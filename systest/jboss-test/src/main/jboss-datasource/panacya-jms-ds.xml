@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE connection-factories
+    PUBLIC "-//JBoss//DTD JBOSS JCA Config 1.5//EN"
+    "http://www.jboss.org/j2ee/dtd/jboss-ds_1_5.dtd">
+
+<connection-factories>
+
+   <tx-connection-factory>
+      <jndi-name>activemq/QueueConnectionFactory</jndi-name>
+      <xa-transaction/>
+      <track-connection-by-tx/> <!-- Thanks to Adrian Brock for pointing this one out! -->
+      <rar-name>activemq-ra-3.1-SNAPSHOT.rar</rar-name>
+      <connection-definition>javax.jms.QueueConnectionFactory</connection-definition>
+      <security-domain-and-application>JmsXARealm</security-domain-and-application>
+      <config-property name="UseInboundSession" type="java.lang.Boolean">true</config-property>
+   </tx-connection-factory>
+
+   <tx-connection-factory>
+      <jndi-name>activemq/TopicConnectionFactory</jndi-name>
+      <xa-transaction/>
+      <track-connection-by-tx/> <!-- Thanks to Adrian Brock for pointing this one out too! -->
+      <rar-name>activemq-ra-3.1-SNAPSHOT.rar</rar-name>
+      <connection-definition>javax.jms.TopicConnectionFactory</connection-definition>
+      <security-domain-and-application>JmsXARealm</security-domain-and-application>
+      <config-property name="UseInboundSession" type="java.lang.Boolean">true</config-property>
+   </tx-connection-factory>
+
+   <mbean code="org.jboss.resource.deployment.AdminObject" name="activemq.queue:name=outboundQueue">
+      <attribute name="JNDIName">activemq/queue/outbound</attribute>
+      <depends optional-attribute-name="RARName">jboss.jca:service=RARDeployment,name='activemq-ra-3.1-SNAPSHOT.rar'</depends>
+      <attribute name="Type">javax.jms.Queue</attribute>
+      <attribute name="Properties">
+            PhysicalName=queue.outbound
+      </attribute>
+   </mbean>
+
+</connection-factories>

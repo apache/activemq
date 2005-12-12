@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
+<beans>
+
+  <broker name="sender">
+    <connector>
+      <tcpServerTransport uri="tcp://localhost:0"/>
+    </connector>
+
+    <discoveryAgent>
+      <multicastDiscovery channelName="development" uri="multicast://228.8.9.10:2677"/>
+    </discoveryAgent>
+
+    <discoveryNetworkConnector/>
+
+    <persistence>
+      <vmPersistence/>
+    </persistence>
+  </broker>
+
+</beans>

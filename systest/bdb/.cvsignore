@@ -1,0 +1,8 @@
+*.log
+junit*.properties
+target
+*.iws
+*.ipr
+*.iml
+build.properties
+

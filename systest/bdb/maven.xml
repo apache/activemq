@@ -1,0 +1,16 @@
+<project default="default" xmlns:j="jelly:core">
+
+  <goal name="default" prereqs="clean, test"/>
+
+  <goal name="java:compile"/>
+
+  <!--
+  <preGoal name="test:compile">
+    <echo>copying from ${basedir}/../../../src/test to ${basedir}/target/src/test</echo>
+    <copy todir="${basedir}/target/src/test">
+      <fileset dir="${basedir}/../../../src/test"/>
+    </copy>
+  </preGoal>
+  -->
+
+</project>

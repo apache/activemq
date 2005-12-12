@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- START SNIPPET: spring -->
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+  <!-- create a JNDI initial template already prepopulated with
+    || ActiveMQ's ConnectionFactory and some destinations. This setting also
+    uses the Provider url configured in /resource/jndi.properties.
+  -->
+
+  <bean id="jndiTemplate" class="org.springframework.jndi.JndiTemplate">
+    <property name="environment">
+      <props>
+        <prop key="java.naming.factory.initial">org.activemq.jndi.ActiveMQInitialContextFactory</prop>
+        <prop key="useEmbeddedBroker">true</prop>
+
+        <!-- lets register some destinations -->
+        <prop key="topic.MyTopic">example.Spring.MyTopic</prop>
+      </props>
+    </property>
+  </bean>
+
+  <!-- look up the JMS ConnectionFactory in JNDI -->
+  <bean id="myConnectionFactory" class="org.springframework.jndi.JndiObjectFactoryBean">
+    <property name="jndiTemplate">
+      <ref bean="jndiTemplate"/>
+    </property>
+    <property name="jndiName">
+      <value>ConnectionFactory</value>
+    </property>
+  </bean>
+
+  <!-- look up the Destination in JNDI -->
+  <bean id="myDestination" class="org.springframework.jndi.JndiObjectFactoryBean">
+    <property name="jndiTemplate">
+      <ref bean="jndiTemplate"/>
+    </property>
+    <property name="jndiName">
+      <value>MyTopic</value>
+    </property>
+  </bean>
+
+  <bean id="myJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    <property name="pubSubDomain">
+      <value>true</value>
+    </property>
+    <property name="connectionFactory">
+
+      <!-- lets wrap in a pool to avoid creating a connection per send -->
+      <bean class="org.springframework.jms.connection.SingleConnectionFactory">
+        <property name="targetConnectionFactory">
+          <ref bean="myConnectionFactory"/>
+        </property>
+      </bean>
+    </property>
+    <property name="defaultDestination">
+      <ref bean="myDestination"/>
+    </property>
+  </bean>
+
+
+  <!-- a sample POJO which uses a Spring JmsTemplate -->
+  <bean id="producer" class="org.activemq.spring.SpringProducer">
+    <property name="template">
+      <ref bean="myJmsTemplate"></ref>
+    </property>
+
+    <property name="destination">
+      <ref bean="myDestination"/>
+    </property>
+
+    <property name="messageCount">
+      <value>10</value>
+    </property>
+  </bean>
+
+
+  <!-- a sample POJO consumer -->
+  <bean id="consumer" class="org.activemq.spring.SpringConsumer">
+    <property name="template">
+      <ref bean="myJmsTemplate"></ref>
+    </property>
+
+    <property name="destination">
+      <ref bean="myDestination"/>
+    </property>
+  </bean>
+
+  <bean id="destination" class="org.activemq.command.ActiveMQTopic" autowire="constructor">
+    <constructor-arg>
+      <value>example.Spring.MyTopic</value>
+    </constructor-arg>
+  </bean>
+</beans>
+
+<!-- END SNIPPET: spring -->

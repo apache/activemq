@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+  <!--  types of producer -->
+  <bean id="durableTransactedProducer" singleton="false"
+    class="org.activemq.systest.impl.ProducerAgentImpl">
+    <property name="persistent" value="true" />
+    <property name="transacted" value="true" />
+  </bean>
+
+  <!--  types of consumer -->
+  <bean id="consumer" singleton="false"
+    class="org.activemq.systest.impl.ConsumerAgentImpl">
+  </bean>
+
+  <!--  types of messageList -->
+  <bean id="messageList"
+    class="org.activemq.systest.impl.MessageListImpl">
+    <constructor-arg value="10" />
+    <constructor-arg value="100" />
+  </bean>
+
+  <!--  destination factory -->
+  <bean id="destinationFactory"
+    class="org.activemq.systest.impl.DestinationFactoryImpl"/>
+
+</beans>

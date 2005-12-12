@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
+<beans>
+
+  <broker name="receiver">
+    <connector>
+      <tcpServerTransport uri="tcp://localhost:62002"/>
+    </connector>
+
+    <discoveryAgent>
+      <zeroconfDiscovery type="_activemq.broker.development."/>
+    </discoveryAgent>
+
+    <discoveryNetworkConnector/>
+
+    <persistence>
+      <vmPersistence/>
+    </persistence>
+  </broker>
+
+</beans>

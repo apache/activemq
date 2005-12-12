@@ -1,0 +1,1667 @@
+/**
+* <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a>
+*
+* Copyright 2005 (C) LogicBlaze, Inc. http://www.logicblaze.com
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*
+**/
+
+package org.activemq;
+
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.jms.BytesMessage;
+import javax.jms.Destination;
+import javax.jms.IllegalStateException;
+import javax.jms.InvalidDestinationException;
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
+import javax.jms.Queue;
+import javax.jms.QueueBrowser;
+import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
+import javax.jms.QueueSession;
+import javax.jms.Session;
+import javax.jms.StreamMessage;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
+import javax.jms.TopicSubscriber;
+import javax.jms.TransactionRolledBackException;
+
+import org.activemq.command.ActiveMQBytesMessage;
+import org.activemq.command.ActiveMQDestination;
+import org.activemq.command.ActiveMQMapMessage;
+import org.activemq.command.ActiveMQMessage;
+import org.activemq.command.ActiveMQObjectMessage;
+import org.activemq.command.ActiveMQQueue;
+import org.activemq.command.ActiveMQStreamMessage;
+import org.activemq.command.ActiveMQTextMessage;
+import org.activemq.command.ActiveMQTopic;
+import org.activemq.command.Command;
+import org.activemq.command.ConsumerId;
+import org.activemq.command.MessageAck;
+import org.activemq.command.MessageDispatch;
+import org.activemq.command.MessageId;
+import org.activemq.command.ProducerId;
+import org.activemq.command.RedeliveryPolicy;
+import org.activemq.command.Response;
+import org.activemq.command.SessionId;
+import org.activemq.command.SessionInfo;
+import org.activemq.command.TransactionId;
+import org.activemq.management.JMSSessionStatsImpl;
+import org.activemq.management.StatsCapable;
+import org.activemq.management.StatsImpl;
+import org.activemq.thread.Scheduler;
+import org.activemq.transaction.Synchronization;
+import org.activemq.util.Callback;
+import org.activemq.util.LongSequenceGenerator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * <P>
+ * A <CODE>Session</CODE> object is a single-threaded context for producing
+ * and consuming messages. Although it may allocate provider resources outside
+ * the Java virtual machine (JVM), it is considered a lightweight JMS object.
+ * <P>
+ * A session serves several purposes:
+ * <UL>
+ * <LI>It is a factory for its message producers and consumers.
+ * <LI>It supplies provider-optimized message factories.
+ * <LI>It is a factory for <CODE>TemporaryTopics</CODE> and <CODE>TemporaryQueues</CODE>.
+ * <LI>It provides a way to create <CODE>Queue</CODE> or <CODE>Topic</CODE>
+ * objects for those clients that need to dynamically manipulate
+ * provider-specific destination names.
+ * <LI>It supports a single series of transactions that combine work spanning
+ * its producers and consumers into atomic units.
+ * <LI>It defines a serial order for the messages it consumes and the messages
+ * it produces.
+ * <LI>It retains messages it consumes until they have been acknowledged.
+ * <LI>It serializes execution of message listeners registered with its message
+ * consumers.
+ * <LI>It is a factory for <CODE>QueueBrowsers</CODE>.
+ * </UL>
+ * <P>
+ * A session can create and service multiple message producers and consumers.
+ * <P>
+ * One typical use is to have a thread block on a synchronous <CODE>MessageConsumer</CODE>
+ * until a message arrives. The thread may then use one or more of the <CODE>Session</CODE>'s<CODE>MessageProducer</CODE>s.
+ * <P>
+ * If a client desires to have one thread produce messages while others consume
+ * them, the client should use a separate session for its producing thread.
+ * <P>
+ * Once a connection has been started, any session with one or more registered
+ * message listeners is dedicated to the thread of control that delivers
+ * messages to it. It is erroneous for client code to use this session or any of
+ * its constituent objects from another thread of control. The only exception to
+ * this rule is the use of the session or connection <CODE>close</CODE>
+ * method.
+ * <P>
+ * It should be easy for most clients to partition their work naturally into
+ * sessions. This model allows clients to start simply and incrementally add
+ * message processing complexity as their need for concurrency grows.
+ * <P>
+ * The <CODE>close</CODE> method is the only session method that can be called
+ * while some other session method is being executed in another thread.
+ * <P>
+ * A session may be specified as transacted. Each transacted session supports a
+ * single series of transactions. Each transaction groups a set of message sends
+ * and a set of message receives into an atomic unit of work. In effect,
+ * transactions organize a session's input message stream and output message
+ * stream into series of atomic units. When a transaction commits, its atomic
+ * unit of input is acknowledged and its associated atomic unit of output is
+ * sent. If a transaction rollback is done, the transaction's sent messages are
+ * destroyed and the session's input is automatically recovered.
+ * <P>
+ * The content of a transaction's input and output units is simply those
+ * messages that have been produced and consumed within the session's current
+ * transaction.
+ * <P>
+ * A transaction is completed using either its session's <CODE>commit</CODE>
+ * method or its session's <CODE>rollback </CODE> method. The completion of a
+ * session's current transaction automatically begins the next. The result is
+ * that a transacted session always has a current transaction within which its
+ * work is done.
+ * <P>
+ * The Java Transaction Service (JTS) or some other transaction monitor may be
+ * used to combine a session's transaction with transactions on other resources
+ * (databases, other JMS sessions, etc.). Since Java distributed transactions
+ * are controlled via the Java Transaction API (JTA), use of the session's
+ * <CODE>commit</CODE> and <CODE>rollback</CODE> methods in this context is
+ * prohibited.
+ * <P>
+ * The JMS API does not require support for JTA; however, it does define how a
+ * provider supplies this support.
+ * <P>
+ * Although it is also possible for a JMS client to handle distributed
+ * transactions directly, it is unlikely that many JMS clients will do this.
+ * Support for JTA in the JMS API is targeted at systems vendors who will be
+ * integrating the JMS API into their application server products.
+ * 
+ * @version $Revision: 1.34 $
+ * @see javax.jms.Session
+ * @see javax.jms.QueueSession
+ * @see javax.jms.TopicSession
+ * @see javax.jms.XASession
+ */
+public class ActiveMQSession implements Session, QueueSession, TopicSession, StatsCapable, ActiveMQDispatcher {
+
+    public static interface DeliveryListener {
+        public void beforeDelivery(ActiveMQSession session, Message msg);
+        public void afterDelivery(ActiveMQSession session, Message msg);
+    }
+
+    private static final Log log = LogFactory.getLog(ActiveMQSession.class);
+
+    protected int acknowledgementMode;
+
+    private MessageListener messageListener;
+    private JMSSessionStatsImpl stats;
+    private TransactionContext transactionContext;
+    private DeliveryListener deliveryListener;
+    
+    protected final ActiveMQConnection connection;
+    protected final SessionInfo info;
+    protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
+    protected final LongSequenceGenerator producerIdGenerator = new LongSequenceGenerator();
+    protected final LongSequenceGenerator deliveryIdGenerator = new LongSequenceGenerator();
+    protected final ActiveMQSessionExecutor executor = new ActiveMQSessionExecutor(this);
+    protected final AtomicBoolean started = new AtomicBoolean(false);
+    
+    protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
+    protected final CopyOnWriteArrayList producers = new CopyOnWriteArrayList();
+
+    protected boolean closed;
+    protected boolean asyncDispatch;
+
+    /**
+     * Construct the Session
+     * 
+     * @param connection
+     * @param acknowledgeMode
+     *            n.b if transacted - the acknowledgeMode ==
+     *            Session.SESSION_TRANSACTED
+     * @throws JMSException
+     *             on internal error
+     */
+    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch)
+            throws JMSException {
+
+        this.connection = connection;
+        this.acknowledgementMode = acknowledgeMode;
+        this.asyncDispatch=asyncDispatch;
+        
+        this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getSessionId());
+        setTransactionContext(new TransactionContext(connection));
+        connection.addSession(this);
+        stats = new JMSSessionStatsImpl(producers, consumers);
+        this.connection.asyncSendPacket(info);
+        
+        if( connection.isStarted() )
+            start();
+
+    }
+
+    /**
+     * Sets the transaction context of the session.
+     * 
+     * @param transactionContext -
+     *            provides the means to control a JMS transaction.
+     */
+    public void setTransactionContext(TransactionContext transactionContext) {
+        this.transactionContext = transactionContext;
+    }
+
+    /**
+     * Returns the transaction context of the session.
+     * 
+     * @return transactionContext - session's transaction context.
+     */
+    public TransactionContext getTransactionContext() {
+        return transactionContext;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.activemq.management.StatsCapable#getStats()
+     */
+    public StatsImpl getStats() {
+        return stats;
+    }
+
+    /**
+     * Returns the session's statistics.
+     * 
+     * @return stats - session's statistics.
+     */
+    public JMSSessionStatsImpl getSessionStats() {
+        return stats;
+    }
+
+    /**
+     * Creates a <CODE>BytesMessage</CODE> object. A <CODE>BytesMessage</CODE>
+     * object is used to send a message containing a stream of uninterpreted
+     * bytes.
+     * 
+     * @return the an ActiveMQBytesMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public BytesMessage createBytesMessage() throws JMSException {
+        checkClosed();
+        ActiveMQBytesMessage message = new ActiveMQBytesMessage();
+        message.setConnection(connection);
+        return message;
+    }
+
+    /**
+     * Creates a <CODE>MapMessage</CODE> object. A <CODE>MapMessage</CODE>
+     * object is used to send a self-defining set of name-value pairs, where
+     * names are <CODE>String</CODE> objects and values are primitive values
+     * in the Java programming language.
+     * 
+     * @return an ActiveMQMapMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public MapMessage createMapMessage() throws JMSException {
+        checkClosed();
+        ActiveMQMapMessage message = new ActiveMQMapMessage();
+        message.setConnection(connection);
+        return message;
+    }
+
+    /**
+     * Creates a <CODE>Message</CODE> object. The <CODE>Message</CODE>
+     * interface is the root interface of all JMS messages. A <CODE>Message</CODE>
+     * object holds all the standard message header information. It can be sent
+     * when a message containing only header information is sufficient.
+     * 
+     * @return an ActiveMQMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public Message createMessage() throws JMSException {
+        checkClosed();
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setConnection(connection);
+        return message;
+    }
+
+    /**
+     * Creates an <CODE>ObjectMessage</CODE> object. An <CODE>ObjectMessage</CODE>
+     * object is used to send a message that contains a serializable Java
+     * object.
+     * 
+     * @return an ActiveMQObjectMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public ObjectMessage createObjectMessage() throws JMSException {
+        checkClosed();
+        ActiveMQObjectMessage message = new ActiveMQObjectMessage();
+        message.setConnection(connection);
+        return message;
+    }
+
+    /**
+     * Creates an initialized <CODE>ObjectMessage</CODE> object. An <CODE>ObjectMessage</CODE>
+     * object is used to send a message that contains a serializable Java
+     * object.
+     * 
+     * @param object
+     *            the object to use to initialize this message
+     * @return an ActiveMQObjectMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
+        checkClosed();
+        ActiveMQObjectMessage message = new ActiveMQObjectMessage();
+        message.setConnection(connection);
+        message.setObject(object);
+        return message;
+    }
+
+    /**
+     * Creates a <CODE>StreamMessage</CODE> object. A <CODE>StreamMessage</CODE>
+     * object is used to send a self-defining stream of primitive values in the
+     * Java programming language.
+     * 
+     * @return an ActiveMQStreamMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public StreamMessage createStreamMessage() throws JMSException {
+        checkClosed();
+        ActiveMQStreamMessage message = new ActiveMQStreamMessage();
+        message.setConnection(connection);
+        return message;
+    }
+
+    /**
+     * Creates a <CODE>TextMessage</CODE> object. A <CODE>TextMessage</CODE>
+     * object is used to send a message containing a <CODE>String</CODE>
+     * object.
+     * 
+     * @return an ActiveMQTextMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public TextMessage createTextMessage() throws JMSException {
+        checkClosed();
+        ActiveMQTextMessage message = new ActiveMQTextMessage();
+        message.setConnection(connection);
+        return message;
+    }
+
+    /**
+     * Creates an initialized <CODE>TextMessage</CODE> object. A <CODE>TextMessage</CODE>
+     * object is used to send a message containing a <CODE>String</CODE>.
+     * 
+     * @param text
+     *            the string used to initialize this message
+     * @return an ActiveMQTextMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public TextMessage createTextMessage(String text) throws JMSException {
+        checkClosed();
+        ActiveMQTextMessage message = new ActiveMQTextMessage();
+        message.setText(text);
+        message.setConnection(connection);
+        return message;
+    }
+
+    /**
+     * Indicates whether the session is in transacted mode.
+     * 
+     * @return true if the session is in transacted mode
+     * @throws JMSException
+     *             if there is some internal error.
+     */
+    public boolean getTransacted() throws JMSException {
+        checkClosed();
+        return ((acknowledgementMode == Session.SESSION_TRANSACTED) || (transactionContext.isInXATransaction()));
+    }
+
+    /**
+     * Returns the acknowledgement mode of the session. The acknowledgement mode
+     * is set at the time that the session is created. If the session is
+     * transacted, the acknowledgement mode is ignored.
+     * 
+     * @return If the session is not transacted, returns the current
+     *         acknowledgement mode for the session. If the session is
+     *         transacted, returns SESSION_TRANSACTED.
+     * @throws JMSException
+     * @see javax.jms.Connection#createSession(boolean,int)
+     * @since 1.1 exception JMSException if there is some internal error.
+     */
+    public int getAcknowledgeMode() throws JMSException {
+        checkClosed();
+        return this.acknowledgementMode;
+    }
+
+    /**
+     * Commits all messages done in this transaction and releases any locks
+     * currently held.
+     * 
+     * @throws JMSException
+     *             if the JMS provider fails to commit the transaction due to
+     *             some internal error.
+     * @throws TransactionRolledBackException
+     *             if the transaction is rolled back due to some internal error
+     *             during commit.
+     * @throws javax.jms.IllegalStateException
+     *             if the method is not called by a transacted session.
+     */
+    public void commit() throws JMSException {
+        checkClosed();
+        if (!getTransacted()) {
+            throw new javax.jms.IllegalStateException("Not a transacted session");
+        }
+        transactionContext.commit();
+    }
+
+    /**
+     * Rolls back any messages done in this transaction and releases any locks
+     * currently held.
+     * 
+     * @throws JMSException
+     *             if the JMS provider fails to roll back the transaction due to
+     *             some internal error.
+     * @throws javax.jms.IllegalStateException
+     *             if the method is not called by a transacted session.
+     */
+    public void rollback() throws JMSException {
+        checkClosed();
+        if (!getTransacted()) {
+            throw new javax.jms.IllegalStateException("Not a transacted session");
+        }
+        transactionContext.rollback();
+    }
+    
+    /**
+     * Closes the session.
+     * <P>
+     * Since a provider may allocate some resources on behalf of a session
+     * outside the JVM, clients should close the resources when they are not
+     * needed. Relying on garbage collection to eventually reclaim these
+     * resources may not be timely enough.
+     * <P>
+     * There is no need to close the producers and consumers of a closed
+     * session.
+     * <P>
+     * This call will block until a <CODE>receive</CODE> call or message
+     * listener in progress has completed. A blocked message consumer <CODE>receive</CODE>
+     * call returns <CODE>null</CODE> when this session is closed.
+     * <P>
+     * Closing a transacted session must roll back the transaction in progress.
+     * <P>
+     * This method is the only <CODE>Session</CODE> method that can be called
+     * concurrently.
+     * <P>
+     * Invoking any other <CODE>Session</CODE> method on a closed session must
+     * throw a <CODE> JMSException.IllegalStateException</CODE>. Closing a
+     * closed session must <I>not </I> throw an exception.
+     * 
+     * @throws JMSException
+     *             if the JMS provider fails to close the session due to some
+     *             internal error.
+     */
+    public void close() throws JMSException {
+        if (!closed) {
+            dispose();
+            connection.asyncSendPacket(info.createRemoveCommand());
+        }
+    }
+    
+
+    public void dispose() throws JMSException {
+        if (!closed) {
+            
+            for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+                ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
+                consumer.dispose();
+            }
+            consumers.clear();
+
+            for (Iterator iter = producers.iterator(); iter.hasNext();) {
+                ActiveMQMessageProducer producer = (ActiveMQMessageProducer) iter.next();
+                producer.dispose();
+            }
+            producers.clear();
+            
+            try {
+                if (getTransactionContext().isInLocalTransaction()) {
+                    rollback();
+                }
+            } catch (JMSException e) {
+            }
+            
+            
+            connection.removeSession(this);
+            this.transactionContext=null;
+            closed = true;
+        }
+    }
+
+    /**
+     * Check if the session is closed. It is used for ensuring that the session
+     * is open before performing various operations.
+     * 
+     * @throws IllegalStateException
+     *             if the Session is closed
+     */
+    protected void checkClosed() throws IllegalStateException {
+        if (closed) {
+            throw new IllegalStateException("The Session is closed");
+        }
+    }
+
+    /**
+     * Stops message delivery in this session, and restarts message delivery
+     * with the oldest unacknowledged message.
+     * <P>
+     * All consumers deliver messages in a serial order. Acknowledging a
+     * received message automatically acknowledges all messages that have been
+     * delivered to the client.
+     * <P>
+     * Restarting a session causes it to take the following actions:
+     * <UL>
+     * <LI>Stop message delivery
+     * <LI>Mark all messages that might have been delivered but not
+     * acknowledged as "redelivered"
+     * <LI>Restart the delivery sequence including all unacknowledged messages
+     * that had been previously delivered. Redelivered messages do not have to
+     * be delivered in exactly their original delivery order.
+     * </UL>
+     * 
+     * @throws JMSException
+     *             if the JMS provider fails to stop and restart message
+     *             delivery due to some internal error.
+     * @throws IllegalStateException
+     *             if the method is called by a transacted session.
+     */
+    public void recover() throws JMSException {
+
+        checkClosed();
+        if (getTransacted()) {
+            throw new IllegalStateException("This session is transacted");
+        }
+
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            c.rollback();
+        }
+
+    }
+
+    /**
+     * Returns the session's distinguished message listener (optional).
+     * 
+     * @return the message listener associated with this session
+     * @throws JMSException
+     *             if the JMS provider fails to get the message listener due to
+     *             an internal error.
+     * @see javax.jms.Session#setMessageListener(javax.jms.MessageListener)
+     * @see javax.jms.ServerSessionPool
+     * @see javax.jms.ServerSession
+     */
+    public MessageListener getMessageListener() throws JMSException {
+        checkClosed();
+        return this.messageListener;
+    }
+
+    /**
+     * Sets the session's distinguished message listener (optional).
+     * <P>
+     * When the distinguished message listener is set, no other form of message
+     * receipt in the session can be used; however, all forms of sending
+     * messages are still supported.
+     * <P>
+     * This is an expert facility not used by regular JMS clients.
+     * 
+     * @param listener
+     *            the message listener to associate with this session
+     * @throws JMSException
+     *             if the JMS provider fails to set the message listener due to
+     *             an internal error.
+     * @see javax.jms.Session#getMessageListener()
+     * @see javax.jms.ServerSessionPool
+     * @see javax.jms.ServerSession
+     */
+    public void setMessageListener(MessageListener listener) throws JMSException {
+        checkClosed();
+        this.messageListener = listener;
+
+        if (listener != null) {
+            executor.setDispatchedBySessionPool(true);
+        }
+    }
+
+    /**
+     * Optional operation, intended to be used only by Application Servers, not
+     * by ordinary JMS clients.
+     * 
+     * @see javax.jms.ServerSession
+     */
+    public void run() {
+        MessageDispatch messageDispatch;
+        while ((messageDispatch = executor.dequeueNoWait()) != null) {
+            final MessageDispatch md = messageDispatch;
+            ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
+            if( message.isExpired() ) {
+                //TODO: Ack it without delivery to client
+                continue;
+            }
+            
+            if( isClientAcknowledge() ) {
+                message.setAcknowledgeCallback(new Callback() {
+                    public void execute() throws Throwable {
+                    }
+                });
+            }
+            
+            if (deliveryListener != null) {
+                deliveryListener.beforeDelivery(this, message);
+            }
+
+            md.setDeliverySequenceId(getNextDeliveryId());            
+
+            try { 
+                messageListener.onMessage(message);
+            } catch ( Throwable e ) {  
+                // TODO: figure out proper way to handle error.
+            }
+
+            try {
+                MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1);
+                ack.setFirstMessageId(md.getMessage().getMessageId());
+                doStartTransaction();
+                ack.setTransactionId(getTransactionContext().getTransactionId());
+                if( ack.getTransactionId()!=null ) {
+                    getTransactionContext().addSynchronization(new Synchronization(){
+                        public void afterRollback() throws Throwable {
+
+                            md.getMessage().incrementRedeliveryCounter();
+                            
+                            RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
+                            int redeliveryCounter = md.getMessage().getRedeliveryCounter();
+                            if (redeliveryCounter > redeliveryPolicy.getMaximumRedeliveries()) {
+                                
+                                // We need to NACK the messages so that they get sent to the
+                                // DLQ.
+
+                                // Acknowledge the last message.
+                                MessageAck ack = new MessageAck(md,MessageAck.POSION_ACK_TYPE,1);
+                                ack.setFirstMessageId(md.getMessage().getMessageId());
+                                asyncSendPacket(ack);
+
+                            } else {
+                                
+                                // Figure out how long we should wait to resend this message.
+                                long redeliveryDelay=0;
+                                for( int i=0; i < redeliveryCounter; i++) {
+                                    if (redeliveryDelay == 0) {
+                                        redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
+                                    } else {
+                                        if (redeliveryPolicy.isUseExponentialBackOff())
+                                            redeliveryDelay *= redeliveryPolicy.getBackOffMultiplier();
+                                    }
+                                }
+                                
+                                Scheduler.executeAfterDelay(new Runnable() {
+                                    public void run() {
+                                        ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
+                                    }
+                                }, redeliveryDelay);
+                                
+                            }
+                        }
+                    });
+                }
+                asyncSendPacket(ack);
+            } catch ( Throwable e ) {
+                connection.onAsyncException(e);
+            }
+
+            if (deliveryListener != null) {
+                deliveryListener.afterDelivery(this, message);
+            }
+        }
+    }
+
+    /**
+     * Creates a <CODE>MessageProducer</CODE> to send messages to the
+     * specified destination.
+     * <P>
+     * A client uses a <CODE>MessageProducer</CODE> object to send messages to
+     * a destination. Since <CODE>Queue </CODE> and <CODE>Topic</CODE> both
+     * inherit from <CODE>Destination</CODE>, they can be used in the
+     * destination parameter to create a <CODE>MessageProducer</CODE> object.
+     * 
+     * @param destination
+     *            the <CODE>Destination</CODE> to send to, or null if this is
+     *            a producer which does not have a specified destination.
+     * @return the MessageProducer
+     * @throws JMSException
+     *             if the session fails to create a MessageProducer due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid destination is specified.
+     * @since 1.1
+     */
+    public MessageProducer createProducer(Destination destination) throws JMSException {
+        checkClosed();
+        return new ActiveMQMessageProducer(this, getNextProducerId(), ActiveMQMessageTransformation
+                .transformDestination(destination));
+    }
+
+    /**
+     * Creates a <CODE>MessageConsumer</CODE> for the specified destination.
+     * Since <CODE>Queue</CODE> and <CODE> Topic</CODE> both inherit from
+     * <CODE>Destination</CODE>, they can be used in the destination
+     * parameter to create a <CODE>MessageConsumer</CODE>.
+     * 
+     * @param destination
+     *            the <CODE>Destination</CODE> to access.
+     * @return the MessageConsumer
+     * @throws JMSException
+     *             if the session fails to create a consumer due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid destination is specified.
+     * @since 1.1
+     */
+    public MessageConsumer createConsumer(Destination destination) throws JMSException {
+        checkClosed();
+        return createConsumer(destination, null);
+    }
+
+    /**
+     * Creates a <CODE>MessageConsumer</CODE> for the specified destination,
+     * using a message selector. Since <CODE> Queue</CODE> and <CODE>Topic</CODE>
+     * both inherit from <CODE>Destination</CODE>, they can be used in the
+     * destination parameter to create a <CODE>MessageConsumer</CODE>.
+     * <P>
+     * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
+     * that have been sent to a destination.
+     * 
+     * @param destination
+     *            the <CODE>Destination</CODE> to access
+     * @param messageSelector
+     *            only messages with properties matching the message selector
+     *            expression are delivered. A value of null or an empty string
+     *            indicates that there is no message selector for the message
+     *            consumer.
+     * @return the MessageConsumer
+     * @throws JMSException
+     *             if the session fails to create a MessageConsumer due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid destination is specified.
+     * @throws InvalidSelectorException
+     *             if the message selector is invalid.
+     * @since 1.1
+     */
+    public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
+        checkClosed();
+        int prefetch = 0;
+
+        if (destination instanceof Topic) {
+            prefetch = connection.getPrefetchPolicy().getTopicPrefetch();
+        } else {
+            prefetch = connection.getPrefetchPolicy().getQueuePrefetch();
+        }
+
+        return new ActiveMQMessageConsumer(this, getNextConsumerId(), ActiveMQMessageTransformation
+                .transformDestination(destination), null, messageSelector, prefetch, false, false, asyncDispatch);
+    }
+
+    /**
+     * @return
+     */
+    protected ConsumerId getNextConsumerId() {
+        return new ConsumerId(info.getSessionId(), consumerIdGenerator.getNextSequenceId());
+    }
+
+    /**
+     * @return
+     */
+    protected ProducerId getNextProducerId() {
+        return new ProducerId(info.getSessionId(), producerIdGenerator.getNextSequenceId());
+    }
+
+    /**
+     * Creates <CODE>MessageConsumer</CODE> for the specified destination,
+     * using a message selector. This method can specify whether messages
+     * published by its own connection should be delivered to it, if the
+     * destination is a topic.
+     * <P>
+     * Since <CODE>Queue</CODE> and <CODE>Topic</CODE> both inherit from
+     * <CODE>Destination</CODE>, they can be used in the destination
+     * parameter to create a <CODE>MessageConsumer</CODE>.
+     * <P>
+     * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
+     * that have been published to a destination.
+     * <P>
+     * In some cases, a connection may both publish and subscribe to a topic.
+     * The consumer <CODE>NoLocal</CODE> attribute allows a consumer to
+     * inhibit the delivery of messages published by its own connection. The
+     * default value for this attribute is False. The <CODE>noLocal</CODE>
+     * value must be supported by destinations that are topics.
+     * 
+     * @param destination
+     *            the <CODE>Destination</CODE> to access
+     * @param messageSelector
+     *            only messages with properties matching the message selector
+     *            expression are delivered. A value of null or an empty string
+     *            indicates that there is no message selector for the message
+     *            consumer.
+     * @param NoLocal -
+     *            if true, and the destination is a topic, inhibits the delivery
+     *            of messages published by its own connection. The behavior for
+     *            <CODE>NoLocal</CODE> is not specified if the destination is
+     *            a queue.
+     * @return the MessageConsumer
+     * @throws JMSException
+     *             if the session fails to create a MessageConsumer due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid destination is specified.
+     * @throws InvalidSelectorException
+     *             if the message selector is invalid.
+     * @since 1.1
+     */
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal)
+            throws JMSException {
+        checkClosed();
+        return new ActiveMQMessageConsumer(this, getNextConsumerId(), ActiveMQMessageTransformation
+                .transformDestination(destination), null, messageSelector, connection.getPrefetchPolicy()
+                .getTopicPrefetch(), NoLocal, false, asyncDispatch);
+    }
+
+    /**
+     * Creates a queue identity given a <CODE>Queue</CODE> name.
+     * <P>
+     * This facility is provided for the rare cases where clients need to
+     * dynamically manipulate queue identity. It allows the creation of a queue
+     * identity with a provider-specific name. Clients that depend on this
+     * ability are not portable.
+     * <P>
+     * Note that this method is not for creating the physical queue. The
+     * physical creation of queues is an administrative task and is not to be
+     * initiated by the JMS API. The one exception is the creation of temporary
+     * queues, which is accomplished with the <CODE>createTemporaryQueue</CODE>
+     * method.
+     * 
+     * @param queueName
+     *            the name of this <CODE>Queue</CODE>
+     * @return a <CODE>Queue</CODE> with the given name
+     * @throws JMSException
+     *             if the session fails to create a queue due to some internal
+     *             error.
+     * @since 1.1
+     */
+    public Queue createQueue(String queueName) throws JMSException {
+        checkClosed();
+        return new ActiveMQQueue(queueName);
+    }
+
+    /**
+     * Creates a topic identity given a <CODE>Topic</CODE> name.
+     * <P>
+     * This facility is provided for the rare cases where clients need to
+     * dynamically manipulate topic identity. This allows the creation of a
+     * topic identity with a provider-specific name. Clients that depend on this
+     * ability are not portable.
+     * <P>
+     * Note that this method is not for creating the physical topic. The
+     * physical creation of topics is an administrative task and is not to be
+     * initiated by the JMS API. The one exception is the creation of temporary
+     * topics, which is accomplished with the <CODE>createTemporaryTopic</CODE>
+     * method.
+     * 
+     * @param topicName
+     *            the name of this <CODE>Topic</CODE>
+     * @return a <CODE>Topic</CODE> with the given name
+     * @throws JMSException
+     *             if the session fails to create a topic due to some internal
+     *             error.
+     * @since 1.1
+     */
+    public Topic createTopic(String topicName) throws JMSException {
+        checkClosed();
+        return new ActiveMQTopic(topicName);
+    }
+
+    /**
+     * Creates a <CODE>QueueBrowser</CODE> object to peek at the messages on
+     * the specified queue.
+     * 
+     * @param queue
+     *            the <CODE>queue</CODE> to access
+     * @exception InvalidDestinationException
+     *                if an invalid destination is specified
+     * @since 1.1
+     */
+    /**
+     * Creates a durable subscriber to the specified topic.
+     * <P>
+     * If a client needs to receive all the messages published on a topic,
+     * including the ones published while the subscriber is inactive, it uses a
+     * durable <CODE>TopicSubscriber</CODE>. The JMS provider retains a
+     * record of this durable subscription and insures that all messages from
+     * the topic's publishers are retained until they are acknowledged by this
+     * durable subscriber or they have expired.
+     * <P>
+     * Sessions with durable subscribers must always provide the same client
+     * identifier. In addition, each client must specify a name that uniquely
+     * identifies (within client identifier) each durable subscription it
+     * creates. Only one session at a time can have a <CODE>TopicSubscriber</CODE>
+     * for a particular durable subscription.
+     * <P>
+     * A client can change an existing durable subscription by creating a
+     * durable <CODE>TopicSubscriber</CODE> with the same name and a new topic
+     * and/or message selector. Changing a durable subscriber is equivalent to
+     * unsubscribing (deleting) the old one and creating a new one.
+     * <P>
+     * In some cases, a connection may both publish and subscribe to a topic.
+     * The subscriber <CODE>NoLocal</CODE> attribute allows a subscriber to
+     * inhibit the delivery of messages published by its own connection. The
+     * default value for this attribute is false.
+     * 
+     * @param topic
+     *            the non-temporary <CODE>Topic</CODE> to subscribe to
+     * @param name
+     *            the name used to identify this subscription
+     * @return the TopicSubscriber
+     * @throws JMSException
+     *             if the session fails to create a subscriber due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid topic is specified.
+     * @since 1.1
+     */
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
+        checkClosed();
+        return createDurableSubscriber(topic, name, null, false);
+    }
+
+    /**
+     * Creates a durable subscriber to the specified topic, using a message
+     * selector and specifying whether messages published by its own connection
+     * should be delivered to it.
+     * <P>
+     * If a client needs to receive all the messages published on a topic,
+     * including the ones published while the subscriber is inactive, it uses a
+     * durable <CODE>TopicSubscriber</CODE>. The JMS provider retains a
+     * record of this durable subscription and insures that all messages from
+     * the topic's publishers are retained until they are acknowledged by this
+     * durable subscriber or they have expired.
+     * <P>
+     * Sessions with durable subscribers must always provide the same client
+     * identifier. In addition, each client must specify a name which uniquely
+     * identifies (within client identifier) each durable subscription it
+     * creates. Only one session at a time can have a <CODE>TopicSubscriber</CODE>
+     * for a particular durable subscription. An inactive durable subscriber is
+     * one that exists but does not currently have a message consumer associated
+     * with it.
+     * <P>
+     * A client can change an existing durable subscription by creating a
+     * durable <CODE>TopicSubscriber</CODE> with the same name and a new topic
+     * and/or message selector. Changing a durable subscriber is equivalent to
+     * unsubscribing (deleting) the old one and creating a new one.
+     * 
+     * @param topic
+     *            the non-temporary <CODE>Topic</CODE> to subscribe to
+     * @param name
+     *            the name used to identify this subscription
+     * @param messageSelector
+     *            only messages with properties matching the message selector
+     *            expression are delivered. A value of null or an empty string
+     *            indicates that there is no message selector for the message
+     *            consumer.
+     * @param noLocal
+     *            if set, inhibits the delivery of messages published by its own
+     *            connection
+     * @return the Queue Browser
+     * @throws JMSException
+     *             if the session fails to create a subscriber due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid topic is specified.
+     * @throws InvalidSelectorException
+     *             if the message selector is invalid.
+     * @since 1.1
+     */
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal)
+            throws JMSException {
+        checkClosed();
+        connection.checkClientIDWasManuallySpecified();
+        return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation
+                .transformDestination(topic), name, messageSelector, this.connection.getPrefetchPolicy()
+                .getDurableTopicPrefetch(), noLocal, false, asyncDispatch);
+    }
+
+    /**
+     * Creates a <CODE>QueueBrowser</CODE> object to peek at the messages on
+     * the specified queue.
+     * 
+     * @param queue
+     *            the <CODE>queue</CODE> to access
+     * @return the Queue Browser
+     * @throws JMSException
+     *             if the session fails to create a browser due to some internal
+     *             error.
+     * @throws InvalidDestinationException
+     *             if an invalid destination is specified
+     * @since 1.1
+     */
+    public QueueBrowser createBrowser(Queue queue) throws JMSException {
+        checkClosed();
+        return createBrowser(queue, null);
+    }
+
+    /**
+     * Creates a <CODE>QueueBrowser</CODE> object to peek at the messages on
+     * the specified queue using a message selector.
+     * 
+     * @param queue
+     *            the <CODE>queue</CODE> to access
+     * @param messageSelector
+     *            only messages with properties matching the message selector
+     *            expression are delivered. A value of null or an empty string
+     *            indicates that there is no message selector for the message
+     *            consumer.
+     * @return the Queue Browser
+     * @throws JMSException
+     *             if the session fails to create a browser due to some internal
+     *             error.
+     * @throws InvalidDestinationException
+     *             if an invalid destination is specified
+     * @throws InvalidSelectorException
+     *             if the message selector is invalid.
+     * @since 1.1
+     */
+    public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
+        checkClosed();
+        return new ActiveMQQueueBrowser(this, getNextConsumerId(), ActiveMQMessageTransformation
+                .transformDestination(queue), messageSelector, asyncDispatch);
+    }
+
+    /**
+     * Creates a <CODE>TemporaryQueue</CODE> object. Its lifetime will be that
+     * of the <CODE>Connection</CODE> unless it is deleted earlier.
+     * 
+     * @return a temporary queue identity
+     * @throws JMSException
+     *             if the session fails to create a temporary queue due to some
+     *             internal error.
+     * @since 1.1
+     */
+    public TemporaryQueue createTemporaryQueue() throws JMSException {
+        checkClosed();
+        return (TemporaryQueue) connection.createTempDestination(false);
+    }
+
+    /**
+     * Creates a <CODE>TemporaryTopic</CODE> object. Its lifetime will be that
+     * of the <CODE>Connection</CODE> unless it is deleted earlier.
+     * 
+     * @return a temporary topic identity
+     * @throws JMSException
+     *             if the session fails to create a temporary topic due to some
+     *             internal error.
+     * @since 1.1
+     */
+    public TemporaryTopic createTemporaryTopic() throws JMSException {
+        checkClosed();
+        return (TemporaryTopic)connection.createTempDestination(true);
+    }
+
+    /**
+     * Creates a <CODE>QueueReceiver</CODE> object to receive messages from
+     * the specified queue.
+     * 
+     * @param queue
+     *            the <CODE>Queue</CODE> to access
+     * @return
+     * @throws JMSException
+     *             if the session fails to create a receiver due to some
+     *             internal error.
+     * @throws JMSException
+     * @throws InvalidDestinationException
+     *             if an invalid queue is specified.
+     */
+    public QueueReceiver createReceiver(Queue queue) throws JMSException {
+        checkClosed();
+        return createReceiver(queue, null);
+    }
+
+    /**
+     * Creates a <CODE>QueueReceiver</CODE> object to receive messages from
+     * the specified queue using a message selector.
+     * 
+     * @param queue
+     *            the <CODE>Queue</CODE> to access
+     * @param messageSelector
+     *            only messages with properties matching the message selector
+     *            expression are delivered. A value of null or an empty string
+     *            indicates that there is no message selector for the message
+     *            consumer.
+     * @return QueueReceiver
+     * @throws JMSException
+     *             if the session fails to create a receiver due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid queue is specified.
+     * @throws InvalidSelectorException
+     *             if the message selector is invalid.
+     */
+    public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
+        checkClosed();
+        return new ActiveMQQueueReceiver(this, getNextConsumerId(), ActiveMQMessageTransformation
+                .transformDestination(queue), messageSelector, this.connection.getPrefetchPolicy().getQueuePrefetch(), asyncDispatch);
+    }
+
+    /**
+     * Creates a <CODE>QueueSender</CODE> object to send messages to the
+     * specified queue.
+     * 
+     * @param queue
+     *            the <CODE>Queue</CODE> to access, or null if this is an
+     *            unidentified producer
+     * @return QueueSender
+     * @throws JMSException
+     *             if the session fails to create a sender due to some internal
+     *             error.
+     * @throws InvalidDestinationException
+     *             if an invalid queue is specified.
+     */
+    public QueueSender createSender(Queue queue) throws JMSException {
+        checkClosed();
+        return new ActiveMQQueueSender(this, ActiveMQMessageTransformation.transformDestination(queue));
+    }
+
+    /**
+     * Creates a nondurable subscriber to the specified topic. <p/>
+     * <P>
+     * A client uses a <CODE>TopicSubscriber</CODE> object to receive messages
+     * that have been published to a topic. <p/>
+     * <P>
+     * Regular <CODE>TopicSubscriber</CODE> objects are not durable. They
+     * receive only messages that are published while they are active. <p/>
+     * <P>
+     * In some cases, a connection may both publish and subscribe to a topic.
+     * The subscriber <CODE>NoLocal</CODE> attribute allows a subscriber to
+     * inhibit the delivery of messages published by its own connection. The
+     * default value for this attribute is false.
+     * 
+     * @param topic
+     *            the <CODE>Topic</CODE> to subscribe to
+     * @return TopicSubscriber
+     * @throws JMSException
+     *             if the session fails to create a subscriber due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid topic is specified.
+     */
+    public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
+        checkClosed();
+        return createSubscriber(topic, null, false);
+    }
+
+    /**
+     * Creates a nondurable subscriber to the specified topic, using a message
+     * selector or specifying whether messages published by its own connection
+     * should be delivered to it. <p/>
+     * <P>
+     * A client uses a <CODE>TopicSubscriber</CODE> object to receive messages
+     * that have been published to a topic. <p/>
+     * <P>
+     * Regular <CODE>TopicSubscriber</CODE> objects are not durable. They
+     * receive only messages that are published while they are active. <p/>
+     * <P>
+     * Messages filtered out by a subscriber's message selector will never be
+     * delivered to the subscriber. From the subscriber's perspective, they do
+     * not exist. <p/>
+     * <P>
+     * In some cases, a connection may both publish and subscribe to a topic.
+     * The subscriber <CODE>NoLocal</CODE> attribute allows a subscriber to
+     * inhibit the delivery of messages published by its own connection. The
+     * default value for this attribute is false.
+     * 
+     * @param topic
+     *            the <CODE>Topic</CODE> to subscribe to
+     * @param messageSelector
+     *            only messages with properties matching the message selector
+     *            expression are delivered. A value of null or an empty string
+     *            indicates that there is no message selector for the message
+     *            consumer.
+     * @param noLocal
+     *            if set, inhibits the delivery of messages published by its own
+     *            connection
+     * @return TopicSubscriber
+     * @throws JMSException
+     *             if the session fails to create a subscriber due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid topic is specified.
+     * @throws InvalidSelectorException
+     *             if the message selector is invalid.
+     */
+    public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
+        checkClosed();
+        return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation
+                .transformDestination(topic), null, messageSelector, this.connection.getPrefetchPolicy()
+                .getTopicPrefetch(), noLocal, false, asyncDispatch);
+    }
+
+    /**
+     * Creates a publisher for the specified topic. <p/>
+     * <P>
+     * A client uses a <CODE>TopicPublisher</CODE> object to publish messages
+     * on a topic. Each time a client creates a <CODE>TopicPublisher</CODE> on
+     * a topic, it defines a new sequence of messages that have no ordering
+     * relationship with the messages it has previously sent.
+     * 
+     * @param topic
+     *            the <CODE>Topic</CODE> to publish to, or null if this is an
+     *            unidentified producer
+     * @return TopicPublisher
+     * @throws JMSException
+     *             if the session fails to create a publisher due to some
+     *             internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid topic is specified.
+     */
+    public TopicPublisher createPublisher(Topic topic) throws JMSException {
+        checkClosed();
+        return new ActiveMQTopicPublisher(this, ActiveMQMessageTransformation.transformDestination(topic));
+    }
+
+    /**
+     * Unsubscribes a durable subscription that has been created by a client.
+     * <P>
+     * This method deletes the state being maintained on behalf of the
+     * subscriber by its provider.
+     * <P>
+     * It is erroneous for a client to delete a durable subscription while there
+     * is an active <CODE>MessageConsumer </CODE> or <CODE>TopicSubscriber</CODE>
+     * for the subscription, or while a consumed message is part of a pending
+     * transaction or has not been acknowledged in the session.
+     * 
+     * @param name
+     *            the name used to identify this subscription
+     * @throws JMSException
+     *             if the session fails to unsubscribe to the durable
+     *             subscription due to some internal error.
+     * @throws InvalidDestinationException
+     *             if an invalid subscription name is specified.
+     * @since 1.1
+     */
+    public void unsubscribe(String name) throws JMSException {
+        checkClosed();
+        connection.unsubscribe(name);
+    }
+
+    
+    public void dispatch(MessageDispatch messageDispatch) {
+        try {
+            executor.execute(messageDispatch);
+        } catch (InterruptedException e) {
+            connection.onAsyncException(e);
+        }
+    }
+    
+    
+    
+    /**
+     * Acknowledges all consumed messages of the session of this consumed
+     * message.
+     * <P>
+     * All consumed JMS messages support the <CODE>acknowledge</CODE> method
+     * for use when a client has specified that its JMS session's consumed
+     * messages are to be explicitly acknowledged. By invoking <CODE>acknowledge</CODE>
+     * on a consumed message, a client acknowledges all messages consumed by the
+     * session that the message was delivered to.
+     * <P>
+     * Calls to <CODE>acknowledge</CODE> are ignored for both transacted
+     * sessions and sessions specified to use implicit acknowledgement modes.
+     * <P>
+     * A client may individually acknowledge each message as it is consumed, or
+     * it may choose to acknowledge messages as an application-defined group
+     * (which is done by calling acknowledge on the last received message of the
+     * group, thereby acknowledging all messages consumed by the session.)
+     * <P>
+     * Messages that have been received but not acknowledged may be redelivered.
+     * 
+     * @param caller -
+     *            the message calling acknowledge on the session
+     * 
+     * @throws JMSException
+     *             if the JMS provider fails to acknowledge the messages due to
+     *             some internal error.
+     * @throws javax.jms.IllegalStateException
+     *             if this method is called on a closed session.
+     * @see javax.jms.Session#CLIENT_ACKNOWLEDGE
+     */
+    public void acknowledge() throws JMSException {
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            c.acknowledge();
+        }
+    }
+
+   
+    /**
+     * Add a message consumer.
+     * @param id 
+     * 
+     * @param consumer -
+     *            message consumer.
+     * @throws JMSException
+     */
+    protected void addConsumer(ActiveMQMessageConsumer consumer) throws JMSException {
+        this.consumers.add(consumer);
+        if (consumer.isDurableSubscriber()) {
+            stats.onCreateDurableSubscriber();
+        }
+        this.connection.addDispatcher(consumer.getConsumerId(), this);
+    }
+
+    /**
+     * Remove the message consumer.
+     * 
+     * @param consumer -
+     *            consumer to be removed.
+     * @throws JMSException
+     */
+    protected void removeConsumer(ActiveMQMessageConsumer consumer) {
+        this.connection.removeDispatcher(consumer.getConsumerId());
+        if (consumer.isDurableSubscriber()) {
+            stats.onRemoveDurableSubscriber();
+        }
+        this.consumers.remove(consumer);
+    }
+
+    /**
+     * Adds a message producer.
+     * 
+     * @param producer -
+     *            message producer to be added.
+     * @throws JMSException
+     */
+    protected void addProducer(ActiveMQMessageProducer producer) throws JMSException {
+        this.producers.add(producer);
+    }
+
+    /**
+     * Removes a message producer.
+     * 
+     * @param producer -
+     *            message producer to be removed.
+     * @throws JMSException
+     */
+    protected void removeProducer(ActiveMQMessageProducer producer) {
+        this.producers.remove(producer);
+    }
+
+    /**
+     * Start this Session.
+     * 
+     * @throws JMSException
+     */
+    protected void start() throws JMSException {
+        started.set(true);
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            c.start();
+        }
+        executor.start();
+    }
+
+    /**
+     * Stops this session.
+     * @throws JMSException 
+     */
+    protected void stop() throws JMSException {
+        
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            c.stop();
+        }
+
+        started.set(false);
+        executor.stop();
+    }
+
+    /**
+     * Returns the session id.
+     * 
+     * @return sessionId - session id.
+     */
+    protected SessionId getSessionId() {
+        return info.getSessionId();
+    }
+
+    /**
+     * Sends the message for dispatch by the broker.
+     * 
+     * @param producer -
+     *            message producer.
+     * @param destination -
+     *            message destination.
+     * @param message -
+     *            message to be sent.
+     * @param deliveryMode -
+     *            JMS messsage delivery mode.
+     * @param priority -
+     *            message priority.
+     * @param timeToLive -
+     *            message expiration.
+     * @param reuseMessageId -
+     *            true if the message id will be reused.
+     * @throws JMSException
+     */
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode,
+            int priority, long timeToLive) throws JMSException {
+        checkClosed();
+
+        if( destination.isTemporary() && connection.isDeleted(destination) ) {
+            throw new JMSException("Cannot publish to a deleted Destination: "+destination);
+        }
+
+        // tell the Broker we are about to start a new transaction
+        doStartTransaction();
+        TransactionId txid = transactionContext.getTransactionId();
+        
+        message.setJMSDestination(destination);
+        message.setJMSDeliveryMode(deliveryMode);        
+        long expiration = 0L;
+
+        if (!producer.getDisableMessageTimestamp()) {
+            long timeStamp = System.currentTimeMillis();
+            message.setJMSTimestamp(timeStamp);
+            if (timeToLive > 0) {
+                expiration = timeToLive + timeStamp;
+            }
+        }
+
+        message.setJMSExpiration(expiration);
+        message.setJMSPriority(priority);
+        long sequenceNumber = producer.getMessageSequence();
+        
+        message.setJMSRedelivered(false);        
+
+        // transform to our own message format here
+        ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message, connection);
+        // Set the message id.
+        if( msg == message ) {
+            msg.setMessageId( new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber) );
+        } else {
+            msg.setMessageId( new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber) );
+            message.setJMSMessageID(msg.getMessageId().toString());
+        }
+        
+        msg.setTransactionId(txid);
+
+        if ( connection.isCopyMessageOnSend() ){
+            msg = (ActiveMQMessage) msg.copy();
+        }        
+        msg.onSend();
+        msg.setProducerId(msg.getMessageId().getProducerId());
+
+        if (log.isDebugEnabled()) {
+            log.debug("Sending message: " + msg);
+        }
+
+        if(!msg.isPersistent() || connection.isUseAsyncSend() || txid!=null) {
+            this.connection.asyncSendPacket(msg);
+        } else {
+            this.connection.syncSendPacket(msg);
+        }
+
+    }
+
+    /**
+     * Send TransactionInfo to indicate transaction has started
+     * 
+     * @throws JMSException
+     *             if some internal error occurs
+     */
+    protected void doStartTransaction() throws JMSException {
+        if (getTransacted() && !transactionContext.isInXATransaction()) {
+            transactionContext.begin();
+        }
+    }
+
+    /**
+     * Checks whether the session has unconsumed messages.
+     * 
+     * @return true - if there are unconsumed messages.
+     */
+    public boolean hasUncomsumedMessages() {
+        return !executor.isEmpty();
+    }
+
+    /**
+     * Checks whether the session uses transactions.
+     * 
+     * @return true - if the session uses transactions.
+     */
+    public boolean isTransacted() {
+        return this.acknowledgementMode == Session.SESSION_TRANSACTED;
+    }
+
+    /**
+     * Checks whether the session used client acknowledgment.
+     * 
+     * @return true - if the session uses client acknowledgment.
+     */
+    protected boolean isClientAcknowledge() {
+        return this.acknowledgementMode == Session.CLIENT_ACKNOWLEDGE;
+    }
+    
+    /**
+     * Checks whether the session used auto acknowledgment.
+     * 
+     * @return true - if the session uses client acknowledgment.
+     */
+    public boolean isAutoAcknowledge() {
+        return acknowledgementMode==Session.AUTO_ACKNOWLEDGE;
+    }
+    
+    /**
+     * Checks whether the session used dup ok acknowledgment.
+     * 
+     * @return true - if the session uses client acknowledgment.
+     */
+    public boolean isDupsOkAcknowledge() {
+        return acknowledgementMode==Session.DUPS_OK_ACKNOWLEDGE;
+    }
+
+    /**
+     * Returns the message delivery listener.
+     * 
+     * @return deliveryListener - message delivery listener.
+     */
+    public DeliveryListener getDeliveryListener() {
+        return deliveryListener;
+    }
+
+    /**
+     * Sets the message delivery listener.
+     * 
+     * @param deliveryListener -
+     *            message delivery listener.
+     */
+    public void setDeliveryListener(DeliveryListener deliveryListener) {
+        this.deliveryListener = deliveryListener;
+    }
+
+    /**
+     * Returns the SessionInfo bean.
+     * 
+     * @return info - SessionInfo bean.
+     * @throws JMSException
+     */
+    protected SessionInfo getSessionInfo() throws JMSException {
+        SessionInfo info = new SessionInfo(connection.getConnectionInfo(), getSessionId().getSessionId());
+        return info;
+    }
+
+    /**
+     * Send the asynchronus command.
+     * 
+     * @param command -
+     *            command to be executed.
+     * @throws JMSException
+     */
+    public void asyncSendPacket(Command command) throws JMSException {
+        connection.asyncSendPacket(command);
+    }
+
+    /**
+     * Send the synchronus command.
+     * 
+     * @param command -
+     *            command to be executed.
+     * @return Response
+     * @throws JMSException
+     */
+    public Response syncSendPacket(Command command) throws JMSException {
+        return connection.syncSendPacket(command);
+    }
+
+    public long getNextDeliveryId() {
+        return deliveryIdGenerator.getNextSequenceId();
+    }
+
+    public void redispatch(MessageDispatchChannel unconsumedMessages) throws JMSException {
+        
+        List c = unconsumedMessages.removeAll();
+        Collections.reverse(c);
+        
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            MessageDispatch md = (MessageDispatch) iter.next();
+            executor.executeFirst(md);
+        }
+                
+    }
+
+    public boolean isRunning() {
+        return started.get();
+    }
+
+    public boolean isAsyncDispatch() {
+        return asyncDispatch;
+    }
+
+    public void setAsyncDispatch(boolean asyncDispatch) {
+        this.asyncDispatch = asyncDispatch;
+    }
+
+	public List getUnconsumedMessages() {
+		return executor.getUnconsumedMessages();
+	}
+
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://activemq.org/config/1.0">
+
+  <broker brokerName="brokerXmlConfigHelper" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:61638"/>
+    </transportConnectors>
+  </broker>
+
+</beans>

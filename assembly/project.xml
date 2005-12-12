@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE project>
+<project>
+  <pomVersion>3</pomVersion>
+  <extend>${basedir}/../etc/project.xml</extend>
+  <name>ActiveMQ :: Assembly</name>
+  <id>activemq</id>
+  <shortDescription>ActiveMQ Assembly</shortDescription>
+  <description>ActiveMQ Assembly creates an ActiveMQ distribution</description>
+
+  <!-- ============ -->
+  <!-- Dependencies -->
+  <!-- ============ -->
+  <dependencies>
+
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>${pom.currentVersion}</version>
+        <properties>
+          <activemq.module>true</activemq.module>
+          <lib>true</lib>
+        </properties>
+      </dependency>
+
+      <!--
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>activemq-optional</artifactId>
+        <version>${pom.currentVersion}</version>
+        <properties>
+          <activemq.module>true</activemq.module>
+          <optional>true</optional>
+        </properties>
+      </dependency>
+      -->
+
+      <dependency>
+        <groupId>activeio</groupId>
+        <artifactId>activeio</artifactId>
+        <version>${activeio_version}</version>
+        <properties>
+          <activemq.module>true</activemq.module>
+          <lib>true</lib>
+        </properties>
+      </dependency>
+
+
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>activemq-core-test</artifactId>
+      <version>${pom.currentVersion}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>activemq-ra</artifactId>
+      <version>${pom.currentVersion}</version>
+      <type>rar</type>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <!--
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>activemq-web</artifactId>
+      <version>${pom.currentVersion}</version>
+      <type>jar</type>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+    -->
+
+    <!-- used by the WS module -->
+    <dependency>
+      <groupId>activesoap</groupId>
+      <artifactId>activesoap</artifactId>
+      <version>${activesoap_version}</version>
+      <type>jar</type>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <!-- used to support optional transport configuration via URI query strings -->
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>${commons_beanutils_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+        <rar.bundle>true</rar.bundle>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>${commons_collections_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+        <rar.bundle>true</rar.bundle>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>${commons_httpclient_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+
+    <!-- web container -->
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>${servlet_api_version}</version>
+    </dependency>
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty</artifactId>
+      <version>${jetty_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>jrms</groupId>
+      <artifactId>jrms</artifactId>
+      <version>${jrms_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>${xstream_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>xmlpull</groupId>
+      <artifactId>xmlpull</artifactId>
+      <version>${xmlpull_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>jmdns</artifactId>
+      <version>${jmdns_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>activecluster</groupId>
+      <artifactId>activecluster</artifactId>
+      <version>${activecluster_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+       <groupId>xbean</groupId>
+       <artifactId>xbean-spring</artifactId>
+       <version>${xbean_spring_version}</version>
+       <url>http://www.gbean.org</url>
+       <properties>
+         <optional>true</optional>
+       </properties>
+    </dependency>
+
+    <dependency>
+      <id>springframework</id>
+      <artifactId>spring</artifactId>
+      <version>${spring_version}</version>
+      <url>http://www.springframework.org</url>
+      <properties>
+         <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <!-- To create Pooled DataSources for the JDBC message store -->
+    <dependency>
+      <groupId>commons-dbcp</groupId>
+      <artifactId>commons-dbcp</artifactId>
+      <version>${commons_dbcp_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
+      <version>${commons_pool_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <!-- Derby DB used for testing JDBC message store -->
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>${derby_version}</version>
+      <properties>
+        <activemq.module>true</activemq.module>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbynet</artifactId>
+      <version>${derbynet_version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>${xercesImpl_version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xmlParserAPIs</artifactId>
+      <version>${xercesImpl_version}</version>
+    </dependency>
+
+    <!-- to create a web server to test out the web stuff -->
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-jsp</artifactId>
+      <version>${geronimo_spec_jsp_version}</version>
+      <properties>
+        <war.bundle>false</war.bundle>
+        <!-- <eclipse.dependency>true</eclipse.dependency> -->
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-j2ee-connector</artifactId>
+      <version>${geronimo_spec_j2ee_connector_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
+
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j</artifactId>
+        <version>${mx4j_version}</version>
+        <properties>
+            <lib>true</lib>
+        </properties>
+    </dependency>
+
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-remote</artifactId>
+        <version>${mx4j_remote_version}</version>
+        <properties>
+            <optional>true</optional>
+        </properties>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+    <sourceDirectory>src/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+
+    <integrationUnitTestSourceDirectory/>
+    <aspectSourceDirectory/>
+
+    <unitTest>
+      <resources>
+        <resource>
+          <directory>src/test</directory>
+          <includes>
+            <include>**/*.properties</include>
+            <include>**/*.xml</include>
+          </includes>
+        </resource>
+      </resources>
+      <includes>
+        <include>**/*Test.*</include>
+      </includes>
+      <excludes>
+
+
+          <!-- This test currently fails [boxes: jafar], [jira: AMQ-228] -->
+          <!-- Temporarily enable this test
+          <exclude>**/SubscribeClosePublishThenConsumeTest.*</exclude>
+          -->
+          
+          <exclude>**/DurableConsumerCloseAndReconnectTest.*</exclude>
+          <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
+          <exclude>**/ChangeSessionDeliveryModeTest.*</exclude>
+          <exclude>**/DeadLetterTest.*</exclude>
+      </excludes>
+    </unitTest>
+
+    <resources>
+      <resource>
+        <directory>src/resources</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+
+</project>
+

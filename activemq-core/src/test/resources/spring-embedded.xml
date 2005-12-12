@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- START SNIPPET: spring -->
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+    <bean id="brokerContainer" class="org.activemq.xbean.BrokerFactoryBean">
+      <property name="config" value="classpath:activemq.xml"/>
+    </bean>
+
+    <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
+    <bean id="jmsFactory" class="org.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="vm://localhost" />
+        <property name="useEmbeddedBroker">
+            <value>true</value>
+        </property>
+    </bean>
+
+    <!-- Spring JMS Template -->
+    <bean id="myJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory">
+            <!-- lets wrap in a pool to avoid creating a connection per send -->
+            <bean class="org.springframework.jms.connection.SingleConnectionFactory">
+                <property name="targetConnectionFactory">
+                    <ref local="jmsFactory"/>
+                </property>
+            </bean>
+        </property>
+    </bean>
+
+    <!-- a sample POJO which uses a Spring JmsTemplate -->
+    <bean id="producer" class="org.activemq.spring.SpringProducer">
+        <property name="template">
+            <ref bean="myJmsTemplate"></ref>
+        </property>
+
+        <property name="destination">
+            <ref bean="destination"/>
+        </property>
+
+        <property name="messageCount">
+            <value>10</value>
+        </property>
+    </bean>
+
+
+    <!-- a sample POJO consumer -->
+    <bean id="consumer" class="org.activemq.spring.SpringConsumer">
+        <property name="template">
+            <ref bean="myJmsTemplate"></ref>
+        </property>
+
+        <property name="destination">
+            <ref bean="destination"/>
+        </property>
+    </bean>
+
+    <bean id="destination" class="org.activemq.command.ActiveMQQueue" autowire="constructor">
+        <constructor-arg>
+            <value>org.activemq.spring.Test.spring.embedded</value>
+        </constructor-arg>
+    </bean>
+</beans>
+
+<!-- END SNIPPET: spring -->

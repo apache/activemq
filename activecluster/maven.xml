@@ -1,0 +1,63 @@
+<project default="default" xmlns:j="jelly:core">
+
+  <goal name="default" prereqs="clean, test"/>
+
+  <goal name="dc">
+    <attain>
+      <attainGoal name="clean"/>
+      <attainGoal name="site:deploy"/>
+      <j:set var="maven.test.skip" value="true"/>
+      <attainGoal name="jar:deploy"/>
+      <attainGoal name="dist:deploy"/>
+    </attain>
+  </goal>
+
+  <preGoal name="site:deploy">
+    <attainGoal name="javadoc"/>
+    <attainGoal name="java:compile"/>
+    <attainGoal name="clover"/>
+  </preGoal>
+
+  <goal name="setclasspath" prereqs="java:compile, test:compile">
+    <path id="test.classpath">
+      <pathelement path="${maven.build.dest}"/>
+      <pathelement path="target/classes"/>
+      <pathelement path="target/test-classes"/>
+      <path refid="maven.dependency.classpath"/>
+    </path>
+  </goal>
+
+  <!-- Sample programs  -->
+  <goal name="demo:A" prereqs="setclasspath"
+    description="Runs the simple ActiveCluster Demo">
+    <echo>Running the ActiveCluster demo...</echo>
+    <java classname="org.activecluster.ClusterDemo" fork="true">
+      <classpath refid="test.classpath"/>
+      <sysproperty key="org.apache.commons.logging.simplelog.defaultlog" value="debug"/>
+      <arg value="A"/>
+    </java>
+  </goal>
+
+  <goal name="demo:B" prereqs="setclasspath"
+    description="Runs the simple ActiveCluster Demo">
+    <echo>Running the ActiveCluster demo...</echo>
+    <java classname="org.activecluster.ClusterDemo" fork="true">
+      <classpath refid="test.classpath"/>
+      <arg value="B"/>
+    </java>
+  </goal>
+
+
+  <!--
+  Uses keyboard input so can't be run in Maven
+  
+  <goal name="chat" prereqs="setclasspath"
+    description="Runs the ActiveCluster Chat Demo">
+    <echo>Running the ActiveCluster Chat demo...</echo>
+    <java classname="org.activecluster.ChatDemo" fork="true">
+      <classpath refid="test.classpath"/>
+    </java>
+  </goal>
+  -->
+
+</project>

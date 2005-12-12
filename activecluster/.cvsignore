@@ -1,0 +1,10 @@
+target
+bin
+*.log
+junit*.properties
+activecluster.iml
+activecluster.ipr
+activecluster.iws
+ActiveMQ
+classes
+test-classes

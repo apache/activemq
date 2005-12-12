@@ -1,0 +1,49 @@
+
+
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0">
+
+  <broker useJmx="true">
+
+	<!-- In ActiveMQ 4, you can setup destination policies. note: this xml format may still change a bit -->
+    <destinationPolicy>
+      <policyMap><policyEntries>
+
+          <policyEntry topic="FOO.>">
+            <dispatchPolicy>
+              <strictOrderDispatchPolicy />
+            </dispatchPolicy>
+            <subscriptionRecoveryPolicy>
+              <lastImageSubscriptionRecoveryPolicy />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+
+      </policyEntries></policyMap>
+    </destinationPolicy>
+
+
+    <persistenceAdapter>
+      <journaledJDBC journalLogFiles="5" dataDirectory="../data"/>
+      <!-- To use a different datasource, use th following syntax : -->
+      <!--
+      <journaledJDBC journalLogFiles="5" dataDirectory="../data" dataSource="#postgres-ds"/>
+       -->
+    </persistenceAdapter>
+
+    <transportConnectors>
+      <!-- prefixing a connector with discovery: causes the connector to be advertiesed over rendezvous -->
+      <transportConnector uri="discovery:tcp://localhost:61616"/>
+    </transportConnectors>
+
+    <networkConnectors>
+      <!-- by default just auto discover the other brokers -->
+      <networkConnector uri="multicast"/>
+      <!--
+      <networkConnector uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
+      -->
+    </networkConnectors>
+
+  </broker>
+
+
+</beans>

@@ -1,0 +1,109 @@
+<model>
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>activemq</groupId>
+    <artifactId>activemq</artifactId>
+    <version>4.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>activemq-jaas</artifactId>
+  <packaging>jar</packaging>
+  <name>ActiveMQ JAAS Login Modules</name>
+
+  <dependencies>
+  
+    <dependency>
+      <groupId>activeio</groupId>
+      <artifactId>activeio</artifactId>
+    </dependency>
+    
+      
+    <dependency>
+      <groupId>backport-util-concurrent</groupId>
+      <artifactId>backport-util-concurrent</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+      
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>axion</groupId>
+      <artifactId>axion</artifactId>
+    </dependency>
+
+
+        <dependency>
+            <groupId>directory</groupId>
+            <artifactId>apacheds-core</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>directory</groupId>
+            <artifactId>apacheds-shared</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>directory-shared</groupId>
+            <artifactId>apache-ldapber-provider</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>directory-shared</groupId>
+            <artifactId>ldap-common</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>directory-asn1</groupId>
+            <artifactId>asn1-codec</artifactId>
+            <version>0.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>directory-asn1</groupId>
+            <artifactId>asn1-ber</artifactId>
+            <version>0.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>directory-asn1</groupId>
+            <artifactId>asn1-der</artifactId>
+            <version>0.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-shared</groupId>
+            <artifactId>kerberos-common</artifactId>
+            <version>0.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-network</groupId>
+            <artifactId>mina</artifactId>
+            <version>0.7.3</version>
+        </dependency>
+        <dependency>
+            <groupId>directory-protocols</groupId>
+            <artifactId>kerberos-protocol</artifactId>
+            <version>0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>directory-protocols</groupId>
+            <artifactId>ldap-protocol</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+
+  </dependencies>
+
+</model>
