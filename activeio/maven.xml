@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant">
+    <goal name="default">
+        <attainGoal name="jar:install"/>
+    </goal>
+
+    <goal name="idl:compile">
+
+    <ant:taskdef name="java2idl" classname="org.openorb.compiler.taskdefs.Java2Idl">
+            <ant:classpath refid="maven.dependency.classpath"/>
+        </ant:taskdef>
+        <ant:taskdef name="idl2java" classname="org.openorb.compiler.taskdefs.Idl2Java">
+            <ant:classpath refid="maven.dependency.classpath"/>
+        </ant:taskdef>  
+
+    <j:set var="targetdir" value="${basedir}/target/test-iiop"/>
+    <ant:mkdir dir="${targetdir}"/>
+
+        <idl2java cachefile="${targetdir}/java2idl.cache"
+              includepath="${basedir}/target/test-classes"
+              destdir="${basedir}/src/test"
+              srcdir="${basedir}/target/test-classes"
+              includeorbidl="false">
+          <include name="org/activeio/oneport/TestIIOPServer.idl" />
+        </idl2java>
+
+    <!--
+    <ant:java2idl cachefile="${targetdir}/java2idl.cache"
+        includes="org/activeio/oneport/TestIIOPServerImpl.class"
+        destdir="${basedir}/src/test"
+              generateidl="false"
+              generatestub="true"
+              generatetie="true">
+          <ant:src path="${basedir}/target/test-classes"/>
+        </ant:java2idl>
+    -->
+
+    </goal>
+
+    <preGoal name="test:test">
+        <j:choose>
+            <j:when test="${context.getVariable('os.name').startsWith('Windows')}">
+                <ant:copy todir=".">
+            <ant:fileset dir="${maven.repo.local}/ibmaio/libs/win32" includes="*.dll"/>
+            </ant:copy>
+            </j:when>
+            <j:when test="${context.getVariable('os.name').startsWith('Linux') and context.getVariable('os.version').startsWith('2.6.')}">
+                <ant:copy todir=".">
+            <ant:fileset dir="${maven.repo.local}/ibmaio/libs/linux32" includes="*.so"/>
+            </ant:copy>
+        <j:set var="maven.junit.jvmargs" value="${maven.junit.jvmargs} -Djava.library.path=."/>
+            </j:when>
+            <j:otherwise>
+        <echo>Diabling IBM AIO tests since your platform (${context.getVariable('os.name')} ${context.getVariable('os.version')}) is not recognized</echo>
+        <j:set var="maven.junit.jvmargs" value="${maven.junit.jvmargs} -Ddisable.aio.tests=true"/>
+            </j:otherwise>
+        </j:choose>
+    </preGoal>
+    
+    <goal name="setclasspath">
+      <path id="test.classpath">
+        <pathelement path="${maven.build.dest}"/>
+        <pathelement path="target/classes"/>
+        <pathelement path="target/test-classes"/>
+        <path refid="maven.dependency.classpath"/>
+      </path>
+    </goal>
+
+    <goal name="benchmark:client" prereqs="setclasspath"
+      description="Runs the benchmark client load simulator">
+  
+      <j:if test="${empty(url)}">
+        <j:set var="url" value="socket://localhost:3434"/>
+      </j:if>
+  
+      <echo>Running the benchmark client load simulator</echo>
+      <java classname="org.activeio.net.benchmark.ClientLoadSimulator" fork="yes" maxmemory="100M">
+        <classpath refid="test.classpath"/>
+        <sysproperty key="org.activeio.net.nio.BufferSize" value="10240"/>
+  
+        <arg value="-url"/>
+        <arg value="${url}"/>
+  
+        <j:if test="${!empty(concurrentClients)}">
+          <arg value="-concurrentClients"/>
+          <arg value="${concurrentClients}"/>
+        </j:if>
+        <j:if test="${!empty(rampUpTime)}">
+          <arg value="-rampUpTime"/>
+          <arg value="${rampUpTime}"/>
+        </j:if>
+        <j:if test="${!empty(requestDelay)}">
+          <arg value="-requestDelay"/>
+          <arg value="${requestDelay}"/>
+        </j:if>
+        <j:if test="${!empty(requestIterations)}">
+          <arg value="-requestIterations"/>
+          <arg value="${requestIterations}"/>
+        </j:if>
+        <j:if test="${!empty(requestSize)}">
+          <arg value="-requestSize"/>
+          <arg value="${requestSize}"/>
+        </j:if>
+        <j:if test="${!empty(sampleInterval)}">
+          <arg value="-sampleInterval"/>
+          <arg value="${sampleInterval}"/>
+        </j:if>
+  
+      </java>
+  
+    </goal>
+  
+    <goal name="benchmark:server" prereqs="setclasspath"
+      description="Runs the benchmark server">
+  
+      <j:if test="${empty(url)}">
+        <j:set var="url" value="socket://localhost:3434"/>
+      </j:if>
+  
+      <echo>Running the benchmark server</echo>
+      <java classname="org.activeio.net.benchmark.Server" fork="yes" maxmemory="100M">
+        <classpath refid="test.classpath"/>
+
+        <arg value="-url"/>
+        <arg value="${url}"/>
+  
+        <j:if test="${!empty(requestDelay)}">
+          <arg value="-requestDelay"/>
+          <arg value="${requestDelay}"/>
+        </j:if>
+        <j:if test="${!empty(sampleInterval)}">
+          <arg value="-sampleInterval"/>
+          <arg value="${sampleInterval}"/>
+        </j:if>
+  
+      </java>
+  
+    </goal>
+  
+  </project>

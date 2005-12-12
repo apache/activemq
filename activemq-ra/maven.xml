@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- $Revision$ $Date$ -->
+<project default="default">
+  <goal name="default" prereqs="rar:install" />
+
+  <postGoal name="clean">
+    <delete dir="${basedir}/activemq-data" />
+  </postGoal>
+  
+  <preGoal name="rar:rar">
+    <attainGoal name="jar:install" />
+  </preGoal>
+
+  <preGoal name="rar:deploy">
+    <attainGoal name="jar:deploy" />
+  </preGoal>
+
+  <postGoal name="java:compile">
+    <attainGoal name="xbean:generate" />
+  </postGoal>
+
+
+  <goal name="xbean:generate" description="Generates the XBean XSD, documentation and META-INF/services files.">
+    <path id="test.classpath">
+      <pathelement path="${maven.build.dest}" />
+      <pathelement path="target/classes" />
+      <pathelement path="target/test-classes" />
+      <path refid="maven.dependency.classpath" />
+    </path>
+
+    <taskdef name="xsdGenerate" classname="org.xbean.spring.generator.MappingGeneratorTask">
+      <classpath refid="test.classpath" />
+    </taskdef>
+    <xsdGenerate destFile="target/activemq-ra.xsd" namespace="http://activemq.org/ra/config/1.0" classpathref="test.classpath" srcdir="src/main/java" />
+  </goal>
+</project>

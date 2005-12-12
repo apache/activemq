@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
+<!-- START SNIPPET: example -->
+<beans>
+
+  <broker name="receiver">
+    <connector>
+      <tcpServerTransport uri="tcp://localhost:62002"/>
+    </connector>
+
+    <networkConnector>
+      <networkChannel uri="reliable:tcp://localhost:62001"/>
+    </networkConnector>
+
+    <persistence>
+      <vmPersistence/>
+    </persistence>
+  </broker>
+
+</beans>
+<!-- END SNIPPET: example -->

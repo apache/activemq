@@ -1,0 +1,21 @@
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0">
+
+  <broker useJmx="false">
+  
+    <persistenceAdapter>
+      <journaledJDBC journalLogFiles="5" dataDirectory="foo"/>
+    </persistenceAdapter>
+  
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:0" discoveryUri="rendezvous://default"/>
+    </transportConnectors>
+    
+    <networkConnectors>
+      <networkConnector uri="rendezvous://default"/>
+    </networkConnectors>
+    
+  </broker>
+  
+</beans>
+<!-- END SNIPPET: xbean -->

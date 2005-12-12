@@ -1,0 +1,7 @@
+<project default="default" xmlns:j="jelly:core">
+
+  <goal name="default" prereqs="clean, test"/>
+
+  <goal name="java:compile"/>
+
+</project>

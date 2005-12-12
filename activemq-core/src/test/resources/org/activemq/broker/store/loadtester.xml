@@ -1,0 +1,35 @@
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0">
+
+  <usageManager id="memory-manager" limit="1048576"/> <!--  1 meg limit -->
+  
+  <broker useJmx="true" deleteAllMessagesOnStartup="true" memoryManager="#memory-manager">
+  
+    <persistenceAdapter>
+      <journaledJDBC 
+      useQuickJournal="false"
+      memManager="#memory-manager" journalLogFiles="2" dataDirectory="loadtest"/>
+    </persistenceAdapter>
+  
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:0"/>
+    </transportConnectors>
+        
+  </broker>
+  
+  <!-- The Derby Datasource that will be used by the Broker -->
+  <!-- 
+  <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource" destroy-method="close">
+    <property name="serverName" value="localhost"/>
+    <property name="databaseName" value="activemq"/>
+    <property name="portNumber" value="0"/>
+    <property name="user" value="activemq"/>
+    <property name="password" value="activemq"/>
+    <property name="dataSourceName" value="postgres"/>
+    <property name="initialConnections" value="1"/>
+    <property name="maxConnections" value="10"/>
+  </bean>
+  -->
+   
+</beans>
+<!-- END SNIPPET: xbean -->

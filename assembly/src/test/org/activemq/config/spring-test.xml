@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+  <bean id="wireFormat" class="org.activemq.io.impl.DefaultWireFormat"/>
+
+  <bean id="transport" factory-method="newInstance" class="org.activemq.transport.TransportServerChannelProvider">
+    <constructor-arg index="0">
+      <bean class="org.activemq.io.impl.DefaultWireFormat"/>
+      <!---
+      <ref bean="wireFormat"/>
+    -->
+    </constructor-arg>
+    <constructor-arg index="1">
+      <value>vm://localhost</value>
+    </constructor-arg>
+  </bean>
+
+</beans>

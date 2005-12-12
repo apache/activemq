@@ -1,0 +1,152 @@
+<project name="Inbox" default="help" basedir=".">
+
+  <property name="class.dir" value="target/classes"/>
+
+  <!-- example program defaults -->
+  <property name="url" value="tcp://localhost:61616"/>
+  <property name="topic" value="false"/>
+  <property name="subject" value="TEST.FOO"/>
+  <property name="durable" value="false"/>
+  <property name="max" value="10"/>
+  <property name="messageSize" value="1000"/>
+  <property name="clientId" value="consumer1"/>
+  <property name="producerClientId" value="null"/>
+  <property name="timeToLive" value="0"/>
+  <property name="sleepTime" value="0"/>
+  <property name="transacted" value="false"/>
+
+  <!-- for WAR -->
+  <property name="app.name" value="activemq-web"/>
+  <property name="app.base.dir" location="target/${app.name}"/>
+  <property name="app.webinf.dir" value="${app.base.dir}/WEB-INF"/>
+  <property name="app.classes.dir" value="${app.webinf.dir}/classes"/>
+  <property name="app.lib.dir" value="${app.webinf.dir}/lib"/>
+  <property name="app.src.dir" value="src"/>
+  <property name="app.conf.dir" value="conf"/>
+  <property name="app.dist.dir" value="target"/>
+
+
+  <target name="help">
+    <echo>
+		This script requires Ant 1.6 or higher
+
+		usage:
+		   ant -help		display ant help screen
+		   ant help			display this message
+		   ant clean		delete the built directory
+
+		   ant consumer creates a consumer which waits until a specific number of messages have been received
+		   ant producer creates a producer publishing a number of messages
+
+       ant war      creates a WAR deployment unit of the ActiveMQ Broker
+    </echo>
+  </target>
+
+  <target name="clean">
+    <delete dir="target" quiet="true"/>
+    <delete dir="${class.dir}" quiet="true"/>
+  </target>
+
+  <target name="init">
+    <mkdir dir="${class.dir}"/>
+    <mkdir dir="src/ddl"/>
+
+    <path id="javac.classpath">
+      <pathelement path="${class.dir}"/>
+      <fileset dir="../lib">
+        <include name="**/*.jar"/>
+      </fileset>
+    </path>
+  </target>
+
+
+  <target name="compile" depends="init" description="Compile all Java">
+    <javac srcdir="src" destdir="${class.dir}">
+      <classpath refid="javac.classpath"/>
+    </javac>
+    <copy todir="${class.dir}">
+      <fileset dir="src">
+        <include name="**/*.properties"/>
+        <include name="**/*.xml"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="war" depends="compile" description="Create the activemq broker war file.">
+    <!--Copy the required jar files-->
+    <copy todir="${app.lib.dir}">
+      <fileset dir="../lib">
+        <include name="*.jar"/>
+        <exclude name="servlet.jar"/>
+      </fileset>
+
+      <fileset dir="../lib/optional">
+        <include name="activemq-web*.jar"/>
+        <include name="activemq-container*.jar"/>
+        <include name="commons-bean*.jar"/>
+
+        <!-- include Apache Derby for persistence -->
+        <include name="derby*.jar"/>
+
+        <!-- include database pooling just in case -->
+        <include name="commons-pool*.jar"/>
+        <include name="commons-db*.jar"/>
+      </fileset>
+    </copy>
+    <!--Copy the configuration file-->
+    <copy todir="${app.webinf.dir}">
+      <fileset dir="${app.conf.dir}">
+        <!--Web application configuration file-->
+        <include name="web.xml"/>
+        <!--ActiveMQ configuration file-->
+        <include name="activemq.xml"/>
+      </fileset>
+    </copy>
+    <copy todir="${app.classes.dir}">
+      <fileset dir="${app.conf.dir}">
+        <!--Log4j configuration file-->
+        <include name="log4j.properties"/>
+      </fileset>
+    </copy>
+    <!-- Create the war file -->
+    <jar jarfile="${app.dist.dir}/${app.name}.war"
+      basedir="${app.base.dir}"/>
+  </target>
+
+  <target name="consumer" depends="compile" description="Runs a simple consumer">
+
+    <echo>Running consumer against server at $$url = ${url} for subject $$subject = ${subject}</echo>
+    <java classname="ConsumerTool" fork="yes" maxmemory="100M">
+      <classpath refid="javac.classpath"/>
+      <jvmarg value="-server"/>
+      <arg value="${url}"/>
+      <arg value="${topic}"/>
+      <arg value="${subject}"/>
+      <arg value="${durable}"/>
+      <arg value="${max}"/>
+      <arg value="${clientId}"/>
+      <arg value="${transacted}"/>    	
+      <arg value="${sleepTime}"/>    	    	
+    </java>
+  </target>
+
+  <target name="producer" depends="compile" description="Runs a simple producer">
+
+    <echo>Running producer against server at $$url = ${url} for subject $$subject = ${subject}</echo>
+    <java classname="ProducerTool" fork="yes" maxmemory="100M">
+      <classpath refid="javac.classpath"/>
+      <jvmarg value="-server"/>
+      <arg value="${url}"/>
+      <arg value="${topic}"/>
+      <arg value="${subject}"/>
+      <arg value="${durable}"/>
+      <arg value="${max}"/>
+      <arg value="${messageSize}"/>
+      <arg value="${producerClientId}"/>
+      <arg value="${timeToLive}"/>
+      <arg value="${sleepTime}"/>
+      <arg value="${transacted}"/>    	
+    </java>
+  </target>
+
+</project>

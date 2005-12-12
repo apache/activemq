@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>Getting Started</title>
+
+</head>
+<body>
+<h1>Getting Started<br>
+</h1>
+
+<p>
+Welcome to <a href="activemq.com">ActiveMQ</a>. This document gives you a quick overview of how to get started trying out ActiveMQ.
+</p>
+
+<h2>Running the broker</h2>
+
+<p>
+From the binary distribution you can run the ActiveMQ server pretty easily via the bin/activemq command.
+e.g. from a shell type
+</p>
+<pre>
+    cd bin
+    activemq
+</pre>
+
+<p>
+The ActiveMQ broker should now have started
+</p>
+
+<h2>Running the example programs</h2>
+
+<p>
+To run the demo producer/consumer tools, you need Java and Ant installed.
+</p>
+
+<h3>Installing Ant</h3>
+
+
+<p>
+The example programs depend on <a href="http://ant.apache.org/">Ant</a> being installed. There are more detailed
+instructions on the Ant website - but essentially you need to follow these steps.
+</p>
+<ul>
+<li>
+JAVA_HOME must point to your JDK installation, such that $JAVA_HOME/bin contains the java executable and $JAVA_HOME/lib contains some jar files.
+</li>
+<li>
+ANT_HOME must point to where you installed Apache Ant (http://ant.apache.org)
+</li>
+<li>
+then you need to add $JAVA_HOME/bin and $ANT_HOME/bin to your PATH variable.
+</li>
+</ul>
+
+<p>
+To test this is all working, try typing
+</p>
+
+<pre>
+    java -version
+    cd example
+    ant -version
+</pre>
+
+<h3>Running the example producer and consumer</h3>
+
+<p>
+Once you've got Java and Ant installed correctly you should be able to run
+</p>
+
+<pre>
+    cd example
+    ant consumer
+</pre>
+
+<p>
+and in another shell
+</p>
+
+<pre>
+    cd example
+    ant producer
+</pre>
+
+<p>
+you can specify exact URLs to connect to via command like arguments. e.g.
+</p>
+
+<pre>
+    ant producer -Durl=tcp://somehost:port
+</pre>
+
+</body>
+</html>
+
+

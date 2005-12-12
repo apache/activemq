@@ -1,0 +1,131 @@
+/**
+ * <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a>
+ *
+ * Copyright 2005 (C) LogicBlaze, Inc. http://www.logicblaze.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ **/
+package org.activemq.xbean;
+
+import org.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.io.Resource;
+import org.xbean.spring.context.ResourceXmlApplicationContext;
+import org.xbean.spring.context.impl.URIEditor;
+
+import java.beans.PropertyEditorManager;
+import java.net.URI;
+
+/**
+ * A Spring {@link FactoryBean} which creates an embedded broker inside a Spring
+ * XML using an external <a href="http://gbean.org/Custom+XML">XBean Spring XML
+ * configuration file</a> which provides a much neater and more concise XML
+ * format.
+ * 
+ * @version $Revision: 1.1 $
+ */
+public class BrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
+    private static final Log log = LogFactory.getLog(BrokerFactoryBean.class);
+
+    static {
+        PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
+    }
+
+    private Resource config;
+    private XBeanBrokerService broker;
+    private boolean start=false;
+
+    public BrokerFactoryBean() {
+    }
+
+    public BrokerFactoryBean(Resource config) {
+        this.config = config;
+    }
+
+    public Object getObject() throws Exception {
+        return broker;
+    }
+
+    public Class getObjectType() {
+        return BrokerService.class;
+    }
+
+    public boolean isSingleton() {
+        return true;
+    }
+
+    public void afterPropertiesSet() throws Exception {
+        if (config == null) {
+            throw new IllegalArgumentException("config property must be set");
+        }
+        ResourceXmlApplicationContext context = new ResourceXmlApplicationContext(config);
+
+        try {
+            broker = (XBeanBrokerService) context.getBean("broker");
+        }
+        catch (BeansException e) {
+            log.trace("No bean named broker available: " + e, e);
+        }
+        if (broker == null) {
+            // lets try find by type
+            String[] names = context.getBeanNamesForType(BrokerService.class);
+            for (int i = 0; i < names.length; i++) {
+                String name = names[i];
+                broker = (XBeanBrokerService) context.getBean(name);
+                if (broker != null) {
+                    break;
+                }
+            }
+        }
+        if (broker == null) {
+            throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
+        }
+        broker.setAbstractApplicationContext(context);
+        if( start )
+            broker.start();
+    }
+
+    public void destroy() throws Exception {
+        if (broker != null) {
+            broker.stop();
+        }
+    }
+
+    public Resource getConfig() {
+        return config;
+    }
+
+    public void setConfig(Resource config) {
+        this.config = config;
+    }
+
+    public BrokerService getBroker() {
+        return broker;
+    }
+
+    public boolean isStart() {
+        return start;
+    }
+
+    public void setStart(boolean start) {
+        this.start = start;
+    }
+    
+    
+}

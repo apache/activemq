@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 7.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActiveMQ", "ActiveMQ.csproj", "{8B07A13A-8E84-48F9-A0FE-12715CC4C842}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{8B07A13A-8E84-48F9-A0FE-12715CC4C842}.Debug.ActiveCfg = Debug|.NET
+		{8B07A13A-8E84-48F9-A0FE-12715CC4C842}.Debug.Build.0 = Debug|.NET
+		{8B07A13A-8E84-48F9-A0FE-12715CC4C842}.Release.ActiveCfg = Release|.NET
+		{8B07A13A-8E84-48F9-A0FE-12715CC4C842}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

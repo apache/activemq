@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2004 The Apache Software Foundation
+    Copyright 2004 Hiram Chirino
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project default="default"
+    xmlns:j="jelly:core"
+    xmlns:u="jelly:util"
+    xmlns:ant="jelly:ant"
+    >
+
+    <!-- ==================== -->
+    <!-- Default Global Goals -->
+    <!-- ==================== -->
+
+    <goal name="default">
+        <attainGoal name="jar:install"/>
+    </goal>
+
+    <goal name="rebuild">
+        <attainGoal name="clean"/>
+        <attainGoal name="jar:install"/>
+    </goal>
+
+    <preGoal name="jar:jar">
+
+	<ant:mkdir dir="${maven.build.dir}/timestamps"/>
+	<!-- Unpack all the composite ActiveMQ modules into the classes dir -->
+        <j:forEach var="artifact" items="${pom.artifacts}">
+            <j:set var="dependency" value="${artifact.dependency}"/>
+            <j:if test="${dependency.getProperty('activemq.module') == 'true'}">
+                <u:file var="file" name="${artifact.path}"/>
+                <j:if test="${file.exists()}" >
+		   <j:set var="uptodateFile" value="${maven.build.dir}/timestamps/${artifact.name}.ts"/>
+                   <j:set var="uptodatePropName" value="tests.uptodate"/>
+                   <j:remove var="${uptodatePropName}"/>
+		   <ant:uptodate property="${uptodatePropName}" targetfile="${uptodateFile}" srcfile="${artifact.path}"/>
+                   <j:if test="${context.getVariable(uptodatePropName) != 'true'}">
+	             <unjar dest="${maven.build.dir}/classes" src="${artifact.path}"/>       
+		     <touch file="${uptodateFile}"/>
+                   </j:if>		   
+
+       		</j:if>       
+            </j:if>
+        </j:forEach>
+
+	<!--
+        <j:set var="maven.build.dest" value="${basedir}/target/${pom.groupId}-${pom.currentVersion}"/>
+        -->
+
+    </preGoal>
+
+</project>

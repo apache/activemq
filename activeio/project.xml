@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<!--
+ *  Copyright 2004 Hiram Chirino
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ -->
+<project>
+
+    <pomVersion>3</pomVersion>
+    <id>activeio</id>
+    <name>ActiveIO</name>
+    <currentVersion>2.2-SNAPSHOT</currentVersion>
+    <organization>
+        <name>The ActiveIO Project</name>
+        <url>http://activeio.org</url>
+        <logo>http://activeio.org/activeio-logo.png</logo>
+    </organization>
+
+    <package>org.activeio</package>
+    <packageGroups>
+        <packageGroup>
+            <title>Protocol Implementation Framework</title>
+            <packages>org.activeio.protocol.*</packages>
+        </packageGroup>
+    </packageGroups>
+
+
+    <shortDescription>ActiveIO provides a high performance IO framework for implementing protocols.</shortDescription>
+    <logo>/images/activeio-logo.png</logo>
+
+    <description></description>
+    <url>http://activeio.org/</url>
+
+    <siteAddress>www.activeio.org</siteAddress>
+    <siteDirectory>/home/projects/activeio/public_html/maven</siteDirectory>
+    <distributionSite>dist.codehaus.org</distributionSite>
+    <distributionDirectory>/dist</distributionDirectory>    
+
+    <repository>
+        <connection>scm:svn:https://svn.codehaus.org/activeio/trunk/activeio</connection>
+        <developerConnection>scm:svn:svn+ssh://svn.activeio.org/home/projects/activeio/scm/trunk/activeio</developerConnection>
+        <url>http://svn.activeio.org/viewcvs.cgi/activeio/</url>
+    </repository>
+
+    <mailingLists>
+        <mailingList>
+            <name>activeio dev</name>
+            <subscribe>dev-subscribe@activeio.codehaus.org</subscribe>
+            <unsubscribe>dev-unsubscribe@activeio.codehaus.org</unsubscribe>
+        </mailingList>
+        <mailingList>
+            <name>activeio users</name>
+            <subscribe>user-subscribe@activeio.codehaus.org</subscribe>
+            <unsubscribe>user-unsubscribe@activeio.codehaus.org</unsubscribe>
+        </mailingList>
+        <mailingList>
+            <name>activeio svn messages</name>
+            <subscribe>scm-subscribe@activeio.codehaus.org</subscribe>
+            <unsubscribe>scm-unsubscribe@activeio.codehaus.org</unsubscribe>
+        </mailingList>
+    </mailingLists>
+
+    <developers>
+        <developer>
+            <name>Hiram Chirino</name>
+            <id>chirino</id>
+            <email>hiram@hiramchirino.com</email>
+        <organization></organization>
+            <roles>
+                <role>Founder</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Alan D. Cabrera</name>
+            <id>adc</id>
+            <email>adc@toolazydogs.com</email>
+        <organization></organization>
+            <roles>
+                <role>Founder</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>David Blevins</name>
+            <id>dblevins</id>
+            <email>dblevins@gluecode.com</email>
+        <organization></organization>
+            <roles>
+                <role>Founder</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <dependencies>
+        <!-- Required Dependencies -->
+        <dependency>
+          <groupId>backport-util-concurrent</groupId>
+          <artifactId>backport-util-concurrent</artifactId>
+          <version>2.0_01_pd</version>
+        </dependency>
+
+        <!-- 
+        <dependency>
+            <groupId>concurrent</groupId>
+            <artifactId>concurrent</artifactId>
+            <version>${concurrent_version}</version>
+        </dependency>
+         -->
+        <!-- Optional Dependencies -->
+
+        <!-- For HOWL integration -->
+        <dependency>
+            <groupId>howl</groupId>
+            <artifactId>howl-logger</artifactId>
+            <version>${howl_logger_version}</version>
+            <url>http://forge.objectweb.org/projects/howl</url>
+        </dependency>    
+
+        <!-- For JXTA integration -->
+        <dependency>
+            <groupId>p2psockets</groupId>
+            <artifactId>p2psockets-core</artifactId>
+            <version>${p2psockets_core_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jxta</groupId>
+            <artifactId>jxta</artifactId>
+            <version>${jxta_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ibmaio</groupId>
+            <artifactId>ibmaio</artifactId>
+            <version>${ibmaio_version}</version>
+        <url>https://www7b.software.ibm.com/dl/AW-0H8/AW-0H8-p</url>
+        </dependency>    
+    
+
+        <!-- For Jetty integration -->
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>org.mortbay.jetty</artifactId>
+            <version>${org.mortbay.jetty_version}</version>
+        </dependency>
+
+        <!-- For OpenORB integration -->
+        <dependency>
+            <groupId>openorb</groupId>
+            <artifactId>openorb-orb</artifactId>
+            <version>${openorb_orb_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>openorb</groupId>
+            <artifactId>openorb-tools</artifactId>
+            <version>${openorb_tools_version}</version>
+        </dependency>   
+        <dependency>
+            <groupId>openorb</groupId>
+            <artifactId>openorb-orb-tools</artifactId>
+            <version>${openorb_orb_tools_version}</version>
+        </dependency>   
+        <dependency>
+            <groupId>openorb</groupId>
+            <artifactId>openorb-orb-omg</artifactId>
+            <version>${openorb_orb_omg_version}</version>
+        </dependency>   
+        <dependency>
+            <groupId>avalon</groupId>
+            <artifactId>avalon-framework</artifactId>
+            <version>${avalon_framework_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>avalon</groupId>
+            <artifactId>avalon-logkit</artifactId>
+            <version>${avalon_logkit_version}</version>
+        </dependency>
+
+        <!-- Unit Test Dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons_logging_version}</version>
+            <url>http://jakarta.apache.org/commons/logging/</url>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j_version}</version>
+            <url>http://jakarta.apache.org/log4j</url>
+        </dependency>   
+
+        <!-- Used by journal performance testing tools -->
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-j2ee</artifactId>
+            <version>${geronimo_spec_j2ee_version}</version>
+        </dependency>   
+        
+        <!-- Used in testing -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${commons_beanutils_version}</version>
+        </dependency>
+	    <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons_collections_version}</version>
+	    </dependency>
+
+        <!-- Used by xnet GBean code -->
+        <dependency>
+            <groupId>geronimo</groupId>
+            <artifactId>geronimo-kernel</artifactId>
+            <version>${geronimo_version}</version>
+        </dependency>   
+        <dependency>
+            <groupId>geronimo</groupId>
+            <artifactId>geronimo-j2ee</artifactId>
+            <version>${geronimo_version}</version>
+        </dependency>   
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j</artifactId>
+            <version>${mx4j_version}</version>
+        </dependency>
+        
+    </dependencies>
+
+    <!-- How we build the project -->
+    <build>
+        <sourceDirectory>src/java</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>src/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+        <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+        <unitTest>
+            <includes>
+                <include>**/*Test.java</include>
+            </includes>
+            <resources>
+                <resource>
+                    <directory>src/test</directory>
+                    <includes>
+                       <include>**/*.properties</include>
+                       <include>**/*.xml</include>
+                    </includes>
+                </resource>
+            </resources>    
+        </unitTest>
+    </build>
+
+    <reports>
+      <report>maven-license-plugin</report>
+      <report>maven-pmd-plugin</report>
+      <report>maven-jdepend-plugin</report>
+      <report>maven-jxr-plugin</report>
+      <report>maven-javadoc-plugin</report>
+      <report>maven-junit-report-plugin</report>
+      <report>maven-faq-plugin</report>
+      <report>maven-changes-plugin</report>
+      <!--  
+      <report>maven-file-activity-plugin</report>
+      <report>maven-developer-activity-plugin</report>
+      <report>maven-changelog-plugin</report>
+      <report>maven-statcvs-plugin</report>
+      -->
+      <report>maven-checkstyle-plugin</report>
+      <report>maven-simian-plugin</report> 
+      <report>maven-clover-plugin</report>
+    </reports>
+
+</project>
+

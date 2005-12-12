@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project>
+  <pomVersion>3</pomVersion>
+  <name>ActiveCluster</name>
+  <id>activecluster</id>
+  <currentVersion>1.2</currentVersion>
+
+  <organization>
+    <name>LogicBlaze, Inc.</name>
+    <url>http://logicblaze.com</url>
+    <logo>http://logicblaze.com/images/logo.jpg</logo>
+  </organization>
+  <logo></logo>
+
+  <inceptionYear>2004</inceptionYear>
+
+  <package>org.activecluster</package>
+  <packageGroups>
+    <packageGroup>
+      <title>Core ActiveCluster API</title>
+      <packages>org.activecluster</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Group organisation protocols</title>
+      <packages>org.activecluster.group</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Election protocols</title>
+      <packages>org.activecluster.election</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>ActiveMQ specific implementation classes</title>
+      <packages>org.activecluster.activemq</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Implementation classes</title>
+      <packages>org.activecluster.impl:org.activecluster.election.impl</packages>
+    </packageGroup>
+  </packageGroups>
+
+  <shortDescription>ActiveCluster is a framework for building cluster-aware software</shortDescription>
+
+  <gumpRepositoryId>activecluster</gumpRepositoryId>
+
+  <description>
+  	ActiveCluster is a framework for building cluster-aware software
+  </description>
+
+  <url>http://activecluster.codehaus.org/</url>
+  <issueTrackingUrl>http://jira.codehaus.org/browse/ACL</issueTrackingUrl>
+
+  <siteAddress>beaver.codehaus.org</siteAddress>
+  <siteDirectory>/home/projects/activecluster/public_html/maven</siteDirectory>
+  <distributionDirectory>/home/projects/activecluster/dist</distributionDirectory>
+
+  <repository>
+    <connection>scm:cvs:pserver:anonymous@cvs.activecluster.codehaus.org:/home/projects/activecluster/scm:activecluster</connection>
+    <developerConnection>scm:cvs:ext:${maven.username}@cvs.activecluster.codehaus.org:/home/projects/activecluster/scm:activecluster</developerConnection>
+    <url>http://cvs.activecluster.codehaus.org/</url>
+  </repository>
+
+  <mailingLists>
+    <mailingList>
+      <name>ActiveCluster Developer List</name>
+      <subscribe>dev-subscribe@activecluster.codehaus.org</subscribe>
+      <unsubscribe>dev-unsubscribe@activecluster.codehaus.org</unsubscribe>
+      <archive>http://archive.activecluster.codehaus.org/dev/</archive>
+    </mailingList>
+    <mailingList>
+      <name>ActiveCluster User List</name>
+      <subscribe>user-subscribe@activecluster.codehaus.org</subscribe>
+      <unsubscribe>user-unsubscribe@activecluster.codehaus.org</unsubscribe>
+      <archive>http://archive.activecluster.codehaus.org/user/</archive>
+    </mailingList>
+    <mailingList>
+      <name>ActiveCluster SCM List</name>
+      <subscribe>scm-subscribe@activecluster.codehaus.org</subscribe>
+      <unsubscribe>scm-unsubscribe@activecluster.codehaus.org</unsubscribe>
+      <archive>http://archive.activecluster.codehaus.org/scm/</archive>
+    </mailingList>
+  </mailingLists>
+
+
+  <versions>
+    <version>
+      <id>1.0</id>
+      <name>1.0</name>
+      <tag>ACTIVECLUSTER_1_0</tag>
+    </version>
+    <version>
+      <id>1.2</id>
+      <name>1.2</name>
+      <tag>ACTIVECLUSTER_1_2</tag>
+    </version>
+  </versions>
+  <branches></branches>
+
+  <developers>
+    <developer>
+      <name>James Strachan</name>
+      <id>jstrachan</id>
+      <email>jstrachan@logicblaze.com</email>
+      <organization>LogicBlaze, Inc.</organization>
+    </developer>
+    <developer>
+      <name>Hiram Chirino</name>
+      <id>chirino</id>
+      <email>hiram@logicblaze.com</email>
+      <organization>LogicBlaze, Inc.</organization>
+    </developer>
+    <developer>
+      <name>Rob Davies</name>
+      <id>Rob</id>
+      <email>rajdavies@gmail.com</email>
+      <organization>RAJD Consultancy Ltd</organization>
+    </developer>
+
+    <developer>
+      <name>Jules Gosnell</name>
+      <id>jules</id>
+      <email>jules@coredevelopers.net</email>
+      <organization>Core Developers Network</organization>
+    </developer>
+  </developers>
+
+  <contributors>
+  </contributors>
+
+
+  <dependencies>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.0.4</version>
+      <url>http://jakarta.apache.org/commons/logging/</url>
+    </dependency>
+   
+    <!-- lets use freely distributable J2EE jars -->
+    <dependency>
+      <id>geronimo-spec+jms</id>
+      <version>1.1-rc4</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <id>geronimo-spec+jta</id>
+      <version>1.0.1B-rc4</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <id>geronimo-spec+j2ee-management</id>
+      <version>1.0-rc4</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <!-- default JMS provider used for implementation -->
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>4.0-SNAPSHOT</version>
+    </dependency>
+
+     <dependency>
+            <groupId>activeio</groupId>
+            <artifactId>activeio</artifactId>
+            <version>2.1-SNAPSHOT</version>
+        </dependency>
+
+    <!-- for unit test cases -->
+    <dependency>
+      <id>junit</id>
+      <version>3.8.1</version>
+    </dependency>
+
+  <!--concurrency -->
+    <dependency>
+      <id>backport-util-concurrent</id>
+      <version>2.0_01_pd</version>
+    </dependency>
+    
+
+  </dependencies>
+
+    
+  <build>
+    <nagEmailAddress>scm@activecluster.codehaus.org</nagEmailAddress>
+    <sourceDirectory>src/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+
+    <integrationUnitTestSourceDirectory/>
+    <aspectSourceDirectory/>
+
+    <unitTest>
+      <resources>
+        <resource>
+          <directory>src/java</directory>
+          <includes>
+            <include>**/*.properties</include>
+          </includes>
+        </resource>
+      </resources>
+      <includes>
+        <include>**/*Test.*</include>
+      </includes>
+    </unitTest>
+
+    <resources>
+      <!--
+            <resource>
+              <directory>src/jar</directory>
+              <includes>
+                <include>**/*.properties</include>
+                <include>**/*.xml</include>
+              </includes>
+            </resource>
+      -->
+    </resources>
+  </build>
+</project>

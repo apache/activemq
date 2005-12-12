@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- this file can only be parsed using the xbean-spring library -->
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0">
+
+  <broker persistent="false">
+
+    <!--  lets define the dispatch policy -->
+    <destinationPolicy>
+      <policyMap>
+        <policyEntries>
+          <policyEntry topic="FOO.>">
+            <dispatchPolicy>
+              <roundRobinDispatchPolicy />
+            </dispatchPolicy>
+            <subscriptionRecoveryPolicy>
+              <lastImageSubscriptionRecoveryPolicy />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+
+          <policyEntry topic="ORDERS.>">
+            <dispatchPolicy>
+              <strictOrderDispatchPolicy />
+            </dispatchPolicy>
+            <!--  1 minutes worth -->
+            <subscriptionRecoveryPolicy>
+              <timedSubscriptionRecoveryPolicy recoverDuration="60000" />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+
+          <policyEntry topic="PRICES.>">
+            <!--  10 seconds worth -->
+            <subscriptionRecoveryPolicy>
+              <timedSubscriptionRecoveryPolicy recoverDuration="10000" />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+        </policyEntries>
+      </policyMap>
+    </destinationPolicy>
+  </broker>
+
+</beans>
+<!-- END SNIPPET: xbean -->

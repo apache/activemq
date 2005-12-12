@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns:amq="http://activemq.org/config/1.0">
+
+    <amq:broker brokerName="brokerJdbcConfigTest" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+
+        <amq:transportConnectors>
+            <amq:transportConnector uri="tcp://localhost:61635"/>
+        </amq:transportConnectors>
+
+        <amq:persistenceAdapter>
+            <amq:jdbcPersistenceAdapter>
+                <property name="cleanupPeriod" value="60000"/>
+                <property name="dataSource" ref="embedded-ds"/>
+                <property name="wireFormat">
+                    <bean id="myWireFormat" class="org.activeio.command.DefaultWireFormat"/>
+                </property>
+            </amq:jdbcPersistenceAdapter>
+        </amq:persistenceAdapter>
+    </amq:broker>
+
+    <!-- ==================================================================== -->
+    <!-- JDBC DataSource Configurations -->
+    <!-- ==================================================================== -->
+
+    <!-- The Datasource that will be used by the Broker -->
+    <bean id="embedded-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
+        <property name="databaseName" value="testJdbcConfig"/>
+        <property name="createDatabase" value="create"/>
+    </bean>
+</beans>

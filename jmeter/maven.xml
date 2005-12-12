@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Copyright 2004 Protique Ltd
+ 
+  Licensed under the Apache License, Version 2.0 (the "License"); 
+	you may not use this file except in compliance with the License. 
+	You may obtain a copy of the License at 
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS, 
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+	See the License for the specific language governing permissions and 
+ 	limitations under the License. 
+-->
+
+<project default="jar:jar" xmlns:ant="jelly:ant">
+    
+    <postGoal name="jar:jar">
+        <move file="target\${maven.final.name}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+
+        <!-- copy JMeter TestPlans -->
+        <copy todir="${jmeter.home}\bin\testfiles" overwrite="true">
+            <fileset dir="resource\TestPlans"/>
+        </copy>
+
+
+        <!-- jmeter bin files -->
+        <copy file="resource\jmeter" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\jmeter-server" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\jmeter.bat" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\jmeter-n.bat" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\jmeter-server.bat" todir="${jmeter.home}\bin"  overwrite="true"/>
+        <copy file="resource\jmeter-t.bat" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\jmeterw.bat" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellAssertion.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellFunction.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellSampler.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellSampler.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\log4j.conf" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\users.dtd" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\jmeter.properties" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\jmetertest.properties" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\saveservice.properties" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\upgrade.properties" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\logkit.xml" todir="${jmeter.home}\bin" overwrite="true"/>
+        <copy file="resource\users.xml" todir="${jmeter.home}\bin" overwrite="true"/>
+        
+        <!-- jmeter lib\ext jars-->
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_tcp-${ApacheJMeter_tcp_version}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_monitors-${ApacheJMeter_monitors_version}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_mail-${ApacheJMeter_mail_version}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_ldap-${ApacheJMeter_ldap_version}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_jms-${ApacheJMeter_jms_version}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+	    <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_jdbc-${ApacheJMeter_jdbc_version}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+	    <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_java-${ApacheJMeter_java_version}.jar" todir="${jmeter.home}\lib\ext" overwrite="true"/>
+	    <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_http-${ApacheJMeter_http_version}.jar" todir="${jmeter.home}\lib\ext" overwrite="true"/>
+	    <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_functions-${ApacheJMeter_functions_version}.jar" todir="${jmeter.home}\lib\ext" overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_ftp-${ApacheJMeter_ftp_version}.jar" todir="${jmeter.home}\lib\ext" overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_core-${ApacheJMeter_core_version}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter_components-${ApacheJMeter_components_version}.jar" todir="${jmeter.home}\lib\ext" overwrite="true"/>
+        <copy file="${maven.repo.local}\jmeter\jars\ApacheJMeter-1.0.jar" todir="${jmeter.home}\bin" overwrite="true"/>
+        <move file="${jmeter.home}\bin\ApacheJMeter-${ApacheJMeter_version}.jar" tofile="${jmeter.home}\bin\ApacheJMeter.jar"/>
+        
+        <!-- jmeter lib jars and files -->
+        <copy file="resource\js_jar_license(mozilla).html" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="resource\junit_license.html" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\activemq\jars\activemq-${pom.currentVersion}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\avalon-framework\jars\avalon-framework-${avalon_framework_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\batik\jars\batik-awt-util-${batik_awt_util_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\commons-collections\jars\commons-collections-${commons_collections_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\commons-httpclient\jars\commons-httpclient-${commons_httpclient_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\commons-logging\jars\commons-logging-${commons_logging_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\concurrent\jars\concurrent-${concurrent_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\excalibur-datasource\jars\excalibur-datasource-${excalibur_datasource_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\excalibur-instrument\jars\excalibur-instrument-${excalibur_instrument_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\excalibur-logger\jars\excalibur-logger-${excalibur_logger_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\excalibur-pool\jars\excalibur-pool-${excalibur_pool_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\geronimo-spec\jars\geronimo-spec-j2ee-${geronimo_spec_j2ee_version}.jar" todir="${jmeter.home}\lib"  overwrite="true"/>
+        <copy file="${maven.repo.local}\htmlparser\jars\htmlparser-${htmlparser_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\oro\jars\jakarta-oro-${jakarta_oro_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\jdom\jars\jdom-${jdom_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\jorphan\jars\jorphan-${jorphan_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\js\jars\js-${js_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\junit\jars\junit-${junit_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\logkit\jars\logkit-${logkit_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\soap\jars\soap-${soap_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\tidy\jars\Tidy-${Tidy_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\velocity\jars\velocity-${velocity_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\xalan\jars\xalan-${xalan_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\xerces\jars\xercesImpl-${xercesImpl_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\xml-apis\jars\xml-apis-${xml_apis_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\xpp3\jars\xpp3_min-${xpp3_min_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\xstream\jars\xstream-${xstream_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\manta\jars\manta-${manta_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\log4j\jars\log4j-${log4j_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\mx4j\jars\mx4j-${mx4j_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="${maven.repo.local}\antlr\jars\antlr-${antlr_version}.jar" todir="${jmeter.home}\lib" overwrite="true"/>
+        
+        <copy file="resource\jar_usage.txt" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(jdom).txt" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(jtidy).txt" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(XPP3).txt" todir="${jmeter.home}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(XStream).txt" todir="${jmeter.home}\lib" overwrite="true"/>
+                
+        <ant:zip zipfile="${jmeter.home}\..\${activemq.jmeter.distribution.name}-${pom.currentVersion}.zip" basedir="${jmeter.home}\"></ant:zip>        
+                
+    </postGoal>
+
+    <goal name="clean">
+        <ant:echo>+-----------------------------------------------------+</ant:echo>
+        <ant:echo>| Cleaning: ${basedir}\target </ant:echo>
+        <ant:echo>+-----------------------------------------------------+</ant:echo>
+        <delete dir="${basedir}/target"/>
+    </goal>
+
+
+</project>

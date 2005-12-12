@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+    <display-name>ActiveMQ Message Broker Web Application</display-name>
+    <description>
+    Provides a REST API to the ActiveMQ Message Broker
+    </description>
+
+    <!-- context config -->
+    <context-param>
+        <param-name>org.activemq.brokerURL</param-name>
+        <param-value>vm://localhost</param-value>
+        <description>The URL of the Message Broker to connect to</description>
+    </context-param>
+
+    <context-param>
+        <param-name>org.activemq.embeddedBroker</param-name>
+        <param-value>true</param-value>
+        <description>Whether we should include an embedded broker or not</description>
+    </context-param>
+
+    <!-- connection manager -->
+    <listener>
+        <listener-class>org.activemq.web.ConnectionManager</listener-class>
+    </listener>
+
+
+    <!-- servlet mappings -->
+
+    <!-- the main REST servlet -->
+    <servlet>
+        <servlet-name>MessageServlet</servlet-name>
+        <servlet-class>org.activemq.web.MessageServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <!-- servlets for the portfolio demo -->
+    <servlet>
+        <servlet-name>PortfolioPublishServlet</servlet-name>
+        <servlet-class>org.activemq.web.PortfolioPublishServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>MessageServlet</servlet-name>
+        <url-pattern>/jms/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PortfolioPublishServlet</servlet-name>
+        <url-pattern>/portfolioPublish</url-pattern>
+    </servlet-mapping>
+
+</web-app>

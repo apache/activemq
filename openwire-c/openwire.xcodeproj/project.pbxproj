@@ -1,0 +1,665 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		53C445DF08E4A71D006387E9 /* ow_marshal.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C445B208E4A19E006387E9 /* ow_marshal.c */; };
+		53C445E008E4A71D006387E9 /* ow_commands_v1.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C445B508E4A19E006387E9 /* ow_commands_v1.c */; };
+		53C445E108E4A71D006387E9 /* ow.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C445B708E4A19E006387E9 /* ow.c */; };
+		53C445E208E4A71D006387E9 /* ow_buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C445B008E4A19E006387E9 /* ow_buffer.c */; };
+		53C445E308E4A729006387E9 /* ow.h in Headers */ = {isa = PBXBuildFile; fileRef = 53C445B808E4A19E006387E9 /* ow.h */; };
+		53C445E508E4A729006387E9 /* ow_commands_v1.h in Headers */ = {isa = PBXBuildFile; fileRef = 53C445B608E4A19E006387E9 /* ow_commands_v1.h */; };
+		53C445E608E4A729006387E9 /* ow_command_types_v1.h in Headers */ = {isa = PBXBuildFile; fileRef = 53C445B408E4A19E006387E9 /* ow_command_types_v1.h */; };
+		53C445E708E4A758006387E9 /* amqcs.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C445BB08E4A20A006387E9 /* amqcs.c */; };
+		53C445E808E4A75C006387E9 /* amqcs.h in Headers */ = {isa = PBXBuildFile; fileRef = 53C445BC08E4A20A006387E9 /* amqcs.h */; };
+		53C445E908E4A77A006387E9 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C445BE08E4A266006387E9 /* main.c */; };
+		53C445EA08E4A7DD006387E9 /* openwire.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 53C445C308E4A3CA006387E9 /* openwire.dylib */; };
+		53C445EB08E4A7E3006387E9 /* activemq.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 53C445CD08E4A6B2006387E9 /* activemq.dylib */; };
+		53C4461008E4AD63006387E9 /* libapr-1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 53D4A4E508A9091000CAE09B /* libapr-1.a */; };
+		53C4462608E4AFED006387E9 /* libapr-1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 53D4A4E508A9091000CAE09B /* libapr-1.a */; };
+		53C4462908E4B01A006387E9 /* openwire.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 53C445C308E4A3CA006387E9 /* openwire.dylib */; };
+		53C4462E08E4B06A006387E9 /* libapr-1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 53D4A4E508A9091000CAE09B /* libapr-1.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+		014CEA520018CE5811CA2923 /* Development */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		014CEA530018CE5811CA2923 /* Deployment */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+/* End PBXBuildStyle section */
+
+/* Begin PBXContainerItemProxy section */
+		53C445D308E4A6CF006387E9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 53C445C208E4A3CA006387E9;
+			remoteInfo = openwire;
+		};
+		53C445D508E4A6D5006387E9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 53C445CC08E4A6B2006387E9;
+			remoteInfo = activemq;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		530E4E5E08AC5438007E3535 /* GenerateCMarshalling.groovy */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = GenerateCMarshalling.groovy; path = "../activemq-core/src/gram/script/GenerateCMarshalling.groovy"; sourceTree = SOURCE_ROOT; };
+		53C445B008E4A19E006387E9 /* ow_buffer.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ow_buffer.c; path = src/libopenwire/ow_buffer.c; sourceTree = "<group>"; };
+		53C445B208E4A19E006387E9 /* ow_marshal.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ow_marshal.c; path = src/libopenwire/ow_marshal.c; sourceTree = "<group>"; };
+		53C445B408E4A19E006387E9 /* ow_command_types_v1.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ow_command_types_v1.h; path = src/libopenwire/ow_command_types_v1.h; sourceTree = "<group>"; };
+		53C445B508E4A19E006387E9 /* ow_commands_v1.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ow_commands_v1.c; path = src/libopenwire/ow_commands_v1.c; sourceTree = "<group>"; };
+		53C445B608E4A19E006387E9 /* ow_commands_v1.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ow_commands_v1.h; path = src/libopenwire/ow_commands_v1.h; sourceTree = "<group>"; };
+		53C445B708E4A19E006387E9 /* ow.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ow.c; path = src/libopenwire/ow.c; sourceTree = "<group>"; };
+		53C445B808E4A19E006387E9 /* ow.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ow.h; path = src/libopenwire/ow.h; sourceTree = "<group>"; };
+		53C445BB08E4A20A006387E9 /* amqcs.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = amqcs.c; path = src/libactivemq/amqcs.c; sourceTree = "<group>"; };
+		53C445BC08E4A20A006387E9 /* amqcs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = amqcs.h; path = src/libactivemq/amqcs.h; sourceTree = "<group>"; };
+		53C445BE08E4A266006387E9 /* main.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/examples/main.c; sourceTree = "<group>"; };
+		53C445C308E4A3CA006387E9 /* openwire.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = openwire.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		53C445CD08E4A6B2006387E9 /* activemq.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = activemq.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		53C445D108E4A6CA006387E9 /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
+		53D4A4E508A9091000CAE09B /* libapr-1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libapr-1.a"; path = "../../apr/lib/libapr-1.a"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		53C445C108E4A3CA006387E9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C4461008E4AD63006387E9 /* libapr-1.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53C445CB08E4A6B2006387E9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C4462908E4B01A006387E9 /* openwire.dylib in Frameworks */,
+				53C4462608E4AFED006387E9 /* libapr-1.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53C445CF08E4A6CA006387E9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C4462E08E4B06A006387E9 /* libapr-1.a in Frameworks */,
+				53C445EB08E4A7E3006387E9 /* activemq.dylib in Frameworks */,
+				53C445EA08E4A7DD006387E9 /* openwire.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* amqc */ = {
+			isa = PBXGroup;
+			children = (
+				53C445B908E4A1A7006387E9 /* libopenwire */,
+				53C445BA08E4A1F1006387E9 /* libactivemq */,
+				53C445BD08E4A249006387E9 /* examples */,
+				53D4A4E508A9091000CAE09B /* libapr-1.a */,
+				530E4E5E08AC5438007E3535 /* GenerateCMarshalling.groovy */,
+				53C445C408E4A3CA006387E9 /* Products */,
+			);
+			name = amqc;
+			sourceTree = "<group>";
+		};
+		53C445B908E4A1A7006387E9 /* libopenwire */ = {
+			isa = PBXGroup;
+			children = (
+				53C445B008E4A19E006387E9 /* ow_buffer.c */,
+				53C445B208E4A19E006387E9 /* ow_marshal.c */,
+				53C445B408E4A19E006387E9 /* ow_command_types_v1.h */,
+				53C445B508E4A19E006387E9 /* ow_commands_v1.c */,
+				53C445B608E4A19E006387E9 /* ow_commands_v1.h */,
+				53C445B708E4A19E006387E9 /* ow.c */,
+				53C445B808E4A19E006387E9 /* ow.h */,
+			);
+			name = libopenwire;
+			sourceTree = "<group>";
+		};
+		53C445BA08E4A1F1006387E9 /* libactivemq */ = {
+			isa = PBXGroup;
+			children = (
+				53C445BB08E4A20A006387E9 /* amqcs.c */,
+				53C445BC08E4A20A006387E9 /* amqcs.h */,
+			);
+			name = libactivemq;
+			sourceTree = "<group>";
+		};
+		53C445BD08E4A249006387E9 /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				53C445BE08E4A266006387E9 /* main.c */,
+			);
+			name = examples;
+			sourceTree = "<group>";
+		};
+		53C445C408E4A3CA006387E9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				53C445C308E4A3CA006387E9 /* openwire.dylib */,
+				53C445CD08E4A6B2006387E9 /* activemq.dylib */,
+				53C445D108E4A6CA006387E9 /* main */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		53C445BF08E4A3CA006387E9 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C445E308E4A729006387E9 /* ow.h in Headers */,
+				53C445E508E4A729006387E9 /* ow_commands_v1.h in Headers */,
+				53C445E608E4A729006387E9 /* ow_command_types_v1.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53C445C908E4A6B2006387E9 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C445E808E4A75C006387E9 /* amqcs.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		53C445C208E4A3CA006387E9 /* openwire */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 53C445C508E4A3CB006387E9 /* Build configuration list for PBXNativeTarget "openwire" */;
+			buildPhases = (
+				53C445BF08E4A3CA006387E9 /* Headers */,
+				53C445C008E4A3CA006387E9 /* Sources */,
+				53C445C108E4A3CA006387E9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = openwire;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			dependencies = (
+			);
+			name = openwire;
+			productName = openwire;
+			productReference = 53C445C308E4A3CA006387E9 /* openwire.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		53C445CC08E4A6B2006387E9 /* activemq */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 53C445D708E4A6F4006387E9 /* Build configuration list for PBXNativeTarget "activemq" */;
+			buildPhases = (
+				53C445C908E4A6B2006387E9 /* Headers */,
+				53C445CA08E4A6B2006387E9 /* Sources */,
+				53C445CB08E4A6B2006387E9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = activemq;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			dependencies = (
+			);
+			name = activemq;
+			productName = activemq;
+			productReference = 53C445CD08E4A6B2006387E9 /* activemq.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		53C445D008E4A6CA006387E9 /* main */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 53C445DB08E4A6F4006387E9 /* Build configuration list for PBXNativeTarget "main" */;
+			buildPhases = (
+				53C445CE08E4A6CA006387E9 /* Sources */,
+				53C445CF08E4A6CA006387E9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = "$(HOME)/bin";
+				OPTIMIZATION_CFLAGS = "";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = main;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			dependencies = (
+				53C445D408E4A6CF006387E9 /* PBXTargetDependency */,
+				53C445D608E4A6D5006387E9 /* PBXTargetDependency */,
+			);
+			name = main;
+			productName = main;
+			productReference = 53C445D108E4A6CA006387E9 /* main */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 53D4A41D08A8931000CAE09B /* Build configuration list for PBXProject "openwire" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				014CEA520018CE5811CA2923 /* Development */,
+				014CEA530018CE5811CA2923 /* Deployment */,
+			);
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* amqc */;
+			productRefGroup = 53C445C408E4A3CA006387E9 /* Products */;
+			projectDirPath = "";
+			targets = (
+				53C445C208E4A3CA006387E9 /* openwire */,
+				53C445CC08E4A6B2006387E9 /* activemq */,
+				53C445D008E4A6CA006387E9 /* main */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		53C445C008E4A3CA006387E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C445DF08E4A71D006387E9 /* ow_marshal.c in Sources */,
+				53C445E008E4A71D006387E9 /* ow_commands_v1.c in Sources */,
+				53C445E108E4A71D006387E9 /* ow.c in Sources */,
+				53C445E208E4A71D006387E9 /* ow_buffer.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53C445CA08E4A6B2006387E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C445E708E4A758006387E9 /* amqcs.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53C445CE08E4A6CA006387E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53C445E908E4A77A006387E9 /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		53C445D408E4A6CF006387E9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 53C445C208E4A3CA006387E9 /* openwire */;
+			targetProxy = 53C445D308E4A6CF006387E9 /* PBXContainerItemProxy */;
+		};
+		53C445D608E4A6D5006387E9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 53C445CC08E4A6B2006387E9 /* activemq */;
+			targetProxy = 53C445D508E4A6D5006387E9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		53C445C608E4A3CB006387E9 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = openwire;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Development;
+		};
+		53C445C708E4A3CB006387E9 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = openwire;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Deployment;
+		};
+		53C445C808E4A3CB006387E9 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = openwire;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Default;
+		};
+		53C445D808E4A6F4006387E9 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = activemq;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Development;
+		};
+		53C445D908E4A6F4006387E9 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = activemq;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Deployment;
+		};
+		53C445DA08E4A6F4006387E9 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = activemq;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Default;
+		};
+		53C445DC08E4A6F4006387E9 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = main;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Development;
+		};
+		53C445DD08E4A6F4006387E9 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = main;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Deployment;
+		};
+		53C445DE08E4A6F4006387E9 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../apr/lib\"";
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = main;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Default;
+		};
+		53D4A41E08A8931000CAE09B /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				HEADER_SEARCH_PATHS = "/usr/local/apr/include/apr-1";
+				LIBRARY_SEARCH_PATHS = /usr/local/apr/lib;
+			};
+			name = Development;
+		};
+		53D4A41F08A8931000CAE09B /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				HEADER_SEARCH_PATHS = "/usr/local/apr/include/apr-1";
+				LIBRARY_SEARCH_PATHS = /usr/local/apr/lib;
+			};
+			name = Deployment;
+		};
+		53D4A42008A8931000CAE09B /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				HEADER_SEARCH_PATHS = "/usr/local/apr/include/apr-1";
+				LIBRARY_SEARCH_PATHS = /usr/local/apr/lib;
+			};
+			name = Default;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		53C445C508E4A3CB006387E9 /* Build configuration list for PBXNativeTarget "openwire" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53C445C608E4A3CB006387E9 /* Development */,
+				53C445C708E4A3CB006387E9 /* Deployment */,
+				53C445C808E4A3CB006387E9 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		53C445D708E4A6F4006387E9 /* Build configuration list for PBXNativeTarget "activemq" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53C445D808E4A6F4006387E9 /* Development */,
+				53C445D908E4A6F4006387E9 /* Deployment */,
+				53C445DA08E4A6F4006387E9 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		53C445DB08E4A6F4006387E9 /* Build configuration list for PBXNativeTarget "main" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53C445DC08E4A6F4006387E9 /* Development */,
+				53C445DD08E4A6F4006387E9 /* Deployment */,
+				53C445DE08E4A6F4006387E9 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		53D4A41D08A8931000CAE09B /* Build configuration list for PBXProject "openwire" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53D4A41E08A8931000CAE09B /* Development */,
+				53D4A41F08A8931000CAE09B /* Deployment */,
+				53D4A42008A8931000CAE09B /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
