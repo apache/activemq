@@ -18,14 +18,10 @@
 <project>
 
     <pomVersion>3</pomVersion>
-    <id>activeio</id>
+    <extend>${basedir}/../etc/project.xml</extend>
+
     <name>ActiveIO</name>
-    <currentVersion>2.2-SNAPSHOT</currentVersion>
-    <organization>
-        <name>The ActiveIO Project</name>
-        <url>http://activeio.org</url>
-        <logo>http://activeio.org/activeio-logo.png</logo>
-    </organization>
+    <artifactId>activeio</artifactId>
 
     <package>org.activeio</package>
     <packageGroups>
