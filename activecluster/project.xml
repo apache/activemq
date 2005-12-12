@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project>
-  <pomVersion>3</pomVersion>
-  <name>ActiveCluster</name>
-  <id>activecluster</id>
-  <currentVersion>1.2</currentVersion>
 
-  <organization>
-    <name>LogicBlaze, Inc.</name>
-    <url>http://logicblaze.com</url>
-    <logo>http://logicblaze.com/images/logo.jpg</logo>
-  </organization>
-  <logo></logo>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../etc/project.xml</extend>
+
+    <name>ActiveCluster</name>
+    <artifactId>activecluster</artifactId>
+
 
   <inceptionYear>2004</inceptionYear>
 
