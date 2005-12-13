@@ -164,13 +164,6 @@ public class Main {
         System.out.println("    Example: Main xbean:activemq.xml");
         System.out.println("        Loads the xbean configuration file from the classpath");
         System.out.println();
-        System.out.println(" Spring based broker configuration:");
-        System.out.println("    ");
-        System.out.println("    Example: Main spring:file:activemq.xml");
-        System.out.println("        Loads the spring configuration file from the current working directory");
-        System.out.println("    Example: Main spring:activemq.xml");
-        System.out.println("        Loads the spring configuration file from the classpath");
-        System.out.println();
         System.out.println(" URI Parameter based broker configuration:");
         System.out.println("    Example: Main broker:(tcp://localhost:61616, tcp://localhost:5000)?useJmx=true");
         System.out.println("        Configures the broker with 2 transport connectors and jmx enabled");
