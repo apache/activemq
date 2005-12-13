@@ -38,7 +38,8 @@ import junit.framework.TestCase;
 public class EmbeddedBrokerTestSupport extends TestCase {
 
     protected BrokerService broker;
-    protected String bindAddress = "tcp://localhost:61616";
+    //protected String bindAddress = "tcp://localhost:61616";
+    protected String bindAddress = "vm://localhost";
     protected ConnectionFactory connectionFactory;
     protected boolean useTopic = false;
     protected Destination destination;
@@ -127,8 +128,16 @@ public class EmbeddedBrokerTestSupport extends TestCase {
      */
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
+        answer.setPersistent(isPersistent());
         answer.addConnector(bindAddress);
         return answer;
+    }
+
+    /**
+     * @return whether or not persistence should be used
+     */
+    protected boolean isPersistent() {
+        return false;
     }
 
     /**
