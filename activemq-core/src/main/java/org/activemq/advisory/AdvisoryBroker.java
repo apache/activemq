@@ -74,12 +74,12 @@ public class AdvisoryBroker extends BrokerFilter {
 
     public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
         next.addConsumer(context, info);
-        
+
         // Don't advise advisory topics.
         if( !AdvisorySupport.isAdvisoryTopic(info.getDestination()) ) { 
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
-            fireAdvisory(context, topic, info);
             consumers.put(info.getConsumerId(), info);
+            fireConsumerAdvisory(context, topic, info);
         } else {
             
             // We need to replay all the previously collected state objects 
@@ -118,7 +118,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 for (Iterator iter = consumers.values().iterator(); iter.hasNext();) {
                     ConsumerInfo value = (ConsumerInfo) iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(value.getDestination());
-                    fireAdvisory(context, topic, value, info.getConsumerId());
+                    fireConsumerAdvisory(context, topic, value);
                 }
             }
         }
@@ -168,8 +168,8 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if( !AdvisorySupport.isAdvisoryTopic(info.getDestination()) ) { 
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
-            fireAdvisory(context, topic, info.createRemoveCommand());
             consumers.remove(info.getConsumerId());
+            fireConsumerAdvisory(context, topic, info.createRemoveCommand());
         }
     }
 
@@ -184,13 +184,22 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
-    private void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Throwable {
+    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Throwable {
         fireAdvisory(context, topic, command, null);
     }
     
-    private void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Throwable {
-        
+    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Throwable {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+        fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
+    }
+    
+    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Throwable {
+        ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+        advisoryMessage.setIntProperty("consumerCount", consumers.size());
+        fireAdvisory(context, topic, command, null, advisoryMessage);
+    }
+
+    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Throwable {
         advisoryMessage.setDataStructure(command);
         advisoryMessage.setPersistent(false);
         advisoryMessage.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
@@ -208,7 +217,6 @@ public class AdvisoryBroker extends BrokerFilter {
         } finally {
             context.setProducerFlowControl(originalFlowControl);
         }
-        
     }
 
 }
