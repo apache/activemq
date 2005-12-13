@@ -29,19 +29,13 @@
     </persistenceAdapter>
   
     <transportConnectors>
-      <!-- prefixing a connector with discovery: causes the connector to be advertiesed over rendezvous -->
-      <!-- 
-      <transportConnector uri="discovery:tcp://localhost:61616"/>
-       -->
-      <transportConnector uri="tcp://localhost:61616"/>
+       <transportConnector uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
     </transportConnectors>
     
     <networkConnectors>
       <!-- by default just auto discover the other brokers -->
-      <networkConnector uri="rendezvous://default"/>
-      
+      <networkConnector uri="multicast://default"/>
       <!--  
-      <networkConnector uri="multicast"/>
       <networkConnector uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
       -->
     </networkConnectors>
