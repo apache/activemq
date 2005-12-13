@@ -25,6 +25,7 @@ import org.activemq.command.Response;
 import org.activemq.thread.TaskRunnerFactory;
 import org.activemq.transport.Transport;
 import org.activemq.util.IOExceptionSupport;
+import org.activemq.util.JMXSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -116,7 +117,7 @@ public class ManagedTransportConnection extends TransportConnection {
         Hashtable map = new Hashtable(connectorName.getKeyPropertyList());
         map.put("Type", "Connection");
         String jmxConnectionId = ObjectName.quote(connectionId);
-        map.put("Connection", jmxConnectionId);
+        map.put("Connection", JMXSupport.encodeObjectNamePart(connectionId));
         try {
             return new ObjectName(connectorName.getDomain(), map);
         }

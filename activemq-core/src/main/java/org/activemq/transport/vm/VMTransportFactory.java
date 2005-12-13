@@ -76,8 +76,13 @@ public class VMTransportFactory extends TransportFactory {
             try {
                 host =  location.getHost();
                 options = URISupport.parseParamters(location);
-                Map brokerOptions = IntrospectionSupport.extractProperties(options, "broker.");
-                brokerURI = new URI("broker://()/"+host+"?"+URISupport.createQueryString(brokerOptions));
+                String config = (String) options.remove("brokerConfig");
+                if( config != null ) {
+                    brokerURI = new URI(config);
+                } else {
+                    Map brokerOptions = IntrospectionSupport.extractProperties(options, "broker.");
+                    brokerURI = new URI("broker://()/"+host+"?"+URISupport.createQueryString(brokerOptions));
+                }
             } catch (URISyntaxException e1) {
                 throw IOExceptionSupport.create(e1);
             }

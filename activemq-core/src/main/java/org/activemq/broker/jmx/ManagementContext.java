@@ -82,12 +82,18 @@ public class ManagementContext implements Service {
                 getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
             } catch (Throwable ignore) {
             }
-            try {
-                connectorServer.start();     
-                log.info("JMX consoles can connect to " + connectorServer.getAddress());
-            } catch (IOException e) {
-                log.warn("Failed to start jmx connector: "+e.getMessage());
-            }
+            Thread t = new Thread("JMX connector") {
+                public void run() {
+                    try {
+                        connectorServer.start();     
+                        log.info("JMX consoles can connect to " + connectorServer.getAddress());
+                    } catch (IOException e) {
+                        log.warn("Failed to start jmx connector: "+e.getMessage());
+                    }
+                }
+            };
+            t.setDaemon(true);
+            t.start();
         }
     }
 
