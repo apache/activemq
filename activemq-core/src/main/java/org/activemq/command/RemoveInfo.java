@@ -69,5 +69,33 @@ public class RemoveInfo extends BaseCommand {
             throw new IOException("Unknown remove command type: "+ objectId.getDataStructureType());
         }
     }
+    
+    /**
+     * Returns true if this event is for a removed connection
+     */
+    public boolean isConnectionRemove() {
+        return objectId.getDataStructureType() == ConnectionId.DATA_STRUCTURE_TYPE;
+    }
+    
+    /**
+     * Returns true if this event is for a removed session
+     */
+    public boolean isSessionRemove() {
+        return objectId.getDataStructureType() == SessionId.DATA_STRUCTURE_TYPE;
+    }
+    
+    /**
+     * Returns true if this event is for a removed consumer
+     */
+    public boolean isConsumerRemove() {
+        return objectId.getDataStructureType() == ConsumerId.DATA_STRUCTURE_TYPE;
+    }
+
+    /**
+     * Returns true if this event is for a removed producer
+     */
+    public boolean isProducerRemove() {
+        return objectId.getDataStructureType() == ProducerId.DATA_STRUCTURE_TYPE;
+    }
 
 }
