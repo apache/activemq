@@ -38,6 +38,9 @@ final public class JMSExceptionSupport {
     }
     
     public static JMSException create(Throwable cause) {
+        if (cause instanceof JMSException) {
+            return (JMSException) cause;
+        }
         String msg = cause.getMessage();
         if( msg==null || msg.length()==0 )
             msg = cause.toString();
@@ -47,6 +50,9 @@ final public class JMSExceptionSupport {
     }
 
     public static JMSException create(Exception cause) {
+        if (cause instanceof JMSException) {
+            return (JMSException) cause;
+        }
         String msg = cause.getMessage();
         if( msg==null || msg.length()==0 )
             msg = cause.toString();
