@@ -53,6 +53,7 @@
 
     <path id="javac.classpath">
       <pathelement path="${class.dir}"/>
+      <pathelement path="../conf"/>
       <fileset dir="../lib">
         <include name="**/*.jar"/>
       </fileset>
