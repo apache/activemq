@@ -65,7 +65,7 @@ public class ManagedRegionBroker extends RegionBroker {
         
         // Build the object name for the destination
         Hashtable map = new Hashtable(brokerObjectName.getKeyPropertyList());
-        map.put("Type",destName.getDestinationTypeAsString());
+        map.put("Type",ObjectName.quote(destName.getDestinationTypeAsString()));
         map.put("Destination", JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
         ObjectName destObjectName= new ObjectName(brokerObjectName.getDomain(), map);
         
@@ -77,7 +77,7 @@ public class ManagedRegionBroker extends RegionBroker {
     public void unregister(ActiveMQDestination destName) throws Throwable {
         // Build the object name for the destination
         Hashtable map = new Hashtable(brokerObjectName.getKeyPropertyList());
-        map.put("Type",destName.getDestinationTypeAsString());
+        map.put("Type",ObjectName.quote(destName.getDestinationTypeAsString()));
         map.put("Destination", JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
         ObjectName destObjectName= new ObjectName(brokerObjectName.getDomain(), map);
         
