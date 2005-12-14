@@ -17,14 +17,14 @@
  **/
 package org.activemq.web;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletContextEvent;
-import javax.jms.JMSException;
-
 import org.activemq.broker.BrokerService;
+import org.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.support.ServletContextResource;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 /**
  * Used to configure and instance of ActiveMQ <tt>BrokerService</tt> using
@@ -105,7 +105,13 @@ public class SpringBrokerContextListener implements ServletContextListener {
         }
         context.log("Loading ActiveMQ Broker configuration from: " + brokerURI);
         Resource resource = new ServletContextResource(context, brokerURI);
-        // return SpringBrokerServiceFactory.newInstance(resource);
-        return null;
+        BrokerFactoryBean factory = new BrokerFactoryBean(resource);
+        try {
+            factory.afterPropertiesSet();
+        }
+        catch (Exception e) {
+            context.log("Failed to create broker: " + e, e);
+        }
+        return factory.getBroker();
     }
 }
