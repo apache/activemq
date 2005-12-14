@@ -115,6 +115,7 @@ public class FailoverTransport implements CompositeTransport {
                         if( connectList.isEmpty() ) {
                             failure = new IOException("No uris available to connect to.");
                         } else {
+                            reconnectDelay = initialReconnectDelay;
                             Iterator iter = connectList.iterator();
                             for (int i = 0; iter.hasNext() && connectedTransport == null && !disposed; i++) {
                                 URI uri = (URI) iter.next();
@@ -126,7 +127,7 @@ public class FailoverTransport implements CompositeTransport {
                                         restoreTransport(t);
                                     }
                                     log.debug("Connection established");
-                                    reconnectDelay = 10;
+                                    reconnectDelay = initialReconnectDelay;
                                     connectedTransportURI = uri;
                                     connectedTransport = t;
                                     reconnectMutex.notifyAll();
