@@ -445,7 +445,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         RecordLocation pos = null;
         int transactionCounter = 0;
 
-        log.info("Journal Recovery Started.");
+        log.info("Journal Recovery Started from: " + journal);
         ConnectionContext context = new ConnectionContext();
 
         // While we have records in the journal.
