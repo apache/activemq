@@ -34,7 +34,9 @@ import java.util.Map;
 
 /**
  * A JMS provider which pools Connection, Session and MessageProducer instances so it can be used with tools like 
- * Spring's <a href="http://activemq.org/Spring+Support">JmsTemplate</a>
+ * Spring's <a href="http://activemq.org/Spring+Support">JmsTemplate</a>.
+ * 
+ * <b>NOTE</b> this implementation is only intended for use when sending messages.
  * 
  * @version $Revision: 1.1 $
  */
