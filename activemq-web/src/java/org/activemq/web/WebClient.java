@@ -18,13 +18,12 @@
 
 package org.activemq.web;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
-
-import org.activemq.ActiveMQConnection;
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.ActiveMQSession;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
@@ -40,12 +39,14 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionActivationListener;
 import javax.servlet.http.HttpSessionEvent;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.HashMap;
-import java.util.Map;
+import org.activemq.ActiveMQConnection;
+import org.activemq.ActiveMQConnectionFactory;
+import org.activemq.ActiveMQSession;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.Semaphore;
 
 /**
  * Represents a messaging client used from inside a web container
@@ -71,6 +72,8 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
     private transient MessageProducer producer;
     private transient Map topicConsumers = new ConcurrentHashMap();
     private int deliveryMode = DeliveryMode.NON_PERSISTENT;
+
+    private final Semaphore semaphore = new Semaphore(1);
 
 
     /**
@@ -246,5 +249,9 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
     protected static class SessionConsumerPair {
         public Session session;
         public MessageConsumer consumer;
+    }
+
+    public Semaphore getSemaphore() {
+        return semaphore;
     }
 }
