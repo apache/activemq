@@ -66,15 +66,15 @@ final public class ControlFile implements Disposable {
      * @throws IOException 
      */
     public void lock() throws IOException {
-        if( lock==null ) {
-            Set set = getVmLockSet();
-            synchronized(set) {
-                if( !set.add(canonicalPath) ) {
+        Set set = getVmLockSet();
+        synchronized (set) {
+            if (lock == null) {
+                if (!set.add(canonicalPath)) {
                     throw new IOException("Journal is already opened by this application.");
                 }
-                
+
                 lock = channel.tryLock();
-                if( lock ==null ) {
+                if (lock == null) {
                     set.remove(canonicalPath);
                     throw new IOException("Journal is already opened by another application");
                 }
@@ -84,15 +84,16 @@ final public class ControlFile implements Disposable {
 
     /**
      * Un locks the control file.
-     * @throws IOException 
+     * 
+     * @throws IOException
      */
     public void unlock() throws IOException {
-        if( lock != null ) {
-            Set set = getVmLockSet();
-            synchronized(set) {
-                lock.release();
-                lock=null;
+        Set set = getVmLockSet();
+        synchronized (set) {
+            if (lock != null) {
                 set.remove(canonicalPath);
+                lock.release();
+                lock = null;
             }
         }
     }
