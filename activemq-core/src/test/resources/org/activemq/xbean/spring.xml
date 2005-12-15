@@ -8,7 +8,6 @@
 
   <bean id="broker" class="org.activemq.xbean.BrokerFactoryBean">
     <property name="config" value="classpath:org/activemq/xbean/activemq.xml" />
-    <property name="start" value="true" />
   </bean>
 
   <!-- JMS ConnectionFactory to use -->

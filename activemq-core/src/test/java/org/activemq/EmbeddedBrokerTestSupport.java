@@ -50,7 +50,7 @@ public class EmbeddedBrokerTestSupport extends TestCase {
         if (broker == null) {
             broker = createBroker();
         }
-        broker.start();
+        startBroker();
 
         connectionFactory = createConnectionFactory();
 
@@ -131,6 +131,10 @@ public class EmbeddedBrokerTestSupport extends TestCase {
         answer.setPersistent(isPersistent());
         answer.addConnector(bindAddress);
         return answer;
+    }
+
+    protected void startBroker() throws Exception {
+        broker.start();
     }
 
     /**

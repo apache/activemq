@@ -45,8 +45,8 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
     public void testSendThenConsume() throws Exception {
 
         // lets some messages
-         connection = createConnection();
-         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        connection = createConnection();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(destination);
         for (int i = 0; i < messageCount; i++) {
             TextMessage message = session.createTextMessage("Message: " + i + " sent at: " + new Date());
@@ -65,7 +65,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         consumer.setMessageListener(listener);
         listener.waitForMessagesToArrive(messageCount);
         listener.assertMessagesReceived(messageCount);
-        
+
     }
 
     protected void setUp() throws Exception {
@@ -74,7 +74,6 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         super.setUp();
     }
 
-    
     protected void tearDown() throws Exception {
         if (session != null) {
             session.close();
@@ -98,6 +97,10 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         BrokerFactoryBean factory = new BrokerFactoryBean(new ClassPathResource(uri));
         factory.afterPropertiesSet();
         return factory.getBroker();
+    }
+
+    protected void startBroker() throws Exception {
+        // broker already started by XBean
     }
 
     protected String getBrokerXml() {

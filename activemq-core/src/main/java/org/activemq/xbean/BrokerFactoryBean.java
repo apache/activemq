@@ -49,7 +49,8 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
 
     private Resource config;
     private XBeanBrokerService broker;
-    private boolean start=false;
+    private boolean start = false;
+    private ResourceXmlApplicationContext context;
 
     public BrokerFactoryBean() {
     }
@@ -74,7 +75,7 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
         if (config == null) {
             throw new IllegalArgumentException("config property must be set");
         }
-        ResourceXmlApplicationContext context = new ResourceXmlApplicationContext(config);
+        context = new ResourceXmlApplicationContext(config);
 
         try {
             broker = (XBeanBrokerService) context.getBean("broker");
@@ -96,12 +97,15 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
         if (broker == null) {
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
-        broker.setAbstractApplicationContext(context);
-        if( start )
+        if (start) {
             broker.start();
+        }
     }
 
     public void destroy() throws Exception {
+        if (context != null) {
+            context.close();
+        }
         if (broker != null) {
             broker.stop();
         }
@@ -126,6 +130,5 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     public void setStart(boolean start) {
         this.start = start;
     }
-    
-    
+
 }

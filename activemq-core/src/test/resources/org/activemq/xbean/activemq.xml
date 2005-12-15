@@ -15,7 +15,10 @@
     </transportConnectors>
 
     <networkConnectors>
+      <!-- 
+      <networkConnector uri="multicast://default?initialReconnectDelay=100" />
       <networkConnector uri="static://(tcp://localhost:61616)" />
+       -->
     </networkConnectors>
   </broker>
 
