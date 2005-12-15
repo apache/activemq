@@ -75,9 +75,8 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
             type += ".";
         }
         try {
-            if (jmdns == null) {
-                jmdns = createJmDNS();
-            }
+            // force lazy construction
+            getJmdns();
             if (listener!=null) {
                 log.info("Discovering service of type: " +type);
                 jmdns.addServiceListener(type, this);
@@ -111,12 +110,9 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     }
     
     public void registerService(String name) throws IOException {
-        if (jmdns == null) {
-            throw new IllegalStateException("Not started.");
-        }
         ServiceInfo si = createServiceInfo(name, new HashMap());
         serviceInfos.add(si);
-        jmdns.registerService(si);
+        getJmdns().registerService(si);
     }
 
 
@@ -166,7 +162,10 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         this.weight = weight;
     }
 
-    public JmDNS getJmdns() {
+    public JmDNS getJmdns() throws IOException {
+        if (jmdns == null) {
+            jmdns = createJmDNS();
+        }
         return jmdns;
     }
 
