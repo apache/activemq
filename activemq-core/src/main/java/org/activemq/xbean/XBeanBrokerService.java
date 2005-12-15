@@ -1,9 +1,8 @@
 package org.activemq.xbean;
 
 import org.activemq.broker.BrokerService;
-import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.support.AbstractApplicationContext;
 
 /**
  * Represents a running broker service which consists of a number of transport
@@ -16,37 +15,33 @@ import org.springframework.context.support.AbstractApplicationContext;
  * 
  * @version $Revision: 1.1 $
  */
-public class XBeanBrokerService extends BrokerService implements InitializingBean {
+public class XBeanBrokerService extends BrokerService implements InitializingBean, DisposableBean {
 
-    private boolean start=false;
-    private AbstractApplicationContext applicationContext;
+    private boolean start = true;
 
-    public XBeanBrokerService() {        
+    public XBeanBrokerService() {
     }
-    
-    public void setAbstractApplicationContext(AbstractApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-    
+
     public void afterPropertiesSet() throws Exception {
-        if( start ) {  
+        if (start) {
             start();
         }
     }
 
-    public void stop() throws Exception {
-        super.stop();
-        if( applicationContext!=null ) {
-            applicationContext.destroy();
-            applicationContext=null;
-        }
+    public void destroy() throws Exception {
+        stop();
     }
 
     public boolean isStart() {
         return start;
     }
+
+    /**
+     * Sets whether or not the broker is started along with the ApplicationContext it is defined within.
+     * Normally you would want the broker to start up along with the ApplicationContext but sometimes when working
+     * with JUnit tests you may wish to start and stop the broker explicitly yourself.
+     */
     public void setStart(boolean start) {
         this.start = start;
     }
-    
 }

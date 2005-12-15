@@ -63,7 +63,8 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
         
-        broker.setAbstractApplicationContext(context);
+        // TODO warning resources from the context may not be closed down!
+        
         return broker;
     }
 

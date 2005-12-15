@@ -1,0 +1,37 @@
+<beans xmlns="http://activemq.org/config/1.0">
+
+  <!-- for easier integration with the JUnit tests, lets not start the broker when the ApplicationContext starts -->
+  <broker useJmx="true" start="false">
+    <destinationPolicy>
+      <policyMap>
+        <policyEntries>
+
+          <policyEntry topic="FOO.>">
+            <dispatchPolicy>
+              <strictOrderDispatchPolicy />
+            </dispatchPolicy>
+            <subscriptionRecoveryPolicy>
+              <lastImageSubscriptionRecoveryPolicy />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+        </policyEntries>
+      </policyMap>
+    </destinationPolicy>
+
+
+    <persistenceAdapter>
+      <journaledJDBC journalLogFiles="5" dataDirectory="../data" />
+    </persistenceAdapter>
+
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:61616" />
+    </transportConnectors>
+
+<!-- 
+    <networkConnectors>
+      <networkConnector
+        uri="multicast://default?initialReconnectDelay=100" />
+    </networkConnectors>
+ -->
+  </broker>
+</beans>

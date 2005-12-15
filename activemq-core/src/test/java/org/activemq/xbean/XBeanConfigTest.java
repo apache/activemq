@@ -79,7 +79,8 @@ public class XBeanConfigTest extends TestCase {
         brokerService = createBroker();
         broker = brokerService.getBroker();
 
-        brokerService.start();
+        // started automatically
+        //brokerService.start();
 
         context = new ConnectionContext();
         context.setBroker(broker);
