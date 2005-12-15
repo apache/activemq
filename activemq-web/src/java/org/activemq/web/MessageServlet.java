@@ -110,7 +110,7 @@ public class MessageServlet extends MessageServletSupport {
      * from a queue
      */
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doMessagesWithoutContinuation(request, response, 1);
+        doMessages(request, response, 1);
     }
 
     /**
@@ -118,7 +118,7 @@ public class MessageServlet extends MessageServletSupport {
      * from a queue
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doMessagesWithoutContinuation(request, response, -1);
+        doMessages(request, response, -1);
     }
 
     /**
