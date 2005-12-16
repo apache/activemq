@@ -115,6 +115,13 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             taskRunner = null;        
     }
 
+    /**
+     * Returns the number of messages to be dispatched to this connection
+     */
+    public int getDispatchQueueSize() {
+        return dispatchQueue.size();
+    }
+    
     public void start() throws Exception {
         this.dispatch(connector.getBrokerInfo());
     }

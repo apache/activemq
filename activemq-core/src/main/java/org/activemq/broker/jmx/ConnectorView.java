@@ -20,6 +20,7 @@ package org.activemq.broker.jmx;
 
 import org.activemq.broker.Connector;
 import org.activemq.command.BrokerInfo;
+import org.activemq.command.RedeliveryPolicy;
 
 public class ConnectorView implements ConnectorViewMBean {
 
@@ -33,12 +34,61 @@ public class ConnectorView implements ConnectorViewMBean {
         connector.start();
     }
 
+    public String getBrokerName() {
+        return getBrokerInfo().getBrokerName();
+    }
+
     public void stop() throws Exception {
         connector.stop();
     }
-    
+
+    public String getBrokerURL() {
+        return getBrokerInfo().getBrokerURL();
+    }
+
     public BrokerInfo getBrokerInfo() {
         return connector.getBrokerInfo();
+    }
+
+    public short getBackOffMultiplier() {
+        return getRedeliveryPolicy().getBackOffMultiplier();
+    }
+
+    public long getInitialRedeliveryDelay() {
+        return getRedeliveryPolicy().getInitialRedeliveryDelay();
+    }
+
+    public int getMaximumRedeliveries() {
+        return getRedeliveryPolicy().getMaximumRedeliveries();
+    }
+
+    public boolean isUseExponentialBackOff() {
+        return getRedeliveryPolicy().isUseExponentialBackOff();
+    }
+
+    public void setBackOffMultiplier(short backOffMultiplier) {
+        getRedeliveryPolicy().setBackOffMultiplier(backOffMultiplier);
+    }
+
+    public void setInitialRedeliveryDelay(long initialRedeliveryDelay) {
+        getRedeliveryPolicy().setInitialRedeliveryDelay(initialRedeliveryDelay);
+    }
+
+    public void setMaximumRedeliveries(int maximumRedeliveries) {
+        getRedeliveryPolicy().setMaximumRedeliveries(maximumRedeliveries);
+    }
+
+    public void setUseExponentialBackOff(boolean useExponentialBackOff) {
+        getRedeliveryPolicy().setUseExponentialBackOff(useExponentialBackOff);
+    }
+
+    public RedeliveryPolicy getRedeliveryPolicy() {
+        RedeliveryPolicy redeliveryPolicy = getBrokerInfo().getRedeliveryPolicy();
+        if (redeliveryPolicy == null) {
+            redeliveryPolicy = new RedeliveryPolicy();
+            getBrokerInfo().setRedeliveryPolicy(redeliveryPolicy);
+        }
+        return redeliveryPolicy;
     }
 
 }

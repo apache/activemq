@@ -25,21 +25,24 @@ public interface ConnectionViewMBean extends Service {
      * @return true if the Connection is slow
      */
     public boolean isSlow();
-    
+
     /**
      * @return if after being marked, the Connection is still writing
      */
     public boolean isBlocked();
-    
-    
+
     /**
      * @return true if the Connection is connected
      */
     public boolean isConnected();
-    
+
     /**
      * @return true if the Connection is active
      */
     public boolean isActive();
-    
+
+    /**
+     * Returns the number of messages to be dispatched to this connection
+     */
+    public int getDispatchQueueSize();
 }
