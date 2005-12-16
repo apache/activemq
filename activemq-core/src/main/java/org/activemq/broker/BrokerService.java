@@ -247,7 +247,12 @@ public class BrokerService implements Service {
     // -------------------------------------------------------------------------
     public void start() throws Exception {
         if (! started.compareAndSet(false, true)) {
-            throw new IllegalStateException("Allready started.");
+            // lets just ignore redundant start() calls
+            // as its way too easy to not be completely sure if start() has been 
+            // called or not with the gazillion of different configuration mechanisms
+            
+            //throw new IllegalStateException("Allready started.");
+            return;
         }
         
         processHelperProperties();
