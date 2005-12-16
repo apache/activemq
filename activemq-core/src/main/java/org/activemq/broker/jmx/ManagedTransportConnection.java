@@ -116,7 +116,7 @@ public class ManagedTransportConnection extends TransportConnection {
         // Build the object name for the destination
         Hashtable map = new Hashtable(connectorName.getKeyPropertyList());
         map.put("Type", "Connection");
-        String jmxConnectionId = ObjectName.quote(connectionId);
+        String jmxConnectionId = JMXSupport.encodeObjectNamePart(connectionId);
         map.put("Connection", JMXSupport.encodeObjectNamePart(connectionId));
         try {
             return new ObjectName(connectorName.getDomain(), map);
