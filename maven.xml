@@ -108,7 +108,7 @@
   <goal name="assembly:goal" prereqs="init">
     <maven:reactor
       basedir="."
-      includes="modules/assembly/project.xml"
+      includes="assembly/project.xml"
       goals="${goal}"
       ignoreFailures="false"
       />
@@ -133,7 +133,7 @@
     <j:set var="goal" value="dist:deploy"/>
     <attainGoal name="assembly:goal"/>
   </goal>
-
+  
   <goal name="clean" prereqs="init">
     <j:set var="goal" value="clean"/>
     <attainGoal name="multiproject:goal"/>
