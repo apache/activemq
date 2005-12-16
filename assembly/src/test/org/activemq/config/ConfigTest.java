@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2004 Protique Ltd
+ * Copyright 2005 LogicBlaze, Inc. http://www.logicblaze.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import org.activemq.store.memory.MemoryPersistenceAdapter;
 import org.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.activemq.store.journal.JournalPersistenceAdapter;
 import org.activemq.memory.UsageManager;
-import org.activemq.ActiveMQConnectionFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -71,14 +70,10 @@ public class ConfigTest extends TestCase {
 
         // Create broker from resource
         System.out.print("Creating broker... ");
-        broker = createBroker("org/activemq/config/activemq.xml");
+        broker = createBroker("org/activemq/config/example.xml");
         System.out.println("Success");
 
         try {
-
-        //    ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
-        //    factory.
-            /*
             // Check broker configuration
             System.out.print("Checking broker configurations... ");
             assertEquals("Broker Config Error (brokerName)", "brokerConfigTest", broker.getBrokerName());
@@ -196,15 +191,9 @@ public class ConfigTest extends TestCase {
             System.out.print("Checking if persistence adapter was succesfully created... ");
             assertTrue("Should have created a journal persistence adapter", broker.getPersistenceAdapter() instanceof JournalPersistenceAdapter);
             System.out.println("Success");
-
-            */
-
-        }catch(Exception e){
-             fail("Exception Starting Broker: "+ e.toString());
         } finally {
-            System.out.println("*******************");
             if (broker != null) {
-               broker.stop();
+                broker.stop();
             }
         }
     }
@@ -385,7 +374,9 @@ public class ConfigTest extends TestCase {
 
         assertTrue("Should have a broker!", broker != null);
 
-        broker.start();
+        //Broker is already started by default when using the XML file
+       // broker.start();
+
         return broker;
     }
 }
