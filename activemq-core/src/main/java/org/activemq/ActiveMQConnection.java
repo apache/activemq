@@ -88,6 +88,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
+
 public class ActiveMQConnection implements Connection, TopicConnection, QueueConnection, StatsCapable, Closeable, TransportListener, StreamConnection {
 
     public static final TaskRunnerFactory SESSION_TASK_RUNNER = new TaskRunnerFactory("session Task",ThreadPriorities.INBOUND_CLIENT_SESSION,true,1000);
@@ -149,7 +150,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
 
     /**
-     * 
+     * Construct an <code>ActiveMQConnection</code>
+     * @param transport 
      * @param factoryStats
      * @param userName
      * @param password
