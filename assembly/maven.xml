@@ -35,6 +35,7 @@
     <!-- Default Global Goals -->
     <!-- ==================== -->
     <goal name="default">
+        <ant:copy todir="${basedir}/src/test/org/activemq/usecases" file="${basedir}/src/release/conf/activemq.xml" overwrite="true"/>
         <attainGoal name="dist:build-bin"/>
     </goal>
     
