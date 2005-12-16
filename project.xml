@@ -113,9 +113,9 @@
 
     
     <repository>
-       <connection>scm:svn:svn://svn.activemq.org/activemq/scm/trunk/activemq/</connection>
-       <developerConnection>scm:svn:svn://svn.activemq.org/activemq/trunk/activemq/</developerConnection>
-       <url>https://svn.activemq.org/activemq/trunk/activemq/</url>
+       <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</connection>
+       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</developerConnection>
+       <url>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</url>
     </repository>     
     
 </project>
