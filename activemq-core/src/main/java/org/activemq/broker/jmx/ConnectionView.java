@@ -66,4 +66,10 @@ public class ConnectionView implements ConnectionViewMBean {
     }
     
 
+    /**
+     * Returns the number of messages to be dispatched to this connection
+     */
+    public int getDispatchQueueSize() {
+        return connection.getDispatchQueueSize();
+    }
 }
