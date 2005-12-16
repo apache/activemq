@@ -176,8 +176,6 @@ public class Main {
 
     public String getVersion() throws Throwable {
         ClassLoader cl = getClassLoader();
-        // Use reflection to get teh version
-        Object broker;
         try {
             Class activeMQConnectionMetaData = cl.loadClass("org.activemq.ActiveMQConnectionMetaData");
             Field field = activeMQConnectionMetaData.getField("PROVIDER_VERSION");
