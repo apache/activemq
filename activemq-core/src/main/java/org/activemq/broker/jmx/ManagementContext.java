@@ -309,7 +309,13 @@ public class ManagementContext implements Service {
             LocateRegistry.createRegistry(connectorPort);
             
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
-            mbeanServer.createMBean("mx4j.tools.naming.NamingService", namingServiceObjectName, null);
+            
+//          Do not use the createMBean as the mx4j jar may not be in the 
+            // same class loader than the server
+            Class cl = Class.forName("mx4j.tools.naming.NamingService");
+            mbeanServer.registerMBean(cl.newInstance(), namingServiceObjectName);
+            //mbeanServer.createMBean("mx4j.tools.naming.NamingService", namingServiceObjectName, null);
+            
             // set the naming port
             Attribute attr = new Attribute("Port", new Integer(connectorPort));
             mbeanServer.setAttribute(namingServiceObjectName, attr);
