@@ -1,22 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
-<!-- START SNIPPET: example -->
-<beans>
+<beans xmlns="http://activemq.org/config/1.0">
 
-  <broker name="receiver">
-    <connector>
-      <tcpServerTransport uri="tcp://localhost:0"/>
-    </connector>
 
-    <discoveryAgent>
-      <multicastDiscovery channelName="development" uri="multicast://228.8.9.10:2677"/>
-    </discoveryAgent>
+  <broker name="receiver" persistent="false" useJmx="false">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default"/>
+    </transportConnectors>
 
-    <discoveryNetworkConnector/>
+    <networkConnectors>
+      <networkConnector uri="static:discovery:(multicast://default)"/>
+    </networkConnectors>
 
-    <persistence>
-      <vmPersistence/>
-    </persistence>
+    <persistenceAdapter>
+      <memoryPersistenceAdapter/>
+    </persistenceAdapter>
   </broker>
 
 </beans>
