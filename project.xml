@@ -110,8 +110,6 @@
         <report>maven-developer-activity-plugin</report>
     </reports>
 
-
-    
     <repository>
        <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</connection>
        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</developerConnection>
