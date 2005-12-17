@@ -315,6 +315,9 @@
           <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
           <exclude>**/ChangeSessionDeliveryModeTest.*</exclude>
           <exclude>**/DeadLetterTest.*</exclude>
+          
+          <!-- HTTP not yet implemented -->
+          <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
       </excludes>
     </unitTest>
 
