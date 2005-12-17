@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
-<beans>
+<beans xmlns="http://activemq.org/config/1.0">
 
-  <broker name="sender">
-    <connector>
-      <tcpServerTransport uri="tcp://localhost:0"/>
-    </connector>
+  <broker name="sender" persistent="false" useJmx="false">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default"/>
+    </transportConnectors>
 
-    <discoveryAgent>
-      <multicastDiscovery channelName="development" uri="multicast://228.8.9.10:2677"/>
-    </discoveryAgent>
+    <networkConnectors>
+      <networkConnector uri="static:discovery:(multicast://default)"/>
+    </networkConnectors>
 
-    <discoveryNetworkConnector/>
-
-    <persistence>
-      <vmPersistence/>
-    </persistence>
+    <persistenceAdapter>
+      <memoryPersistenceAdapter/>
+    </persistenceAdapter>
   </broker>
 
 </beans>

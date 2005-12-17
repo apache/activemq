@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
-<beans>
 
-  <broker name="sender">
-    <connector>
-      <tcpServerTransport uri="tcp://localhost:62001"/>
-    </connector>
+<beans xmlns="http://activemq.org/config/1.0">
 
-    <networkConnector>
-      <networkChannel uri="reliable:tcp://localhost:62002"/>
-    </networkConnector>
+  <broker brokerName="sender" persistent="false" useJmx="false">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:62001"/>
+    </transportConnectors>
 
-    <persistence>
-      <vmPersistence/>
-    </persistence>
+    <networkConnectors>
+      <networkConnector uri="static:(failover:tcp://localhost:62002)"/>
+    </networkConnectors>
+
+    <persistenceAdapter>
+      <memoryPersistenceAdapter/>
+    </persistenceAdapter>
   </broker>
 
 </beans>
