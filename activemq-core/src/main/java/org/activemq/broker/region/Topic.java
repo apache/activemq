@@ -90,7 +90,7 @@ public class Topic implements Destination {
         }
         else {
             if (sub.getConsumerInfo().isRetroactive()) {
-                subscriptionRecoveryPolicy.recover(context, sub);
+                subscriptionRecoveryPolicy.recover(context, this, sub);
             }
             consumers.add(sub);
         }
@@ -272,8 +272,9 @@ public class Topic implements Destination {
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
-
-            subscriptionRecoveryPolicy.add(context, message);
+            if (! subscriptionRecoveryPolicy.add(context, message)) {
+                return;
+            }
             if (consumers.isEmpty())
                 return;
 

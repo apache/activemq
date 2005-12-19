@@ -21,6 +21,7 @@ package org.activemq.broker.region.policy;
 import org.activemq.broker.ConnectionContext;
 import org.activemq.broker.region.MessageReference;
 import org.activemq.broker.region.Subscription;
+import org.activemq.broker.region.Topic;
 
 /**
  * This is the default Topic recovery policy which does not recover any messages.
@@ -31,10 +32,11 @@ import org.activemq.broker.region.Subscription;
  */
 public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
-    public void add(ConnectionContext context, MessageReference node) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference node) throws Throwable {
+        return true;
     }
 
-    public void recover(ConnectionContext context, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
     }
 
     public void start() throws Exception {
