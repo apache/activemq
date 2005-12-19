@@ -344,8 +344,7 @@ public class Queue implements Destination {
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
-            destinationStatistics.getEnqueues().increment();
-            destinationStatistics.getMessages().increment();
+            destinationStatistics.onMessageEnqueue(message);
             synchronized (messages) {
                 messages.add(node);
             }

@@ -27,6 +27,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.activemq.broker.jmx.ManagedTransportConnector;
+import org.activemq.broker.region.ConnectorStatistics;
 import org.activemq.command.BrokerInfo;
 import org.activemq.command.ConnectionInfo;
 import org.activemq.thread.TaskRunnerFactory;
@@ -60,8 +61,8 @@ public class TransportConnector implements Connector {
     protected CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
     protected TransportStatusDetector statusDector;
     private DiscoveryAgent discoveryAgent;
+    private ConnectorStatistics statistics = new ConnectorStatistics();
     private URI discoveryUri;
-
     private URI connectUri;
 
     /**
@@ -162,6 +163,13 @@ public class TransportConnector implements Connector {
 
     public void setTaskRunnerFactory(TaskRunnerFactory taskRunnerFactory) {
         this.taskRunnerFactory = taskRunnerFactory;
+    }
+
+    /**
+     * @return the statistics for this connector
+     */
+    public ConnectorStatistics getStatistics() {
+        return statistics;
     }
 
     public void start() throws Exception {

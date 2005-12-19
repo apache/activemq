@@ -72,4 +72,31 @@ public class ConnectionView implements ConnectionViewMBean {
     public int getDispatchQueueSize() {
         return connection.getDispatchQueueSize();
     }
+    
+    /**
+     * Resets the statistics
+     */
+    public void resetStatistics() {
+        connection.getStatistics().reset();
+    }
+
+    /**
+     * Returns the number of messages enqueued on this connection
+     * 
+     * @return the number of messages enqueued on this connection
+     */
+    public long getEnqueueCount() {
+        return connection.getStatistics().getEnqueues().getCount();
+    
+    }
+
+    /**
+     * Returns the number of messages dequeued on this connection
+     * 
+     * @return the number of messages dequeued on this connection
+     */
+    public long getDequeueCount() {
+        return connection.getStatistics().getDequeues().getCount();
+    }
+
 }

@@ -62,8 +62,6 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     public Context getInitialContext(Hashtable environment) throws NamingException {
         // lets create a factory
         Map data = new ConcurrentHashMap();
-        Broker broker = null;
-
         String[] names = getConnectionFactoryNames(environment);
         for (int i = 0; i < names.length; i++) {
             ActiveMQConnectionFactory factory =null;

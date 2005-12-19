@@ -84,6 +84,10 @@ public class MessageAck extends BaseCommand {
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
+    
+    public boolean isMessageAck() {
+        return true;
+    }
 
     public boolean isPoisonAck() {
         return ackType==POSION_ACK_TYPE;

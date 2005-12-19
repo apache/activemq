@@ -277,7 +277,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
         node.decrementReferenceCount();
         
         if( node.getRegionDestination() !=null ) {
-            node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+            node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
+            context.getConnection().getStatistics().onMessageDequeue(message);
             
             if( wasFull && !isFull() ) {                            
                 try {
