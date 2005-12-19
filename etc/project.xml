@@ -495,8 +495,8 @@
 
   <build>
     <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
-    <sourceDirectory>src/java</sourceDirectory>
-    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
 
     <integrationUnitTestSourceDirectory/>
     <aspectSourceDirectory/>
@@ -504,11 +504,13 @@
     <unitTest>
       <resources>
         <resource>
-          <directory>src/test</directory>
+          <directory>src/test/resources</directory>
           <includes>
-            <include>**/*.properties</include>
-            <include>**/*.xml</include>
+            <include>**/*</include>
           </includes>
+          <excludes>
+            <exclude>**/.*</exclude>
+          </excludes>
         </resource>
       </resources>
       <includes>
@@ -522,6 +524,9 @@
         <includes>
           <include>**/*</include>
         </includes>
+        <excludes>
+          <exclude>**/.*</exclude>
+        </excludes>
       </resource>
       <resource>
         <directory>${basedir}/target/xmlbeans</directory>
