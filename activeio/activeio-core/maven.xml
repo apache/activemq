@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant">
+<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant"
+	xmlns:license="license" xmlns:util="jelly:util" xmlns:maven="jelly:maven" xmlns:artifact="artifact">
+
     <goal name="default">
         <attainGoal name="jar:install"/>
     </goal>
@@ -36,6 +38,34 @@
     -->
 
     </goal>
+
+  <postGoal name="test:compile">    <!-- Once the tests are compiled... install them -->    
+      <ant:jar jarfile="${maven.build.dir}/${pom.artifactId}-test-${pom.currentVersion}.jar" 
+      	basedir="${maven.test.dest}" index="${maven.jar.index}" compress="${maven.jar.compress}" 
+      	excludes="${maven.jar.excludes}">
+      
+      <j:if test="${maven.jar.manifest.available}">
+        <ant:setProperty name="manifest" value="${maven.jar.manifest}" />
+      </j:if>
+      
+      <j:if test="${context.getVariable('maven.jar.includes') != null}">
+        <ant:setProperty name="includes" value="${maven.jar.includes}" />
+      </j:if>
+      
+      <j:set var="licenseFileName">
+        <license:fileName />
+      </j:set>
+      <util:file name="${licenseFileName}" var="licenseFile" />
+      <ant:metainf dir="${licenseFile.canonicalFile.parent}"> 
+        <ant:include name="${licenseFile.canonicalFile.name}" />
+      </ant:metainf>
+      
+    </ant:jar>
+    
+    <mkdir dir="${maven.repo.local}/${pom.groupId}/jars" />
+    <copy todir="${maven.repo.local}/${pom.groupId}/jars" file="${maven.build.dir}/${pom.artifactId}-test-${pom.currentVersion}.jar" />
+  
+  </postGoal>
 
     <preGoal name="test:test">
         <j:choose>

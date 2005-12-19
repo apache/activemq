@@ -18,11 +18,11 @@
 <project>
 
     <pomVersion>3</pomVersion>
-    <extend>${basedir}/../etc/project.xml</extend>
+    <extend>${basedir}/../../etc/project.xml</extend>
     <currentVersion>3.0-SNAPSHOT</currentVersion>
 
-    <name>ActiveIO</name>
-    <artifactId>activeio</artifactId>
+    <name>ActiveIO :: Core</name>
+    <artifactId>activeio-core</artifactId>
 
     <package>org.activeio</package>
     <packageGroups>
