@@ -17,7 +17,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant" xmlns:license="license" xmlns:util="jelly:util" xmlns:maven="jelly:maven">
+<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant" xmlns:license="license" xmlns:util="jelly:util" xmlns:maven="jelly:maven" xmlns:artifact="artifact">
 
   <goal name="default" prereqs="jar:install, javadoc:api"/>
 
@@ -200,6 +200,20 @@
   
   <goal name="javadoc:api">
       <attainGoal name="javadoc:install"/>
+  </goal>
+  
+  <!-- ================================================================== -->
+  <!-- GOAL for deploying test jar -->
+  <!-- ================================================================== -->
+  
+  <goal name="test:deploy-bin" 
+      description="Deploy a source distribution" prereqs="test:compile">
+      
+      <artifact:deploy
+        artifact="${basedir}/target/${pom.artifactId}-test-${pom.currentVersion}.jar"
+        type="jar"
+        project="${pom}"
+      />
   </goal>
 
 </project>
