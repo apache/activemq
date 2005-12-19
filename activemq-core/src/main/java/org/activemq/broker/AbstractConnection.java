@@ -111,7 +111,9 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         this.connector = connector;
         this.broker = broker;
-        this.statistics.setParent(connector.getStatistics());
+        if (connector != null) {
+            this.statistics.setParent(connector.getStatistics());
+        }
         
         if( taskRunnerFactory != null ) {
             taskRunner = taskRunnerFactory.createTaskRunner( this );
