@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.activemq.Service;
+import org.activemq.broker.region.ConnectionStatistics;
 import org.activemq.command.ActiveMQDestination;
 import org.activemq.command.BrokerInfo;
 import org.activemq.command.Command;
@@ -78,11 +79,13 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     protected final TaskRunner taskRunner;
     protected final Connector connector;
     protected boolean demandForwardingBridge;
+    private ConnectionStatistics statistics = new ConnectionStatistics();
 
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
     
     private WireFormatInfo wireFormatInfo;    
     protected boolean disposed=false;
+
     
     static class ConnectionState extends org.activemq.state.ConnectionState {
         private final ConnectionContext context;
@@ -108,11 +111,15 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         this.connector = connector;
         this.broker = broker;
+        this.statistics.setParent(connector.getStatistics());
         
-        if( taskRunnerFactory != null )
+        if( taskRunnerFactory != null ) {
             taskRunner = taskRunnerFactory.createTaskRunner( this );
-        else 
-            taskRunner = null;        
+        }
+        else { 
+            taskRunner = null;
+        }
+        
     }
 
     /**
@@ -560,5 +567,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     
     abstract protected void dispatch(Command command);
+
+    /**
+     * Returns the statistics for this connection
+     */
+    public ConnectionStatistics getStatistics() {
+        return statistics;
+    }
 
 }

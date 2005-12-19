@@ -58,6 +58,10 @@ public class KeepAliveInfo implements Command {
         return false;
     }
 
+    public boolean isMessageAck() {
+        return false;
+    }
+
     public boolean isBrokerInfo() {
         return false;
     }

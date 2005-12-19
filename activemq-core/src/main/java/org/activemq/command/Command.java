@@ -43,6 +43,7 @@ public interface Command extends DataStructure {
     boolean isBrokerInfo();
     boolean isWireFormatInfo();
     boolean isMessage();
+    boolean isMessageAck();
     
     Response visit( CommandVisitor visitor) throws Throwable;
 }

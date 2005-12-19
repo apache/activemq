@@ -90,5 +90,31 @@ public class ConnectorView implements ConnectorViewMBean {
         }
         return redeliveryPolicy;
     }
+    
+    /**
+     * Resets the statistics
+     */
+    public void resetStatistics() {
+        connector.getStatistics().reset();
+    }
+
+    /**
+     * Returns the number of messages enqueued on this connector
+     * 
+     * @return the number of messages enqueued on this connector
+     */
+    public long getEnqueueCount() {
+        return connector.getStatistics().getEnqueues().getCount();
+    
+    }
+
+    /**
+     * Returns the number of messages dequeued on this connector
+     * 
+     * @return the number of messages dequeued on this connector
+     */
+    public long getDequeueCount() {
+        return connector.getStatistics().getDequeues().getCount();
+    }
 
 }

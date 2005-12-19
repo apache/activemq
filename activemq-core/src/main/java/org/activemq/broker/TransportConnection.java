@@ -66,7 +66,7 @@ public class TransportConnection extends AbstractConnection {
                 serviceTransportException(exception);
             }
         });
-       connected =true;
+        connected = true;
     }
 
     public void start() throws Exception {
@@ -80,6 +80,7 @@ public class TransportConnection extends AbstractConnection {
         active = false;
         super.stop();
     }
+    
     
     /**
      * @return Returns the blockedCandidate.
@@ -186,6 +187,7 @@ public class TransportConnection extends AbstractConnection {
             try{
                 setMarkedCandidate(true);
                 transport.oneway(command);
+                getStatistics().onCommand(command);
             }catch(IOException e){
                 serviceException(e);
             }finally{

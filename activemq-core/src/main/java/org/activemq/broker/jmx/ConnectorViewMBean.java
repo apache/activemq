@@ -19,8 +19,6 @@
 package org.activemq.broker.jmx;
 
 import org.activemq.Service;
-import org.activemq.command.BrokerInfo;
-import org.activemq.command.RedeliveryPolicy;
 
 public interface ConnectorViewMBean extends Service {
 
@@ -39,5 +37,24 @@ public interface ConnectorViewMBean extends Service {
     public void setMaximumRedeliveries(int maximumRedeliveries);
 
     public void setUseExponentialBackOff(boolean useExponentialBackOff);
+    
+    /**
+     * Resets the statistics
+     */
+    public void resetStatistics();
+
+    /**
+     * Returns the number of messages enqueued on this connector
+     * 
+     * @return the number of messages enqueued on this connector
+     */
+    public long getEnqueueCount();
+
+    /**
+     * Returns the number of messages dequeued on this connector
+     * 
+     * @return the number of messages dequeued on this connector
+     */
+    public long getDequeueCount();
 
 }

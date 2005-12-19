@@ -18,11 +18,10 @@
 **/
 package org.activemq.management;
 
-import java.util.List;
-
 import org.activemq.ActiveMQSession;
 import org.activemq.util.IndentPrinter;
-import javax.management.j2ee.statistics.Statistic;
+
+import java.util.List;
 /**
  * Statistics for a JMS connection
  *

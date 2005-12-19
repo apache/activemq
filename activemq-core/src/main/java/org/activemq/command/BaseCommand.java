@@ -60,6 +60,10 @@ abstract public class BaseCommand implements Command {
     public boolean isMarshallAware() {
         return false;
     }
+    
+    public boolean isMessageAck() {
+        return false;
+    }
 
     /**
      * @openwire:property version=1

@@ -19,6 +19,7 @@
 package org.activemq.broker;
 
 import org.activemq.Service;
+import org.activemq.broker.region.ConnectionStatistics;
 import org.activemq.command.Command;
 import org.activemq.command.Response;
 
@@ -86,4 +87,10 @@ public interface Connection extends Service {
      * Returns the number of messages to be dispatched to this connection
      */
     public int getDispatchQueueSize();
+    
+    /**
+     * Returns the statistics for this connection
+     */
+    public ConnectionStatistics getStatistics();
+
 }

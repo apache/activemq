@@ -45,4 +45,24 @@ public interface ConnectionViewMBean extends Service {
      * Returns the number of messages to be dispatched to this connection
      */
     public int getDispatchQueueSize();
+    
+    /**
+     * Resets the statistics
+     */
+    public void resetStatistics();
+
+    /**
+     * Returns the number of messages enqueued on this connection
+     * 
+     * @return the number of messages enqueued on this connection
+     */
+    public long getEnqueueCount();
+
+    /**
+     * Returns the number of messages dequeued on this connection
+     * 
+     * @return the number of messages dequeued on this connection
+     */
+    public long getDequeueCount();
+
 }
