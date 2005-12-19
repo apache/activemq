@@ -22,14 +22,13 @@ import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
-import org.activeio.AsyncChannel;
-import org.activeio.AsyncChannelListener;
 import org.activeio.Channel;
 import org.activeio.ChannelFactory;
-import org.activeio.Packet;
-import org.activeio.Service;
-import org.activeio.SyncChannel;
 import org.activeio.packet.EOSPacket;
+import org.activeio.packet.Packet;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.async.AsyncChannelListener;
+import org.activeio.packet.sync.SyncChannel;
 
 import java.io.IOException;
 
@@ -100,34 +99,13 @@ public class SyncToAsyncChannel implements AsyncChannel, Runnable {
         }
     }
 
-    synchronized public void stop(long timeout) throws IOException {
+    synchronized public void stop() throws IOException {
         if (running.compareAndSet(true, false)) {
             try {
-                if( timeout == NO_WAIT_TIMEOUT ) {
-                    syncChannel.stop(NO_WAIT_TIMEOUT);
-                } else if( timeout == WAIT_FOREVER_TIMEOUT ) {
-                    doneCountDownLatch.await();
-                    syncChannel.stop(WAIT_FOREVER_TIMEOUT);
-                } else {
-                    
-                    long start = System.currentTimeMillis();
-                    if( doneCountDownLatch.await(timeout, TimeUnit.MILLISECONDS) ) {
-                        timeout -= (System.currentTimeMillis() - start);
-                    } else {
-                        timeout=0;
-                    }
-                    
-                    if( timeout <= 0 ) {
-                        syncChannel.stop(NO_WAIT_TIMEOUT);
-                    } else {
-                        syncChannel.stop(timeout);
-                    }
-                }
-            } catch (IOException e) {
-                throw e;
+                doneCountDownLatch.await(5, TimeUnit.SECONDS);
             } catch (Throwable e) {
-                throw (IOException)new IOException("stop failed: " + e.getMessage()).initCause(e);
             }
+            syncChannel.stop();
         }
     }
 
@@ -169,7 +147,7 @@ public class SyncToAsyncChannel implements AsyncChannel, Runnable {
     }
 
     /**
-     * @see org.activeio.AsyncChannel#setAsyncChannelListener(org.activeio.UpPacketListener)
+     * @see org.activeio.packet.async.AsyncChannel#setAsyncChannelListener(org.activeio.UpPacketListener)
      */
     public void setAsyncChannelListener(AsyncChannelListener channelListener) {
         if (running.get())
@@ -178,9 +156,9 @@ public class SyncToAsyncChannel implements AsyncChannel, Runnable {
     }
 
     /**
-     * @see org.activeio.Channel#write(org.activeio.Packet)
+     * @see org.activeio.Channel#write(org.activeio.packet.Packet)
      */
-    public void write(org.activeio.Packet packet) throws IOException {
+    public void write(org.activeio.packet.Packet packet) throws IOException {
         syncChannel.write(packet);
     }
 
@@ -196,7 +174,7 @@ public class SyncToAsyncChannel implements AsyncChannel, Runnable {
      */
     public void dispose() {
         try {
-            stop(Service.NO_WAIT_TIMEOUT);
+            stop();
         } catch ( IOException ignore) {
         }
         syncChannel.dispose();        

@@ -26,19 +26,19 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 import org.activeio.AcceptListener;
-import org.activeio.AsyncChannel;
-import org.activeio.AsyncChannelFactory;
-import org.activeio.AsyncChannelServer;
 import org.activeio.Channel;
-import org.activeio.FilterAsyncChannelServer;
-import org.activeio.FilterSyncChannel;
-import org.activeio.Packet;
-import org.activeio.SyncChannel;
 import org.activeio.adapter.AsyncToSyncChannel;
 import org.activeio.adapter.SyncToAsyncChannelFactory;
-import org.activeio.net.SocketMetadata;
-import org.activeio.net.SocketSyncChannelFactory;
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.Packet;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.async.AsyncChannelFactory;
+import org.activeio.packet.async.AsyncChannelServer;
+import org.activeio.packet.async.FilterAsyncChannelServer;
+import org.activeio.packet.sync.FilterSyncChannel;
+import org.activeio.packet.sync.SyncChannel;
+import org.activeio.packet.sync.socket.SocketSyncChannelFactory;
+import org.activeio.stream.sync.socket.SocketMetadata;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -103,7 +103,7 @@ public class OnePortAsyncChannelServerTest extends TestCase {
         ((SocketMetadata)channel.getAdapter(SocketMetadata.class)).setTcpNoDelay(true);
         channel.write(new ByteArrayPacket("GIOPcrapcrap".getBytes("UTF-8")));
         channel.flush();
-        channel.dispose();
+        channel.stop();
     }
 
     public void testUnknownAccept() throws IOException, URISyntaxException, InterruptedException {
@@ -132,7 +132,7 @@ public class OnePortAsyncChannelServerTest extends TestCase {
             public void onAccept(Channel channel) {
                 SyncChannel syncChannel = AsyncToSyncChannel.adapt(channel);                
                 super.onAccept(new FilterSyncChannel(syncChannel) {
-                    public org.activeio.Packet read(long timeout) throws IOException {
+                    public org.activeio.packet.Packet read(long timeout) throws IOException {
                         Packet packet = super.read(timeout);
                         if( packet!=null && packet.hasRemaining() )
                             serverPacketCounter.incrementAndGet();

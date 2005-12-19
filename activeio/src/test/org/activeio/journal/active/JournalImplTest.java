@@ -22,11 +22,11 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-import org.activeio.Packet;
 import org.activeio.journal.InvalidRecordLocationException;
 import org.activeio.journal.Journal;
 import org.activeio.journal.RecordLocation;
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.Packet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

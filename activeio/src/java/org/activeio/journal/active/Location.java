@@ -21,9 +21,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.activeio.Packet;
-import org.activeio.PacketData;
 import org.activeio.journal.RecordLocation;
+import org.activeio.packet.Packet;
+import org.activeio.packet.PacketData;
 
 /**
  * Defines a where a record can be located in the Journal.

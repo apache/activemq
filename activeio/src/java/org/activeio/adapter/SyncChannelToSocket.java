@@ -25,10 +25,10 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.SocketChannel;
 
-import org.activeio.Packet;
-import org.activeio.SyncChannel;
-import org.activeio.net.SocketMetadata;
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.Packet;
+import org.activeio.packet.sync.SyncChannel;
+import org.activeio.stream.sync.socket.SocketMetadata;
 
 /**
  * Provides a {@see java.net.Socket} interface to a {@see org.activeio.SynchChannel}.
@@ -80,7 +80,7 @@ public class SyncChannelToSocket extends Socket {
         closed = true;
         inputStream.close();
         outputStream.close();
-        channel.dispose();
+        channel.stop();
     }
     
     public void connect(SocketAddress endpoint) throws IOException {

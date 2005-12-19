@@ -27,5 +27,5 @@ package org.activeio;
  * 
  * @version $Revision$
  */
-public interface Channel extends Disposable, Service, Adaptable {    
+public interface Channel extends Service, Adaptable {    
 }

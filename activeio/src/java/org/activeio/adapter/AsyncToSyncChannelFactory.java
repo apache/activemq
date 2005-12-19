@@ -20,10 +20,10 @@ package org.activeio.adapter;
 import java.io.IOException;
 import java.net.URI;
 
-import org.activeio.AsyncChannelFactory;
-import org.activeio.SyncChannel;
-import org.activeio.SyncChannelFactory;
-import org.activeio.SyncChannelServer;
+import org.activeio.packet.async.AsyncChannelFactory;
+import org.activeio.packet.sync.SyncChannel;
+import org.activeio.packet.sync.SyncChannelFactory;
+import org.activeio.packet.sync.SyncChannelServer;
 
 /**
  * @version $Revision$

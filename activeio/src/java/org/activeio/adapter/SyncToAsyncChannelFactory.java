@@ -20,11 +20,11 @@ package org.activeio.adapter;
 import java.io.IOException;
 import java.net.URI;
 
-import org.activeio.AsyncChannel;
-import org.activeio.AsyncChannelFactory;
-import org.activeio.AsyncChannelServer;
 import org.activeio.ChannelFactory;
-import org.activeio.SyncChannelFactory;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.async.AsyncChannelFactory;
+import org.activeio.packet.async.AsyncChannelServer;
+import org.activeio.packet.sync.SyncChannelFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 

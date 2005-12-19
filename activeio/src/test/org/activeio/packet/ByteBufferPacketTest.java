@@ -18,7 +18,6 @@ package org.activeio.packet;
 
 import java.nio.ByteBuffer;
 
-import org.activeio.Packet;
 
 /**
  */

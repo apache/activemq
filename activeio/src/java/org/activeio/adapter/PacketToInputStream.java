@@ -19,7 +19,7 @@ package org.activeio.adapter;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 
 /**
  * Provides an InputStream for a given Packet.

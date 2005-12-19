@@ -19,9 +19,6 @@ package org.activeio.packet;
 
 import java.util.ArrayList;
 
-import org.activeio.Disposable;
-import org.activeio.Packet;
-
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -30,7 +27,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
  * 
  * @version $Revision: 1.1 $
  */
-abstract public class PacketPool implements Disposable {
+abstract public class PacketPool {
     
     public static final int DEFAULT_POOL_SIZE = Integer.parseInt(System.getProperty("org.activeio.journal.active.DefaultPoolSize", ""+(5)));
     public static final int DEFAULT_PACKET_SIZE = Integer.parseInt(System.getProperty("org.activeio.journal.active.DefaultPacketSize", ""+(1024*1024*4)));

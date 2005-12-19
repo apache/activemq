@@ -19,7 +19,7 @@ package org.activeio.journal;
 
 import java.io.IOException;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 
 /**
  * A Journal is a record logging Interface that can be used to implement 

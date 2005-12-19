@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 
-import org.activeio.ByteSequence;
-import org.activeio.Packet;
 
 /**
  * Provides a Packet implementation that is directly backed by a <code>byte[]</code>.
@@ -135,7 +133,7 @@ final public class ByteArrayPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#read()
+     * @see org.activeio.packet.Packet#read()
      */
     public int read() {
         if( !(remaining > 0) )
@@ -147,7 +145,7 @@ final public class ByteArrayPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#read(byte[], int, int)
+     * @see org.activeio.packet.Packet#read(byte[], int, int)
      */
     public int read(byte[] data, int offset, int length) {
         if( !(remaining > 0) )
@@ -161,7 +159,7 @@ final public class ByteArrayPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#write(int)
+     * @see org.activeio.packet.Packet#write(int)
      */
     public boolean write(int data) {
         if( !(remaining > 0) )
@@ -173,7 +171,7 @@ final public class ByteArrayPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#write(byte[], int, int)
+     * @see org.activeio.packet.Packet#write(byte[], int, int)
      */
     public int write(byte[] data, int offset, int length) {
         if( !(remaining > 0) )
@@ -191,7 +189,7 @@ final public class ByteArrayPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#sliceAsBytes()
+     * @see org.activeio.packet.Packet#sliceAsBytes()
      */
     public byte[] sliceAsBytes() {
         if( buffer.length == remaining ) {

@@ -17,7 +17,7 @@
  **/
 package org.activeio.oneport;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 
 
 public class IIOPRecognizer implements ProtocolRecognizer {

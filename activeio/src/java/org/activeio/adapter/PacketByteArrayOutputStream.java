@@ -20,9 +20,9 @@ package org.activeio.adapter;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.activeio.Packet;
 import org.activeio.packet.AppendedPacket;
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.Packet;
 
 /**
  *

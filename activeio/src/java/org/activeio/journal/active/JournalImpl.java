@@ -21,14 +21,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
-import org.activeio.Disposable;
-import org.activeio.Packet;
 import org.activeio.journal.InvalidRecordLocationException;
 import org.activeio.journal.Journal;
 import org.activeio.journal.JournalEventListener;
 import org.activeio.journal.RecordLocation;
 import org.activeio.packet.ByteArrayPacket;
 import org.activeio.packet.ByteBufferPacketPool;
+import org.activeio.packet.Packet;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Callable;
 import edu.emory.mathcs.backport.java.util.concurrent.ExecutionException;
@@ -60,7 +59,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
  * 
  * @version $Revision: 1.1 $
  */
-final public class JournalImpl implements Journal, Disposable {
+final public class JournalImpl implements Journal {
 
     public static final int DEFAULT_POOL_SIZE = Integer.parseInt(System.getProperty("org.activeio.journal.active.DefaultPoolSize", ""+(5)));
     public static final int DEFAULT_PACKET_SIZE = Integer.parseInt(System.getProperty("org.activeio.journal.active.DefaultPacketSize", ""+(1024*1024*4)));

@@ -16,10 +16,10 @@
  */
 package org.activeio.xnet;
 
-import org.activeio.SyncChannel;
-import org.activeio.SyncChannelServer;
 import org.activeio.adapter.SyncChannelToSocket;
-import org.activeio.net.SocketSyncChannelFactory;
+import org.activeio.packet.sync.SyncChannel;
+import org.activeio.packet.sync.SyncChannelServer;
+import org.activeio.packet.sync.socket.SocketSyncChannelFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -85,10 +85,10 @@ public class SyncChannelServerDaemon implements Runnable {
         stopped = true;
     }
 
-    public synchronized void doFail() {
+    public synchronized void doFail() throws IOException {
         doStop();
         if (server != null) {
-            server.dispose();
+            server.stop();
         }
     }
 
@@ -140,7 +140,7 @@ public class SyncChannelServerDaemon implements Runnable {
 
         if (server != null) {
             try {
-                server.dispose();
+                server.stop();
             } catch (Exception ioException) {
                 log.debug("Error cleaning up socked", ioException);
             }

@@ -16,9 +16,10 @@
  */
 package org.activeio.adapter;
 
-import org.activeio.SyncChannel;
-import org.activeio.AsyncChannel;
 import org.activeio.Channel;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.sync.SyncChannel;
+
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 
 /**

@@ -17,7 +17,7 @@
  **/
 package org.activeio.journal.active;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 

@@ -20,12 +20,12 @@ package org.activeio.journal.howl;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
-import org.activeio.Packet;
 import org.activeio.journal.InvalidRecordLocationException;
 import org.activeio.journal.Journal;
 import org.activeio.journal.JournalEventListener;
 import org.activeio.journal.RecordLocation;
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.Packet;
 import org.objectweb.howl.log.Configuration;
 import org.objectweb.howl.log.InvalidFileSetException;
 import org.objectweb.howl.log.InvalidLogBufferException;

@@ -27,7 +27,7 @@ import java.net.URI;
  * 
  * @version $Revision$
  */
-public interface ChannelServer extends Channel {
+public interface ChannelServer extends Service, Adaptable {
 
     /**
      * The URI that was used when the channel was bound.  This could be different

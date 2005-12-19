@@ -24,11 +24,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.zip.CRC32;
 
-import org.activeio.Disposable;
-import org.activeio.Packet;
-import org.activeio.adapter.PacketToInputStream;
 import org.activeio.adapter.PacketOutputStream;
+import org.activeio.adapter.PacketToInputStream;
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.Packet;
 
 
 /**
@@ -36,7 +35,7 @@ import org.activeio.packet.ByteArrayPacket;
  * 
  * @version $Revision: 1.1 $
  */
-final public class Record implements Disposable {
+final public class Record {
     
     static final public int RECORD_HEADER_SIZE=8+Location.SERIALIZED_SIZE;
     static final public int RECORD_FOOTER_SIZE=12+Location.SERIALIZED_SIZE;
