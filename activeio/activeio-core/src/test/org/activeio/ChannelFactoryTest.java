@@ -27,8 +27,6 @@ import org.activeio.adapter.AsyncToSyncChannel;
 import org.activeio.adapter.SyncToAsyncChannel;
 import org.activeio.packet.async.AsyncChannel;
 import org.activeio.packet.async.AsyncChannelServer;
-import org.activeio.packet.async.aio.AIOAsyncChannel;
-import org.activeio.packet.async.aio.AIOSyncChannelServer;
 import org.activeio.packet.async.nio.NIOAsyncChannel;
 import org.activeio.packet.async.nio.NIOAsyncChannelServer;
 import org.activeio.packet.async.vmpipe.VMPipeAsyncChannelPipe;
@@ -79,24 +77,6 @@ public class ChannelFactoryTest extends TestCase {
         assertNotNull( serverAsyncChannel.getAdapter(SocketSyncChannel.class) );
         
     }
-
-    public void testAIO() throws IOException, URISyntaxException, InterruptedException {
-
-        if( aioDisabled ) {
-            return;
-        }
-        
-        createSynchObjects("aio://localhost:0");
-        assertNotNull( syncChannelServer.getAdapter(AIOSyncChannelServer.class) );
-        assertNotNull( clientSynchChannel.getAdapter(AIOAsyncChannel.class) );
-        assertNotNull( serverSynchChannel.getAdapter(AIOAsyncChannel.class) );
-        
-        createAsynchObjects("aio://localhost:0");
-        assertNotNull( asyncChannelServer.getAdapter(AIOSyncChannelServer.class) );
-        assertNotNull( clientAsyncChannel.getAdapter(AIOAsyncChannel.class) );
-        assertNotNull( serverAsyncChannel.getAdapter(AIOAsyncChannel.class) );
-        
-    }    
 
     public void testNIO() throws IOException, URISyntaxException, InterruptedException {
         

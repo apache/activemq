@@ -17,13 +17,14 @@
  **/
 package org.activeio.oneport;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+
+import junit.framework.TestCase;
 
 import org.activeio.AcceptListener;
 import org.activeio.Channel;
@@ -42,16 +43,13 @@ import org.activeio.stream.sync.socket.SocketMetadata;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.naming.NamingException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-
-import junit.framework.TestCase;
+import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 /**
  */
@@ -69,7 +67,7 @@ public class OnePortAsyncChannelServerTest extends TestCase {
     public void testIIOPAccept() throws Exception {
         serverPacketCounter.set(0);
         hitIIOPServer();
-        String type = (String) resultSlot.poll(1000 * 5, TimeUnit.MILLISECONDS);
+        String type = (String) resultSlot.poll(10, TimeUnit.SECONDS);
         assertEquals("IIOP", type);
         // Verify that a request when through the one port.
         assertTrue(serverPacketCounter.get()>0);
@@ -78,7 +76,7 @@ public class OnePortAsyncChannelServerTest extends TestCase {
     public void testHttpAccept() throws IOException, URISyntaxException, InterruptedException {
         serverPacketCounter.set(0);
         hitHttpServer();
-        String type = (String) resultSlot.poll(1000 * 5 * 10000, TimeUnit.MILLISECONDS);
+        String type = (String) resultSlot.poll(60, TimeUnit.SECONDS);
         assertEquals("HTTP", type);
         // Verify that a request when through the one port.
         assertTrue(serverPacketCounter.get()>0);
