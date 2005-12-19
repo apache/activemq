@@ -21,6 +21,7 @@ package org.activemq.broker.region.policy;
 import org.activemq.broker.ConnectionContext;
 import org.activemq.broker.region.MessageReference;
 import org.activemq.broker.region.Subscription;
+import org.activemq.broker.region.Topic;
 import org.activemq.filter.MessageEvaluationContext;
 
 /**
@@ -35,11 +36,12 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
 
     volatile private MessageReference lastImage;
 
-    public void add(ConnectionContext context, MessageReference node) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference node) throws Throwable {
         lastImage = node;
+        return true;
     }
 
-    public void recover(ConnectionContext context, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
         // Re-dispatch the last message seen.
         MessageReference node = lastImage;
         if( node != null ){

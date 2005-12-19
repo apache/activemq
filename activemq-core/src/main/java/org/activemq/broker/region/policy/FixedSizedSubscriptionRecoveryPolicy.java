@@ -24,6 +24,7 @@ import java.util.List;
 import org.activemq.broker.ConnectionContext;
 import org.activemq.broker.region.MessageReference;
 import org.activemq.broker.region.Subscription;
+import org.activemq.broker.region.Topic;
 import org.activemq.filter.MessageEvaluationContext;
 import org.activemq.memory.list.DestinationBasedMessageList;
 import org.activemq.memory.list.MessageList;
@@ -44,11 +45,12 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
     private int maximumSize = 100 * 64 * 1024;
     private boolean useSharedBuffer = true;
 
-    public void add(ConnectionContext context, MessageReference message) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference message) throws Throwable {
         buffer.add(message);
+        return true;
     }
 
-    public void recover(ConnectionContext context, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
         // Re-dispatch the messages from the buffer.
         List copy = buffer.getMessages(sub);
         if( !copy.isEmpty() ) {

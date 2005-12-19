@@ -22,6 +22,7 @@ import org.activemq.Service;
 import org.activemq.broker.ConnectionContext;
 import org.activemq.broker.region.MessageReference;
 import org.activemq.broker.region.Subscription;
+import org.activemq.broker.region.Topic;
 
 /**
  * Abstraction to allow different recovery policies to be plugged
@@ -37,17 +38,20 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * 
      * @param context
      * @param node
+     * @return TODO
      * @throws Throwable
      */
-    void add(ConnectionContext context, MessageReference message) throws Throwable;
+    boolean add(ConnectionContext context, MessageReference message) throws Throwable;
     
     /**
      * Let a subscription recover message held by the policy.
      * 
      * @param context
+     * @param topic TODO
+     * @param topic 
      * @param node
      * @throws Throwable
      */
-    void recover(ConnectionContext context, Subscription sub) throws Throwable;
+    void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable;
 
 }

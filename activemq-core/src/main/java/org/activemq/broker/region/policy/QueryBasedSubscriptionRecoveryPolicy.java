@@ -18,13 +18,22 @@
  **/
 package org.activemq.broker.region.policy;
 
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
+
 import org.activemq.ActiveMQMessageTransformation;
 import org.activemq.broker.ConnectionContext;
+import org.activemq.broker.region.Destination;
 import org.activemq.broker.region.MessageReference;
 import org.activemq.broker.region.Subscription;
+import org.activemq.broker.region.Topic;
 import org.activemq.command.ActiveMQDestination;
 import org.activemq.command.ActiveMQMessage;
+import org.activemq.command.ConnectionId;
+import org.activemq.command.MessageId;
+import org.activemq.command.ProducerId;
+import org.activemq.command.SessionId;
 import org.activemq.filter.MessageEvaluationContext;
+import org.activemq.util.IdGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -44,18 +53,25 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     private static final Log log = LogFactory.getLog(QueryBasedSubscriptionRecoveryPolicy.class);
 
     private MessageQuery query;
+    private AtomicLong messageSequence = new AtomicLong(0);
+    private IdGenerator idGenerator = new IdGenerator();
+    private ProducerId producerId = createProducerId();
 
-    public void add(ConnectionContext context, MessageReference message) throws Throwable {
+    public QueryBasedSubscriptionRecoveryPolicy() {
     }
 
-    public void recover(ConnectionContext context, final Subscription sub) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference message) throws Throwable {
+        return query.validateUpdate(message.getMessage());
+    }
+
+    public void recover(ConnectionContext context, final Topic topic, final Subscription sub) throws Throwable {
         if (query != null) {
             final MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
             try {
                 ActiveMQDestination destination = sub.getConsumerInfo().getDestination();
                 query.execute(destination, new MessageListener() {
                     public void onMessage(Message message) {
-                        dispatchInitialMessage(message, msgContext, sub);
+                        dispatchInitialMessage(message, topic, msgContext, sub);
                     }
                 });
             }
@@ -66,7 +82,7 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     }
 
     public void start() throws Exception {
-        if (query != null) {
+        if (query == null) {
             throw new IllegalArgumentException("No query property configured");
         }
     }
@@ -85,10 +101,17 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
         this.query = query;
     }
 
-    protected void dispatchInitialMessage(Message message, MessageEvaluationContext msgContext, Subscription sub) {
+    protected void dispatchInitialMessage(Message message,  Destination regionDestination, MessageEvaluationContext msgContext, Subscription sub) {
         try {
             ActiveMQMessage activeMessage = ActiveMQMessageTransformation.transformMessage(message, null);
-            msgContext.setDestination(activeMessage.getDestination());
+            ActiveMQDestination destination = activeMessage.getDestination();
+            if (destination == null) {
+                destination = sub.getConsumerInfo().getDestination();
+                activeMessage.setDestination(destination);
+            }
+            activeMessage.setRegionDestination(regionDestination);
+            configure(activeMessage);
+            msgContext.setDestination(destination);
             msgContext.setMessageReference(activeMessage);
             if (sub.matches(activeMessage, msgContext)) {
                 sub.add(activeMessage);
@@ -97,5 +120,19 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
         catch (Throwable e) {
             log.warn("Failed to dispatch initial message: " + message + " into subscription. Reason: " + e, e);
         }
+    }
+
+    protected void configure(ActiveMQMessage msg) {
+        long sequenceNumber = messageSequence.incrementAndGet();
+        msg.setMessageId(new MessageId(producerId, sequenceNumber));
+        msg.onSend();
+        msg.setProducerId(producerId);
+    }
+
+    protected ProducerId createProducerId() {
+        String id = idGenerator.generateId();
+        ConnectionId connectionId = new ConnectionId(id);
+        SessionId sessionId = new SessionId(connectionId, 1);
+        return new ProducerId(sessionId, 1);
     }
 }

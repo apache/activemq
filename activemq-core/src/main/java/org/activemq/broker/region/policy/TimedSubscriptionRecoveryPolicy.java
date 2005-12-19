@@ -27,6 +27,7 @@ import java.util.List;
 import org.activemq.broker.ConnectionContext;
 import org.activemq.broker.region.MessageReference;
 import org.activemq.broker.region.Subscription;
+import org.activemq.broker.region.Topic;
 import org.activemq.filter.MessageEvaluationContext;
 import org.activemq.thread.Scheduler;
 
@@ -66,11 +67,12 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
         }
     };
 
-    public void add(ConnectionContext context, MessageReference message) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference message) throws Throwable {
         buffer.add(new TimestampWrapper(message, lastGCRun));
+        return true;
     }
 
-    public void recover(ConnectionContext context, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
         
         // Re-dispatch the messages from the buffer.
         ArrayList copy = new ArrayList(buffer);
