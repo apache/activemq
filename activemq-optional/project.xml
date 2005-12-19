@@ -39,12 +39,6 @@
     </dependency>
 
     <dependency>
-      <groupId>jgroups</groupId>
-      <artifactId>jgroups</artifactId>
-      <version>${jgroups_version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>activeio</groupId>
       <artifactId>activeio</artifactId>
       <version>${activeio_version}</version>
@@ -92,23 +86,6 @@
       <properties>
         <war.bundle>true</war.bundle>
       </properties>
-    </dependency>
-
-    <!-- to test the XA support -->
-    <dependency>
-      <id>jotm</id>
-      <artifactId>jotm</artifactId>
-      <version>1.5.3</version>
-    </dependency>
-    <dependency>
-      <id>jotm+carol</id>
-      <artifactId>jotm-carol</artifactId>
-      <version>1.5.3</version>
-    </dependency>
-    <dependency>
-      <id>jotm+jrmp+stubs</id>
-      <artifactId>jotm-jrmp-stubs</artifactId>
-      <version>1.5.3</version>
     </dependency>
 
     <!-- this should be an optional dependency now, when 1.1.2 of Spring is out -->
