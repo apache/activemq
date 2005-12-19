@@ -48,7 +48,7 @@ import org.activemq.command.ActiveMQTempTopic;
 import org.activemq.command.ActiveMQTextMessage;
 import org.activemq.command.ActiveMQTopic;
 
-class ActiveMQMessageTransformation {
+public class ActiveMQMessageTransformation {
 
 	/**
      * Creates a an available JMS message from another provider.
