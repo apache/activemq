@@ -22,18 +22,18 @@ import java.net.URI;
 import java.util.Iterator;
 
 import org.activeio.AcceptListener;
-import org.activeio.AsyncChannel;
-import org.activeio.AsyncChannelListener;
-import org.activeio.AsyncChannelServer;
 import org.activeio.Channel;
-import org.activeio.FilterAsyncChannel;
-import org.activeio.FilterAsyncChannelServer;
-import org.activeio.Packet;
-import org.activeio.SyncChannel;
 import org.activeio.adapter.AsyncToSyncChannel;
 import org.activeio.adapter.SyncToAsyncChannel;
-import org.activeio.filter.PushbackSyncChannel;
 import org.activeio.packet.AppendedPacket;
+import org.activeio.packet.Packet;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.async.AsyncChannelListener;
+import org.activeio.packet.async.AsyncChannelServer;
+import org.activeio.packet.async.FilterAsyncChannel;
+import org.activeio.packet.async.FilterAsyncChannelServer;
+import org.activeio.packet.sync.SyncChannel;
+import org.activeio.packet.sync.filter.PushbackSyncChannel;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
@@ -121,7 +121,7 @@ final public class OnePortAsyncChannelServer extends FilterAsyncChannelServer {
                     // packets wiil get
                     // delivered.
                     try {
-                        stop(NO_WAIT_TIMEOUT);
+                        stop();
                         setAsyncChannelListener(null);
                     } catch (IOException e) {                        
                         getAsyncChannelListener().onPacketError(e);
@@ -176,7 +176,7 @@ final public class OnePortAsyncChannelServer extends FilterAsyncChannelServer {
         public void start() throws IOException {
             started = true;
         }
-        public void stop(long timeout) throws IOException {
+        public void stop() throws IOException {
             started = false;
         }
         

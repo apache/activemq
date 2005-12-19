@@ -18,22 +18,20 @@
 
 package org.activeio.adapter;
 
+import java.io.IOException;
+import java.net.URI;
+
+import org.activeio.AcceptListener;
+import org.activeio.Channel;
+import org.activeio.ChannelFactory;
+import org.activeio.ChannelServer;
+import org.activeio.packet.async.AsyncChannelServer;
+import org.activeio.packet.sync.SyncChannelServer;
+
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-
-import org.activeio.AcceptListener;
-import org.activeio.AsyncChannelServer;
-import org.activeio.Channel;
-import org.activeio.ChannelFactory;
-import org.activeio.ChannelServer;
-import org.activeio.Disposable;
-import org.activeio.Service;
-import org.activeio.SyncChannelServer;
-
-import java.io.IOException;
-import java.net.URI;
 
 /**
  * Adapts a {@see org.activeio,SynchChannelServer} so that it provides an 
@@ -93,36 +91,13 @@ final public class SyncToAsyncChannelServer implements AsyncChannelServer, Runna
         }
     }
 
-    synchronized public void stop(long timeout) throws IOException {
+    synchronized public void stop() throws IOException {
         if (running.compareAndSet(true, false)) {
             try {
-                
-                if( timeout == NO_WAIT_TIMEOUT ) {
-                    syncChannelServer.stop(NO_WAIT_TIMEOUT);
-                } else if( timeout == WAIT_FOREVER_TIMEOUT ) {
-                    doneCountDownLatch.await();
-                    syncChannelServer.stop(WAIT_FOREVER_TIMEOUT);
-                } else {
-                    
-                    long start = System.currentTimeMillis();
-                    if( doneCountDownLatch.await(timeout, TimeUnit.MILLISECONDS) ) {
-                        timeout -= (System.currentTimeMillis() - start);
-                    } else {
-                        timeout=0;
-                    }
-                    
-                    if( timeout <= 0 ) {
-                        syncChannelServer.stop(NO_WAIT_TIMEOUT);
-                    } else {
-                        syncChannelServer.stop(timeout);
-                    }
-                }
-                
-            } catch (IOException e) {
-                throw e;
+                doneCountDownLatch.await(5, TimeUnit.SECONDS);
             } catch (Throwable e) {
-                throw (IOException)new IOException("stop failed: " + e.getMessage()).initCause(e);
             }
+            syncChannelServer.stop();
         }
     }
 
@@ -153,7 +128,7 @@ final public class SyncToAsyncChannelServer implements AsyncChannelServer, Runna
     }
 
     /**
-     * @see org.activeio.AsyncChannelServer#setAcceptListener(org.activeio.AcceptListener)
+     * @see org.activeio.packet.async.AsyncChannelServer#setAcceptListener(org.activeio.AcceptListener)
      */
     public void setAcceptListener(AcceptListener acceptListener) {
         if(running.get()) 
@@ -166,12 +141,10 @@ final public class SyncToAsyncChannelServer implements AsyncChannelServer, Runna
      */
     public void dispose() {
         try {
-            stop(Service.NO_WAIT_TIMEOUT);
+            stop();
         } catch ( IOException ignore) {
         }
-        if( syncChannelServer instanceof Disposable ) {
-            ((Disposable)syncChannelServer).dispose();
-        }
+        syncChannelServer.dispose();
     }
 
     public URI getBindURI() {

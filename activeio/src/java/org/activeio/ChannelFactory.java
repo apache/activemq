@@ -17,19 +17,25 @@
  **/
 package org.activeio;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
+
+import org.activeio.adapter.AsyncToSyncChannelFactory;
+import org.activeio.adapter.SyncToAsyncChannelFactory;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.async.AsyncChannelFactory;
+import org.activeio.packet.async.AsyncChannelServer;
+import org.activeio.packet.sync.SyncChannel;
+import org.activeio.packet.sync.SyncChannelFactory;
+import org.activeio.packet.sync.SyncChannelServer;
+import org.activeio.util.FactoryFinder;
+
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
-import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.SynchronousQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
-
-import org.activeio.adapter.AsyncToSyncChannelFactory;
-import org.activeio.adapter.SyncToAsyncChannelFactory;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashMap;
 
 /**
  * A {@see ChannelFactory}uses the requested URI's scheme to determine the

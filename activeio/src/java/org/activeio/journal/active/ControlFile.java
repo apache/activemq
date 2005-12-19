@@ -27,9 +27,8 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import org.activeio.Disposable;
-import org.activeio.Packet;
 import org.activeio.packet.ByteBufferPacket;
+import org.activeio.packet.Packet;
 
 /**
  * Control file holds the last known good state of the journal.  It stores the state in 
@@ -39,7 +38,7 @@ import org.activeio.packet.ByteBufferPacket;
  * 
  * @version $Revision: 1.1 $
  */
-final public class ControlFile implements Disposable {
+final public class ControlFile {
 
     /** The File that holds the control data. */
     private final RandomAccessFile file;

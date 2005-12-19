@@ -20,10 +20,10 @@ package org.activeio.adapter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
-import org.activeio.AsyncChannel;
-import org.activeio.AsyncChannelListener;
-import org.activeio.Packet;
-import org.activeio.SyncChannel;
+import org.activeio.packet.Packet;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.async.AsyncChannelListener;
+import org.activeio.packet.sync.SyncChannel;
 
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
@@ -79,9 +79,9 @@ final public class AsyncToSyncChannel implements SyncChannel, AsyncChannelListen
     }
 
     /**
-     * @see org.activeio.Channel#write(org.activeio.Packet)
+     * @see org.activeio.Channel#write(org.activeio.packet.Packet)
      */
-    public void write(org.activeio.Packet packet) throws IOException {
+    public void write(org.activeio.packet.Packet packet) throws IOException {
         asyncChannel.write(packet);
     }
 
@@ -93,7 +93,7 @@ final public class AsyncToSyncChannel implements SyncChannel, AsyncChannelListen
     }
 
     /**
-     * @see org.activeio.SyncChannel#read(long)
+     * @see org.activeio.packet.sync.SyncChannel#read(long)
      */
     public Packet read(long timeout) throws IOException {
         try {
@@ -136,14 +136,14 @@ final public class AsyncToSyncChannel implements SyncChannel, AsyncChannelListen
     }
 
     /**
-     * @see org.activeio.Service#stop(long)
+     * @see org.activeio.Service#stop()
      */
-    public void stop(long timeout) throws IOException {
-        asyncChannel.stop(timeout);
+    public void stop() throws IOException {
+        asyncChannel.stop();
     }
 
     /**
-     * @see org.activeio.AsyncChannelListener#onPacket(org.activeio.Packet)
+     * @see org.activeio.packet.async.AsyncChannelListener#onPacket(org.activeio.packet.Packet)
      */
     public void onPacket(Packet packet) {
         try {
@@ -154,7 +154,7 @@ final public class AsyncToSyncChannel implements SyncChannel, AsyncChannelListen
     }
 
     /**
-     * @see org.activeio.AsyncChannelListener#onPacketError(org.activeio.ChannelException)
+     * @see org.activeio.packet.async.AsyncChannelListener#onPacketError(org.activeio.ChannelException)
      */
     public void onPacketError(IOException error) {
         try {

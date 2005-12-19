@@ -20,8 +20,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.activeio.ByteSequence;
-import org.activeio.Packet;
 
 /**
  * Provides a Packet implementation that filters operations to another packet.

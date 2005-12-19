@@ -22,10 +22,10 @@ import java.io.InterruptedIOException;
 import java.net.URI;
 
 import org.activeio.AcceptListener;
-import org.activeio.AsyncChannelServer;
 import org.activeio.Channel;
 import org.activeio.ChannelServer;
-import org.activeio.SyncChannelServer;
+import org.activeio.packet.async.AsyncChannelServer;
+import org.activeio.packet.sync.SyncChannelServer;
 
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
@@ -82,7 +82,7 @@ final public class AsyncToSyncChannelServer implements SyncChannelServer, Accept
     }
 
     /**
-     * @see org.activeio.SyncChannelServer#accept(long)
+     * @see org.activeio.packet.sync.SyncChannelServer#accept(long)
      */
     public org.activeio.Channel accept(long timeout) throws IOException {
         try {
@@ -124,10 +124,10 @@ final public class AsyncToSyncChannelServer implements SyncChannelServer, Accept
     }
 
     /**
-     * @see org.activeio.Service#stop(long)
+     * @see org.activeio.Service#stop()
      */
-    public void stop(long timeout) throws IOException {
-        asyncChannelServer.stop(timeout);
+    public void stop() throws IOException {
+        asyncChannelServer.stop();
     }
 
     public URI getBindURI() {

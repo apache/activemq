@@ -43,11 +43,14 @@ public interface Service {
     /**
 	 * Stops the channel.  Once stopped, the channel is in the stopped state.
 	 * 
-	 * @param timeout The amount of time the channel is allowed to take to gracefully stop.  If the timeout
-	 *        is exceeded, the channel should do a forcefull stop.
-	 * 
 	 * @throws IOException
 	 */
-    void stop(long timeout) throws IOException;
+    void stop() throws IOException;
         
+    /**
+     * Disposes the channel.  Once disposed, the channel cannot be used anymore.
+     * 
+     * @throws IOException
+     */
+    void dispose();
 }

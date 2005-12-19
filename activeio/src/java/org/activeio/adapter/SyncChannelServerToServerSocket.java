@@ -28,8 +28,8 @@ import java.net.URI;
 import java.nio.channels.ServerSocketChannel;
 
 import org.activeio.Channel;
-import org.activeio.SyncChannel;
-import org.activeio.SyncChannelServer;
+import org.activeio.packet.sync.SyncChannel;
+import org.activeio.packet.sync.SyncChannelServer;
 
 /**
  */
@@ -91,12 +91,6 @@ public class SyncChannelServerToServerSocket extends ServerSocket {
   	    throw new SocketException("Already bound");
     }
     
-    public void close() throws IOException {
-    	if (!isClosed()) {
-    	    channelServer.dispose();
-    	}
-    }
-
     public ServerSocketChannel getChannel() {
         return null;
     }

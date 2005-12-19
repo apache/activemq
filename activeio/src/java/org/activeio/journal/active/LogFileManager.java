@@ -27,12 +27,12 @@ import java.nio.ByteBuffer;
 import java.text.NumberFormat;
 import java.util.HashMap;
 
-import org.activeio.Packet;
 import org.activeio.adapter.PacketOutputStream;
 import org.activeio.adapter.PacketToInputStream;
 import org.activeio.journal.InvalidRecordLocationException;
 import org.activeio.packet.ByteArrayPacket;
 import org.activeio.packet.ByteBufferPacket;
+import org.activeio.packet.Packet;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 

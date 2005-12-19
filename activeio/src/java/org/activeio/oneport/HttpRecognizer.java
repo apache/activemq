@@ -19,7 +19,7 @@ package org.activeio.oneport;
 
 import java.util.HashSet;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 
 
 public class HttpRecognizer implements ProtocolRecognizer {

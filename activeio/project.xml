@@ -19,6 +19,7 @@
 
     <pomVersion>3</pomVersion>
     <extend>${basedir}/../etc/project.xml</extend>
+    <currentVersion>3.0-SNAPSHOT</currentVersion>
 
     <name>ActiveIO</name>
     <artifactId>activeio</artifactId>
@@ -254,6 +255,9 @@
             <includes>
                 <include>**/*Test.java</include>
             </includes>
+            <excludes>
+                <exclude>**/OpenORBOnePortSocketFactoryTest.*</exclude>
+            </excludes>
             <resources>
                 <resource>
                     <directory>src/test</directory>

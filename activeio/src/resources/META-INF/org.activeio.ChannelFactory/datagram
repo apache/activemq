@@ -1,1 +1,1 @@
-SyncChannelFactory.class=org.activeio.net.DatagramSocketSyncChannelFactory
+SyncChannelFactory.class=org.activeio.packet.sync.datagram.DatagramSocketSyncChannelFactory

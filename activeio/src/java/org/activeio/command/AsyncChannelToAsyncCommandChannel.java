@@ -17,10 +17,10 @@
  **/
 package org.activeio.command;
 
-import org.activeio.AsyncChannel;
-import org.activeio.AsyncChannelListener;
-import org.activeio.Packet;
 import org.activeio.packet.EOSPacket;
+import org.activeio.packet.Packet;
+import org.activeio.packet.async.AsyncChannel;
+import org.activeio.packet.async.AsyncChannelListener;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -54,8 +54,8 @@ public class AsyncChannelToAsyncCommandChannel implements AsyncCommandChannel {
         channel.start();
     }
 
-    public void stop(long timeout) throws IOException {
-        channel.stop(timeout);
+    public void stop() throws IOException {
+        channel.stop();
     }
 
     public void setCommandListener(final CommandListener listener) {

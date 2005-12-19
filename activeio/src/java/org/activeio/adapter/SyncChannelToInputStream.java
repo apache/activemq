@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.activeio.Channel;
-import org.activeio.Packet;
-import org.activeio.SyncChannel;
 import org.activeio.packet.EOSPacket;
+import org.activeio.packet.Packet;
+import org.activeio.packet.sync.SyncChannel;
 
 /**
  * Provides an InputStream for a given SynchChannel.

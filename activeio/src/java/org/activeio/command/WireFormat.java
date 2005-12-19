@@ -21,7 +21,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 
 /**
  * Provides a mechanism to marshal commands into and out of packets

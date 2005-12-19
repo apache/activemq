@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 import org.activeio.stats.CountStatisticImpl;
 import org.activeio.stats.IndentPrinter;
 import org.activeio.stats.TimeStatisticImpl;

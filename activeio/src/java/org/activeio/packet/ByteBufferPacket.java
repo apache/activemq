@@ -22,8 +22,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 
-import org.activeio.ByteSequence;
-import org.activeio.Packet;
 
 /**
  * Provides a Packet implementation that is backed by a {@see java.nio.ByteBuffer}
@@ -174,7 +172,7 @@ final public class ByteBufferPacket implements Packet {
     
 
     /**
-     * @see org.activeio.Packet#read()
+     * @see org.activeio.packet.Packet#read()
      */
     public int read() {
         if( !buffer.hasRemaining() )
@@ -183,7 +181,7 @@ final public class ByteBufferPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#read(byte[], int, int)
+     * @see org.activeio.packet.Packet#read(byte[], int, int)
      */
     public int read(byte[] data, int offset, int length) {
         if( !hasRemaining() )
@@ -195,7 +193,7 @@ final public class ByteBufferPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#write(int)
+     * @see org.activeio.packet.Packet#write(int)
      */
     public boolean write(int data) {
         if( !buffer.hasRemaining() )
@@ -205,7 +203,7 @@ final public class ByteBufferPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#write(byte[], int, int)
+     * @see org.activeio.packet.Packet#write(byte[], int, int)
      */
     public int write(byte[] data, int offset, int length) {
         if( !hasRemaining() )
@@ -217,7 +215,7 @@ final public class ByteBufferPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#asByteSequence()
+     * @see org.activeio.packet.Packet#asByteSequence()
      */
     public ByteSequence asByteSequence() {
         if( buffer.hasArray() ) {
@@ -229,7 +227,7 @@ final public class ByteBufferPacket implements Packet {
     }
     
     /**
-     * @see org.activeio.Packet#sliceAsBytes()
+     * @see org.activeio.packet.Packet#sliceAsBytes()
      */
     public byte[] sliceAsBytes() {
         // TODO Auto-generated method stub

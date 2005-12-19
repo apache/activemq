@@ -20,8 +20,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.activeio.ByteSequence;
-import org.activeio.Packet;
 
 /**
  * Provides a Packet implementation that is used to represent the end of a stream.
@@ -93,28 +91,28 @@ final public class EOSPacket implements Packet {
     }
 
     /**
-     * @see org.activeio.Packet#read()
+     * @see org.activeio.packet.Packet#read()
      */
     public int read() {
         return -1;
     }
 
     /**
-     * @see org.activeio.Packet#read(byte[], int, int)
+     * @see org.activeio.packet.Packet#read(byte[], int, int)
      */
     public int read(byte[] data, int offset, int length) {
         return -1;
     }
 
     /**
-     * @see org.activeio.Packet#write(int)
+     * @see org.activeio.packet.Packet#write(int)
      */
     public boolean write(int data) {
         return false;
     }
 
     /**
-     * @see org.activeio.Packet#write(byte[], int, int)
+     * @see org.activeio.packet.Packet#write(byte[], int, int)
      */
     public int write(byte[] data, int offset, int length) {
         return -1;

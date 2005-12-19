@@ -1,1 +1,1 @@
-SyncChannelFactory.class=org.activeio.net.MulticastSocketSyncChannelFactory
+SyncChannelFactory.class=org.activeio.packet.sync.multicast.MulticastSocketSyncChannelFactory

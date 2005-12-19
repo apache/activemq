@@ -19,9 +19,9 @@ package org.activeio.adapter;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.activeio.SyncChannel;
 import org.activeio.packet.ByteArrayPacket;
 import org.activeio.packet.BytePacket;
+import org.activeio.packet.sync.SyncChannel;
 
 /**
  */

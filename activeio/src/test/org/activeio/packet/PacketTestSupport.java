@@ -20,7 +20,6 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import org.activeio.Packet;
 
 /**
  */

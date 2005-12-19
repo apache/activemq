@@ -20,6 +20,7 @@ package org.activeio;
 import java.io.IOException;
 
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.PacketData;
 
 import junit.framework.TestCase;
 

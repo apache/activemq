@@ -22,10 +22,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.Packet;
 import org.activeio.adapter.PacketToInputStream;
 import org.activeio.packet.ByteArrayPacket;
+import org.activeio.packet.Packet;
+import org.activeio.util.ByteArrayOutputStream;
 
 /**
  * A default implementation which uses serialization

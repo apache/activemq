@@ -24,14 +24,12 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import org.activeio.Disposable;
-
 /**
  * Allows read/append access to a LogFile.
  * 
  * @version $Revision: 1.1 $
  */
-final public class LogFile implements Disposable {
+final public class LogFile {
 
     private final RandomAccessFile file;
     private final FileChannel channel;

@@ -16,7 +16,7 @@
  */
 package org.activeio.adapter;
 
-import org.activeio.Packet;
+import org.activeio.packet.Packet;
 
 /**
  * @deprecated  Use PacketToInputStream instead.  This class will be removed very soon.

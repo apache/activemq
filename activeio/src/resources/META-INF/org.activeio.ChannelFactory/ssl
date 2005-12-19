@@ -1,1 +1,1 @@
-SyncChannelFactory.class=org.activeio.net.SslSocketSyncChannelFactory
+SyncChannelFactory.class=org.activeio.packet.sync.ssl.SslSocketSyncChannelFactory
