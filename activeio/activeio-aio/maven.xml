@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant">
+
+    <goal name="default">
+        <attainGoal name="jar:install"/>
+    </goal>
+
+    <preGoal name="test:test">
+        <j:choose>
+            <j:when test="${context.getVariable('os.name').startsWith('Windows')}">
+                <ant:copy todir=".">
+            <ant:fileset dir="${maven.repo.local}/ibmaio/libs/win32" includes="*.dll"/>
+            </ant:copy>
+            </j:when>
+            <j:when test="${context.getVariable('os.name').startsWith('Linux') and context.getVariable('os.version').startsWith('2.6.')}">
+                <ant:copy todir=".">
+            <ant:fileset dir="${maven.repo.local}/ibmaio/libs/linux32" includes="*.so"/>
+            </ant:copy>
+        <j:set var="maven.junit.jvmargs" value="${maven.junit.jvmargs} -Djava.library.path=."/>
+            </j:when>
+            <j:otherwise>
+        <echo>Diabling IBM AIO tests since your platform (${context.getVariable('os.name')} ${context.getVariable('os.version')}) is not recognized</echo>
+        <j:set var="maven.junit.jvmargs" value="${maven.junit.jvmargs} -Ddisable.aio.tests=true"/>
+            </j:otherwise>
+        </j:choose>
+    </preGoal>
+      
+  </project>
