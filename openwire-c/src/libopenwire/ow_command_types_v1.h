@@ -43,6 +43,7 @@ extern "C" {
 #define OW_REMOVEINFO_TYPE                 12
 #define OW_REDELIVERYPOLICY_TYPE           13
 #define OW_CONTROLCOMMAND_TYPE             14
+#define OW_FLUSHCOMMAND_TYPE               15
 
 #define OW_MESSAGEDISPATCH_TYPE            21
 #define OW_MESSAGEACK_TYPE                 22
