@@ -2,9 +2,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activemq</artifactId>
-    <version>4.0-SNAPSHOT</version>
+    <version>4.0M4</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-core</artifactId>
@@ -66,6 +67,12 @@
   <dependencies>
   
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+    </dependency>
+         
+    <dependency>
       <groupId>activeio</groupId>
       <artifactId>activeio</artifactId>
     </dependency>
@@ -103,7 +110,7 @@
     </dependency>
     
     <dependency>
-      <groupId>springframework</groupId>
+      <groupId>org.springframework</groupId>
       <artifactId>spring</artifactId>
     </dependency>
     
@@ -140,7 +147,7 @@
     </dependency>
 
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
 
