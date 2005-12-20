@@ -59,7 +59,6 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
     public static final String connectionFactoryAttribute = "org.activemq.connectionFactory";
     public static final String queueConsumersAttribute = "org.activemq.queueConsumers";
     public static final String brokerUrlInitParam = "org.activemq.brokerURL";
-    public static final String embeddedBrokerInitParam = "org.activemq.embeddedBroker";
 
     private static final Log log = LogFactory.getLog(WebClient.class);
 
@@ -202,12 +201,8 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
                 brokerURL = "vm://localhost";
             }
 
-            boolean embeddedBroker = MessageServletSupport.asBoolean(servletContext.getInitParameter(embeddedBrokerInitParam));
-            servletContext.log("Use embedded broker: " + embeddedBroker);
 
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerURL);
-            factory.setUseEmbeddedBroker(embeddedBroker);
-
             connectionFactory = factory;
             servletContext.setAttribute(connectionFactoryAttribute, connectionFactory);
         }
