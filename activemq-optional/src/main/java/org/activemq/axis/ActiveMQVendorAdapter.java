@@ -52,11 +52,6 @@ public class ActiveMQVendorAdapter extends BeanVendorAdapter {
      */
     public final static String DEFAULT_PASSWORD = "defaultPassword";
 
-    /**
-     * Specifies whether the broker is embedded
-     */
-    public final static String EMBEDDED_BROKER = "embeddedBroker";
-
 
     public QueueConnectionFactory getQueueConnectionFactory(HashMap properties)
             throws Exception {
@@ -84,14 +79,10 @@ public class ActiveMQVendorAdapter extends BeanVendorAdapter {
         if (jmsUrl.getPropertyValue(DEFAULT_PASSWORD) != null) {
             properties.put(DEFAULT_PASSWORD, jmsUrl.getPropertyValue(DEFAULT_PASSWORD));
         }
-        if (jmsUrl.getPropertyValue(EMBEDDED_BROKER) != null) {
-            properties.put(EMBEDDED_BROKER, jmsUrl.getPropertyValue(EMBEDDED_BROKER));
-        }
     }
 
     public boolean isMatchingConnectionFactory(ConnectionFactory connectionFactory, JMSURLHelper jmsURL, HashMap properties) {
         String brokerURL = null;
-        boolean embeddedBroker = false;
 
         if (connectionFactory instanceof ActiveMQConnectionFactory) {
             ActiveMQConnectionFactory amqConnectionFactory =
@@ -99,22 +90,11 @@ public class ActiveMQVendorAdapter extends BeanVendorAdapter {
 
             // get existing queue connection factory properties
             brokerURL = amqConnectionFactory.getBrokerURL();
-            embeddedBroker = amqConnectionFactory.isUseEmbeddedBroker();
         }
 
         // compare broker url
         String propertyBrokerURL = (String) properties.get(BROKER_URL);
         if (!brokerURL.equals(propertyBrokerURL)) {
-            return false;
-        }
-
-        // compare load balancing flag
-        String tmpEmbeddedBroker = (String) properties.get(EMBEDDED_BROKER);
-        boolean propertyEmbeddedBroker = false;
-        if (tmpEmbeddedBroker != null) {
-            propertyEmbeddedBroker = Boolean.valueOf(tmpEmbeddedBroker).booleanValue();
-        }
-        if (embeddedBroker != propertyEmbeddedBroker) {
             return false;
         }
         return true;
