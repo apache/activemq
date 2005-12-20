@@ -64,7 +64,6 @@ public final class TransactionRollbackOrderTest extends TestCase {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
 
-        factory.setUseEmbeddedBroker(true);
         connection = factory.createConnection();
         queue = new ActiveMQQueue(getClass().getName() + "." + getName());
 

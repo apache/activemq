@@ -40,7 +40,6 @@ public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConne
         // on the classpath instead
         Hashtable properties = new Hashtable();
         properties.put("java.naming.factory.initial", "org.activemq.jndi.ActiveMQInitialContextFactory");
-        properties.put("useEmbeddedBroker", Boolean.TRUE);
 
         // configure the embedded broker using an XML config file
         // which is either a URL or a resource on the classpath

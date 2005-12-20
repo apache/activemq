@@ -7,7 +7,7 @@
     </transportConnectors>
 
     <networkConnectors>
-      <networkConnector uri="static:discovery:(multicast://default)"/>
+      <networkConnector uri="multicast://default"/>
     </networkConnectors>
 
     <persistenceAdapter>

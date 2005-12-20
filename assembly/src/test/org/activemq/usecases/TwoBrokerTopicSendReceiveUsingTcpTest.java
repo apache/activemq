@@ -65,7 +65,6 @@ public class TwoBrokerTopicSendReceiveUsingTcpTest extends TwoBrokerTopicSendRec
     protected ActiveMQConnectionFactory createReceiverConnectionFactory() throws JMSException {
         try {
             ActiveMQConnectionFactory fac =  new ActiveMQConnectionFactory(((TransportConnector)receiverBroker.getTransportConnectors().get(0)).getConnectUri());
-            fac.setUseEmbeddedBroker(false);
             return fac;
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,7 +75,6 @@ public class TwoBrokerTopicSendReceiveUsingTcpTest extends TwoBrokerTopicSendRec
     protected ActiveMQConnectionFactory createSenderConnectionFactory() throws JMSException {
         try {
             ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(((TransportConnector)senderBroker.getTransportConnectors().get(0)).getConnectUri());
-            fac.setUseEmbeddedBroker(false);
             return fac;
         } catch (Exception e) {
             e.printStackTrace();

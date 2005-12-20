@@ -39,7 +39,6 @@ public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrok
             receiveBroker.start();
 
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:62002");
-            factory.setUseEmbeddedBroker(false);
             return factory;
         } catch (Exception e) {
             e.printStackTrace();
@@ -56,7 +55,6 @@ public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrok
             sendBroker.start();
 
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:62001");
-            factory.setUseEmbeddedBroker(false);
             return factory;
         } catch (Exception e) {
             e.printStackTrace();

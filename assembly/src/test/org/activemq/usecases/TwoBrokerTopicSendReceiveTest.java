@@ -68,7 +68,6 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
 
             BrokerService broker = brokerFactory.getBroker();
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getConnectUri());
-            factory.setUseEmbeddedBroker(false);
 
             return factory;
 

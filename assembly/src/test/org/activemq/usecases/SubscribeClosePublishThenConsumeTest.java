@@ -37,7 +37,6 @@ public class SubscribeClosePublishThenConsumeTest extends TestSupport {
 
     public void testDurableTopic() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://locahost");
-        connectionFactory.setUseEmbeddedBroker(true);
 
         String topicName = "TestTopic";
         String clientID = getName();

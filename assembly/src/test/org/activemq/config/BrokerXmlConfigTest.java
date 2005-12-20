@@ -32,7 +32,6 @@ public class BrokerXmlConfigTest extends JmsTopicSendReceiveWithTwoConnectionsTe
         // configure the connection factory using
         // normal Java Bean property methods
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
-        connectionFactory.setUseEmbeddedBroker(true);
 
         // configure the embedded broker using an XML config file
         // which is either a URL or a resource on the classpath
