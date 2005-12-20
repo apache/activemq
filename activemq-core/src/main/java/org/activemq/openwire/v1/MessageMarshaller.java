@@ -107,6 +107,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         			
         info.setArrival(unmarshalLong(wireFormat, dataIn, bs));
         info.setUserID(readString(dataIn, bs));
+        info.setRecievedByDFBridge(bs.readBoolean());
 
         info.afterUnmarshall(wireFormat);
 
@@ -153,6 +154,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
         rc+=marshal1Long(wireFormat, info.getArrival(), bs);
         rc += writeString(info.getUserID(), bs);
+        bs.writeBoolean(info.isRecievedByDFBridge());
 
         return rc+9;
     }
@@ -204,6 +206,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         marshalObjectArray(wireFormat, info.getBrokerPath(), dataOut, bs);
         marshal2Long(wireFormat, info.getArrival(), dataOut, bs);
         writeString(info.getUserID(), dataOut, bs);
+        bs.readBoolean();
 
         info.afterMarshall(wireFormat);
 

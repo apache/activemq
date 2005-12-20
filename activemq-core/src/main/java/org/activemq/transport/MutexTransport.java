@@ -53,4 +53,8 @@ public class MutexTransport extends TransportFilter {
         }
     }
     
+    public String toString() {
+        return next.toString();
+    }
+    
 }

@@ -1,5 +1,4 @@
 /**
-* <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a>
 *
 * Copyright 2005 (C) LogicBlaze, Inc. http://www.logicblaze.com
 *
@@ -49,16 +48,17 @@ public class DiscoveryEvent implements DataStructure {
         this.serviceName = serviceName;
     }
     
+    /**
+     * @openwire:property version=1
+     */
     public String getBrokerName(){
         return brokerName;
     }
-    
     public void setBrokerName(String name){
         this.brokerName = name;
     }
 
     public boolean isMarshallAware() {
         return false;
-    }
-    
+    }    
 }

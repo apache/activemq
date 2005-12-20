@@ -67,7 +67,7 @@ public class PeerTransportFactory extends TransportFactory {
     private VMTransportFactory createTransportFactory(URI location) throws IOException {
         try {
             String group = location.getHost();
-            String broker = location.getPath();
+            String broker = URISupport.stripPrefix(location.getPath(), "/");
             
             if( group == null ) {
                 group = "default";

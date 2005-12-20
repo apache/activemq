@@ -89,6 +89,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
 		            info.setBrokerPath(null);
 		        }
         			
+        info.setNetworkSubscription(bs.readBoolean());
 
     }
 
@@ -113,6 +114,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isRetroactive());
         
         rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
+        bs.writeBoolean(info.isNetworkSubscription());
 
         return rc+5;
     }
@@ -140,6 +142,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         bs.readBoolean();
         dataOut.writeByte(info.getPriority());
         marshalObjectArray(wireFormat, info.getBrokerPath(), dataOut, bs);
+        bs.readBoolean();
 
     }
 }

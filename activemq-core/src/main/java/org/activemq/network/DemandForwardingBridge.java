@@ -19,6 +19,9 @@
 package org.activemq.network;
 
 import java.io.IOException;
+
+import javax.jms.JMSException;
+
 import org.activemq.advisory.AdvisorySupport;
 import org.activemq.command.ActiveMQTopic;
 import org.activemq.command.BrokerId;
@@ -37,9 +40,12 @@ import org.activemq.command.ProducerInfo;
 import org.activemq.command.RemoveInfo;
 import org.activemq.command.SessionInfo;
 import org.activemq.command.ShutdownInfo;
+import org.activemq.filter.BooleanExpression;
+import org.activemq.filter.MessageEvaluationContext;
 import org.activemq.transport.Transport;
 import org.activemq.transport.TransportListener;
 import org.activemq.util.IdGenerator;
+import org.activemq.util.JMSExceptionSupport;
 import org.activemq.util.LongSequenceGenerator;
 import org.activemq.util.ServiceStopper;
 import org.activemq.util.ServiceSupport;
@@ -231,18 +237,22 @@ public class DemandForwardingBridge implements Bridge {
             // Create a new local subscription
             ConsumerInfo info = (ConsumerInfo) data;
             BrokerId[] path = info.getBrokerPath();
-            String pathStr = "{";
-            for (int i =0; path != null && i < path.length; i++){
-                pathStr += path[i] + " , ";
+
+            if( (path!=null && path.length>0) || info.isNetworkSubscription() ) {
+                // Ignore:  We only support directly connected brokers for now.
+                return;
             }
-            pathStr += "}";
             if( contains(info.getBrokerPath(), localBrokerPath[0]) ) {
                 // Ignore this consumer as it's a consumer we locally sent to the broker.
                 return;
             }
-         
+            
+            if( log.isTraceEnabled() )
+                log.trace("Forwarding sub on " + localBroker + " from " + remoteBroker + " on  "+info);
+
             
             // Update the packet to show where it came from.
+            info = info.copy();
             info.setBrokerPath( appendToBrokerPath(info.getBrokerPath(), remoteBrokerPath) );
                 
             DemandSubscription sub  = new DemandSubscription(info);
@@ -259,6 +269,21 @@ public class DemandForwardingBridge implements Bridge {
             subscriptionMapByRemoteId.put(sub.remoteInfo.getConsumerId(), sub);
             sub.localInfo.setBrokerPath(info.getBrokerPath());
             sub.localInfo.setNetworkSubscription(true);
+            // This works for now since we use a VM connection to the local broker.
+            // may need to change if we ever subscribe to a remote broker.
+            sub.localInfo.setAdditionalPredicate(new BooleanExpression(){
+                public boolean matches(MessageEvaluationContext message) throws JMSException {
+                    try {
+                        return matchesForwardingFilter(message.getMessage());
+                    } catch (IOException e) {
+                        throw JMSExceptionSupport.create(e);
+                    }
+                }
+                public Object evaluate(MessageEvaluationContext message) throws JMSException {
+                    return matches(message) ? Boolean.TRUE : Boolean.FALSE;
+                }
+            });
+                        
             localBroker.oneway(sub.localInfo);            
         }
         if( data.getClass() == RemoveInfo.class ) {
@@ -275,30 +300,35 @@ public class DemandForwardingBridge implements Bridge {
         log.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: "+error.getMessage(), error);
         ServiceSupport.dispose(this);
     }
+
+    boolean matchesForwardingFilter(Message message) {
+        if( message.isRecievedByDFBridge() || contains(message.getBrokerPath(), remoteBrokerPath[0]) )
+            return false;
+
+        // Don't propagate advisory messages about network subscriptions
+        if( message.isAdvisory() 
+                && message.getDataStructure()!=null
+                && message.getDataStructure().getDataStructureType()==CommandTypes.CONSUMER_INFO) {
+            
+            ConsumerInfo info=(ConsumerInfo) message.getDataStructure();
+            if(info.isNetworkSubscription()) {
+                return false;
+            }
+        }
+        return true;
+    }
     
     protected void serviceLocalCommand(Command command) {
+        boolean trace = log.isTraceEnabled();
         try {
             if( command.isMessageDispatch() ) {
                 MessageDispatch md = (MessageDispatch) command;
                 Message message = md.getMessage();
-                //only allow one network hop for this type of bridge
-                if (message.isRecievedByDFBridge()){
-                    return;
-                }
-                if (message.isAdvisory() && message.getDataStructure() != null &&  message.getDataStructure().getDataStructureType()==CommandTypes.CONSUMER_INFO){
-                    ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
-                    if (info.isNetworkSubscription()){
-                        //don't want to forward these
-                        return;
-                    }
-                }
                 DemandSubscription sub = (DemandSubscription)subscriptionMapByLocalId.get(md.getConsumerId());
                 if( sub!=null ) {
                    
-                    if( contains(message.getBrokerPath(), remoteBrokerPath[0]) ) {
-                        // Don't send the message back to the originator 
-                        return;
-                    }
+                    message = message.copy();
+                    
                     // Update the packet to show where it came from.
                     message.setBrokerPath( appendToBrokerPath(message.getBrokerPath(), localBrokerPath) );
 
@@ -308,9 +338,14 @@ public class DemandForwardingBridge implements Bridge {
                     if( message.getOriginalTransactionId()==null )
                         message.setOriginalTransactionId(message.getTransactionId());
                     message.setTransactionId(null);
+                    message.setRecievedByDFBridge(true);
                     message.evictMarshlledForm();
 
+                    if( trace )
+                        log.trace("bridging " + localBroker + " -> " + remoteBroker + ": "+message);
+                    
                     remoteBroker.oneway( message );
+
                     sub.dispatched++;
                     if( sub.dispatched > (sub.localInfo.getPrefetchSize()*.75) ) {
                         localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched));

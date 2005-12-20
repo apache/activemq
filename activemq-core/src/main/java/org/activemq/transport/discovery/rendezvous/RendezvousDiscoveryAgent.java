@@ -236,4 +236,8 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;        
     }
+
+    public void serviceFailed(DiscoveryEvent event) throws IOException {
+        // TODO: is there a way to notify the JmDNS that the service failed?
+    }
 }

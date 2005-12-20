@@ -52,4 +52,8 @@ public class TransportLogger extends TransportFilter {
         }
         next.oneway(command);
     }
+    
+    public String toString() {
+        return next.toString();
+    }
 }

@@ -12,9 +12,6 @@
     <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
     <bean id="jmsFactory" class="org.activemq.ActiveMQConnectionFactory">
         <property name="brokerURL" value="vm://localhost" />
-        <property name="useEmbeddedBroker">
-            <value>true</value>
-        </property>
     </bean>
 
     <!-- Spring JMS Template -->

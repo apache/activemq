@@ -48,6 +48,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
 
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
     private String brokerName;
+    boolean failover=true;
     
     public NetworkConnector() {
     }
@@ -88,7 +89,17 @@ public class NetworkConnector implements Service, DiscoveryListener {
             if (bridges.containsKey(uri) || localURI.equals(uri))
                 return;
 
-            log.info("Establishing network connection between " + localURI + " and " + event.getBrokerName() + " at " + uri);
+            URI connectUri = uri;
+            if( failover ) {
+                try {
+                    connectUri = new URI("failover:"+connectUri);
+                } catch (URISyntaxException e) {
+                    log.warn("Could not create failover URI: "+connectUri);
+                    return;
+                }
+            }
+            
+            log.info("Establishing network connection between " + localURI + " and " + event.getBrokerName() + " at " + connectUri);
 
             Transport localTransport;
             try {
@@ -101,15 +112,15 @@ public class NetworkConnector implements Service, DiscoveryListener {
 
             Transport remoteTransport;
             try {
-                remoteTransport = TransportFactory.connect(uri);
+                remoteTransport = TransportFactory.connect(connectUri);
             }
             catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
-                log.warn("Could not connect to remote URI: " + uri + ": " + e, e);
+                log.warn("Could not connect to remote URI: " + connectUri + ": " + e, e);
                 return;
             }
 
-            Bridge bridge = createBridge(localTransport, remoteTransport);
+            Bridge bridge = createBridge(localTransport, remoteTransport, event);
             bridges.put(uri, bridge);
             try {
                 bridge.start();
@@ -170,8 +181,17 @@ public class NetworkConnector implements Service, DiscoveryListener {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected Bridge createBridge(Transport localTransport, Transport remoteTransport) {
-        return new DemandForwardingBridge(localTransport, remoteTransport);
+    protected Bridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
+        return new DemandForwardingBridge(localTransport, remoteTransport) {
+            protected void serviceRemoteException(IOException error) {
+                super.serviceRemoteException(error);
+                try {
+                    // Notify the discovery agent that the remote broker failed.
+                    discoveryAgent.serviceFailed(event);
+                } catch (IOException e) {
+                }
+            }
+        };
     }
 
     public void setBrokerName(String brokerName) {
@@ -179,6 +199,14 @@ public class NetworkConnector implements Service, DiscoveryListener {
         if( discoveryAgent!=null ) {
             discoveryAgent.setBrokerName(brokerName);
         }
+    }
+
+    public boolean isFailover() {
+        return failover;
+    }
+
+    public void setFailover(boolean reliable) {
+        this.failover = reliable;
     }
 
 }

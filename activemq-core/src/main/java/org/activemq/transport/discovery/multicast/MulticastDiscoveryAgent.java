@@ -348,4 +348,8 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent,Runnable{
         }
         return result;
     }
+
+    public void serviceFailed(DiscoveryEvent event) throws IOException {
+        processDead(event.getBrokerName(), event.getServiceName());
+    }
 }

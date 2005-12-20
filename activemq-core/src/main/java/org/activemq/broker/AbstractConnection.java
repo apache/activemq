@@ -78,7 +78,6 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     protected final List dispatchQueue = Collections.synchronizedList(new LinkedList());
     protected final TaskRunner taskRunner;
     protected final Connector connector;
-    protected boolean demandForwardingBridge;
     private ConnectionStatistics statistics = new ConnectionStatistics();
 
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
@@ -326,7 +325,6 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
 
     public Response processMessage(Message messageSend) throws Throwable {
-        messageSend.setRecievedByDFBridge(demandForwardingBridge);
         broker.send(lookupConnectionState(messageSend.getProducerId()).getContext(), messageSend);
         return null;
     }
@@ -337,7 +335,6 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
     public Response processBrokerInfo(BrokerInfo info) {
-        demandForwardingBridge = true;
         return null;
     }
 
