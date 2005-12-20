@@ -203,17 +203,49 @@
   </goal>
   
   <!-- ================================================================== -->
-  <!-- GOAL for deploying test jar -->
+  <!-- GOALs for deploying resources -->
   <!-- ================================================================== -->
   
-  <goal name="test:deploy-bin" 
-      description="Deploy a source distribution" prereqs="test:compile">
+  <goal name="jar:deploy" 
+      description="Deploy the core and core test binaries" prereqs="test:compile">
+      
+      <artifact:deploy 
+        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}.jar"
+        type="jar"
+        project="${pom}"
+      />
       
       <artifact:deploy
         artifact="${basedir}/target/${pom.artifactId}-test-${pom.currentVersion}.jar"
         type="jar"
         project="${pom}"
       />
+  </goal>
+  
+  <goal name="jar:deploy-javadocs" 
+      description="Deploys javadoc binary" prereqs="javadoc:api">
+        
+      <artifact:deploy
+        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}_javadoc.jar"
+        type="jar"
+        project="${pom}"
+      />
+  </goal>
+  
+  <goal name="jar:deploy-xbean" 
+      description="Deploys xsd files" prereqs="xbean:generate">
+          
+      <artifact:deploy
+        artifact="${basedir}/target/${pom.groupId}-${pom.currentVersion}.xsd"
+        type="distribution"
+        project="${pom}"
+      />
+
+      <artifact:deploy
+        artifact="${basedir}/target/${pom.groupId}-${pom.currentVersion}.xsd.html"
+        type="distribution"
+        project="${pom}"
+      />      
   </goal>
 
 </project>
