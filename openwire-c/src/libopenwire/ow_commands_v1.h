@@ -166,6 +166,7 @@ typedef struct ow_Message {
    ow_DataStructure_array *brokerPath;
    ow_long arrival;
    ow_string *userID;
+   ow_boolean recievedByDFBridge;
 
 } ow_Message;
 ow_Message *ow_Message_create(apr_pool_t *pool);
@@ -248,6 +249,7 @@ typedef struct ow_ConsumerInfo {
    ow_boolean retroactive;
    ow_byte priority;
    ow_DataStructure_array *brokerPath;
+   ow_boolean networkSubscription;
 
 } ow_ConsumerInfo;
 ow_ConsumerInfo *ow_ConsumerInfo_create(apr_pool_t *pool);
@@ -403,6 +405,7 @@ typedef struct ow_ActiveMQMessage {
    ow_DataStructure_array *brokerPath;
    ow_long arrival;
    ow_string *userID;
+   ow_boolean recievedByDFBridge;
 
 } ow_ActiveMQMessage;
 ow_ActiveMQMessage *ow_ActiveMQMessage_create(apr_pool_t *pool);
@@ -533,6 +536,7 @@ typedef struct ow_ActiveMQStreamMessage {
    ow_DataStructure_array *brokerPath;
    ow_long arrival;
    ow_string *userID;
+   ow_boolean recievedByDFBridge;
 
 } ow_ActiveMQStreamMessage;
 ow_ActiveMQStreamMessage *ow_ActiveMQStreamMessage_create(apr_pool_t *pool);
@@ -606,6 +610,7 @@ typedef struct ow_ActiveMQBytesMessage {
    ow_DataStructure_array *brokerPath;
    ow_long arrival;
    ow_string *userID;
+   ow_boolean recievedByDFBridge;
 
 } ow_ActiveMQBytesMessage;
 ow_ActiveMQBytesMessage *ow_ActiveMQBytesMessage_create(apr_pool_t *pool);
@@ -640,6 +645,7 @@ typedef struct ow_ActiveMQTextMessage {
    ow_DataStructure_array *brokerPath;
    ow_long arrival;
    ow_string *userID;
+   ow_boolean recievedByDFBridge;
 
 } ow_ActiveMQTextMessage;
 ow_ActiveMQTextMessage *ow_ActiveMQTextMessage_create(apr_pool_t *pool);
@@ -674,6 +680,7 @@ typedef struct ow_ActiveMQMapMessage {
    ow_DataStructure_array *brokerPath;
    ow_long arrival;
    ow_string *userID;
+   ow_boolean recievedByDFBridge;
 
 } ow_ActiveMQMapMessage;
 ow_ActiveMQMapMessage *ow_ActiveMQMapMessage_create(apr_pool_t *pool);
@@ -731,6 +738,7 @@ typedef struct ow_ActiveMQObjectMessage {
    ow_DataStructure_array *brokerPath;
    ow_long arrival;
    ow_string *userID;
+   ow_boolean recievedByDFBridge;
 
 } ow_ActiveMQObjectMessage;
 ow_ActiveMQObjectMessage *ow_ActiveMQObjectMessage_create(apr_pool_t *pool);
