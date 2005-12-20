@@ -163,9 +163,15 @@ apr_status_t amqcs_connect(amqcs_connection **conn, amqcs_connect_options *optio
    {
       connection->info = ow_ConnectionInfo_create(pool);
       connection->info->connectionId = create_ConnectionId(connection, pool);
-      connection->info->clientId = ow_string_create_from_cstring(pool, options->clientId);
-      connection->info->userName = ow_string_create_from_cstring(pool, options->userId);
-      connection->info->password = ow_string_create_from_cstring(pool, options->password);      
+      if( strlen(options->clientId)>0 ) {
+         connection->info->clientId = ow_string_create_from_cstring(pool, options->clientId);
+      }
+      if( strlen(options->userId)>0 ) {
+         connection->info->userName = ow_string_create_from_cstring(pool, options->userId);
+      }
+      if( strlen(options->password)>0 ) {
+         connection->info->password = ow_string_create_from_cstring(pool, options->password);      
+      }
       rc = amqcs_sync_send( connection, (ow_BaseCommand*)connection->info, temp_pool );
       CHECK_SUCCESS;
    }
