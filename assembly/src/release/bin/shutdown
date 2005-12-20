@@ -124,7 +124,7 @@ fi
 # Uncomment to enable remote debugging
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
-#ACTIVEMQ_TASK="start"
+ACTIVEMQ_TASK="stop"
 if [ -n "$CYGHOME" ]; then
     exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dcygwin.user.home="$CYGHOME" -jar ${ACTIVEMQ_HOME}/bin/run.jar $ACTIVEMQ_TASK $@
 else
