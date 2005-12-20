@@ -54,8 +54,6 @@ public final class TransactionTest extends TestCase {
     public void testTransaction() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
-
-        factory.setUseEmbeddedBroker(true);
         connection = factory.createConnection();
         queue = new ActiveMQQueue(getClass().getName() + "." + getName());
 
