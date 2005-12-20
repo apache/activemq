@@ -121,7 +121,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @return pretty print of 'this'
      */
     public String toString() {
-        return "TcpTransport: " + socket;
+        return "tcp://"+socket.getInetAddress()+":"+socket.getPort();
     }
 
     /**

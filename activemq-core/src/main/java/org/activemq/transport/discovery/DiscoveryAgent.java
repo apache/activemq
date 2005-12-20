@@ -23,6 +23,7 @@ import java.io.IOException;
 import javax.jms.JMSException;
 
 import org.activemq.Service;
+import org.activemq.command.DiscoveryEvent;
 
 /**
  * An agent used to discover other instances of a service. 
@@ -47,6 +48,12 @@ public interface DiscoveryAgent extends Service {
      */
     void registerService(String name) throws IOException;
     
+    /**
+     * A process actively using a service may see it go down before the DiscoveryAgent notices the
+     * service's failure.  That process can use this method to notify the DiscoveryAgent of the failure
+     * so that other listeners of this DiscoveryAgent can also be made aware of the failure.
+     */
+    void serviceFailed(DiscoveryEvent event) throws IOException;
 
     String getGroup();    
     

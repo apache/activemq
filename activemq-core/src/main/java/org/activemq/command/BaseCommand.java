@@ -20,6 +20,7 @@ package org.activemq.command;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 /**
@@ -118,7 +119,14 @@ abstract public class BaseCommand implements Command {
             }
             
             try {
-                map.put(field.getName(), field.get(this));
+                Object o = field.get(this);
+                if( o!=null && o.getClass().isArray() ) {
+                    try {
+                        o = Arrays.asList((Object[]) o);
+                    } catch (Throwable e) {
+                    }
+                }
+                map.put(field.getName(), o);
             } catch (Throwable e) {
                 e.printStackTrace();
             }

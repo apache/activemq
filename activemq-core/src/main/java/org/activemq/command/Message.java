@@ -604,6 +604,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     /**
+     * @openwire:property version=1
      * @return Returns the recievedByDFBridge.
      */
     public boolean isRecievedByDFBridge(){

@@ -397,4 +397,8 @@ public class FailoverTransport implements CompositeTransport {
         this.useExponentialBackOff = useExponentialBackOff;
     }
 
+    public String toString() {
+        return connectedTransportURI==null ? "unconnected" : connectedTransportURI.toString();
+    }
+
 }

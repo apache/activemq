@@ -17,13 +17,15 @@
  **/
 package org.activemq.util;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.TextMessage;
 
 import junit.framework.Assert;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A simple container for performing testing and rendezvous style code.
@@ -57,6 +59,21 @@ public class MessageList extends Assert implements MessageListener {
     public synchronized List getMessages() {
         synchronized (semaphore) {
             return new ArrayList(messages);
+        }
+    }
+    
+    public synchronized List getTextMessages() {
+        synchronized (semaphore) {
+            ArrayList l = new ArrayList();
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                try {
+                    TextMessage m = (TextMessage) iter.next();
+                    l.add(m.getText());
+                } catch (Throwable e) {
+                    l.add(""+e);
+                }
+            }
+            return l;
         }
     }
 

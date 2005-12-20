@@ -21,10 +21,6 @@ package org.activemq.broker;
 import java.io.IOException;
 
 import org.activemq.command.Command;
-import org.activemq.command.CommandTypes;
-import org.activemq.command.ConsumerInfo;
-import org.activemq.command.Message;
-import org.activemq.command.MessageDispatch;
 import org.activemq.command.Response;
 import org.activemq.thread.TaskRunnerFactory;
 import org.activemq.transport.Transport;
@@ -183,34 +179,15 @@ public class TransportConnection extends AbstractConnection {
     
 
     protected void dispatch(Command command){
-        if(isValidForNetwork(command)){
-            try{
-                setMarkedCandidate(true);
-                transport.oneway(command);
-                getStatistics().onCommand(command);
-            }catch(IOException e){
-                serviceException(e);
-            }finally{
-                setMarkedCandidate(false);
-            }
+        try{
+            setMarkedCandidate(true);
+            transport.oneway(command);
+            getStatistics().onCommand(command);
+        }catch(IOException e){
+            serviceException(e);
+        }finally{
+            setMarkedCandidate(false);
         }
-    }    
-    
-    protected boolean isValidForNetwork(Command command){
-        boolean result=true;
-        if(demandForwardingBridge&&command.isMessageDispatch()){
-            MessageDispatch md=(MessageDispatch) command;
-            Message message=md.getMessage();
-            if(message.isAdvisory()&&message.getDataStructure()!=null
-                            &&message.getDataStructure().getDataStructureType()==CommandTypes.CONSUMER_INFO){
-                ConsumerInfo info=(ConsumerInfo) message.getDataStructure();
-                if(info.isNetworkSubscription()){
-                    // don't want to forward these
-                    result=false;
-                }
-            }
-        }
-        return result;
-    }
+    }        
 
 }

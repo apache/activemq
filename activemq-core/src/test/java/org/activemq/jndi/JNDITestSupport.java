@@ -91,7 +91,6 @@ public abstract class JNDITestSupport extends TestCase {
     }
 
     protected void configureEnvironment() {
-        environment.put("useEmbeddedBroker", "true");
         environment.put("brokerURL", "vm://localhost");
     }
 

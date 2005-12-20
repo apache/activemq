@@ -82,4 +82,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     public void setBrokerName(String brokerName) {
     }
 
+    public void serviceFailed(DiscoveryEvent event) throws IOException {
+    }
+    
 }

@@ -278,6 +278,7 @@ public class ConsumerInfo extends BaseCommand {
     }
 
     /**
+     * @openwire:property version=1
      * @return Returns the networkSubscription.
      */
     public boolean isNetworkSubscription(){

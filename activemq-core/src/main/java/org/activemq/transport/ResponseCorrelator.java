@@ -84,4 +84,9 @@ final public class ResponseCorrelator extends TransportFilter {
             commandListener.onCommand(command);
         }
     }
+    
+    public String toString() {
+        return next.toString();
+    }
+
 }

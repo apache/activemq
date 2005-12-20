@@ -106,4 +106,8 @@ public class WireFormatNegotiator extends TransportFilter {
         }
         commandListener.onCommand(command);
     }
+    
+    public String toString() {
+        return next.toString();
+    }
 }

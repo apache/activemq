@@ -16,10 +16,12 @@
 package org.activemq.transport.vm;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.activemq.command.Command;
 import org.activemq.command.Response;
 import org.activemq.transport.FutureResponse;
@@ -27,6 +29,8 @@ import org.activemq.transport.Transport;
 import org.activemq.transport.TransportListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
 /**
  * A Transport implementation that uses direct method invocations.
  * 
@@ -34,13 +38,21 @@ import org.apache.commons.logging.LogFactory;
  */
 public class VMTransport implements Transport{
     private static final Log log=LogFactory.getLog(VMTransport.class);
+    private static final AtomicLong nextId = new AtomicLong(0);
+    
     protected VMTransport peer;
     protected TransportListener transportListener;
     protected boolean disposed;
     protected boolean marshal;
     protected boolean network;
     protected List queue = Collections.synchronizedList(new LinkedList());
+    protected final URI location;
+    protected final long id;
     
+    public VMTransport(URI location) {
+        this.location = location;
+        this.id=nextId.getAndIncrement();
+    }
 
     synchronized public VMTransport getPeer(){
         return peer;
@@ -115,6 +127,10 @@ public class VMTransport implements Transport{
 
     public void setNetwork(boolean network){
         this.network=network;
+    }
+    
+    public String toString() {
+        return location+"#"+id;
     }
 
 }

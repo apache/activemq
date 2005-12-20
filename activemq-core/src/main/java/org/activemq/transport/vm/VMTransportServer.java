@@ -74,7 +74,7 @@ public class VMTransportServer implements TransportServer {
             throw new IOException("Server TransportAcceptListener is null.");
             
         connectionCount.incrementAndGet();
-        VMTransport client = new VMTransport() {
+        VMTransport client = new VMTransport(location) {
             public void stop() throws Exception {
                 if( disposed )
                     return;
@@ -85,7 +85,7 @@ public class VMTransportServer implements TransportServer {
             };
         };
         
-        VMTransport server = new VMTransport();
+        VMTransport server = new VMTransport(location);
         client.setPeer(server);
         server.setPeer(client);
         al.onAccept(configure(server));

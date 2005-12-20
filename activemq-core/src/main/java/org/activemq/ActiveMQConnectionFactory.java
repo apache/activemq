@@ -66,8 +66,6 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     protected String password;
     protected String clientID;
 
-    protected boolean useEmbeddedBroker;
-
     // optimization flags
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
     private boolean disableTimeStampsByDefault = false;
@@ -315,14 +313,6 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
 
     public void setUseAsyncSend(boolean useAsyncSend) {
         this.useAsyncSend = useAsyncSend;
-    }
-
-    public boolean isUseEmbeddedBroker() {
-        return useEmbeddedBroker;
-    }
-
-    public void setUseEmbeddedBroker(boolean useEmbeddedBroker) {
-        this.useEmbeddedBroker = useEmbeddedBroker;
     }
 
     public String getUserName() {

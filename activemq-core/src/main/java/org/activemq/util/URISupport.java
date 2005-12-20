@@ -236,7 +236,7 @@ public class URISupport {
         return rc;
     }
     
-    private static String stripPrefix(String value, String prefix) {
+    public static String stripPrefix(String value, String prefix) {
         if( value.startsWith(prefix) )
             return value.substring(prefix.length());
         return value;
