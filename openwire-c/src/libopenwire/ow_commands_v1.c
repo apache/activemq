@@ -553,6 +553,7 @@ apr_status_t ow_marshal1_Message(ow_bit_buffer *buffer, ow_Message *object)
    SUCCESS_CHECK(ow_marshal1_DataStructure_array(buffer, object->brokerPath));
    ow_marshal1_long(buffer, object->arrival);
    ow_marshal1_string(buffer, object->userID);
+   ow_bit_buffer_append(buffer, object->recievedByDFBridge);
    
 	return APR_SUCCESS;
 }
@@ -583,6 +584,7 @@ apr_status_t ow_marshal2_Message(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffe
    SUCCESS_CHECK(ow_marshal2_DataStructure_array(buffer, bitbuffer, object->brokerPath));
    SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->arrival));
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->userID));
+   ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -614,6 +616,7 @@ apr_status_t ow_unmarshal_Message(ow_byte_array *buffer, ow_bit_buffer *bitbuffe
    SUCCESS_CHECK(ow_unmarshal_DataStructure_array(buffer, bitbuffer, &object->brokerPath, pool));
    SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->arrival, pool));
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->userID, pool));
+   object->recievedByDFBridge = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -913,6 +916,7 @@ apr_status_t ow_marshal1_ConsumerInfo(ow_bit_buffer *buffer, ow_ConsumerInfo *ob
    ow_bit_buffer_append(buffer, object->retroactive);
    
    SUCCESS_CHECK(ow_marshal1_DataStructure_array(buffer, object->brokerPath));
+   ow_bit_buffer_append(buffer, object->networkSubscription);
    
 	return APR_SUCCESS;
 }
@@ -931,6 +935,7 @@ apr_status_t ow_marshal2_ConsumerInfo(ow_byte_buffer *buffer, ow_bit_buffer *bit
    ow_bit_buffer_read(bitbuffer);
    SUCCESS_CHECK(ow_byte_buffer_append_byte(buffer, object->priority));
    SUCCESS_CHECK(ow_marshal2_DataStructure_array(buffer, bitbuffer, object->brokerPath));
+   ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -950,6 +955,7 @@ apr_status_t ow_unmarshal_ConsumerInfo(ow_byte_array *buffer, ow_bit_buffer *bit
    object->retroactive = ow_bit_buffer_read(bitbuffer);
    SUCCESS_CHECK(ow_byte_array_read_byte(buffer, &object->priority));
    SUCCESS_CHECK(ow_unmarshal_DataStructure_array(buffer, bitbuffer, &object->brokerPath, pool));
+   object->networkSubscription = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
