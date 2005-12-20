@@ -2,30 +2,113 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-
   <parent>
-    <groupId>activemq</groupId>
-    <artifactId>activemq</artifactId>
-    <version>4.0-SNAPSHOT</version>
+    <groupId>org.apache.activeio</groupId>
+    <artifactId>activeio</artifactId>
+    <relativePath>../pom.xml</relativePath>
+    <version>3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activeio-core</artifactId>
   <name>ActiveIO :: Core</name>
-  <version>3.0-SNAPSHOT</version>
   <description></description>
   <url>http://activeio.org/</url>
+  <mailingLists>
+    <mailingList>
+      <name>activeio dev</name>
+      <subscribe>dev-subscribe@activeio.codehaus.org</subscribe>
+      <unsubscribe>dev-unsubscribe@activeio.codehaus.org</unsubscribe>
+    </mailingList>
+    <mailingList>
+      <name>activeio users</name>
+      <subscribe>user-subscribe@activeio.codehaus.org</subscribe>
+      <unsubscribe>user-unsubscribe@activeio.codehaus.org</unsubscribe>
+    </mailingList>
+    <mailingList>
+      <name>activeio svn messages</name>
+      <subscribe>scm-subscribe@activeio.codehaus.org</subscribe>
+      <unsubscribe>scm-unsubscribe@activeio.codehaus.org</unsubscribe>
+    </mailingList>
+  </mailingLists>
+  <developers>
+    <developer>
+      <id>chirino</id>
+      <name>Hiram Chirino</name>
+      <email>hiram@hiramchirino.com</email>
+      <organization></organization>
+      <roles>
+        <role>Founder</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>adc</id>
+      <name>Alan D. Cabrera</name>
+      <email>adc@toolazydogs.com</email>
+      <organization></organization>
+      <roles>
+        <role>Founder</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>dblevins</id>
+      <name>David Blevins</name>
+      <email>dblevins@gluecode.com</email>
+      <organization></organization>
+      <roles>
+        <role>Founder</role>
+      </roles>
+    </developer>
+  </developers>
+  <scm>
+    <!-- TODO: Need to update SCM to apache -->
+    <connection>scm:svn:hvttps://svn.codehaus.org/activeio/trunk/activeio</connection>
+    <developerConnection>scm:svn:svn+ssh://svn.activeio.org/home/projects/activeio/scm/trunk/activeio</developerConnection>
+    <url>http://svn.activeio.org/viewcvs.cgi/activeio/</url>
+  </scm>
+  <organization>
+    <name>The ActiveIO Project</name>
+    <url>http://activeio.org</url>
+  </organization>
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <testSourceDirectory>src/test</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>src/resources</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test</directory>
+        <includes>
+          <include>**/*.properties</include>
+          <include>**/*.xml</include>
+        </includes>
+      </testResource>
+    </testResources>
+  </build>
 
   <dependencies>
+    <!-- Required Dependencies -->
     <dependency>
       <groupId>backport-util-concurrent</groupId>
       <artifactId>backport-util-concurrent</artifactId>
       <version>2.0_01_pd</version>
     </dependency>
+
+    <!-- Optional Dependencies -->
+
+    <!-- For HOWL integration -->
     <dependency>
       <groupId>howl</groupId>
       <artifactId>howl-logger</artifactId>
       <version>0.1.8</version>
     </dependency>
+
+    <!-- For JXTA integration -->
     <dependency>
       <groupId>p2psockets</groupId>
       <artifactId>p2psockets-core</artifactId>
@@ -36,19 +119,21 @@
       <artifactId>jxta</artifactId>
       <version>2.0</version>
     </dependency>
-<!--
+
     <dependency>
       <groupId>ibmaio</groupId>
       <artifactId>ibmaio</artifactId>
       <version>1.0</version>
     </dependency>
--->
+
+    <!-- For Jetty integration -->
     <dependency>
       <groupId>jetty</groupId>
       <artifactId>org.mortbay.jetty</artifactId>
-      <version>5.1.2-SNAPSHOT</version>
+      <version>5.1.2</version>
     </dependency>
-<!--
+    
+    <!-- For OpenORB integration -->
     <dependency>
       <groupId>openorb</groupId>
       <artifactId>openorb-orb</artifactId>
@@ -79,27 +164,35 @@
       <artifactId>avalon-logkit</artifactId>
       <version>1.2.2</version>
     </dependency>
--->
+
+    <!-- Unit Test Dependencies -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
+      <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <version>1.0.4</version>
     </dependency>
+
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.8</version>
     </dependency>
+
+    <!-- Used by journal performance testing tools -->
     <dependency>
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-j2ee</artifactId>
       <version>1.4-rc4</version>
     </dependency>
+
+    <!-- Used in testing -->
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
@@ -110,6 +203,8 @@
       <artifactId>commons-collections</artifactId>
       <version>2.1</version>
     </dependency>
+
+    <!-- Used by xnet GBean code -->
     <dependency>
       <groupId>geronimo</groupId>
       <artifactId>geronimo-kernel</artifactId>
