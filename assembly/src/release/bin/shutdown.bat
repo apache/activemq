@@ -2,7 +2,7 @@
 
 REM   ActiveMQ shell script
 REM
-REM   $Id: activemq.bat,v 1.1.1.1 2005/03/11 21:14:04 jstrachan Exp $
+REM   $Id: shutdown.bat,v 1.1.1.1 2005/12/09 21:14:04 aco Exp $
 REM
 REM   This script is heavily based on the Ant script
 REM
@@ -87,8 +87,8 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 
 set LOCALCLASSPATH=%ACTIVEMQ_HOME%\conf;%LOCALCLASSPATH%
 
-set ACTIVEMQ_TASK="start"
-"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
+set ACTIVEMQ_TASK="stop"
+"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
 
 
 goto end
