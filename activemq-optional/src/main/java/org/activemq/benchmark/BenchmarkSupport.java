@@ -42,7 +42,6 @@ public class BenchmarkSupport {
     protected int connectionCount = 1;
     protected int batch = 1000;
     protected Destination destination;
-    protected boolean embeddedBroker = false;
     private boolean topic = true;
     private boolean durable = false;
 
@@ -112,14 +111,6 @@ public class BenchmarkSupport {
         this.durable = durable;
     }
 
-    public boolean isEmbeddedBroker() {
-        return embeddedBroker;
-    }
-
-    public void setEmbeddedBroker(boolean embeddedBroker) {
-        this.embeddedBroker = embeddedBroker;
-    }
-
     public int getConnectionCount() {
         return connectionCount;
     }
@@ -148,9 +139,6 @@ public class BenchmarkSupport {
 
     protected ActiveMQConnectionFactory createFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory(getUrl());
-        if (embeddedBroker) {
-            answer.setUseEmbeddedBroker(true);
-        }
         return answer;
     }
 
