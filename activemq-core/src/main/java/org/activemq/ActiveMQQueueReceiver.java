@@ -86,4 +86,5 @@ public class ActiveMQQueueReceiver extends ActiveMQMessageConsumer implements
         checkClosed();
         return (Queue) super.getDestination();
     }
+    
 }

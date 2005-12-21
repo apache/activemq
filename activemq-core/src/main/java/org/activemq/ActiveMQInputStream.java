@@ -227,4 +227,8 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         unconsumedMessages.enqueue(md);
     }
 
+    public String toString() {
+        return "ActiveMQInputStream { consumerId="+info.getConsumerId()+", producerId=" +producerId+" }";
+    }
+
 }

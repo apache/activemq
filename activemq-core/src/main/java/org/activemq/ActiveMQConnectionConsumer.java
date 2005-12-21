@@ -148,4 +148,8 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
             connection.onAsyncException(e);
         }
     }
+    
+    public String toString() {
+        return "ActiveMQConnectionConsumer { consumerId=" +consumerInfo.getConsumerId()+" }";
+    }
 }

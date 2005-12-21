@@ -126,4 +126,9 @@ public class PooledProducer implements MessageProducer {
     protected ActiveMQMessageProducer getMessageProducer() {
         return messageProducer;
     }
+    
+    public String toString() {
+        return "PooledProducer { "+messageProducer+" }";
+    }
+
 }

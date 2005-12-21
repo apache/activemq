@@ -727,5 +727,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         started.set(false);
         unconsumedMessages.stop();
     }
+    
+    public String toString() {
+        return "ActiveMQMessageConsumer { consumerId=" +info.getConsumerId()+", started=" +started.get()+" }";
+    }
 
 }

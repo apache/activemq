@@ -142,5 +142,9 @@ public class PooledConnection implements TopicConnection, QueueConnection {
     protected ActiveMQSession createSession(SessionKey key) throws JMSException {
         return (ActiveMQSession) getConnection().createSession(key.isTransacted(), key.getAckMode());
     }
+    
+    public String toString() {
+        return "PooledConnection { "+pool+" }";
+    }
 
 }

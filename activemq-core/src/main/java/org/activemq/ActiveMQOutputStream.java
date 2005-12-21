@@ -155,4 +155,8 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         connection.send(info.getDestination(), msg, id, deliveryMode, priority, timeToLive, !eosMessage);
     }
     
+    public String toString() {
+        return "ActiveMQOutputStream { producerId=" +info.getProducerId()+" }";
+    }
+
 }
