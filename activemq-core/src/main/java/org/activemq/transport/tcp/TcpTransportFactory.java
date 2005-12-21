@@ -19,6 +19,7 @@
 package org.activemq.transport.tcp;
 
 import org.activeio.command.WireFormat;
+import org.activemq.openwire.OpenWireFormat;
 import org.activemq.transport.MutexTransport;
 import org.activemq.transport.ResponseCorrelator;
 import org.activemq.transport.Transport;
@@ -68,7 +69,9 @@ public class TcpTransportFactory extends TransportFactory {
         // transport = new InactivityMonitor(transport,
         // temp.getMaxInactivityDuration(), activityMonitor.getReadCounter(),
         // activityMonitor.getWriteCounter());
-        transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
+        if( format instanceof OpenWireFormat )
+            transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
+        
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
         return transport;
