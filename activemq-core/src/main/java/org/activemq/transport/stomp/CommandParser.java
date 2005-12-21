@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.net.ProtocolException;
 
 class CommandParser {
-    private String clientId;
     private final StompWireFormat format;
 
     CommandParser(StompWireFormat wireFormat) {
@@ -33,8 +32,10 @@ class CommandParser {
             throw new IOException("connection was closed");
         }
 
-        // figure corrent command and return it
+        // figure correct command and return it
         StompCommand command = null;
+        if (line.startsWith(Stomp.Commands.CONNECT))
+            command = new Connect(format);
         if (line.startsWith(Stomp.Commands.SUBSCRIBE))
             command = new Subscribe(format);
         if (line.startsWith(Stomp.Commands.SEND))
@@ -58,27 +59,28 @@ class CommandParser {
             throw new ProtocolException("Unknown command [" + line + "]");
         }
 
-        CommandEnvelope envelope = command.build(line, in);
-        if (envelope.getHeaders().containsKey(Stomp.Headers.RECEIPT_REQUESTED)) {
-            final short id = StompWireFormat.generateCommandId();
-            envelope.getCommand().setCommandId(id);
+        final CommandEnvelope envelope = command.build(line, in);
+        final short commandId = format.generateCommandId();
+        final String client_packet_key = envelope.getHeaders().getProperty(Stomp.Headers.RECEIPT_REQUESTED);
+        final boolean receiptRequested = client_packet_key!=null;
+        
+        envelope.getCommand().setCommandId(commandId);
+        if (receiptRequested || envelope.getResponseListener()!=null ) {
             envelope.getCommand().setResponseRequired(true);
-            final String client_packet_key = envelope.getHeaders().getProperty(Stomp.Headers.RECEIPT_REQUESTED);
-            format.addResponseListener(new ResponseListener() {
-                public boolean onResponse(Response receipt, DataOutput out) throws IOException {
-                    if (receipt.getCorrelationId() != id)
-                        return false;
-
-                    out.write(new FrameBuilder(Stomp.Responses.RECEIPT).addHeader(Stomp.Headers.Response.RECEIPT_ID, client_packet_key).toFrame());
-                    return true;
-                }
-            });
+            if( envelope.getResponseListener()!=null ) {
+                format.addResponseListener(envelope.getResponseListener());
+            } else {
+                format.addResponseListener(new ResponseListener() {
+                    public boolean onResponse(Response receipt, DataOutput out) throws IOException {
+                        if (receipt.getCorrelationId() != commandId)
+                            return false;
+                        out.write(new FrameBuilder(Stomp.Responses.RECEIPT).addHeader(Stomp.Headers.Response.RECEIPT_ID, client_packet_key).toFrame());
+                        return true;
+                    }
+                });
+            }
         }
 
         return envelope.getCommand();
-    }
-
-    void setClientId(String clientId) {
-        this.clientId = clientId;
     }
 }

@@ -31,9 +31,6 @@ public class StompWireFormatTest extends TestCase {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(bout);
 
-        wire.registerTransportStreams(dout, din);
-        wire.initiateServerSideProtocol();
-
         ConnectionInfo ci = (ConnectionInfo) wire.readCommand(din);
         assertNotNull(ci);
         assertTrue(ci.isResponseRequired());
