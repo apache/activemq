@@ -24,13 +24,9 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.ObjectInstance;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Map;
-import java.util.HashMap;
+import javax.management.MBeanAttributeInfo;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -54,24 +50,27 @@ public class Main {
     public static final int HELP_STOP_BROKER  = 2;
     public static final int HELP_LIST_BROKER  = 3;
     public static final int HELP_STAT_BROKER  = 4;
+    public static final int HELP_QUERY_BROKER = 5;
 
-    public static final int TASK_NONE              = -1;
-    public static final int TASK_START_BROKER      = 0;
-    public static final int TASK_STOP_BROKER       = 1;
-    public static final int TASK_LIST_BROKER       = 2;
-    public static final int TASK_STAT_BROKER       = 3;
-    public static final int TASK_PRINT_MAIN_HELP   = 4;
-    public static final int TASK_PRINT_START_HELP  = 5;
-    public static final int TASK_PRINT_STOP_HELP   = 6;
-    public static final int TASK_PRINT_LIST_HELP   = 7;
-    public static final int TASK_PRINT_STAT_HELP   = 8;
-    public static final int TASK_PRINT_ALL_HELP    = 9;
-    public static final int TASK_PRINT_VER         = 10;
+    public static final int TASK_NONE              = 0;
+    public static final int TASK_START_BROKER      = 1;
+    public static final int TASK_STOP_BROKER       = 2;
+    public static final int TASK_LIST_BROKER       = 3;
+    public static final int TASK_STAT_BROKER       = 4;
+    public static final int TASK_QUERY_BROKER      = 5;
+    public static final int TASK_PRINT_MAIN_HELP   = 6;
+    public static final int TASK_PRINT_START_HELP  = 7;
+    public static final int TASK_PRINT_STOP_HELP   = 8;
+    public static final int TASK_PRINT_LIST_HELP   = 9;
+    public static final int TASK_PRINT_STAT_HELP   = 10;
+    public static final int TASK_PRINT_QUERY_HELP  = 11;
+    public static final int TASK_PRINT_ALL_HELP    = 12;
+    public static final int TASK_PRINT_VER         = 13;
 
-    private static final String BROKER_FACTORY_CLASS = "org.activemq.broker.BrokerFactory";
-    private static final String DEFAULT_CONFIG_URI   = "xbean:activemq.xml";
-    private static final String DEFAULT_JMX_URL      = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxconnector";
-    private static final String DEFAULT_JMX_DOMAIN   = "org.activemq";
+    public static final String BROKER_FACTORY_CLASS = "org.activemq.broker.BrokerFactory";
+    public static final String DEFAULT_CONFIG_URI   = "xbean:activemq.xml";
+    public static final String DEFAULT_JMX_URL      = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxconnector";
+    public static final String DEFAULT_JMX_DOMAIN   = "org.activemq";
 
     private static final String   DEFAULT_KEY_BROKER_NAME    = "BrokerName";
     private static final String   DEFAULT_METHOD_BROKER_STOP = "terminateJVM";
@@ -91,7 +90,22 @@ public class Main {
     private static final int STAT_DISP_BROKER  = Integer.parseInt("0001", 2);
     private static final int STAT_DISP_ALL     = Integer.parseInt("1111", 2);
 
-    private final ArrayList extensions = new ArrayList();
+    // Query object type to id mapping
+    private static final Properties QUERY_TYPE_ID_MAP = new Properties();
+
+    static
+    {
+        QUERY_TYPE_ID_MAP.setProperty("Broker",           "BrokerName");
+        QUERY_TYPE_ID_MAP.setProperty("Connection",       "Connection");
+        QUERY_TYPE_ID_MAP.setProperty("Connector",        "ConnectorName");
+        QUERY_TYPE_ID_MAP.setProperty("NetworkConnector", "BrokerName");
+        QUERY_TYPE_ID_MAP.setProperty("Queue",            "Destination");
+        QUERY_TYPE_ID_MAP.setProperty("Topic",            "Destination");
+    };
+
+    private final ArrayList extensions   = new ArrayList();
+    private final Map       queryObjects = new HashMap();
+    private final List      queryViews   = new ArrayList();
 
     private int           taskType = TASK_NONE;
     private boolean       stopAll  = false;
@@ -147,6 +161,14 @@ public class Main {
                 }
                 break;
 
+            case  TASK_QUERY_BROKER:
+                try {
+                    app.taskQueryBrokers();
+                } catch (Throwable e) {
+                    System.out.println("Failed to query broker. Reason: " + e.getMessage());
+                }
+                break;
+
             case  TASK_PRINT_MAIN_HELP:
                 app.printHelp(HELP_MAIN_APP);
                 break;
@@ -167,6 +189,10 @@ public class Main {
                 app.printHelp(HELP_STAT_BROKER);
                 break;
 
+            case  TASK_PRINT_QUERY_HELP:
+                app.printHelp(HELP_QUERY_BROKER);
+                break;
+
             case  TASK_PRINT_VER:
                 app.printVersion();
                 break;
@@ -178,6 +204,198 @@ public class Main {
             case TASK_NONE:
             default:
                 break;
+        }
+    }
+
+    public int parseTask(List tokens) {
+        if (tokens.isEmpty()) {
+            // If no defined arguments, assume start task and default uri
+            return TASK_START_BROKER;
+        }
+
+        // Process task token
+        String taskToken = (String)tokens.get(0);
+
+        if (taskToken.equals("start")) {
+            tokens.remove(0);
+            return TASK_START_BROKER;
+        } else if (taskToken.equals("stop")) {
+            tokens.remove(0);
+            return TASK_STOP_BROKER;
+        } else if (taskToken.equals("list")) {
+            tokens.remove(0);
+            return TASK_LIST_BROKER;
+        } else if (taskToken.equals("stat")) {
+            tokens.remove(0);
+            return TASK_STAT_BROKER;
+        } else if (taskToken.equals("query")) {
+            tokens.remove(0);
+            return TASK_QUERY_BROKER;
+        } else if (taskToken.equals("-h") || taskToken.equals("-?") || taskToken.equals("--help")) {
+            // No need to parse other tokens
+            tokens.clear();
+            return TASK_PRINT_MAIN_HELP;
+        } else if (taskToken.equals("--version")) {
+            // No need to parse other tokens
+            tokens.clear();
+            return TASK_PRINT_VER;
+        } else {
+            // If not a valid task, assume start task and succeeding args are options
+            return TASK_START_BROKER;
+        }
+    }
+
+    public void parseOptions(List tokens) {
+        String token;
+
+        while (!tokens.isEmpty()) {
+            token = (String)tokens.get(0);
+
+            // If token is an option
+            if (token.startsWith("-")) {
+
+                // Consider token to be processed
+                tokens.remove(0);
+
+                // If token is a help option
+                if (token.equals("-h") || token.equals("-?") || token.equals("--help")) {
+                    switch (this.getTaskType()) {
+                        case TASK_STOP_BROKER:
+                            this.setTaskType(TASK_PRINT_STOP_HELP);
+                            tokens.clear();
+                            return;
+
+                        case TASK_LIST_BROKER:
+                            this.setTaskType(TASK_PRINT_LIST_HELP);
+                            tokens.clear();
+                            return;
+
+                        case TASK_STAT_BROKER:
+                            this.setTaskType(TASK_PRINT_STAT_HELP);
+                            tokens.clear();
+                            return;
+
+                        case TASK_QUERY_BROKER:
+                            this.setTaskType(TASK_PRINT_QUERY_HELP);
+                            tokens.clear();
+                            return;
+
+                        case TASK_START_BROKER:
+                        default:
+                            this.setTaskType(TASK_PRINT_START_HELP);
+                            tokens.clear();
+                            return;
+
+                    }
+
+                // If token is a version option
+                } else if (token.equals("--version")) {
+                    this.setTaskType(TASK_PRINT_VER);
+                    tokens.clear();
+                    return;
+
+                // If token is an extension dir option
+                } else if (token.equals("--extdir")) {
+                    if(!canUseExtdir()) {
+                        printError("Extension directory feature not available due to the system classpath being able to load: " + BROKER_FACTORY_CLASS);
+                        tokens.clear();
+                        return;
+                    }
+
+                    // If no extension directory is specified, or next token is another option
+                    if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                        printError("Extension directory not specified.");
+                        return;
+                    }
+
+                    // Process extension dir token
+                    File extDir = new File((String)tokens.remove(0));
+                    if (!extDir.isDirectory()) {
+                        printError("Extension directory specified is not valid directory: " + extDir);
+                        return;
+                    }
+
+                    this.addExtensionDirectory(extDir);
+                }
+
+                // If token is a system property define option
+                else if (token.startsWith("-D")) {
+                    String key = token.substring(2);
+                    String value = "";
+                    int pos = key.indexOf("=");
+                    if (pos >= 0) {
+                        value = key.substring(pos + 1);
+                        key = key.substring(0, pos);
+                    }
+                    System.setProperty(key, value);
+                }
+
+                // If token is a query define option
+                else if (token.startsWith("-Q")) {
+                    String key = token.substring(2);
+                    String value = "";
+                    int pos = key.indexOf("=");
+                    if (pos >= 0) {
+                        value = key.substring(pos + 1);
+                        key = key.substring(0, pos);
+                    }
+
+                    queryObjects.put(key, value);
+                }
+
+                // If token is a view option
+                else if (token.startsWith("--view")) {
+
+                    // If no view specified, or next token is a new option
+                    if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                        printError("Attributes to view not specified");
+                        return;
+                    }
+
+                    // Add the attributes to view
+                    Enumeration viewTokens = new StringTokenizer((String)tokens.remove(0), ",", false);
+                    while (viewTokens.hasMoreElements()) {
+                        queryViews.add(viewTokens.nextElement());
+                    }
+                }
+
+                // If token is a JMX URL option
+                else if (token.startsWith("--jmxurl")) {
+
+                    // If no jmx url specified, or next token is a new option
+                    if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                        printError("JMX URL not specified.");
+                        return;
+                    }
+
+                    // If jmx url already specified
+                    if (getJmxUrl() != null) {
+                        printError("Multiple JMX URL cannot be specified.");
+                        tokens.clear();
+                        return;
+                    }
+
+                    String strJmxUrl = (String)tokens.remove(0);
+                    try {
+                        this.setJmxUrl(new JMXServiceURL(strJmxUrl));
+                    } catch (MalformedURLException e) {
+                        printError("Invalid JMX URL format: " + strJmxUrl);
+                        tokens.clear();
+                        return;
+                    }
+
+                // If token is stop all broker option
+                } else if (token.equals("--all")) {
+                    this.setStopAllBrokers(true);
+
+                } else {
+                    System.out.println("Ignoring unrecognized option: " + token);
+                }
+
+            // Finish parsing options
+            } else {
+                return;
+            }
         }
     }
 
@@ -228,15 +446,17 @@ public class Main {
 
         // Stop all brokers
         if (this.isStopAllBrokers()) {
-            JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxUrl);
+            JMXConnector jmxConnector = JMXConnectorFactory.connect(this.getJmxUrl());
             MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
 
             ObjectName brokerObjName = new ObjectName(DEFAULT_JMX_DOMAIN + ":Type=Broker,*");
 
             this.stopBroker(server, brokerObjName);
 
-            jmxConnector.close();
             brokerNames.clear();
+
+            // Maybe no need to close, since context is already closed by broker
+            //jmxConnector.close();
 
             return;
         }
@@ -262,7 +482,7 @@ public class Main {
             } else {
                 Iterator brokerIter = brokerList.iterator();
 
-                JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxUrl);
+                JMXConnector jmxConnector = JMXConnectorFactory.connect(this.getJmxUrl());
                 MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
 
                 this.stopBroker(server, ((ObjectInstance)brokerIter.next()).getObjectName());
@@ -276,7 +496,7 @@ public class Main {
         // Stop each specified broker
         String brokerName;
 
-        JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxUrl);
+        JMXConnector jmxConnector = JMXConnectorFactory.connect(this.getJmxUrl());
         MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
 
         while (!brokerNames.isEmpty()) {
@@ -324,7 +544,7 @@ public class Main {
             } else {
                 Iterator brokerIter = brokerList.iterator();
 
-                JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxUrl);
+                JMXConnector jmxConnector = JMXConnectorFactory.connect(this.getJmxUrl());
                 MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
 
                 ObjectName brokerObjName = ((ObjectInstance)brokerIter.next()).getObjectName();
@@ -338,7 +558,7 @@ public class Main {
         // Print the statistics for each specified broker
         String brokerName;
 
-        JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxUrl);
+        JMXConnector jmxConnector = JMXConnectorFactory.connect(this.getJmxUrl());
         MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
 
         while (!brokerNames.isEmpty()) {
@@ -351,152 +571,47 @@ public class Main {
         jmxConnector.close();
     }
 
-    public int parseTask(List tokens) {
-        if (tokens.isEmpty()) {
-            // If no defined arguments, assume start task and default uri
-            return TASK_START_BROKER;
+    protected void taskQueryBrokers() throws Throwable {
+        // Check if there is a user-specified JMX URL
+        if (this.getJmxUrl() == null) {
+            this.setJmxUrl(this.getDefaultJmxUrl());
         }
 
-        // Process task token
-        String taskToken = (String)tokens.get(0);
+        JMXConnector jmxConnector = JMXConnectorFactory.connect(this.getJmxUrl());
+        MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
 
-        if (taskToken.equals("start")) {
-            tokens.remove(0);
-            return TASK_START_BROKER;
-        } else if (taskToken.equals("stop")) {
-            tokens.remove(0);
-            return TASK_STOP_BROKER;
-        } else if (taskToken.equals("list")) {
-            tokens.remove(0);
-            return TASK_LIST_BROKER;
-        } else if (taskToken.equals("stat")) {
-            tokens.remove(0);
-            return TASK_STAT_BROKER;
-        } else if (taskToken.equals("-h") || taskToken.equals("-?") || taskToken.equals("--help")) {
-            // No need to parse other tokens
-            tokens.clear();
-            return TASK_PRINT_MAIN_HELP;
-        } else if (taskToken.equals("--version")) {
-            // No need to parse other tokens
-            tokens.clear();
-            return TASK_PRINT_VER;
+        Set mbeans;
+        // If there is no query defined get all mbeans
+        if (this.getQueryObjects().isEmpty()) {
+            ObjectName queryName = new ObjectName(DEFAULT_JMX_DOMAIN + ":*");
+
+            mbeans = server.queryMBeans(queryName, null);
+
+        // Construct the object name based on the query
         } else {
-            // If not a valid task, assume start task and succeeding args are options
-            return TASK_START_BROKER;
-        }
-    }
+            mbeans = new CopyOnWriteArraySet();
+            Set queryKeys = queryObjects.keySet();
+            for (Iterator i=queryKeys.iterator(); i.hasNext();) {
+                String objType = (String)i.next();
+                String objName = (String)queryObjects.get(objType);
 
-    public void parseOptions(List tokens) {
-        String token;
-
-        while (!tokens.isEmpty()) {
-            token = (String)tokens.get(0);
-
-            // If token is an option
-            if (token.startsWith("-")) {
-
-                // Consider token to be processed
-                tokens.remove(0);
-
-                // If token is a help option
-                if (token.equals("-h") || token.equals("-?") || token.equals("--help")) {
-                    switch (this.getTaskType()) {
-                        case TASK_STOP_BROKER:
-                            this.setTaskType(TASK_PRINT_STOP_HELP);
-                            tokens.clear();
-                            return;
-
-                        case TASK_LIST_BROKER:
-                            this.setTaskType(TASK_PRINT_LIST_HELP);
-                            tokens.clear();
-                            return;
-
-                        case TASK_STAT_BROKER:
-                            this.setTaskType(TASK_PRINT_STAT_HELP);
-                            tokens.clear();
-                            return;
-
-                        case TASK_START_BROKER:
-                        default:
-                            this.setTaskType(TASK_PRINT_START_HELP);
-                            tokens.clear();
-                            return;
-
-                    }
-
-                // If token is a version option
-                } else if (token.equals("--version")) {
-                    this.setTaskType(TASK_PRINT_VER);
-                    tokens.clear();
-                    return;
-
-                // If token is an extension dir option
-                } else if (token.equals("--extdir")) {
-                    if(!canUseExtdir()) {
-                        printError("Extension directory feature not available due to the system classpath being able to load: " + BROKER_FACTORY_CLASS);
-                        tokens.clear();
-                        return;
-                    }
-
-                    if (tokens.isEmpty()) {
-                        printError("Extension directory not specified.");
-                        return;
-                    }
-
-                    // Process extension dir token
-                    File extDir = new File((String)tokens.remove(0));
-                    if (!extDir.isDirectory()) {
-                        printError("Extension directory specified is not valid directory: " + extDir);
-                        return;
-                    }
-
-                    this.addExtensionDirectory(extDir);
-                }
-
-                // If token is a system property define option
-                else if (token.startsWith("-D")) {
-                    String key = token.substring(2);
-                    String value = "";
-                    int pos = key.indexOf("=");
-                    if (pos >= 0) {
-                        value = key.substring(pos + 1);
-                        key = key.substring(0, pos);
-                    }
-                    System.setProperty(key, value);
-                }
-
-                // If token is a JMX URL option
-                else if (token.startsWith("--jmxurl")) {
-                    if (tokens.isEmpty()) {
-                        printError("JMX URL not specified.");
-                        return;
-                    }
-
-                    if (getJmxUrl() != null) {
-                        printError("Multiple JMX URL cannot be specified.");
-                        tokens.clear();
-                        return;
-                    }
-
-                    String strJmxUrl = (String)tokens.remove(0);
-                    try {
-                        this.setJmxUrl(new JMXServiceURL(strJmxUrl));
-                    } catch (MalformedURLException e) {
-                        printError("Invalid JMX URL format: " + strJmxUrl);
-                        tokens.clear();
-                        return;
-                    }
-
-                // If token is stop all broker option
-                } else if (token.equals("--all")) {
-                    this.setStopAllBrokers(true);
-
-                // Ignore unknown options
+                // If select all type
+                ObjectName queryName;
+                if (objName.equals("*")) {
+                    queryName = new ObjectName(DEFAULT_JMX_DOMAIN + ":Type=" + objType + ",*");
                 } else {
-                    System.out.println("Ignoring unrecognized option: " + token);
+                    queryName = new ObjectName(DEFAULT_JMX_DOMAIN + ":Type=" + objType + "," +
+                                               QUERY_TYPE_ID_MAP.getProperty(objType) + "=" + objName + ",*");
                 }
+                mbeans.addAll(server.queryMBeans(queryName, null));
             }
         }
+
+        for (Iterator i=mbeans.iterator(); i.hasNext();) {
+            printMBeanAttr(server, (ObjectInstance)i.next(), this.getQueryViews());
+        }
+
+        jmxConnector.close();
     }
 
     public void addExtensionDirectory(File directory) {
@@ -604,6 +719,54 @@ public class Main {
         }
     }
 
+    public void printMBeanAttr(MBeanServerConnection server, ObjectInstance mbean, List attrView) {
+        ObjectName mbeanObjName = mbean.getObjectName();
+        String mbeanType = mbeanObjName.getKeyProperty("Type");
+        String mbeanName = mbeanObjName.getKeyProperty(QUERY_TYPE_ID_MAP.getProperty(mbeanType));
+        System.out.println("MBean Type: " + mbeanType);
+        System.out.println("MBean Name: " + mbeanName);
+        System.out.println("MBean Attributes:");
+
+        try {
+            MBeanAttributeInfo[] attrs = server.getMBeanInfo(mbeanObjName).getAttributes();
+
+            // If there mbean has no attribute, print a no attribute message
+            if (attrs.length == 0) {
+                System.out.println("    MBean has no attributes.");
+                System.out.println();
+                return;
+            }
+
+            // If there is no view specified, print all attributes
+            if (attrView == null || attrView.isEmpty()) {
+                for (int i=0; i<attrs.length; i++) {
+                    Object attrVal = server.getAttribute(mbeanObjName, attrs[i].getName());
+                    System.out.println("    " + attrs[i].getName() + " = " + attrVal.toString());
+                }
+                System.out.println();
+                return;
+            }
+
+            // Print attributes specified by view
+            boolean matchedAttr = false;
+            for (int i=0; i<attrs.length; i++) {
+                if (attrView.contains(attrs[i].getName())) {
+                    matchedAttr = true;
+                    Object attrVal = server.getAttribute(mbeanObjName, attrs[i].getName());
+                    System.out.println("    " + attrs[i].getName() + " = " + attrVal.toString());
+                }
+            }
+
+            // If the mbean's attributes did not match any of the view, display a message
+            if (!matchedAttr) {
+                System.out.println("    View did not match any of the mbean's attributes.");
+            }
+            System.out.println();
+        } catch (Exception e) {
+            System.out.println("Failed to print mbean attributes. Reason: " + e.getMessage());
+        }
+    }
+
     public void printBrokerStat(String brokerName, Map brokerStat) {
         printBrokerStat(brokerName, brokerStat, STAT_DISP_ALL);
     }
@@ -676,6 +839,14 @@ public class Main {
 
     public boolean isStopAllBrokers() {
         return stopAll;
+    }
+
+    public Map getQueryObjects() {
+        return queryObjects;
+    }
+
+    public List getQueryViews() {
+        return queryViews;
     }
 
     public ClassLoader getClassLoader() throws MalformedURLException {
@@ -818,10 +989,10 @@ public class Main {
             "Task Usage: Main start [start-options] [uri]",
             "",
             "Start Options:",
-            "    --extdir dir      Add the jar files in the directory to the classpath.",
-            "    -Dname=value      Define a system property.",
-            "    --version         Display the version information.",
-            "    -h,-?,--help      Display the start broker help information.",
+            "    --extdir <dir>        Add the jar files in the directory to the classpath.",
+            "    -D<name>=<value>      Define a system property.",
+            "    --version             Display the version information.",
+            "    -h,-?,--help          Display the start broker help information.",
             "",
             "URI:",
             "",
@@ -846,10 +1017,10 @@ public class Main {
             "Task Usage: Main stop [stop-options] [broker-name1] [broker-name2] ...",
             "",
             "Stop Options:",
-            "    --jmxurl url      Set the JMX URL to connect to.",
-            "    --all             Stop all brokers.",
-            "    --version         Display the version information.",
-            "    -h,-?,--help      Display the stop broker help information.",
+            "    --jmxurl <url>      Set the JMX URL to connect to.",
+            "    --all               Stop all brokers.",
+            "    --version           Display the version information.",
+            "    -h,-?,--help        Display the stop broker help information.",
             "",
             "Broker Names:",
             "    Name of the brokers that will be stopped.",
@@ -863,9 +1034,9 @@ public class Main {
             "Task Usage: Main list [list-options]",
             "",
             "List Options:",
-            "    --jmxurl url      Set the JMX URL to connect to.",
-            "    --version         Display the version information.",
-            "    -h,-?,--help      Display the stop broker help information.",
+            "    --jmxurl <url>      Set the JMX URL to connect to.",
+            "    --version           Display the version information.",
+            "    -h,-?,--help        Display the stop broker help information.",
             "",
         },
 
@@ -874,10 +1045,42 @@ public class Main {
             "Task Usage: Main stat [stat-options] [broker-name1] [broker-name2] ...",
             "",
             "Stat Options:",
-            "    --jmxurl url      Set the JMX URL to connect to.",
-            "    --version         Display the version information.",
-            "    -h,-?,--help      Display the stop broker help information.",
+            "    --jmxurl <url>      Set the JMX URL to connect to.",
+            "    --version           Display the version information.",
+            "    -h,-?,--help        Display the stat broker help information.",
             "",
+        },
+
+        // Query brokers task help
+        {
+            "Task Usage: Main query [query-options]",
+            "",
+            "Query Options:",
+            "    -Q<type>=<name>               Filter the specific object type using the defined object identifier.",
+            "    --view <attr1>,<attr2>,...    Select the specific attribute of the object to view. By default all attributes will be displayed.",
+            "    --jmxurl <url>                Set the JMX URL to connect to.",
+            "    --version                     Display the version information.",
+            "    -h,-?,--help                  Display the query broker help information.",
+            "",
+            "Examples:",
+            "    Main query",
+            "        - Print all the attributes of all registered objects (queues, topics, connections, etc).",
+            "",
+            "    Main query -QQueue=TEST.FOO",
+            "        - Print all the attributes of the queue with destination name TEST.FOO.",
+            "",
+            "    Main query -QTopic=*",
+            "        - Print all the attributes of all registered topics.",
+            "",
+            "    Main query --view EnqueueCount,DequeueCount",
+            "        - Print the attributes EnqueueCount and DequeueCount of all registered objects.",
+            "",
+            "    Main -QTopic=* --view EnqueueCount,DequeueCount",
+            "        - Print the attributes EnqueueCount and DequeueCount of all registered topics.",
+            "",
+            "    Main -QTopic=* -QQueue=* --view EnqueueCount,DequeueCount",
+            "        - Print the attributes EnqueueCount and DequeueCount of all registered topics and queues.",
+            ""
         }
     };
 }
