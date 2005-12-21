@@ -1,8 +1,8 @@
 <model>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.activemq</groupId>
-  <artifactId>activemq</artifactId>
-  <version>4.0M4</version>
+  <artifactId>activemq-project</artifactId>
+  <version>4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ JMS Broker Project</name>
 
