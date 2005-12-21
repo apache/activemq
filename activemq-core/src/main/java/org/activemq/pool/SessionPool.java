@@ -1,21 +1,21 @@
 /**
-* <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a>
-*
-* Copyright 2005 (C) LogicBlaze, Inc. http://www.logicblaze.com
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-**/
+ * <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a>
+ *
+ * Copyright 2005 (C) LogicBlaze, Inc. http://www.logicblaze.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ **/
 package org.activemq.pool;
 
 import org.activemq.ActiveMQConnection;
@@ -30,32 +30,35 @@ import javax.jms.JMSException;
 
 /**
  * Represents the session pool for a given JMS connection.
- *
+ * 
  * @version $Revision: 1.1 $
  */
 public class SessionPool implements PoolableObjectFactory {
-    private ActiveMQConnection connection;
+    private ConnectionPool connectionPool;
     private SessionKey key;
     private ObjectPool sessionPool;
 
-    public SessionPool(ActiveMQConnection connection, SessionKey key) {
-        this(connection, key, new GenericObjectPool());
+    public SessionPool(ConnectionPool connectionPool, SessionKey key) {
+        this(connectionPool, key, new GenericObjectPool());
     }
 
-    public SessionPool(ActiveMQConnection connection, SessionKey key, ObjectPool sessionPool) {
-        this.connection = connection;
+    public SessionPool(ConnectionPool connectionPool, SessionKey key, ObjectPool sessionPool) {
+        this.connectionPool = connectionPool;
         this.key = key;
         this.sessionPool = sessionPool;
         sessionPool.setFactory(this);
     }
 
     public void close() throws Exception {
-        sessionPool.close();
+        if (sessionPool != null) {
+            sessionPool.close();
+        }
+        sessionPool = null;
     }
-    
+
     public PooledSession borrowSession() throws JMSException {
         try {
-            Object object = sessionPool.borrowObject();
+            Object object = getSessionPool().borrowObject();
             return (PooledSession) object;
         }
         catch (JMSException e) {
@@ -66,10 +69,21 @@ public class SessionPool implements PoolableObjectFactory {
         }
     }
 
+    public void returnSession(PooledSession session) throws JMSException {
+        // lets check if we are already closed
+        getConnection();
+        try {
+            getSessionPool().returnObject(this);
+        }
+        catch (Exception e) {
+            throw JMSExceptionSupport.create("Failed to return session to pool: " + e, e);
+        }
+    }
+
     // PoolableObjectFactory methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public Object makeObject() throws Exception {
-        return new PooledSession(createSession(), sessionPool);
+        return new PooledSession(createSession(), this);
     }
 
     public void destroyObject(Object o) throws Exception {
@@ -88,17 +102,20 @@ public class SessionPool implements PoolableObjectFactory {
     }
 
     // Implemention methods
-    //-------------------------------------------------------------------------
-    protected ActiveMQConnection getConnection() throws JMSException {
-        if (connection == null) {
+    // -------------------------------------------------------------------------
+    protected ObjectPool getSessionPool() throws AlreadyClosedException {
+        if (sessionPool == null) {
             throw new AlreadyClosedException();
         }
-        return connection;
+        return sessionPool;
+    }
+
+    protected ActiveMQConnection getConnection() throws JMSException {
+        return connectionPool.getConnection();
     }
 
     protected ActiveMQSession createSession() throws JMSException {
         return (ActiveMQSession) getConnection().createSession(key.isTransacted(), key.getAckMode());
     }
-
 
 }

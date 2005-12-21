@@ -60,13 +60,13 @@ public class PooledSession implements TopicSession, QueueSession {
     private static final transient Log log = LogFactory.getLog(PooledSession.class);
 
     private ActiveMQSession session;
-    private ObjectPool sessionPool;
+    private SessionPool sessionPool;
     private ActiveMQMessageProducer messageProducer;
     private ActiveMQQueueSender queueSender;
     private ActiveMQTopicPublisher topicPublisher;
     private boolean transactional = true;
 
-    public PooledSession(ActiveMQSession aSession, ObjectPool sessionPool) {
+    public PooledSession(ActiveMQSession aSession, SessionPool sessionPool) {
         this.session = aSession;
         this.sessionPool = sessionPool;
         this.transactional = session.isTransacted();
@@ -99,12 +99,7 @@ public class PooledSession implements TopicSession, QueueSession {
             }
         }
 
-        try {
-            sessionPool.returnObject(this);
-        }
-        catch (Exception e) {
-            throw JMSExceptionSupport.create("Failed to return session to pool: " + e, e);
-        }
+        sessionPool.returnSession(this);
     }
 
     public void commit() throws JMSException {

@@ -172,7 +172,7 @@
             <groupId>xbean</groupId>
             <artifactId>xbean-spring</artifactId>
             <version>${xbean_spring_version}</version>
-            <url>http://www.gbean.org</url>
+            <url>http://www.xbean.org</url>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
