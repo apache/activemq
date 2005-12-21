@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.ProtocolException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jms.JMSException;
 
@@ -19,9 +20,7 @@ import org.activeio.Packet;
 import org.activeio.adapter.PacketInputStream;
 import org.activeio.command.WireFormat;
 import org.activeio.packet.ByteArrayPacket;
-import org.activemq.command.ActiveMQBytesMessage;
 import org.activemq.command.ActiveMQDestination;
-import org.activemq.command.ActiveMQTextMessage;
 import org.activemq.command.Command;
 import org.activemq.command.CommandTypes;
 import org.activemq.command.ConnectionId;
@@ -29,11 +28,14 @@ import org.activemq.command.ConnectionInfo;
 import org.activemq.command.ConsumerId;
 import org.activemq.command.FlushCommand;
 import org.activemq.command.LocalTransactionId;
+import org.activemq.command.Message;
+import org.activemq.command.MessageDispatch;
 import org.activemq.command.MessageId;
 import org.activemq.command.ProducerId;
 import org.activemq.command.Response;
 import org.activemq.command.SessionId;
 import org.activemq.command.TransactionId;
+import org.activemq.filter.DestinationMap;
 import org.activemq.util.IOExceptionSupport;
 import org.activemq.util.IdGenerator;
 import org.activemq.util.LongSequenceGenerator;
@@ -53,15 +55,17 @@ public class StompWireFormat implements WireFormat {
     private static int transactionIdCounter;
 
     private int version = 1;
-    private CommandParser commandParser = new CommandParser(this);
-    private HeaderParser headerParser = new HeaderParser();
+    private final CommandParser commandParser = new CommandParser(this);
+    private final HeaderParser headerParser = new HeaderParser();
 
-    private BlockingQueue pendingReadCommands = new LinkedBlockingQueue();
-    private BlockingQueue pendingWriteFrames = new LinkedBlockingQueue();
-    private List receiptListeners = new CopyOnWriteArrayList();
-    private Map subscriptions = new ConcurrentHashMap();
-    private List ackListeners = new CopyOnWriteArrayList();
+    private final BlockingQueue pendingReadCommands = new LinkedBlockingQueue();
+    private final BlockingQueue pendingWriteFrames = new LinkedBlockingQueue();
+    private final List receiptListeners = new CopyOnWriteArrayList();
+    private final Map subscriptionsByConsumerId = new ConcurrentHashMap();
+    private final Map subscriptionsByName = new ConcurrentHashMap();
+    private final DestinationMap subscriptionsByDestination = new DestinationMap();
     private final Map transactions = new ConcurrentHashMap();
+    private final Map dispachedMap = new ConcurrentHashMap();
     private short lastCommandId;
 
     private final ConnectionId connectionId = new ConnectionId(connectionIdGenerator.generateId());
@@ -119,18 +123,11 @@ public class StompWireFormat implements WireFormat {
                 }
             }
         }
-
-        if (packet.getDataStructureType() == CommandTypes.ACTIVEMQ_TEXT_MESSAGE) {
-            assert (packet instanceof ActiveMQTextMessage);
-            ActiveMQTextMessage msg = (ActiveMQTextMessage) packet;
-            Subscription sub = (Subscription) subscriptions.get(msg.getJMSDestination());
-            sub.receive(msg, out);
-        }
-        else if (packet.getDataStructureType() == CommandTypes.ACTIVEMQ_BYTES_MESSAGE) {
-            assert (packet instanceof ActiveMQBytesMessage);
-            ActiveMQBytesMessage msg = (ActiveMQBytesMessage) packet;
-            Subscription sub = (Subscription) subscriptions.get(msg.getJMSDestination());
-            sub.receive(msg, out);
+        if( packet.isMessageDispatch() ) {
+            MessageDispatch md = (MessageDispatch)packet;
+            Message message = md.getMessage();
+            Subscription sub = (Subscription) subscriptionsByConsumerId.get(md.getConsumerId());
+            sub.receive(md, out);
         }
         return null;
     }
@@ -184,17 +181,35 @@ public class StompWireFormat implements WireFormat {
     public ProducerId getProducerId() {
         return producerId;
     }
+
+    
+    public Subscription getSubcription(ConsumerId consumerId) {
+        return (Subscription) subscriptionsByConsumerId.get(consumerId);
+    }
+    public Set getSubcriptions(ActiveMQDestination destination) {
+        return subscriptionsByDestination.get(destination);
+    }
+    public Subscription getSubcription(String name) {
+        return (Subscription) subscriptionsByName.get(name);
+    }
     
     public void addSubscription(Subscription s) {
-        if (subscriptions.containsKey(s.getDestination())) {
-            Subscription old = (Subscription) subscriptions.get(s.getDestination());
-            Command p = old.close();
-            enqueueCommand(p);
-            subscriptions.put(s.getDestination(), s);
+        if (s.getSubscriptionId()!=null && subscriptionsByName.containsKey(s.getSubscriptionId())) {
+            Subscription old = (Subscription) subscriptionsByName.get(s.getSubscriptionId());
+            removeSubscription(old);
+            enqueueCommand(old.close());
         }
-        else {
-            subscriptions.put(s.getDestination(), s);
-        }
+        if( s.getSubscriptionId()!=null )
+            subscriptionsByName.put(s.getSubscriptionId(), s);
+        subscriptionsByConsumerId.put(s.getConsumerInfo().getConsumerId(), s);
+        subscriptionsByDestination.put(s.getConsumerInfo().getDestination(), s);
+    }
+    
+    public void removeSubscription(Subscription s) {
+        if( s.getSubscriptionId()!=null )
+            subscriptionsByName.remove(s.getSubscriptionId());
+        subscriptionsByConsumerId.remove(s.getConsumerInfo().getConsumerId());
+        subscriptionsByDestination.remove(s.getConsumerInfo().getDestination(), s);
     }
 
     public void enqueueCommand(final Command ack) {
@@ -203,18 +218,6 @@ public class StompWireFormat implements WireFormat {
                 pendingReadCommands.put(ack);
             }
         });
-    }
-
-    public Subscription getSubscriptionFor(ActiveMQDestination destination) {
-        return (Subscription) subscriptions.get(destination);
-    }
-
-    public void addAckListener(AckListener listener) {
-        this.ackListeners.add(listener);
-    }
-
-    public List getAckListeners() {
-        return ackListeners;
     }
 
     public TransactionId getTransactionId(String key) {
@@ -291,6 +294,10 @@ public class StompWireFormat implements WireFormat {
         } catch (JMSException e) {
             throw IOExceptionSupport.create(e);
         }
+    }
+
+    public Map getDispachedMap() {
+        return dispachedMap;
     }
 
 }

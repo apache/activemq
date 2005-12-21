@@ -7,7 +7,10 @@ import org.activemq.command.ActiveMQDestination;
 
 import java.io.DataInput;
 import java.io.IOException;
+import java.net.ProtocolException;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 public class Unsubscribe implements StompCommand {
     private static final HeaderParser parser = new HeaderParser();
@@ -22,10 +25,25 @@ public class Unsubscribe implements StompCommand {
         while (in.readByte() == 0) {
         }
 
-        String dest_name = headers.getProperty(Stomp.Headers.Unsubscribe.DESTINATION);
-        ActiveMQDestination destination = DestinationNamer.convert(dest_name);
+        String subscriptionId = headers.getProperty(Stomp.Headers.Unsubscribe.ID);
+        String destination = headers.getProperty(Stomp.Headers.Unsubscribe.DESTINATION);
 
-        Subscription s = format.getSubscriptionFor(destination);
-        return new CommandEnvelope(s.close(), headers);
+
+        if( subscriptionId!=null ) {
+            Subscription s = format.getSubcription(subscriptionId);
+            format.removeSubscription(s);
+            return new CommandEnvelope(s.close(), headers);
+        }
+        
+        ActiveMQDestination d = DestinationNamer.convert(destination);
+        Set subs = format.getSubcriptions(d);
+        for (Iterator iter = subs.iterator(); iter.hasNext();) {
+            Subscription s = (Subscription) iter.next();
+            format.removeSubscription(s);
+            return new CommandEnvelope(s.close(), headers);
+        }
+        
+        throw new ProtocolException("Unexpected UNSUBSCRIBE received.");
+
     }
 }

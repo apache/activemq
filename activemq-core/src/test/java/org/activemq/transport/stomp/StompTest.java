@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.net.URI;
 
 import javax.jms.Connection;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -18,7 +17,6 @@ import org.activemq.ActiveMQConnectionFactory;
 import org.activemq.CombinationTestSupport;
 import org.activemq.broker.BrokerService;
 import org.activemq.broker.TransportConnector;
-import org.activemq.command.ActiveMQDestination;
 import org.activemq.command.ActiveMQQueue;
 
 public class StompTest extends CombinationTestSupport {
@@ -115,6 +113,34 @@ public class StompTest extends CombinationTestSupport {
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
+        
+    }
+    
+    public void testSubscribeWithAutoAck() throws Exception {
+        
+        String frame = 
+            "CONNECT\n" + 
+            "login: brianm\n" + 
+            "passcode: wombats\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
+     
+        frame = receiveFrame(10000000);
+        assertTrue(frame.startsWith("CONNECTED"));
+        
+        frame = 
+            "SUBSCRIBE\n" + 
+            "destination:/queue/TEST\n" +
+            "ack:auto\n\n" + 
+            Stomp.NULL;
+        sendFrame(frame);
+
+        MessageProducer producer = session.createProducer(queue);
+        TextMessage message = session.createTextMessage(getName());
+        producer.send(message);
+        
+        frame = receiveFrame(10000);
+        assertTrue(frame.startsWith("MESSAGE"));
         
     }
     
