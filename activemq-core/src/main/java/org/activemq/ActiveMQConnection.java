@@ -1542,4 +1542,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setCopyMessageOnSend(boolean copyMessageOnSend) {
         this.copyMessageOnSend = copyMessageOnSend;
     }
+    
+    public String toString() {
+        return "ActiveMQConnection {id="+info.getConnectionId()+",clientId"+info.getClientId()+",started="+started.get()+"}";
+    }
 }

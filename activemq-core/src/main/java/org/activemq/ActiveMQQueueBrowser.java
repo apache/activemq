@@ -242,4 +242,9 @@ public class ActiveMQQueueBrowser implements
             semaphore.notifyAll();
         }
     }
+    
+    public String toString() {
+        return "ActiveMQQueueBrowser { consumerId=" +consumerId+" }";
+    }
+
 }

@@ -1663,5 +1663,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 	public List getUnconsumedMessages() {
 		return executor.getUnconsumedMessages();
 	}
+    
+    public String toString() {
+        return "ActiveMQSession {id="+info.getSessionId()+",started="+started.get()+"}";
+    }
+
 
 }

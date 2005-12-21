@@ -280,4 +280,7 @@ public class PooledSession implements TopicSession, QueueSession {
         return topicPublisher;
     }
 
+    public String toString() {
+        return "PooledSession { "+session+" }";
+    }
 }
