@@ -3,80 +3,79 @@
  */
 package org.activemq.transport.stomp;
 
-import org.activemq.command.ActiveMQBytesMessage;
-import org.activemq.command.ActiveMQDestination;
-import org.activemq.command.ActiveMQTextMessage;
-import org.activemq.command.ConsumerId;
-import org.activemq.command.MessageAck;
-import org.activemq.command.RemoveInfo;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import javax.jms.JMSException;
 
-import java.io.DataOutput;
-import java.io.IOException;
+import org.activemq.command.ActiveMQBytesMessage;
+import org.activemq.command.ActiveMQDestination;
+import org.activemq.command.ActiveMQMessage;
+import org.activemq.command.ActiveMQTextMessage;
+import org.activemq.command.ConsumerInfo;
+import org.activemq.command.MessageAck;
+import org.activemq.command.MessageDispatch;
+import org.activemq.command.RemoveInfo;
 
 public class Subscription {
+    
     private ActiveMQDestination destination;
     private int ackMode = 1;
     private StompWireFormat format;
-    private final ConsumerId consumerId;
+
     private final String subscriptionId;
     public static final String NO_ID = "~~ NO SUCH THING ~~%%@#!Q";
-
-    public Subscription(StompWireFormat format, ConsumerId consumerId, String subscriptionId) {
+    private final ConsumerInfo consumerInfo;
+    private final LinkedList dispatchedMessages = new LinkedList();
+    
+    public Subscription(StompWireFormat format, String subscriptionId, ConsumerInfo consumerInfo) {
         this.format = format;
-        this.consumerId = consumerId;
         this.subscriptionId = subscriptionId;
+        this.consumerInfo = consumerInfo;
     }
 
     void setDestination(ActiveMQDestination actual_dest) {
         this.destination = actual_dest;
     }
 
-    void receive(ActiveMQTextMessage msg, DataOutput out) throws IOException, JMSException {
+    void receive(MessageDispatch md, DataOutput out) throws IOException, JMSException {
+
+        ActiveMQMessage m = (ActiveMQMessage) md.getMessage();
+
         if (ackMode == CLIENT_ACK) {
-            AckListener listener = new AckListener(msg, consumerId, subscriptionId);
-            format.addAckListener(listener);
+            Subscription sub = format.getSubcription(md.getConsumerId());
+            sub.addMessageDispatch(md);
+            format.getDispachedMap().put(m.getJMSMessageID(), sub);
         }
         else if (ackMode == AUTO_ACK) {
-            MessageAck ack = new MessageAck();
-            // if (format.isInTransaction())
-            // ack.setTransactionIDString(format.getTransactionId());
-            ack.setDestination(msg.getDestination());
-            ack.setConsumerId(consumerId);
-            ack.setMessageID(msg.getMessageId());
-            ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+            MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             format.enqueueCommand(ack);
         }
-        FrameBuilder builder = new FrameBuilder(Stomp.Responses.MESSAGE).addHeaders(msg).setBody(msg.getText().getBytes());
-        if (!subscriptionId.equals(NO_ID)) {
+        
+        
+        FrameBuilder builder = new FrameBuilder(Stomp.Responses.MESSAGE);
+        builder.addHeaders(m);
+        
+        if( m.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE ) {
+            builder.setBody(((ActiveMQTextMessage)m).getText().getBytes("UTF-8"));
+        } else if( m.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE ) {
+            ActiveMQBytesMessage msg = (ActiveMQBytesMessage)m;
+            byte data[] = new byte[(int) msg.getBodyLength()];
+            msg.readBytes(data);
+            builder.setBody(data);
+        }
+        
+        if (subscriptionId!=null) {
             builder.addHeader(Stomp.Headers.Message.SUBSCRIPTION, subscriptionId);
         }
+        
         out.write(builder.toFrame());
     }
 
-    void receive(ActiveMQBytesMessage msg, DataOutput out) throws IOException, JMSException {
-        // @todo refactor this and the other receive form to remoce duplication
-        // -bmc
-        if (ackMode == CLIENT_ACK) {
-            AckListener listener = new AckListener(msg, consumerId, subscriptionId);
-            format.addAckListener(listener);
-        }
-        else if (ackMode == AUTO_ACK) {
-            MessageAck ack = new MessageAck();
-            // if (format.isInTransaction())
-            // ack.setTransactionIDString(format.getTransactionId());
-            ack.setDestination(msg.getDestination());
-            ack.setConsumerId(consumerId);
-            ack.setMessageID(msg.getMessageId());
-            ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-            format.enqueueCommand(ack);
-        }
-        FrameBuilder builder = new FrameBuilder(Stomp.Responses.MESSAGE).addHeaders(msg).setBody(msg.getContent().getData());
-        if (!subscriptionId.equals(NO_ID)) {
-            builder.addHeader(Stomp.Headers.Message.SUBSCRIPTION, subscriptionId);
-        }
-        out.write(builder.toFrame());
+    private void addMessageDispatch(MessageDispatch md) {
+        dispatchedMessages.addLast(md);
     }
 
     ActiveMQDestination getDestination() {
@@ -91,8 +90,39 @@ public class Subscription {
     }
 
     public RemoveInfo close() {
-        RemoveInfo unsub = new RemoveInfo();
-        unsub.setObjectId(consumerId);
-        return unsub;
+        return new RemoveInfo(consumerInfo.getConsumerId());
+    }
+
+    public ConsumerInfo getConsumerInfo() {
+        return consumerInfo;
+    }
+
+    public String getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public MessageAck createMessageAck(String message_id) {
+        MessageAck ack = new MessageAck();
+        ack.setDestination(consumerInfo.getDestination());
+        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+        ack.setConsumerId(consumerInfo.getConsumerId());
+        
+        int count=0;
+        for (Iterator iter = dispatchedMessages.iterator(); iter.hasNext();) {
+            
+            MessageDispatch md = (MessageDispatch) iter.next();
+            String id = ((ActiveMQMessage)md.getMessage()).getJMSMessageID();
+            if( ack.getFirstMessageId()==null )
+                ack.setFirstMessageId(md.getMessage().getMessageId());
+
+            format.getDispachedMap().remove(id);
+            iter.remove();
+            count++;
+            if( id.equals(message_id)  ) {
+                ack.setLastMessageId(md.getMessage().getMessageId());
+            }
+        }
+        ack.setMessageCount(count);
+        return ack;
     }
 }

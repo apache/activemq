@@ -75,6 +75,7 @@ public interface Stomp {
 
         public interface Unsubscribe {
             String DESTINATION = "destination";
+            String ID = "id";
         }
 
         public interface Connect {
