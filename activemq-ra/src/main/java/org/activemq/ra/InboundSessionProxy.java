@@ -20,6 +20,7 @@ package org.activemq.ra;
 
 
 import javax.jms.*;
+
 import java.io.Serializable;
 
 /**
@@ -219,4 +220,13 @@ public class InboundSessionProxy implements Session, QueueSession, TopicSession 
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
         return getTopicSession().createPublisher(topic);
     }
+    
+    public String toString() {
+        try {
+            return "InboundSessionProxy { "+getSession()+" }";
+        } catch (JMSException e) {
+            return "InboundSessionProxy { null }";
+        }
+    }
+
 }

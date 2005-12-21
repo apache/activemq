@@ -403,4 +403,8 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
         throw new RuntimeException("Operation not supported.");
     }
 
+    public String toString() {
+        return "ManagedSessionProxy { "+session+" }";
+    }
+
 }
