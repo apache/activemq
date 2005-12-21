@@ -232,8 +232,8 @@
       />
   </goal>
   
-  <goal name="jar:deploy-xbean" 
-      description="Deploys xsd files" prereqs="xbean:generate">
+  <goal name="xsd:deploy-xbean" 
+      description="Deploys xsd generated files" prereqs="xbean:generate">
           
       <artifact:deploy
         artifact="${basedir}/target/${pom.groupId}-${pom.currentVersion}.xsd"
