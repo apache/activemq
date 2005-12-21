@@ -18,9 +18,9 @@
  **/
 package org.activemq.pool;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import org.activemq.ActiveMQConnection;
+import org.activemq.ActiveMQSession;
+import org.activemq.AlreadyClosedException;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
@@ -37,11 +37,6 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
-import org.activemq.ActiveMQConnection;
-import org.activemq.ActiveMQSession;
-import org.activemq.AlreadyClosedException;
-import org.activemq.util.JMSExceptionSupport;
-
 /**
  * Represents a proxy {@link Connection} which is-a {@link TopicConnection} and
  * {@link QueueConnection} which is pooled and on {@link #close()} will return
@@ -51,44 +46,27 @@ import org.activemq.util.JMSExceptionSupport;
  */
 public class PooledConnection implements TopicConnection, QueueConnection {
 
-    private ActiveMQConnection connection;
-    private Map cache;
+    private ConnectionPool pool;
     private boolean stopped;
 
-    public PooledConnection(ActiveMQConnection connection) {
-        this(connection, new HashMap());
-    }
-
-    public PooledConnection(ActiveMQConnection connection, Map cache) {
-        this.connection = connection;
-        this.cache = cache;
+    public PooledConnection(ConnectionPool pool) {
+        this.pool = pool;
     }
 
     /**
      * Factory method to create a new instance.
      */
     public PooledConnection newInstance() {
-        return new PooledConnection(connection, cache);
+        return new PooledConnection(pool);
     }
 
     public void close() throws JMSException {
-        connection = null;
-        Iterator i = cache.values().iterator();
-        while (i.hasNext()) {
-            SessionPool pool = (SessionPool) i.next();
-            i.remove();
-            try {
-                pool.close();
-            }
-            catch (Exception e) {
-                throw JMSExceptionSupport.create(e);
-            }
-        }
+        pool = null;
     }
 
     public void start() throws JMSException {
-        // TODO should we start connections first before pooling them?
-        getConnection().start();
+        assertNotClosed();
+        pool.start();
     }
 
     public void stop() throws JMSException {
@@ -144,22 +122,21 @@ public class PooledConnection implements TopicConnection, QueueConnection {
     }
 
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
-        SessionKey key = new SessionKey(transacted, ackMode);
-        SessionPool pool = (SessionPool) cache.get(key);
-        if (pool == null) {
-            pool = new SessionPool(getConnection(), key);
-            cache.put(key, pool);
-        }
-        return pool.borrowSession();
+        return pool.createSession(transacted, ackMode);
     }
 
     // Implementation methods
     // -------------------------------------------------------------------------
+
     protected ActiveMQConnection getConnection() throws JMSException {
-        if (stopped || connection == null) {
+        assertNotClosed();
+        return pool.getConnection();
+    }
+
+    protected void assertNotClosed() throws AlreadyClosedException {
+        if (stopped || pool == null) {
             throw new AlreadyClosedException();
         }
-        return connection;
     }
 
     protected ActiveMQSession createSession(SessionKey key) throws JMSException {

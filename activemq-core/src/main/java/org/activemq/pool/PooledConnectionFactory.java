@@ -33,10 +33,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * A JMS provider which pools Connection, Session and MessageProducer instances so it can be used with tools like 
- * Spring's <a href="http://activemq.org/Spring+Support">JmsTemplate</a>.
+ * A JMS provider which pools Connection, Session and MessageProducer instances
+ * so it can be used with tools like Spring's <a
+ * href="http://activemq.org/Spring+Support">JmsTemplate</a>.
  * 
- * <b>NOTE</b> this implementation is only intended for use when sending messages.
+ * <b>NOTE</b> this implementation is only intended for use when sending
+ * messages.
  * 
  * @version $Revision: 1.1 $
  */
@@ -70,13 +72,13 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     public synchronized Connection createConnection(String userName, String password) throws JMSException {
         ConnectionKey key = new ConnectionKey(userName, password);
-        PooledConnection connection = (PooledConnection) cache.get(key);
+        ConnectionPool connection = (ConnectionPool) cache.get(key);
         if (connection == null) {
             ActiveMQConnection delegate = createConnection(key);
-            connection = new PooledConnection(delegate);
+            connection = new ConnectionPool(delegate);
             cache.put(key, connection);
         }
-        return connection.newInstance();
+        return new PooledConnection(connection);
     }
 
     protected ActiveMQConnection createConnection(ConnectionKey key) throws JMSException {
@@ -103,9 +105,8 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     public void stop() throws Exception {
         ServiceStopper stopper = new ServiceStopper();
         for (Iterator iter = cache.values().iterator(); iter.hasNext();) {
-            PooledConnection connection = (PooledConnection) iter.next();
+            ConnectionPool connection = (ConnectionPool) iter.next();
             try {
-                connection.getConnection().close();
                 connection.close();
             }
             catch (JMSException e) {

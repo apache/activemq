@@ -18,12 +18,12 @@
 **/
 package org.activemq.pool;
 
+import org.activemq.ActiveMQMessageProducer;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
-
-import org.activemq.ActiveMQMessageProducer;
 
 /**
  * A pooled {@link MessageProducer}
