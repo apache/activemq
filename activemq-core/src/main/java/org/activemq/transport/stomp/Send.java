@@ -68,7 +68,9 @@ class Send implements StompCommand {
             msg = text;
         }
 
-        msg.setMessageId(format.generateMessageId());
+        msg.setProducerId(format.getProducerId());
+        msg.setMessageId(format.createMessageId());
+        
 
         ActiveMQDestination d = DestinationNamer.convert(destination);
         msg.setDestination(d);

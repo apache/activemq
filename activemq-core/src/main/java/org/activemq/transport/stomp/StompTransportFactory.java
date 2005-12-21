@@ -17,21 +17,32 @@
  **/
 package org.activemq.transport.stomp;
 
-import org.activemq.transport.TransportFactory;
-import org.activemq.transport.TransportServer;
-
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+
+import org.activemq.transport.TransportFactory;
+import org.activemq.transport.TransportServer;
+import org.activemq.util.IOExceptionSupport;
 
 /**
  * A <a href="http://stomp.codehaus.org/">Stomp</a> transport factory
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class StompTransportServerChannelFactory extends TransportFactory {
+public class StompTransportFactory extends TransportFactory {
 
     public TransportServer doBind(String brokerId, URI location) throws IOException {
-        return new StompTransportServerChannel(brokerId, location);
+        try {
+            URI tcpURI = new URI(
+                    "tcp://"+location.getHost()+
+                    (location.getPort()>=0 ? ":"+location.getPort() : "")+
+                    "?wireFormat=stomp"
+                    );
+            return TransportFactory.bind(brokerId, tcpURI);
+        } catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
 
 }

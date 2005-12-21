@@ -80,6 +80,7 @@ public interface Stomp {
         public interface Connect {
             String LOGIN = "login";
             String PASSCODE = "passcode";
+            String CLIENT_ID = "client-id";
         }
 
         public interface Error {
