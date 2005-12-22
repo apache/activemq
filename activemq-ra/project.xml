@@ -118,6 +118,17 @@
         <version>2.1.1</version>
     </dependency>
 
+    <!-- For Spring -->
+    <dependency>
+        <groupId>springframework</groupId>
+        <artifactId>spring</artifactId>
+        <version>${spring_ra_version}</version>
+        <url>http://www.springframework.org</url>
+        <properties>
+              <rar.bundle>true</rar.bundle>
+        </properties>
+    </dependency>
+
     <!--  for custom XML parsing -->
 
     <dependency>
@@ -127,6 +138,7 @@
       <url>http://www.gbean.org</url>
       <properties>
         <war.bundle>true</war.bundle>
+        <rar.bundle>true</rar.bundle>  
       </properties>
     </dependency>
 
