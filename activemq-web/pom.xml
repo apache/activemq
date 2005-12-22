@@ -1,0 +1,70 @@
+<model>
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.activemq</groupId>
+    <artifactId>activemq-project</artifactId>
+    <version>4.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>activemq-web</artifactId>
+  <packaging>jar</packaging>
+  <name>ActiveMQ :: Web</name>
+  <description>Web Connector for REST API and Streamlets support</description>description>
+  
+  <dependencies>
+  
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>backport-util-concurrent</groupId>
+      <artifactId>backport-util-concurrent</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>activeio</groupId>
+      <artifactId>activeio</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-jms</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-jsp</artifactId>
+    </dependency>
+ 
+    <dependency>
+      <groupId>xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>servlet-api</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty</artifactId>
+    </dependency>
+    
+  </dependencies>
+
+</model>

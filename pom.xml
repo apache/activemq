@@ -88,12 +88,16 @@
   </build>
 
   <modules>
+
     <module>activemq-core</module>
     <module>activemq-ra</module>
     <module>activemq-jaas</module>
     <module>activemq-optional</module>
+    <module>activemq-web</module>
+
     <module>activeio</module>
     <module>activecluster</module>
+
   </modules> 
 
   <licenses>
@@ -168,6 +172,13 @@
         <artifactId>geronimo-spec-j2ee-connector</artifactId>
         <version>1.5-rc4</version>
       </dependency>
+
+      <dependency>
+        <groupId>geronimo-spec</groupId>
+        <artifactId>geronimo-spec-jsp</artifactId>
+        <version>2.0-rc4</version>
+      </dependency>
+
       
       <!-- =============================== -->
       <!-- Optional dependencies -->
