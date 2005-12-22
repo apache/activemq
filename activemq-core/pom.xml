@@ -10,7 +10,8 @@
 
   <artifactId>activemq-core</artifactId>
   <packaging>jar</packaging>
-  <name>ActiveMQ JMS Broker</name>
+  <name>ActiveMQ :: Core</name>
+  <description>The ActiveMQ Message Broker and Client implementations</description>
 
   <build>
     <plugins>

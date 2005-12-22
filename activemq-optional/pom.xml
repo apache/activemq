@@ -8,10 +8,9 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activemq-ra</artifactId>
-  <packaging>rar</packaging>
-  <name>ActiveMQ :: RA</name>
-  <description>A JCA Resource Adapter used to integrate ActiveMQ with transactional enterprise containers</description>
+  <artifactId>activemq-optional</artifactId>
+  <packaging>jar</packaging>
+  <name>ActiveMQ :: Optional</name>
 
   <dependencies>
   
@@ -22,20 +21,23 @@
     </dependency>
 
     <dependency>
-      <groupId>activeio</groupId>
-      <artifactId>activeio</artifactId>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>compile</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>backport-util-concurrent</groupId>
       <artifactId>backport-util-concurrent</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>activeio</groupId>
+      <artifactId>activeio</artifactId>
+    </dependency>
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
     </dependency>
-
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
@@ -44,7 +46,7 @@
     <dependency>
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-jms</artifactId>
-    </dependency>
+    </dependency>    
     <dependency>
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-jta</artifactId>
@@ -62,17 +64,58 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring</artifactId>
     </dependency>
-    
     <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
+      <groupId>aopalliance</groupId>
+      <artifactId>aopalliance</artifactId>
     </dependency>
     
     <dependency>
-      <groupId>activemq</groupId>
-      <artifactId>jmdns</artifactId>
+      <groupId>xstream</groupId>
+      <artifactId>xstream</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>xmlpull</groupId>
+      <artifactId>xmlpull</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>servlet-api</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+    </dependency>
+    
   </dependencies>
 
 </model>

@@ -10,7 +10,8 @@
 
   <artifactId>activemq-jaas</artifactId>
   <packaging>jar</packaging>
-  <name>ActiveMQ JAAS Login Modules</name>
+  <name>ActiveMQ :: JAAS</name>
+  <description>A collection of generic JAAS Login Modules</description>
 
   <build>
     <plugins>
