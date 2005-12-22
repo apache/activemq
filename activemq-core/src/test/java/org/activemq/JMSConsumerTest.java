@@ -59,6 +59,55 @@ public class JMSConsumerTest extends JmsTestSupport {
     public byte destinationType;
     public boolean durableConsumer;
     
+    public void initCombosForTestMessageListenerWithConsumerCanBeStopped() {
+        addCombinationValues("deliveryMode", new Object[] { 
+                new Integer(DeliveryMode.NON_PERSISTENT),
+                new Integer(DeliveryMode.PERSISTENT) });
+        addCombinationValues("destinationType", new Object[] { 
+                new Byte(ActiveMQDestination.QUEUE_TYPE),
+                new Byte(ActiveMQDestination.TOPIC_TYPE), 
+                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
+    }
+    public void testMessageListenerWithConsumerCanBeStopped() throws Throwable {
+
+        final AtomicInteger counter = new AtomicInteger(0);
+        final CountDownLatch done1 = new CountDownLatch(1);
+        final CountDownLatch done2 = new CountDownLatch(1);
+        
+        // Receive a message with the JMS API
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        destination = createDestination(session, destinationType);
+        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(destination);
+        consumer.setMessageListener(new MessageListener() {
+            public void onMessage(Message m) {
+                counter.incrementAndGet();
+                if( counter.get()==1 )
+                    done1.countDown();
+                if( counter.get()==2 )
+                    done2.countDown();
+            }
+        });
+
+        // Send a first message to make sure that the consumer dispatcher is running
+        sendMessages(session, destination, 1);
+        assertTrue(done1.await(1, TimeUnit.SECONDS));
+        assertEquals(1, counter.get());
+
+        // Stop the consumer.
+        consumer.stop();
+
+        // Send a message, but should not get delivered.
+        sendMessages(session, destination, 1);
+        assertFalse(done2.await(1, TimeUnit.SECONDS));
+        assertEquals(1, counter.get());
+        
+        // Start the consumer, and the message should now get delivered.
+        consumer.start();
+        assertTrue(done2.await(1, TimeUnit.SECONDS));
+        assertEquals(2, counter.get());
+    }
     
     public void initCombosForTestMutiReceiveWithPrefetch1() {
         addCombinationValues("deliveryMode", new Object[] { 

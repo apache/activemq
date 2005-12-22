@@ -245,10 +245,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @return true if this is a durable topic subscriber
      */
     public boolean isDurableSubscriber() {
-        // TODO Add ActiveMQTopicSubscriber
-        return false;
-        // return this instanceof ActiveMQTopicSubscriber && consumerName !=
-        // null && consumerName.length() > 0;
+        return info.getSubcriptionName()!=null && info.getDestination().isTopic();
     }
 
     /**
@@ -671,8 +668,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
                 Scheduler.executeAfterDelay(new Runnable() {
                     public void run() {
-                        if (started.get())
-                            unconsumedMessages.start();
+                        try {
+                            if (started.get())
+                                start();
+                        } catch (JMSException e) {
+                            session.connection.onAsyncException(e);
+                        }
                     }
                 }, redeliveryDelay);
                 
@@ -695,7 +696,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         MessageListener listener = this.messageListener;
         try {
             if (!unconsumedMessages.isClosed()) {
-                if (listener != null) {
+                if (listener != null && started.get()) {
                     ActiveMQMessage message = createActiveMQMessage(md);
                     beforeMessageIsConsumed(md);
                     listener.onMessage(message);
@@ -716,9 +717,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         return unconsumedMessages.size();
     }
 
-    public void start() {
+    public void start() throws JMSException {
         started.set(true);
         unconsumedMessages.start();
+        MessageListener listener = this.messageListener;
+        if( listener!=null ) {
+            MessageDispatch md;
+            while( (md = unconsumedMessages.dequeueNoWait())!=null ) {
+                ActiveMQMessage message = createActiveMQMessage(md);
+                beforeMessageIsConsumed(md);
+                listener.onMessage(message);
+                afterMessageIsConsumed(md, false);
+            }
+        }
     }
 
     public void stop() {
