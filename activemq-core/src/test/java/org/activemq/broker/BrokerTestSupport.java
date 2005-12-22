@@ -75,6 +75,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
 
 
     protected void setUp() throws Exception {
+        super.setUp();
         broker = createBroker();
         broker.start();
     }
@@ -85,6 +86,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
     
     protected void tearDown() throws Exception {
         broker.stop();
+        super.tearDown();
     }
     
     protected ConsumerInfo createConsumerInfo(SessionInfo sessionInfo, ActiveMQDestination destination) throws Throwable {

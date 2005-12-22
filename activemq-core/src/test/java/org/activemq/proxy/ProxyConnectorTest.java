@@ -43,7 +43,12 @@ public class ProxyConnectorTest extends ProxyTestSupport {
     public byte destinationType;
     public int deliveryMode;
 
-    public void initCombosForTestSendAndConsume() {    
+    public void setUp() throws Exception {
+        super.setAutoFail(true);
+        super.setUp();
+    }
+
+    public void initCombosForTestSendAndConsume() {
         addCombinationValues( "deliveryMode", new Object[]{ 
                 new Integer(DeliveryMode.NON_PERSISTENT), 
                 new Integer(DeliveryMode.PERSISTENT)
@@ -84,7 +89,7 @@ public class ProxyConnectorTest extends ProxyTestSupport {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         // Send the message to the local broker.
         connection1.request(createMessage(producerInfo, destination, deliveryMode));
                 

@@ -43,6 +43,11 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
     
 	static final private Log log = LogFactory.getLog(DiscoveryTransportBrokerTest.class);
 
+    public void setUp() throws Exception {
+        super.setAutoFail(true);
+        super.setUp();
+    }
+
 	public void testPublisherFailsOver() throws Throwable {
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         int deliveryMode = DeliveryMode.NON_PERSISTENT;
