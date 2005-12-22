@@ -121,7 +121,7 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
     static {
         String path = System.getProperty("java.security.auth.login.config");
         if( path == null ) {
-            URL resource = SimpleSecurityBrokerSystemTest.class.getResource("login.config");
+            URL resource = SimpleSecurityBrokerSystemTest.class.getClassLoader().getResource("login.config");
             if( resource!=null ) {
                 path = resource.getFile();
                 System.setProperty("java.security.auth.login.config", path);
