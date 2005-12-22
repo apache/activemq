@@ -123,7 +123,7 @@ public class StateServiceImpl implements StateService {
         HashMap answer = new HashMap(nodes.size());
         for (Iterator iter = nodes.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry) iter.next();
-            String key = entry.getKey().toString();
+            Object key = entry.getKey();
             NodeEntry nodeEntry = (NodeEntry) entry.getValue();
             answer.put(key, nodeEntry.node);
         }
