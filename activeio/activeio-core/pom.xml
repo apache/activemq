@@ -69,27 +69,6 @@
     <name>The ActiveIO Project</name>
     <url>http://activeio.org</url>
   </organization>
-  <build>
-    <sourceDirectory>src/java</sourceDirectory>
-    <testSourceDirectory>src/test</testSourceDirectory>
-    <resources>
-      <resource>
-        <directory>src/resources</directory>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </resource>
-    </resources>
-    <testResources>
-      <testResource>
-        <directory>src/test</directory>
-        <includes>
-          <include>**/*.properties</include>
-          <include>**/*.xml</include>
-        </includes>
-      </testResource>
-    </testResources>
-  </build>
 
   <dependencies>
     <!-- Required Dependencies -->
