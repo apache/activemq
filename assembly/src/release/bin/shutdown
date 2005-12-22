@@ -114,7 +114,7 @@ if $cygwin; then
 fi
 
 
-if [ -n "ACTIVEMQ_OPTS" ] ; then
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
   ACTIVEMQ_OPTS="-Xmx512M -Dderby.system.home=../data -Dderby.storage.fileSyncTransactionLog=true"
 fi
 
