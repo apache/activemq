@@ -7,13 +7,14 @@
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+ **/
 package org.activecluster;
 
 import org.activecluster.impl.ActiveMQClusterFactory;
@@ -49,13 +50,13 @@ public abstract class ClusterTestSupport extends TestSupport {
     protected void subscribeToCluster() throws Exception {
 
         // listen to cluster messages
-        String clusterDestination = cluster.getDestination();
+        Destination clusterDestination = cluster.getDestination();
         assertTrue("Local destination must not be null", clusterDestination != null);
         clusterConsumer = cluster.createConsumer(clusterDestination);
         clusterConsumer.setMessageListener(clusterListener);
 
         // listen to inbox messages (individual messages)
-        String localDestination = cluster.getLocalNode().getDestination();
+        Destination localDestination = cluster.getLocalNode().getDestination();
         assertTrue("Local destination must not be null", localDestination != null);
 
         System.out.println("Consuming from local destination: " + localDestination);

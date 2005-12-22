@@ -7,13 +7,14 @@
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+ **/
 package org.activecluster.group;
 
 import java.util.HashMap;
@@ -22,7 +23,9 @@ import junit.framework.TestCase;
 import org.activecluster.Cluster;
 import org.activecluster.ClusterEvent;
 import org.activecluster.ClusterListener;
+import org.activecluster.DestinationMarshaller;
 import org.activecluster.Node;
+import org.activecluster.impl.DefaultDestinationMarshaller;
 import org.activecluster.impl.NodeImpl;
 
 /**
@@ -36,6 +39,7 @@ public abstract class GroupTestSupport extends TestCase {
     private ClusterListener listener;
     private Cluster cluster;
     private Map nodes = new HashMap();
+    private DestinationMarshaller marshaller = new DefaultDestinationMarshaller();
 
     protected void addNodes(String[] nodeNames) {
         for (int i = 0; i < nodeNames.length; i++) {
@@ -45,7 +49,8 @@ public abstract class GroupTestSupport extends TestCase {
     }
 
     protected void addNode(String nodeName) {
-        Node node = new NodeImpl(nodeName,nodeName);
+        
+        Node node = new NodeImpl(nodeName,marshaller.getDestination(nodeName));
         nodes.put(nodeName, node);
         listener.onNodeAdd(new ClusterEvent(cluster, node, ClusterEvent.ADD_NODE));
     }

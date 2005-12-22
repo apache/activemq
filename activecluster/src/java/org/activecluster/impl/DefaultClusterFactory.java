@@ -20,6 +20,7 @@ import java.util.Timer;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -27,6 +28,7 @@ import javax.jms.Topic;
 import org.activecluster.Cluster;
 import org.activecluster.ClusterException;
 import org.activecluster.ClusterFactory;
+import org.activecluster.DestinationMarshaller;
 import org.activemq.util.IdGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,15 +63,41 @@ public class DefaultClusterFactory implements ClusterFactory {
         this(connectionFactory, false, Session.AUTO_ACKNOWLEDGE, "ACTIVECLUSTER.DATA.", 6000L);
     }
 
-    public Cluster createCluster(String groupDestination) throws JMSException {
+    public Cluster createCluster(Destination groupDestination) throws JMSException {
         return createCluster(idGenerator.generateId(), groupDestination);
     }
 
-    public Cluster createCluster(String name,String groupDestination) throws  JMSException {
+    public Cluster createCluster(String name,Destination groupDestination) throws  JMSException {
         Connection connection = getConnectionFactory().createConnection();
         Session session = createSession(connection);
-        return createCluster(connection, session, name,groupDestination);
+        return createCluster(connection, session, name,groupDestination,new DefaultDestinationMarshaller());
     }
+    
+    public Cluster createCluster(String name,Destination groupDestination,DestinationMarshaller marshaller) throws  JMSException {
+        Connection connection = getConnectionFactory().createConnection();
+        Session session = createSession(connection);
+        return createCluster(connection, session, name,groupDestination,marshaller);
+    }
+    
+    
+    public Cluster createCluster(String name,String groupDestinationName) throws JMSException{
+        Connection connection = getConnectionFactory().createConnection();
+        Session session = createSession(connection);
+        return createCluster(connection, session, name,session.createTopic(groupDestinationName),new DefaultDestinationMarshaller());
+    }
+    
+    public Cluster createCluster(String name,String groupDestinationName,DestinationMarshaller marshaller) throws JMSException{
+        Connection connection = getConnectionFactory().createConnection();
+        Session session = createSession(connection);
+        return createCluster(connection, session, name,session.createTopic(groupDestinationName),marshaller);
+    }
+
+
+    
+    public Cluster createCluster(String groupDestinationName) throws  JMSException{
+        return createCluster(idGenerator.generateId(), groupDestinationName);
+    }
+    
 
     // Properties
     //-------------------------------------------------------------------------
@@ -134,34 +162,29 @@ public class DefaultClusterFactory implements ClusterFactory {
 
     // Implementation methods
     //-------------------------------------------------------------------------
-    protected Cluster createCluster(Connection connection, Session session, String name,String groupDestination) throws JMSException {
-        String dataDestination = dataTopicPrefix + groupDestination;
-
-        log.info("Creating cluster group producer on topic: " + groupDestination);
-
-        MessageProducer producer = createProducer(session, null);
+    protected Cluster createCluster(Connection connection,Session session,String name,Destination groupDestination,
+                    DestinationMarshaller marshaller) throws JMSException{
+        String dataDestination=dataTopicPrefix+groupDestination;
+        log.info("Creating cluster group producer on topic: "+groupDestination);
+        MessageProducer producer=createProducer(session,null);
         producer.setDeliveryMode(deliveryMode);
-
-        log.info("Creating cluster data producer on data destination: " + dataDestination);
-
-        Topic dataTopic = session.createTopic(dataDestination);
-        MessageProducer keepAliveProducer = session.createProducer(dataTopic);
+        log.info("Creating cluster data producer on data destination: "+dataDestination);
+        Topic dataTopic=session.createTopic(dataDestination);
+        MessageProducer keepAliveProducer=session.createProducer(dataTopic);
         keepAliveProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        StateService serviceStub = new StateServiceStub(session, keepAliveProducer);
-
-        String localInboxDestination = dataDestination + "." + name;
-        
-        ReplicatedLocalNode localNode = new ReplicatedLocalNode(name,localInboxDestination, serviceStub);
-        Timer timer = new Timer();
-        DefaultCluster answer = new DefaultCluster(localNode, dataDestination, groupDestination, connection, session, producer, timer, inactiveTime);
+        StateService serviceStub=new StateServiceStub(session,keepAliveProducer,marshaller);
+        Destination localInboxDestination=session.createTopic(dataDestination+"."+name);
+        ReplicatedLocalNode localNode=new ReplicatedLocalNode(name,localInboxDestination,serviceStub);
+        Timer timer=new Timer();
+        DefaultCluster answer=new DefaultCluster(localNode,dataTopic,groupDestination,marshaller,connection,session,
+                        producer,timer,inactiveTime);
         return answer;
     }
 
     /*
-     protected Cluster createInternalCluster(Session session, Topic dataDestination) {
-         MessageProducer producer = createProducer(session);
-         return new DefaultCluster(new NonReplicatedLocalNode(), dataDestination, connection, session, producer);
-     }
+     * protected Cluster createInternalCluster(Session session, Topic dataDestination) { MessageProducer producer =
+     * createProducer(session); return new DefaultCluster(new NonReplicatedLocalNode(), dataDestination, connection,
+     * session, producer); }
      */
     
     protected MessageProducer createProducer(Session session, Topic groupDestination) throws JMSException {

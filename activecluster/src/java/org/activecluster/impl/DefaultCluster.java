@@ -7,13 +7,14 @@
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+ **/
 package org.activecluster.impl;
 
 import java.io.Serializable;
@@ -33,6 +34,7 @@ import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 import org.activecluster.Cluster;
 import org.activecluster.ClusterListener;
+import org.activecluster.DestinationMarshaller;
 import org.activecluster.LocalNode;
 import org.activecluster.Service;
 import org.activecluster.election.ElectionStrategy;
@@ -50,41 +52,53 @@ public class DefaultCluster implements Cluster {
 
     private StateServiceImpl stateService;
     private LocalNode localNode;
-    private String destination;
+    private Destination destination;
     private Connection connection;
     private Session session;
     private MessageProducer producer;
     private MessageConsumer consumer;
     private Timer timer;
+    private DestinationMarshaller marshaller;
     private AtomicBoolean started = new AtomicBoolean(false);
     private Object clusterLock = new Object();
 
-    public DefaultCluster(final LocalNode localNode,String dataDestination, String destination, Connection connection, Session session,
-                          MessageProducer producer, Timer timer, long inactiveTime) throws JMSException {
-        this.localNode = localNode;
-        this.destination = destination;
-        this.connection = connection;
-        this.session = session;
-        this.producer = producer;
-        this.timer = timer;
-
-        if (producer == null) {
+    /**
+     * Construct this beast
+     * @param localNode
+     * @param dataDestination
+     * @param destination
+     * @param marshaller
+     * @param connection
+     * @param session
+     * @param producer
+     * @param timer
+     * @param inactiveTime
+     * @throws JMSException
+     */
+    public DefaultCluster(final LocalNode localNode,Destination dataDestination,Destination destination,
+                    DestinationMarshaller marshaller,Connection connection,Session session,MessageProducer producer,
+                    Timer timer,long inactiveTime) throws JMSException{
+        this.localNode=localNode;
+        this.destination=destination;
+        this.marshaller=marshaller;
+        this.connection=connection;
+        this.session=session;
+        this.producer=producer;
+        this.timer=timer;
+        if(producer==null){
             throw new IllegalArgumentException("No producer specified!");
         }
-
         // now lets subscribe the service to the updates from the data topic
-        consumer = session.createConsumer(createDestination(dataDestination), null, true);
-
-        log.info("Creating data consumer on topic: " + dataDestination);
-
-        this.stateService = new StateServiceImpl(this, clusterLock, new Runnable() {
-            public void run() {
-                if (localNode instanceof ReplicatedLocalNode) {
+        consumer=session.createConsumer(dataDestination,null,true);
+        log.info("Creating data consumer on topic: "+dataDestination);
+        this.stateService=new StateServiceImpl(this,clusterLock,new Runnable(){
+            public void run(){
+                if(localNode instanceof ReplicatedLocalNode){
                     ((ReplicatedLocalNode) localNode).pingRemoteNodes();
                 }
             }
-        }, timer, inactiveTime);
-        consumer.setMessageListener(new StateConsumer(stateService));
+        },timer,inactiveTime);
+        consumer.setMessageListener(new StateConsumer(stateService,marshaller));
     }
 
     public void addClusterListener(ClusterListener listener) {
@@ -95,7 +109,7 @@ public class DefaultCluster implements Cluster {
         stateService.removeClusterListener(listener);
     }
 
-    public String getDestination() {
+    public Destination getDestination() {
         return destination;
     }
 
@@ -111,24 +125,21 @@ public class DefaultCluster implements Cluster {
         stateService.setElectionStrategy(strategy);
     }
 
-    public void send(String destination,Message message) throws JMSException {
-        producer.send(createDestination(destination), message);
-    }
-    
+        
    public void send(Destination replyTo, Message message) throws JMSException{
        producer.send(replyTo,message);
    }
 
-    public MessageConsumer createConsumer(String destination) throws JMSException {
-        return getSession().createConsumer(createDestination(destination));
+    public MessageConsumer createConsumer(Destination destination) throws JMSException {
+        return getSession().createConsumer(destination);
     }
 
-    public MessageConsumer createConsumer(String destination, String selector) throws JMSException {
-        return getSession().createConsumer(createDestination(destination), selector);
+    public MessageConsumer createConsumer(Destination destination, String selector) throws JMSException {
+        return getSession().createConsumer(destination, selector);
     }
 
-    public MessageConsumer createConsumer(String destination, String selector, boolean noLocal) throws JMSException {
-        return getSession().createConsumer(createDestination(destination), selector, noLocal);
+    public MessageConsumer createConsumer(Destination destination, String selector, boolean noLocal) throws JMSException {
+        return getSession().createConsumer(destination, selector, noLocal);
     }
 
     public Message createMessage() throws JMSException {
