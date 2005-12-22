@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
@@ -63,7 +62,7 @@ import junit.framework.TestSuite;
  * 
  * @version $Revision: 1.5 $
  */
-public class CombinationTestSupport extends TestCase {
+public class CombinationTestSupport extends AutoFailTestSupport {
 
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
             .getLog(CombinationTestSupport.class);
