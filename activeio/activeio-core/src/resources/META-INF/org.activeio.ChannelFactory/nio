@@ -1,2 +1,0 @@
-SyncChannelFactory.class=org.activeio.packet.sync.nio.NIOSyncChannelFactory
-AsyncChannelFactory.class=org.activeio.packet.async.nio.NIOAsyncChannelFactory
