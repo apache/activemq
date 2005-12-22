@@ -4,7 +4,7 @@
 
   <parent>
     <groupId>org.apache.activeio</groupId>
-    <artifactId>activeio</artifactId>
+    <artifactId>activeio-project</artifactId>
     <relativePath>../pom.xml</relativePath>
     <version>3.0-SNAPSHOT</version>
   </parent>
