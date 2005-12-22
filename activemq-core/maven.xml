@@ -19,7 +19,7 @@
 -->
 <project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant" xmlns:license="license" xmlns:util="jelly:util" xmlns:maven="jelly:maven" xmlns:artifact="artifact">
 
-  <goal name="default" prereqs="jar:install, javadoc:api"/>
+  <goal name="default" prereqs="jar:install"/>
 
   <postGoal name="clean">
     <delete dir="${basedir}/activemq-data" />
@@ -222,7 +222,7 @@
       />
   </goal>
   
-  <goal name="jar:deploy-javadocs" 
+  <goal name="jar:deploy-javadoc" 
       description="Deploys javadoc binary" prereqs="javadoc:api">
         
       <artifact:deploy
