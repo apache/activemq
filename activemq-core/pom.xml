@@ -19,7 +19,11 @@
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
+<!--
+        <version>2.1.2-SNAPSHOT</version>
+-->
         <configuration>
+          <forkMode>pertest</forkMode>
           <excludes>
             <!-- These tests run too slow to execute as part of the unit tests -->
             <exclude implementation="java.lang.String">**/DefaultStoreBrokerTest.*</exclude>
@@ -45,18 +49,59 @@
         </executions>
       </plugin>
 
-<!--
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javacc-plugin</artifactId>
-        <version>1.0-SNAPSHOT</version>
-        <phase>generate-sources</phase>
-        <configuration>
-          <sourceDirectory>src/main/grammar</sourceDirectory>
-          <outputDirectory>src/main/java</outputDirectory>
-        </configuration>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <configuration>
+              <tasks>
+
+                <mkdir dir="${basedir}/target/generated"/>
+                <taskdef name="xsdGenerate" classname="org.xbean.spring.generator.MappingGeneratorTask"/>
+                <xsdGenerate 
+                    destFile="${basedir}/target/activemq-${version}.xsd" 
+                    namespace="http://activemq.org/config/1.0"
+                    srcdir="${basedir}/src/main/java"  
+                    metaInfDir="${basedir}/target/generated/"/>
+            
+                <copy file="${basedir}/target/activemq-${version}.xsd" todir="${basedir}/../xdocs"/>
+                <copy file="${basedir}/target/activemq-${version}.xsd.html" todir="${basedir}/../xdocs"/>
+
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>xbean</groupId>
+            <artifactId>xbean-spring</artifactId>
+            <version>2.0</version>
+          </dependency>
+        </dependencies>
       </plugin>
--->
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>javacc-maven-plugin</artifactId>
+        <version>0.6.1-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <configuration>
+              <sourceDirectory>src/main/grammar</sourceDirectory>
+              <outputDirectory>src/main/java/org/activemq/selector</outputDirectory>
+            </configuration>
+            <goals>
+              <goal>javacc</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
