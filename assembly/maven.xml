@@ -175,14 +175,17 @@
     </ant:copy>
 
     <!-- Copy documentation -->
-    <!--
-    <j:set var="docsDest" value="${project.root}/activemq-core/target/docs"/>
-    <ant:copy todir="${maven.dist.bin.assembly.dir}/docs">
-      <ant:fileset dir="${docsDest}">
-        <ant:include name="**"/>
-      </ant:fileset>
-    </ant:copy>
-    -->       
+    <echo>exist 2 ..............................................</echo>
+    <u:file var="file" name="${project.root}/activemq-core/target/docs"/>
+    <j:if test="${file.exists()}">
+      <j:set var="docsDest" value="${project.root}/activemq-core/target/docs"/>
+      <echo>exist ..............................................</echo>
+      <ant:copy todir="${maven.dist.bin.assembly.dir}/docs">
+        <ant:fileset dir="${docsDest}">
+          <ant:include name="**"/>
+        </ant:fileset>
+      </ant:copy>
+    </j:if>       
   </goal>
 
   <goal
