@@ -18,25 +18,35 @@
  **/
 package org.activemq.broker;
 
-import javax.management.remote.JMXServiceURL;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-import javax.management.ObjectInstance;
-import javax.management.MBeanAttributeInfo;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.JarURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.JarURLConnection;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 
 /**
  * Main class that can bootstrap a ActiveMQ Broker. Handles command line
@@ -589,7 +599,7 @@ public class Main {
 
         // Construct the object name based on the query
         } else {
-            mbeans = new CopyOnWriteArraySet();
+            mbeans = new HashSet();
             Set queryKeys = queryObjects.keySet();
             for (Iterator i=queryKeys.iterator(); i.hasNext();) {
                 String objType = (String)i.next();
