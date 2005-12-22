@@ -8,12 +8,18 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activemq-web</artifactId>
+  <artifactId>activemq-systest</artifactId>
   <packaging>jar</packaging>
-  <name>ActiveMQ :: Web</name>
-  <description>Web Connector for REST API and Streamlets support</description>
+  <name>ActiveMQ :: System Test</name>
+  <description>System Testing Framework for ActiveMQ</description>
   
   <dependencies>
+  
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>compile</scope>
+    </dependency>
   
     <dependency>
       <groupId>org.apache.activemq</groupId>
@@ -37,14 +43,14 @@
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-jms</artifactId>
     </dependency>    
     <dependency>
       <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-jsp</artifactId>
+      <artifactId>geronimo-spec-j2ee-connector</artifactId>
     </dependency>
  
     <dependency>
@@ -57,6 +63,11 @@
     </dependency>
     
     <dependency>
+      <groupId>cglib</groupId>
+      <artifactId>cglib-full</artifactId>
+    </dependency>
+    
+    <dependency>
       <groupId>jetty</groupId>
       <artifactId>servlet-api</artifactId>
     </dependency>    
@@ -65,6 +76,25 @@
       <artifactId>jetty</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>jmdns</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>annogen</groupId>
+      <artifactId>annogen</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ant</groupId>
+      <artifactId>ant</artifactId>
+    </dependency>
+
   </dependencies>
 
 </model>
