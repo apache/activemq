@@ -71,7 +71,7 @@ public class SessionPool implements PoolableObjectFactory {
         // lets check if we are already closed
         getConnection();
         try {
-            getSessionPool().returnObject(this);
+            getSessionPool().returnObject(session);
         }
         catch (Exception e) {
             throw JMSExceptionSupport.create("Failed to return session to pool: " + e, e);
