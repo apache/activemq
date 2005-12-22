@@ -12,6 +12,34 @@
   <packaging>jar</packaging>
   <name>ActiveMQ JAAS Login Modules</name>
 
+  <build>
+    <plugins>
+
+      <!-- Configure which tests are included/excuded -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.1.1</version>
+        <configuration>
+          <forkMode>pertest</forkMode>
+          <excludes>
+            <exclude implementation="java.lang.String">**/LDAPLoginModuleTest.*</exclude>
+          </excludes>
+          <includes>
+            <include implementation="java.lang.String">**/*Test.*</include>
+          </includes>
+          <systemProperties>
+            <property>
+              <name>java.security.auth.login.config</name>
+              <value>${basedir}/src/test/resources/login.config</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+
   <dependencies>
   
     <dependency>
