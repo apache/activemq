@@ -2,17 +2,18 @@
  *
  * Copyright 2004 The Apache Software Foundation
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or 
+ implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 package org.activecluster;
@@ -150,7 +151,7 @@ public class ClusterFunctionTest extends TestCase {
             try {
                 System.out.println("request received");
                 ObjectMessage om = cluster.createObjectMessage();
-                om.setJMSReplyTo(cluster.createDestination(cluster.getLocalNode().getDestination()));
+                om.setJMSReplyTo(cluster.getLocalNode().getDestination());
                 om.setObject(new Response());
                 System.out.println("sending response");
                 cluster.send(om2.getJMSReplyTo(), om);
@@ -192,7 +193,7 @@ public class ClusterFunctionTest extends TestCase {
         // 1->1 messages
         _cluster1.createConsumer(_cluster1.getLocalNode().getDestination()).setMessageListener(listener1);
         ObjectMessage om = _cluster0.createObjectMessage();
-        om.setJMSReplyTo(_cluster0.createDestination(_cluster0.getLocalNode().getDestination()));
+        om.setJMSReplyTo(_cluster0.getLocalNode().getDestination());
         om.setObject(new Request());
         testResponsePassed = false;
         _cluster0.send(_cluster0.getLocalNode().getDestination(), om);

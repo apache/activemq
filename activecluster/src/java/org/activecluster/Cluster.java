@@ -7,13 +7,15 @@
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+ **/
+
 package org.activecluster;
 
 import java.io.Serializable;
@@ -46,7 +48,7 @@ public interface Cluster extends Service {
      *
      * @return the destination to send messages to all members of the cluster
      */
-    public String getDestination();
+    public Destination getDestination();
 
     /**
      * A snapshot of the nodes in the cluster indexed by the Destination
@@ -94,17 +96,9 @@ public interface Cluster extends Service {
      * @param message     the message to be sent
      * @throws JMSException
      */
-    public void send(String destination, Message message) throws JMSException;
+    public void send(Destination destination, Message message) throws JMSException;
 
     
-    /**
-     * Utility method for sending back replies in message exchanges
-     *
-     * @param replyTo the replyTo JMS Destination on a Message
-     * @param message     the message to be sent
-     * @throws JMSException
-     */
-    public void send(Destination replyTo, Message message) throws JMSException;
     /**
      * Creates a consumer of all the messags sent to the given destination,
      * including messages sent via the send() messages
@@ -113,7 +107,7 @@ public interface Cluster extends Service {
      * @return a newly  created message consumer
      * @throws JMSException
      */
-    public MessageConsumer createConsumer(String destination) throws JMSException;
+    public MessageConsumer createConsumer(Destination destination) throws JMSException;
 
     /**
      * Creates a consumer of all message sent to the given destination,
@@ -125,7 +119,7 @@ public interface Cluster extends Service {
      * @return a newly  created message consumer
      * @throws JMSException
      */
-    public MessageConsumer createConsumer(String destination, String selector) throws JMSException;
+    public MessageConsumer createConsumer(Destination destination, String selector) throws JMSException;
 
     /**
      * Creates a consumer of all message sent to the given destination,
@@ -139,7 +133,7 @@ public interface Cluster extends Service {
      * @return a newly  created message consumer
      * @throws JMSException
      */
-    public MessageConsumer createConsumer(String destination, String selector, boolean noLocal) throws JMSException;
+    public MessageConsumer createConsumer(Destination destination, String selector, boolean noLocal) throws JMSException;
 
 
     // Message factory methods

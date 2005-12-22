@@ -7,17 +7,18 @@
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+ **/
 package org.activecluster;
 
-import java.io.Serializable;
 import java.util.Map;
+import javax.jms.Destination;
 
 
 /**
@@ -25,14 +26,14 @@ import java.util.Map;
  *
  * @version $Revision: 1.3 $
  */
-public interface Node extends Serializable {
+public interface Node {
 
     /**
      * Access to the queue to send messages direct to this node.
      *
      * @return the destination to send messages to this node while its available
      */
-    public String getDestination();
+    public Destination getDestination();
 
     /**
      * @return an immutable map of the nodes state
