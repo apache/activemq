@@ -92,8 +92,8 @@
           <execution>
             <phase>generate-sources</phase>
             <configuration>
-              <sourceDirectory>src/main/grammar</sourceDirectory>
-              <outputDirectory>src/main/java/org/activemq/selector</outputDirectory>
+              <sourceDirectory>${basedir}/src/main/grammar</sourceDirectory>
+              <outputDirectory>${basedir}/src/main/java/org/activemq/selector</outputDirectory>
             </configuration>
             <goals>
               <goal>javacc</goal>
