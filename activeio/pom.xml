@@ -1,12 +1,32 @@
 <project>
 
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>org.apache.activeio</groupId>
-    <artifactId>activeio</artifactId>
-    <version>3.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
-    <name>ActiveIO</name>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.activeio</groupId>
+  <artifactId>activeio</artifactId>
+  <version>3.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>ActiveIO</name>
+  <description>A high performance IO abstraction framework</description>
 
+  <mailingLists>
+    <mailingList>
+      <name>Development List</name>
+      <subscribe>activemq-dev@geronimo.apache.org</subscribe>
+      <unsubscribe>activemq-dev@geronimo.apache.org</unsubscribe>
+      <post>activemq-dev@geronimo.apache.org</post>
+    </mailingList>
+  </mailingLists>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/activeio</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/activeio</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/activeio</url>
+  </scm>
+
+  <organization>
+    <name>The ActiveIO Project</name>
+    <url>http://activeio.org</url>
+  </organization>
     <repositories>
         <repository>
             <id>openejb</id>
@@ -15,12 +35,19 @@
             <layout>legacy</layout>
         </repository>
     </repositories>
+
     <modules>
         <module>activeio-core</module>
+<!-- 
+    Disable this optional module from the default build since this contains a dependency that cannot 
+    be automatically downloaded from a maven repository
         <module>activeio-aio</module>
+-->
+
     </modules>
     <dependencyManagement>
         <dependencies>
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -40,12 +67,6 @@
                 <version>2.0_01_pd</version>
             </dependency>
 
-           <dependency>
-             <groupId>ibmaio</groupId>
-             <artifactId>ibmaio</artifactId>
-             <version>1.0</version>
-           </dependency>
-
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging-api</artifactId>
@@ -58,8 +79,10 @@
               <artifactId>log4j</artifactId>
               <version>1.2.8</version>
             </dependency>
+
        </dependencies>
     </dependencyManagement>
+
     <build>
         <plugins>
             <plugin>

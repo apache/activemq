@@ -120,12 +120,6 @@
       <version>2.0</version>
     </dependency>
 
-    <dependency>
-      <groupId>ibmaio</groupId>
-      <artifactId>ibmaio</artifactId>
-      <version>1.0</version>
-    </dependency>
-
     <!-- For Jetty integration -->
     <dependency>
       <groupId>jetty</groupId>

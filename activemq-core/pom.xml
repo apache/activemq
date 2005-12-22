@@ -18,7 +18,6 @@
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.1-SNAPSHOT</version>
         <configuration>
           <excludes>
             <!-- These tests run too slow to execute as part of the unit tests -->
@@ -30,16 +29,13 @@
           <includes>
             <include implementation="java.lang.String">**/*Test.*</include>
           </includes>
-          <forkMode>pertest</forkMode>
         </configuration>
       </plugin>
 
       <!-- generate the attached tests jar -->
-      <!--
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-         <executions>
+        <executions>
           <execution>
             <goals>
               <goal>test-jar</goal>
@@ -47,7 +43,6 @@
           </execution>
         </executions>
       </plugin>
-      -->
 
 <!--
       <plugin>
