@@ -164,7 +164,7 @@ public class DefaultClusterFactory implements ClusterFactory {
     //-------------------------------------------------------------------------
     protected Cluster createCluster(Connection connection,Session session,String name,Destination groupDestination,
                     DestinationMarshaller marshaller) throws JMSException{
-        String dataDestination=dataTopicPrefix+groupDestination;
+        String dataDestination = dataTopicPrefix + marshaller.getDestinationName(groupDestination);
         log.info("Creating cluster group producer on topic: "+groupDestination);
         MessageProducer producer=createProducer(session,null);
         producer.setDeliveryMode(deliveryMode);

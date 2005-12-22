@@ -27,7 +27,7 @@ import javax.jms.Message;
  */
 public class ClusterTest extends ClusterTestSupport {
 
-    protected int count = 2;
+    protected int count = 3;
 
     public void testCluster() throws Exception {
         cluster = createCluster();
@@ -76,9 +76,7 @@ public class ClusterTest extends ClusterTestSupport {
 
         assertClusterMembership(clusters);
 
-        // lets wait for a while to see if things fail
-        Thread.sleep(10000L);
-
+      
         assertClusterMembership(clusters);
 
         Cluster testCluster = clusters[0];
@@ -89,10 +87,12 @@ public class ClusterTest extends ClusterTestSupport {
         Map map = testNode.getState();
         map.put(key, value);
         testNode.setState(map);
+        
 
-        Thread.sleep(5000);
+        Thread.sleep(500);
         for (int i = 1; i < count; i++) {
             Node node = (Node) clusters[i].getNodes().get(testNode.getDestination());
+          
             assertTrue("The current test node should be in the cluster: " + i, node != null);
             assertTrue(node.getState().get(key).equals(value));
         }
