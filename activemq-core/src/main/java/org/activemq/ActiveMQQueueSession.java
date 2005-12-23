@@ -347,4 +347,8 @@ public class ActiveMQQueueSession implements QueueSession {
 		throw new IllegalStateException("Operation not supported by a QueueSession");
 	}
 
+    public QueueSession getNext() {
+        return next;
+    }
+
 }
