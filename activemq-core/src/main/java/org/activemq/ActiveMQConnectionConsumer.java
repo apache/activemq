@@ -135,12 +135,21 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
             ServerSession serverSession = sessionPool.getServerSession();
             Session s = serverSession.getSession();
             ActiveMQSession session = null;
+            
+            
             if( s instanceof ActiveMQSession ) {
                 session = (ActiveMQSession) s;
+            } else if (s instanceof ActiveMQTopicSession) {
+                ActiveMQTopicSession topicSession = (ActiveMQTopicSession) s;
+                session = (ActiveMQSession) topicSession.getNext();
+            } else if (s instanceof ActiveMQQueueSession) {
+                ActiveMQQueueSession queueSession = (ActiveMQQueueSession) s;
+                session = (ActiveMQSession) queueSession.getNext();
             } else {
                 connection.onAsyncException(new JMSException("Session pool provided an invalid session type: "+s.getClass()));
                 return;
             }
+            
             session.dispatch(messageDispatch);
             serverSession.start();
         } catch (JMSException e) {
