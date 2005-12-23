@@ -239,19 +239,19 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
 
     private void dispatch(final MessageReference node) throws IOException {
         
-        node.incrementReferenceCount();
-        
         final Message message = node.getMessage();
         if( message == null ) {
             return;
-        }
-        incrementPreloadSize(node.getMessage().getSize());        
+        }       
         
         // Make sure we can dispatch a message.
         if( canDispatch(node) ) {
 
             MessageDispatch md = createMessageDispatch(node, message);
             dispatched.addLast(node);
+            
+            node.incrementReferenceCount();
+            incrementPreloadSize(node.getMessage().getSize()); 
             
             if( info.isDispatchAsync() ) {
                 md.setConsumer(new Runnable(){
