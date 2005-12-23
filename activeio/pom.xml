@@ -6,7 +6,6 @@
   <version>3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveIO Project</name>
-  <description>A high performance IO abstraction framework</description>
 
   <mailingLists>
     <mailingList>
@@ -23,10 +22,6 @@
     <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/activeio</url>
   </scm>
 
-  <organization>
-    <name>The ActiveIO Project</name>
-    <url>http://activeio.org</url>
-  </organization>
   <repositories>
       <repository>
           <id>openejb</id>
@@ -70,9 +65,8 @@
 
           <dependency>
               <groupId>commons-logging</groupId>
-              <artifactId>commons-logging-api</artifactId>
+              <artifactId>commons-logging</artifactId>
               <version>1.0.4</version>
-              <scope>provided</scope>
           </dependency>
 
           <dependency>

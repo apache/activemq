@@ -1,7 +1,6 @@
 <project>
 
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>org.apache.activeio</groupId>
     <artifactId>activeio-project</artifactId>
@@ -11,74 +10,14 @@
 
   <artifactId>activeio-core</artifactId>
   <name>ActiveIO :: Core</name>
-  <description></description>
-  <url>http://activeio.org/</url>
-  <mailingLists>
-    <mailingList>
-      <name>activeio dev</name>
-      <subscribe>dev-subscribe@activeio.codehaus.org</subscribe>
-      <unsubscribe>dev-unsubscribe@activeio.codehaus.org</unsubscribe>
-    </mailingList>
-    <mailingList>
-      <name>activeio users</name>
-      <subscribe>user-subscribe@activeio.codehaus.org</subscribe>
-      <unsubscribe>user-unsubscribe@activeio.codehaus.org</unsubscribe>
-    </mailingList>
-    <mailingList>
-      <name>activeio svn messages</name>
-      <subscribe>scm-subscribe@activeio.codehaus.org</subscribe>
-      <unsubscribe>scm-unsubscribe@activeio.codehaus.org</unsubscribe>
-    </mailingList>
-  </mailingLists>
-  <developers>
-    <developer>
-      <id>chirino</id>
-      <name>Hiram Chirino</name>
-      <email>hiram@hiramchirino.com</email>
-      <organization></organization>
-      <roles>
-        <role>Founder</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>adc</id>
-      <name>Alan D. Cabrera</name>
-      <email>adc@toolazydogs.com</email>
-      <organization></organization>
-      <roles>
-        <role>Founder</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>dblevins</id>
-      <name>David Blevins</name>
-      <email>dblevins@gluecode.com</email>
-      <organization></organization>
-      <roles>
-        <role>Founder</role>
-      </roles>
-    </developer>
-  </developers>
-  <scm>
-    <!-- TODO: Need to update SCM to apache -->
-    <connection>scm:svn:hvttps://svn.codehaus.org/activeio/trunk/activeio</connection>
-    <developerConnection>scm:svn:svn+ssh://svn.activeio.org/home/projects/activeio/scm/trunk/activeio</developerConnection>
-    <url>http://svn.activeio.org/viewcvs.cgi/activeio/</url>
-  </scm>
-  <organization>
-    <name>The ActiveIO Project</name>
-    <url>http://activeio.org</url>
-  </organization>
-
+  <description>A high performance IO abstraction framework</description>
+  
   <dependencies>
     <!-- Required Dependencies -->
     <dependency>
       <groupId>backport-util-concurrent</groupId>
       <artifactId>backport-util-concurrent</artifactId>
-      <version>2.0_01_pd</version>
     </dependency>
-
-    <!-- Optional Dependencies -->
 
     <!-- For HOWL integration -->
     <dependency>
@@ -142,20 +81,14 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
-      <version>1.0.4</version>
     </dependency>
-
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <version>1.2.8</version>
     </dependency>
 
     <!-- Used by journal performance testing tools -->
@@ -193,6 +126,7 @@
       <artifactId>mx4j</artifactId>
       <version>3.0.1</version>
     </dependency>
+    
   </dependencies>
 
 </project>
