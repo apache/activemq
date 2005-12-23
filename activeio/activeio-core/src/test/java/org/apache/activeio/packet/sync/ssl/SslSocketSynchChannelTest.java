@@ -32,10 +32,10 @@ public class SslSocketSynchChannelTest extends SyncChannelTestSupport {
 
     static {
         String basedir = System.getProperty("basedir");
-        System.setProperty("javax.net.ssl.trustStore", basedir+"/src/test/client.keystore");
+        System.setProperty("javax.net.ssl.trustStore", basedir+"/src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");        
-        System.setProperty("javax.net.ssl.keyStore", basedir+"/src/test/server.keystore");
+        System.setProperty("javax.net.ssl.keyStore", basedir+"/src/test/resources/server.keystore");
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");        
         //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");        
