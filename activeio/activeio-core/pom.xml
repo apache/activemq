@@ -26,18 +26,6 @@
       <version>0.1.8</version>
     </dependency>
 
-    <!-- For JXTA integration -->
-    <dependency>
-      <groupId>p2psockets</groupId>
-      <artifactId>p2psockets-core</artifactId>
-      <version>1.1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>jxta</groupId>
-      <artifactId>jxta</artifactId>
-      <version>2.0</version>
-    </dependency>
-
     <!-- Unit Test Dependencies -->
     <dependency>
       <groupId>junit</groupId>
