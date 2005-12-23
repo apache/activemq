@@ -38,13 +38,6 @@
       <version>2.0</version>
     </dependency>
 
-    <!-- For Jetty integration -->
-    <dependency>
-      <groupId>jetty</groupId>
-      <artifactId>org.mortbay.jetty</artifactId>
-      <version>5.1.2</version>
-    </dependency>
-    
     <!-- Unit Test Dependencies -->
     <dependency>
       <groupId>junit</groupId>
