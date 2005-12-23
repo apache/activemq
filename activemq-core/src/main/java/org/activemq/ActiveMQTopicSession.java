@@ -347,4 +347,8 @@ public class ActiveMQTopicSession implements TopicSession {
 	public void unsubscribe(String name) throws JMSException {
 		next.unsubscribe(name);
 	}
+
+    public TopicSession getNext() {
+        return next;
+    }
 }
