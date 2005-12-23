@@ -1,0 +1,20 @@
+<classpath>
+  <classpathentry kind="src" path="src/main/java"/>
+  <classpathentry kind="src" path="src/main/resources"/>
+  <classpathentry kind="src" path="src/test/java" output="target/test-classes"/>
+  <classpathentry kind="src" path="src/test/resources" output="target/test-classes"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+  <classpathentry kind="var" path="M2_REPO/openorb/openorb-tools/1.4.0-GERONIMO/openorb-tools-1.4.0-GERONIMO.jar"/>
+  <classpathentry kind="var" path="M2_REPO/backport-util-concurrent/backport-util-concurrent/2.0_01_pd/backport-util-concurrent-2.0_01_pd.jar"/>
+  <classpathentry kind="var" path="M2_REPO/junit/junit/3.8.1/junit-3.8.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/openorb/openorb-orb-tools/1.4.0-GERONIMO/openorb-orb-tools-1.4.0-GERONIMO.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activeio/activeio-core/3.0-SNAPSHOT/activeio-core-3.0-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar"/>
+  <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.8/log4j-1.2.8.jar"/>
+  <classpathentry kind="var" path="M2_REPO/avalon/avalon-framework/4.1.4/avalon-framework-4.1.4.jar"/>
+  <classpathentry kind="var" path="M2_REPO/avalon/avalon-logkit/1.2.2/avalon-logkit-1.2.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/openorb/openorb-orb/1.4.0-GERONIMO/openorb-orb-1.4.0-GERONIMO.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/activeio/activeio-core/3.0-SNAPSHOT/activeio-core-3.0-SNAPSHOT-tests.jar"/>
+  <classpathentry kind="var" path="M2_REPO/openorb/openorb-orb-omg/1.4.0-GERONIMO/openorb-orb-omg-1.4.0-GERONIMO.jar"/>
+</classpath>

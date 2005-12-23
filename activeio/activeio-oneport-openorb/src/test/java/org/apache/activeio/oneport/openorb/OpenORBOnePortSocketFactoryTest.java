@@ -22,8 +22,6 @@ import java.util.Properties;
 import javax.naming.NamingException;
 
 import org.apache.activeio.oneport.OnePortAsyncChannelServerTest;
-import org.apache.activeio.oneport.openorb.OpenORBOpenPortFeatureInitializer;
-import org.apache.activeio.oneport.openorb.OpenORBOpenPortSocketFactory;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.Object;
 import org.omg.PortableServer.POA;
