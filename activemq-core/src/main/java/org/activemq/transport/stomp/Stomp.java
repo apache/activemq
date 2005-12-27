@@ -58,7 +58,7 @@ public interface Stomp {
             String CORRELATION_ID = "correlation-id";
             String REPLY_TO = "reply-to";
             String EXPIRATION_TIME = "expires";
-            String PRORITY = "priority";
+            String PRIORITY = "priority";
             String TYPE = "type";
         }
 
