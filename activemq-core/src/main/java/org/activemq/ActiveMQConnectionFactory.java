@@ -207,6 +207,9 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
             connection.setAsyncDispatch(isAsyncDispatch());
             connection.setUseAsyncSend(isUseAsyncSend());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
+
+            if( clientID !=null )
+                connection.setClientID(clientID);
             
             return connection;
         }
