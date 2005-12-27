@@ -238,6 +238,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
     }
 
     private void dispatch(final MessageReference node) throws IOException {
+        node.incrementReferenceCount();
         
         final Message message = node.getMessage();
         if( message == null ) {
@@ -250,7 +251,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
             MessageDispatch md = createMessageDispatch(node, message);
             dispatched.addLast(node);
             
-            node.incrementReferenceCount();
             incrementPreloadSize(node.getMessage().getSize()); 
             
             if( info.isDispatchAsync() ) {
