@@ -31,7 +31,7 @@
   <goal name="demo:A" prereqs="setclasspath"
     description="Runs the simple ActiveCluster Demo">
     <echo>Running the ActiveCluster demo...</echo>
-    <java classname="org.activecluster.ClusterDemo" fork="true">
+    <java classname="org.apache.activecluster.ClusterDemo" fork="true">
       <classpath refid="test.classpath"/>
       <sysproperty key="org.apache.commons.logging.simplelog.defaultlog" value="debug"/>
       <arg value="A"/>
@@ -41,7 +41,7 @@
   <goal name="demo:B" prereqs="setclasspath"
     description="Runs the simple ActiveCluster Demo">
     <echo>Running the ActiveCluster demo...</echo>
-    <java classname="org.activecluster.ClusterDemo" fork="true">
+    <java classname="org.apache.activecluster.ClusterDemo" fork="true">
       <classpath refid="test.classpath"/>
       <arg value="B"/>
     </java>
@@ -54,7 +54,7 @@
   <goal name="chat" prereqs="setclasspath"
     description="Runs the ActiveCluster Chat Demo">
     <echo>Running the ActiveCluster Chat demo...</echo>
-    <java classname="org.activecluster.ChatDemo" fork="true">
+    <java classname="org.apache.activecluster.ChatDemo" fork="true">
       <classpath refid="test.classpath"/>
     </java>
   </goal>

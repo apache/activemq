@@ -11,27 +11,27 @@
 
   <inceptionYear>2004</inceptionYear>
 
-  <package>org.activecluster</package>
+  <package>org.apache.activecluster</package>
   <packageGroups>
     <packageGroup>
       <title>Core ActiveCluster API</title>
-      <packages>org.activecluster</packages>
+      <packages>org.apache.activecluster</packages>
     </packageGroup>
     <packageGroup>
       <title>Group organisation protocols</title>
-      <packages>org.activecluster.group</packages>
+      <packages>org.apache.activecluster.group</packages>
     </packageGroup>
     <packageGroup>
       <title>Election protocols</title>
-      <packages>org.activecluster.election</packages>
+      <packages>org.apache.activecluster.election</packages>
     </packageGroup>
     <packageGroup>
       <title>ActiveMQ specific implementation classes</title>
-      <packages>org.activecluster.activemq</packages>
+      <packages>org.apache.activecluster.activemq</packages>
     </packageGroup>
     <packageGroup>
       <title>Implementation classes</title>
-      <packages>org.activecluster.impl:org.activecluster.election.impl</packages>
+      <packages>org.apache.activecluster.impl:org.apache.activecluster.election.impl</packages>
     </packageGroup>
   </packageGroups>
 
