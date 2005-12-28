@@ -31,7 +31,6 @@ import javax.jms.TextMessage;
 
 import junit.framework.Test;
 
-import org.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
@@ -39,6 +38,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.security.JaasAuthenticationBroker;
 import org.apache.activemq.security.SimpleAuthenticationBroker;
 import org.apache.activemq.security.SimpleAuthorizationBroker;
