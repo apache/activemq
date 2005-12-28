@@ -1,1 +1,1 @@
-class=org.activemq.transport.http.HttpTransportFactory
+class=org.apache.activemq.transport.http.HttpTransportFactory
