@@ -109,7 +109,7 @@ public class HttpTunnelServlet extends HttpServlet {
             ConnectionInfo info = (ConnectionInfo) command;
             request.getSession(true).setAttribute("clientID", info.getClientId());
         }
-        if (command instanceof WireFormatInfo) {
+        else if (command instanceof WireFormatInfo) {
             WireFormatInfo info = (WireFormatInfo) command;
             if (!canProcessWireFormatVersion(info.getVersion())) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot process wire format of version: " + info.getVersion());
@@ -173,12 +173,14 @@ public class HttpTunnelServlet extends HttpServlet {
                 listener.onAccept(answer);
             }
             else {
+                /*
                 try {
-                    answer.asyncRequest(ping);
+                    answer.oneway(ping);
                 }
                 catch (IOException e) {
                     log.warn("Failed to ping transport: " + e, e);
                 }
+                */
             }
             return answer;
         }

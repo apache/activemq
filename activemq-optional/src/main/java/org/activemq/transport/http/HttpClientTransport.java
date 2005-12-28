@@ -24,6 +24,7 @@ import org.activemq.transport.FutureResponse;
 import org.activemq.transport.util.TextWireFormat;
 import org.activemq.util.IOExceptionSupport;
 import org.activemq.util.ServiceStopper;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
@@ -52,7 +53,6 @@ public class HttpClientTransport extends HttpTransportSupport {
     private String clientID;
     private String sessionID;
 
-
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
     }
@@ -62,9 +62,9 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     public void oneway(Command command) throws IOException {
-        if (command.getDataStructureType()==ConnectionInfo.DATA_STRUCTURE_TYPE)
-            clientID=((ConnectionInfo)command).getClientId();
-        
+        if (command.getDataStructureType() == ConnectionInfo.DATA_STRUCTURE_TYPE)
+            clientID = ((ConnectionInfo) command).getClientId();
+
         PostMethod httpMethod = new PostMethod(getRemoteUrl().toString());
         configureMethod(httpMethod);
         httpMethod.setRequestBody(getTextWireFormat().toString(command));
@@ -90,10 +90,10 @@ public class HttpClientTransport extends HttpTransportSupport {
         HttpClient httpClient = getReceiveHttpClient();
         URI remoteUrl = getRemoteUrl();
         while (!isClosed()) {
-            
+
             GetMethod httpMethod = new GetMethod(remoteUrl.toString());
             configureMethod(httpMethod);
-     
+
             try {
                 int answer = httpClient.executeMethod(httpMethod);
                 if (answer != HttpStatus.SC_OK) {
@@ -120,7 +120,6 @@ public class HttpClientTransport extends HttpTransportSupport {
             }
         }
     }
-
 
     // Properties
     // -------------------------------------------------------------------------
@@ -157,8 +156,8 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected void configureMethod(HttpMethod method) {
-        if (sessionID!=null) {
-            method.addRequestHeader("Cookie", "JSESSIONID="+sessionID);
+        if (sessionID != null) {
+            method.addRequestHeader("Cookie", "JSESSIONID=" + sessionID);
         }
         else if (clientID != null) {
             method.setRequestHeader("clientID", clientID);
@@ -166,12 +165,15 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected void checkSession(HttpMethod client) {
-        String set_cookie=client.getRequestHeader("Set-Cookie").getValue();
-        
-        if (set_cookie!=null && set_cookie.startsWith("JSESSIONID=")) {
-            String[] bits=set_cookie.split("[=;]");
-            sessionID=bits[1];
+        Header header = client.getRequestHeader("Set-Cookie");
+        if (header != null) {
+            String set_cookie = header.getValue();
+
+            if (set_cookie != null && set_cookie.startsWith("JSESSIONID=")) {
+                String[] bits = set_cookie.split("[=;]");
+                sessionID = bits[1];
+            }
         }
     }
-    
+
 }
