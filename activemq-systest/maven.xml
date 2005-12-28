@@ -30,7 +30,7 @@
 
 		<delete dir="target/test"/>
 					
-		<taskdef name="systest" classname="org.activemq.systest.task.SystemTestTask">
+		<taskdef name="systest" classname="org.apache.activemq.systest.task.SystemTestTask">
 	      <classpath refid="test.classpath"/>
 	    </taskdef>
 	    

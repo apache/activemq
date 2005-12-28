@@ -5,24 +5,24 @@
 
   <!--  types of producer -->
   <bean id="nonDurableProducer" singleton="false"
-    class="org.activemq.systest.impl.ProducerAgentImpl">
+    class="org.apache.activemq.systest.impl.ProducerAgentImpl">
     <property name="persistent" value="false" />
   </bean>
 
   <!--  types of consumer -->
   <bean id="consumer" singleton="false"
-    class="org.activemq.systest.impl.ConsumerAgentImpl">
+    class="org.apache.activemq.systest.impl.ConsumerAgentImpl">
   </bean>
 
   <!--  types of messageList -->
   <bean id="messageList"
-    class="org.activemq.systest.impl.MessageListImpl">
+    class="org.apache.activemq.systest.impl.MessageListImpl">
     <constructor-arg value="10" />
     <constructor-arg value="100" />
   </bean>
 
   <!--  destination factory -->
   <bean id="destinationFactory"
-    class="org.activemq.systest.impl.DestinationFactoryImpl"/>
+    class="org.apache.activemq.systest.impl.DestinationFactoryImpl"/>
 
 </beans>
