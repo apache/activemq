@@ -1,0 +1,81 @@
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0">
+  
+  <broker useJmx="true">
+
+	<!-- In ActiveMQ 4, you can setup destination policies -->  
+    <destinationPolicy>
+      <policyMap><policyEntries>
+        
+          <policyEntry topic="FOO.>">
+            <dispatchPolicy>
+              <strictOrderDispatchPolicy />
+            </dispatchPolicy>
+            <subscriptionRecoveryPolicy>
+              <lastImageSubscriptionRecoveryPolicy />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+
+      </policyEntries></policyMap>
+    </destinationPolicy>
+  
+  
+    <persistenceAdapter>
+      <journaledJDBC journalLogFiles="5" dataDirectory="../data"/>
+      <!-- To use a different datasource, use th following syntax : -->
+      <!-- 
+      <journaledJDBC journalLogFiles="5" dataDirectory="../data" dataSource="#postgres-ds"/>
+       -->
+    </persistenceAdapter>
+  
+    <transportConnectors>
+       <transportConnector uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+    </transportConnectors>
+    
+    <networkConnectors>
+      <!-- by default just auto discover the other brokers -->
+      <networkConnector uri="multicast://default"/>
+      <!--  
+      <networkConnector uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
+      -->
+    </networkConnectors>
+    
+  </broker>
+  
+  <!--  This xbean configuration file supports all the standard spring xml configuration options -->
+  
+  <!-- Postgres DataSource Sample Setup -->
+  <!-- 
+  <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource">
+    <property name="serverName" value="localhost"/>
+    <property name="databaseName" value="activemq"/>
+    <property name="portNumber" value="0"/>
+    <property name="user" value="activemq"/>
+    <property name="password" value="activemq"/>
+    <property name="dataSourceName" value="postgres"/>
+    <property name="initialConnections" value="1"/>
+    <property name="maxConnections" value="10"/>
+  </bean>
+  -->
+  
+  <!-- MySql DataSource Sample Setup -->
+  <!-- 
+  <bean id="mysql-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost/activemq"/>
+    <property name="username" value="activemq"/>
+    <property name="password" value="activemq"/>
+    <property name="poolPreparedStatements" value="true"/>
+  </bean>
+  -->  
+   
+  <!-- Embedded Derby DataSource Sample Setup -->
+  <!-- 
+  <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
+    <property name="databaseName" value="derbydb"/>
+    <property name="createDatabase" value="create"/>
+  </bean>
+  -->  
+
+</beans>
+<!-- END SNIPPET: xbean -->
