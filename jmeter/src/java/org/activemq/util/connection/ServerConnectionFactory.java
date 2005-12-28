@@ -16,34 +16,32 @@
  */
 package org.activemq.util.connection;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.ActiveMQConnection;
-import org.mr.api.jms.MantaTopicConnectionFactory;
-import org.mr.api.jms.MantaQueueConnectionFactory;
-
-import org.apache.jmeter.util.JMeterUtils;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Properties;
 
 import javax.jms.Connection;
-import javax.jms.Session;
-import javax.jms.JMSException;
-import javax.jms.Topic;
-import javax.jms.Queue;
 import javax.jms.ConnectionFactory;
-import javax.jms.TopicConnectionFactory;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicSession;
-import javax.jms.QueueSession;
 import javax.jms.Destination;
-import javax.jms.TopicConnection;
+import javax.jms.JMSException;
+import javax.jms.Queue;
 import javax.jms.QueueConnection;
-
+import javax.jms.QueueConnectionFactory;
+import javax.jms.QueueSession;
+import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.jms.TopicSession;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Properties;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.jmeter.util.JMeterUtils;
+import org.mr.api.jms.MantaQueueConnectionFactory;
+import org.mr.api.jms.MantaTopicConnectionFactory;
 
 /**
  * Provides static methods for creating Session and Destination objects.
@@ -202,10 +200,6 @@ public class ServerConnectionFactory {
             //Used to create a session from the default MQ server ActiveMQConnectionFactory.
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
             factory.setUseAsyncSend(true);
-
-            if (embeddedBroker) {
-                factory.setUseEmbeddedBroker(true);
-            }
             
             ActiveMQConnection c = (ActiveMQConnection) factory.createConnection();
 

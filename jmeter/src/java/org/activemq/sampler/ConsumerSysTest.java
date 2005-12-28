@@ -22,8 +22,8 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Entry;
 import org.activemq.util.connection.ServerConnectionFactory;
-import org.activemq.util.IdGenerator;
-import org.activemq.command.ActiveMQMessage;
+import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.command.ActiveMQMessage;
 
 import javax.jms.*;
 import java.util.*;

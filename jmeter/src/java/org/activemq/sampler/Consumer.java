@@ -16,7 +16,7 @@
  */
 package org.activemq.sampler;
 
-import org.activemq.util.IdGenerator;
+import org.apache.activemq.util.IdGenerator;
 import org.activemq.util.connection.ServerConnectionFactory;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;

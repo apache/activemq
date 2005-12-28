@@ -24,7 +24,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.activemq.util.connection.ServerConnectionFactory;
-import org.activemq.util.IdGenerator;
+import org.apache.activemq.util.IdGenerator;
 
 import javax.jms.Connection;
 import javax.jms.Session;

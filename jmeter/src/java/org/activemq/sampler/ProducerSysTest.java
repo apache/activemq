@@ -25,7 +25,7 @@ import org.apache.log.Logger;
 import org.apache.jorphan.logging.LoggingManager;
 
 import org.activemq.util.connection.ServerConnectionFactory;
-import org.activemq.util.IdGenerator;
+import org.apache.activemq.util.IdGenerator;
 
 import javax.jms.*;
 import java.io.File;
