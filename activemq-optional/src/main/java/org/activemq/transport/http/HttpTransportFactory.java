@@ -55,7 +55,9 @@ public class HttpTransportFactory extends TransportFactory {
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
-        Transport transport = new HttpTransport(asTextWireFormat(wf), location);
+        TextWireFormat textWireFormat = asTextWireFormat(wf);
+        Transport transport = new HttpClientTransport(textWireFormat, location);
+        //Transport transport = new HttpTransport(textWireFormat, location);
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
         return transport;
