@@ -30,7 +30,7 @@
         <license-required>true</license-required>
     </license>
     <resourceadapter>
-        <resourceadapter-class>org.activemq.ra.ActiveMQResourceAdapter</resourceadapter-class>
+        <resourceadapter-class>org.apache.activemq.ra.ActiveMQResourceAdapter</resourceadapter-class>
         <config-property>
             <description>
               The URL to the ActiveMQ server that you want this connection to connect to.  If using
@@ -87,25 +87,25 @@
         </config-property>
         <outbound-resourceadapter>
             <connection-definition>
-                <managedconnectionfactory-class>org.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
+                <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
                 <connectionfactory-interface>javax.jms.ConnectionFactory</connectionfactory-interface>
-                <connectionfactory-impl-class>org.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
+                <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
                 <connection-interface>javax.jms.Connection</connection-interface>
-                <connection-impl-class>org.activemq.ra.JMSConnectionProxy</connection-impl-class>
+                <connection-impl-class>org.apache.activemq.ra.JMSConnectionProxy</connection-impl-class>
             </connection-definition>
             <connection-definition>
-                <managedconnectionfactory-class>org.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
+                <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
                 <connectionfactory-interface>javax.jms.QueueConnectionFactory</connectionfactory-interface>
-                <connectionfactory-impl-class>org.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
+                <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
                 <connection-interface>javax.jms.QueueConnection</connection-interface>
-                <connection-impl-class>org.activemq.ra.JMSConnectionProxy</connection-impl-class>
+                <connection-impl-class>org.apache.activemq.ra.JMSConnectionProxy</connection-impl-class>
             </connection-definition>
             <connection-definition>
-                <managedconnectionfactory-class>org.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
+                <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
                 <connectionfactory-interface>javax.jms.TopicConnectionFactory</connectionfactory-interface>
-                <connectionfactory-impl-class>org.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
+                <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
                 <connection-interface>javax.jms.TopicConnection</connection-interface>
-                <connection-impl-class>org.activemq.ra.JMSConnectionProxy</connection-impl-class>
+                <connection-impl-class>org.apache.activemq.ra.JMSConnectionProxy</connection-impl-class>
             </connection-definition>
             <transaction-support>XATransaction</transaction-support>
             <authentication-mechanism>
@@ -119,7 +119,7 @@
                 <messagelistener>
                     <messagelistener-type>javax.jms.MessageListener</messagelistener-type>
                     <activationspec>
-                        <activationspec-class>org.activemq.ra.ActiveMQActivationSpec</activationspec-class>
+                        <activationspec-class>org.apache.activemq.ra.ActiveMQActivationSpec</activationspec-class>
                         
                         <required-config-property>
                             <config-property-name>destination</config-property-name>
@@ -134,7 +134,7 @@
         </inbound-resourceadapter>
         <adminobject>
             <adminobject-interface>javax.jms.Queue</adminobject-interface>
-            <adminobject-class>org.activemq.command.ActiveMQQueue</adminobject-class>
+            <adminobject-class>org.apache.activemq.command.ActiveMQQueue</adminobject-class>
             <config-property>
                 <config-property-name>PhysicalName</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
@@ -142,7 +142,7 @@
         </adminobject>
         <adminobject>
             <adminobject-interface>javax.jms.Topic</adminobject-interface>
-            <adminobject-class>org.activemq.command.ActiveMQTopic</adminobject-class>
+            <adminobject-class>org.apache.activemq.command.ActiveMQTopic</adminobject-class>
             <config-property>
                 <config-property-name>PhysicalName</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
