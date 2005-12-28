@@ -95,6 +95,7 @@
     <module>activemq-optional</module>
     <module>activemq-web</module>
     <module>activemq-systest</module>
+    <module>assembly</module>
 
     <module>activeio</module>
     <module>activecluster</module>
