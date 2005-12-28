@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.jaas;
+package org.apache.activemq.jaas;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,11 +36,12 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import junit.framework.TestCase;
+
+import org.apache.activemq.jaas.ldap.MutableServerStartupConfiguration;
+import org.apache.activemq.jaas.ldap.ServerContextFactory;
 import org.apache.ldap.server.configuration.ShutdownConfiguration;
 import org.apache.ldap.server.jndi.CoreContextFactory;
 
-import org.activemq.jaas.ldap.MutableServerStartupConfiguration;
-import org.activemq.jaas.ldap.ServerContextFactory;
 
 
 /**

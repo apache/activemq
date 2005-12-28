@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.jaas;
+package org.apache.activemq.jaas;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,8 +43,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class PropertiesLoginModule implements LoginModule {
 
-    private final String USER_FILE = "org.activemq.jaas.properties.user";
-    private final String GROUP_FILE = "org.activemq.jaas.properties.group";
+    private final String USER_FILE = "org.apache.activemq.jaas.properties.user";
+    private final String GROUP_FILE = "org.apache.activemq.jaas.properties.group";
 
     private static final Log log = LogFactory.getLog(PropertiesLoginModule.class);
 
