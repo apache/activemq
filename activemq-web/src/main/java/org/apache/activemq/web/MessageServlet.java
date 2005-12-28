@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.activemq.web;
+package org.apache.activemq.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;

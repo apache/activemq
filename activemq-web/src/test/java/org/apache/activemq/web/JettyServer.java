@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.activemq.web;
+package org.apache.activemq.web;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Handler;
