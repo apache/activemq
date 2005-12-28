@@ -11,19 +11,19 @@
   </shortDescription>
   <description>System Testing Framework for ActiveMQ</description>
 
-  <package>org.activemq.systest</package>
+  <package>org.apache.activemq.systest</package>
   <packageGroups>
     <packageGroup>
       <title>The core APIs of the system testing agents</title>
-      <packages>org.activemq.systest</packages>
+      <packages>org.apache.activemq.systest</packages>
     </packageGroup>
     <packageGroup>
       <title>The single VM implementations</title>
-      <packages>org.activemq.systest.impl.vm</packages>
+      <packages>org.apache.activemq.systest.impl.vm</packages>
     </packageGroup>
     <packageGroup>
       <title>The testing use cases and scenarios</title>
-      <packages>org.activemq.systest.usecase.*</packages>
+      <packages>org.apache.activemq.systest.usecase.*</packages>
     </packageGroup>
   </packageGroups>
 
