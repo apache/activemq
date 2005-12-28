@@ -1,0 +1,311 @@
+<model>
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>activemq</groupId>
+        <artifactId>activemq</artifactId>
+        <version>4.0-SNAPSHOT</version>
+    </parent>
+    
+    <artifactId>activemq-assembly</artifactId>
+    <packaging>jar</packaging>
+    <name>ActiveMQ Assembly</name>
+    
+    <build>
+        
+        <testSourceDirectory>src/test</testSourceDirectory>
+        
+        <testResources>
+            <testResource>
+                <filtering>false</filtering>
+                <directory>${basedir}/src/test</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+            </testResource>
+        </testResources>
+        
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- This test sometimes hangs on linux and windows running on jdk1.5 -->
+                        <exclude>**/ReliableReconnectTest.*</exclude>
+                        
+                        <!-- This test currently fails [boxes: jafar], [jira: AMQ-228] -->
+                        <exclude>**/SubscribeClosePublishThenConsumeTest.*</exclude>
+                        
+                        <exclude>**/DurableConsumerCloseAndReconnectTest.*</exclude>
+                        <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
+                        <exclude>**/ChangeSessionDeliveryModeTest.*</exclude>
+                        <exclude>**/DeadLetterTest.*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.1-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <id>assemble-jar</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <descriptor>src/main/assembly/dep.xml</descriptor>
+                        </configuration>
+                        <goals>
+                            <goal>assembly</goal>
+                        </goals>
+                        </execution>
+                    <execution>
+                        <id>assemble-bin</id>
+                        <phase>verify</phase>
+                        <configuration>
+                            <descriptor>src/main/assembly/bin.xml</descriptor>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <finalName>activemq-${version}</finalName>
+                        </configuration>
+                        <goals>
+                            <goal>assembly</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <phase>integration-test</phase>
+                        <configuration>
+                            <tasks>
+                            
+                                <copy file="${basedir}/target/${project.build.finalName}-jar-with-dependencies.jar" tofile="${settings.localRepository}/activemq/activemq/${version}/activemq-${version}.jar"/>
+                                <copy file="${basedir}/target/${project.build.finalName}-jar-with-dependencies.jar" tofile="${project.build.directory}/assembly/activemq-${version}.jar"/>
+                                <copy todir="${project.build.directory}/assembly">
+                                    <fileset dir="${basedir}/src/release"/>
+                                </copy>
+                                
+                                <jar destfile="${project.build.directory}/assembly/bin/run.jar" basedir="${project.build.directory}/assembly/work/activemq-core-${version}">
+                                    <include name="org/activemq/broker/Main*.class"/>
+                                    <manifest>
+                                    <attribute name="Main-Class" value="org.activemq.broker.Main"/>
+                                    </manifest>
+                                </jar>
+                            
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        
+        </plugins>
+        
+        <resources>
+            <resource>
+                <directory>src/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+    
+    </build>
+    
+    <dependencies>
+    
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-jms</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-jta</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-j2ee-management</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-j2ee-jacc</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>backport-util-concurrent</groupId>
+            <artifactId>backport-util-concurrent</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        
+    
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>activemq-core</artifactId>
+            <version>${version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>activeio</groupId>
+            <artifactId>activeio</artifactId>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>activemq-core-test</artifactId>
+            <version>${version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>activemq-ra</artifactId>
+            <version>${version}</version>
+            <type>rar</type>
+        </dependency>
+        
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>activemq-ra</artifactId>
+            <version>${version}</version>
+            <type>jar</type>
+        </dependency>
+        
+        <!-- used by the WS module -->
+        <dependency>
+            <groupId>activesoap</groupId>
+            <artifactId>activesoap</artifactId>
+        </dependency>
+        
+        <!-- used to support optional transport configuration via URI query strings -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+        </dependency>
+        
+        
+        <!-- web container -->
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>jetty</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>jrms</groupId>
+            <artifactId>jrms</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>xstream</groupId>
+            <artifactId>xstream</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>xmlpull</groupId>
+            <artifactId>xmlpull</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>jmdns</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>activecluster</groupId>
+            <artifactId>activecluster</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>xbean</groupId>
+            <artifactId>xbean-spring</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>springframework</groupId>
+            <artifactId>spring</artifactId>
+        </dependency>
+        
+        <!-- To create Pooled DataSources for the JDBC message store -->
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+        </dependency>
+        
+        <!-- Derby DB used for testing JDBC message store -->
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbynet</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xmlParserAPIs</artifactId>
+        </dependency>
+        
+        <!-- to create a web server to test out the web stuff -->
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-jsp</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-j2ee-connector</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-remote</artifactId>
+        </dependency>
+    
+    </dependencies>
+
+</model>
