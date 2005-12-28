@@ -11,7 +11,7 @@
   <bean id="jndiTemplate" class="org.springframework.jndi.JndiTemplate">
     <property name="environment">
       <props>
-        <prop key="java.naming.factory.initial">org.activemq.jndi.ActiveMQInitialContextFactory</prop>
+        <prop key="java.naming.factory.initial">org.apache.activemq.jndi.ActiveMQInitialContextFactory</prop>
         <!-- lets register some destinations -->
         <prop key="topic.MyTopic">example.Spring.MyTopic</prop>
       </props>
@@ -58,7 +58,7 @@
 
 
   <!-- a sample POJO which uses a Spring JmsTemplate -->
-  <bean id="producer" class="org.activemq.spring.SpringProducer">
+  <bean id="producer" class="org.apache.activemq.spring.SpringProducer">
     <property name="template">
       <ref bean="myJmsTemplate"></ref>
     </property>
@@ -74,7 +74,7 @@
 
 
   <!-- a sample POJO consumer -->
-  <bean id="consumer" class="org.activemq.spring.SpringConsumer">
+  <bean id="consumer" class="org.apache.activemq.spring.SpringConsumer">
     <property name="template">
       <ref bean="myJmsTemplate"></ref>
     </property>
@@ -84,7 +84,7 @@
     </property>
   </bean>
 
-  <bean id="destination" class="org.activemq.command.ActiveMQTopic" autowire="constructor">
+  <bean id="destination" class="org.apache.activemq.command.ActiveMQTopic" autowire="constructor">
     <constructor-arg>
       <value>example.Spring.MyTopic</value>
     </constructor-arg>

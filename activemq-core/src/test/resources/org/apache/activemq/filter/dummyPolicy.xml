@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+  <bean id="policy" class="org.apache.activemq.filter.DummyPolicy">
+    <property name="entries">
+      <list>
+        <bean class="org.apache.activemq.filter.DummyPolicyEntry">
+          <property name="topic" value="FOO.>" />
+          <property name="description" value="Edam" />
+        </bean>
+        <bean class="org.apache.activemq.filter.DummyPolicyEntry">
+          <property name="topic" value="FOO.BAR" />
+          <property name="description" value="Cheddar" />
+        </bean>
+      </list>
+    </property>
+  </bean>
+
+</beans>

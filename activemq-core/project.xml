@@ -28,55 +28,55 @@
     <description>ActiveMQ is an open source message broker and JMS 1.1 provider</description>
     <shortDescription>ActiveMQ JMS Message Broker</shortDescription>
 
-    <package>org.activemq</package>
+    <package>org.apache.activemq</package>
     <packageGroups>
         <packageGroup>
             <title>Core JMS Client API</title>
-            <packages>org.activemq:org.activemq.message</packages>
+            <packages>org.apache.activemq:org.apache.activemq.message</packages>
         </packageGroup>
         <packageGroup>
             <title>JMS Broker and Region implementations</title>
-            <packages>org.activemq.broker:org.activemq.broker.*</packages>
+            <packages>org.apache.activemq.broker:org.apache.activemq.broker.*</packages>
         </packageGroup>
         <packageGroup>
             <title>Management Statistics</title>
-            <packages>org.activemq.management</packages>
+            <packages>org.apache.activemq.management</packages>
         </packageGroup>
         <packageGroup>
             <title>JNDI support</title>
-            <packages>org.activemq.jndi</packages>
+            <packages>org.apache.activemq.jndi</packages>
         </packageGroup>
         <packageGroup>
             <title>Message filter and router</title>
-            <packages>org.activemq.filter:org.activemq.filter.*:org.activemq.selector</packages>
+            <packages>org.apache.activemq.filter:org.apache.activemq.filter.*:org.apache.activemq.selector</packages>
         </packageGroup>
         <packageGroup>
             <title>Security strategies and implementations</title>
-            <packages>org.activemq.security</packages>
+            <packages>org.apache.activemq.security</packages>
         </packageGroup>
         <packageGroup>
             <title>Transport, Discovery and WireFormat strategies and implementations</title>
-            <packages>org.activemq.transport:org.activemq.transport.*</packages>
+            <packages>org.apache.activemq.transport:org.apache.activemq.transport.*</packages>
         </packageGroup>
         <packageGroup>
             <title>OpenWire support</title>
-            <packages>org.activemq.command:org.activemq.openwire:org.activemq.openwire.*</packages>
+            <packages>org.apache.activemq.command:org.apache.activemq.openwire:org.apache.activemq.openwire.*</packages>
         </packageGroup>
         <packageGroup>
             <title>Support for Networks</title>
-            <packages>org.activemq.network:org.activemq.network.*</packages>
+            <packages>org.apache.activemq.network:org.apache.activemq.network.*</packages>
         </packageGroup>
         <packageGroup>
             <title>Message persistence strategies and implementations</title>
-            <packages>org.activemq.store:org.activemq.store.*</packages>
+            <packages>org.apache.activemq.store:org.apache.activemq.store.*</packages>
         </packageGroup>
         <packageGroup>
             <title>Core router services</title>
-            <packages>org.activemq.service:org.activemq.service.*</packages>
+            <packages>org.apache.activemq.service:org.apache.activemq.service.*</packages>
         </packageGroup>
         <packageGroup>
             <title>Utilities</title>
-            <packages>org.activemq.capacity:org.activemq.io.util:org.activemq.util</packages>
+            <packages>org.apache.activemq.capacity:org.apache.activemq.io.util:org.apache.activemq.util</packages>
         </packageGroup>
     </packageGroups>
     <!-- ============ -->

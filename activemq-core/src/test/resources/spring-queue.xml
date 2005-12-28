@@ -5,7 +5,7 @@
 
 <beans>
   <!-- JMS ConnectionFactory to use -->
-  <bean id="jmsFactory" class="org.activemq.ActiveMQConnectionFactory">
+  <bean id="jmsFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
     <property name="brokerURL" value="vm://localhost"/>
   </bean>
 
@@ -25,7 +25,7 @@
   </bean>
 
   <!-- a sample POJO which uses a Spring JmsTemplate -->
-  <bean id="producer" class="org.activemq.spring.SpringProducer">
+  <bean id="producer" class="org.apache.activemq.spring.SpringProducer">
     <property name="template">
       <ref bean="myJmsTemplate"></ref>
     </property>
@@ -41,7 +41,7 @@
 
 
   <!-- a sample POJO consumer -->
-  <bean id="consumer" class="org.activemq.spring.SpringConsumer">
+  <bean id="consumer" class="org.apache.activemq.spring.SpringConsumer">
     <property name="template">
       <ref bean="myJmsTemplate"></ref>
     </property>
@@ -52,9 +52,9 @@
   </bean>
 
 
-  <bean id="destination" class="org.activemq.command.ActiveMQQueue" autowire="constructor">
+  <bean id="destination" class="org.apache.activemq.command.ActiveMQQueue" autowire="constructor">
     <constructor-arg>
-      <value>org.activemq.spring.Test.spring.queue</value>
+      <value>org.apache.activemq.spring.Test.spring.queue</value>
     </constructor-arg>
   </bean>
 

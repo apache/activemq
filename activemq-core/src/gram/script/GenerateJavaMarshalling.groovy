@@ -16,7 +16,7 @@
 * limitations under the License.
 *
 **/
-import org.activemq.openwire.tool.OpenWireScript
+import org.apache.activemq.openwire.tool.OpenWireScript
 
 /**
  * Generates the Java marshalling code for the Open Wire Format
@@ -29,7 +29,7 @@ class GenerateJavaMarshalling extends OpenWireScript {
     
         def openwireVersion = System.getProperty("openwire.version");
         
-        def destDir = new File("src/main/java/org/activemq/openwire/v${openwireVersion}")
+        def destDir = new File("src/main/java/org/apache/activemq/openwire/v${openwireVersion}")
         println "Generating Java marshalling code to directory ${destDir}"
         
         def openwireClasses = classes.findAll {
@@ -78,14 +78,14 @@ out << """/**
  * limitations under the License. 
  * 
  **/
-package org.activemq.openwire.v${openwireVersion};
+package org.apache.activemq.openwire.v${openwireVersion};
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.activemq.openwire.*;
-import org.activemq.command.*;
+import org.apache.activemq.openwire.*;
+import org.apache.activemq.command.*;
 """
 for (pkg in jclass.importedPackages) {
     for (clazz in pkg.classes) {
@@ -93,7 +93,7 @@ for (pkg in jclass.importedPackages) {
     }
 }
 
-def baseClass = "org.activemq.openwire.DataStreamMarshaller"
+def baseClass = "org.apache.activemq.openwire.DataStreamMarshaller"
 if( !jclass.superclass.simpleName.equals("Object") ) {
    baseClass = jclass.superclass.simpleName + "Marshaller";
 }
@@ -450,10 +450,10 @@ out << """/**
  * limitations under the License. 
  * 
  **/
-package org.activemq.openwire.v${openwireVersion};
+package org.apache.activemq.openwire.v${openwireVersion};
 
-import org.activemq.openwire.DataStreamMarshaller;
-import org.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.openwire.DataStreamMarshaller;
+import org.apache.activemq.openwire.OpenWireFormat;
 
 /**
  * MarshallerFactory for Open Wire Format.

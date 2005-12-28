@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  **/
-package org.activemq.openwire.tool;
+package org.apache.activemq.openwire.tool;
 
 import org.codehaus.gram.GramSupport;
 import org.codehaus.jam.JAnnotationValue;
@@ -66,7 +66,7 @@ public abstract class OpenWireScript extends GramSupport {
     public boolean isMarshallAware(JClass j) {
         JClass[] interfaces = j.getInterfaces();
         for (int i = 0; i < interfaces.length; i++) {
-            if( interfaces[i].getQualifiedName().equals("org.activemq.command.MarshallAware") ) {
+            if( interfaces[i].getQualifiedName().equals("org.apache.activemq.command.MarshallAware") ) {
                 return true;
             }
         }

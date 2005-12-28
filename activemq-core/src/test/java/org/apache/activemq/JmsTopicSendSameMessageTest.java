@@ -1,0 +1,50 @@
+/**
+ *
+ * Copyright 2004 The Apache Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq;
+
+import javax.jms.TextMessage;
+
+import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
+
+/**
+ * @version $Revision: 1.3 $
+ */
+public class JmsTopicSendSameMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
+    
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+            .getLog(JmsTopicSendSameMessageTest.class);
+
+    public void testSendReceive() throws Exception {
+        messages.clear();
+
+        TextMessage message = session.createTextMessage();
+
+        for (int i = 0; i < data.length; i++) {
+            message.setText(data[i]);
+            message.setStringProperty("stringProperty",data[i]);
+            message.setIntProperty("intProperty",i);
+
+            if (verbose) {
+                log.info("About to send a message: " + message + " with text: " + data[i]);
+            }
+
+            producer.send(producerDestination, message);
+        }
+
+        assertMessagesAreReceived();
+    }
+}

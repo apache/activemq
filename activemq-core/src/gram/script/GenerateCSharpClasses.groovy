@@ -16,7 +16,7 @@
 * limitations under the License.
 *
 **/
-import org.activemq.openwire.tool.OpenWireScript
+import org.apache.activemq.openwire.tool.OpenWireScript
 
 /**
  * Generates the C# marshalling code for the Open Wire Format
@@ -26,7 +26,7 @@ import org.activemq.openwire.tool.OpenWireScript
 class GenerateCSharpClasses extends OpenWireScript {
 
     Object run() {
-        def destDir = new File("target/generated/dotnet/cs/org/activemq/openwire")
+        def destDir = new File("target/generated/dotnet/cs/org/apache/activemq/openwire")
         destDir.mkdirs()
 
         def messageClasses = classes.findAll { isMessageType(it) }
@@ -130,9 +130,9 @@ namespace ActiveMQ
         switch (type) {
             case "java.lang.String":
                 return "string"
-            case "org.activemq.message.ActiveMQDestination":
+            case "org.apache.activemq.message.ActiveMQDestination":
                 return "ActiveMQDestination"
-            case "org.activemq.message.ActiveMQXid":
+            case "org.apache.activemq.message.ActiveMQXid":
                 return "ActiveMQXid"
             default:
                 return name

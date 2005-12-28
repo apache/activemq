@@ -16,7 +16,7 @@
 * limitations under the License.
 *
 **/
-import org.activemq.openwire.tool.OpenWireScript
+import org.apache.activemq.openwire.tool.OpenWireScript
 
 /**
  * Generates the Java marshalling code for the Open Wire Format
