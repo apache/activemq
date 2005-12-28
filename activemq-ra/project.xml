@@ -14,11 +14,11 @@
     manage ActiveMQ connection when run inside a J2EE app server.
   </description>
 
-  <package>org.activemq.ra</package>
+  <package>org.apache.activemq.ra</package>
   <packageGroups>
     <packageGroup>
       <title>JCA Managed Connections and Resource Adapters</title>
-      <packages>org.activemq.ra</packages>
+      <packages>org.apache.activemq.ra</packages>
     </packageGroup>
   </packageGroups>
 
