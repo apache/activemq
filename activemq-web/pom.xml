@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>activemq-web</artifactId>
-  <packaging>jar</packaging>
+  <packaging>war</packaging>
   <name>ActiveMQ :: Web</name>
   <description>Web Connector for REST API and Streamlets support</description>
   
