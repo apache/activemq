@@ -79,28 +79,35 @@
   </dependencyManagement>
 
   <build>
-      <plugins>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <configuration>
-                  <source>1.4</source>
-                  <target>1.4</target>
-              </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.1.1</version>
-            <configuration>
-              <!-- <forkMode>pertest</forkMode> -->
-              <forkMode>none</forkMode>
-              <includes>
-                <include implementation="java.lang.String">**/*Test.*</include>
-              </includes>
-            </configuration>
-          </plugin>
-      </plugins>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.4</source>
+          <target>1.4</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.1.1</version>
+        <configuration>
+          <!-- <forkMode>pertest</forkMode> -->
+          <forkMode>none</forkMode>
+          <includes>
+            <include implementation="java.lang.String">**/*Test.*</include>
+          </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <outputDirectory>bin</outputDirectory>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
 </project>
