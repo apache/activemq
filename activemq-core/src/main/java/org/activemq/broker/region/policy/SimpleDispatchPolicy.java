@@ -35,8 +35,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
  */
 public class SimpleDispatchPolicy implements DispatchPolicy {
 
-    public void dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
-        
+    public boolean dispatch(ConnectionContext context, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
+        int count = 0;
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
             Subscription sub = (Subscription) iter.next();
             
@@ -48,7 +48,9 @@ public class SimpleDispatchPolicy implements DispatchPolicy {
                 continue;
             
             sub.add(node);
+            count++;
         }
+        return count > 0;
     }
 
 }

@@ -36,11 +36,11 @@ public class StrictOrderDispatchPolicy implements DispatchPolicy {
     int i=0;
     private final Object mutex = new Object();
     
-    public void dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
-        
+    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
         // Big synch here so that only 1 message gets dispatched at a time.  Ensures 
         // Everyone sees the same order.
         synchronized(mutex) {
+            int count = 0;
             i++;
             for (Iterator iter = consumers.iterator(); iter.hasNext();) {
                 Subscription sub = (Subscription) iter.next();
@@ -50,7 +50,9 @@ public class StrictOrderDispatchPolicy implements DispatchPolicy {
                     continue;
                 
                 sub.add(node);
+                count++;
             }
+            return count > 0;
         }
     }
 
