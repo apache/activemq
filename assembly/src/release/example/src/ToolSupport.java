@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-import org.apache.activemq.activemq.ActiveMQConnection;
-import org.apache.activemq.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.activemq.util.IndentPrinter;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.IndentPrinter;
 
 import javax.jms.Connection;
 import javax.jms.Destination;

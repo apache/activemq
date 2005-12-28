@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:amq="http://activemq.org/config/1.0">
+
+    <!-- normal ActiveMQ XML config which is less verbose & can be validated -->
+    <amq:broker brokerName="brokerConfigTest" populateJMSXUserID="false"
+        useLoggingForShutdownErrors="true" useJmx="true"
+        persistent="false" vmConnectorURI="vm://javacoola"
+        useShutdownHook="false" deleteAllMessagesOnStartup="true">
+
+        <!--
+        || NOTE this config file is used for unit testing the configuration mechanism
+        || it is not necessarily a good example of a config file! :)
+        -->
+
+        <amq:transportConnectors>
+            <amq:transportConnector uri="tcp://localhost:61635"/>
+            <amq:transportConnector uri="tcp://localhost:61636"/>
+            <amq:transportConnector uri="tcp://localhost:61637"/>
+            <amq:transportConnector>
+                <property name="server" ref="myTransportServer"/>
+            </amq:transportConnector>
+        </amq:transportConnectors>
+
+        <amq:networkConnectors>
+            <amq:networkConnector uri="static://(tcp://localhost:61616)"/>
+        </amq:networkConnectors>
+
+        <amq:destinationPolicy>
+            <amq:policyMap>
+                <amq:policyEntries>
+
+                    <amq:policyEntry topic="Topic.SimpleDispatch">
+                        <amq:dispatchPolicy><amq:simpleDispatchPolicy /></amq:dispatchPolicy>
+                    </amq:policyEntry>
+
+                    <amq:policyEntry topic="Topic.RoundRobinDispatch">
+                        <amq:dispatchPolicy><amq:roundRobinDispatchPolicy /></amq:dispatchPolicy>
+                    </amq:policyEntry>
+
+                    <amq:policyEntry topic="Topic.StrictOrderDispatch">
+                        <amq:dispatchPolicy><amq:strictOrderDispatchPolicy /></amq:dispatchPolicy>
+                    </amq:policyEntry>
+
+                    <amq:policyEntry topic="Topic.FixedSizedSubs">
+                        <amq:subscriptionRecoveryPolicy>
+                            <amq:fixedSizedSubscriptionRecoveryPolicy maximumSize="2000000" useSharedBuffer="false"/>
+                        </amq:subscriptionRecoveryPolicy>
+                    </amq:policyEntry>
+
+                    <amq:policyEntry topic="Topic.LastImageSubs">
+                        <amq:subscriptionRecoveryPolicy><amq:lastImageSubscriptionRecoveryPolicy/></amq:subscriptionRecoveryPolicy>
+                    </amq:policyEntry>
+
+                    <amq:policyEntry topic="Topic.NoSubs">
+                        <amq:subscriptionRecoveryPolicy><amq:noSubscriptionRecoveryPolicy/></amq:subscriptionRecoveryPolicy>
+                    </amq:policyEntry>
+
+                    <amq:policyEntry topic="Topic.TimedSubs">
+                        <amq:subscriptionRecoveryPolicy><amq:timedSubscriptionRecoveryPolicy recoverDuration="25000"/></amq:subscriptionRecoveryPolicy>
+                    </amq:policyEntry>
+
+                </amq:policyEntries>
+            </amq:policyMap>
+        </amq:destinationPolicy>
+
+        <amq:memoryManager>
+            <amq:usageManager limit="200000" percentUsageMinDelta="20"/>
+        </amq:memoryManager>
+
+        <amq:persistenceFactory>
+            <bean id="myPersistenceFactory" class="org.apache.activemq.store.DefaultPersistenceAdapterFactory">
+                <property name="journalLogFileSize" value="32768" />
+                <property name="journalLogFiles" value="4" />
+                <property name="useJournal" value="true" />
+                <property name="dataDirectory" value="target/test-data" />
+            </bean>
+        </amq:persistenceFactory>
+
+        <amq:persistenceAdapter>
+            <amq:journaledJDBC journalLogFiles="4" journalLogFileSize="32768" dataDirectory="target/test-data" />
+        </amq:persistenceAdapter>
+    </amq:broker>
+
+    <!-- testing normal Spring stuff inside the same config file -->
+    <bean id="myTransportServer" class="org.apache.activemq.transport.activeio.ActiveIOTransportServer">
+        <constructor-arg index="0">
+            <bean id="brokerURI " class="java.net.URI">
+                <constructor-arg index="0">
+                    <value>ssl://localhost:61634</value>
+                </constructor-arg>
+            </bean>
+        </constructor-arg>
+
+        <constructor-arg index="1">
+            <map/>
+        </constructor-arg>
+
+        <property name="stopTimeout" value="5000"/>
+        <property name="wireFormatFactory">
+            <bean id="myWireFormatFactory" class="org.apache.activemq.openwire.OpenWireFormatFactory">
+                <property name="stackTraceEnabled" value="false"/>
+                <property name="tcpNoDelayEnabled" value="true"/>
+                <property name="cacheEnabled" value="false" />
+            </bean>
+        </property>
+    </bean>
+
+</beans>

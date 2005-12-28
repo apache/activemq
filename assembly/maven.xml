@@ -35,7 +35,7 @@
     <!-- Default Global Goals -->
     <!-- ==================== -->
     <goal name="default">
-        <ant:copy todir="${basedir}/src/test/org/activemq/usecases" file="${basedir}/src/release/conf/activemq.xml" overwrite="true"/>
+        <ant:copy todir="${basedir}/src/test/org/apache/activemq/usecases" file="${basedir}/src/release/conf/activemq.xml" overwrite="true"/>
         <attainGoal name="dist:build-bin"/>
     </goal>
     
@@ -109,9 +109,9 @@
     </ant:chmod>
 
     <ant:jar destfile="${maven.dist.bin.assembly.dir}/bin/run.jar" basedir="${maven.build.dir}/classes">
-      <ant:include name="org/activemq/broker/Main*.class"/>
+      <ant:include name="org/apache/activemq/broker/Main*.class"/>
       <ant:manifest>
-        <ant:attribute name="Main-Class" value="org.apache.activemq.activemq.broker.Main"/>
+        <ant:attribute name="Main-Class" value="org.apache.activemq.broker.Main"/>
       </ant:manifest>
     </ant:jar>
     <ant:copy todir="${maven.dist.bin.assembly.dir/conf}">
@@ -253,7 +253,7 @@
         </j:if>
 
         <echo>Running an ActiveMQ server with $$config = ${config}</echo>
-        <java classname="org.apache.activemq.activemq.broker.Main" fork="yes" maxmemory="512M">
+        <java classname="org.apache.activemq.broker.Main" fork="yes" maxmemory="512M">
           <classpath refid="test.classpath"/>
           <arg value="${config}"/>
           <j:if test="${!empty(debug)}">
@@ -273,7 +273,7 @@
         <!-- run simple server using just a URL -->
 
         <echo>Running an ActiveMQ server at $$url = ${url}</echo>
-        <java classname="org.apache.activemq.activemq.broker.Main" fork="yes" maxmemory="512M">
+        <java classname="org.apache.activemq.broker.Main" fork="yes" maxmemory="512M">
           <classpath refid="test.classpath"/>
           <arg value="${url}"/>
 
@@ -318,7 +318,7 @@
           <jvmarg value="-Xbootclasspath/a:${OPTIT_HOME}/lib/oibcp.jar"/>
           <jvmarg value="-Xnoclassgc"/>
           <arg value="-pause"/>
-          <arg value="org.apache.activemq.activemq.spring.Main"/>
+          <arg value="org.apache.activemq.spring.Main"/>
           <arg value="${config}"/>
         </java>
       </j:when>
@@ -335,7 +335,7 @@
           <jvmarg value="-Xbootclasspath/a:${OPTIT_HOME}/lib/oibcp.jar"/>
           <jvmarg value="-Xnoclassgc"/>
           <arg value="-pause"/>
-          <arg value="org.apache.activemq.activemq.broker.Main"/>
+          <arg value="org.apache.activemq.broker.Main"/>
           <arg value="${url}"/>
           <sysproperty key="derby.system.home" value="target/derby"/>
           <sysproperty key="derby.storage.fileSyncTransactionLog" value="true"/>
@@ -359,7 +359,7 @@
     </j:if>
 
     <echo>Running an ActiveMQ web server with webapp = ${url}</echo>
-    <java classname="org.apache.activemq.activemq.tool.WebServer" fork="yes">
+    <java classname="org.apache.activemq.tool.WebServer" fork="yes">
       <classpath refid="test.classpath"/>
       <jvmarg value="-server"/>
       <arg value="${url}"/>
@@ -387,7 +387,7 @@
     </j:if>
 
     <echo>Running consumer against server at $$url = ${url} for subject $$subject = ${subject}</echo>
-    <java classname="org.apache.activemq.activemq.tool.ConsumerTool" fork="yes" maxmemory="100M">
+    <java classname="org.apache.activemq.tool.ConsumerTool" fork="yes" maxmemory="100M">
       <classpath refid="test.classpath"/>
       <jvmarg value="-server"/>
       <arg value="${url}"/>
@@ -422,7 +422,7 @@
 
 
     <echo>Running producer against server at $$url = ${url} for subject $$subject = ${subject}</echo>
-    <java classname="org.apache.activemq.activemq.tool.ProducerTool" fork="yes" maxmemory="100M">
+    <java classname="org.apache.activemq.tool.ProducerTool" fork="yes" maxmemory="100M">
       <classpath refid="test.classpath"/>
       <jvmarg value="-server"/>
       <arg value="${url}"/>
@@ -451,7 +451,7 @@
     </j:if>
 
     <echo>Running producer using subject $$subject = ${subject}</echo>
-    <java classname="org.apache.activemq.activemq.demo.SimpleProducer" fork="yes">
+    <java classname="org.apache.activemq.demo.SimpleProducer" fork="yes">
       <classpath refid="test.classpath"/>
       <jvmarg value="-server"/>
       <arg value="${subject}"/>
@@ -471,7 +471,7 @@
     </j:if>
 
     <echo>Running consumer using subject $$subject = ${subject}</echo>
-    <java classname="org.apache.activemq.activemq.demo.SimpleConsumer" fork="yes">
+    <java classname="org.apache.activemq.demo.SimpleConsumer" fork="yes">
       <classpath refid="test.classpath"/>
       <jvmarg value="-server"/>
       <arg value="${subject}"/>
@@ -499,7 +499,7 @@
     </j:if>
 
     <echo>Running topic consumer against server at $$url = ${url} for subject $$subject = ${subject} with $$topic = ${topic}</echo>
-    <java classname="org.apache.activemq.activemq.benchmark.Consumer" fork="yes" maxmemory="100M">
+    <java classname="org.apache.activemq.benchmark.Consumer" fork="yes" maxmemory="100M">
       <classpath refid="test.classpath"/>
       <j:if test="${empty(ignoreServer)}">
         <jvmarg value="-server"/>
@@ -535,7 +535,7 @@
     </j:if>
 
     <echo>Running topic producer against server at $$url = ${url} for subject $$subject = ${subject} with $$topic = ${topic} $$messageSize = ${messageSize}</echo>
-    <java classname="org.apache.activemq.activemq.benchmark.Producer" fork="yes">
+    <java classname="org.apache.activemq.benchmark.Producer" fork="yes">
       <classpath refid="test.classpath"/>
       <j:if test="${empty(ignoreServer)}">
         <jvmarg value="-server"/>
@@ -570,7 +570,7 @@
     </j:if>
 
     <echo>Running topic producer against server at $$url = ${url} for subject $$subject = ${subject} with $$topic = ${topic}</echo>
-    <java classname="org.apache.activemq.activemq.benchmark.ProducerConsumer" fork="yes" maxmemory="100M">
+    <java classname="org.apache.activemq.benchmark.ProducerConsumer" fork="yes" maxmemory="100M">
       <classpath refid="test.classpath"/>
       <j:if test="${empty(ignoreServer)}">
         <jvmarg value="-server"/>
@@ -619,7 +619,7 @@
     </j:if>
 
     <echo>Running ActiveMQ Journal Benchmark</echo>
-    <j:set var="mainClass" value="org.apache.activemq.activemq.journal.impl.JournalPerfTool"/>
+    <j:set var="mainClass" value="org.apache.activemq.journal.impl.JournalPerfTool"/>
     <j:if test="${profile=='true'}">
       <j:set var="mainClass" value="intuitive.audit.Audit"/>
     </j:if>
@@ -631,7 +631,7 @@
         <jvmarg value="-Xnoclassgc"/>
         <classpath path="${OPTIT_HOME}/lib/optit.jar"/>
         <arg value="-pause"/>
-        <arg value="org.apache.activemq.activemq.journal.impl.JournalPerfTool"/>
+        <arg value="org.apache.activemq.journal.impl.JournalPerfTool"/>
       </j:if>
       <j:elseif test="${empty(ignoreServer)}">
         <jvmarg value="-server"/>
@@ -689,7 +689,7 @@
     </j:if>
 
     <echo>Running HOWL Journal Benchmark</echo>
-    <java classname="org.apache.activemq.activemq.journal.howl.JournalPerfTool" fork="no" maxmemory="100M">
+    <java classname="org.apache.activemq.journal.howl.JournalPerfTool" fork="no" maxmemory="100M">
       <classpath refid="test.classpath"/>
       <j:if test="${empty(ignoreServer)}">
         <jvmarg value="-server"/>
@@ -723,7 +723,7 @@
   <goal name="test-create-temp-queues" prereqs="setclasspath, test:compile"
     description="Tests the creation of lots of temporary queues">
 
-    <java classname="org.apache.activemq.activemq.usecases.CreateLotsOfTemporaryQueuesTest" fork="yes" maxmemory="10M">
+    <java classname="org.apache.activemq.usecases.CreateLotsOfTemporaryQueuesTest" fork="yes" maxmemory="10M">
       <classpath refid="test.classpath"/>
       <arg value="${count}"/>
     </java>
