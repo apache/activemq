@@ -27,11 +27,11 @@
     <id>activemq-jaas</id>
     <description>ActiveMQ is an open source message broker and JMS 1.1 provider</description>
     <shortDescription>ActiveMQ JAAS Login Modules</shortDescription>
-    <package>org.activemq.jaas</package>
+    <package>org.apache.activemq.jaas</package>
     <packageGroups>
         <packageGroup>
             <title>Utilities</title>
-            <packages>org.activemq.jaas.*</packages>
+            <packages>org.apache.activemq.jaas.*</packages>
         </packageGroup>
     </packageGroups>
 

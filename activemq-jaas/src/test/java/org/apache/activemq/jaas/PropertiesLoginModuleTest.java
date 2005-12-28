@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.jaas;
+package org.apache.activemq.jaas;
 
 import java.io.IOException;
 import javax.security.auth.Subject;
@@ -26,6 +26,9 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+
+import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.jaas.UserPrincipal;
 
 import junit.framework.TestCase;
 
