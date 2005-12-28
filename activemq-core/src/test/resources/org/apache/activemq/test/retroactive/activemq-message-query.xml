@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- this file can only be parsed using the xbean-spring library -->
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0"
+  xmlns:s="http://xbean.org/spring/">
+
+  <broker persistent="false">
+
+    <destinationPolicy>
+      <policyMap>
+        <policyEntries>
+          <policyEntry topic="org.apache.activemq.test.>">
+            <subscriptionRecoveryPolicy>
+              <queryBasedSubscriptionRecoveryPolicy query="#myQuery" />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+        </policyEntries>
+      </policyMap>
+    </destinationPolicy>
+  </broker>
+
+  <bean id="myQuery"
+    class="org.apache.activemq.test.retroactive.DummyMessageQuery" />
+</beans>
+<!-- END SNIPPET: xbean -->

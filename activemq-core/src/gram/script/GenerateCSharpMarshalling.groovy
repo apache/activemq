@@ -16,7 +16,7 @@
 * limitations under the License.
 *
 **/
-import org.activemq.openwire.tool.OpenWireScript
+import org.apache.activemq.openwire.tool.OpenWireScript
 
 /**
  * Generates the Java marshalling code for the Open Wire Format
@@ -26,7 +26,7 @@ import org.activemq.openwire.tool.OpenWireScript
 class GenerateCSharpMarshalling extends OpenWireScript {
 
     Object run() {
-        def destDir = new File("target/generated/dotnet/cs/org/activemq/openwire/io")
+        def destDir = new File("target/generated/dotnet/cs/org/apache/activemq/openwire/io")
         destDir.mkdirs()
 
         def messageClasses = classes.findAll { isMessageType(it) }
@@ -93,7 +93,7 @@ namespace ActiveMQ
                             out << "dataIn.readUTF()"
                             break;
 
-                        case "org.activemq.message.ActiveMQDestination":
+                        case "org.apache.activemq.message.ActiveMQDestination":
                             out << "readDestination(dataIn)"
                             break;
 
@@ -153,7 +153,7 @@ namespace ActiveMQ
                             out << "writeUTF($getter, dataOut);"
                             break;
 
-                        case "org.activemq.message.ActiveMQDestination":
+                        case "org.apache.activemq.message.ActiveMQDestination":
                             out << "writeDestination($getter, dataOut);"
                             break;
 

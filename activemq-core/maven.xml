@@ -61,8 +61,8 @@
   </postGoal>
 
   <goal name="selector:generate" description="Generates the ActiveMQ selector parser.">
-    <mkdir dir="${pom.build.sourceDirectory}/org/activemq/selector" />
-    <javacc target="${basedir}/src/main/grammar/SelectorParser.jj" javacchome="${maven.repo.local}/javacc/jars" outputdirectory="${pom.build.sourceDirectory}/org/activemq/selector" />
+    <mkdir dir="${pom.build.sourceDirectory}/org/apache/activemq/selector" />
+    <javacc target="${basedir}/src/main/grammar/SelectorParser.jj" javacchome="${maven.repo.local}/javacc/jars" outputdirectory="${pom.build.sourceDirectory}/org/apache/activemq/selector" />
   </goal>
 
   <goal name="openwire:generate-control-data" description="Generates the openwire control data." prereqs="test:compile">
@@ -74,7 +74,7 @@
       <path refid="maven.dependency.classpath" />
     </path>
 
-    <java classname="org.activemq.openwire.DataFileGenerator" fork="true">
+    <java classname="org.apache.activemq.openwire.DataFileGenerator" fork="true">
       <classpath refid="test.classpath" />
     </java>
 
@@ -111,7 +111,7 @@
     <java classname="org.codehaus.gram.Gram" fork="true">
       <classpath refid="openwire.classpath" />
       <sysproperty key="openwire.version" value="${openwire.version}" />
-      <arg value="src/main/java/org/activemq/command" />
+      <arg value="src/main/java/org/apache/activemq/command" />
       <arg value="src/gram/script/GenerateJavaMarshalling.groovy" />
       <arg value="src/gram/script/GenerateCMarshalling.groovy" />
       <!--
@@ -164,7 +164,7 @@
     </j:if>
 
     <echo>Running the ActiveMQ broker for the URI ${uri}</echo>
-    <java classname="org.activemq.broker.Main" fork="true">
+    <java classname="org.apache.activemq.broker.Main" fork="true">
       <classpath refid="test.classpath" />
       <arg value="${uri}" />
       <sysproperty key="com.sun.management.jmxremote.port" value="5001" />
@@ -179,7 +179,7 @@
     </j:if>
 
     <echo>Running the ActiveMQ consumer for the URI ${uri}</echo>
-    <java classname="org.activemq.simple.Consumer" fork="false">
+    <java classname="org.apache.activemq.simple.Consumer" fork="false">
       <classpath refid="test.classpath" />
       <arg value="${uri}" />
     </java>

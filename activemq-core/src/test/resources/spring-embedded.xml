@@ -5,12 +5,12 @@
 
 <beans>
 
-    <bean id="brokerContainer" class="org.activemq.xbean.BrokerFactoryBean">
+    <bean id="brokerContainer" class="org.apache.activemq.xbean.BrokerFactoryBean">
       <property name="config" value="classpath:activemq.xml"/>
     </bean>
 
     <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
-    <bean id="jmsFactory" class="org.activemq.ActiveMQConnectionFactory">
+    <bean id="jmsFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
         <property name="brokerURL" value="vm://localhost" />
     </bean>
 
@@ -27,7 +27,7 @@
     </bean>
 
     <!-- a sample POJO which uses a Spring JmsTemplate -->
-    <bean id="producer" class="org.activemq.spring.SpringProducer">
+    <bean id="producer" class="org.apache.activemq.spring.SpringProducer">
         <property name="template">
             <ref bean="myJmsTemplate"></ref>
         </property>
@@ -43,7 +43,7 @@
 
 
     <!-- a sample POJO consumer -->
-    <bean id="consumer" class="org.activemq.spring.SpringConsumer">
+    <bean id="consumer" class="org.apache.activemq.spring.SpringConsumer">
         <property name="template">
             <ref bean="myJmsTemplate"></ref>
         </property>
@@ -53,9 +53,9 @@
         </property>
     </bean>
 
-    <bean id="destination" class="org.activemq.command.ActiveMQQueue" autowire="constructor">
+    <bean id="destination" class="org.apache.activemq.command.ActiveMQQueue" autowire="constructor">
         <constructor-arg>
-            <value>org.activemq.spring.Test.spring.embedded</value>
+            <value>org.apache.activemq.spring.Test.spring.embedded</value>
         </constructor-arg>
     </bean>
 </beans>

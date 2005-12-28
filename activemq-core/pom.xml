@@ -250,7 +250,7 @@
             <phase>generate-sources</phase>
             <configuration>
               <sourceDirectory>${basedir}/src/main/grammar</sourceDirectory>
-              <outputDirectory>${basedir}/src/main/java/org/activemq/selector</outputDirectory>
+              <outputDirectory>${basedir}/src/main/java/org/apache/activemq/selector</outputDirectory>
             </configuration>
             <goals>
               <goal>javacc</goal>
