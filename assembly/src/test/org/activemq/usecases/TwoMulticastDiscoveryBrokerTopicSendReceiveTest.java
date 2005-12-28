@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
-import org.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.JMSException;
 

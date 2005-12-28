@@ -14,23 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.config;
+package org.apache.activemq.activemq.config;
 
-import org.activemq.broker.BrokerService;
-import org.activemq.broker.TransportConnector;
-import org.activemq.broker.region.policy.*;
-import org.activemq.xbean.BrokerFactoryBean;
-import org.activemq.transport.activeio.ActiveIOTransportServer;
-import org.activemq.transport.tcp.TcpTransportServer;
-import org.activemq.command.ActiveMQTopic;
-import org.activemq.openwire.OpenWireFormat;
-import org.activemq.store.PersistenceAdapter;
-import org.activemq.store.PersistenceAdapterFactory;
-import org.activemq.store.DefaultPersistenceAdapterFactory;
-import org.activemq.store.memory.MemoryPersistenceAdapter;
-import org.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.activemq.store.journal.JournalPersistenceAdapter;
-import org.activemq.memory.UsageManager;
+import org.apache.activemq.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.broker.TransportConnector;
+import org.apache.activemq.activemq.broker.region.policy.*;
+import org.apache.activemq.activemq.xbean.BrokerFactoryBean;
+import org.apache.activemq.activemq.transport.activeio.ActiveIOTransportServer;
+import org.apache.activemq.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.activemq.command.ActiveMQTopic;
+import org.apache.activemq.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.activemq.store.PersistenceAdapter;
+import org.apache.activemq.activemq.store.PersistenceAdapterFactory;
+import org.apache.activemq.activemq.store.DefaultPersistenceAdapterFactory;
+import org.apache.activemq.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.activemq.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.activemq.store.journal.JournalPersistenceAdapter;
+import org.apache.activemq.activemq.memory.UsageManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;

@@ -15,9 +15,9 @@
  * limitations under the License. 
  * 
  **/
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
-import org.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $

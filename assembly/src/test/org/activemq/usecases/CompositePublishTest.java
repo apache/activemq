@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.command.ActiveMQTopic;
-import org.activemq.test.JmsSendReceiveTestSupport;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.command.ActiveMQTopic;
+import org.apache.activemq.activemq.test.JmsSendReceiveTestSupport;
 
 import javax.jms.Connection;
 import javax.jms.Destination;

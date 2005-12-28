@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.broker.BrokerService;
 
 import javax.jms.Connection;
 import javax.jms.Queue;

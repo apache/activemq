@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
-import org.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -34,7 +34,7 @@ public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTw
 
         // lets resend the message somewhere else
         try {
-            Message msgCopy = (Message)((org.activemq.command.Message)message).copy();
+            Message msgCopy = (Message)((org.apache.activemq.activemq.command.Message)message).copy();
             replyProducer.send(msgCopy);
 
             //System.out.println("Sending reply: " + message);
