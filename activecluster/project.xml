@@ -181,6 +181,12 @@
     </dependency>
     
 
+    <!-- for multi-threaded unit test cases -->
+    <dependency>
+      <id>sysunit</id>
+      <version>1.0-beta-13</version>
+    </dependency>
+    
   </dependencies>
 
     
