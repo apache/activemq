@@ -13,11 +13,11 @@
     Web Connector for REST API and Streamlets support
   </shortDescription>
 
-  <package>org.activemq.web</package>
+  <package>org.apache.activemq.web</package>
   <packageGroups>
     <packageGroup>
       <title>Web Connector for REST API and Streamlets support</title>
-      <packages>org.activemq.web</packages>
+      <packages>org.apache.activemq.web</packages>
     </packageGroup>
   </packageGroups>
 

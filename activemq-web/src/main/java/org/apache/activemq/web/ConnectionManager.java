@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.activemq.web;
+package org.apache.activemq.web;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

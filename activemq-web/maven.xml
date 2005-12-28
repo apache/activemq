@@ -8,7 +8,7 @@
 
     <echo>Running the Web Application</echo>
 
-    <java classname="org.activemq.web.JettyServer" fork="yes" maxmemory="100M">
+    <java classname="org.apache.activemq.web.JettyServer" fork="yes" maxmemory="100M">
       <classpath refid="test.classpath"/>
     </java>
   </goal>

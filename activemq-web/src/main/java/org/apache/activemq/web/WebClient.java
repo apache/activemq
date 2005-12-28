@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.activemq.web;
+package org.apache.activemq.web;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -54,10 +54,10 @@ import edu.emory.mathcs.backport.java.util.concurrent.Semaphore;
  * @version $Revision: 1.1.1.1 $
  */
 public class WebClient implements HttpSessionActivationListener, Externalizable {
-    public static final String webClientAttribute = "org.activemq.webclient";
-    public static final String connectionFactoryAttribute = "org.activemq.connectionFactory";
-    public static final String queueConsumersAttribute = "org.activemq.queueConsumers";
-    public static final String brokerUrlInitParam = "org.activemq.brokerURL";
+    public static final String webClientAttribute = "org.apache.activemq.webclient";
+    public static final String connectionFactoryAttribute = "org.apache.activemq.connectionFactory";
+    public static final String queueConsumersAttribute = "org.apache.activemq.queueConsumers";
+    public static final String brokerUrlInitParam = "org.apache.activemq.brokerURL";
 
     private static final Log log = LogFactory.getLog(WebClient.class);
 

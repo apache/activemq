@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.activemq.web;
+package org.apache.activemq.web;
 
 import org.activemq.command.ActiveMQQueue;
 import org.activemq.command.ActiveMQTopic;
