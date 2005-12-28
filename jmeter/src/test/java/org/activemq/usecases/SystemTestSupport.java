@@ -6,13 +6,13 @@ import javax.jms.*;
 import java.util.*;
 import java.net.URI;
 
-import org.activemq.ActiveMQConnection;
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.command.ActiveMQMessage;
-import org.activemq.command.ActiveMQDestination;
-import org.activemq.broker.BrokerService;
-import org.activemq.broker.BrokerFactory;
-import org.activemq.broker.TransportConnector;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.TransportConnector;
 
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;

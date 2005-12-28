@@ -8,11 +8,11 @@ import java.net.URI;
 
 import junit.framework.TestCase;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.ActiveMQConnection;
-import org.activemq.broker.BrokerService;
-import org.activemq.broker.BrokerFactory;
-import org.activemq.broker.TransportConnector;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.TransportConnector;
 
 /**
 * This Unit Test is created to test the memory leakage when a new producer is created and closed for each message that was sent.
