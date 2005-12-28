@@ -303,6 +303,11 @@
             <artifactId>commons-pool</artifactId>
             <version>${commons_pool_version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons_collections_version}</version>
+        </dependency>
 
         <!-- JAAS Login Modules -->
         <dependency>
