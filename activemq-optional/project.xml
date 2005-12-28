@@ -9,15 +9,15 @@
   <shortDescription>ActiveMQ Optional Tools</shortDescription>
   <description>ActiveMQ Optional Tools</description>
 
-  <package>org.activemq</package>
+  <package>org.apache.activemq</package>
   <packageGroups>
     <packageGroup>
       <title>HTTP Message Transport</title>
-      <packages>org.activemq.transport.http</packages>
+      <packages>org.apache.activemq.transport.http</packages>
     </packageGroup>
     <packageGroup>
       <title>Web Service and Apache Axis support</title>
-      <packages>org.activemq.axis</packages>
+      <packages>org.apache.activemq.axis</packages>
     </packageGroup>
 
   </packageGroups>
