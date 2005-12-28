@@ -37,12 +37,13 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
 
     private final Object mutex = new Object();
     
-    public void dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
+    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
         
         // Big synch here so that only 1 message gets dispatched at a time.  Ensures 
         // Everyone sees the same order and that the consumer list is not used while
         // it's being rotated.
         synchronized(mutex) {
+            int count = 0;
             
             for (Iterator iter = consumers.iterator(); iter.hasNext();) {
                 Subscription sub = (Subscription) iter.next();
@@ -52,6 +53,7 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
                     continue;
                 
                 sub.add(node);
+                count++;
             }
             
             // Rotate the consumer list.
@@ -59,6 +61,7 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
                 consumers.add(consumers.remove(0));
             } catch (Throwable bestEffort) {
             }
+            return count > 0;
         }        
     }
 

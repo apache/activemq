@@ -41,7 +41,9 @@ public interface DispatchPolicy {
      * large pre-fetch may take all the messages if he is always dispatched to first.  
      * Once a message has been locked, it does not need to be dispatched to any 
      * further subscriptions.
+     * 
+     * @return true if at least one consumer was dispatched or false if there are no active subscriptions that could be dispatched
      */
-    void dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable;
+    boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable;
 
 }

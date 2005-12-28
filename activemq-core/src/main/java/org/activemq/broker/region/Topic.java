@@ -273,17 +273,30 @@ public class Topic implements Destination {
             if (! subscriptionRecoveryPolicy.add(context, message)) {
                 return;
             }
-            if (consumers.isEmpty())
+            if (consumers.isEmpty()) {
+                onMessageWithNoConsumers(context, message);
                 return;
+            }
 
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
             
-            dispatchPolicy.dispatch(context, message, msgContext, consumers);
+            if (!dispatchPolicy.dispatch(context, message, msgContext, consumers)) {
+                onMessageWithNoConsumers(context, message);
+            }
         }
         finally {
             msgContext.clear();
             dispatchValve.decrement();
+        }
+    }
+
+    /** 
+     * Provides a hook to allow messages with no consumer to be processed in some way - such as to send to a dead letter queue or something..
+     */
+    protected void onMessageWithNoConsumers(ConnectionContext context, Message message) {
+        if (! message.isPersistent()) {
+            // allow messages with no consumers to be dispatched to a dead letter queue
         }
     }
 
