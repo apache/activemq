@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 import java.util.HashMap;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -24,7 +24,7 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
-import org.activemq.test.TestSupport;
+import org.apache.activemq.activemq.test.TestSupport;
 
 /**
  * @version $Revision: 1.1.1.1 $

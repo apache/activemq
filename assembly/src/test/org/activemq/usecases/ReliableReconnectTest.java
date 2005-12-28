@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 import java.util.HashMap;
 import java.net.URI;
 import javax.jms.Connection;
@@ -33,13 +33,13 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-import org.activemq.ActiveMQConnection;
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.broker.BrokerService;
-import org.activemq.broker.BrokerFactory;
-import org.activemq.broker.Broker;
-import org.activemq.test.TestSupport;
-import org.activemq.util.IdGenerator;
+import org.apache.activemq.activemq.ActiveMQConnection;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.broker.BrokerFactory;
+import org.apache.activemq.activemq.broker.Broker;
+import org.apache.activemq.activemq.test.TestSupport;
+import org.apache.activemq.activemq.util.IdGenerator;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 

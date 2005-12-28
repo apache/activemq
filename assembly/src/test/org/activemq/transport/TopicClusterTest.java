@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-package org.activemq.transport;
+package org.apache.activemq.activemq.transport;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.broker.BrokerService;
-import org.activemq.broker.TransportConnector;
-import org.activemq.command.ActiveMQQueue;
-import org.activemq.command.ActiveMQTextMessage;
-import org.activemq.command.ActiveMQTopic;
-import org.activemq.network.NetworkConnector;
-import org.activemq.transport.discovery.rendezvous.RendezvousDiscoveryAgent;
-import org.activemq.util.ServiceStopper;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.broker.TransportConnector;
+import org.apache.activemq.activemq.command.ActiveMQQueue;
+import org.apache.activemq.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.activemq.command.ActiveMQTopic;
+import org.apache.activemq.activemq.network.NetworkConnector;
+import org.apache.activemq.activemq.transport.discovery.rendezvous.RendezvousDiscoveryAgent;
+import org.apache.activemq.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

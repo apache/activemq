@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -28,9 +28,9 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
-import org.activemq.TestSupport;
-import org.activemq.broker.BrokerService;
-import org.activemq.store.PersistenceAdapter;
+import org.apache.activemq.activemq.TestSupport;
+import org.apache.activemq.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.store.PersistenceAdapter;
 
 /**
  * @version $Revision: 1.1.1.1 $

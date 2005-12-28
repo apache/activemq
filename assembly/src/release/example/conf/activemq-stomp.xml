@@ -23,11 +23,11 @@
           <!-- Choose one of the following three configurationss to work with mysql-ds-->
           <!--
           <jdbcPersistence dataSourceRef="mysql-ds"
-                         adapterClass="org.activemq.store.jdbc.adapter.BytesJDBCAdaptor"/>
+                         adapterClass="org.apache.activemq.activemq.store.jdbc.adapter.BytesJDBCAdaptor"/>
           <jdbcPersistence dataSourceRef="mysql-ds"
-                         adapterClass="org.activemq.store.jdbc.adapter.BlobJDBCAdaptor"/>
+                         adapterClass="org.apache.activemq.activemq.store.jdbc.adapter.BlobJDBCAdaptor"/>
           <jdbcPersistence dataSourceRef="mysql-ds"
-                         adapterClass="org.activemq.store.jdbc.adapter.StreamJDBCAdaptor"/>
+                         adapterClass="org.apache.activemq.activemq.store.jdbc.adapter.StreamJDBCAdaptor"/>
           -->
         </journalPersistence>
       </cachePersistence>

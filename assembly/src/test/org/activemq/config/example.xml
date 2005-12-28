@@ -68,7 +68,7 @@
         </amq:memoryManager>
 
         <amq:persistenceFactory>
-            <bean id="myPersistenceFactory" class="org.activemq.store.DefaultPersistenceAdapterFactory">
+            <bean id="myPersistenceFactory" class="org.apache.activemq.activemq.store.DefaultPersistenceAdapterFactory">
                 <property name="journalLogFileSize" value="32768" />
                 <property name="journalLogFiles" value="4" />
                 <property name="useJournal" value="true" />
@@ -82,7 +82,7 @@
     </amq:broker>
 
     <!-- testing normal Spring stuff inside the same config file -->
-    <bean id="myTransportServer" class="org.activemq.transport.activeio.ActiveIOTransportServer">
+    <bean id="myTransportServer" class="org.apache.activemq.activemq.transport.activeio.ActiveIOTransportServer">
         <constructor-arg index="0">
             <bean id="brokerURI " class="java.net.URI">
                 <constructor-arg index="0">
@@ -97,7 +97,7 @@
 
         <property name="stopTimeout" value="5000"/>
         <property name="wireFormatFactory">
-            <bean id="myWireFormatFactory" class="org.activemq.openwire.OpenWireFormatFactory">
+            <bean id="myWireFormatFactory" class="org.apache.activemq.activemq.openwire.OpenWireFormatFactory">
                 <property name="stackTraceEnabled" value="false"/>
                 <property name="tcpNoDelayEnabled" value="true"/>
                 <property name="cacheEnabled" value="false" />

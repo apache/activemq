@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.config;
+package org.apache.activemq.activemq.config;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 import javax.naming.InitialContext;
 import javax.naming.Context;
@@ -38,7 +38,7 @@ public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConne
         // we could put these properties into a jndi.properties
         // on the classpath instead
         Hashtable properties = new Hashtable();
-        properties.put("java.naming.factory.initial", "org.activemq.jndi.ActiveMQInitialContextFactory");
+        properties.put("java.naming.factory.initial", "org.apache.activemq.activemq.jndi.ActiveMQInitialContextFactory");
 
         // configure the embedded broker using an XML config file
         // which is either a URL or a resource on the classpath

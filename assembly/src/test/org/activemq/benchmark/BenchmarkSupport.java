@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.benchmark;
+package org.apache.activemq.activemq.benchmark;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.util.IdGenerator;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.util.IdGenerator;
 
 import javax.jms.Connection;
 import javax.jms.Destination;

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,7 +35,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import junit.framework.TestCase;
-import org.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
 
 public class QueueDuplicatesTest extends TestCase {
     private static DateFormat formatter = new SimpleDateFormat("HH:mm:ss SSS");

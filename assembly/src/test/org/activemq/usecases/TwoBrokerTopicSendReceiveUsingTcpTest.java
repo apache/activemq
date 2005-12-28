@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
 import javax.jms.JMSException;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.xbean.BrokerFactoryBean;
-import org.activemq.broker.BrokerService;
-import org.activemq.broker.TransportConnector;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.xbean.BrokerFactoryBean;
+import org.apache.activemq.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.broker.TransportConnector;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;

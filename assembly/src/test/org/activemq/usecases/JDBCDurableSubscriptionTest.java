@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.activemq.store.DefaultPersistenceAdapterFactory;
-import org.activemq.store.PersistenceAdapter;
-import org.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.activemq.store.DefaultPersistenceAdapterFactory;
+import org.apache.activemq.activemq.store.PersistenceAdapter;
+import org.apache.activemq.activemq.store.jdbc.JDBCPersistenceAdapter;
 
 /**
  * @version $Revision: 1.1.1.1 $

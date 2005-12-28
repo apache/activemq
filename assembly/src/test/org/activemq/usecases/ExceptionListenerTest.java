@@ -15,7 +15,7 @@
  * limitations under the License. 
  * 
  **/
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -39,7 +39,7 @@ public class ExceptionListenerTest extends TestCase implements ExceptionListener
         /* TODO not sure yet if this is a valid test
 
         System.setProperty("activemq.persistenceAdapter",
-                "org.activemq.store.vm.VMPersistenceAdapter");
+                "org.apache.activemq.activemq.store.vm.VMPersistenceAdapter");
         // configuration of container and all protocolls
         BrokerContainerImpl container = new
                 BrokerContainerImpl("DefaultBroker");

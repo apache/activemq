@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.config;
+package org.apache.activemq.activemq.config;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 import java.net.URI;
 

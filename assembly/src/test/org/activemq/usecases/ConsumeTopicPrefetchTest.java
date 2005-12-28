@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
-import org.activemq.ActiveMQConnection;
+import org.apache.activemq.activemq.ActiveMQConnection;
 
 /**
  * @version $Revision: 1.1.1.1 $

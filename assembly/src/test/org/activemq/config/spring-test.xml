@@ -2,11 +2,11 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 
 <beans>
-  <bean id="wireFormat" class="org.activemq.io.impl.DefaultWireFormat"/>
+  <bean id="wireFormat" class="org.apache.activemq.activemq.io.impl.DefaultWireFormat"/>
 
-  <bean id="transport" factory-method="newInstance" class="org.activemq.transport.TransportServerChannelProvider">
+  <bean id="transport" factory-method="newInstance" class="org.apache.activemq.activemq.transport.TransportServerChannelProvider">
     <constructor-arg index="0">
-      <bean class="org.activemq.io.impl.DefaultWireFormat"/>
+      <bean class="org.apache.activemq.activemq.io.impl.DefaultWireFormat"/>
       <!---
       <ref bean="wireFormat"/>
     -->

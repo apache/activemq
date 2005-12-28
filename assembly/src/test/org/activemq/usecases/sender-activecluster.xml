@@ -8,7 +8,7 @@
     </connector>
 
     <discoveryAgent>
-      <activeClusterDiscovery uri="multicast://224.1.2.3:2123" subject="org.activemq.discover"/>
+      <activeClusterDiscovery uri="multicast://224.1.2.3:2123" subject="org.apache.activemq.activemq.discover"/>
     </discoveryAgent>
 
     <discoveryNetworkConnector/>

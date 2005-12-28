@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.store.memory.MemoryPersistenceAdapter;
-import org.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.activemq.activemq.broker.BrokerService;
 
 import javax.jms.JMSException;
 

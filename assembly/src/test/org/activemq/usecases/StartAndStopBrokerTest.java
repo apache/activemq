@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.activemq.usecases;
+package org.apache.activemq.activemq.usecases;
 
 import junit.framework.TestCase;
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.broker.BrokerService;
-import org.activemq.broker.BrokerFactory;
-import org.activemq.broker.TransportConnector;
+import org.apache.activemq.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.activemq.broker.BrokerService;
+import org.apache.activemq.activemq.broker.BrokerFactory;
+import org.apache.activemq.activemq.broker.TransportConnector;
 
 import javax.jms.JMSException;
 import java.net.URI;
@@ -34,7 +34,7 @@ public class StartAndStopBrokerTest extends TestCase {
         // This systemproperty is used if we dont want to
         // have persistence messages as a default
         System.setProperty("activemq.persistenceAdapter",
-                "org.activemq.store.vm.VMPersistenceAdapter");
+                "org.apache.activemq.activemq.store.vm.VMPersistenceAdapter");
 
         // configuration of container and all protocolls
         BrokerService broker = createBroker();
