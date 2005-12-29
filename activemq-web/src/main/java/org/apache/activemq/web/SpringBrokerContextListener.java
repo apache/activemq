@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.web;
 
-import org.activemq.broker.BrokerService;
-import org.activemq.xbean.BrokerFactoryBean;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.support.ServletContextResource;
 

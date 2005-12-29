@@ -33,8 +33,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.activemq.MessageAvailableConsumer;
-import org.activemq.MessageAvailableListener;
+import org.apache.activemq.MessageAvailableConsumer;
+import org.apache.activemq.MessageAvailableListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mortbay.util.ajax.Continuation;

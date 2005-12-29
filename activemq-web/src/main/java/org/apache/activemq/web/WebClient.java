@@ -38,9 +38,9 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionActivationListener;
 import javax.servlet.http.HttpSessionEvent;
 
-import org.activemq.ActiveMQConnection;
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.ActiveMQSession;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSession;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
