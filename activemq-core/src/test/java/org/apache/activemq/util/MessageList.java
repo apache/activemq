@@ -27,7 +27,14 @@ import java.util.List;
 import junit.framework.Assert;
 
 /**
- * A simple container for performing testing and rendezvous style code.
+ * A simple container of messages for performing testing and rendezvous style
+ * code. You can use this class a {@link MessageListener} and then make
+ * assertions about how many messages it has received allowing a certain maximum
+ * amount of time to ensure that the test does not hang forever.
+ * 
+ * Also you can chain these instances together with the
+ * {@link #setParent(MessageListener)} method so that you can aggregate the
+ * total number of messages consumed across a number of consumers.
  * 
  * @version $Revision: 1.6 $
  */
@@ -61,7 +68,7 @@ public class MessageList extends Assert implements MessageListener {
 
     public String toString() {
         synchronized (semaphore) {
-        return messages.toString();
+            return messages.toString();
         }
     }
 
@@ -81,7 +88,7 @@ public class MessageList extends Assert implements MessageListener {
             return new ArrayList(messages);
         }
     }
-    
+
     public synchronized List getTextMessages() {
         synchronized (semaphore) {
             ArrayList l = new ArrayList();
@@ -89,8 +96,9 @@ public class MessageList extends Assert implements MessageListener {
                 try {
                     TextMessage m = (TextMessage) iter.next();
                     l.add(m.getText());
-                } catch (Throwable e) {
-                    l.add(""+e);
+                }
+                catch (Throwable e) {
+                    l.add("" + e);
                 }
             }
             return l;
@@ -163,7 +171,6 @@ public class MessageList extends Assert implements MessageListener {
         assertTrue("at most: " + messageCount + " messages received. Actual: " + actual, actual <= messageCount);
     }
 
-
     public boolean hasReceivedMessage() {
         return getMessageCount() == 0;
     }
@@ -185,11 +192,11 @@ public class MessageList extends Assert implements MessageListener {
     }
 
     /**
-     * Allows a parent listener to be specified such as to aggregate messages consumed across consumers
+     * Allows a parent listener to be specified such as to aggregate messages
+     * consumed across consumers
      */
     public void setParent(MessageListener parent) {
         this.parent = parent;
     }
-    
-    
+
 }
