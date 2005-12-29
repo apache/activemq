@@ -23,7 +23,7 @@ import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
  * Represents an entry in a {@link PolicyMap} for assigning policies to a
- * specific destination or a hierarchial wildcard area of destinations.
+ * specific destination or a hierarchical wildcard area of destinations.
  * 
  * @org.xbean.XBean
  * 
@@ -34,6 +34,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private RedeliveryPolicy redeliveryPolicy;
+    private boolean sendAdvisoryIfNoConsumers = true;
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -48,6 +49,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (subscriptionRecoveryPolicy != null) {
             topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy);
         }
+        topic.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
     }
 
     // Properties
@@ -76,4 +78,15 @@ public class PolicyEntry extends DestinationMapEntry {
         this.subscriptionRecoveryPolicy = subscriptionRecoveryPolicy;
     }
 
+    public boolean isSendAdvisoryIfNoConsumers() {
+        return sendAdvisoryIfNoConsumers;
+    }
+
+    /**
+     * Sends an advisory message if a non-persistent message is sent and there
+     * are no active consumers
+     */
+    public void setSendAdvisoryIfNoConsumers(boolean sendAdvisoryIfNoConsumers) {
+        this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
+    }
 }

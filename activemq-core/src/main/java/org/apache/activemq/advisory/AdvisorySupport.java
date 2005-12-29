@@ -29,6 +29,10 @@ public class AdvisorySupport {
     public static final ActiveMQTopic TEMP_TOPIC_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX+"TempTopic");
     public static final String PRODUCER_ADVISORY_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Producer.";
     public static final String CONSUMER_ADVISORY_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Consumer.";
+    public static final String EXPIRED_TOPIC_MESSAGES_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Expired.Topic.";
+    public static final String EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Expired.Queue.";
+    public static final String NO_TOPIC_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"NoConsumer.Topic.";
+    public static final String NO_QUEUE_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"NoConsumer.Queue.";
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(TEMP_QUEUE_ADVISORY_TOPIC+","+TEMP_TOPIC_ADVISORY_TOPIC);
 
@@ -43,6 +47,26 @@ public class AdvisorySupport {
     
     public static ActiveMQTopic getProducerAdvisoryTopic(ActiveMQDestination destination) {
         String name = PRODUCER_ADVISORY_TOPIC_PREFIX+destination.getQualifiedName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getExpiredTopicMessageAdvisoryTopic(ActiveMQDestination destination) {
+        String name = EXPIRED_TOPIC_MESSAGES_TOPIC_PREFIX+destination.getQualifiedName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getExpiredQueueMessageAdvisoryTopic(ActiveMQDestination destination) {
+        String name = EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX+destination.getQualifiedName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getNoTopicConsumersAdvisoryTopic(ActiveMQDestination destination) {
+        String name = NO_TOPIC_CONSUMERS_TOPIC_PREFIX+destination.getQualifiedName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getNoQueueConsumersAdvisoryTopic(ActiveMQDestination destination) {
+        String name = NO_QUEUE_CONSUMERS_TOPIC_PREFIX+destination.getQualifiedName();
         return new ActiveMQTopic(name);
     }
     
