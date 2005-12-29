@@ -9,8 +9,8 @@
   </parent>
 
   <artifactId>activeio-oneport-jetty</artifactId>
-  <name>ActiveIO :: Openport :: OpenORB</name>
-  <description>A Openport OpenORB adapter</description>
+  <name>ActiveIO :: Openport :: Jetty</name>
+  <description>A Openport Jetty adapter</description>
   
   <dependencies>
     <!-- Required Dependencies -->
