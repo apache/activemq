@@ -18,12 +18,14 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
@@ -57,9 +59,10 @@ public class Topic implements Destination {
 
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
+    private boolean sendAdvisoryIfNoConsumers = true;
 
-    public Topic(ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager,
-            DestinationStatistics parentStats, TaskRunnerFactory taskFactory) {
+    public Topic(ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
+            TaskRunnerFactory taskFactory) {
 
         this.destination = destination;
         this.store = store;
@@ -166,33 +169,34 @@ public class Topic implements Destination {
 
     public void send(final ConnectionContext context, final Message message) throws Throwable {
 
-        if( context.isProducerFlowControl() )
+        if (context.isProducerFlowControl())
             usageManager.waitForSpace();
-        
+
         message.setRegionDestination(this);
-        
+
         if (store != null && message.isPersistent())
             store.addMessage(context, message);
 
         message.incrementReferenceCount();
         try {
-    
+
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     public void afterCommit() throws Throwable {
                         dispatch(context, message);
                     }
                 });
-    
+
             }
             else {
                 dispatch(context, message);
             }
-            
-        } finally {
+
+        }
+        finally {
             message.decrementReferenceCount();
         }
-        
+
     }
 
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
@@ -236,7 +240,7 @@ public class Topic implements Destination {
 
     // Properties
     // -------------------------------------------------------------------------
-    
+
     public UsageManager getUsageManager() {
         return usageManager;
     }
@@ -265,12 +269,26 @@ public class Topic implements Destination {
         this.subscriptionRecoveryPolicy = subscriptionRecoveryPolicy;
     }
 
+    public boolean isSendAdvisoryIfNoConsumers() {
+        return sendAdvisoryIfNoConsumers;
+    }
+
+    public void setSendAdvisoryIfNoConsumers(boolean sendAdvisoryIfNoConsumers) {
+        this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
+    }
+
+    public MessageStore getMessageStore() {
+        return store;
+    }
+
+    // Implementation methods
+    // -------------------------------------------------------------------------
     protected void dispatch(ConnectionContext context, Message message) throws Throwable {
         destinationStatistics.getEnqueues().increment();
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
-            if (! subscriptionRecoveryPolicy.add(context, message)) {
+            if (!subscriptionRecoveryPolicy.add(context, message)) {
                 return;
             }
             if (consumers.isEmpty()) {
@@ -280,7 +298,7 @@ public class Topic implements Destination {
 
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
-            
+
             if (!dispatchPolicy.dispatch(context, message, msgContext, consumers)) {
                 onMessageWithNoConsumers(context, message);
             }
@@ -291,17 +309,23 @@ public class Topic implements Destination {
         }
     }
 
-    /** 
-     * Provides a hook to allow messages with no consumer to be processed in some way - such as to send to a dead letter queue or something..
+    /**
+     * Provides a hook to allow messages with no consumer to be processed in
+     * some way - such as to send to a dead letter queue or something..
      */
-    protected void onMessageWithNoConsumers(ConnectionContext context, Message message) {
-        if (! message.isPersistent()) {
-            // allow messages with no consumers to be dispatched to a dead letter queue
+    protected void onMessageWithNoConsumers(ConnectionContext context, Message message) throws Throwable {
+        if (!message.isPersistent()) {
+            if (sendAdvisoryIfNoConsumers) {
+                // allow messages with no consumers to be dispatched to a dead
+                // letter queue
+                ActiveMQDestination originalDestination = message.getDestination();
+                if (!AdvisorySupport.isAdvisoryTopic(originalDestination)) {
+                    ActiveMQTopic advisoryTopic = AdvisorySupport.getExpiredTopicMessageAdvisoryTopic(originalDestination);
+                    message.setDestination(advisoryTopic);
+                    context.getBroker().send(context, message);
+                }
+            }
         }
-    }
-
-    public MessageStore getMessageStore() {
-        return store;
     }
 
 }
