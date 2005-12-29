@@ -21,6 +21,7 @@ import org.apache.activemq.broker.TopicSubscriptionTest;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
+import org.apache.activemq.util.MessageList;
 
 import java.util.List;
 import java.util.Iterator;
@@ -97,10 +98,10 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
 
         // Get basis of order
         Iterator i = consumers.keySet().iterator();
-        List messageOrder = (List)consumers.get(i.next());
+        MessageList messageOrder = (MessageList)consumers.get(i.next());
 
         for (;i.hasNext();) {
-            List messageList = (List)consumers.get(i.next());
+            MessageList messageList = (MessageList)consumers.get(i.next());
             assertTrue("Messages are not ordered.", messageOrder.equals(messageList));
         }
     }
