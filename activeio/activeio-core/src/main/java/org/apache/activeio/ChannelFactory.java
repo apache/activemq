@@ -43,7 +43,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
  * {@see org.apache.activeio.Channel}s and {@see org.apache.activeio.ChannelServer}s.
  * 
  * Each URI scheme that {@see ChannelFactory}object handles will have a
- * properties file located at: "META-INF/org.apache.activeio.ChannelFactory/{scheme}".
+ * properties file located at: "META-INF/services/org/apache/activeio/channel/{scheme}".
  * 
  */
 public class ChannelFactory implements SyncChannelFactory, AsyncChannelFactory {
@@ -63,7 +63,7 @@ public class ChannelFactory implements SyncChannelFactory, AsyncChannelFactory {
         });
     }
 
-    private static FactoryFinder finder = new FactoryFinder("META-INF/org.apache.activeio.ChannelFactory/");
+    private static FactoryFinder finder = new FactoryFinder("META-INF/services/org/apache/activeio/channel/");
 
     public SyncChannel openSyncChannel(URI location) throws IOException {
         SyncChannelFactory factory = getSynchChannelFactory(location.getScheme());
