@@ -43,6 +43,7 @@ public class MessageList extends Assert implements MessageListener {
     private Object semaphore;
     private boolean verbose;
     private MessageListener parent;
+    private long maximumDuration = 15000L;
 
     public MessageList() {
         this(new Object());
@@ -134,6 +135,10 @@ public class MessageList extends Assert implements MessageListener {
                 if (hasReceivedMessages(messageCount)) {
                     break;
                 }
+                long duration = System.currentTimeMillis() - start;
+                if (duration > maximumDuration ) {
+                    break;
+                }
                 synchronized (semaphore) {
                     semaphore.wait(4000);
                 }
@@ -144,28 +149,43 @@ public class MessageList extends Assert implements MessageListener {
         }
         long end = System.currentTimeMillis() - start;
 
-        System.out.println("End of wait for " + end + " millis");
+        System.out.println("End of wait for " + end + " millis and received: " + getMessageCount() + " messages");
     }
 
     /**
      * Performs a testing assertion that the correct number of messages have
-     * been received
+     * been received without waiting
+     * 
+     * @param messageCount
+     */
+    public void assertMessagesReceivedNoWait(int messageCount) {
+        assertEquals("expected number of messages when received", messageCount, getMessageCount());
+    }
+    
+    /**
+     * Performs a testing assertion that the correct number of messages have
+     * been received waiting for the messages to arrive up to a fixed amount of time.
      * 
      * @param messageCount
      */
     public void assertMessagesReceived(int messageCount) {
         waitForMessagesToArrive(messageCount);
 
-        assertEquals("expected number of messages when received: " + getMessages(), messageCount, getMessageCount());
+        assertMessagesReceivedNoWait(messageCount);
     }
 
+    /**
+     * Asserts that there are at least the given number of messages received without waiting.
+     */
     public void assertAtLeastMessagesReceived(int messageCount) {
-        waitForMessagesToArrive(messageCount);
-
         int actual = getMessageCount();
         assertTrue("at least: " + messageCount + " messages received. Actual: " + actual, actual >= messageCount);
     }
 
+    /**
+     * Asserts that there are at most the number of messages received without waiting
+     * @param messageCount
+     */
     public void assertAtMostMessagesReceived(int messageCount) {
         int actual = getMessageCount();
         assertTrue("at most: " + messageCount + " messages received. Actual: " + actual, actual <= messageCount);

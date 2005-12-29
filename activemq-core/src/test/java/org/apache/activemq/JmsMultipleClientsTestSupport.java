@@ -90,7 +90,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
             // Wait for all producers to finish sending
             synchronized (producerLock) {
                 while (producerLock.get() != 0) {
-                    producerLock.wait();
+                    producerLock.wait(2000);
                 }
             }
 
@@ -169,16 +169,16 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     protected TopicSubscriber createDurableSubscriber(Connection conn, Destination dest, String name) throws Exception {
         conn.setClientID(name);
         connections.add(conn);
+        conn.start();
 
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final TopicSubscriber consumer = sess.createDurableSubscriber((javax.jms.Topic)dest, name);
-        conn.start();
 
         return consumer;
     }
 
-    protected void waitForAllMessagesToBeReceived(int timeout) throws Exception {
-        //Thread.sleep(timeout);
+    protected void waitForAllMessagesToBeReceived(int messageCount) throws Exception {
+        allMessagesList.waitForMessagesToArrive(messageCount);
     }
 
     protected ActiveMQDestination createDestination() throws JMSException {
@@ -233,7 +233,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
     protected void assertConsumerReceivedXMessages(MessageConsumer consumer, int msgCount) {
         MessageList messageList = (MessageList)consumers.get(consumer);
-        messageList.assertMessagesReceived(msgCount);
+        messageList.assertMessagesReceivedNoWait(msgCount);
     }
 
     protected void assertEachConsumerReceivedAtLeastXMessages(int msgCount) {
@@ -255,7 +255,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     }
 
     protected void assertTotalMessagesReceived(int msgCount) {
-        allMessagesList.assertMessagesReceived(msgCount);
+        allMessagesList.assertMessagesReceivedNoWait(msgCount);
         
         // now lets count the individual messages received 
         int totalMsg = 0;
