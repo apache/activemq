@@ -17,8 +17,8 @@
 
 package org.apache.activemq.web;
 
-import org.activemq.command.ActiveMQQueue;
-import org.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
