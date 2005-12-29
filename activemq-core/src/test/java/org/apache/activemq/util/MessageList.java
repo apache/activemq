@@ -35,6 +35,7 @@ public class MessageList extends Assert implements MessageListener {
     private List messages = new ArrayList();
     private Object semaphore;
     private boolean verbose;
+    private MessageListener parent;
 
     public MessageList() {
         this(new Object());
@@ -77,6 +78,9 @@ public class MessageList extends Assert implements MessageListener {
     }
 
     public void onMessage(Message message) {
+        if (parent != null) {
+            parent.onMessage(message);
+        }
         synchronized (semaphore) {
             messages.add(message);
             semaphore.notifyAll();
@@ -127,6 +131,19 @@ public class MessageList extends Assert implements MessageListener {
         assertEquals("expected number of messages when received: " + getMessages(), messageCount, getMessageCount());
     }
 
+    public void assertAtLeastMessagesReceived(int messageCount) {
+        waitForMessagesToArrive(messageCount);
+
+        int actual = getMessageCount();
+        assertTrue("at least: " + messageCount + " messages received. Actual: " + actual, actual >= messageCount);
+    }
+
+    public void assertAtMostMessagesReceived(int messageCount) {
+        int actual = getMessageCount();
+        assertTrue("at most: " + messageCount + " messages received. Actual: " + actual, actual <= messageCount);
+    }
+
+
     public boolean hasReceivedMessage() {
         return getMessageCount() == 0;
     }
@@ -143,4 +160,16 @@ public class MessageList extends Assert implements MessageListener {
         this.verbose = verbose;
     }
 
+    public MessageListener getParent() {
+        return parent;
+    }
+
+    /**
+     * Allows a parent listener to be specified such as to aggregate messages consumed across consumers
+     */
+    public void setParent(MessageListener parent) {
+        this.parent = parent;
+    }
+    
+    
 }
