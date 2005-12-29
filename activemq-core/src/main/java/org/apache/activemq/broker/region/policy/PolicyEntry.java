@@ -34,7 +34,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private RedeliveryPolicy redeliveryPolicy;
-    private boolean sendAdvisoryIfNoConsumers = true;
+    private boolean sendAdvisoryIfNoConsumers;
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {

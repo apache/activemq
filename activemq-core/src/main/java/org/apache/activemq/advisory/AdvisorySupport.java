@@ -51,22 +51,22 @@ public class AdvisorySupport {
     }
     
     public static ActiveMQTopic getExpiredTopicMessageAdvisoryTopic(ActiveMQDestination destination) {
-        String name = EXPIRED_TOPIC_MESSAGES_TOPIC_PREFIX+destination.getQualifiedName();
+        String name = EXPIRED_TOPIC_MESSAGES_TOPIC_PREFIX+destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
     
     public static ActiveMQTopic getExpiredQueueMessageAdvisoryTopic(ActiveMQDestination destination) {
-        String name = EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX+destination.getQualifiedName();
+        String name = EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX+destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
     
     public static ActiveMQTopic getNoTopicConsumersAdvisoryTopic(ActiveMQDestination destination) {
-        String name = NO_TOPIC_CONSUMERS_TOPIC_PREFIX+destination.getQualifiedName();
+        String name = NO_TOPIC_CONSUMERS_TOPIC_PREFIX+destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
     
     public static ActiveMQTopic getNoQueueConsumersAdvisoryTopic(ActiveMQDestination destination) {
-        String name = NO_QUEUE_CONSUMERS_TOPIC_PREFIX+destination.getQualifiedName();
+        String name = NO_QUEUE_CONSUMERS_TOPIC_PREFIX+destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
     

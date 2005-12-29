@@ -59,7 +59,7 @@ public class Topic implements Destination {
 
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
-    private boolean sendAdvisoryIfNoConsumers = true;
+    private boolean sendAdvisoryIfNoConsumers;
 
     public Topic(ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory) {
@@ -320,7 +320,7 @@ public class Topic implements Destination {
                 // letter queue
                 ActiveMQDestination originalDestination = message.getDestination();
                 if (!AdvisorySupport.isAdvisoryTopic(originalDestination)) {
-                    ActiveMQTopic advisoryTopic = AdvisorySupport.getExpiredTopicMessageAdvisoryTopic(originalDestination);
+                    ActiveMQTopic advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(originalDestination);
                     message.setDestination(advisoryTopic);
                     context.getBroker().send(context, message);
                 }

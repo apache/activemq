@@ -66,6 +66,10 @@ public class TestSupport extends TestCase {
         }
     }
 
+    protected Destination createDestination() {
+        return createDestination(getClass().getName() + "." + getName());
+    }
+
     /**
      * @param messsage
      * @param firstSet
