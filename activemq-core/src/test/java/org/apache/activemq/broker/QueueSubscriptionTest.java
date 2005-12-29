@@ -137,11 +137,11 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         startConsumers(consumerFactory, dest);
 
         // Wait for consumers to setup
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
         startProducers(dest, messageCount);
 
         // Wait for messages to be received. Make it proportional to the messages delivered.
-        waitForAllMessagesToBeReceived((producerCount * messageCount) / 2000);
+        waitForAllMessagesToBeReceived(messageCount * producerCount);
     }
 }
