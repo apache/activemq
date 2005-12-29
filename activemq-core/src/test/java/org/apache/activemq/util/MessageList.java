@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.util;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import junit.framework.Assert;
 
@@ -43,6 +43,26 @@ public class MessageList extends Assert implements MessageListener {
 
     public MessageList(Object semaphore) {
         this.semaphore = semaphore;
+    }
+
+    public boolean equals(Object that) {
+        if (that instanceof MessageList) {
+            MessageList thatList = (MessageList) that;
+            return getMessages().equals(thatList.getMessages());
+        }
+        return false;
+    }
+
+    public int hashCode() {
+        synchronized (semaphore) {
+            return messages.hashCode() + 1;
+        }
+    }
+
+    public String toString() {
+        synchronized (semaphore) {
+        return messages.toString();
+        }
     }
 
     /**
