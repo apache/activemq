@@ -175,11 +175,14 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
                         Message message = node.getMessage();
                         if( message !=null ) {
                             
-                            // TODO is this meant to be == null - it was != ?
-                            if( message.getOriginalDestination()==null )
+                            // TODO is this meant to be == null?
+                            if( message.getOriginalDestination()!=null )
                                 message.setOriginalDestination(message.getDestination());
                             
                             ActiveMQDestination originalDestination = message.getOriginalDestination();
+                            if (originalDestination == null) {
+                                originalDestination = message.getDestination();
+                            }
                             DeadLetterStrategy deadLetterStrategy = node.getRegionDestination().getDeadLetterStrategy();
                             ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(originalDestination);
                             message.setDestination(deadLetterDestination);
