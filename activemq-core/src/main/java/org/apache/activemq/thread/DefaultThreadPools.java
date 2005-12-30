@@ -18,6 +18,7 @@ package org.apache.activemq.thread;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
 
 /**
  * 
@@ -25,7 +26,17 @@ import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecuto
  */
 public class DefaultThreadPools {
 
-    private static final Executor defaultPool = new ScheduledThreadPoolExecutor(5);
+    private static final Executor defaultPool;
+    static {
+        defaultPool = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "ActiveMQ Default Thread Pool Thread");
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+    }
+    
     private static final TaskRunnerFactory defaultTaskRunnerFactory = new TaskRunnerFactory(defaultPool,10);
     
     public static Executor getDeaultPool() {
