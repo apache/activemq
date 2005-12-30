@@ -56,8 +56,8 @@ public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicC
      * @param factoryStats
      * @throws Exception 
      */
-    public ActiveMQXAConnection(Transport transport, String theUserName, String thePassword, JMSStatsImpl factoryStats) throws Exception {
-        super(transport, theUserName, thePassword, factoryStats);
+    protected ActiveMQXAConnection(Transport transport, JMSStatsImpl factoryStats) throws Exception {
+        super(transport, factoryStats);
     }
 
     public XASession createXASession() throws JMSException {

@@ -102,7 +102,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     // Connection state variables
     private final ConnectionInfo info;
     private ExceptionListener exceptionListener;
-    private String resourceManagerId;
     private boolean clientIDSet;
     private boolean isConnectionInfoSentToBroker;
     private boolean userSpecifiedClientID;
@@ -145,6 +144,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private AdvisoryConsumer advisoryConsumer;
     private final CountDownLatch brokerInfoReceived = new CountDownLatch(1);
 
+    private BrokerInfo brokerInfo;
+
 
 
     /**
@@ -155,21 +156,26 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param password
      * @throws Exception 
      */
-    protected ActiveMQConnection(Transport transport, String userName, String password, JMSStatsImpl factoryStats)
+    protected ActiveMQConnection(Transport transport, JMSStatsImpl factoryStats)
             throws Exception {
-        this.transport = transport;
         this.info = new ConnectionInfo(new ConnectionId(connectionIdGenerator.generateId()));
-        this.info.setUserName(userName);
-        this.info.setPassword(password);
-
         this.connectionSessionId = new SessionId(info.getConnectionId(), -1);
         
-        this.factoryStats = factoryStats;
-        this.factoryStats.addConnection(this);
-        this.stats = new JMSConnectionStatsImpl(sessions, this instanceof XAConnection);
+        this.transport = transport;
         this.transport.setTransportListener(this);
 
-        transport.start();
+        this.stats = new JMSConnectionStatsImpl(sessions, this instanceof XAConnection);
+        this.factoryStats = factoryStats;
+        this.factoryStats.addConnection(this);
+    }
+
+
+    protected void setUserName(String userName) {
+        this.info.setUserName(userName);
+    }
+
+    protected void setPassword(String password) {
+        this.info.setPassword(password);
     }
 
     /**
@@ -1203,9 +1209,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public String getResourceManagerId() throws JMSException {
         waitForBrokerInfo();
-        if( resourceManagerId==null )
-            throw new JMSException("Resource manager id could not be determined.");            
-        return resourceManagerId;
+        if( brokerInfo==null )
+            throw new JMSException("Connection failed before Broker info was received.");            
+        return brokerInfo.getBrokerId().getBrokerId();
     }
 
     /**
@@ -1213,7 +1219,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public RedeliveryPolicy getRedeliveryPolicy() throws JMSException {
-        waitForBrokerInfo();
         return redeliveryPolicy;
     }
 
@@ -1267,15 +1272,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     dispatcher.dispatch(md);
                 }
             } else if ( command.isBrokerInfo() ) {
-                BrokerInfo brokerInfo = (BrokerInfo)command;
-                resourceManagerId = brokerInfo.getBrokerId().getBrokerId();
-                if( redeliveryPolicy == null ) {
-                    if( brokerInfo.getRedeliveryPolicy()!=null ) {
-                        redeliveryPolicy = brokerInfo.getRedeliveryPolicy();
-                    } else {
-                        redeliveryPolicy = new RedeliveryPolicy();
-                    }
-                }
+                this.brokerInfo = (BrokerInfo)command;
                 brokerInfoReceived.countDown();
             }
             else if (command instanceof ControlCommand) {

@@ -19,22 +19,6 @@ package org.apache.activemq.broker.jmx;
 import org.apache.activemq.Service;
 
 public interface ConnectorViewMBean extends Service {
-
-    public short getBackOffMultiplier();
-
-    public long getInitialRedeliveryDelay();
-
-    public int getMaximumRedeliveries();
-
-    public boolean isUseExponentialBackOff();
-
-    public void setBackOffMultiplier(short backOffMultiplier);
-
-    public void setInitialRedeliveryDelay(long initialRedeliveryDelay);
-
-    public void setMaximumRedeliveries(int maximumRedeliveries);
-
-    public void setUseExponentialBackOff(boolean useExponentialBackOff);
     
     /**
      * Resets the statistics
