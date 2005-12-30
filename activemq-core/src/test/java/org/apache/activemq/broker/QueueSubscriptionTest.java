@@ -30,6 +30,18 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         topic = false;
     }
 
+    public void testManyProducersOneConsumer() throws Exception {
+        consumerCount = 1;
+        producerCount = 10;
+        messageCount  = 100;
+        messageSize   = 1; // 1 byte
+        prefetchCount = 10;
+
+        doMultipleClientsTest();
+
+        assertTotalMessagesReceived(messageCount * producerCount);
+    }
+
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
         consumerCount = 2;
         producerCount = 1;
@@ -102,18 +114,6 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         assertTotalMessagesReceived(messageCount * producerCount);
     }
 
-    public void testManyProducersOneConsumer() throws Exception {
-        consumerCount = 1;
-        producerCount = 50;
-        messageCount  = 100;
-        messageSize   = 1; // 1 byte
-        prefetchCount = 10;
-
-        doMultipleClientsTest();
-
-        assertTotalMessagesReceived(messageCount * producerCount);
-    }
-
     public void testManyProducersManyConsumers() throws Exception {
         consumerCount = 50;
         producerCount = 50;
@@ -137,7 +137,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         startConsumers(consumerFactory, dest);
 
         // Wait for consumers to setup
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         startProducers(dest, messageCount);
 

@@ -37,6 +37,7 @@ public class QueueSubscription extends PrefetchSubscription {
     public void add(MessageReference node) throws Throwable {
         super.add(node);
     }
+    
     /**
      * In the queue case, mark the node as dropped and then a gc cycle will remove it from 
      * the queue.

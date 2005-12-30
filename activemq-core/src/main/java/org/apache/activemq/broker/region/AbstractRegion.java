@@ -63,16 +63,16 @@ abstract public class AbstractRegion implements Region {
         synchronized(destinationsMutex){
             destinations.put(destination,dest);
             destinationMap.put(destination,dest);
-        }
-
-        // Add all consumers that are interested in the destination. 
-        for (Iterator iter = subscriptions.values().iterator(); iter.hasNext();) {
-            Subscription sub = (Subscription) iter.next();
-            if( sub.matches(destination) ) {
-                dest.addSubscription(context, sub);
+            
+            // Add all consumers that are interested in the destination. 
+            for (Iterator iter = subscriptions.values().iterator(); iter.hasNext();) {
+                Subscription sub = (Subscription) iter.next();
+                if( sub.matches(destination) ) {
+                    dest.addSubscription(context, sub);
+                }
             }
+            return dest;
         }
-        return dest;
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
