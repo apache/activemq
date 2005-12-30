@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.filter.MessageEvaluationContext;
-
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Abstraction to allow different dispatching policies to be plugged

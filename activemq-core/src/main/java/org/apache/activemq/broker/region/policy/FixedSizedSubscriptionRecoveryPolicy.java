@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -27,6 +24,9 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.memory.list.DestinationBasedMessageList;
 import org.apache.activemq.memory.list.MessageList;
 import org.apache.activemq.memory.list.SimpleMessageList;
+
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed

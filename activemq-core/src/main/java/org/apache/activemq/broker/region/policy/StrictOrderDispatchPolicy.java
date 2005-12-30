@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import java.util.Iterator;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Iterator;
 
 /**
  * Dispatch policy that causes every subscription to see messages in the same order.

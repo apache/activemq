@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -67,6 +69,7 @@ public class Queue implements Destination {
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     protected final MessageStore store;
     protected int highestSubscriptionPriority;
+    private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
 
     public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store,
             DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Throwable {
@@ -330,6 +333,14 @@ public class Queue implements Destination {
 
     public void setDispatchPolicy(DispatchPolicy dispatchPolicy) {
         this.dispatchPolicy = dispatchPolicy;
+    }
+
+    public DeadLetterStrategy getDeadLetterStrategy() {
+        return deadLetterStrategy;
+    }
+
+    public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
+        this.deadLetterStrategy = deadLetterStrategy;
     }
 
     // Implementation methods

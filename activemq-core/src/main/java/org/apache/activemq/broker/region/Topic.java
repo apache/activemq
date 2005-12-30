@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
@@ -60,6 +62,7 @@ public class Topic implements Destination {
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
     private boolean sendAdvisoryIfNoConsumers;
+    private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
 
     public Topic(ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory) {
@@ -279,6 +282,14 @@ public class Topic implements Destination {
 
     public MessageStore getMessageStore() {
         return store;
+    }
+
+    public DeadLetterStrategy getDeadLetterStrategy() {
+        return deadLetterStrategy;
+    }
+
+    public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
+        this.deadLetterStrategy = deadLetterStrategy;
     }
 
     // Implementation methods

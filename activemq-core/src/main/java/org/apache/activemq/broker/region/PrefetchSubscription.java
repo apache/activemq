@@ -16,22 +16,22 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.transaction.Synchronization;
+
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * A subscription that honors the pre-fetch option of the ConsumerInfo.
@@ -43,7 +43,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
     final protected LinkedList matched = new LinkedList();
     final protected LinkedList dispatched = new LinkedList();
     
-    final protected ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
     protected int delivered=0;
     
     int preLoadLimit=1024*100;
@@ -176,9 +175,13 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
                         Message message = node.getMessage();
                         if( message !=null ) {
                             
+                            // TODO is this meant to be == null?
                             if( message.getOriginalDestination()!=null )
                                 message.setOriginalDestination(message.getDestination());
-                            message.setDestination(dlqDestination);
+                            
+                            ActiveMQDestination originalDestination = message.getOriginalDestination();
+                            DeadLetterStrategy deadLetterStrategy = node.getRegionDestination().getDeadLetterStrategy();
+                            message.setDestination(deadLetterStrategy.getDeadLetterQueueFor(originalDestination));
                             
                             if( message.getOriginalTransactionId()!=null )
                                 message.setOriginalTransactionId(message.getTransactionId());
