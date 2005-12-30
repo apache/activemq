@@ -47,6 +47,7 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
     }
 
     protected Destination createDlqDestination() {
-        return new ActiveMQQueue("ActiveMQ.DLQ.Queue." + getClass().getName() + "." + getName());
+        String prefix = (topic) ? "ActiveMQ.DLQ.Topic.": "ActiveMQ.DLQ.Queue.";
+        return new ActiveMQQueue(prefix + getClass().getName() + "." + getName());
     }
 }
