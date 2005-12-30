@@ -33,7 +33,6 @@ public class BrokerInfo extends BaseCommand {
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.BROKER_INFO;
     BrokerId brokerId;
     String brokerURL;
-    RedeliveryPolicy redeliveryPolicy;
     
     BrokerInfo peerBrokerInfos[];
     String brokerName;
@@ -74,16 +73,6 @@ public class BrokerInfo extends BaseCommand {
     }
     public void setPeerBrokerInfos(BrokerInfo[] peerBrokerInfos) {
         this.peerBrokerInfos = peerBrokerInfos;
-    }
-
-    /**
-     * @openwire:property version=1
-     */
-    public RedeliveryPolicy getRedeliveryPolicy() {
-        return redeliveryPolicy;
-    }
-    public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
-        this.redeliveryPolicy = redeliveryPolicy;
     }
 
     /**

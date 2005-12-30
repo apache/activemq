@@ -67,7 +67,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
 
     // optimization flags
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-    private RedeliveryPolicy redeliveryPolicy;
+    private RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
 
     private boolean disableTimeStampsByDefault = false;
     private boolean onSendPrepareMessageBody = true;
@@ -198,8 +198,10 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
         Transport transport;
         try {
             transport = TransportFactory.connect(brokerURL,DEFAULT_CONNECTION_EXECUTOR);
-            ActiveMQConnection connection = new ActiveMQConnection(transport, userName, password, factoryStats);
+            ActiveMQConnection connection = new ActiveMQConnection(transport, factoryStats);
 
+            connection.setUserName(userName);
+            connection.setPassword(password);
             connection.setPrefetchPolicy(getPrefetchPolicy());
             connection.setDisableTimeStampsByDefault(isDisableTimeStampsByDefault());
             connection.setOnSendPrepareMessageBody(isOnSendPrepareMessageBody());
@@ -210,13 +212,13 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
             connection.setAsyncDispatch(isAsyncDispatch());
             connection.setUseAsyncSend(isUseAsyncSend());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
-            if (getRedeliveryPolicy() != null) {
-                connection.setRedeliveryPolicy(getRedeliveryPolicy());
-            }
+            connection.setRedeliveryPolicy(getRedeliveryPolicy());
+            
+            transport.start();
 
             if( clientID !=null )
                 connection.setClientID(clientID);
-            
+
             return connection;
         }
         catch (JMSException e) {

@@ -1,27 +1,30 @@
-/**
- *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+/** 
+ * <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a> 
+ * 
+ * Copyright 2005 Hiram Chirino
+ * Copyright 2005 Protique Ltd
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ * 
+ **/
 package org.apache.activemq.openwire.v1;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.apache.activemq.command.*;
 import org.apache.activemq.openwire.*;
+import org.apache.activemq.command.*;
 
 
 /**
@@ -77,7 +80,6 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
 		            info.setPeerBrokerInfos(null);
 		        }
         			
-        info.setRedeliveryPolicy((org.apache.activemq.command.RedeliveryPolicy) unmarsalNestedObject(wireFormat, dataIn, bs));
         info.setBrokerName(readString(dataIn, bs));
 
     }
@@ -94,7 +96,6 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         rc += marshal1CachedObject(wireFormat, info.getBrokerId(), bs);
         rc += writeString(info.getBrokerURL(), bs);
         rc += marshalObjectArray(wireFormat, info.getPeerBrokerInfos(), bs);
-        rc += marshal1NestedObject(wireFormat, info.getRedeliveryPolicy(), bs);
         rc += writeString(info.getBrokerName(), bs);
 
         return rc+0;
@@ -114,7 +115,6 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         marshal2CachedObject(wireFormat, info.getBrokerId(), dataOut, bs);
         writeString(info.getBrokerURL(), dataOut, bs);
         marshalObjectArray(wireFormat, info.getPeerBrokerInfos(), dataOut, bs);
-        marshal2NestedObject(wireFormat, info.getRedeliveryPolicy(), dataOut, bs);
         writeString(info.getBrokerName(), dataOut, bs);
 
     }
