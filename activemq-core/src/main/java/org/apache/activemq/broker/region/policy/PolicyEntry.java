@@ -35,6 +35,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private RedeliveryPolicy redeliveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
+    private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -89,4 +90,17 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setSendAdvisoryIfNoConsumers(boolean sendAdvisoryIfNoConsumers) {
         this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
     }
+
+    public DeadLetterStrategy getDeadLetterStrategy() {
+        return deadLetterStrategy;
+    }
+
+    /**
+     * Sets the policy used to determine which dead letter queue destination should be used
+     */
+    public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
+        this.deadLetterStrategy = deadLetterStrategy;
+    }
+    
+    
 }

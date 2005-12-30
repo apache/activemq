@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -50,4 +51,5 @@ public interface Destination extends Service {
     
     DestinationStatistics getDestinationStatistics();
     MessageStore getMessageStore();
+    DeadLetterStrategy getDeadLetterStrategy();
 }
