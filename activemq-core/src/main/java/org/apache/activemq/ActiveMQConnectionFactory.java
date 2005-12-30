@@ -30,6 +30,7 @@ import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
 
+import org.apache.activemq.command.RedeliveryPolicy;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -66,6 +67,8 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
 
     // optimization flags
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+    private RedeliveryPolicy redeliveryPolicy;
+
     private boolean disableTimeStampsByDefault = false;
     private boolean onSendPrepareMessageBody = true;
     private boolean optimizedMessageDispatch = true;
@@ -207,6 +210,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
             connection.setAsyncDispatch(isAsyncDispatch());
             connection.setUseAsyncSend(isUseAsyncSend());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
+            connection.setRedeliveryPolicy(getRedeliveryPolicy());
 
             if( clientID !=null )
                 connection.setClientID(clientID);
@@ -335,6 +339,17 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
      */
     public void setUseRetroactiveConsumer(boolean useRetroactiveConsumer) {
         this.useRetroactiveConsumer = useRetroactiveConsumer;
+    }
+
+    public RedeliveryPolicy getRedeliveryPolicy() {
+        return redeliveryPolicy;
+    }
+
+    /**
+     * Sets the global redelivery policy to be used when a message is delivered but the session is rolled back
+     */
+    public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
+        this.redeliveryPolicy = redeliveryPolicy;
     }
 
     /**

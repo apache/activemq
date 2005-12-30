@@ -1217,6 +1217,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         return redeliveryPolicy;
     }
 
+    /**
+     * Sets the redelivery policy to be used when messages are rolled back
+     */
+    public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
+        this.redeliveryPolicy = redeliveryPolicy;
+    }
+
     private void waitForBrokerInfo() throws JMSException {
         try {
             brokerInfoReceived.await();
