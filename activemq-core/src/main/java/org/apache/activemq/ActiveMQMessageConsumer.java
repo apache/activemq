@@ -649,10 +649,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
                 session.asyncSendPacket(ack);
 
-                // Adjust the counters
-                deliveredCounter -= deliveredMessages.size();
+                // Adjust the window size.
                 additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
-
+                rollbackCounter = 0;
+                redeliveryDelay = 0;
+                
             } else {
 
                 // stop the delivery of messages.
@@ -684,6 +685,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
 
+            deliveredCounter -= deliveredMessages.size();
             deliveredMessages.clear();
         }
 
