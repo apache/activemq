@@ -546,6 +546,14 @@ public class SelectorParser implements SelectorParserConstants {
     return !jj_3_6();
   }
 
+  final private boolean jj_3R_58() {
+    if (jj_scan_token(37)) return true;
+    if (jj_la == 0 && jj_scanpos == jj_lastpos) return false;
+    if (jj_3R_11()) return true;
+    if (jj_la == 0 && jj_scanpos == jj_lastpos) return false;
+    return false;
+  }
+
   final private boolean jj_3R_53() {
     if (jj_scan_token(32)) return true;
     if (jj_la == 0 && jj_scanpos == jj_lastpos) return false;
@@ -1154,14 +1162,6 @@ public class SelectorParser implements SelectorParserConstants {
     if (jj_scan_token(33)) return true;
     if (jj_la == 0 && jj_scanpos == jj_lastpos) return false;
     if (jj_3R_45()) return true;
-    if (jj_la == 0 && jj_scanpos == jj_lastpos) return false;
-    return false;
-  }
-
-  final private boolean jj_3R_58() {
-    if (jj_scan_token(37)) return true;
-    if (jj_la == 0 && jj_scanpos == jj_lastpos) return false;
-    if (jj_3R_11()) return true;
     if (jj_la == 0 && jj_scanpos == jj_lastpos) return false;
     return false;
   }

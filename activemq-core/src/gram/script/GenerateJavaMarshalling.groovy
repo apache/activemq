@@ -1,21 +1,19 @@
 /**
-* <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a>
-*
-* Copyright 2005 (C) LogicBlaze, Inc. http://www.logicblaze.com
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-**/
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import org.apache.activemq.openwire.tool.OpenWireScript
 
 /**
@@ -59,25 +57,23 @@ ${jclass.simpleName}Marshaller.class
 """
 
             file.withWriter { out |
-out << """/** 
- * <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a> 
- * 
- * Copyright 2005 Hiram Chirino
- * Copyright 2005 Protique Ltd
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
+out << """/**
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
- * limitations under the License. 
- * 
- **/
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.activemq.openwire.v${openwireVersion};
 
 import java.io.DataInputStream;
@@ -431,25 +427,23 @@ out << """
 
         def file = new File(destDir, "MarshallerFactory.java")
         file.withWriter { out |
-out << """/** 
- * <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a> 
- * 
- * Copyright 2005 Hiram Chirino
- * Copyright 2005 Protique Ltd
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
+out << """/**
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
- * limitations under the License. 
- * 
- **/
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.activemq.openwire.v${openwireVersion};
 
 import org.apache.activemq.openwire.DataStreamMarshaller;
