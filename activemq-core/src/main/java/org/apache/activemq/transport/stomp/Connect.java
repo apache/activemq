@@ -25,6 +25,7 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.util.IntrospectionSupport;
 
 class Connect implements StompCommand {
     private HeaderParser headerParser = new HeaderParser();
@@ -45,6 +46,9 @@ class Connect implements StompCommand {
         String clientId = headers.getProperty(Stomp.Headers.Connect.CLIENT_ID);
         
         final ConnectionInfo connectionInfo = new ConnectionInfo();
+        
+        IntrospectionSupport.setProperties(connectionInfo, headers, "activemq.");
+        
         connectionInfo.setConnectionId(format.getConnectionId());
         if( clientId!=null )
             connectionInfo.setClientId(clientId);
