@@ -18,9 +18,6 @@ package org.apache.activemq.broker.policy;
 
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -30,6 +27,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.jms.Topic;
 
 /**
@@ -49,6 +47,8 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected Destination dlqDestination;
     protected MessageConsumer dlqConsumer;
     protected BrokerService broker;
+    protected boolean transactedMode = false;
+    protected int acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -57,7 +57,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         connection = createConnection();
         connection.setClientID(toString());
 
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(transactedMode, acknowledgeMode);
         connection.start();
     }
 
@@ -80,6 +80,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
 
     protected void makeConsumer() throws JMSException {
         Destination destination = getDestination();
+        System.out.println("Consuming from: " + destination);
         if (durableSubscriber) {
             consumer = session.createDurableSubscriber((Topic) destination, destination.toString());
         }
@@ -96,17 +97,34 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     }
 
     protected void sendMessages() throws JMSException {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(getDestination());
         producer.setDeliveryMode(deliveryMode);
         producer.setTimeToLive(timeToLive);
 
         System.out.println("Sending " + messageCount + " messages to: " + getDestination());
         for (int i = 0; i < messageCount; i++) {
-            Message message = session.createTextMessage("msg: " + i);
+            Message message = createMessage(session, i);
             producer.send(message);
         }
     }
 
+    protected TextMessage createMessage(Session session, int i) throws JMSException {
+        return session.createTextMessage(getMessageText(i));
+    }
+
+    protected String getMessageText(int i) {
+        return "message: " + i;
+    }
+
+    protected void assertMessage(Message message, int i) throws Exception {
+        System.out.println("Received message: " + message);
+        assertNotNull("No message received for index: " + i, message);
+        assertTrue("Should be a TextMessage not: " + message, message instanceof TextMessage);
+        TextMessage textMessage = (TextMessage) message;
+        assertEquals("text of message: " + i, getMessageText(i), textMessage .getText());
+    }
+    
     protected abstract Destination createDlqDestination();
 
     public void testTransientTopicMessage() throws Exception {
@@ -143,5 +161,4 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         }
         return destination;
     }
-
 }

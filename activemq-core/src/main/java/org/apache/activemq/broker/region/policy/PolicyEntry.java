@@ -41,11 +41,17 @@ public class PolicyEntry extends DestinationMapEntry {
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
         }
+        if (deadLetterStrategy != null) {
+            queue.setDeadLetterStrategy(deadLetterStrategy);
+        }
     }
 
     public void configure(Topic topic) {
         if (dispatchPolicy != null) {
             topic.setDispatchPolicy(dispatchPolicy);
+        }
+        if (deadLetterStrategy != null) {
+            topic.setDeadLetterStrategy(deadLetterStrategy);
         }
         if (subscriptionRecoveryPolicy != null) {
             topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy);
