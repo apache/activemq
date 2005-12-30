@@ -21,7 +21,7 @@ import org.apache.activemq.broker.TopicSubscriptionTest;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
-import org.apache.activemq.util.MessageList;
+import org.apache.activemq.util.MessageIdList;
 
 import java.util.List;
 import java.util.Iterator;
@@ -42,6 +42,12 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         return broker;
     }
 
+    public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
+        super.testOneProducerTwoConsumersLargeMessagesOnePrefetch();
+
+        assertReceivedMessagesAreOrdered();
+    }
+
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesOnePrefetch();
 
@@ -50,12 +56,6 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
 
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
-
-        assertReceivedMessagesAreOrdered();
-    }
-
-    public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
-        super.testOneProducerTwoConsumersLargeMessagesOnePrefetch();
 
         assertReceivedMessagesAreOrdered();
     }
@@ -98,11 +98,11 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
 
         // Get basis of order
         Iterator i = consumers.keySet().iterator();
-        MessageList messageOrder = (MessageList)consumers.get(i.next());
+        MessageIdList messageOrder = (MessageIdList)consumers.get(i.next());
 
         for (;i.hasNext();) {
-            MessageList messageList = (MessageList)consumers.get(i.next());
-            assertTrue("Messages are not ordered.", messageOrder.equals(messageList));
+            MessageIdList messageIdList = (MessageIdList)consumers.get(i.next());
+            assertTrue("Messages are not ordered.", messageOrder.equals(messageIdList));
         }
     }
 }

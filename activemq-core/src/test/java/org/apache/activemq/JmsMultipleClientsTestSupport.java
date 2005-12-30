@@ -19,7 +19,7 @@ package org.apache.activemq;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.util.MessageList;
+import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerFactory;
 
@@ -53,11 +53,12 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     protected boolean useConcurrentSend = true;
     protected boolean durable = false;
     protected boolean topic = false;
+    protected boolean persistent = false;
 
     protected BrokerService broker;
     protected Destination destination;
     protected List connections = Collections.synchronizedList(new ArrayList());
-    protected MessageList allMessagesList = new MessageList();
+    protected MessageIdList allMessagesList = new MessageIdList();
 
     protected void startProducers(Destination dest, int msgCount) throws Exception {
         startProducers(createConnectionFactory(), dest, msgCount);
@@ -108,7 +109,8 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(destination);
-
+        producer.setDeliveryMode(persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
+        
         for (int i = 0; i < count; i++) {
             TextMessage msg = createTextMessage(session, "" + i);
             producer.send(msg);
@@ -149,7 +151,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
             } else {
                 consumer = createMessageConsumer(factory.createConnection(), dest);
             }
-            MessageList list = new MessageList();
+            MessageIdList list = new MessageIdList();
             list.setParent(allMessagesList);
             consumer.setMessageListener(list);
             consumers.put(consumer, list);
@@ -222,18 +224,18 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
      * Some helpful assertions for multiple consumers.
      */
     protected void assertConsumerReceivedAtLeastXMessages(MessageConsumer consumer, int msgCount) {
-        MessageList messageList = (MessageList)consumers.get(consumer);
-        messageList.assertAtLeastMessagesReceived(msgCount);
+        MessageIdList messageIdList = (MessageIdList)consumers.get(consumer);
+        messageIdList.assertAtLeastMessagesReceived(msgCount);
     }
 
     protected void assertConsumerReceivedAtMostXMessages(MessageConsumer consumer, int msgCount) {
-        MessageList messageList = (MessageList)consumers.get(consumer);
-        messageList.assertAtMostMessagesReceived(msgCount);
+        MessageIdList messageIdList = (MessageIdList)consumers.get(consumer);
+        messageIdList.assertAtMostMessagesReceived(msgCount);
     }
 
     protected void assertConsumerReceivedXMessages(MessageConsumer consumer, int msgCount) {
-        MessageList messageList = (MessageList)consumers.get(consumer);
-        messageList.assertMessagesReceivedNoWait(msgCount);
+        MessageIdList messageIdList = (MessageIdList)consumers.get(consumer);
+        messageIdList.assertMessagesReceivedNoWait(msgCount);
     }
 
     protected void assertEachConsumerReceivedAtLeastXMessages(int msgCount) {
@@ -260,8 +262,8 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
         // now lets count the individual messages received 
         int totalMsg = 0;
         for (Iterator i=consumers.keySet().iterator(); i.hasNext();) {
-            MessageList messageList = (MessageList)consumers.get(i.next());
-            totalMsg += messageList.getMessageCount();
+            MessageIdList messageIdList = (MessageIdList)consumers.get(i.next());
+            totalMsg += messageIdList.getMessageCount();
         }
         assertEquals("Total of consumers message count", msgCount, totalMsg);
     }
