@@ -1,20 +1,19 @@
 /**
- * 
- * Copyright 2005 LogicBlaze, Inc. http://www.logicblaze.com
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
- * limitations under the License. 
- * 
- **/
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.systest.task;
 
 import org.apache.activemq.systest.DestinationFactory;
@@ -25,9 +24,11 @@ import org.apache.activemq.systest.TopicOnlyScenario;
 import org.apache.tools.ant.DirectoryScanner;
 import org.codehaus.jam.JClass;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -45,7 +46,8 @@ public class SystemTestGenerator {
     private final DirectoryScanner brokersScanner;
     private final File baseDir;
     private final File scenariosFile;
-
+    private String licenseHeader;
+    
     public SystemTestGenerator(JClass[] classes, File destDir, DirectoryScanner clientsScanner, DirectoryScanner brokersScanner, File baseDir,
             File scenariosFile) {
         this.classes = classes;
@@ -163,25 +165,7 @@ public class SystemTestGenerator {
     }
 
     protected void generateFile(PrintWriter writer, JClass type, File clientFile, File brokerFile, String packageName, int destinationType) throws IOException {
-        writer.println("/**");
-        writer.println(" * <a href='http://activemq.org'>ActiveMQ: The Open Source Message Fabric</a> ");
-        writer.println(" * ");
-        writer.println(" * Copyright 2005 LogicBlaze, Inc.");
-        writer.println(" * ");
-        writer.println(" * Licensed under the Apache License, Version 2.0 (the 'License');");
-        writer.println(" * you may not use this file except in compliance with the License.");
-        writer.println(" *");
-        writer.println(" * You may obtain a copy of the License at");
-        writer.println(" *");
-        writer.println(" * http://www.apache.org/licenses/LICENSE-2.0");
-        writer.println(" *");
-        writer.println(" * Unless required by applicable law or agreed to in writing, software");
-        writer.println(" * distributed under the License is distributed on an 'AS IS' BASIS,");
-        writer.println(" * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.");
-        writer.println(" * See the License for the specific language governing permissions and");
-        writer.println(" * limitations under the License.");
-        writer.println(" *");
-        writer.println(" **/");
+        writer.println(getLicenseHeader());
         writer.println("package " + packageName + ";");
         writer.println();
         writer.println("import org.apache.activemq.systest.DestinationFactory;");
@@ -273,6 +257,29 @@ public class SystemTestGenerator {
         else {
             return implementsInterface(superclass, interfaceClass);
         }
+    }
+
+    public String getLicenseHeader() throws IOException {
+        if( licenseHeader == null ) {
+            // read the LICENSE_HEADER.txt into the licenseHeader variable.
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            InputStream is = SystemTestGenerator.class.getResourceAsStream("LICENSE_HEADER.txt");
+            try {
+                int c;
+                while( (c=is.read())>=0 ) {
+                    baos.write(c);
+                }
+            } finally {
+                is.close();
+            }
+            baos.close();
+            licenseHeader = new String(baos.toByteArray(),"UTF-8");
+        }
+        return licenseHeader;
+    }
+
+    public void setLicenseHeader(String licenseHeader) {
+        this.licenseHeader = licenseHeader;
     }
 
 }
