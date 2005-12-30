@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
@@ -24,6 +23,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Simple dispatch policy that sends a message to every subscription that 
@@ -35,7 +35,7 @@ import java.util.Iterator;
  */
 public class SimpleDispatchPolicy implements DispatchPolicy {
 
-    public boolean dispatch(ConnectionContext context, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
+    public boolean dispatch(ConnectionContext context, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Throwable {
         int count = 0;
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
             Subscription sub = (Subscription) iter.next();

@@ -96,7 +96,9 @@ public class Topic implements Destination {
             if (sub.getConsumerInfo().isRetroactive()) {
                 subscriptionRecoveryPolicy.recover(context, this, sub);
             }
-            consumers.add(sub);
+            synchronized(consumers) {
+                consumers.add(sub);
+            }
         }
     }
 
@@ -108,8 +110,11 @@ public class Topic implements Destination {
         dispatchValve.turnOff();
         try {
 
-            if (initialActivation)
-                consumers.add(sub);
+            if (initialActivation) {
+                synchronized(consumers) {
+                    consumers.add(sub);
+                }
+            }
 
             if (store != null) {
                 String clientId = sub.getClientId();
@@ -166,7 +171,9 @@ public class Topic implements Destination {
 
     public void removeSubscription(ConnectionContext context, Subscription sub) throws Throwable {
         destinationStatistics.getConsumers().decrement();
-        consumers.remove(sub);
+        synchronized(consumers) {
+            consumers.remove(sub);
+        }
         sub.remove(context, this);
     }
 
@@ -302,9 +309,11 @@ public class Topic implements Destination {
             if (!subscriptionRecoveryPolicy.add(context, message)) {
                 return;
             }
-            if (consumers.isEmpty()) {
-                onMessageWithNoConsumers(context, message);
-                return;
+            synchronized(consumers) {
+                if (consumers.isEmpty()) {
+                    onMessageWithNoConsumers(context, message);
+                    return;
+                }
             }
 
             msgContext.setDestination(destination);

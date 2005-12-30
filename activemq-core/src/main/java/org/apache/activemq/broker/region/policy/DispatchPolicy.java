@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.util.List;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
@@ -44,6 +44,6 @@ public interface DispatchPolicy {
      * 
      * @return true if at least one consumer was dispatched or false if there are no active subscriptions that could be dispatched
      */
-    boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable;
+    boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Throwable;
 
 }

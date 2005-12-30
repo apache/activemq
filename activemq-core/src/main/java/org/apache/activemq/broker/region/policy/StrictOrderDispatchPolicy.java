@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
@@ -24,6 +23,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Dispatch policy that causes every subscription to see messages in the same order.
@@ -33,15 +33,12 @@ import java.util.Iterator;
  * @version $Revision$
  */
 public class StrictOrderDispatchPolicy implements DispatchPolicy {
-    int i=0;
-    private final Object mutex = new Object();
     
-    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, CopyOnWriteArrayList consumers) throws Throwable {
+    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Throwable {
         // Big synch here so that only 1 message gets dispatched at a time.  Ensures 
         // Everyone sees the same order.
-        synchronized(mutex) {
+        synchronized(consumers) {
             int count = 0;
-            i++;
             for (Iterator iter = consumers.iterator(); iter.hasNext();) {
                 Subscription sub = (Subscription) iter.next();
                 

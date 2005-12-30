@@ -20,12 +20,13 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
-import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
@@ -55,7 +56,7 @@ public class Queue implements Destination {
     private final Log log;
 
     protected final ActiveMQDestination destination;
-    protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
+    protected final List consumers = new CopyOnWriteArrayList();
     protected final LinkedList messages = new LinkedList();
     protected final Valve dispatchValve = new Valve(true);
     protected final UsageManager usageManager;
@@ -123,7 +124,9 @@ public class Queue implements Destination {
 
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
-            consumers.add(sub);
+            synchronized (consumers) {
+                consumers.add(sub);
+            }
 
             highestSubscriptionPriority = calcHighestSubscriptionPriority();
             msgContext.setDestination(destination);
@@ -167,7 +170,9 @@ public class Queue implements Destination {
         dispatchValve.turnOff();
         try {
 
-            consumers.remove(sub);
+            synchronized (consumers) {
+                consumers.remove(sub);
+            }
             sub.remove(context, this);
 
             highestSubscriptionPriority = calcHighestSubscriptionPriority();
@@ -350,6 +355,7 @@ public class Queue implements Destination {
     }
 
     private void dispatch(ConnectionContext context, MessageReference node, Message message) throws Throwable {
+
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
@@ -358,8 +364,12 @@ public class Queue implements Destination {
                 messages.add(node);
             }
 
-            if (consumers.isEmpty())
-                return;
+            synchronized(consumers) {
+                if (consumers.isEmpty()) {
+                    log.debug("No subscriptions registered, will not dispatch message at this time.");
+                    return;
+                }
+            }
 
             msgContext.setDestination(destination);
             msgContext.setMessageReference(node);
@@ -374,10 +384,12 @@ public class Queue implements Destination {
 
     private int calcHighestSubscriptionPriority() {
         int rc = Integer.MIN_VALUE;
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            Subscription sub = (Subscription) iter.next();
-            if (sub.getConsumerInfo().getPriority() > rc) {
-                rc = sub.getConsumerInfo().getPriority();
+        synchronized (consumers) {
+            for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+                Subscription sub = (Subscription) iter.next();
+                if (sub.getConsumerInfo().getPriority() > rc) {
+                    rc = sub.getConsumerInfo().getPriority();
+                }
             }
         }
         return rc;
