@@ -20,7 +20,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.util.MessageList;
+import org.apache.activemq.util.MessageIdList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,13 +47,13 @@ public class PeerTransportTest extends TestCase {
     protected int deliveryMode = DeliveryMode.NON_PERSISTENT;
     protected MessageProducer[] producers;
     protected Connection[] connections;
-    protected MessageList messageList[];
+    protected MessageIdList messageIdList[];
 
     protected void setUp() throws Exception {
         
         connections = new Connection[NUMBER_IN_CLUSTER];
         producers = new MessageProducer[NUMBER_IN_CLUSTER];
-        messageList = new MessageList[NUMBER_IN_CLUSTER];
+        messageIdList = new MessageIdList[NUMBER_IN_CLUSTER];
         Destination destination = createDestination();
 
         String root = System.getProperty("activemq.store.dir");
@@ -67,8 +67,8 @@ public class PeerTransportTest extends TestCase {
             producers[i] = session.createProducer(destination);
             producers[i].setDeliveryMode(deliveryMode);
             MessageConsumer consumer = createMessageConsumer(session, destination);
-            messageList[i] = new MessageList();
-            consumer.setMessageListener(messageList[i]);
+            messageIdList[i] = new MessageIdList();
+            consumer.setMessageListener(messageIdList[i]);
         }
         System.out.println("Sleeping to ensure cluster is fully connected");
         Thread.sleep(10000);
@@ -120,7 +120,7 @@ public class PeerTransportTest extends TestCase {
         }
         
         for (int i = 0;i < NUMBER_IN_CLUSTER;i++) {
-            messageList[i].assertMessagesReceived(expectedReceiveCount());
+            messageIdList[i].assertMessagesReceived(expectedReceiveCount());
         }
     }
     

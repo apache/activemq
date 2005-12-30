@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-import javax.jms.TextMessage;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import junit.framework.Assert;
 
@@ -38,38 +37,38 @@ import junit.framework.Assert;
  * 
  * @version $Revision: 1.6 $
  */
-public class MessageList extends Assert implements MessageListener {
-    private List messages = new ArrayList();
+public class MessageIdList extends Assert implements MessageListener {
+    private List messageIds = new ArrayList();
     private Object semaphore;
     private boolean verbose;
     private MessageListener parent;
     private long maximumDuration = 15000L;
 
-    public MessageList() {
+    public MessageIdList() {
         this(new Object());
     }
 
-    public MessageList(Object semaphore) {
+    public MessageIdList(Object semaphore) {
         this.semaphore = semaphore;
     }
 
     public boolean equals(Object that) {
-        if (that instanceof MessageList) {
-            MessageList thatList = (MessageList) that;
-            return getMessages().equals(thatList.getMessages());
+        if (that instanceof MessageIdList) {
+            MessageIdList thatList = (MessageIdList) that;
+            return getMessageIds().equals(thatList.getMessageIds());
         }
         return false;
     }
 
     public int hashCode() {
         synchronized (semaphore) {
-            return messages.hashCode() + 1;
+            return messageIds.hashCode() + 1;
         }
     }
 
     public String toString() {
         synchronized (semaphore) {
-            return messages.toString();
+            return messageIds.toString();
         }
     }
 
@@ -78,31 +77,15 @@ public class MessageList extends Assert implements MessageListener {
      */
     public List flushMessages() {
         synchronized (semaphore) {
-            List answer = new ArrayList(messages);
-            messages.clear();
+            List answer = new ArrayList(messageIds);
+            messageIds.clear();
             return answer;
         }
     }
 
-    public synchronized List getMessages() {
+    public synchronized List getMessageIds() {
         synchronized (semaphore) {
-            return new ArrayList(messages);
-        }
-    }
-
-    public synchronized List getTextMessages() {
-        synchronized (semaphore) {
-            ArrayList l = new ArrayList();
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                try {
-                    TextMessage m = (TextMessage) iter.next();
-                    l.add(m.getText());
-                }
-                catch (Throwable e) {
-                    l.add("" + e);
-                }
-            }
-            return l;
+            return new ArrayList(messageIds);
         }
     }
 
@@ -110,18 +93,24 @@ public class MessageList extends Assert implements MessageListener {
         if (parent != null) {
             parent.onMessage(message);
         }
-        synchronized (semaphore) {
-            messages.add(message);
-            semaphore.notifyAll();
-        }
-        if (verbose) {
-            System.out.println("###Êreceived message: " + message);
+        String id=null;
+        try {
+            id = message.getJMSMessageID();
+            synchronized (semaphore) {
+                messageIds.add(id);
+                semaphore.notifyAll();
+            }
+            if (verbose) {
+                System.out.println("###Êreceived message: " + message);
+            }
+        } catch (JMSException e) {
+            e.printStackTrace();
         }
     }
 
     public int getMessageCount() {
         synchronized (semaphore) {
-            return messages.size();
+            return messageIds.size();
         }
     }
 

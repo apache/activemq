@@ -24,6 +24,18 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         topic = true;
     }
 
+    public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
+        consumerCount = 2;
+        producerCount = 1;
+        messageCount  = 100;
+        messageSize   = 1024 * 1024 * 1; // 1 MB
+        prefetchCount = 1;
+
+        doMultipleClientsTest();
+
+        assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+    }
+
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
         consumerCount = 2;
         producerCount = 1;
@@ -42,18 +54,6 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         messageCount  = 1000;
         messageSize   = 1024;
         prefetchCount = messageCount * 2;
-
-        doMultipleClientsTest();
-
-        assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
-    }
-
-    public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
-        consumerCount = 2;
-        producerCount = 1;
-        messageCount  = 10;
-        messageSize   = 1024 * 1024 * 1; // 1 MB
-        prefetchCount = 1;
 
         doMultipleClientsTest();
 

@@ -21,7 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
-import org.apache.activemq.util.MessageList;
+import org.apache.activemq.util.MessageIdList;
 
 import java.util.Iterator;
 import java.util.List;
@@ -59,8 +59,8 @@ public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
     public void assertOneConsumerReceivedAllMessages(int messageCount) throws Exception {
         boolean found = false;
         for (Iterator i=consumers.keySet().iterator(); i.hasNext();) {
-            MessageList messageList = (MessageList)consumers.get(i.next());
-            int count = messageList.getMessageCount();
+            MessageIdList messageIdList = (MessageIdList)consumers.get(i.next());
+            int count = messageIdList.getMessageCount();
             if (count > 0) {
                 if (found) {
                     fail("No other consumers should have received any messages");

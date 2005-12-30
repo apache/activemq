@@ -19,7 +19,7 @@ package org.apache.activemq.test.retroactive;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.MessageList;
+import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
@@ -60,7 +60,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         MessageConsumer consumer = session.createConsumer(destination);
-        MessageList listener = new MessageList();
+        MessageIdList listener = new MessageIdList();
         consumer.setMessageListener(listener);
         listener.waitForMessagesToArrive(messageCount);
         listener.assertMessagesReceived(messageCount);
