@@ -43,7 +43,7 @@ class Subscribe implements StompCommand {
         ci.setPrefetchSize(1000);
         ci.setDispatchAsync(true);
 
-        IntrospectionSupport.setProperties(ci, headers, "activemq:");
+        IntrospectionSupport.setProperties(ci, headers, "activemq.");
         
         ci.setDestination(DestinationNamer.convert(destination));
         
