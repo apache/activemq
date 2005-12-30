@@ -36,7 +36,7 @@ import javax.jms.Topic;
 public abstract class DeadLetterTestSupport extends TestSupport {
 
     protected int messageCount = 10;
-    protected long timeToLive = 250;
+    protected long timeToLive = 0;
     protected Connection connection;
     protected Session session;
     protected MessageConsumer consumer;

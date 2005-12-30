@@ -161,5 +161,7 @@ public class MessageDispatchChannel {
         }
     }
 
-
+    public String toString() {
+        return list.toString();
+    }
 }
