@@ -152,6 +152,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
             
         } else if( ack.isPoisonAck() ) {
             
+            // TODO: what if the message is already in a DLQ???
+            
             // Handle the poison ACK case: we need to send the message to a DLQ  
             if( ack.isInTransaction() )
                 throw new JMSException("Poison ack cannot be transacted: "+ack);
@@ -175,20 +177,16 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
                         Message message = node.getMessage();
                         if( message !=null ) {
                             
-                            // TODO is this meant to be == null?
+                            // The original destination and transaction id do not get filled when the message is first sent,
+                            // it is only populated if the message is routed to another destination like the DLQ
                             if( message.getOriginalDestination()!=null )
                                 message.setOriginalDestination(message.getDestination());
-                            
-                            ActiveMQDestination originalDestination = message.getOriginalDestination();
-                            if (originalDestination == null) {
-                                originalDestination = message.getDestination();
-                            }
-                            DeadLetterStrategy deadLetterStrategy = node.getRegionDestination().getDeadLetterStrategy();
-                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(originalDestination);
-                            message.setDestination(deadLetterDestination);
-                            
                             if( message.getOriginalTransactionId()!=null )
                                 message.setOriginalTransactionId(message.getTransactionId());
+                            
+                            DeadLetterStrategy deadLetterStrategy = node.getRegionDestination().getDeadLetterStrategy();
+                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message.getDestination());
+                            message.setDestination(deadLetterDestination);
                             message.setTransactionId(null);
                             message.evictMarshlledForm();
 
