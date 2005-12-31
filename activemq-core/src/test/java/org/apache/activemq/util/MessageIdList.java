@@ -125,11 +125,11 @@ public class MessageIdList extends Assert implements MessageListener {
                     break;
                 }
                 long duration = System.currentTimeMillis() - start;
-                if (duration > maximumDuration ) {
+                if (duration >= maximumDuration ) {
                     break;
                 }
                 synchronized (semaphore) {
-                    semaphore.wait(4000);
+                    semaphore.wait(maximumDuration-duration);
                 }
             }
             catch (InterruptedException e) {
