@@ -338,11 +338,29 @@ public class Topic implements Destination {
             if (sendAdvisoryIfNoConsumers) {
                 // allow messages with no consumers to be dispatched to a dead
                 // letter queue
-                ActiveMQDestination originalDestination = message.getDestination();
-                if (!AdvisorySupport.isAdvisoryTopic(originalDestination)) {
-                    ActiveMQTopic advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(originalDestination);
+                if (!AdvisorySupport.isAdvisoryTopic(destination)) {
+                    
+                    // The original destination and transaction id do not get filled when the message is first sent,
+                    // it is only populated if the message is routed to another destination like the DLQ
+                    if( message.getOriginalDestination()!=null )
+                        message.setOriginalDestination(message.getDestination());
+                    if( message.getOriginalTransactionId()!=null )
+                        message.setOriginalTransactionId(message.getTransactionId());
+
+                    ActiveMQTopic advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
                     message.setDestination(advisoryTopic);
-                    context.getBroker().send(context, message);
+                    message.setTransactionId(null);
+                    message.evictMarshlledForm();
+
+                    // Disable flow control for this since since we don't want to block.
+                    boolean originalFlowControl = context.isProducerFlowControl();
+                    try {
+                        context.setProducerFlowControl(false);
+                        context.getBroker().send(context, message);
+                    } finally {
+                        context.setProducerFlowControl(originalFlowControl);
+                    }
+                    
                 }
             }
         }
