@@ -217,6 +217,8 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
             }
         }
         broker.stop();
+        allMessagesList.flushMessages();
+        consumers.clear();
         super.tearDown();
     }
 
