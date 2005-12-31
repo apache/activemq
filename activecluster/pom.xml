@@ -25,6 +25,12 @@
   <name>ActiveCluster Project</name>
   <url>http://maven.apache.org</url>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/servicemix/trunk/activecluster</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/servicemix/trunk/activecluster</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/servicemix/trunk/activecluster/</url>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
