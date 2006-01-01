@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.systest.impl;
 
+import java.io.File;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.systest.BrokerAgent;
 
 import javax.jms.ConnectionFactory;
 
-import java.io.*;
-import java.util.Iterator;
 
 /**
  * Runs a broker in a separate process
@@ -94,20 +94,20 @@ public class SeparateBrokerProcessAgentImpl extends SeparateProcessAgent impleme
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Process createProcess() throws Exception {
-        ProcessBuilder builder = new ProcessBuilder(getCommands());
-        File workingDir = createBrokerWorkingDirectory();
-        
+        String commands[] = getCommands();
+
         System.out.print("About to execute command:");
-        for (Iterator iter = builder.command().iterator(); iter.hasNext();) {
-            System.out.print(" " + iter.next());
+        for (int i=0; i<commands.length; i++) {
+            System.out.print(" ");
+            System.out.print(commands[i]);
         }
         System.out.println();
+
+        File workingDir = createBrokerWorkingDirectory();
+
         System.out.println("In directory: " + workingDir);
-        
-        builder = builder.directory(workingDir);
-        builder = builder.redirectErrorStream(true);
-        
-        Process answer = builder.start();
+
+        Process answer = Runtime.getRuntime().exec(commands, null, workingDir);
         return answer;
     }
 
