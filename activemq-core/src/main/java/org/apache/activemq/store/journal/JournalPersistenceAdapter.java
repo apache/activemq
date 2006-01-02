@@ -221,7 +221,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         Scheduler.cancel(periodicCheckpointTask);
 
         // Take one final checkpoint and stop checkpoint processing.
-        checkpoint(false, true);
+        checkpoint(true, true);
         checkpointTask.shutdown();        
         checkpointExecutor.shutdown();
         
