@@ -90,9 +90,6 @@ public class MessageIdList extends Assert implements MessageListener {
     }
 
     public void onMessage(Message message) {
-        if (parent != null) {
-            parent.onMessage(message);
-        }
         String id=null;
         try {
             id = message.getJMSMessageID();
@@ -105,6 +102,9 @@ public class MessageIdList extends Assert implements MessageListener {
             }
         } catch (JMSException e) {
             e.printStackTrace();
+        }
+        if (parent != null) {
+            parent.onMessage(message);
         }
     }
 
