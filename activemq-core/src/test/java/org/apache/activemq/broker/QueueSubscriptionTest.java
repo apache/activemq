@@ -119,7 +119,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         producerCount = 50;
         messageCount  = 100;
         messageSize   = 1; // 1 byte
-        prefetchCount = 10;
+        prefetchCount = 100;
 
         doMultipleClientsTest();
 
