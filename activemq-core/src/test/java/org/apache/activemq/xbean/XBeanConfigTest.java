@@ -16,7 +16,12 @@
  */
 package org.apache.activemq.xbean;
 
+import java.net.URI;
+
+import junit.framework.TestCase;
+
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Topic;
@@ -29,10 +34,6 @@ import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.springframework.core.io.ClassPathResource;
-
-import junit.framework.TestCase;
 
 /**
  * 
@@ -107,9 +108,9 @@ public class XBeanConfigTest extends TestCase {
     }
 
     protected BrokerService createBroker() throws Exception {
-        BrokerFactoryBean factory = new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/xbean/activemq-policy.xml"));
-        factory.afterPropertiesSet();
-        return factory.getBroker();
+        String uri = "org/apache/activemq/xbean/activemq-policy.xml";
+        System.out.println("Loading broker configuration from the classpath with URI: " + uri);
+        return BrokerFactory.createBroker(new URI("xbean:"+uri));
     }
 
 }

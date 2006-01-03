@@ -16,12 +16,8 @@
  */
 package org.apache.activemq.test.retroactive;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.springframework.core.io.ClassPathResource;
+import java.net.URI;
+import java.util.Date;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -30,7 +26,11 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import java.util.Date;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.MessageIdList;
 
 /**
  * 
@@ -93,9 +93,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
     protected BrokerService createBroker() throws Exception {
         String uri = getBrokerXml();
         System.out.println("Loading broker configuration from the classpath with URI: " + uri);
-        BrokerFactoryBean factory = new BrokerFactoryBean(new ClassPathResource(uri));
-        factory.afterPropertiesSet();
-        return factory.getBroker();
+        return BrokerFactory.createBroker(new URI("xbean:"+uri));
     }
 
     protected void startBroker() throws Exception {

@@ -88,6 +88,7 @@ public class SpringTest extends TestCase {
      * @throws Exception
      */
     protected void assertSenderConfig(String config) throws Exception {
+        Thread.currentThread().setContextClassLoader(SpringTest.class.getClassLoader());
         context = new ClassPathXmlApplicationContext(config);
 
         consumer = (SpringConsumer) context.getBean("consumer");
