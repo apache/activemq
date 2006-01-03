@@ -20,6 +20,8 @@ import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 /**
  * @version $Revision: 1.3 $
  */
@@ -32,5 +34,11 @@ public class SimpleDurableTopicTest extends SimpleTopicTest{
 
     protected PerfConsumer createConsumer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
         return new PerfConsumer(fac,dest,"subs:"+number);
+    }
+    
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        ActiveMQConnectionFactory cf = super.createConnectionFactory();
+        cf.setClientID(getName());
+        return cf;
     }
 }
