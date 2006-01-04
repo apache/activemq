@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
 
 import org.apache.activemq.Service;
@@ -60,6 +60,8 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.jms.InvalidClientIDException;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
@@ -447,12 +449,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     public Response processAddConnection(ConnectionInfo info) throws Throwable {
         // Setup the context.
+        String clientId = info.getClientId();
         ConnectionContext context = new ConnectionContext();
         context.setConnection(this);
         context.setBroker(broker);
         context.setConnector(connector);
         context.setTransactions(new ConcurrentHashMap());
-        String clientId = info.getClientId();
         context.setClientId(clientId);
         context.setUserName(info.getUserName());
         context.setConnectionId(info.getConnectionId());
