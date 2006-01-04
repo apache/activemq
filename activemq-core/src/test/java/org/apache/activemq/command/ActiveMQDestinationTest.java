@@ -17,7 +17,13 @@
 package org.apache.activemq.command;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -62,6 +68,15 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
         assertNotNull(options);
         assertEquals("v1", options.get("k1"));
         assertEquals("v2", options.get("k2"));
+    }
+    
+    public void testSorting() throws Exception {
+        SortedSet set = new TreeSet();
+        ActiveMQDestination[] destinations = { new ActiveMQQueue("A"), new ActiveMQQueue("B"), new ActiveMQTopic("A"), new ActiveMQTopic("B") };
+        List expected = Arrays.asList(destinations);
+        set.addAll(expected);
+        List actual = new ArrayList(set);
+        assertEquals("Sorted order", expected, actual);
     }
 
     public static Test suite() {

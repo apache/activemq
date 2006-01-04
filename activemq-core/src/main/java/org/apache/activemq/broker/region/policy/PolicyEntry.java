@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.command.RedeliveryPolicy;
 import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
@@ -33,9 +32,8 @@ public class PolicyEntry extends DestinationMapEntry {
 
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
-    private RedeliveryPolicy redeliveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
-    private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
+    private DeadLetterStrategy deadLetterStrategy;
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -67,14 +65,6 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setDispatchPolicy(DispatchPolicy policy) {
         this.dispatchPolicy = policy;
-    }
-
-    public RedeliveryPolicy getRedeliveryPolicy() {
-        return redeliveryPolicy;
-    }
-
-    public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
-        this.redeliveryPolicy = redeliveryPolicy;
     }
 
     public SubscriptionRecoveryPolicy getSubscriptionRecoveryPolicy() {
