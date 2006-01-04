@@ -157,6 +157,7 @@
             <j:if test="${dependency.extension == 'jar'}">           
                <j:set var="classpath" value="${classpath} ../lib/optional/${artifact.name}"/>
             </j:if>
+            <!--
             <j:if test="${dependency.extension == 'rar'}">    
                <ant:unzip src="${artifact.path}" dest="${optionalDir}">
                   <ant:patternset>
@@ -164,6 +165,7 @@
                   </ant:patternset>
                </ant:unzip>               
             </j:if>
+            -->
         </j:if>
     </j:forEach>
 
