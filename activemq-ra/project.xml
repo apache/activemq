@@ -83,9 +83,6 @@
       <groupId>activemq</groupId>
       <artifactId>jmdns</artifactId>
       <version>${jmdns_version}</version>
-      <properties>
-        <rar.bundle>true</rar.bundle>
-      </properties>
     </dependency>
 
     <dependency>
