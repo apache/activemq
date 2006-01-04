@@ -641,6 +641,7 @@ public class Main {
             Class brokerFactory = cl.loadClass(BROKER_FACTORY_CLASS);
             Method createBroker = brokerFactory.getMethod("createBroker", new Class[] { URI.class });
             broker = createBroker.invoke(null, new Object[] { configURI });
+            brokers.add(broker);
 
             Method start = broker.getClass().getMethod("start", new Class[]{});
             start.invoke(broker, new Object[]{});
@@ -851,7 +852,6 @@ public class Main {
     }
 
     public String getVersion() throws Throwable {
-        // TODO: Why is version returned invalid?
         ClassLoader cl = getClassLoader();
         // Use reflection to get the version
         try {
