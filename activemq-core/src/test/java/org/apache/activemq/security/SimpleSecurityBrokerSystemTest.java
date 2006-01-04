@@ -90,6 +90,9 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
             writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), users);
 
             DestinationMap adminAccess = new DestinationMap();
+            adminAccess.put(new ActiveMQTopic(">"), admins);
+            adminAccess.put(new ActiveMQTopic(">"), users);
+            adminAccess.put(new ActiveMQTopic(">"), guests);
             adminAccess.put(new ActiveMQQueue(">"), admins);
             adminAccess.put(new ActiveMQQueue(">"), users);
             adminAccess.put(new ActiveMQQueue(">"), guests);
