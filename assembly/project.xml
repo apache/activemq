@@ -95,9 +95,6 @@
       <artifactId>activesoap</artifactId>
       <version>${activesoap_version}</version>
       <type>jar</type>
-      <properties>
-        <optional>true</optional>
-      </properties>
     </dependency>
 
     <!-- used to support optional transport configuration via URI query strings -->
@@ -142,18 +139,12 @@
       <groupId>jetty</groupId>
       <artifactId>jetty</artifactId>
       <version>${jetty_version}</version>
-      <properties>
-        <optional>true</optional>
-      </properties>
     </dependency>
 
     <dependency>
       <groupId>jrms</groupId>
       <artifactId>jrms</artifactId>
       <version>${jrms_version}</version>
-      <properties>
-        <optional>true</optional>
-      </properties>
     </dependency>
 
     <dependency>
@@ -178,9 +169,6 @@
       <groupId>activemq</groupId>
       <artifactId>jmdns</artifactId>
       <version>${jmdns_version}</version>
-      <properties>
-        <optional>true</optional>
-      </properties>
     </dependency>
 
     <dependency>
