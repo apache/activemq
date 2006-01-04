@@ -165,20 +165,34 @@ public class DestinationMapTest extends TestCase {
         put("TEST.XYZ.D4", v4);
         put("TEST.BAR.D3", v5);
         put("TEST.*.D2", v6);
-
-
+        
+        
         assertMapValue("TEST.*.D3", v2, v3, v5);
         assertMapValue("TEST.*.D4", v2, v4);
-
+        
         assertMapValue("TEST.*", v1, v2);
         assertMapValue("TEST.*.*", v2, v3, v4, v5, v6);
         assertMapValue("*.*.D3", v2, v3, v5);
         assertMapValue("TEST.BAR.*", v2, v5, v6);
-
+        
         assertMapValue("TEST.BAR.D2", v2, v6);
         assertMapValue("TEST.*.D2", v2, v6);
         assertMapValue("TEST.BAR.*", v2, v5, v6);
     }
+    
+    public void testAnyPathWildcardInMap() throws Exception {
+        put("TEST.FOO.>", v1);
+
+
+        assertMapValue("TEST.FOO.BAR.WHANOT.A.B.C", v1);
+        assertMapValue("TEST.FOO.BAR.WHANOT", v1);
+        assertMapValue("TEST.FOO.BAR", v1);
+        
+        assertMapValue("TEST.*.*", v1);
+        assertMapValue("TEST.BAR", null);
+        
+        assertMapValue("TEST.FOO", v1);
+     }
 
     public void testSimpleAddRemove() throws Exception {
         put("TEST.D1", v2);

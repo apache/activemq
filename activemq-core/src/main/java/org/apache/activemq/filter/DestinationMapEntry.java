@@ -27,9 +27,23 @@ import org.springframework.beans.factory.InitializingBean;
  * 
  * @version $Revision: 1.1 $
  */
-public abstract class DestinationMapEntry implements InitializingBean {
+public abstract class DestinationMapEntry implements InitializingBean, Comparable {
 
     private ActiveMQDestination destination;
+
+    
+    public int compareTo(Object that) {
+        if (that instanceof DestinationMapEntry) {
+            DestinationMapEntry thatEntry = (DestinationMapEntry) that;
+            return ActiveMQDestination.compare(destination, thatEntry.destination);
+        }
+        else if (that == null) {
+            return 1;
+        }
+        else {
+            return getClass().getName().compareTo(that.getClass().getName());
+        }
+    }
 
     /**
      * A helper method to set the destination from a configuration file
