@@ -26,31 +26,35 @@ import java.util.TreeSet;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- * A Map-like data structure allowing values to be indexed by {@link ActiveMQDestination}
- * and retrieved by destination - supporting both * and &gt; style of wildcard
- * as well as composite destinations.
- * <br>
- * This class assumes that the index changes rarely but that fast lookup into the index is required.
- * So this class maintains a pre-calculated index for destination steps. So looking up the values
- * for "TEST.*" or "*.TEST" will be pretty fast.
- * <br>
- * Looking up of a value could return a single value or a List of matching values if a wildcard or
- * composite destination is used.
- *
+ * A Map-like data structure allowing values to be indexed by
+ * {@link ActiveMQDestination} and retrieved by destination - supporting both *
+ * and &gt; style of wildcard as well as composite destinations. <br>
+ * This class assumes that the index changes rarely but that fast lookup into
+ * the index is required. So this class maintains a pre-calculated index for
+ * destination steps. So looking up the values for "TEST.*" or "*.TEST" will be
+ * pretty fast. <br>
+ * Looking up of a value could return a single value or a List of matching
+ * values if a wildcard or composite destination is used.
+ * 
  * @version $Revision: 1.3 $
  */
 public class DestinationMap {
-    private DestinationMapNode rootNode = new DestinationMapNode(null);
     protected static final String ANY_DESCENDENT = DestinationFilter.ANY_DESCENDENT;
     protected static final String ANY_CHILD = DestinationFilter.ANY_CHILD;
 
+    private DestinationMapNode queueRootNode = new DestinationMapNode(null);
+    private DestinationMapNode topicRootNode = new DestinationMapNode(null);
+
     /**
-     * Looks up the value(s) matching the given Destination key. For simple destinations
-     * this is typically a List of one single value, for wildcards or composite destinations this will typically be
-     * a List of matching values.
-     *
-     * @param key the destination to lookup
-     * @return a List of matching values or an empty list if there are no matching values.
+     * Looks up the value(s) matching the given Destination key. For simple
+     * destinations this is typically a List of one single value, for wildcards
+     * or composite destinations this will typically be a List of matching
+     * values.
+     * 
+     * @param key
+     *            the destination to lookup
+     * @return a List of matching values or an empty list if there are no
+     *         matching values.
      */
     public synchronized Set get(ActiveMQDestination key) {
         if (key.isComposite()) {
@@ -81,7 +85,7 @@ public class DestinationMap {
             return;
         }
         String[] paths = key.getDestinationPaths();
-        rootNode.add(paths, 0, value);
+        getRootNode(key).add(paths, 0, value);
     }
 
     /**
@@ -97,20 +101,24 @@ public class DestinationMap {
             return;
         }
         String[] paths = key.getDestinationPaths();
-        rootNode.remove(paths, 0, value);
+        getRootNode(key).remove(paths, 0, value);
 
     }
 
-    public int getRootChildCount() {
-        return rootNode.getChildCount();
+    public int getTopicRootChildCount() {
+        return topicRootNode.getChildCount();
+    }
+    
+    public int getQueueRootChildCount() {
+        return queueRootNode.getChildCount();
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     /**
-     * A helper method to allow the destination map to be populated from a dependency injection
-     * framework such as Spring
+     * A helper method to allow the destination map to be populated from a
+     * dependency injection framework such as Spring
      */
     protected void setEntries(List entries) {
         for (Iterator iter = entries.iterator(); iter.hasNext();) {
@@ -125,11 +133,12 @@ public class DestinationMap {
             }
         }
     }
-    
+
     /**
-     * Returns the type of the allowed entries which can be set via the {@link #setEntries(List)} method.
-     * This allows derived classes to further restrict the type of allowed entries to make a type safe 
-     * destination map for custom policies.
+     * Returns the type of the allowed entries which can be set via the
+     * {@link #setEntries(List)} method. This allows derived classes to further
+     * restrict the type of allowed entries to make a type safe destination map
+     * for custom policies.
      */
     protected Class getEntryClass() {
         return DestinationMapEntry.class;
@@ -138,7 +147,7 @@ public class DestinationMap {
     protected Set findWildcardMatches(ActiveMQDestination key) {
         String[] paths = key.getDestinationPaths();
         Set answer = new HashSet();
-        rootNode.appendMatchingValues(answer, paths, 0);
+        getRootNode(key).appendMatchingValues(answer, paths, 0);
         return answer;
     }
 
@@ -154,15 +163,16 @@ public class DestinationMap {
             return;
         }
         String[] paths = key.getDestinationPaths();
-        rootNode.removeAll(paths, 0);
+        getRootNode(key).removeAll(paths, 0);
     }
 
     /**
-     * Returns the value which matches the given destination or null if there is no matching
-     * value. If there are multiple values, the results are sorted and the last item (the biggest)
-     * is returned.
+     * Returns the value which matches the given destination or null if there is
+     * no matching value. If there are multiple values, the results are sorted
+     * and the last item (the biggest) is returned.
      * 
-     * @param destination the destination to find the value for
+     * @param destination
+     *            the destination to find the value for
      * @return the largest matching value or null if no value matches
      */
     public Object chooseValue(ActiveMQDestination destination) {
@@ -174,4 +184,15 @@ public class DestinationMap {
         return sortedSet.last();
     }
 
+    /**
+     * Returns the root node for the given destination type
+     */
+    protected DestinationMapNode getRootNode(ActiveMQDestination key) {
+        if (key.isQueue()) {
+            return queueRootNode;
+        }
+        else {
+            return topicRootNode;
+        }
+    }
 }

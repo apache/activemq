@@ -20,6 +20,7 @@ package org.apache.activemq.filter;
 import junit.framework.TestCase;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMap;
 
@@ -45,16 +46,15 @@ public class DestinationMapTest extends TestCase {
     protected Object v5 = "value5";
     protected Object v6 = "value6";
 
-
     public void testCompositeDestinations() throws Exception {
-        
         ActiveMQDestination d1 = createDestination("TEST.BAR.D2");
         ActiveMQDestination d2 = createDestination("TEST.BAR.D3");
-        map.put(d1,d1);
-        map.put(d2,d2);
+        map.put(d1, d1);
+        map.put(d2, d2);
         map.get(createDestination("TEST.BAR.D2,TEST.BAR.D3"));
-        
+
     }
+
     public void testSimpleDestinations() throws Exception {
         map.put(d1, v1);
         map.put(d2, v2);
@@ -63,6 +63,17 @@ public class DestinationMapTest extends TestCase {
         assertMapValue(d1, v1);
         assertMapValue(d2, v2);
         assertMapValue(d3, v3);
+    }
+
+    public void testQueueAndTopicWithSameName() throws Exception {
+        ActiveMQQueue q1 = new ActiveMQQueue("foo");
+        ActiveMQTopic t1 = new ActiveMQTopic("foo");
+
+        map.put(q1, v1);
+        map.put(t1, v2);
+
+        assertMapValue(q1, v1);
+        assertMapValue(t1, v2);
     }
 
     public void testSimpleDestinationsWithMultipleValues() throws Exception {
@@ -122,7 +133,7 @@ public class DestinationMapTest extends TestCase {
         map.put(d2, v2);
         map.put(d3, v3);
 
-        List allValues = Arrays.asList(new Object[]{v1, v2, v3});
+        List allValues = Arrays.asList(new Object[] { v1, v2, v3 });
 
         assertMapValue(">", allValues);
         assertMapValue("TEST.>", allValues);
@@ -130,7 +141,6 @@ public class DestinationMapTest extends TestCase {
 
         assertMapValue("FOO.>", null);
     }
-
 
     public void testStoreWildcardWithOneStepPath() throws Exception {
         put("TEST.*", v1);
@@ -165,48 +175,46 @@ public class DestinationMapTest extends TestCase {
         put("TEST.XYZ.D4", v4);
         put("TEST.BAR.D3", v5);
         put("TEST.*.D2", v6);
-        
-        
+
         assertMapValue("TEST.*.D3", v2, v3, v5);
         assertMapValue("TEST.*.D4", v2, v4);
-        
+
         assertMapValue("TEST.*", v1, v2);
         assertMapValue("TEST.*.*", v2, v3, v4, v5, v6);
         assertMapValue("*.*.D3", v2, v3, v5);
         assertMapValue("TEST.BAR.*", v2, v5, v6);
-        
+
         assertMapValue("TEST.BAR.D2", v2, v6);
         assertMapValue("TEST.*.D2", v2, v6);
         assertMapValue("TEST.BAR.*", v2, v5, v6);
     }
-    
+
     public void testAnyPathWildcardInMap() throws Exception {
         put("TEST.FOO.>", v1);
-
 
         assertMapValue("TEST.FOO.BAR.WHANOT.A.B.C", v1);
         assertMapValue("TEST.FOO.BAR.WHANOT", v1);
         assertMapValue("TEST.FOO.BAR", v1);
-        
+
         assertMapValue("TEST.*.*", v1);
         assertMapValue("TEST.BAR", null);
-        
+
         assertMapValue("TEST.FOO", v1);
-     }
+    }
 
     public void testSimpleAddRemove() throws Exception {
         put("TEST.D1", v2);
-        
-        assertEquals("Root child count", 1, map.getRootChildCount());
-        
+
+        assertEquals("Root child count", 1, map.getTopicRootChildCount());
+
         assertMapValue("TEST.D1", v2);
-        
+
         remove("TEST.D1", v2);
-        
-        assertEquals("Root child count", 0, map.getRootChildCount());
+
+        assertEquals("Root child count", 0, map.getTopicRootChildCount());
         assertMapValue("TEST.D1", null);
     }
-    
+
     public void testStoreAndLookupAllWildcards() throws Exception {
         loadSample2();
 
@@ -301,7 +309,6 @@ public class DestinationMapTest extends TestCase {
         assertMapValue("TEST.BAR.*", v3, v4);
     }
 
-
     protected void put(String name, Object value) {
         map.put(createDestination(name), value);
     }
@@ -311,26 +318,25 @@ public class DestinationMapTest extends TestCase {
         map.remove(destination, value);
     }
 
-
     protected void assertMapValue(String destinationName, Object expected) {
         ActiveMQDestination destination = createDestination(destinationName);
         assertMapValue(destination, expected);
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2) {
-        assertMapValue(destinationName, Arrays.asList(new Object[]{expected1, expected2}));
+        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2 }));
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3) {
-        assertMapValue(destinationName, Arrays.asList(new Object[]{expected1, expected2, expected3}));
+        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3 }));
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3, Object expected4) {
-        assertMapValue(destinationName, Arrays.asList(new Object[]{expected1, expected2, expected3, expected4}));
+        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3, expected4 }));
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3, Object expected4, Object expected5) {
-        assertMapValue(destinationName, Arrays.asList(new Object[]{expected1, expected2, expected3, expected4, expected5}));
+        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3, expected4, expected5 }));
     }
 
     protected void assertMapValue(ActiveMQDestination destination, Object expected) {
