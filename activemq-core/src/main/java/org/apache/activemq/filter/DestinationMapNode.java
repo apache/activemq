@@ -25,7 +25,7 @@ import java.util.Set;
 
 /**
  * An implementation class used to implement {@link DestinationMap}
- *
+ * 
  * @version $Revision: 1.2 $
  */
 public class DestinationMapNode {
@@ -38,14 +38,13 @@ public class DestinationMapNode {
     protected static final String ANY_CHILD = DestinationMap.ANY_CHILD;
     protected static final String ANY_DESCENDENT = DestinationMap.ANY_DESCENDENT;
 
-
     public DestinationMapNode(DestinationMapNode parent) {
         this.parent = parent;
     }
-    
 
     /**
-     * Returns the child node for the given named path or null if it does not exist
+     * Returns the child node for the given named path or null if it does not
+     * exist
      */
     public DestinationMapNode getChild(String path) {
         return (DestinationMapNode) childNodes.get(path);
@@ -54,10 +53,10 @@ public class DestinationMapNode {
     public int getChildCount() {
         return childNodes.size();
     }
-    
+
     /**
-     * Returns the child node for the given named path, lazily creating one if it does
-     * not yet exist
+     * Returns the child node for the given named path, lazily creating one if
+     * it does not yet exist
      */
     public DestinationMapNode getChildOrCreate(String path) {
         DestinationMapNode answer = (DestinationMapNode) childNodes.get(path);
@@ -169,10 +168,12 @@ public class DestinationMapNode {
 
     public void appendMatchingValues(Set answer, String[] paths, int startIndex) {
         DestinationMapNode node = this;
+        boolean couldMatchAny = true;
         for (int i = startIndex, size = paths.length; i < size && node != null; i++) {
             String path = paths[i];
             if (path.equals(ANY_DESCENDENT)) {
                 answer.addAll(node.getDesendentValues());
+                couldMatchAny = false;
                 break;
             }
 
@@ -186,9 +187,15 @@ public class DestinationMapNode {
         }
         if (node != null) {
             answer.addAll(node.getValues());
+            if (couldMatchAny) {
+                // lets allow FOO.BAR to match the FOO.BAR.> entry in the map
+                DestinationMapNode child = node.getChild(ANY_DESCENDENT);
+                if (child != null) {
+                    answer.addAll(child.getValues());
+                }
+            }
         }
     }
-
 
     public String getPath() {
         return path;
@@ -199,7 +206,6 @@ public class DestinationMapNode {
             parent.removeChild(this);
         }
     }
-
 
     protected void removeChild(DestinationMapNode node) {
         childNodes.remove(node.getPath());
