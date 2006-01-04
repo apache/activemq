@@ -111,9 +111,10 @@ public class Main {
         QUERY_TYPE_ID_MAP.setProperty("Topic",            "Destination");
     };
 
-    private final ArrayList extensions   = new ArrayList();
-    private final Map       queryObjects = new HashMap();
-    private final List      queryViews   = new ArrayList();
+    private final List brokers      = new ArrayList();
+    private final List extensions   = new ArrayList();
+    private final Map  queryObjects = new HashMap();
+    private final List queryViews   = new ArrayList();
 
     private int           taskType = TASK_NONE;
     private boolean       stopAll  = false;
@@ -444,6 +445,8 @@ public class Main {
                 this.startBroker(this.getConfigUri());
 //            }
         }
+        
+        waitForShutdown();
     }
 
     protected void taskStopBrokers(List brokerNames) throws Throwable {
@@ -642,6 +645,37 @@ public class Main {
             Method start = broker.getClass().getMethod("start", new Class[]{});
             start.invoke(broker, new Object[]{});
 
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        } catch (Throwable e) {
+            throw e;
+        }
+    }
+
+    public void waitForShutdown() throws Throwable {
+        // Prevent the main thread from exiting, in case this is the last user thread
+        final boolean[] shutdown = new boolean[]{false};
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                synchronized(shutdown) {
+                    shutdown[0]=true;
+                    shutdown.notify();
+                }
+            }
+        });
+        synchronized(shutdown) {
+            while( !shutdown[0] ) {
+                shutdown.wait();
+            }
+        }
+
+        // Use reflection to stop the broker in case, the vm was exited via unconventional means
+        try {
+            for (Iterator i=brokers.iterator(); i.hasNext();) {
+                Object broker = i.next();
+                Method stop = broker.getClass().getMethod("stop", new Class[] {});
+                stop.invoke(broker, new Object[] {});
+            }
         } catch (InvocationTargetException e) {
             throw e.getCause();
         } catch (Throwable e) {
