@@ -38,6 +38,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.transport.Transport;
@@ -222,7 +223,12 @@ public class DemandForwardingBridge implements Bridge {
                     }
                 }
             } else {
-               log.warn("Unexpected remote command: "+command);
+                switch ( command.getDataStructureType() ) {
+                    case WireFormatInfo.DATA_STRUCTURE_TYPE:
+                    break;
+                    default:
+                        log.warn("Unexpected remote command: "+command);
+                }
             }
         } catch (IOException e) {
             serviceRemoteException(e);
@@ -364,7 +370,12 @@ public class DemandForwardingBridge implements Bridge {
                     }
                 }
             } else {
-                log.warn("Unexpected local command: "+command);
+                switch ( command.getDataStructureType() ) {
+                case WireFormatInfo.DATA_STRUCTURE_TYPE:
+                break;
+                default:
+                    log.warn("Unexpected local command: "+command);
+                }
             }
         } catch (IOException e) {
             serviceLocalException(e);
