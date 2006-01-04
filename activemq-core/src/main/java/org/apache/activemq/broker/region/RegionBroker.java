@@ -40,10 +40,13 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 
+import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.*;
+import java.util.Set;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -67,6 +70,7 @@ public class RegionBroker implements Broker {
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();    
     private BrokerId brokerId;
     private String brokerName;
+    private Map clientIdSet = new HashMap(); // we will synchronize access
 
     public RegionBroker(TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter) throws IOException {
         this(taskRunnerFactory, memoryManager, createDefaultPersistenceAdapter(memoryManager), null);
@@ -110,10 +114,35 @@ public class RegionBroker implements Broker {
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
+        String clientId = info.getClientId();
+        if (clientId == null) {
+            throw new InvalidClientIDException("No clientID specified for connection request");
+        }
+        synchronized (clientIdSet ) {
+            if (clientIdSet.containsKey(clientId)) {
+                throw new InvalidClientIDException("Client: " + clientId + " already connected");
+            }
+            else {
+                clientIdSet.put(clientId, info);
+            }
+        }
+
         connections.add(context.getConnection());
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+        String clientId = info.getClientId();
+        if (clientId == null) {
+            throw new InvalidClientIDException("No clientID specified for connection disconnect request");
+        }
+        synchronized (clientIdSet) {
+            ConnectionInfo oldValue = (ConnectionInfo) clientIdSet.get(clientId);
+            // we may be removing the duplicate connection, not the first connection to be created
+            if (oldValue == info) {
+                clientIdSet.remove(clientId);
+            }
+        }
+
         connections.remove(context.getConnection());
     }
 
