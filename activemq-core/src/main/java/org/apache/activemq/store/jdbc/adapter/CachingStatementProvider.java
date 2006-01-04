@@ -47,6 +47,7 @@ public class CachingStatementProvider implements StatementProvider {
     private String deleteOldMessagesStatment;
     private String findLastSequenceIdInAcks;
     private String findAllDestinationsStatment;
+    private String findAllDurableSubsStatment;
 
     public CachingStatementProvider(StatementProvider statementProvider) {
         this.statementProvider = statementProvider;
@@ -221,5 +222,12 @@ public class CachingStatementProvider implements StatementProvider {
 
     public String getFullMessageTableName() {
         return statementProvider.getFullMessageTableName();
+    }
+
+    public String getFindAllDurableSubsStatment() {
+        if ( findAllDurableSubsStatment==null ) {
+            findAllDurableSubsStatment = statementProvider.getFindAllDurableSubsStatment();
+        }
+        return findAllDurableSubsStatment;
     }
 }

@@ -47,5 +47,6 @@ public interface StatementProvider {
     public boolean isUseExternalMessageReferences();
 
     public String getFullMessageTableName();
+    public String getFindAllDurableSubsStatment();
 
 }

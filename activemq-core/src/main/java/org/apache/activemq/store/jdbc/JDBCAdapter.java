@@ -74,5 +74,7 @@ public interface JDBCAdapter {
 
     public abstract void setUseExternalMessageReferences(boolean useExternalMessageReferences);
 
+    public abstract SubscriptionInfo[] doGetAllSubscriptions(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
+
 
 }

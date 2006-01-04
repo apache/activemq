@@ -126,4 +126,15 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+        try {
+            return adapter.doGetAllSubscriptions(c, destination);
+        } catch (SQLException e) {
+            throw IOExceptionSupport.create("Failed to lookup subscriptions. Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+    }
+
 }

@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -475,6 +476,32 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             subscription.setSelector(rs.getString(1));
             return subscription;
             
+        }
+        finally {
+            close(rs);
+            close(s);
+        }
+    }
+
+    public SubscriptionInfo[] doGetAllSubscriptions(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException {
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+
+            s = c.getConnection().prepareStatement(statementProvider.getFindAllDurableSubsStatment());
+            s.setString(1, destination.getQualifiedName());
+            rs = s.executeQuery();
+
+            ArrayList rc = new ArrayList();
+            while(rs.next()) {
+                SubscriptionInfo subscription = new SubscriptionInfo();
+                subscription.setDestination(destination);
+                subscription.setSelector(rs.getString(1));
+                subscription.setSubcriptionName(rs.getString(2));
+                subscription.setClientId(rs.getString(3));
+            }
+
+            return (SubscriptionInfo[]) rc.toArray(new SubscriptionInfo[rc.size()]);            
         }
         finally {
             close(rs);
