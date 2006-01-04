@@ -39,7 +39,7 @@ import org.apache.activemq.util.URISupport;
  * @openwire:marshaller
  * @version $Revision: 1.10 $
  */
-abstract public class ActiveMQDestination implements DataStructure, Destination, Externalizable {
+abstract public class ActiveMQDestination implements DataStructure, Destination, Externalizable, Comparable {
 
     private static final long serialVersionUID = -3885260014960795889L;
 
@@ -65,6 +65,72 @@ abstract public class ActiveMQDestination implements DataStructure, Destination,
     transient protected int hashValue;
     protected Map options;
 
+    
+    // static helper methods for working with destinations
+    // -------------------------------------------------------------------------
+    static public ActiveMQDestination createDestination(String name, byte defaultType) {
+        
+        if( name.startsWith(QUEUE_QUALIFIED_PREFIX) ) {
+            return new ActiveMQQueue(name.substring(QUEUE_QUALIFIED_PREFIX.length()));
+        } else if( name.startsWith(TOPIC_QUALIFIED_PREFIX) ) {            
+            return new ActiveMQTopic(name.substring(TOPIC_QUALIFIED_PREFIX.length()));
+        } else if( name.startsWith(TEMP_QUEUE_QUALIFED_PREFIX) ) {            
+            return new ActiveMQTempQueue(name.substring(TEMP_QUEUE_QUALIFED_PREFIX.length()));
+        } else if( name.startsWith(TEMP_TOPIC_QUALIFED_PREFIX) ) {            
+            return new ActiveMQTempTopic(name.substring(TEMP_TOPIC_QUALIFED_PREFIX.length()));
+        }
+        
+        switch(defaultType) {
+        case QUEUE_TYPE:
+            return new ActiveMQQueue(name);
+        case TOPIC_TYPE:
+            return new ActiveMQTopic(name);
+        case TEMP_QUEUE_TYPE:
+            return new ActiveMQTempQueue(name);
+        case TEMP_TOPIC_TYPE:
+            return new ActiveMQTempTopic(name);
+        default:
+            throw new IllegalArgumentException("Invalid default destination type: "+defaultType);
+        }
+    }
+    
+    public static ActiveMQDestination transform(Destination dest) throws JMSException {
+        if( dest == null )
+            return null;
+        if( dest instanceof ActiveMQDestination )
+            return (ActiveMQDestination) dest;
+        if( dest instanceof TemporaryQueue )
+            return new ActiveMQTempQueue(((TemporaryQueue)dest).getQueueName());
+        if( dest instanceof TemporaryTopic )
+            return new ActiveMQTempTopic(((TemporaryTopic)dest).getTopicName());
+        if( dest instanceof Queue )
+            return new ActiveMQQueue(((Queue)dest).getQueueName());
+        if( dest instanceof Topic )
+            return new ActiveMQTopic(((Topic)dest).getTopicName());
+        throw new JMSException("Could not transform the destination into a ActiveMQ destination: "+dest);
+    }
+
+    public static int compare(ActiveMQDestination destination, ActiveMQDestination destination2) {
+        if (destination == destination2) {
+            return 0;
+        }
+        if (destination == null) {
+            return -1;
+        }
+        else if (destination2 == null) {
+            return 1;
+        }
+        else {
+            if (destination.isQueue() == destination2.isQueue()) {
+                return destination.getPhysicalName().compareTo(destination2.getPhysicalName());
+            }
+            else {
+                return destination.isQueue() ? -1 : 1;
+            }
+        }
+    }
+
+    
     public ActiveMQDestination() {
     }
     
@@ -74,6 +140,18 @@ abstract public class ActiveMQDestination implements DataStructure, Destination,
     
     public ActiveMQDestination(ActiveMQDestination composites[]) {
         setCompositeDestinations(composites);
+    }
+
+    public int compareTo(Object that) {
+        if (that instanceof ActiveMQDestination) {
+            return compare(this, (ActiveMQDestination) that);
+        }
+        if (that == null) {
+            return 1;
+        }
+        else {
+            return getClass().getName().compareTo(that.getClass().getName());
+        }
     }
 
     public boolean isComposite() {
@@ -166,33 +244,6 @@ abstract public class ActiveMQDestination implements DataStructure, Destination,
     public ActiveMQDestination createDestination(String name) {
         return createDestination(name, getDestinationType());
     }
-    
-    static public ActiveMQDestination createDestination(String name, byte defaultType) {
-        
-        if( name.startsWith(QUEUE_QUALIFIED_PREFIX) ) {
-            return new ActiveMQQueue(name.substring(QUEUE_QUALIFIED_PREFIX.length()));
-        } else if( name.startsWith(TOPIC_QUALIFIED_PREFIX) ) {            
-            return new ActiveMQTopic(name.substring(TOPIC_QUALIFIED_PREFIX.length()));
-        } else if( name.startsWith(TEMP_QUEUE_QUALIFED_PREFIX) ) {            
-            return new ActiveMQTempQueue(name.substring(TEMP_QUEUE_QUALIFED_PREFIX.length()));
-        } else if( name.startsWith(TEMP_TOPIC_QUALIFED_PREFIX) ) {            
-            return new ActiveMQTempTopic(name.substring(TEMP_TOPIC_QUALIFED_PREFIX.length()));
-        }
-        
-        switch(defaultType) {
-        case QUEUE_TYPE:
-            return new ActiveMQQueue(name);
-        case TOPIC_TYPE:
-            return new ActiveMQTopic(name);
-        case TEMP_QUEUE_TYPE:
-            return new ActiveMQTempQueue(name);
-        case TEMP_TOPIC_TYPE:
-            return new ActiveMQTempTopic(name);
-        default:
-            throw new IllegalArgumentException("Invalid default destination type: "+defaultType);
-        }
-    }
-    
     public String[] getDestinationPaths() {  
         
         if( destinationPaths!=null )
@@ -242,23 +293,6 @@ abstract public class ActiveMQDestination implements DataStructure, Destination,
         }
         return hashValue;
     }
-
-    public static ActiveMQDestination transform(Destination dest) throws JMSException {
-        if( dest == null )
-            return null;
-        if( dest instanceof ActiveMQDestination )
-            return (ActiveMQDestination) dest;
-        if( dest instanceof TemporaryQueue )
-            return new ActiveMQTempQueue(((TemporaryQueue)dest).getQueueName());
-        if( dest instanceof TemporaryTopic )
-            return new ActiveMQTempTopic(((TemporaryTopic)dest).getTopicName());
-        if( dest instanceof Queue )
-            return new ActiveMQQueue(((Queue)dest).getQueueName());
-        if( dest instanceof Topic )
-            return new ActiveMQTopic(((Topic)dest).getTopicName());
-        throw new JMSException("Could not transform the destination into a ActiveMQ destination: "+dest);
-    }
-    
     public String toString() {
         return getQualifiedName();
     }
