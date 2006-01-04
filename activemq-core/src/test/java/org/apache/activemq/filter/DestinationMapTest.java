@@ -181,6 +181,9 @@ public class DestinationMapTest extends TestCase {
 
         assertMapValue("TEST.*", v1, v2);
         assertMapValue("TEST.*.*", v2, v3, v4, v5, v6);
+        assertMapValue("TEST.*.>", v1, v2, v3, v4, v5, v6);
+        assertMapValue("TEST.>", v1, v2, v3, v4, v5, v6);
+        assertMapValue("TEST.>.>", v1, v2, v3, v4, v5, v6);
         assertMapValue("*.*.D3", v2, v3, v5);
         assertMapValue("TEST.BAR.*", v2, v5, v6);
 
@@ -337,6 +340,10 @@ public class DestinationMapTest extends TestCase {
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3, Object expected4, Object expected5) {
         assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3, expected4, expected5 }));
+    }
+    
+    protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3, Object expected4, Object expected5, Object expected6) {
+        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3, expected4, expected5, expected6 }));
     }
 
     protected void assertMapValue(ActiveMQDestination destination, Object expected) {
