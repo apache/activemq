@@ -81,7 +81,19 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doCreateTables(TransactionContext c) throws SQLException, IOException {
         Statement s = null;
         try {
-            log.info("creating tables");
+            
+            // Check to see if the table already exists.  If it does, then don't log warnings during startup.
+            // Need to run the scripts anyways since they may contain ALTER statements that upgrade a previous version of the table
+            boolean alreadyExists = false;
+            ResultSet rs=null;
+            try {
+                rs= c.getConnection().getMetaData().getTables(null,null, statementProvider.getFullMessageTableName(), new String[] {"TABLE"});
+                alreadyExists = rs.next();                
+            } catch (Throwable ignore) {
+            } finally {
+                close(rs);
+            }
+            
             s = c.getConnection().createStatement();
             String[] createStatments = statementProvider.getCreateSchemaStatments();
             for (int i = 0; i < createStatments.length; i++) {
@@ -91,13 +103,19 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     boolean rc = s.execute(createStatments[i]);
                 }
                 catch (SQLException e) {
-                    log.warn("Could not create JDBC tables; they could already exist." +
-                        " Failure was: " + createStatments[i] + " Message: " + e.getMessage() +
-                        " SQLState: " + e.getSQLState() + " Vendor code: " + e.getErrorCode() );
+                    if( alreadyExists )  {
+                        log.debug("Could not create JDBC tables; The message table already existed." +
+                                " Failure was: " + createStatments[i] + " Message: " + e.getMessage() +
+                                " SQLState: " + e.getSQLState() + " Vendor code: " + e.getErrorCode() );
+                    } else {
+                        log.warn("Could not create JDBC tables; they could already exist." +
+                            " Failure was: " + createStatments[i] + " Message: " + e.getMessage() +
+                            " SQLState: " + e.getSQLState() + " Vendor code: " + e.getErrorCode() );
+                    }
                 }
             }
             c.getConnection().commit();
-            log.info("done creating tables");
+            
         }
         finally {
             try {
