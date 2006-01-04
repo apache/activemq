@@ -218,4 +218,8 @@ public class CachingStatementProvider implements StatementProvider {
     public boolean isUseExternalMessageReferences() {
         return statementProvider.isUseExternalMessageReferences();
     }
+
+    public String getFullMessageTableName() {
+        return statementProvider.getFullMessageTableName();
+    }
 }

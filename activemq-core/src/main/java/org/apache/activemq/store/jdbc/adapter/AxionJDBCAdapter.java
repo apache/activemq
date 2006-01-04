@@ -33,7 +33,7 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
         DefaultStatementProvider answer = new DefaultStatementProvider() {
             public String [] getCreateSchemaStatments() {
                 return new String[]{
-                    "CREATE TABLE "+tablePrefix+messageTableName+"("
+                    "CREATE TABLE "+getTablePrefix()+messageTableName+"("
                            +"ID "+sequenceDataType+" NOT NULL"
                            +", CONTAINER "+containerNameDataType
                            +", MSGID_PROD "+msgIdDataType
@@ -41,9 +41,9 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
                            +", EXPIRATION "+longDataType
                            +", MSG "+(useExternalMessageReferences ? stringIdDataType : binaryDataType)
                            +", PRIMARY KEY ( ID ) )",                          
-                     "CREATE INDEX "+tablePrefix+messageTableName+"_MIDX ON "+tablePrefix+messageTableName+" (MSGID_PROD,MSGID_SEQ)",
-                     "CREATE INDEX "+tablePrefix+messageTableName+"_CIDX ON "+tablePrefix+messageTableName+" (CONTAINER)",                                       
-                     "CREATE TABLE "+tablePrefix+durableSubAcksTableName+"("
+                     "CREATE INDEX "+getTablePrefix()+messageTableName+"_MIDX ON "+getTablePrefix()+messageTableName+" (MSGID_PROD,MSGID_SEQ)",
+                     "CREATE INDEX "+getTablePrefix()+messageTableName+"_CIDX ON "+getTablePrefix()+messageTableName+" (CONTAINER)",                                       
+                     "CREATE TABLE "+getTablePrefix()+durableSubAcksTableName+"("
                            +"CONTAINER "+containerNameDataType+" NOT NULL"
                            +", CLIENT_ID "+stringIdDataType+" NOT NULL"
                            +", SUB_NAME "+stringIdDataType+" NOT NULL"
@@ -55,7 +55,7 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
             }
             
             public String getDeleteOldMessagesStatment() {
-                return "DELETE FROM "+tablePrefix+messageTableName+
+                return "DELETE FROM "+getTablePrefix()+messageTableName+
                     " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)";
             }
 

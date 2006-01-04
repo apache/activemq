@@ -24,7 +24,7 @@ import org.apache.activemq.store.jdbc.StatementProvider;
  */
 public class DefaultStatementProvider implements StatementProvider {
 
-    protected String tablePrefix = "";
+    private   String tablePrefix = "";
     protected String messageTableName = "ACTIVEMQ_MSGS";
     protected String durableSubAcksTableName = "ACTIVEMQ_ACKS";
 
@@ -41,7 +41,7 @@ public class DefaultStatementProvider implements StatementProvider {
     
     public String [] getCreateSchemaStatments() {
         return new String[]{
-            "CREATE TABLE "+tablePrefix+messageTableName+"("
+            "CREATE TABLE "+getFullMessageTableName()+"("
             			   +"ID "+sequenceDataType+" NOT NULL"
             			   +", CONTAINER "+containerNameDataType
             			   +", MSGID_PROD "+msgIdDataType
@@ -49,9 +49,9 @@ public class DefaultStatementProvider implements StatementProvider {
                         +", EXPIRATION "+longDataType
             			   +", MSG "+(useExternalMessageReferences ? stringIdDataType : binaryDataType)
             			   +", PRIMARY KEY ( ID ) )",						   
-            "CREATE INDEX "+tablePrefix+messageTableName+"_MIDX ON "+tablePrefix+messageTableName+" (MSGID_PROD,MSGID_SEQ)",
-            "CREATE INDEX "+tablePrefix+messageTableName+"_CIDX ON "+tablePrefix+messageTableName+" (CONTAINER)",			
-            "CREATE TABLE "+tablePrefix+durableSubAcksTableName+"("
+            "CREATE INDEX "+getFullMessageTableName()+"_MIDX ON "+getFullMessageTableName()+" (MSGID_PROD,MSGID_SEQ)",
+            "CREATE INDEX "+getFullMessageTableName()+"_CIDX ON "+getFullMessageTableName()+" (CONTAINER)",			
+            "CREATE TABLE "+getTablePrefix()+durableSubAcksTableName+"("
                         +"CONTAINER "+containerNameDataType+" NOT NULL"
                         +", CLIENT_ID "+stringIdDataType+" NOT NULL"
                         +", SUB_NAME "+stringIdDataType+" NOT NULL"
@@ -61,88 +61,92 @@ public class DefaultStatementProvider implements StatementProvider {
         };
     }
 
+    public String getFullMessageTableName() {
+        return getTablePrefix()+messageTableName;
+    }
+    
     public String [] getDropSchemaStatments() {
         return new String[]{
-            "DROP TABLE "+tablePrefix+durableSubAcksTableName+"",
-            "DROP TABLE "+tablePrefix+messageTableName+"",
+            "DROP TABLE "+getTablePrefix()+durableSubAcksTableName+"",
+            "DROP TABLE "+getFullMessageTableName()+"",
         };
     }
 
     public String getAddMessageStatment() {
-        return "INSERT INTO "+tablePrefix+messageTableName+"(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, MSG) VALUES (?, ?, ?, ?, ?, ?)";
+        return "INSERT INTO "+getFullMessageTableName()+"(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, MSG) VALUES (?, ?, ?, ?, ?, ?)";
     }
     public String getUpdateMessageStatment() {
-        return "UPDATE "+tablePrefix+messageTableName+" SET MSG=? WHERE ID=?";
+        return "UPDATE "+getFullMessageTableName()+" SET MSG=? WHERE ID=?";
     }
     public String getRemoveMessageStatment() {
-        return "DELETE FROM "+tablePrefix+messageTableName+" WHERE ID=?";
+        return "DELETE FROM "+getFullMessageTableName()+" WHERE ID=?";
     }
     public String getFindMessageSequenceIdStatment() {
-        return "SELECT ID FROM "+tablePrefix+messageTableName+" WHERE MSGID_PROD=? AND MSGID_SEQ=?";
+        return "SELECT ID FROM "+getFullMessageTableName()+" WHERE MSGID_PROD=? AND MSGID_SEQ=?";
     }
     public String getFindMessageStatment() {
-        return "SELECT MSG FROM "+tablePrefix+messageTableName+" WHERE ID=?";
+        return "SELECT MSG FROM "+getFullMessageTableName()+" WHERE ID=?";
     }
     public String getFindAllMessagesStatment() {
-        return "SELECT ID, MSG FROM "+tablePrefix+messageTableName+" WHERE CONTAINER=? ORDER BY ID";
+        return "SELECT ID, MSG FROM "+getFullMessageTableName()+" WHERE CONTAINER=? ORDER BY ID";
     }
     public String getFindLastSequenceIdInMsgs() {
-        return "SELECT MAX(ID) FROM "+tablePrefix+messageTableName;
+        return "SELECT MAX(ID) FROM "+getFullMessageTableName();
     }
     public String getFindLastSequenceIdInAcks() {
-        return "SELECT MAX(LAST_ACKED_ID) FROM "+tablePrefix+durableSubAcksTableName;
+        return "SELECT MAX(LAST_ACKED_ID) FROM "+getTablePrefix()+durableSubAcksTableName;
     }
 
     public String getCreateDurableSubStatment() {
-        return "INSERT INTO "+tablePrefix+durableSubAcksTableName
+        return "INSERT INTO "+getTablePrefix()+durableSubAcksTableName
         	   +"(CONTAINER, CLIENT_ID, SUB_NAME, SELECTOR, LAST_ACKED_ID) "
          	   +"VALUES (?, ?, ?, ?, ?)";
     }
 
     public String getFindDurableSubStatment() {
         return "SELECT SELECTOR, SUB_NAME " +
-                "FROM "+tablePrefix+durableSubAcksTableName+
+                "FROM "+getTablePrefix()+durableSubAcksTableName+
                 " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
     }
 
     public String getUpdateLastAckOfDurableSub() {
-        return "UPDATE "+tablePrefix+durableSubAcksTableName+
+        return "UPDATE "+getTablePrefix()+durableSubAcksTableName+
                 " SET LAST_ACKED_ID=?" +
                 " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
     }
 
     public String getDeleteSubscriptionStatment() {
-        return "DELETE FROM "+tablePrefix+durableSubAcksTableName+
+        return "DELETE FROM "+getTablePrefix()+durableSubAcksTableName+
                 " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
     }
 
     public String getFindAllDurableSubMessagesStatment() {
         return "SELECT M.ID, M.MSG FROM "
-		        +tablePrefix+messageTableName+" M, "
-			    +tablePrefix+durableSubAcksTableName +" D "
+		        +getFullMessageTableName()+" M, "
+			    +getTablePrefix()+durableSubAcksTableName +" D "
 		        +" WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?" 
 				+" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
 				+" ORDER BY M.ID";
     }
 
     public String getFindAllDestinationsStatment() {
-        return "SELECT DISTINCT CONTAINER FROM "+tablePrefix+messageTableName;
+        return "SELECT DISTINCT CONTAINER FROM "+getFullMessageTableName();
     }
     
     public String getRemoveAllMessagesStatment() {
-        return "DELETE FROM "+tablePrefix+messageTableName+" WHERE CONTAINER=?";
+        return "DELETE FROM "+getFullMessageTableName()+" WHERE CONTAINER=?";
     }
 
     public String getRemoveAllSubscriptionsStatment() {
-        return "DELETE FROM "+tablePrefix+durableSubAcksTableName+" WHERE CONTAINER=?";
+        return "DELETE FROM "+getTablePrefix()+durableSubAcksTableName+" WHERE CONTAINER=?";
     }
 
     public String getDeleteOldMessagesStatment() {
-        return "DELETE FROM "+tablePrefix+messageTableName+
+        return "DELETE FROM "+getFullMessageTableName()+
             " WHERE ( EXPIRATION<>0 AND EXPIRATION<?) OR ID <= " +
-            "( SELECT min("+tablePrefix+durableSubAcksTableName+".LAST_ACKED_ID) " +
-                "FROM "+tablePrefix+durableSubAcksTableName+" WHERE " +
-                tablePrefix+durableSubAcksTableName+".CONTAINER="+tablePrefix+messageTableName+
+            "( SELECT min("+getTablePrefix()+durableSubAcksTableName+".LAST_ACKED_ID) " +
+                "FROM "+getTablePrefix()+durableSubAcksTableName+" WHERE " +
+                getTablePrefix()+durableSubAcksTableName+".CONTAINER="+getFullMessageTableName()+
                 ".CONTAINER)";
     }
     
@@ -267,5 +271,6 @@ public class DefaultStatementProvider implements StatementProvider {
     public boolean isUseExternalMessageReferences() {
         return useExternalMessageReferences;
     }
+
 
 }

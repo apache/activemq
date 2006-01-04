@@ -46,4 +46,6 @@ public interface StatementProvider {
     public void setUseExternalMessageReferences(boolean useExternalMessageReferences);
     public boolean isUseExternalMessageReferences();
 
+    public String getFullMessageTableName();
+
 }
