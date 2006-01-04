@@ -108,6 +108,12 @@ public class DefaultStatementProvider implements StatementProvider {
                 "FROM "+getTablePrefix()+durableSubAcksTableName+
                 " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
     }
+    
+    public String getFindAllDurableSubsStatment() {
+        return "SELECT SELECTOR, SUB_NAME, CLIENT_ID" +
+        "FROM "+getTablePrefix()+durableSubAcksTableName+
+        " WHERE CONTAINER=?";
+    }
 
     public String getUpdateLastAckOfDurableSub() {
         return "UPDATE "+getTablePrefix()+durableSubAcksTableName+

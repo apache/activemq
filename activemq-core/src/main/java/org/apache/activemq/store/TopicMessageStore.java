@@ -70,6 +70,15 @@ public interface TopicMessageStore extends MessageStore {
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException;
 
     /**
+     * Lists all the durable subscirptions for a given destination.
+     * 
+     * @param clientId TODO
+     * @param subscriptionName TODO
+     * @return
+     */
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException;
+
+    /**
      * Inserts the subscriber info due to a subscription change
      * <p/>
      * If this is a new subscription and the retroactive is false, then the last

@@ -179,5 +179,9 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
         longTermStore.deleteSubscription(clientId, subscriptionName);
     }
+    
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
+        return longTermStore.getAllSubscriptions();
+    }
 
 }

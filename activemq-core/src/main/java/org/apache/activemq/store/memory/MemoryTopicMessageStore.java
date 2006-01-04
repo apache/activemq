@@ -112,4 +112,8 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         subscriberDatabase.clear();
         lastMessageId=null;
     }
+    
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
+        return (SubscriptionInfo[]) subscriberDatabase.values().toArray(new SubscriptionInfo[subscriberDatabase.size()]);
+    }
 }

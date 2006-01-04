@@ -90,4 +90,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public String getMessageReference(MessageId identity) throws IOException {
         return delegate.getMessageReference(identity);
     }
+
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
+        return delegate.getAllSubscriptions();
+    }
 }

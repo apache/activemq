@@ -190,4 +190,8 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
         longTermStore.deleteSubscription(clientId, subscriptionName);
     }
 
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
+        return longTermStore.getAllSubscriptions();
+    }
+
 }
