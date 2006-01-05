@@ -340,9 +340,8 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         // See if the durable sub works in a new connection.
         // The embeded broker shutsdown when his connections are closed.
         // So we open the new connection before the old one is closed.
-        Connection t = createConnection();
         connection.close();
-        connection = t;       
+        connection = createConnection();
         connection.start();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
 
