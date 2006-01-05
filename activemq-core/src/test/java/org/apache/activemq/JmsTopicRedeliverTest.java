@@ -26,8 +26,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-import org.apache.activemq.ActiveMQConnection;
-
 /**
  * @version $Revision: 1.4 $
  */
@@ -87,6 +85,15 @@ public class JmsTopicRedeliverTest extends TestSupport {
 
         log.info("Created connection: " + connection);
     }
+
+    
+    protected void tearDown() throws Exception {
+        if (connection != null) {
+            connection.close();
+        }
+        super.tearDown();
+    }
+
 
     /**
      * Returns the consumer subject.
