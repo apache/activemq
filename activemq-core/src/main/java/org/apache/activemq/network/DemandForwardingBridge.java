@@ -323,7 +323,7 @@ public class DemandForwardingBridge implements Bridge {
     }
     
     protected void serviceLocalCommand(Command command) {
-        boolean trace = log.isTraceEnabled();
+        final boolean trace = log.isTraceEnabled();
         try {
             if( command.isMessageDispatch() ) {
                 MessageDispatch md = (MessageDispatch) command;
@@ -349,12 +349,8 @@ public class DemandForwardingBridge implements Bridge {
                         log.trace("bridging " + localBroker + " -> " + remoteBroker + ": "+message);
                     
                     remoteBroker.oneway( message );
-
-                    sub.dispatched++;
-                    if( sub.dispatched > (sub.localInfo.getPrefetchSize()*.75) ) {
-                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched));
-                        sub.dispatched=0;
-                    }                    
+                    localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched));
+                                   
                 }
             } else if ( command.isBrokerInfo() ) {
                 synchronized( this ) {
