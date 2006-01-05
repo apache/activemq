@@ -19,9 +19,9 @@ package org.apache.activemq.broker.region;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.group.MessageGroupHashBucket;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupSet;
-import org.apache.activemq.broker.region.group.SimpleMessageGroupMap;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -65,7 +64,8 @@ public class Queue implements Destination {
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
     private Subscription exclusiveOwner;
-    private final MessageGroupMap messageGroupOwners = new SimpleMessageGroupMap();
+    private MessageGroupMap messageGroupOwners;
+    private int messageGroupHashBucketCount = 1024;
 
     protected long garbageSize = 0;
     protected long garbageSizeBeforeCollection = 1000;
@@ -186,7 +186,7 @@ public class Queue implements Destination {
             }
 
             ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
-            MessageGroupSet ownedGroups = messageGroupOwners.removeConsumer(consumerId);
+            MessageGroupSet ownedGroups = getMessageGroupOwners().removeConsumer(consumerId);
 
             synchronized (messages) {
                 if (!sub.getConsumerInfo().isBrowser()) {
@@ -323,6 +323,9 @@ public class Queue implements Destination {
     }
 
     public MessageGroupMap getMessageGroupOwners() {
+        if (messageGroupOwners == null) {
+            messageGroupOwners = new MessageGroupHashBucket(messageGroupHashBucketCount );
+        }
         return messageGroupOwners;
     }
 
@@ -341,6 +344,15 @@ public class Queue implements Destination {
     public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
         this.deadLetterStrategy = deadLetterStrategy;
     }
+
+    public int getMessageGroupHashBucketCount() {
+        return messageGroupHashBucketCount;
+    }
+
+    public void setMessageGroupHashBucketCount(int messageGroupHashBucketCount) {
+        this.messageGroupHashBucketCount = messageGroupHashBucketCount;
+    }
+    
 
     // Implementation methods
     // -------------------------------------------------------------------------

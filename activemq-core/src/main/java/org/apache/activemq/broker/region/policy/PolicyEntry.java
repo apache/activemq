@@ -34,6 +34,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy;
+    private int messageGroupHashBucketCount = 1024;
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -42,6 +43,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (deadLetterStrategy != null) {
             queue.setDeadLetterStrategy(deadLetterStrategy);
         }
+        queue.setMessageGroupHashBucketCount(messageGroupHashBucketCount);
     }
 
     public void configure(Topic topic) {
@@ -96,6 +98,20 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
         this.deadLetterStrategy = deadLetterStrategy;
+    }
+
+    public int getMessageGroupHashBucketCount() {
+        return messageGroupHashBucketCount;
+    }
+
+    /**
+     * Sets the number of hash buckets to use for the message group functionality. 
+     * This is only applicable to using message groups to parallelize processing of a queue
+     * while preserving order across an individual JMSXGroupID header value.
+     * This value sets the number of hash buckets that will be used (i.e. the maximum possible concurrency).
+     */
+    public void setMessageGroupHashBucketCount(int messageGroupHashBucketCount) {
+        this.messageGroupHashBucketCount = messageGroupHashBucketCount;
     }
     
     
