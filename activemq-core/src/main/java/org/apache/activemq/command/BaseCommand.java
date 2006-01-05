@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.command;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
+import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * 
@@ -87,50 +84,7 @@ abstract public class BaseCommand implements Command {
     }
 
     public String toString() {
-        LinkedHashMap map = new LinkedHashMap();
-        addFields(map, getClass());
-        return simpleName(getClass())+" "+map;
+        return IntrospectionSupport.toString(this, BaseCommand.class);
     }
-
-    public static String simpleName(Class clazz) {
-        String name = clazz.getName();
-        int p = name.lastIndexOf(".");
-        if( p >= 0 ) {
-            name = name.substring(p+1);
-        }
-        return name;
-    }
-    
-
-    private void addFields(LinkedHashMap map, Class clazz) {
-        
-        if( clazz!=BaseCommand.class ) 
-            addFields( map, clazz.getSuperclass() );
-        
-        Field[] fields = clazz.getDeclaredFields();
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            if( Modifier.isStatic(field.getModifiers()) || 
-                Modifier.isTransient(field.getModifiers()) ||
-                Modifier.isPrivate(field.getModifiers())  ) {
-                continue;
-            }
-            
-            try {
-                Object o = field.get(this);
-                if( o!=null && o.getClass().isArray() ) {
-                    try {
-                        o = Arrays.asList((Object[]) o);
-                    } catch (Throwable e) {
-                    }
-                }
-                map.put(field.getName(), o);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-        
-    }
-
 
 }

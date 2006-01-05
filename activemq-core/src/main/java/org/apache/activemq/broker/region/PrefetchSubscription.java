@@ -25,6 +25,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -39,6 +41,7 @@ import java.util.LinkedList;
  * @version $Revision: 1.15 $
  */
 abstract public class PrefetchSubscription extends AbstractSubscription {
+    static private final Log log = LogFactory.getLog(PrefetchSubscription.class);
     
     final protected LinkedList matched = new LinkedList();
     final protected LinkedList dispatched = new LinkedList();

@@ -18,6 +18,8 @@ package org.apache.activemq;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsResourceProvider;
 import org.apache.activemq.test.TestSupport;
 
@@ -31,6 +33,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.MessageListener;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +62,8 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     private List ackMessages = new ArrayList(messageCount);
     private boolean resendPhase = false;
 
+    private BrokerService broker;
+
     public JmsTransactionTestSupport() {
         super();
     }
@@ -70,7 +77,9 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
-        super.setUp();
+        broker = createBroker();
+        broker.start();
+        
         resourceProvider = getJmsResourceProvider();
         topic = resourceProvider.isTopic();
         // We will be using transacted sessions.
@@ -79,17 +88,21 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         reconnect();
     }
 
+    /**
+     */
+    protected BrokerService createBroker() throws Exception, URISyntaxException {
+        return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
+    }
+
     /* (non-Javadoc)
      * @see junit.framework.TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
-        //TODO
-        //log.info("Test Done.  Stats");
-        //((ActiveMQConnectionFactory) connectionFactory).getFactoryStats().dump(new IndentPrinter());
         log.info("Closing down connection");
 
         session.close();
         connection.close();
+        broker.stop();
         log.info("Connection closed.");
     }
 

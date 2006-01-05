@@ -25,11 +25,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.SubscriptionKey;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
@@ -42,7 +45,8 @@ import java.util.Set;
  * @version $Revision: 1.12 $
  */
 public class TopicRegion extends AbstractRegion {
-
+    private static final Log log = LogFactory.getLog(TopicRegion.class);
+    
     protected final ConcurrentHashMap durableSubscriptions = new ConcurrentHashMap();
     private final PolicyMap policyMap;
 
@@ -78,7 +82,8 @@ public class TopicRegion extends AbstractRegion {
                 }
                 else {
                     // Change the consumer id key of the durable sub.
-                    subscriptions.remove(sub.getConsumerInfo().getConsumerId());
+                    if( sub.getConsumerInfo().getConsumerId()!=null )
+                        subscriptions.remove(sub.getConsumerInfo().getConsumerId());
                     subscriptions.put(info.getConsumerId(), sub);
                     sub.activate(context, info);
                 }
@@ -136,6 +141,16 @@ public class TopicRegion extends AbstractRegion {
         TopicMessageStore store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
         Topic topic = new Topic(destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
         configureTopic(topic, destination);
+        
+        // Eagerly recover the durable subscriptions
+        if (store != null) {            
+            SubscriptionInfo[] infos = store.getAllSubscriptions();
+            for (int i = 0; i < infos.length; i++) {
+                log.info("Restoring durable subscription: "+infos[i]);
+                createDurableSubscription(infos[i]);
+            }            
+        }
+        
         return topic;
     }
 
@@ -165,6 +180,15 @@ public class TopicRegion extends AbstractRegion {
             return new TopicSubscription(context, info, memoryManager);
         }
     }
+    
+    public Subscription createDurableSubscription(SubscriptionInfo info) throws JMSException {
+        SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubcriptionName());
+        DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
+        sub = new DurableTopicSubscription(info);
+        durableSubscriptions.put(key, sub);
+        return sub;
+    }
+    
 
     /**
      */

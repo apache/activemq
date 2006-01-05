@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -25,16 +26,16 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 /**
  * A Region is used to implement the different QOS options available to 
- * a broker.  A Broker is composed of multiple mesasge processing Regions that
+ * a broker.  A Broker is composed of multiple message processing Regions that
  * provide different QOS options.
  * 
  * @version $Revision$
  */
-public interface Region {
+public interface Region extends Service {
 
     /**
      * Used to create a destination.  Usually, this method is invoked as a side-effect of sending
-     * a message to a destiantion that does not exist yet.
+     * a message to a destination that does not exist yet.
      * 
      * @param context
      * @param destination the destination to create.
@@ -43,11 +44,11 @@ public interface Region {
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable;
     
     /**
-     * Used to destory a destination.  
-     * This shoud try to quiesce use of the destination up to the timeout alotted time before removing the destination.
+     * Used to destroy a destination.  
+     * This should try to quiesce use of the destination up to the timeout allotted time before removing the destination.
      * This will remove all persistent messages associated with the destination.
      * 
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      * @param destination what is being removed from the broker.
      * @param timeout the max amount of time to wait for the destination to quiesce
      */
@@ -55,19 +56,19 @@ public interface Region {
 
     /**
      * Adds a consumer.
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      */
     public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable;
 
     /**
      * Removes a consumer.
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      */
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable;
 
     /**
      * Deletes a durable subscription.
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      * @param info TODO
      */
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable;
@@ -76,13 +77,13 @@ public interface Region {
      * Send a message to the broker to using the specified destination.  The destination specified
      * in the message does not need to match the destination the message is sent to.  This is 
      * handy in case the message is being sent to a dead letter destination.
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      */
     public void send(ConnectionContext context, Message message) throws Throwable;
     
     /**
      * Used to acknowledge the receipt of a message by a client.
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      */
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable;
 

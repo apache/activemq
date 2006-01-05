@@ -18,11 +18,15 @@ package org.apache.activemq.util;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -136,6 +140,57 @@ public class IntrospectionSupport {
         if( clazz == URI.class )
             return true;
         return false;
+    }
+
+    static public String toString(Object target) {
+        return toString(target, Object.class);
+    }
+
+    static public String toString(Object target, Class stopClass) {
+        LinkedHashMap map = new LinkedHashMap();
+        addFields(target, target.getClass(), stopClass, map);
+        return simpleName(target.getClass())+" "+map;
+    }
+
+    static public String simpleName(Class clazz) {
+        String name = clazz.getName();
+        int p = name.lastIndexOf(".");
+        if( p >= 0 ) {
+            name = name.substring(p+1);
+        }
+        return name;
+    }
+    
+
+    static private void addFields(Object target, Class startClass, Class stopClass, LinkedHashMap map) {
+        
+        if( startClass!=stopClass ) 
+            addFields( target, startClass.getSuperclass(), stopClass, map );
+        
+        Field[] fields = startClass.getDeclaredFields();
+        for (int i = 0; i < fields.length; i++) {
+            Field field = fields[i];
+            if( Modifier.isStatic(field.getModifiers()) || 
+                Modifier.isTransient(field.getModifiers()) ||
+                Modifier.isPrivate(field.getModifiers())  ) {
+                continue;
+            }
+            
+            try {
+                field.setAccessible(true);
+                Object o = field.get(target);
+                if( o!=null && o.getClass().isArray() ) {
+                    try {
+                        o = Arrays.asList((Object[]) o);
+                    } catch (Throwable e) {
+                    }
+                }
+                map.put(field.getName(), o);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+        
     }
 
     
