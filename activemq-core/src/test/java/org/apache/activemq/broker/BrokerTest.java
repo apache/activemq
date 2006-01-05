@@ -518,27 +518,19 @@ public class BrokerTest extends BrokerTestSupport {
         
         connection1.send(createMessage(producerInfo1, destination, deliveryMode));
         connection1.send(createMessage(producerInfo1, destination, deliveryMode));
+
+        // the behavior is VERY dependent on the recovery policy used.
+        // But the default broker settings try to make it as consistent as possible
         
-        if( deliveryMode == DeliveryMode.NON_PERSISTENT && durableConsumer ) {
-            // Durable subs don't keep non persistent messages around!
-            for( int i=0; i < 2 ; i++ ) {
-                Message m2 = receiveMessage(connection1);
-                assertNotNull(m2);
-            }
-            
-        } else {
-            
-            // Subscription should see all messages sent.
-            Message m2 = receiveMessage(connection1);
+        // Subscription should see all messages sent.
+        Message m2 = receiveMessage(connection1);
+        assertNotNull(m2);
+        assertEquals(m.getMessageId(), m2.getMessageId());
+        for( int i=0; i < 2 ; i++ ) {
+            m2 = receiveMessage(connection1);
             assertNotNull(m2);
-            assertEquals(m.getMessageId(), m2.getMessageId());
-            for( int i=0; i < 2 ; i++ ) {
-                m2 = receiveMessage(connection1);
-                assertNotNull(m2);
-            }
-            
         }
-        
+            
         assertNoMessagesLeft(connection1);
     }
 

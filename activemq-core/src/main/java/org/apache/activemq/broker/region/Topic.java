@@ -21,9 +21,9 @@ import java.io.IOException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
-import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
-import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.FixedCountSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -43,6 +43,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.SubscriptionKey;
 
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The Topic is a destination that sends a copy of a message to every active
@@ -60,10 +61,11 @@ public class Topic implements Destination {
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
-    private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
+    private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new FixedCountSubscriptionRecoveryPolicy();
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
-
+    private AtomicInteger durableSubscriberCounter = new AtomicInteger();
+    
     public Topic(ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory) {
 
@@ -90,19 +92,54 @@ public class Topic implements Destination {
         destinationStatistics.getConsumers().increment();
         sub.add(context, this);
         if (sub.getConsumerInfo().isDurable()) {
-            recover((DurableTopicSubscription) sub, true);
+            recover(context, (DurableTopicSubscription) sub, true);
         }
         else {
-            if (sub.getConsumerInfo().isRetroactive()) {
+            recover(context, sub);
+        }
+    }
+
+    /**
+     * Used to recover the message list non durable subscriptions.  Recovery only happens if the consumer is
+     * retroactive.
+     * 
+     * @param context
+     * @param sub
+     * @throws Throwable
+     */
+    private void recover(ConnectionContext context, final Subscription sub) throws Throwable {
+        if (sub.getConsumerInfo().isRetroactive()) {
+            
+            // synchronize with dispatch method so that no new messages are sent
+            // while we are recovering a subscription to avoid out of order messages.
+            dispatchValve.turnOff();
+            try {
+                
+                synchronized(consumers) {
+                    consumers.add(sub);
+                }
                 subscriptionRecoveryPolicy.recover(context, this, sub);
+                
+            } finally {
+                dispatchValve.turnOn();
             }
+            
+        } else {
             synchronized(consumers) {
                 consumers.add(sub);
             }
         }
     }
 
-    public void recover(final DurableTopicSubscription sub, boolean initialActivation) throws Throwable {
+    /**
+     * Used to recover the message list for a durable subscription.
+     * 
+     * @param context
+     * @param sub
+     * @param initialActivation
+     * @throws Throwable
+     */
+    public void recover(ConnectionContext context, final DurableTopicSubscription sub, boolean initialActivation) throws Throwable {
 
         // synchronize with dispatch method so that no new messages are sent
         // while
@@ -110,9 +147,11 @@ public class Topic implements Destination {
         dispatchValve.turnOff();
         try {
 
+            boolean persistenceWasOptimized = canOptimizeOutPersistence();
             if (initialActivation) {
-                synchronized(consumers) {
+                synchronized(consumers) {                    
                     consumers.add(sub);
+                    durableSubscriberCounter.incrementAndGet();
                 }
             }
 
@@ -160,6 +199,16 @@ public class Topic implements Destination {
                             throw new RuntimeException("Should not be called.");
                         }
                     });
+                    
+                    if( initialActivation && sub.getConsumerInfo().isRetroactive() ) {
+                        // Then use the subscriptionRecoveryPolicy since there will not be any messages in the persistent store.
+                        if( persistenceWasOptimized ) {
+                            subscriptionRecoveryPolicy.recover(context, this, sub);
+                        } else {
+                            // TODO: implement something like
+                            // subscriptionRecoveryPolicy.recoverNonPersistent(context, this, sub);
+                        }
+                    }
                 }
             }
 
@@ -173,6 +222,9 @@ public class Topic implements Destination {
         destinationStatistics.getConsumers().decrement();
         synchronized(consumers) {
             consumers.remove(sub);
+            if( sub.getConsumerInfo().isDurable() ) {
+                durableSubscriberCounter.decrementAndGet();
+            }
         }
         sub.remove(context, this);
     }
@@ -184,7 +236,7 @@ public class Topic implements Destination {
 
         message.setRegionDestination(this);
 
-        if (store != null && message.isPersistent())
+        if (store != null && message.isPersistent() && !canOptimizeOutPersistence() )
             store.addMessage(context, message);
 
         message.incrementReferenceCount();
@@ -207,6 +259,10 @@ public class Topic implements Destination {
             message.decrementReferenceCount();
         }
 
+    }
+
+    private boolean canOptimizeOutPersistence() {
+        return durableSubscriberCounter.get()==0;
     }
 
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
