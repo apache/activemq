@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.group.MessageGroupMap;
+import org.apache.activemq.broker.region.group.MessageGroupSet;
+import org.apache.activemq.broker.region.group.SimpleMessageGroupMap;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
@@ -42,8 +41,11 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -63,7 +65,7 @@ public class Queue implements Destination {
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
     private Subscription exclusiveOwner;
-    private final ConcurrentHashMap messageGroupOwners = new ConcurrentHashMap();
+    private final MessageGroupMap messageGroupOwners = new SimpleMessageGroupMap();
 
     protected long garbageSize = 0;
     protected long garbageSizeBeforeCollection = 1000;
@@ -183,16 +185,8 @@ public class Queue implements Destination {
                 wasExclusiveOwner = true;
             }
 
-            HashSet ownedGroups = new HashSet();
             ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
-            for (Iterator iter = messageGroupOwners.keySet().iterator(); iter.hasNext();) {
-                String group = (String) iter.next();
-                ConsumerId owner = (ConsumerId) messageGroupOwners.get(group);
-                if (owner.equals(consumerId)) {
-                    ownedGroups.add(group);
-                    iter.remove();
-                }
-            }
+            MessageGroupSet ownedGroups = messageGroupOwners.removeConsumer(consumerId);
 
             synchronized (messages) {
                 if (!sub.getConsumerInfo().isBrowser()) {
@@ -305,7 +299,7 @@ public class Queue implements Destination {
 
     public String toString() {
         return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size() + ", memory=" + usageManager.getPercentUsage()
-                + "%, size=" + messages.size() + ", in flight groups=" + messageGroupOwners.size();
+                + "%, size=" + messages.size() + ", in flight groups=" + messageGroupOwners;
     }
 
     public void start() throws Exception {
@@ -328,7 +322,7 @@ public class Queue implements Destination {
         return destinationStatistics;
     }
 
-    public ConcurrentHashMap getMessageGroupOwners() {
+    public MessageGroupMap getMessageGroupOwners() {
         return messageGroupOwners;
     }
 
