@@ -117,8 +117,8 @@
   </scm>
 
   <organization>
-    <name>LogicBlaze Inc.</name>
-    <url>http://www.logicblaze.com/</url>
+    <name>Apache Software Foundation.</name>
+    <url>http://www.apache.org/</url>
   </organization>
 
   <dependencyManagement>
@@ -196,7 +196,7 @@
       <dependency>
         <groupId>log4j</groupId>
         <artifactId>log4j</artifactId>
-        <version>1.2.8</version>
+        <version>1.2.12</version>
         <scope>runtime</scope>
       </dependency>
       
