@@ -426,12 +426,11 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
      */
     protected void reconnect() throws JMSException {
 
-        Connection t = resourceProvider.createConnection(connectionFactory);
         if (connection != null) {
             // Close the previous connection.
             connection.close();
         }
-        connection = t;
+        connection = resourceProvider.createConnection(connectionFactory);
 
         session = resourceProvider.createSession(connection);
         destination = resourceProvider.createDestination(session, getSubject());
