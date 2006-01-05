@@ -31,11 +31,13 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.WireFormatInfo;
@@ -300,7 +302,7 @@ public class DemandForwardingBridge implements Bridge {
         }
     }
 
-    protected void serviceLocalException(IOException error) {
+    protected void serviceLocalException(Throwable error) {
         log.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: "+error.getMessage(), error);
         ServiceSupport.dispose(this);
     }
@@ -347,8 +349,16 @@ public class DemandForwardingBridge implements Bridge {
 
                     if( trace )
                         log.trace("bridging " + localBroker + " -> " + remoteBroker + ": "+message);
-                    
+                    if (!message.isPersistent() || !sub.remoteInfo.isDurable()){
                     remoteBroker.oneway( message );
+                    }else{
+                        Response response = remoteBroker.request(message);
+                        if (response.isException()) {
+                            ExceptionResponse er = (ExceptionResponse) response;
+                            serviceLocalException(er.getException());
+                            
+                        }
+                    }
                     localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched));
                                    
                 }
@@ -373,7 +383,7 @@ public class DemandForwardingBridge implements Bridge {
                     log.warn("Unexpected local command: "+command);
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             serviceLocalException(e);
         }
     }
