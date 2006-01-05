@@ -111,7 +111,7 @@ public class DefaultStatementProvider implements StatementProvider {
     
     public String getFindAllDurableSubsStatment() {
         return "SELECT SELECTOR, SUB_NAME, CLIENT_ID" +
-        "FROM "+getTablePrefix()+durableSubAcksTableName+
+        " FROM "+getTablePrefix()+durableSubAcksTableName+
         " WHERE CONTAINER=?";
     }
 
