@@ -16,73 +16,60 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.DataStructure;
-
 /**
- * Configuration options used to control how messages are re-delivered when
- * they are rolled back.
- *  
- * @openwire:marshaller
+ * Configuration options used to control how messages are re-delivered when they
+ * are rolled back.
+ * 
  * @version $Revision: 1.11 $
  */
-public class RedeliveryPolicy implements DataStructure {
-    
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.REDELIVERY_POLICY;
-    
+public class RedeliveryPolicy implements Cloneable {
+
     protected int maximumRedeliveries = 5;
     protected long initialRedeliveryDelay = 1000L;
     protected boolean useExponentialBackOff = false;
     protected short backOffMultiplier = 5;
-    
-    public RedeliveryPolicy() {        
-    }    
-    
-    public byte getDataStructureType() {
-        return DATA_STRUCTURE_TYPE;
+
+    public RedeliveryPolicy() {
     }
 
-    /**
-     * @openwire:property version=1 cache=false
-     */
+    public RedeliveryPolicy copy() {
+        try {
+            return (RedeliveryPolicy) clone();
+        }
+        catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Could not clone: " + e, e);
+        }
+    }
+
     public short getBackOffMultiplier() {
         return backOffMultiplier;
     }
+
     public void setBackOffMultiplier(short backOffMultiplier) {
         this.backOffMultiplier = backOffMultiplier;
     }
 
-    /**
-     * @openwire:property version=1 cache=false
-     */
     public long getInitialRedeliveryDelay() {
         return initialRedeliveryDelay;
     }
+
     public void setInitialRedeliveryDelay(long initialRedeliveryDelay) {
         this.initialRedeliveryDelay = initialRedeliveryDelay;
     }
 
-    /**
-     * @openwire:property version=1 cache=false
-     */
     public int getMaximumRedeliveries() {
         return maximumRedeliveries;
     }
+
     public void setMaximumRedeliveries(int maximumRedeliveries) {
         this.maximumRedeliveries = maximumRedeliveries;
     }
 
-    /**
-     * @openwire:property version=1 cache=false
-     */
     public boolean isUseExponentialBackOff() {
         return useExponentialBackOff;
     }
+
     public void setUseExponentialBackOff(boolean useExponentialBackOff) {
         this.useExponentialBackOff = useExponentialBackOff;
-    }
-
-    public boolean isMarshallAware() {
-        return false;
     }
 }
