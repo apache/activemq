@@ -272,7 +272,7 @@ public class Main {
                     System.setProperty(key, value);
                 }
 
-                // If token is a predefined query define option
+                // If token is a additive predefined query define option
                 else if (token.startsWith("-Q")) {
                     String key = token.substring(2);
                     String value = "";
@@ -282,32 +282,37 @@ public class Main {
                         key = key.substring(0, pos);
                     }
 
-                    // If subtractive query
-                    if (key.startsWith("!")) {
-                        // Transform predefined query to object name query
-                        String predefQuery = PREDEFINED_OBJNAME_QUERY.getProperty(key.substring(1));
-                        if (predefQuery == null) {
-                            printError("Unknown query object type: " + key.substring(1));
-                            return;
-                        }
-                        String queryStr = createQueryString(predefQuery, value);
-                        querySubObjects.add(queryStr);
-                    }
-
                     // If additive query
-                    else {
-                        // Transform predefined query to object name query
-                        String predefQuery = PREDEFINED_OBJNAME_QUERY.getProperty(key);
-                        if (predefQuery == null) {
-                            printError("Unknown query object type: " + key);
-                            return;
-                        }
-                        String queryStr = createQueryString(predefQuery, value);
-                        queryAddObjects.add(queryStr);
+                    String predefQuery = PREDEFINED_OBJNAME_QUERY.getProperty(key);
+                    if (predefQuery == null) {
+                        printError("Unknown query object type: " + key);
+                        return;
                     }
+                    String queryStr = createQueryString(predefQuery, value);
+                    queryAddObjects.add(queryStr);
                 }
 
-                // If token is an object name query option
+                // If token is a substractive predefined query define option
+                else if (token.startsWith("-xQ")) {
+                    String key = token.substring(3);
+                    String value = "";
+                    int pos = key.indexOf("=");
+                    if (pos >= 0) {
+                        value = key.substring(pos + 1);
+                        key = key.substring(0, pos);
+                    }
+
+                    // If subtractive query
+                    String predefQuery = PREDEFINED_OBJNAME_QUERY.getProperty(key);
+                    if (predefQuery == null) {
+                        printError("Unknown query object type: " + key);
+                        return;
+                    }
+                    String queryStr = createQueryString(predefQuery, value);
+                    querySubObjects.add(queryStr);
+                }
+
+                // If token is an additive object name query option
                 else if (token.startsWith("--objname")) {
 
                     // If no object name query is specified, or next token is a new option
@@ -317,15 +322,20 @@ public class Main {
                     }
 
                     String queryString = (String)tokens.remove(0);
+                    queryAddObjects.add(queryString);
+                }
 
-                    // If subtractive query
-                    if (queryString.startsWith("!")) {
-                        querySubObjects.add(queryString.substring(1));
+                // If token is a substractive object name query option
+                else if (token.startsWith("--xobjname")) {
 
-                    // If additive query
-                    } else {
-                        queryAddObjects.add(queryString);
+                    // If no object name query is specified, or next token is a new option
+                    if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                        printError("Object name query not specified");
+                        return;
                     }
+
+                    String queryString = (String)tokens.remove(0);
+                    querySubObjects.add(queryString);
                 }
 
                 // If token is a view option
@@ -1140,9 +1150,9 @@ public class Main {
             "",
             "Query Options:",
             "    -Q<type>=<name>               Add to the search list the specific object type matched by the defined object identifier.",
-            "    -Q!<type>=<name>              Remove from the search list the specific object type matched by the object identifier.",
+            "    -xQ<type>=<name>              Remove from the search list the specific object type matched by the object identifier.",
             "    --objname <query>             Add to the search list objects matched by the query similar to the JMX object name format.",
-            "    --objname !<query>            Remove from the search list objects matched by the query similar to the JMX object name format.",
+            "    --xobjname <query>            Remove from the search list objects matched by the query similar to the JMX object name format.",
             "    --view <attr1>,<attr2>,...    Select the specific attribute of the object to view. By default all attributes will be displayed.",
             "    --jmxurl <url>                Set the JMX URL to connect to.",
             "    --version                     Display the version information.",
@@ -1167,13 +1177,13 @@ public class Main {
             "    Main -QTopic=* -QQueue=* --view EnqueueCount,DequeueCount",
             "        - Print the attributes EnqueueCount and DequeueCount of all registered topics and queues.",
             "",
-            "    Main -QTopic=* -Q!Topic=ActiveMQ.Advisory.*",
+            "    Main -QTopic=* -xQTopic=ActiveMQ.Advisory.*",
             "        - Print all attributes of all topics except those that has a name that begins with \"ActiveMQ.Advisory\".",
             "",
-            "    Main --objname Type=*Connect*,BrokerName=local* -Q!NetworkConnector=*",
+            "    Main --objname Type=*Connect*,BrokerName=local* -xQNetworkConnector=*",
             "        - Print all attributes of all connectors, connections excluding network connectors that belongs to the broker that begins with local.",
             "",
-            "    Main -QQueue=* -Q!Queue=????",
+            "    Main -QQueue=* -xQQueue=????",
             "        - Print all attributes of all queues except those that are 4 letters long.",
             "",
         }
