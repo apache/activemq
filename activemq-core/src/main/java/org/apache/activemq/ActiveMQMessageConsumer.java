@@ -110,6 +110,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private MessageAvailableListener availableListener;
 
+    private RedeliveryPolicy redeliveryPolicy;
+
     /**
      * Create a MessageConsumer
      * 
@@ -151,6 +153,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         this.session = session;
         this.selector = selector;
+        this.redeliveryPolicy = session.connection.getRedeliveryPolicy();
 
         this.info = new ConsumerInfo(consumerId);
         this.info.setSubcriptionName(name);
@@ -194,6 +197,17 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public JMSConsumerStatsImpl getConsumerStats() {
         return stats;
+    }
+
+    public RedeliveryPolicy getRedeliveryPolicy() {
+        return redeliveryPolicy;
+    }
+
+    /**
+     * Sets the redelivery policy used when messages are redelivered
+     */
+    public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
+        this.redeliveryPolicy = redeliveryPolicy;
     }
 
     /**
@@ -637,7 +651,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 return;
 
             rollbackCounter++;
-            RedeliveryPolicy redeliveryPolicy = session.connection.getRedeliveryPolicy();
             if (rollbackCounter > redeliveryPolicy.getMaximumRedeliveries()) {
                 
                 // We need to NACK the messages so that they get sent to the
