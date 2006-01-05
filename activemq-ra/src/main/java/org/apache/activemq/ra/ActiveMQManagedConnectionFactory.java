@@ -177,6 +177,11 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
         info.setUseInboundSession(useInboundSession);
     }
 
+    public boolean isUseInboundSessionEnabled() {
+        return info.isUseInboundSessionEnabled();
+    }
+
+    // Redelivery policy configuration
     public Long getInitialRedeliveryDelay() {
         return info.getInitialRedeliveryDelay();
     }
@@ -193,10 +198,6 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
         return info.getRedeliveryUseExponentialBackOff();
     }
 
-    public boolean isUseInboundSessionEnabled() {
-        return info.isUseInboundSessionEnabled();
-    }
-
     public void setInitialRedeliveryDelay(Long value) {
         info.setInitialRedeliveryDelay(value);
     }
@@ -209,6 +210,12 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
         info.setRedeliveryBackOffMultiplier(value);
     }
 
+    public void setRedeliveryUseExponentialBackOff(Boolean value) {
+        info.setRedeliveryUseExponentialBackOff(value);
+    }
+
+
+    // Prefetch policy configuration
     public Integer getDurableTopicPrefetch() {
         return info.getDurableTopicPrefetch();
     }
@@ -247,10 +254,6 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
 
     public void setQueuePrefetch(Integer queuePrefetch) {
         info.setQueuePrefetch(queuePrefetch);
-    }
-
-    public void setRedeliveryUseExponentialBackOff(Boolean value) {
-        info.setRedeliveryUseExponentialBackOff(value);
     }
 
     public void setTopicPrefetch(Integer topicPrefetch) {
