@@ -146,18 +146,6 @@ typedef struct ow_FlushCommand {
 ow_FlushCommand *ow_FlushCommand_create(apr_pool_t *pool);
 ow_boolean ow_is_a_FlushCommand(ow_DataStructure *object);
 
-typedef struct ow_RedeliveryPolicy {
-
-   ow_byte structType;
-   ow_short backOffMultiplier;
-   ow_long initialRedeliveryDelay;
-   ow_int maximumRedeliveries;
-   ow_boolean useExponentialBackOff;
-
-} ow_RedeliveryPolicy;
-ow_RedeliveryPolicy *ow_RedeliveryPolicy_create(apr_pool_t *pool);
-ow_boolean ow_is_a_RedeliveryPolicy(ow_DataStructure *object);
-
 typedef struct ow_ConsumerId {
 
    ow_byte structType;

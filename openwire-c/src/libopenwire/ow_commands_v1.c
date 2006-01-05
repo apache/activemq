@@ -552,60 +552,6 @@ apr_status_t ow_unmarshal_FlushCommand(ow_byte_array *buffer, ow_bit_buffer *bit
 	return APR_SUCCESS;
 }
 
-ow_boolean ow_is_a_RedeliveryPolicy(ow_DataStructure *object) {
-   if( object == 0 )
-      return 0;
-      
-   switch(object->structType) {
-   case OW_REDELIVERYPOLICY_TYPE:
-      return 1;
-   }
-   return 0;
-}
-
-
-ow_RedeliveryPolicy *ow_RedeliveryPolicy_create(apr_pool_t *pool) 
-{
-   ow_RedeliveryPolicy *value = apr_pcalloc(pool,sizeof(ow_RedeliveryPolicy));
-   if( value!=0 ) {
-      ((ow_DataStructure*)value)->structType = OW_REDELIVERYPOLICY_TYPE;
-   }
-   return value;
-}
-
-
-apr_status_t ow_marshal1_RedeliveryPolicy(ow_bit_buffer *buffer, ow_RedeliveryPolicy *object)
-{
-   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
-   
-   ow_marshal1_long(buffer, object->initialRedeliveryDelay);
-   
-   ow_bit_buffer_append(buffer, object->useExponentialBackOff);
-   
-	return APR_SUCCESS;
-}
-apr_status_t ow_marshal2_RedeliveryPolicy(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_RedeliveryPolicy *object)
-{
-   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
-   SUCCESS_CHECK(ow_byte_buffer_append_short(buffer, object->backOffMultiplier));
-   SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->initialRedeliveryDelay));
-   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->maximumRedeliveries));
-   ow_bit_buffer_read(bitbuffer);
-   
-	return APR_SUCCESS;
-}
-
-apr_status_t ow_unmarshal_RedeliveryPolicy(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_RedeliveryPolicy *object, apr_pool_t *pool)
-{
-   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
-   SUCCESS_CHECK(ow_byte_array_read_short(buffer, &object->backOffMultiplier));
-   SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->initialRedeliveryDelay, pool));
-   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->maximumRedeliveries));
-   object->useExponentialBackOff = ow_bit_buffer_read(bitbuffer);
-   
-	return APR_SUCCESS;
-}
-
 ow_boolean ow_is_a_ConsumerId(ow_DataStructure *object) {
    if( object == 0 )
       return 0;
@@ -2516,7 +2462,6 @@ ow_DataStructure *ow_create_object(ow_byte type, apr_pool_t *pool)
       case OW_XATRANSACTIONID_TYPE: return (ow_DataStructure *)ow_XATransactionId_create(pool);
       case OW_JOURNALTRACE_TYPE: return (ow_DataStructure *)ow_JournalTrace_create(pool);
       case OW_FLUSHCOMMAND_TYPE: return (ow_DataStructure *)ow_FlushCommand_create(pool);
-      case OW_REDELIVERYPOLICY_TYPE: return (ow_DataStructure *)ow_RedeliveryPolicy_create(pool);
       case OW_CONSUMERID_TYPE: return (ow_DataStructure *)ow_ConsumerId_create(pool);
       case OW_JOURNALTOPICACK_TYPE: return (ow_DataStructure *)ow_JournalTopicAck_create(pool);
       case OW_BROKERID_TYPE: return (ow_DataStructure *)ow_BrokerId_create(pool);
@@ -2569,7 +2514,6 @@ apr_status_t ow_marshal1_object(ow_bit_buffer *buffer, ow_DataStructure *object)
       case OW_XATRANSACTIONID_TYPE: return ow_marshal1_XATransactionId(buffer, (ow_XATransactionId*)object);
       case OW_JOURNALTRACE_TYPE: return ow_marshal1_JournalTrace(buffer, (ow_JournalTrace*)object);
       case OW_FLUSHCOMMAND_TYPE: return ow_marshal1_FlushCommand(buffer, (ow_FlushCommand*)object);
-      case OW_REDELIVERYPOLICY_TYPE: return ow_marshal1_RedeliveryPolicy(buffer, (ow_RedeliveryPolicy*)object);
       case OW_CONSUMERID_TYPE: return ow_marshal1_ConsumerId(buffer, (ow_ConsumerId*)object);
       case OW_JOURNALTOPICACK_TYPE: return ow_marshal1_JournalTopicAck(buffer, (ow_JournalTopicAck*)object);
       case OW_BROKERID_TYPE: return ow_marshal1_BrokerId(buffer, (ow_BrokerId*)object);
@@ -2622,7 +2566,6 @@ apr_status_t ow_marshal2_object(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer
       case OW_XATRANSACTIONID_TYPE: return ow_marshal2_XATransactionId(buffer, bitbuffer, (ow_XATransactionId*)object);
       case OW_JOURNALTRACE_TYPE: return ow_marshal2_JournalTrace(buffer, bitbuffer, (ow_JournalTrace*)object);
       case OW_FLUSHCOMMAND_TYPE: return ow_marshal2_FlushCommand(buffer, bitbuffer, (ow_FlushCommand*)object);
-      case OW_REDELIVERYPOLICY_TYPE: return ow_marshal2_RedeliveryPolicy(buffer, bitbuffer, (ow_RedeliveryPolicy*)object);
       case OW_CONSUMERID_TYPE: return ow_marshal2_ConsumerId(buffer, bitbuffer, (ow_ConsumerId*)object);
       case OW_JOURNALTOPICACK_TYPE: return ow_marshal2_JournalTopicAck(buffer, bitbuffer, (ow_JournalTopicAck*)object);
       case OW_BROKERID_TYPE: return ow_marshal2_BrokerId(buffer, bitbuffer, (ow_BrokerId*)object);
@@ -2675,7 +2618,6 @@ apr_status_t ow_unmarshal_object(ow_byte_array *buffer, ow_bit_buffer *bitbuffer
       case OW_XATRANSACTIONID_TYPE: return ow_unmarshal_XATransactionId(buffer, bitbuffer, (ow_XATransactionId*)object, pool);
       case OW_JOURNALTRACE_TYPE: return ow_unmarshal_JournalTrace(buffer, bitbuffer, (ow_JournalTrace*)object, pool);
       case OW_FLUSHCOMMAND_TYPE: return ow_unmarshal_FlushCommand(buffer, bitbuffer, (ow_FlushCommand*)object, pool);
-      case OW_REDELIVERYPOLICY_TYPE: return ow_unmarshal_RedeliveryPolicy(buffer, bitbuffer, (ow_RedeliveryPolicy*)object, pool);
       case OW_CONSUMERID_TYPE: return ow_unmarshal_ConsumerId(buffer, bitbuffer, (ow_ConsumerId*)object, pool);
       case OW_JOURNALTOPICACK_TYPE: return ow_unmarshal_JournalTopicAck(buffer, bitbuffer, (ow_JournalTopicAck*)object, pool);
       case OW_BROKERID_TYPE: return ow_unmarshal_BrokerId(buffer, bitbuffer, (ow_BrokerId*)object, pool);
