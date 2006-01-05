@@ -261,7 +261,13 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      * @see javax.resource.spi.ManagedConnection#associateConnection(java.lang.Object)
      */
     public void associateConnection(Object connection) throws ResourceException {
-        throw new ResourceException("Not supported.");
+        if (connection instanceof ManagedConnectionProxy) {
+            ManagedConnectionProxy proxy = (ManagedConnectionProxy) connection;
+            proxyConnections.add(proxy);
+        }
+        else {
+            throw new ResourceException("Not supported : associating connection instance of " + connection.getClass().getName());
+        }
     }
 
     /**
