@@ -57,6 +57,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
     private BootstrapContext bootstrapContext;
     private String brokerXmlConfig;
     private BrokerService broker;
+    private ActiveMQConnectionFactory connectionFactory;
 
     public ActiveMQResourceAdapter() {
     }
@@ -77,7 +78,12 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
     }
 
     public ActiveMQConnection makeConnection() throws JMSException {
-        return makeConnection(info);
+        if (connectionFactory != null) {
+            return makeConnection(info, connectionFactory);
+        }
+        else {
+            return makeConnection(info);
+        }
     }
     
     /**
@@ -85,6 +91,10 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
     public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info) throws JMSException {
 
         ActiveMQConnectionFactory connectionFactory = createConnectionFactory(info);
+        return makeConnection(info, connectionFactory);
+    }
+
+    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info, ActiveMQConnectionFactory connectionFactory) throws JMSException {
         String userName = info.getUserName();
         String password = info.getPassword();
         ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
@@ -457,6 +467,19 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
 
     public void setUseInboundSession(Boolean useInboundSession) {
         info.setUseInboundSession(useInboundSession);
+    }
+
+    public ActiveMQConnectionFactory getConnectionFactory() {
+        return connectionFactory;
+    }
+
+    /**
+     * This allows a connection factory to be configured and shared between a ResourceAdaptor and outbound messaging.
+     * Note that setting the connectionFactory will overload many of the properties on this POJO such as the redelivery
+     * and prefetch policies; the properties on the connectionFactory will be used instead.
+     */
+    public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
     }
 
 
