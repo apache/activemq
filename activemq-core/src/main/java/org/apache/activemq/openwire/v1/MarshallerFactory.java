@@ -64,7 +64,6 @@ public class MarshallerFactory {
         add(new XATransactionIdMarshaller());
         add(new JournalTraceMarshaller());
         add(new FlushCommandMarshaller());
-        add(new RedeliveryPolicyMarshaller());
         add(new ConsumerIdMarshaller());
         add(new JournalTopicAckMarshaller());
         add(new ActiveMQTextMessageMarshaller());

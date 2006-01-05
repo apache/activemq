@@ -24,7 +24,6 @@ import javax.jms.TextMessage;
 import junit.framework.Test;
 
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.RedeliveryPolicy;
 
 /**
  * Test cases used to test the JMS message exclusive consumers.

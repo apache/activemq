@@ -18,8 +18,8 @@ package org.apache.activemq.broker.policy;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.RedeliveryPolicy;
 
 import javax.jms.Destination;
 import javax.jms.Message;
