@@ -36,7 +36,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 abstract public class AbstractSubscription implements Subscription {
     
-    protected final Log log;
+    static private final Log log = LogFactory.getLog(AbstractSubscription.class);
     
     protected ConnectionContext context;
     protected ConsumerInfo info;
@@ -50,7 +50,6 @@ abstract public class AbstractSubscription implements Subscription {
         this.info = info;
         this.destinationFilter = DestinationFilter.parseFilter(info.getDestination());
         this.selector = parseSelector(info);
-        this.log = LogFactory.getLog(getClass().getName()+"."+info.getConsumerId());
     }
     
     static private BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {

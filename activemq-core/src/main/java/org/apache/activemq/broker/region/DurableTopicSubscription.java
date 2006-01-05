@@ -26,6 +26,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.SubscriptionInfo;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
@@ -44,6 +45,22 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         this.subscriptionName = info.getSubcriptionName();
     }
     
+    public DurableTopicSubscription(SubscriptionInfo info) throws InvalidSelectorException {
+        super(null, createFakeConsumerInfo(info));
+        this.clientId = info.getClientId();
+        this.subscriptionName = info.getSubcriptionName();
+        active=false;
+        recovered=false;        
+    }
+
+    private static ConsumerInfo createFakeConsumerInfo(SubscriptionInfo info) {
+        ConsumerInfo rc = new ConsumerInfo();
+        rc.setSelector(info.getSelector());
+        rc.setSubcriptionName(info.getSubcriptionName());
+        rc.setDestination(info.getDestination());
+        return rc;
+    }
+
     synchronized public boolean isActive() {
         return active;
     }

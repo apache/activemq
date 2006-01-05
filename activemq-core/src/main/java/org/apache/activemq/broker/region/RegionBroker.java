@@ -39,6 +39,7 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.util.ServiceStopper;
 
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
@@ -108,9 +109,19 @@ public class RegionBroker implements Broker {
     
     
     public void start() throws Exception {
+        queueRegion.start();
+        topicRegion.start();
+        tempQueueRegion.start();
+        tempTopicRegion.start();
     }
 
     public void stop() throws Exception {
+        ServiceStopper ss = new ServiceStopper();
+        ss.stop(queueRegion);
+        ss.stop(topicRegion);
+        ss.stop(tempQueueRegion);
+        ss.stop(tempTopicRegion);
+        ss.throwFirstException();
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {

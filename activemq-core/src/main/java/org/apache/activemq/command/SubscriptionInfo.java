@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.util.IntrospectionSupport;
+
 
 /**
  * 
@@ -82,4 +84,9 @@ public class SubscriptionInfo implements DataStructure {
     public boolean isMarshallAware() {
         return false;
     }
+    
+    public String toString() {
+        return IntrospectionSupport.toString(this);
+    }
+
 }

@@ -31,6 +31,8 @@ import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
@@ -40,6 +42,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  */
 abstract public class AbstractRegion implements Region {
     
+    private static final Log log = LogFactory.getLog(AbstractRegion.class);
+
     protected final ConcurrentHashMap destinations = new ConcurrentHashMap();
     protected final DestinationMap destinationMap = new DestinationMap();
     protected final ConcurrentHashMap subscriptions = new ConcurrentHashMap();
@@ -57,7 +61,14 @@ abstract public class AbstractRegion implements Region {
         this.persistenceAdapter = persistenceAdapter;
     }
 
+    public void start() throws Exception {
+    }
+    
+    public void stop() throws Exception {
+    }
+    
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+        log.debug("Adding destination: "+destination);
         Destination dest = createDestination(destination);
         dest.start();
         synchronized(destinationsMutex){
@@ -86,6 +97,7 @@ abstract public class AbstractRegion implements Region {
             }
         }
 
+        log.debug("Removing destination: "+destination);
         synchronized(destinationsMutex){
             Destination dest=(Destination) destinations.remove(destination);
             if(dest==null)
