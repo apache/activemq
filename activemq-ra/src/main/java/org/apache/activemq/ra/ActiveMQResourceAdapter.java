@@ -118,7 +118,8 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
      */
     synchronized private ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo info) throws JMSException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(info.getServerUrl());
-        
+        factory.setRedeliveryPolicy(info.redeliveryPolicy());
+        factory.setPrefetchPolicy(info.prefetchPolicy());
         return factory;
     }
 
@@ -320,6 +321,86 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
      */
     public void setBrokerXmlConfig(String brokerXmlConfig) {
         this.brokerXmlConfig=brokerXmlConfig;
+    }
+
+    public Integer getDurableTopicPrefetch() {
+        return info.getDurableTopicPrefetch();
+    }
+
+    public Long getInitialRedeliveryDelay() {
+        return info.getInitialRedeliveryDelay();
+    }
+
+    public Integer getInputStreamPrefetch() {
+        return info.getInputStreamPrefetch();
+    }
+
+    public Integer getMaximumRedeliveries() {
+        return info.getMaximumRedeliveries();
+    }
+
+    public Integer getQueueBrowserPrefetch() {
+        return info.getQueueBrowserPrefetch();
+    }
+
+    public Integer getQueuePrefetch() {
+        return info.getQueuePrefetch();
+    }
+
+    public Short getRedeliveryBackOffMultiplier() {
+        return info.getRedeliveryBackOffMultiplier();
+    }
+
+    public Boolean getRedeliveryUseExponentialBackOff() {
+        return info.getRedeliveryUseExponentialBackOff();
+    }
+
+    public Integer getTopicPrefetch() {
+        return info.getTopicPrefetch();
+    }
+
+    public boolean isUseInboundSessionEnabled() {
+        return info.isUseInboundSessionEnabled();
+    }
+
+    public void setAllPrefetchValues(Integer i) {
+        info.setAllPrefetchValues(i);
+    }
+
+    public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
+        info.setDurableTopicPrefetch(durableTopicPrefetch);
+    }
+
+    public void setInitialRedeliveryDelay(Long value) {
+        info.setInitialRedeliveryDelay(value);
+    }
+
+    public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
+        info.setInputStreamPrefetch(inputStreamPrefetch);
+    }
+
+    public void setMaximumRedeliveries(Integer value) {
+        info.setMaximumRedeliveries(value);
+    }
+
+    public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
+        info.setQueueBrowserPrefetch(queueBrowserPrefetch);
+    }
+
+    public void setQueuePrefetch(Integer queuePrefetch) {
+        info.setQueuePrefetch(queuePrefetch);
+    }
+
+    public void setRedeliveryBackOffMultiplier(Short value) {
+        info.setRedeliveryBackOffMultiplier(value);
+    }
+
+    public void setRedeliveryUseExponentialBackOff(Boolean value) {
+        info.setRedeliveryUseExponentialBackOff(value);
+    }
+
+    public void setTopicPrefetch(Integer topicPrefetch) {
+        info.setTopicPrefetch(topicPrefetch);
     }
 
     /**

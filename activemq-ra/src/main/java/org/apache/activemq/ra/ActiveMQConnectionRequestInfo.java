@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.ra;
 
+import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.RedeliveryPolicy;
+
 import javax.resource.spi.ConnectionRequestInfo;
 import java.io.Serializable;
-
 
 /**
  * @version $Revision$
@@ -34,16 +36,19 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     private String serverUrl;
     private String clientid;
     private Boolean useInboundSession;
+    private RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+    private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
 
     public ActiveMQConnectionRequestInfo copy() {
         try {
-            return (ActiveMQConnectionRequestInfo) clone();
+            ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo) clone();
+            answer.redeliveryPolicy = redeliveryPolicy.copy();
+            return answer;
         }
         catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Could not clone: ", e);
+            throw new RuntimeException("Could not clone: " + e, e);
         }
     }
-
 
     /**
      * @see javax.resource.spi.ConnectionRequestInfo#hashCode()
@@ -59,7 +64,6 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return rc;
     }
 
-
     /**
      * @see javax.resource.spi.ConnectionRequestInfo#equals(java.lang.Object)
      */
@@ -71,15 +75,14 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
             return false;
         }
         ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo) o;
-        if ( notEqual(serverUrl, i.serverUrl) ) {
+        if (notEqual(serverUrl, i.serverUrl)) {
             return false;
         }
-        if ( notEqual(useInboundSession, i.useInboundSession) ) {
+        if (notEqual(useInboundSession, i.useInboundSession)) {
             return false;
         }
         return true;
     }
-
 
     /**
      * @param i
@@ -97,7 +100,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param url The url to set.
+     * @param url
+     *            The url to set.
      */
     public void setServerUrl(String url) {
         this.serverUrl = url;
@@ -111,7 +115,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param password The password to set.
+     * @param password
+     *            The password to set.
      */
     public void setPassword(String password) {
         this.password = password;
@@ -125,7 +130,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param userid The userid to set.
+     * @param userid
+     *            The userid to set.
      */
     public void setUserName(String userid) {
         this.userName = userid;
@@ -139,34 +145,139 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param clientid The clientid to set.
+     * @param clientid
+     *            The clientid to set.
      */
     public void setClientid(String clientid) {
         this.clientid = clientid;
     }
 
     public String toString() {
-        return "ActiveMQConnectionRequestInfo{ " +
-                "userName = '" + userName + "' " +
-                ", serverUrl = '" + serverUrl + "' " +
-                ", clientid = '" + clientid + "' " +
-                ", userName = '" + userName + "' " +
-                ", useInboundSession = '" + useInboundSession + "' " +
-                " }";
+        return "ActiveMQConnectionRequestInfo{ " + "userName = '" + userName + "' " + ", serverUrl = '" + serverUrl + "' " + ", clientid = '" + clientid + "' "
+                + ", userName = '" + userName + "' " + ", useInboundSession = '" + useInboundSession + "' " + " }";
     }
-
 
     public Boolean getUseInboundSession() {
         return useInboundSession;
     }
 
-
     public void setUseInboundSession(Boolean useInboundSession) {
         this.useInboundSession = useInboundSession;
     }
 
-
     public boolean isUseInboundSessionEnabled() {
-        return useInboundSession!=null && useInboundSession.booleanValue();
+        return useInboundSession != null && useInboundSession.booleanValue();
+    }
+
+    public Short getRedeliveryBackOffMultiplier() {
+        return new Short(redeliveryPolicy.getBackOffMultiplier());
+    }
+
+    public Long getInitialRedeliveryDelay() {
+        return new Long(redeliveryPolicy.getInitialRedeliveryDelay());
+    }
+
+    public Integer getMaximumRedeliveries() {
+        return new Integer(redeliveryPolicy.getMaximumRedeliveries());
+    }
+
+    public Boolean getRedeliveryUseExponentialBackOff() {
+        return new Boolean(redeliveryPolicy.isUseExponentialBackOff());
+    }
+
+    public void setRedeliveryBackOffMultiplier(Short value) {
+        if (value != null) {
+            redeliveryPolicy.setBackOffMultiplier(value.shortValue());
+        }
+    }
+
+    public void setInitialRedeliveryDelay(Long value) {
+        if (value != null) {
+            redeliveryPolicy.setInitialRedeliveryDelay(value.longValue());
+        }
+    }
+
+    public void setMaximumRedeliveries(Integer value) {
+        if (value != null) {
+            redeliveryPolicy.setMaximumRedeliveries(value.intValue());
+        }
+    }
+
+    public void setRedeliveryUseExponentialBackOff(Boolean value) {
+        if (value != null) {
+            redeliveryPolicy.setUseExponentialBackOff(value.booleanValue());
+        }
+    }
+
+    public Integer getDurableTopicPrefetch() {
+        return new Integer(prefetchPolicy.getDurableTopicPrefetch());
+    }
+
+    public Integer getInputStreamPrefetch() {
+        return new Integer(prefetchPolicy.getInputStreamPrefetch());
+    }
+
+    public Integer getQueueBrowserPrefetch() {
+        return new Integer(prefetchPolicy.getQueueBrowserPrefetch());
+    }
+
+    public Integer getQueuePrefetch() {
+        return new Integer(prefetchPolicy.getQueuePrefetch());
+    }
+
+    public Integer getTopicPrefetch() {
+        return new Integer(prefetchPolicy.getTopicPrefetch());
+    }
+
+    public void setAllPrefetchValues(Integer i) {
+        if (i != null) {
+            prefetchPolicy.setAll(i.intValue());
+        }
+    }
+
+    public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
+        if (durableTopicPrefetch != null) {
+            prefetchPolicy.setDurableTopicPrefetch(durableTopicPrefetch.intValue());
+        }
+    }
+
+    public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
+        if (inputStreamPrefetch != null) {
+            prefetchPolicy.setInputStreamPrefetch(inputStreamPrefetch.intValue());
+        }
+    }
+
+    public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
+        if (queueBrowserPrefetch != null) {
+            prefetchPolicy.setQueueBrowserPrefetch(queueBrowserPrefetch.intValue());
+        }
+    }
+
+    public void setQueuePrefetch(Integer queuePrefetch) {
+        if (queuePrefetch != null) {
+            prefetchPolicy.setQueuePrefetch(queuePrefetch.intValue());
+        }
+    }
+
+    public void setTopicPrefetch(Integer topicPrefetch) {
+        if (topicPrefetch != null) {
+            prefetchPolicy.setTopicPrefetch(topicPrefetch.intValue());
+        }
+    }
+
+    /**
+     * Returns the redelivery policy; not using bean properties to avoid
+     * breaking compatibility with JCA configuration in J2EE
+     */
+    public RedeliveryPolicy redeliveryPolicy() {
+        return redeliveryPolicy;
+    }
+
+    /**
+     * Returns the prefetch policy; not using bean properties to avoid
+     * breaking compatibility with JCA configuration in J2EE
+     */
+    public ActiveMQPrefetchPolicy prefetchPolicy() {
+        return prefetchPolicy;
     }
 }

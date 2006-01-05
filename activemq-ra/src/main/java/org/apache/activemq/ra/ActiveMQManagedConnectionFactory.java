@@ -31,31 +31,30 @@ import javax.resource.spi.ResourceAdapterAssociation;
 import javax.security.auth.Subject;
 
 /**
- * @version $Revisio    n$
+ * @version $Revisio n$
  * 
- * TODO: Must override equals and hashCode (JCA spec 16.4) 
+ * TODO: Must override equals and hashCode (JCA spec 16.4)
  */
-public class ActiveMQManagedConnectionFactory implements
-        ManagedConnectionFactory, ResourceAdapterAssociation {
+public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation {
 
     private static final long serialVersionUID = 6196921962230582875L;
-    
+
     private ActiveMQResourceAdapter adapter;
     private PrintWriter logWriter;
     private ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
-    
+
     public void setResourceAdapter(ResourceAdapter adapter) throws ResourceException {
         this.adapter = (ActiveMQResourceAdapter) adapter;
         ActiveMQConnectionRequestInfo baseInfo = this.adapter.getInfo().copy();
-        if( info.getClientid()==null ) 
+        if (info.getClientid() == null)
             info.setClientid(baseInfo.getClientid());
-        if( info.getPassword()==null )
+        if (info.getPassword() == null)
             info.setPassword(baseInfo.getPassword());
-        if( info.getServerUrl()==null )
+        if (info.getServerUrl() == null)
             info.setServerUrl(baseInfo.getServerUrl());
-        if( info.getUseInboundSession()==null )
+        if (info.getUseInboundSession() == null)
             info.setUseInboundSession(baseInfo.getUseInboundSession());
-        if( info.getUserName()==null )
+        if (info.getUserName() == null)
             info.setUserName(baseInfo.getUserName());
     }
 
@@ -71,11 +70,11 @@ public class ActiveMQManagedConnectionFactory implements
     }
 
     /**
-     * This is used when not running in an app server.  For now we are creating a
+     * This is used when not running in an app server. For now we are creating a
      * ConnectionFactory that has our SimpleConnectionManager implementation but
-     * it may be a better idea to not support this.  The JMS api will have many quirks
-     * the user may not expect when running through the resource adapter.
-     *
+     * it may be a better idea to not support this. The JMS api will have many
+     * quirks the user may not expect when running through the resource adapter.
+     * 
      * @see javax.resource.spi.ManagedConnectionFactory#createConnectionFactory()
      */
     public Object createConnectionFactory() throws ResourceException {
@@ -88,17 +87,18 @@ public class ActiveMQManagedConnectionFactory implements
      */
     public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo info) throws ResourceException {
         try {
-            ActiveMQConnectionRequestInfo amqInfo = (ActiveMQConnectionRequestInfo)info;
+            ActiveMQConnectionRequestInfo amqInfo = (ActiveMQConnectionRequestInfo) info;
             return new ActiveMQManagedConnection(subject, adapter.makeConnection(amqInfo), amqInfo);
-        } catch (JMSException e) {
+        }
+        catch (JMSException e) {
             throw new ResourceException("Could not create connection.", e);
         }
     }
 
     /**
      * @see javax.resource.spi.ManagedConnectionFactory#matchManagedConnections(java.util.Set,
-            *      javax.security.auth.Subject,
-            *      javax.resource.spi.ConnectionRequestInfo)
+     *      javax.security.auth.Subject,
+     *      javax.resource.spi.ConnectionRequestInfo)
      */
     public ManagedConnection matchManagedConnections(Set connections, Subject subject, ConnectionRequestInfo info) throws ResourceException {
         Iterator iterator = connections.iterator();
@@ -108,7 +108,8 @@ public class ActiveMQManagedConnectionFactory implements
                 try {
                     c.associate(subject, (ActiveMQConnectionRequestInfo) info);
                     return c;
-                } catch (JMSException e) {
+                }
+                catch (JMSException e) {
                     throw new ResourceException(e);
                 }
             }
@@ -130,12 +131,12 @@ public class ActiveMQManagedConnectionFactory implements
         return logWriter;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////
     //
     // Bean setters and getters.
     //
-    ///////////////////////////////////////////////////////////////////////////
-    
+    // /////////////////////////////////////////////////////////////////////////
+
     public String getClientid() {
         return info.getClientid();
     }
@@ -174,5 +175,85 @@ public class ActiveMQManagedConnectionFactory implements
 
     public void setUseInboundSession(Boolean useInboundSession) {
         info.setUseInboundSession(useInboundSession);
+    }
+
+    public Long getInitialRedeliveryDelay() {
+        return info.getInitialRedeliveryDelay();
+    }
+
+    public Integer getMaximumRedeliveries() {
+        return info.getMaximumRedeliveries();
+    }
+
+    public Short getRedeliveryBackOffMultiplier() {
+        return info.getRedeliveryBackOffMultiplier();
+    }
+
+    public Boolean getRedeliveryUseExponentialBackOff() {
+        return info.getRedeliveryUseExponentialBackOff();
+    }
+
+    public boolean isUseInboundSessionEnabled() {
+        return info.isUseInboundSessionEnabled();
+    }
+
+    public void setInitialRedeliveryDelay(Long value) {
+        info.setInitialRedeliveryDelay(value);
+    }
+
+    public void setMaximumRedeliveries(Integer value) {
+        info.setMaximumRedeliveries(value);
+    }
+
+    public void setRedeliveryBackOffMultiplier(Short value) {
+        info.setRedeliveryBackOffMultiplier(value);
+    }
+
+    public Integer getDurableTopicPrefetch() {
+        return info.getDurableTopicPrefetch();
+    }
+
+    public Integer getInputStreamPrefetch() {
+        return info.getInputStreamPrefetch();
+    }
+
+    public Integer getQueueBrowserPrefetch() {
+        return info.getQueueBrowserPrefetch();
+    }
+
+    public Integer getQueuePrefetch() {
+        return info.getQueuePrefetch();
+    }
+
+    public Integer getTopicPrefetch() {
+        return info.getTopicPrefetch();
+    }
+
+    public void setAllPrefetchValues(Integer i) {
+        info.setAllPrefetchValues(i);
+    }
+
+    public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
+        info.setDurableTopicPrefetch(durableTopicPrefetch);
+    }
+
+    public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
+        info.setInputStreamPrefetch(inputStreamPrefetch);
+    }
+
+    public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
+        info.setQueueBrowserPrefetch(queueBrowserPrefetch);
+    }
+
+    public void setQueuePrefetch(Integer queuePrefetch) {
+        info.setQueuePrefetch(queuePrefetch);
+    }
+
+    public void setRedeliveryUseExponentialBackOff(Boolean value) {
+        info.setRedeliveryUseExponentialBackOff(value);
+    }
+
+    public void setTopicPrefetch(Integer topicPrefetch) {
+        info.setTopicPrefetch(topicPrefetch);
     }
 }
