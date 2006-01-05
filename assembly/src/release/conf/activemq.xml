@@ -21,10 +21,10 @@
   
   
     <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="../data"/>
+      <journaledJDBC journalLogFiles="5" dataDirectory="../activemq-data"/>
       <!-- To use a different datasource, use th following syntax : -->
       <!-- 
-      <journaledJDBC journalLogFiles="5" dataDirectory="../data" dataSource="#postgres-ds"/>
+      <journaledJDBC journalLogFiles="5" dataDirectory="../activemq-data" dataSource="#postgres-ds"/>
        -->
     </persistenceAdapter>
   
