@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
@@ -77,7 +78,7 @@ public class QueueSubscription extends PrefetchSubscription {
         int sequence = node.getGroupSequence();
         if( groupId!=null ) {
             
-            ConcurrentHashMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();            
+            MessageGroupMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();            
             
             // If we can own the first, then no-one else should own the rest.
             if( sequence==1 ) {
@@ -93,7 +94,7 @@ public class QueueSubscription extends PrefetchSubscription {
             // need to become the new owner.
             ConsumerId groupOwner;
             synchronized(node) {
-                groupOwner = (ConsumerId) messageGroupOwners.get(groupId);
+                groupOwner = messageGroupOwners.get(groupId);
                 if( groupOwner==null ) {
                     if( node.lock(this) ) {
                         messageGroupOwners.put(groupId, info.getConsumerId());
@@ -107,7 +108,7 @@ public class QueueSubscription extends PrefetchSubscription {
             if( groupOwner.equals(info.getConsumerId()) ) {
                 // A group sequence < 1 is an end of group signal.
                 if ( sequence < 1 ) {
-                    messageGroupOwners.remove(groupId);
+                    messageGroupOwners.removeGroup(groupId);
                 }
                 return true;
             }
