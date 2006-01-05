@@ -14,7 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.command;
+package org.apache.activemq;
+
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.DataStructure;
 
 /**
  * Configuration options used to control how messages are re-delivered when
