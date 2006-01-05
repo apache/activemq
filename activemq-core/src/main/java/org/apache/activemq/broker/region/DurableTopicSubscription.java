@@ -120,7 +120,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                 recovered=true;
                 for (Iterator iter = destinations.iterator(); iter.hasNext();) {
                     Topic topic = (Topic) iter.next();
-                    topic.recover(this, false);
+                    topic.recover(context, this, false);
                 }
             } else {
                 if( !isFull() ) {                            
