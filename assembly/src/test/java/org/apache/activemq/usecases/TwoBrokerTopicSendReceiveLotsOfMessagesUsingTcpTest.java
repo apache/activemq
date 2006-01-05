@@ -23,7 +23,7 @@ package org.apache.activemq.usecases;
 public class TwoBrokerTopicSendReceiveLotsOfMessagesUsingTcpTest extends TwoBrokerTopicSendReceiveUsingTcpTest {
 
     protected void setUp() throws Exception {
-        this.messageCount = 2000;
+        this.messageCount = 5000;
         super.setUp();
     }
 
