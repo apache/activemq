@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class RemoveInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new RemoveInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             RemoveInfo info = (RemoveInfo) command;
-            info.setObjectId((org.apache.activemq.command.DataStructure) readObject(dataIn));
+            info.ObjectId = ReadDataStructure(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             RemoveInfo info = (RemoveInfo) command;
-            writeObject(info.getObjectId(), dataOut);
+            WriteDataStructure(info.ObjectId, dataOut);
 
         }
     }

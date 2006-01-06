@@ -20,25 +20,28 @@ namespace OpenWire.Core.IO
     public class MessageIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new MessageId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             MessageId info = (MessageId) command;
-            info.setProducerId((org.apache.activemq.command.ProducerId) readObject(dataIn));
-            info.setProducerSequenceId(dataIn.readLong());
-            info.setBrokerSequenceId(dataIn.readLong());
+            info.ProducerId = ReadProducerId(dataIn);
+            info.ProducerSequenceId = dataIn.ReadInt64();
+            info.BrokerSequenceId = dataIn.ReadInt64();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             MessageId info = (MessageId) command;
-            writeObject(info.getProducerId(), dataOut);
-            dataOut.writeLong(info.getProducerSequenceId());
-            dataOut.writeLong(info.getBrokerSequenceId());
+            WriteProducerId(info.ProducerId, dataOut);
+            dataOut.Write(info.ProducerSequenceId);
+            dataOut.Write(info.BrokerSequenceId);
 
         }
     }

@@ -20,27 +20,30 @@ namespace OpenWire.Core.IO
     public class BrokerInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new BrokerInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             BrokerInfo info = (BrokerInfo) command;
-            info.setBrokerId((org.apache.activemq.command.BrokerId) readObject(dataIn));
-            info.setBrokerURL(dataIn.readUTF());
-            info.setPeerBrokerInfos((org.apache.activemq.command.BrokerInfo[]) readObject(dataIn));
-            info.setBrokerName(dataIn.readUTF());
+            info.BrokerId = ReadBrokerId(dataIn);
+            info.BrokerURL = dataIn.ReadString();
+            info.PeerBrokerInfos = ReadBrokerInfo[](dataIn);
+            info.BrokerName = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             BrokerInfo info = (BrokerInfo) command;
-            writeObject(info.getBrokerId(), dataOut);
-            writeUTF(info.getBrokerURL(), dataOut);
-            writeObject(info.getPeerBrokerInfos(), dataOut);
-            writeUTF(info.getBrokerName(), dataOut);
+            WriteBrokerId(info.BrokerId, dataOut);
+            dataOut.Write(info.BrokerURL);
+            WriteBrokerInfo[](info.PeerBrokerInfos, dataOut);
+            dataOut.Write(info.BrokerName);
 
         }
     }

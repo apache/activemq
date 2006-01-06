@@ -20,29 +20,32 @@ namespace OpenWire.Core.IO
     public class DestinationInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new DestinationInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             DestinationInfo info = (DestinationInfo) command;
-            info.setConnectionId((org.apache.activemq.command.ConnectionId) readObject(dataIn));
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setOperationType(dataIn.readByte());
-            info.setTimeout(dataIn.readLong());
-            info.setBrokerPath((org.apache.activemq.command.BrokerId[]) readObject(dataIn));
+            info.ConnectionId = ReadConnectionId(dataIn);
+            info.Destination = ReadDestination(dataIn);
+            info.OperationType = dataIn.ReadByte();
+            info.Timeout = dataIn.ReadInt64();
+            info.BrokerPath = ReadBrokerIds(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             DestinationInfo info = (DestinationInfo) command;
-            writeObject(info.getConnectionId(), dataOut);
-            writeObject(info.getDestination(), dataOut);
-            dataOut.writeByte(info.getOperationType());
-            dataOut.writeLong(info.getTimeout());
-            writeObject(info.getBrokerPath(), dataOut);
+            WriteConnectionId(info.ConnectionId, dataOut);
+            WriteDestination(info.Destination, dataOut);
+            dataOut.Write(info.OperationType);
+            dataOut.Write(info.Timeout);
+            dataOut.WriteBrokerIds(info.BrokerPath);
 
         }
     }

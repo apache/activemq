@@ -20,25 +20,28 @@ namespace OpenWire.Core.IO
     public class JournalTransactionMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new JournalTransaction();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             JournalTransaction info = (JournalTransaction) command;
-            info.setTransactionId((org.apache.activemq.command.TransactionId) readObject(dataIn));
-            info.setType(dataIn.readByte());
-            info.setWasPrepared(dataIn.readBoolean());
+            info.TransactionId = ReadTransactionId(dataIn);
+            info.Type = dataIn.ReadByte();
+            info.WasPrepared = dataIn.ReadBoolean();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             JournalTransaction info = (JournalTransaction) command;
-            writeObject(info.getTransactionId(), dataOut);
-            dataOut.writeByte(info.getType());
-            dataOut.writeBoolean(info.getWasPrepared());
+            WriteTransactionId(info.TransactionId, dataOut);
+            dataOut.Write(info.Type);
+            dataOut.Write(info.WasPrepared);
 
         }
     }

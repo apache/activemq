@@ -20,23 +20,26 @@ namespace OpenWire.Core.IO
     public class LocalTransactionIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new LocalTransactionId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             LocalTransactionId info = (LocalTransactionId) command;
-            info.setTransactionId(dataIn.readLong());
-            info.setConnectionId((org.apache.activemq.command.ConnectionId) readObject(dataIn));
+            info.TransactionId = dataIn.ReadInt64();
+            info.ConnectionId = ReadConnectionId(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             LocalTransactionId info = (LocalTransactionId) command;
-            dataOut.writeLong(info.getTransactionId());
-            writeObject(info.getConnectionId(), dataOut);
+            dataOut.Write(info.TransactionId);
+            WriteConnectionId(info.ConnectionId, dataOut);
 
         }
     }

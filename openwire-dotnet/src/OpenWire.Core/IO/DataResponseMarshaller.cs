@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class DataResponseMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new DataResponse();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             DataResponse info = (DataResponse) command;
-            info.setData((org.apache.activemq.command.DataStructure) readObject(dataIn));
+            info.Data = ReadDataStructure(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             DataResponse info = (DataResponse) command;
-            writeObject(info.getData(), dataOut);
+            WriteDataStructure(info.Data, dataOut);
 
         }
     }

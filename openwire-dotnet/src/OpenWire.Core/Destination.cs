@@ -1,11 +1,12 @@
 using System;
+using OpenWire.Core.Commands;
 
 namespace OpenWire.Core
 {
 	/// <summary>
-	/// Summary description for ActiveMQDestination.
+	/// Summary description for Destination.
 	/// </summary>
-	public abstract class ActiveMQDestination {
+	public abstract class Destination {
 
     /**
      * Topic Destination object
@@ -70,16 +71,16 @@ namespace OpenWire.Core
     /**
      * The Default Constructor
      */
-    protected ActiveMQDestination() {
+    protected Destination() {
     }
 
     /**
-     * Construct the ActiveMQDestination with a defined physical name;
+     * Construct the Destination with a defined physical name;
      *
      * @param name
      */
 
-    protected ActiveMQDestination(String name) {
+    protected Destination(String name) {
         this.physicalName = name;
         this.advisory = name != null && name.StartsWith(ADVISORY_PREFIX);
     }
@@ -103,21 +104,21 @@ namespace OpenWire.Core
      * @return true if this is a destination for Consumer advisories
      */
     public bool IsConsumerAdvisory(){
-        return IsAdvisory() && physicalName.StartsWith(ActiveMQDestination.CONSUMER_ADVISORY_PREFIX);
+        return IsAdvisory() && physicalName.StartsWith(Destination.CONSUMER_ADVISORY_PREFIX);
     }
     
     /**
      * @return true if this is a destination for Producer advisories
      */
     public bool IsProducerAdvisory(){
-        return IsAdvisory() && physicalName.StartsWith(ActiveMQDestination.PRODUCER_ADVISORY_PREFIX);
+        return IsAdvisory() && physicalName.StartsWith(Destination.PRODUCER_ADVISORY_PREFIX);
     }
     
     /**
      * @return true if this is a destination for Connection advisories
      */
     public bool IsConnectionAdvisory(){
-        return IsAdvisory() && physicalName.StartsWith(ActiveMQDestination.CONNECTION_ADVISORY_PREFIX);
+        return IsAdvisory() && physicalName.StartsWith(Destination.CONNECTION_ADVISORY_PREFIX);
     }
     
     /**

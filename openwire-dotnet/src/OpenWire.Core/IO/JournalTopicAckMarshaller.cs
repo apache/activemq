@@ -20,31 +20,34 @@ namespace OpenWire.Core.IO
     public class JournalTopicAckMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new JournalTopicAck();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             JournalTopicAck info = (JournalTopicAck) command;
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setMessageId((org.apache.activemq.command.MessageId) readObject(dataIn));
-            info.setMessageSequenceId(dataIn.readLong());
-            info.setSubscritionName(dataIn.readUTF());
-            info.setClientId(dataIn.readUTF());
-            info.setTransactionId((org.apache.activemq.command.TransactionId) readObject(dataIn));
+            info.Destination = ReadDestination(dataIn);
+            info.MessageId = ReadMessageId(dataIn);
+            info.MessageSequenceId = dataIn.ReadInt64();
+            info.SubscritionName = dataIn.ReadString();
+            info.ClientId = dataIn.ReadString();
+            info.TransactionId = ReadTransactionId(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             JournalTopicAck info = (JournalTopicAck) command;
-            writeObject(info.getDestination(), dataOut);
-            writeObject(info.getMessageId(), dataOut);
-            dataOut.writeLong(info.getMessageSequenceId());
-            writeUTF(info.getSubscritionName(), dataOut);
-            writeUTF(info.getClientId(), dataOut);
-            writeObject(info.getTransactionId(), dataOut);
+            WriteDestination(info.Destination, dataOut);
+            WriteMessageId(info.MessageId, dataOut);
+            dataOut.Write(info.MessageSequenceId);
+            dataOut.Write(info.SubscritionName);
+            dataOut.Write(info.ClientId);
+            WriteTransactionId(info.TransactionId, dataOut);
 
         }
     }

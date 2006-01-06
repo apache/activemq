@@ -20,19 +20,18 @@ namespace OpenWire.Core.IO
     public class ActiveMQQueueMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ActiveMQQueue();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
-            ActiveMQQueue info = (ActiveMQQueue) command;
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
-            ActiveMQQueue info = (ActiveMQQueue) command;
 
         }
     }

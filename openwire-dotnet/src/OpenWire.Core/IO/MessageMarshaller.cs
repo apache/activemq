@@ -20,69 +20,72 @@ namespace OpenWire.Core.IO
     public class MessageMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new Message();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             Message info = (Message) command;
-            info.setProducerId((org.apache.activemq.command.ProducerId) readObject(dataIn));
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setTransactionId((org.apache.activemq.command.TransactionId) readObject(dataIn));
-            info.setOriginalDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setMessageId((org.apache.activemq.command.MessageId) readObject(dataIn));
-            info.setOriginalTransactionId((org.apache.activemq.command.TransactionId) readObject(dataIn));
-            info.setGroupID(dataIn.readUTF());
-            info.setGroupSequence(dataIn.readInt());
-            info.setCorrelationId(dataIn.readUTF());
-            info.setPersistent(dataIn.readBoolean());
-            info.setExpiration(dataIn.readLong());
-            info.setPriority(dataIn.readByte());
-            info.setReplyTo((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setTimestamp(dataIn.readLong());
-            info.setType(dataIn.readUTF());
-            info.setContent((org.activeio.ByteSequence) readObject(dataIn));
-            info.setMarshalledProperties((org.activeio.ByteSequence) readObject(dataIn));
-            info.setDataStructure((org.apache.activemq.command.DataStructure) readObject(dataIn));
-            info.setTargetConsumerId((org.apache.activemq.command.ConsumerId) readObject(dataIn));
-            info.setCompressed(dataIn.readBoolean());
-            info.setRedeliveryCounter(dataIn.readInt());
-            info.setBrokerPath((org.apache.activemq.command.BrokerId[]) readObject(dataIn));
-            info.setArrival(dataIn.readLong());
-            info.setUserID(dataIn.readUTF());
-            info.setRecievedByDFBridge(dataIn.readBoolean());
+            info.ProducerId = ReadProducerId(dataIn);
+            info.Destination = ReadDestination(dataIn);
+            info.TransactionId = ReadTransactionId(dataIn);
+            info.OriginalDestination = ReadDestination(dataIn);
+            info.MessageId = ReadMessageId(dataIn);
+            info.OriginalTransactionId = ReadTransactionId(dataIn);
+            info.GroupID = dataIn.ReadString();
+            info.GroupSequence = dataIn.ReadInt32();
+            info.CorrelationId = dataIn.ReadString();
+            info.Persistent = dataIn.ReadBoolean();
+            info.Expiration = dataIn.ReadInt64();
+            info.Priority = dataIn.ReadByte();
+            info.ReplyTo = ReadDestination(dataIn);
+            info.Timestamp = dataIn.ReadInt64();
+            info.Type = dataIn.ReadString();
+            info.Content = ReadByteSequence(dataIn);
+            info.MarshalledProperties = ReadByteSequence(dataIn);
+            info.DataStructure = ReadDataStructure(dataIn);
+            info.TargetConsumerId = ReadConsumerId(dataIn);
+            info.Compressed = dataIn.ReadBoolean();
+            info.RedeliveryCounter = dataIn.ReadInt32();
+            info.BrokerPath = ReadBrokerIds(dataIn);
+            info.Arrival = dataIn.ReadInt64();
+            info.UserID = dataIn.ReadString();
+            info.RecievedByDFBridge = dataIn.ReadBoolean();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             Message info = (Message) command;
-            writeObject(info.getProducerId(), dataOut);
-            writeObject(info.getDestination(), dataOut);
-            writeObject(info.getTransactionId(), dataOut);
-            writeObject(info.getOriginalDestination(), dataOut);
-            writeObject(info.getMessageId(), dataOut);
-            writeObject(info.getOriginalTransactionId(), dataOut);
-            writeUTF(info.getGroupID(), dataOut);
-            dataOut.writeInt(info.getGroupSequence());
-            writeUTF(info.getCorrelationId(), dataOut);
-            dataOut.writeBoolean(info.isPersistent());
-            dataOut.writeLong(info.getExpiration());
-            dataOut.writeByte(info.getPriority());
-            writeObject(info.getReplyTo(), dataOut);
-            dataOut.writeLong(info.getTimestamp());
-            writeUTF(info.getType(), dataOut);
-            writeObject(info.getContent(), dataOut);
-            writeObject(info.getMarshalledProperties(), dataOut);
-            writeObject(info.getDataStructure(), dataOut);
-            writeObject(info.getTargetConsumerId(), dataOut);
-            dataOut.writeBoolean(info.isCompressed());
-            dataOut.writeInt(info.getRedeliveryCounter());
-            writeObject(info.getBrokerPath(), dataOut);
-            dataOut.writeLong(info.getArrival());
-            writeUTF(info.getUserID(), dataOut);
-            dataOut.writeBoolean(info.isRecievedByDFBridge());
+            WriteProducerId(info.ProducerId, dataOut);
+            WriteDestination(info.Destination, dataOut);
+            WriteTransactionId(info.TransactionId, dataOut);
+            WriteDestination(info.OriginalDestination, dataOut);
+            WriteMessageId(info.MessageId, dataOut);
+            WriteTransactionId(info.OriginalTransactionId, dataOut);
+            dataOut.Write(info.GroupID);
+            dataOut.Write(info.GroupSequence);
+            dataOut.Write(info.CorrelationId);
+            dataOut.Write(info.Persistent);
+            dataOut.Write(info.Expiration);
+            dataOut.Write(info.Priority);
+            WriteDestination(info.ReplyTo, dataOut);
+            dataOut.Write(info.Timestamp);
+            dataOut.Write(info.Type);
+            WriteByteSequence(info.Content, dataOut);
+            WriteByteSequence(info.MarshalledProperties, dataOut);
+            WriteDataStructure(info.DataStructure, dataOut);
+            WriteConsumerId(info.TargetConsumerId, dataOut);
+            dataOut.Write(info.Compressed);
+            dataOut.Write(info.RedeliveryCounter);
+            dataOut.WriteBrokerIds(info.BrokerPath);
+            dataOut.Write(info.Arrival);
+            dataOut.Write(info.UserID);
+            dataOut.Write(info.RecievedByDFBridge);
 
         }
     }

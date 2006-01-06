@@ -20,25 +20,28 @@ namespace OpenWire.Core.IO
     public class ProducerIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ProducerId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ProducerId info = (ProducerId) command;
-            info.setConnectionId(dataIn.readUTF());
-            info.setProducerId(dataIn.readLong());
-            info.setSessionId(dataIn.readLong());
+            info.ConnectionId = dataIn.ReadString();
+            info.ProducerIdValue = dataIn.ReadInt64();
+            info.SessionId = dataIn.ReadInt64();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ProducerId info = (ProducerId) command;
-            writeUTF(info.getConnectionId(), dataOut);
-            dataOut.writeLong(info.getProducerId());
-            dataOut.writeLong(info.getSessionId());
+            dataOut.Write(info.ConnectionId);
+            dataOut.Write(info.ProducerIdValue);
+            dataOut.Write(info.SessionId);
 
         }
     }

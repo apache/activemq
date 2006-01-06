@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class ControlCommandMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ControlCommand();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ControlCommand info = (ControlCommand) command;
-            info.setCommand(dataIn.readUTF());
+            info.Command = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ControlCommand info = (ControlCommand) command;
-            writeUTF(info.getCommand(), dataOut);
+            dataOut.Write(info.Command);
 
         }
     }

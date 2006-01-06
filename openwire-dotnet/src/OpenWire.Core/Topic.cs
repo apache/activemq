@@ -1,14 +1,15 @@
 using System;
+using OpenWire.Core.Commands;
 
 namespace OpenWire.Core
 {
 	/// <summary>
-	/// Summary description for ActiveMQTopic.
+	/// Summary description for Topic.
 	/// </summary>
-	public class ActiveMQTopic : ActiveMQDestination 
+	public class Topic : Destination 
 	{
-		public ActiveMQTopic(): base()	{}
-		public ActiveMQTopic(String name):base(name){}
+		public Topic(): base()	{}
+		public Topic(String name):base(name){}
 		
 		public String GetTopicName() 
 		{
