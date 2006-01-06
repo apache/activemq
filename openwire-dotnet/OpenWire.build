@@ -1,0 +1,500 @@
+<?xml version="1.0" ?>
+<project name="openwire" default="test">
+    <!-- set build.date property to current date in format yyyy-MM-dd -->
+    <tstamp property="build.date" pattern="yyyy-MM-dd" />
+    <!-- global project settings -->
+    <property name="project.name" value="openwire" />
+    <property name="project.version" value="4.0" unless="${property::exists('project.version')}" />
+    <property name="project.release.type" value="SNAPSHOT" unless="${property::exists('project.release.type')}" /> <!-- nightly / dev / alpha / beta# / rc# / release -->
+    
+    <if test="${project.release.type == 'nightly'}">
+        <property name="project.version.full" value="${project.version + '-nightly-' + build.date}" />
+    </if>
+    <if test="${project.release.type != 'nightly'}">
+        <property name="project.version.full" value="${project.version + if(project.release.type == 'release', '', '-' + project.release.type)}" dynamic="true" />    
+    </if>
+    
+    <!-- 
+        specifies whether the CommonAssemblyInfo.cs file should be created.
+        we do not want this for releases (whether they're beta or release) as
+        this would cause the build number to be updated
+    -->
+    <property name="create.assemblyinfo" value="true" />
+    
+    <!-- global build settings -->
+    <property name="lib.dir" value="${path::combine(build.dir, 'bin/lib')}" dynamic="true" />
+    <property name="lib.family.dir" value="${path::combine(lib.dir, framework::get-family(framework::get-target-framework()))}" dynamic="true" />
+    <property name="lib.framework.dir" value="${path::combine(lib.family.dir, version::to-string(framework::get-version(framework::get-target-framework())))}" dynamic="true" />
+    
+    <!-- default configuration -->
+    <property name="project.config" value="debug" /> <!-- debug|release -->
+    <property name="console.name" value="OpenWire" />
+    <property name="build.defines" value="" />
+    <property name="build.number" value="${math::abs(math::floor(timespan::get-total-days(datetime::now() - datetime::parse('01/01/2000'))))}" />
+    
+    <!-- platform specific properties. These are the defaults -->
+    <property name="current.build.defines" value="${build.defines}" />
+
+    <fileset id="tas.msnet" basedir="src">
+        <include name="OpenWire.MSNet/OpenWire.MSNet.build" />
+    </fileset>
+    
+    <fileset id="tas.msnet.tests" basedir="tests">
+        <include name="OpenWire.MSNet/OpenWire.MSNet.build" />
+    </fileset>
+    
+    <fileset id="tas.win32" basedir="src">
+        <include name="OpenWire.Win32/OpenWire.Win32.build" />
+        <include name="OpenWire.VisualCpp/OpenWire.VisualCpp.build" />
+        <include name="OpenWire.VSNet/OpenWire.VSNet.build" />
+    </fileset>
+    
+    <fileset id="tas.win32.tests" basedir="tests">
+        <include name="OpenWire.Win32/OpenWire.Win32.build" />
+        <include name="OpenWire.VisualCpp/OpenWire.VisualCpp.build" />
+        <include name="OpenWire.VSNet/OpenWire.VSNet.build" />
+    </fileset>
+    
+    <fileset id="tas.core" basedir="src">
+        <include name="OpenWire.Resources/OpenWire.Resources.build" />
+        <include name="OpenWire.DotNet/OpenWire.DotNet.build" />
+        <include name="OpenWire.Compression/OpenWire.Compression.build" />
+        <include name="OpenWire.NUnit/OpenWire.NUnit.build" />
+        <include name="OpenWire.SourceControl/OpenWire.SourceControl.build" />
+    </fileset>
+    
+    <fileset id="tas.core.tests" basedir="tests">
+        <include name="OpenWire.DotNet/OpenWire.DotNet.build" />
+        <include name="OpenWire.Compression/OpenWire.Compression.build" />
+        <include name="OpenWire.SourceControl/OpenWire.SourceControl.build" />
+        <!--
+        <include name="OpenWire.NUnit/OpenWire.NUnit.build" />
+        -->
+    </fileset>
+    <!-- named project configurations (used by self-test and self-doc tasks) -->
+    <target name="debug" description="Perform a 'debug' build">
+        <property name="project.config" value="debug" />
+        <property name="build.debug" value="true" />
+        <property name="build.dir" value="${project::get-base-directory()}/build/${framework::get-target-framework()}.${platform::get-name()}/${project.name}-${project.version}-${project.config}" />
+    </target>
+    <target name="release" description="Perform a 'release' build">
+        <property name="project.config" value="release" />
+        <property name="build.debug" value="false" />
+        <property name="build.dir" value="${project::get-base-directory()}/build/${project.name}-${project.version.full}" />
+    </target>
+    <!-- build tasks -->
+    <target name="init" description="Initializes build properties">
+        <call target="${project.config}" />
+        <call target="set-framework-configuration" />
+    </target>
+    <target name="create-common-assemblyinfo" if="${create.assemblyinfo}">
+        <!-- ensure src/CommonAssemblyInfo.cs is writable if it already exists -->
+        <attrib file="src/CommonAssemblyInfo.cs" readonly="false" if="${file::exists('src/CommonAssemblyInfo.cs')}" />
+        <!-- generate the source file holding the common assembly-level attributes -->
+        <asminfo output="src/CommonAssemblyInfo.cs" language="CSharp">
+            <imports>
+                <import namespace="System" />
+                <import namespace="System.Reflection" />
+                <import namespace="System.Runtime.InteropServices" />
+            </imports>
+            <attributes>
+                <attribute type="ComVisibleAttribute" value="false" />
+                <attribute type="CLSCompliantAttribute" value="true" />
+                <attribute type="AssemblyTitleAttribute" value="OpenWire" />
+                <attribute type="AssemblyDescriptionAttribute" value="A .NET Library for talking to ActiveMQ" />
+                <attribute type="AssemblyConfigurationAttribute" value="${project.release.type}" />
+                <attribute type="AssemblyCompanyAttribute" value="http://activemq.org/" />
+                <attribute type="AssemblyProductAttribute" value="OpenWire" />
+                <attribute type="AssemblyCopyrightAttribute" value="Copyright (C) 2005-${datetime::get-year(datetime::now())} Gerry Shaw" />
+                <attribute type="AssemblyTrademarkAttribute" value="" />
+                <attribute type="AssemblyCultureAttribute" value="" />
+                <attribute type="AssemblyVersionAttribute" value="${project.version}.${build.number}.0" />
+                <attribute type="AssemblyInformationalVersionAttribute" value="${project.version}" />
+            </attributes>
+        </asminfo>
+    </target>
+    <target name="clean" depends="init" description="Deletes current build configuration">
+        <delete dir="${build.dir}" if="${directory::exists(build.dir)}" />
+    </target>
+    <target name="cleanall" description="Deletes every build configuration">
+        <echo message="Deleting all builds from all configurations" />
+        <delete dir="build" if="${directory::exists('build')}" />
+    </target>
+    <target name="build" depends="init, create-common-assemblyinfo" description="Builds current configuration">
+        <echo message="Build Directory is ${build.dir}" />
+        <!-- ensure bin directory exists -->
+        <mkdir dir="${build.dir}/bin" />
+        <!-- ensure lib directory exists -->
+        <mkdir dir="${build.dir}/bin/lib" />
+        <!-- copy third party executables -->
+        <copy todir="${build.dir}/bin">
+            <fileset basedir="bin">
+                <include name="scvs.exe" />
+            </fileset>
+        </copy>
+        <copy todir="${build.dir}/bin">
+            <fileset basedir="lib">
+                <!-- copy log4net assembly, workaround for Mono bug #57602 -->
+                <include name="log4net.dll" />
+                <!-- #ziplib command line client -->
+                <include name="scvs.exe" />
+            </fileset>
+        </copy>
+        <!-- copy third party assemblies -->
+        <copy todir="${build.dir}/bin/lib">
+            <fileset basedir="lib">
+                <include name="**/*" />
+                <exclude name="log4net.dll" />
+                <exclude name="scvs.exe" />
+            </fileset>
+        </copy>
+        <!-- build OpenWire.Core assembly -->
+        <nant buildfile="src/OpenWire.Core/OpenWire.Core.build" target="build" />
+        <!-- build task assemblies -->
+        <nant target="build">
+            <buildfiles refid="tas.core"/>
+        </nant>
+        <!-- build Microsoft.NET specific task assemblies if we are on win32 and targeting a .NET Framework -->
+        <nant target="build" if="${platform::is-win32() and framework::get-family(framework::get-target-framework()) == 'net'}">
+            <buildfiles refid="tas.msnet"/>
+        </nant>
+        <!-- build win32 specific task assemblies if we are on win32 -->
+        <nant target="build" if="${platform::is-win32()}">
+            <buildfiles refid="tas.win32" />
+        </nant>
+        <!-- build OpenWire.Core.Tests assembly -->
+        <nant buildfile="tests/OpenWire.Core/OpenWire.Core.build" target="build" />
+        <!-- build tests for task assemblies -->
+        <nant target="build">
+            <buildfiles refid="tas.core.tests"/>
+        </nant>
+        <!-- build tests for Microsoft.NET specific extension assemblies if we are on win32 and targeting a .NET Framework -->
+        <nant target="build" if="${platform::is-win32() and framework::get-family(framework::get-target-framework()) == 'net'}">
+            <buildfiles refid="tas.msnet.tests"/>
+        </nant>
+        <nant target="build" if="${platform::is-win32()}">
+            <buildfiles refid="tas.win32.tests" />
+        </nant>
+    </target>
+
+    <target name="test" depends="build">
+      <!--  TODO NUnit stuff -->
+    </target>
+    
+    <target name="package-doc">
+    </target>
+    
+    <target name="package-common" depends="build">
+        <!-- move config file -->
+        <move file="${build.dir}/bin/OpenWire.exe.config" tofile="${build.dir}/bin/${console.name}.exe.config" />
+        <!-- remove non-release files -->
+        <delete>
+            <fileset basedir="${build.dir}/bin">
+                <include name="OpenWire.Console.*" />
+                <!-- remove test assemblies -->
+                <include name="*.Tests.*" />
+            </fileset>
+        </delete>
+        <!-- copy project files -->
+        <copy todir="${build.dir}">
+            <fileset>
+                <include name="*" />
+                <include name="doc/**" />
+                <include name="src/**" />
+                <include name="tests/**" />
+                <include name="examples/**" />
+                <include name="schema/**" />
+                <!-- third party assemblies -->
+                <include name="lib/**" />
+                <!-- website -->
+                <include name="web/**" />
+                <!-- docs -->
+                <include name="doc/**" />
+                <!-- exclude static html pages as these will be filter-copied -->
+                <exclude name="doc/**/*.html" />
+                <!-- exclude nighlty build file -->
+                <exclude name="nightly.xml" />
+                <!-- exclude release build file -->
+                <exclude name="release.xml" />
+                <!--exclude VS.Net stuff -->
+                <exclude name="**/*.suo" />
+                <exclude name="**/*j.user" />
+                <exclude name="**/bin/**" />
+                <exclude name="**/obj/**" />
+            </fileset>
+        </copy>
+        <!-- filter-copy static html pages -->
+        <copy todir="${build.dir}" overwrite="true">
+            <fileset>
+                <include name="doc/**/*.html" />
+            </fileset>
+            <filterchain>
+                <replacetokens>
+                    <token key="PRODUCT_VERSION" value="${project.version.full}" />
+                </replacetokens>
+                <!-- when NOT building a release package, add prelimary notice -->
+                <replacestring
+                    from="&lt;!-- @PRELIMINARY_NOTICE@ -->"
+                    to="&lt;p class=&quot;topicstatus&quot;>[This is preliminary documentation and subject to change.]&lt;/p>"
+                    unless="${project.release.type == 'release'}" 
+                />
+                <!-- when building a release package, remove the placeholder -->
+                <replacestring
+                    from="&lt;!-- @PRELIMINARY_NOTICE@ -->"
+                    to=""
+                    if="${project.release.type == 'release'}" 
+                />
+            </filterchain>
+        </copy>
+        <!-- determine the zip file prefix directory -->
+        <property name="project.zip.prefix" value="${project.name}-${project.version.full}" />
+    </target>
+
+
+    <target name="package-src" depends="package-common">
+        <!-- determine name of source zip distribution -->
+        <property name="project.zip-path.src" value="${project::get-base-directory()}/build/${project.name}-${project.version.full}-src.zip" />
+        <!-- remove package zip file if it already exists -->
+        <delete file="${project.zip-path.src}" if="${file::exists(project.zip-path.src)}" />
+        <!-- create package zip file -->
+        <zip zipfile="${project.zip-path.src}" ziplevel="9">
+            <fileset basedir="${build.dir}" prefix="${project.zip.prefix}">
+                <include name="Makefile" />
+                <include name="Makefile.nmake" />                
+                <include name="OpenWire.build" />
+                <include name="OpenWire.sln" />
+                <include name="COPYING.txt" />
+                <include name="README.txt" />
+                <!-- third party assemblies -->
+                <include name="lib/**/*" />
+                <!-- license & release notes -->
+                <include name="doc/*" />
+                <!-- user manual (no SDK) -->
+                <include name="doc/help/**" />
+                <!-- examples -->
+                <include name="examples/**/*" />
+                <!-- sources -->
+                <include name="src/**/*" />
+                <!-- unit tests -->
+                <include name="tests/**/*" />
+            </fileset>
+        </zip>
+        <!-- determine name of source gzipped tar distribution -->
+        <property name="project.gzip-path.src" value="${project::get-base-directory()}/build/${project.name}-${project.version.full}-src.tar.gz" />
+        <!-- remove package gzip file if it already exists -->
+        <delete file="${project.gzip-path.src}" if="${file::exists(project.gzip-path.src)}" />
+        <!-- create package gzip file -->
+        <tar destfile="${project.gzip-path.src}" compression="GZip">
+            <fileset basedir="${build.dir}" prefix="${project.zip.prefix}">
+                <include name="Makefile" />
+                <include name="Makefile.nmake" />
+                <include name="OpenWire.build" />
+                <include name="OpenWire.sln" />
+                <include name="COPYING.txt" />
+                <include name="README.txt" />
+                <!-- third party assemblies -->
+                <include name="lib/**/*" />
+                <!-- license & release notes -->
+                <include name="doc/*" />
+                <!-- user manual (no SDK) -->
+                <include name="doc/help/**" />
+                <!-- examples -->
+                <include name="examples/**/*" />
+                <!-- sources -->
+                <include name="src/**/*" />
+                <!-- unit tests -->
+                <include name="tests/**/*" />
+            </fileset>
+        </tar>
+        <echo message="Created '${project.config}' source packages at file://${project::get-base-directory()}/build/" />
+    </target>
+
+    <target name="package-bin" depends="package-common">
+        <!-- determine name of binary zip distribution -->
+        <property name="project.zip-path.bin" value="${project::get-base-directory()}/build/${project.name}-${project.version.full}-bin.zip" />
+        <!-- remove package zip file if it already exists -->
+        <delete file="${project.zip-path.bin}" if="${file::exists(project.zip-path.bin)}" />
+        <!-- create package zip file -->
+        <zip zipfile="${project.zip-path.bin}" ziplevel="9">
+            <fileset basedir="${build.dir}" prefix="${project.zip.prefix}">
+                <include name="COPYING.txt" />
+                <include name="README.txt" />
+                <include name="bin/**/*" />
+                <!-- license & release notes -->
+                <include name="doc/*" />
+                <!-- user manual -->
+                <include name="doc/help/**" />
+                <!-- SDK (in HTML Help format) -->
+                <include name="doc/sdk/OpenWire-SDK.chm" />
+                <!-- examples -->
+                <include name="examples/**/*" />
+                <!-- XML Schema -->
+                <include name="schema/**/*" />
+            </fileset>
+        </zip>
+        <!-- determine name of binary gzipped tar distribution -->
+        <property name="project.gzip-path.bin" value="${project::get-base-directory()}/build/${project.name}-${project.version.full}-bin.tar.gz" />
+        <!-- remove package gzip file if it already exists -->
+        <delete file="${project.gzip-path.bin}" if="${file::exists(project.gzip-path.bin)}" />
+        <!-- create package gzip file -->
+        <tar destfile="${project.gzip-path.bin}" compression="GZip">
+            <fileset basedir="${build.dir}" prefix="${project.zip.prefix}">
+                <include name="COPYING.txt" />
+                <include name="README.txt" />
+                <include name="bin/**/*" />
+                <!-- license & release notes -->
+                <include name="doc/*" />
+                <!-- user manual -->
+                <include name="doc/help/**" />
+                <!-- SDK (in plain HTML format) -->
+                <include name="doc/sdk/*" />
+                <exclude name="doc/sdk/OpenWire-SDK.chm" />
+                <!-- examples -->
+                <include name="examples/**/*" />
+                <!-- XML Schema -->
+                <include name="schema/**/*" />
+            </fileset>
+        </tar>
+        <echo message="Created '${project.config}' binary packages at file://${project.zip-path.bin}" />
+    </target>
+
+    <target name="package" depends="package-doc, package-src, package-bin" description="Creates a binary and source distribution package." />
+    
+    <!-- Copies files to the bin folder. -->
+    <target name="UpdateBin" depends="build" description="Does a release build and copies them to the bin folder.">
+        <delete if="false">
+            <fileset basedir="bin">
+                <include name="OpenWire*" />
+                <exclude name="${console.name}.exe" />
+            </fileset>
+        </delete>
+        <copy todir="bin" overwrite="true">
+            <fileset basedir="${build.dir}/bin/">
+                <include name="OpenWire*" />
+                <exclude name="*Test*" />
+                <exclude name="${console.name}.xml" />
+                <exclude name="${console.name}.exe" />
+            </fileset>
+        </copy>
+    </target>
+    
+    <!-- Framework support targets -->
+    <target name="set-framework-configuration">
+        <if test="${not(target::exists('set-'+framework::get-target-framework()+'-framework-configuration'))}">
+            <fail message="The '${framework::get-target-framework()}' framework is not supported by this version of OpenWire." />
+        </if>
+        <call target="set-${framework::get-target-framework()}-framework-configuration" />
+    </target>
+    <target name="set-net-1.0-framework-configuration">
+        <property name="nant.settings.currentframework" value="net-1.0" />
+        <property name="current.build.defines" value="${build.defines}NET,NET_1_0" dynamic="true" />
+        <property name="link.sdkdoc.version" value="SDK_v1_0" />
+        <property name="link.sdkdoc.web" value="true" />
+    </target>
+    <target name="set-net-1.1-framework-configuration">
+        <property name="nant.settings.currentframework" value="net-1.1" />
+        <property name="current.build.defines" value="${build.defines}NET,NET_1_1" dynamic="true" />
+        <property name="link.sdkdoc.version" value="SDK_v1_1" />
+        <property name="link.sdkdoc.web" value="true" />
+    </target>
+    <target name="set-net-2.0-framework-configuration">
+        <property name="nant.settings.currentframework" value="net-2.0" />
+        <property name="current.build.defines" value="${build.defines}NET,NET_2_0" dynamic="true" />
+        <property name="link.sdkdoc.version" value="SDK_v1_1" />
+        <property name="link.sdkdoc.web" value="true" />
+    </target>
+    <target name="set-netcf-1.0-framework-configuration">
+        <property name="nant.settings.currentframework" value="netcf-1.0" />
+        <property name="current.build.defines" value="${build.defines}NETCF,NETCF_1_0" dynamic="true" />
+        <property name="link.sdkdoc.version" value="SDK_v1_1" />
+        <property name="link.sdkdoc.web" value="true" />
+    </target>
+    <target name="set-mono-1.0-framework-configuration">
+        <property name="nant.settings.currentframework" value="mono-1.0" />
+        <property name="current.build.defines" value="${build.defines}MONO,MONO_1_0" dynamic="true" />
+        <property name="link.sdkdoc.version" value="SDK_v1_1" />
+        <property name="link.sdkdoc.web" value="true" />
+    </target>
+    <target name="set-mono-2.0-framework-configuration">
+        <property name="nant.settings.currentframework" value="mono-2.0" />
+        <property name="current.build.defines" value="${build.defines}MONO,MONO_2_0" dynamic="true" />
+        <property name="link.sdkdoc.version" value="SDK_v1_1" />
+        <property name="link.sdkdoc.web" value="true" />
+    </target>
+    <target name="set-sscli-1.0-framework-configuration">
+        <property name="nant.settings.currentframework" value="sscli-1.0" />
+        <property name="current.build.defines" value="${build.defines}SSCLI,SSCLI_1_0" dynamic="true" />
+        <property name="link.sdkdoc.version" value="SDK_v1_0" />
+        <property name="link.sdkdoc.web" value="true" />
+    </target>
+    
+    <!-- install targets -->
+    
+    <target name="install" depends="install-windows, install-linux" />
+    
+<!--depends="userdoc" -->
+    <target name="install-windows" depends="build" if="${platform::is-win32()}">
+        <!-- install to program files directory by default -->
+        <property name="install.realprefix" value="${environment::get-folder-path('ProgramFiles')}" />
+        <if test="${property::exists('install.prefix') and string::get-length(install.prefix) != 0}">
+            <property name="install.realprefix" value="${install.prefix}" />
+        </if>
+        <property name="install.copylocation" value="${path::combine(install.realprefix, 'OpenWire')}"/>
+        <echo message="Installing OpenWire to '${install.copylocation}' ..." />
+        
+        <copy todir="${install.copylocation}" overwrite="true">
+            <fileset basedir="${build.dir}">
+                <include name="bin/**/*" />
+                <include name="doc/**/*" />
+
+                <exclude name="bin/nant.tests.config" />
+                <exclude name="bin/*.Tests.*" />
+            </fileset>
+        </copy>
+    </target>
+    
+    <target name="install-linux" depends="build" if="${platform::is-unix()}">
+        <property name="install.realprefix" value="/usr/local" />
+        <if test="${property::exists('install.prefix') and string::get-length(install.prefix) != 0}">
+            <property name="install.realprefix" value="${install.prefix}" />
+        </if>
+        <property name="install.bindir" value="${path::combine(install.realprefix, 'bin')}"/>
+        <property name="install.share" value="${path::combine(install.realprefix, 'share')}"/>
+        <property name="install.copylocation" value="${path::combine (install.share, 'OpenWire')}"/>
+        <property name="prefix" value="${pkg-config::get-variable('mono', 'prefix')}"/>
+        <echo message="Installing OpenWire to '${install.copylocation}' ..." />
+        
+        <copy todir="${install.copylocation}" overwrite="true">
+            <fileset basedir="${build.dir}">
+                <include name="bin/**/*" />
+                <include name="doc/**/*" />
+
+                <exclude name="bin/nant.tests.config" />
+                <exclude name="bin/*.Tests.*" />
+            </fileset>
+        </copy>
+        <echo message="Installing OpenWire wrapper script to '${install.bindir}' ..." />
+        <!-- store filename of wrapper script in property -->
+        <property name="wrapper" value="${path::combine(install.bindir, 'nant')}" />
+        <!-- 
+            create wrapper file using separate echo tasks for each line to ensure
+            the line endings of the generated file match the platform on which 
+            the wrapper is created
+        -->
+        <echo file="${wrapper}" append="false">#!/bin/sh</echo>
+        <echo file="${wrapper}" append="true">exec ${path::combine(prefix, 'bin')}/mono ${path::combine(install.copylocation, 'bin')}/OpenWire.exe "$@"</echo>
+        <exec program="chmod" commandline="a+x ${path::combine(install.bindir, 'nant')}"/>
+    </target>
+    
+    <target name="rpm" depends="init, build">
+        <echo message="Build dir: ${build.dir}"/>
+        <copy todir="${build.dir}">
+            <fileset>
+                <include name="OpenWire.spec" />
+            </fileset>
+        </copy>
+
+        <nant buildfile="release.xml" target="prepare-rpm"/>
+        <nant buildfile="release.xml" target="binary-rpm"/>
+    </target>
+</project>
