@@ -9,17 +9,18 @@ namespace OpenWire.Core
 	{
 		public ActiveMQTopic(): base()	{}
 		public ActiveMQTopic(String name):base(name){}
-		public String getTopicName() 
+		
+		public String GetTopicName() 
 		{
-			return super.getPhysicalName();
+			return super.GetPhysicalName();
 		}
-		public override int getDestinationType() 
+		public override int GetDestinationType() 
 		{
 			return ACTIVEMQ_TOPIC;
 		}
 
 
-		public override ActiveMQDestination createDestination(String name) 
+		public override ActiveMQDestination CreateDestination(String name) 
 		{
 			return new ActiveMQTopic(name);
 		}

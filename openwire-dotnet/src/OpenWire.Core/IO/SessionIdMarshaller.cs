@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             SessionId info = (SessionId) command;
             info.setConnectionId(dataIn.readUTF());
             info.setSessionId(dataIn.readLong());
@@ -33,7 +33,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             SessionId info = (SessionId) command;
             writeUTF(info.getConnectionId(), dataOut);
             dataOut.writeLong(info.getSessionId());

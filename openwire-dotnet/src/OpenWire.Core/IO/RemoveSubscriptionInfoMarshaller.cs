@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) command;
             info.setConnectionId((org.apache.activemq.command.ConnectionId) readObject(dataIn));
             info.setSubcriptionName(dataIn.readUTF());
@@ -34,7 +34,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) command;
             writeObject(info.getConnectionId(), dataOut);
             writeUTF(info.getSubcriptionName(), dataOut);

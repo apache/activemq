@@ -81,7 +81,7 @@ namespace OpenWire.Core
 
     protected ActiveMQDestination(String name) {
         this.physicalName = name;
-        this.advisory = name != null && name.startsWith(ADVISORY_PREFIX);
+        this.advisory = name != null && name.StartsWith(ADVISORY_PREFIX);
     }
 
 
@@ -89,71 +89,71 @@ namespace OpenWire.Core
     /**
      * @return Returns the advisory.
      */
-    public bool isAdvisory() {
+    public bool IsAdvisory() {
         return advisory;
     }
     /**
      * @param advisory The advisory to set.
      */
-    public void setAdvisory(bool advisory) {
+    public void SetAdvisory(bool advisory) {
         this.advisory = advisory;
     }
     
     /**
      * @return true if this is a destination for Consumer advisories
      */
-    public bool isConsumerAdvisory(){
-        return isAdvisory() && physicalName.startsWith(ActiveMQDestination.CONSUMER_ADVISORY_PREFIX);
+    public bool IsConsumerAdvisory(){
+        return IsAdvisory() && physicalName.StartsWith(ActiveMQDestination.CONSUMER_ADVISORY_PREFIX);
     }
     
     /**
      * @return true if this is a destination for Producer advisories
      */
-    public bool isProducerAdvisory(){
-        return isAdvisory() && physicalName.startsWith(ActiveMQDestination.PRODUCER_ADVISORY_PREFIX);
+    public bool IsProducerAdvisory(){
+        return IsAdvisory() && physicalName.StartsWith(ActiveMQDestination.PRODUCER_ADVISORY_PREFIX);
     }
     
     /**
      * @return true if this is a destination for Connection advisories
      */
-    public bool isConnectionAdvisory(){
-        return isAdvisory() && physicalName.startsWith(ActiveMQDestination.CONNECTION_ADVISORY_PREFIX);
+    public bool IsConnectionAdvisory(){
+        return IsAdvisory() && physicalName.StartsWith(ActiveMQDestination.CONNECTION_ADVISORY_PREFIX);
     }
     
     /**
      * @return Returns the exclusive.
      */
-    public bool isExclusive() {
+    public bool IsExclusive() {
         return exclusive;
     }
     /**
      * @param exclusive The exclusive to set.
      */
-    public void setExclusive(bool exclusive) {
+    public void SetExclusive(bool exclusive) {
         this.exclusive = exclusive;
     }
     /**
      * @return Returns the ordered.
      */
-    public bool isOrdered() {
+    public bool IsOrdered() {
         return ordered;
     }
     /**
      * @param ordered The ordered to set.
      */
-    public void setOrdered(bool ordered) {
+    public void SetOrdered(bool ordered) {
         this.ordered = ordered;
     }
     /**
      * @return Returns the orderedTarget.
      */
-    public String getOrderedTarget() {
+    public String GetOrderedTarget() {
         return orderedTarget;
     }
     /**
      * @param orderedTarget The orderedTarget to set.
      */
-    public void setOrderedTarget(String orderedTarget) {
+    public void SetOrderedTarget(String orderedTarget) {
         this.orderedTarget = orderedTarget;
     }
     /**
@@ -201,36 +201,12 @@ namespace OpenWire.Core
     }
 
     /**
-     * Write an ActiveMQDestination to a Stream
-     *
-     * @param destination
-     * @param dataOut
-     * @throws IOException
-     */
-
-    public static void writeToStream(ActiveMQDestination destination, Object dataOut)  {
-        //TODO SERILIZATION
-    }
-
-    /**
-     * Read an ActiveMQDestination  from a Stream
-     *
-     * @param dataIn
-     * @return the ActiveMQDestination
-     * @throws IOException
-     */
-
-    public static ActiveMQDestination readFromStream(Object dataIn)  {
-		//TODO Serilization
-    }
-    
-    /**
      * Create a Destination
      * @param type
      * @param pyhsicalName
      * @return
      */
-    public static ActiveMQDestination createDestination(int type,String pyhsicalName){
+    public static ActiveMQDestination CreateDestination(int type,String pyhsicalName){
         ActiveMQDestination result = null;
         if (type == ACTIVEMQ_TOPIC) {
             result = new ActiveMQTopic(pyhsicalName);
@@ -253,7 +229,7 @@ namespace OpenWire.Core
      * @param clientId
      * @return
      */
-    public static String createTemporaryName(String clientId) {
+    public static String CreateTemporaryName(String clientId) {
         return TEMP_PREFIX + clientId + TEMP_POSTFIX;
     }
 
@@ -263,7 +239,7 @@ namespace OpenWire.Core
      * @param destination
      * @return the clientId or null if not a temporary destination
      */
-    public static String getClientId(ActiveMQDestination destination) {
+    public static String GetClientId(ActiveMQDestination destination) {
         String answer = null;
         if (destination != null && destination.isTemporary()) {
             String name = destination.getPhysicalName();
@@ -284,7 +260,7 @@ namespace OpenWire.Core
      * @param o object to compare
      * @return 1 if this is less than o else 0 if they are equal or -1 if this is less than o
      */
-    public int compareTo(Object o) {
+    public int CompareTo(Object o) {
         if (o is ActiveMQDestination) {
             return compareTo((ActiveMQDestination) o);
         }
@@ -297,7 +273,7 @@ namespace OpenWire.Core
      * @param that another destination to compare against
      * @return 1 if this is less than o else 0 if they are equal or -1 if this is less than o
      */
-    public int compareTo(ActiveMQDestination that) {
+    public int CompareTo(ActiveMQDestination that) {
         int answer = 0;
         if (physicalName != that.physicalName) {
             if (physicalName == null) {
@@ -328,20 +304,20 @@ namespace OpenWire.Core
      * @return Returns the Destination type
      */
 
-    public abstract int getDestinationType();
+    public abstract int GetDestinationType();
 
 
     /**
      * @return Returns the physicalName.
      */
-    public String getPhysicalName() {
+    public String GetPhysicalName() {
         return this.physicalName;
     }
 
     /**
      * @param newPhysicalName The physicalName to set.
      */
-    public void setPhysicalName(String newPhysicalName) {
+    public void SetPhysicalName(String newPhysicalName) {
         this.physicalName = newPhysicalName;
     }
 
@@ -351,9 +327,9 @@ namespace OpenWire.Core
      * @return true/false
      */
 
-    public bool isTemporary() {
-        return getDestinationType() == ACTIVEMQ_TEMPORARY_TOPIC ||
-                getDestinationType() == ACTIVEMQ_TEMPORARY_QUEUE;
+    public bool IsTemporary() {
+        return GetDestinationType() == ACTIVEMQ_TEMPORARY_TOPIC ||
+                GetDestinationType() == ACTIVEMQ_TEMPORARY_QUEUE;
     }
 
     /**
@@ -362,9 +338,9 @@ namespace OpenWire.Core
      * @return true/false
      */
 
-    public bool isTopic() {
-        return getDestinationType() == ACTIVEMQ_TOPIC ||
-                getDestinationType() == ACTIVEMQ_TEMPORARY_TOPIC;
+    public bool IsTopic() {
+        return GetDestinationType() == ACTIVEMQ_TOPIC ||
+                GetDestinationType() == ACTIVEMQ_TEMPORARY_TOPIC;
     }
 
     /**
@@ -372,7 +348,7 @@ namespace OpenWire.Core
      *
      * @return true/false
      */
-    public bool isQueue() {
+    public bool IsQueue() {
         return !isTopic();
     }
 
@@ -386,7 +362,7 @@ namespace OpenWire.Core
      *
      * @return true if this destination represents a collection of child destinations.
      */
-    public bool isComposite() {
+    public bool IsComposite() {
         return physicalName.indexOf(COMPOSITE_SEPARATOR) > 0;
     }
 
@@ -396,16 +372,16 @@ namespace OpenWire.Core
      *
      * @return
      */
-    /*public List getChildDestinations() {
+    /*public List GetChildDestinations() {
         List answer = new ArrayList();
         StringTokenizer iter = new StringTokenizer(physicalName, COMPOSITE_SEPARATOR);
         while (iter.hasMoreTokens()) {
             String name = iter.nextToken();
             Destination child = null;
-            if (name.startsWith(QUEUE_PREFIX)) {
+            if (name.StartsWith(QUEUE_PREFIX)) {
                 child = new ActiveMQQueue(name.substring(QUEUE_PREFIX.length()));
             }
-            else if (name.startsWith(TOPIC_PREFIX)) {
+            else if (name.StartsWith(TOPIC_PREFIX)) {
                 child = new ActiveMQTopic(name.substring(TOPIC_PREFIX.length()));
             }
             else {
@@ -425,7 +401,7 @@ namespace OpenWire.Core
      * @return string representation of this instance
      */
 
-    public String toString() {
+    public override String ToString() {
         return this.physicalName;
     }
 
@@ -433,7 +409,7 @@ namespace OpenWire.Core
      * @return hashCode for this instance
      */
 
-    public int hashCode() {
+    public override int GetHashCode() {
         int answer = 0xcafebabe;
 
         if (this.physicalName != null) {
@@ -452,7 +428,7 @@ namespace OpenWire.Core
      * @return true if this instance and obj are equivalent
      */
 
-    public bool equals(Object obj) {
+    public override bool Equals(Object obj) {
         bool result = this == obj;
         if (!result && obj != null && obj is ActiveMQDestination) {
             ActiveMQDestination other = (ActiveMQDestination) obj;
@@ -466,7 +442,7 @@ namespace OpenWire.Core
     /**
      * @return true if the destination matches multiple possible destinations
      */
-    public bool isWildcard() {
+    public bool IsWildcard() {
         if (physicalName != null) {
             return physicalName.indexOf(DestinationFilter.ANY_CHILD) >= 0
                     || physicalName.indexOf(DestinationFilter.ANY_DESCENDENT) >= 0;
@@ -478,9 +454,9 @@ namespace OpenWire.Core
      * @param destination
      * @return  true if the given destination matches this destination; including wildcards
      */
-    public bool matches(ActiveMQDestination destination) {
+    public bool Matches(ActiveMQDestination destination) {
         if (isWildcard()) {
-            return getDestinationFilter().matches(destination);
+            return GetDestinationFilter().matches(destination);
         }
         else {
             return equals(destination);
@@ -491,7 +467,7 @@ namespace OpenWire.Core
     /**
      * @return the DestinationFilter
      */
-    public DestinationFilter getDestinationFilter() {
+    public DestinationFilter GetDestinationFilter() {
         if (filter == null) {
             filter = DestinationFilter.parseFilter(this);
         }
@@ -501,29 +477,19 @@ namespace OpenWire.Core
     /**
      * @return the associated paths associated with this Destination
      */
-    public String[] getDestinationPaths() {
+    public String[] GetDestinationPaths() {
         if (paths == null) {
             paths = DestinationPath.getDestinationPaths(physicalName);
         }
         return paths;
     }
 
-
-
-
-
-    
-    
-    // Implementation methods
-    //-------------------------------------------------------------------------
-
-
     /**
      * Factory method to create a child destination if this destination is a composite
      * @param name
      * @return the created Destination
      */
-    public abstract ActiveMQDestination createDestination(String name);
+    public abstract ActiveMQDestination CreateDestination(String name);
 
     
 }

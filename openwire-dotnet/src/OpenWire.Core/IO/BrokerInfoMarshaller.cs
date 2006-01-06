@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             BrokerInfo info = (BrokerInfo) command;
             info.setBrokerId((org.apache.activemq.command.BrokerId) readObject(dataIn));
             info.setBrokerURL(dataIn.readUTF());
@@ -35,7 +35,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             BrokerInfo info = (BrokerInfo) command;
             writeObject(info.getBrokerId(), dataOut);
             writeUTF(info.getBrokerURL(), dataOut);

@@ -5,14 +5,14 @@ namespace OpenWire.Core
 	/// <summary>
 	/// Summary description for AbstractCommand.
 	/// </summary>
-	public abstract class AbstractCommand {
+	public abstract class AbstractCommand : Command {
 		
-		public const int 	NON_PERSISTENT = 	1;
-		public const int 	PERSISTENT 	= 2;
+		//public const int 	NON_PERSISTENT = 	1;
+		//public const int 	PERSISTENT 	= 2;
     
-											 /**
-											  * Message flag indexes (used for writing/reading to/from a Stream
-											  */
+		 /**
+		  * Message flag indexes (used for writing/reading to/from a Stream
+		  */
 		public const int RECEIPT_REQUIRED_INDEX = 0;
 		public const int BROKERS_VISITED_INDEX =1;
 		private short id = 0;
@@ -28,54 +28,49 @@ namespace OpenWire.Core
          	    return 0;
  	    }
 
-		public short getId() 
+		public short GetId() 
 		{
 			return this.id;
 		}
 
-		public virtual void setId(short newId) 
+		public virtual void SetId(short newId) 
 		{
 			this.id = newId;
 		}
 
-		public virtual bool isReceiptRequired() 
+		public virtual bool IsReceiptRequired() 
 		{
 			return this.receiptRequired;
 		}
 
 		
-		public virtual bool isReceipt() 
+		public virtual bool IsReceipt() 
 		{
 			return false;
 		}
 
-		public void setReceiptRequired(bool value) 
+		public void SetReceiptRequired(bool value) 
 		{
 			this.receiptRequired = value;
 		}
 
-		public virtual bool isJMSMessage() 
+		public virtual bool IsJMSMessage() 
 		{
 			return false;
 		}
 
-		public int hashCode() 
+		public override int GetHashCode() 
 		{
 			return this.id;
 		}
 
-		public virtual short getCommandType() 
+		public override String ToString() 
 		{
-			return id;
-		}
-
-		public String toString() 
-		{
-			return getCommandTypeAsString(getCommandType()) + ": id = " + getId();
+			return GetCommandTypeAsString(GetCommandType()) + ": id = " + GetId();
 		}
 
 
-		public static String getCommandTypeAsString(int type) 
+		public static String GetCommandTypeAsString(int type) 
 		{
 			String packetTypeStr = "";
 			switch (type) 
@@ -155,12 +150,6 @@ namespace OpenWire.Core
 			}
 			return packetTypeStr;
 		}
-
-		protected virtual bool equals(Object left, Object right) 
-		{	
-			return left == right || (left != null && left.Equals(right));
-		}
-
 	}
 }
 
