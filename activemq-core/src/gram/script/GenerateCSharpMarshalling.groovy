@@ -51,6 +51,9 @@ class GenerateCSharpMarshalling extends OpenWireScript {
             if (jclass.superclass?.simpleName == "ActiveMQMessage") {
                 baseClass = "ActiveMQMessageMarshaller"
             }
+            
+            def notAbstract = jclass.simpleName != "ActiveMQDestination"
+            def abstractText = (notAbstract) ? "" : "abstract "
 
             buffer << """
 ${jclass.simpleName}Marshaller.class
@@ -76,66 +79,79 @@ using OpenWire.Core.IO;
 
 namespace OpenWire.Core.IO
 {
-    public class ${jclass.simpleName}Marshaller : $baseClass
+    public ${abstractText}class ${jclass.simpleName}Marshaller : $baseClass
     {
 
+"""
+							 if (notAbstract) 
+	                out << """
         public override Command CreateCommand() {
             return new ${jclass.simpleName}();
         }
-
+"""
+                out << """
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+"""
+							 if (!propertyList.empty) {
+                    out << """
             ${jclass.simpleName} info = (${jclass.simpleName}) command;
 """
+							 }
                 for (property in propertyList) {
-                    out << "            info.${property.setter.simpleName}("
+                		 def propertyName = property.simpleName
+                    if (propertyName == jclass.simpleName) {
+                        // TODO think of a better naming convention :)
+                    		propertyName += "Value"
+                    }
+                    out << "            info.${propertyName} = "
 
                     type = property.type.qualifiedName
                     switch (type) {
                         case "java.lang.String":
-                            out << "dataIn.readUTF()"
+                            out << "dataIn.ReadString()"
                             break;
 
-                        case "org.apache.activemq.message.ActiveMQDestination":
-                            out << "readDestination(dataIn)"
+                        case "org.apache.activemq.command.ActiveMQDestination":
+                            out << "ReadDestination(dataIn)"
                             break;
 
                         case "boolean":
-                            out << "dataIn.readBoolean()"
+                            out << "dataIn.ReadBoolean()"
                             break;
 
                         case "byte":
-                            out << "dataIn.readByte()"
+                            out << "dataIn.ReadByte()"
                             break;
 
                         case "char":
-                            out << "dataIn.readChar()"
+                            out << "dataIn.ReadChar()"
                             break;
 
                         case "short":
-                            out << "dataIn.readShort()"
+                            out << "dataIn.ReadInt16()"
                             break;
 
                         case "int":
-                            out << "dataIn.readInt()"
+                            out << "dataIn.ReadInt32()"
                             break;
 
                         case "long":
-                            out << "dataIn.readLong()"
+                            out << "dataIn.ReadInt64()"
                             break;
 
                         case "float":
-                            out << "dataIn.readFloat()"
+                            out << "dataIn.ReadDecimal()"
                             break;
 
                         case "double":
-                            out << "dataIn.readDouble()"
+                            out << "dataIn.ReadDouble()"
                             break;
 
                         default:
-                            out << "(${type}) readObject(dataIn)"
+                            out << "(${property.type.simpleName}) ReadCommand(dataIn, \"${type}\")"
                     }
-                    out << """);
+                    out << """;
 """
                 }
 
@@ -144,56 +160,66 @@ namespace OpenWire.Core.IO
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+"""
+							 if (!propertyList.empty) {
+                    out << """
             ${jclass.simpleName} info = (${jclass.simpleName}) command;
 """
+							 }
+							 
                 for (property in propertyList) {
-                    def getter = "info." + property.getter.simpleName + "()"
+                		 def propertyName = property.simpleName
+                    if (propertyName == jclass.simpleName) {
+                        // TODO think of a better naming convention :)
+                    		propertyName += "Value"
+                    }
+                    def getter = "info." + propertyName
                     out << "            "
 
                     type = property.type.qualifiedName
                     switch (type) {
                         case "java.lang.String":
-                            out << "writeUTF($getter, dataOut);"
+                            out << "dataOut.Write($getter);"
                             break;
 
-                        case "org.apache.activemq.message.ActiveMQDestination":
-                            out << "writeDestination($getter, dataOut);"
+                        case "org.apache.activemq.command.ActiveMQDestination":
+                            out << "WriteDestination($getter, dataOut);"
                             break;
 
                         case "boolean":
-                            out << "dataOut.writeBoolean($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         case "byte":
-                            out << "dataOut.writeByte($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         case "char":
-                            out << "dataOut.writeChar($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         case "short":
-                            out << "dataOut.writeShort($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         case "int":
-                            out << "dataOut.writeInt($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         case "long":
-                            out << "dataOut.writeLong($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         case "float":
-                            out << "dataOut.writeFloat($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         case "double":
-                            out << "dataOut.writeDouble($getter);"
+                            out << "dataOut.Write($getter);"
                             break;
 
                         default:
-                            out << "writeObject($getter, dataOut);"
+                            out << "WriteCommand($getter, dataOut, \"${type}\");"
                     }
                     out << """
 """
