@@ -109,12 +109,10 @@
       <classpath refid="openwire.classpath" />
       <sysproperty key="openwire.version" value="${openwire.version}" />
       <arg value="src/main/java/org/apache/activemq/command" />
+      <arg value="src/gram/script/GenerateCSharpClasses.groovy" />
+      <arg value="src/gram/script/GenerateCSharpMarshalling.groovy" />
       <arg value="src/gram/script/GenerateJavaMarshalling.groovy" />
       <arg value="src/gram/script/GenerateCMarshalling.groovy" />
-      <!--
-            <arg value="src/gram/script/GenerateCSharpClasses.groovy" />
-            <arg value="src/gram/script/GenerateCSharpMarshalling.groovy" />
-            -->
     </java>
 
   </goal>
