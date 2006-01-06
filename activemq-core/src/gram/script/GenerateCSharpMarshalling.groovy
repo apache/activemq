@@ -106,14 +106,10 @@ namespace OpenWire.Core.IO
                     }
                     out << "            info.${propertyName} = "
 
-                    type = property.type.qualifiedName
+                    type = property.type.simpleName
                     switch (type) {
-                        case "java.lang.String":
+                        case "String":
                             out << "dataIn.ReadString()"
-                            break;
-
-                        case "org.apache.activemq.command.ActiveMQDestination":
-                            out << "ReadDestination(dataIn)"
                             break;
 
                         case "boolean":
@@ -147,9 +143,17 @@ namespace OpenWire.Core.IO
                         case "double":
                             out << "dataIn.ReadDouble()"
                             break;
+                            
+                        case "ActiveMQDestination":
+                            out << "ReadDestination(dataIn)"
+                            break;
+
+                        case "BrokerId[]":
+                            out << "ReadBrokerIds(dataIn)"
+                            break;
 
                         default:
-                            out << "(${property.type.simpleName}) ReadCommand(dataIn, \"${type}\")"
+                            out << "Read${type}(dataIn)"
                     }
                     out << """;
 """
@@ -176,14 +180,10 @@ namespace OpenWire.Core.IO
                     def getter = "info." + propertyName
                     out << "            "
 
-                    type = property.type.qualifiedName
+                    type = property.type.simpleName
                     switch (type) {
-                        case "java.lang.String":
+                        case "String":
                             out << "dataOut.Write($getter);"
-                            break;
-
-                        case "org.apache.activemq.command.ActiveMQDestination":
-                            out << "WriteDestination($getter, dataOut);"
                             break;
 
                         case "boolean":
@@ -218,8 +218,16 @@ namespace OpenWire.Core.IO
                             out << "dataOut.Write($getter);"
                             break;
 
+                        case "ActiveMQDestination":
+                            out << "WriteDestination($getter, dataOut);"
+                            break;
+
+                        case "BrokerId[]":
+                            out << "dataOut.WriteBrokerIds($getter);"
+                            break;
+
                         default:
-                            out << "WriteCommand($getter, dataOut, \"${type}\");"
+                            out << "Write${type}($getter, dataOut);"
                     }
                     out << """
 """
