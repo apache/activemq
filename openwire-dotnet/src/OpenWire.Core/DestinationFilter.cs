@@ -1,4 +1,5 @@
 using System;
+using OpenWire.Core.Commands;
 
 namespace OpenWire.Core
 {

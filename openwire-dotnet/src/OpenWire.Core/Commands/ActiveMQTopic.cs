@@ -20,7 +20,7 @@ namespace OpenWire.Core.Commands
 
 
         // TODO generate Equals method
-        // TODO generate HashCode method
+        // TODO generate GetHashCode method
         // TODO generate ToString method
 
 
@@ -30,7 +30,6 @@ namespace OpenWire.Core.Commands
 
 
         // Properties
-
 
     }
 }

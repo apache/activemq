@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             JournalQueueAck info = (JournalQueueAck) command;
             info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
             info.setMessageAck((org.apache.activemq.command.MessageAck) readObject(dataIn));
@@ -33,7 +33,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             JournalQueueAck info = (JournalQueueAck) command;
             writeObject(info.getDestination(), dataOut);
             writeObject(info.getMessageAck(), dataOut);

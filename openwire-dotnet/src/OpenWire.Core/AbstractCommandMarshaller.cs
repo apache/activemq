@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace OpenWire.Core
 {
@@ -10,9 +11,13 @@ namespace OpenWire.Core
 
         public abstract Command CreateCommand();
 
-        public abstract void BuildCommand(Command command, BinaryReader dataIn);
+        public virtual void BuildCommand(Command command, BinaryReader dataIn) 
+        {
+        }
         
-        public abstract void WriteCommand(Command command, BinaryWriter dataOut);
+        public virtual void WriteCommand(Command command, BinaryWriter dataOut)
+        {
+        }
         
 	}
 }

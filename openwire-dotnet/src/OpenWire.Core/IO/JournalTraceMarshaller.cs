@@ -25,14 +25,14 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             JournalTrace info = (JournalTrace) command;
             info.setMessage(dataIn.readUTF());
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             JournalTrace info = (JournalTrace) command;
             writeUTF(info.getMessage(), dataOut);
 

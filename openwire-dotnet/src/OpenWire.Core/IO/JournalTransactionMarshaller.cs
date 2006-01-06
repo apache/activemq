@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             JournalTransaction info = (JournalTransaction) command;
             info.setTransactionId((org.apache.activemq.command.TransactionId) readObject(dataIn));
             info.setType(dataIn.readByte());
@@ -34,7 +34,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             JournalTransaction info = (JournalTransaction) command;
             writeObject(info.getTransactionId(), dataOut);
             dataOut.writeByte(info.getType());

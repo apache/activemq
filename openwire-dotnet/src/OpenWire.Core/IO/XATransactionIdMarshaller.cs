@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             XATransactionId info = (XATransactionId) command;
             info.setFormatId(dataIn.readInt());
             info.setGlobalTransactionId((byte[]) readObject(dataIn));
@@ -34,7 +34,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             XATransactionId info = (XATransactionId) command;
             dataOut.writeInt(info.getFormatId());
             writeObject(info.getGlobalTransactionId(), dataOut);

@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             ConsumerInfo info = (ConsumerInfo) command;
             info.setConsumerId((org.apache.activemq.command.ConsumerId) readObject(dataIn));
             info.setBrowser(dataIn.readBoolean());
@@ -44,7 +44,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             ConsumerInfo info = (ConsumerInfo) command;
             writeObject(info.getConsumerId(), dataOut);
             dataOut.writeBoolean(info.isBrowser());

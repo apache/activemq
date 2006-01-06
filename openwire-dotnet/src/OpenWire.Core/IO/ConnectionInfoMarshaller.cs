@@ -25,7 +25,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             ConnectionInfo info = (ConnectionInfo) command;
             info.setConnectionId((org.apache.activemq.command.ConnectionId) readObject(dataIn));
             info.setClientId(dataIn.readUTF());
@@ -36,7 +36,7 @@ namespace OpenWire.Core.IO
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             ConnectionInfo info = (ConnectionInfo) command;
             writeObject(info.getConnectionId(), dataOut);
             writeUTF(info.getClientId(), dataOut);

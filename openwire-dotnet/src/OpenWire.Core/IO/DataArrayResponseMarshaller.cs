@@ -25,14 +25,14 @@ namespace OpenWire.Core.IO
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
-            super.buildCommand(command, dataIn);
+            base.BuildCommand(command, dataIn);
             DataArrayResponse info = (DataArrayResponse) command;
             info.setData((org.apache.activemq.command.DataStructure[]) readObject(dataIn));
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
-            super.writeCommand(command, dataOut);
+            base.WriteCommand(command, dataOut);
             DataArrayResponse info = (DataArrayResponse) command;
             writeObject(info.getData(), dataOut);
 
