@@ -142,8 +142,16 @@ namespace OpenWire.Core.Commands
         switch (type) {
             case "java.lang.String":
                 return "string"
+            case "java.lang.Throwable":
+                return "string"
+            case "java.lang.Throwable":
+                return "string"
             case "boolean":
                 return "bool"
+            case "org.activeio.ByteSequence":
+                return "byte[]"
+            case "org.apache.activemq.command.DataStructure[]":
+                return "Command[]"
             case "org.apache.activemq.command.DataStructure":
                 return "Command"
             case "org.apache.activemq.message.ActiveMQDestination":
