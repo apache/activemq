@@ -20,19 +20,18 @@ namespace OpenWire.Core.IO
     public class FlushCommandMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new FlushCommand();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
-            FlushCommand info = (FlushCommand) command;
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
-            FlushCommand info = (FlushCommand) command;
 
         }
     }

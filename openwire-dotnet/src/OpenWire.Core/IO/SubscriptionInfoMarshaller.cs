@@ -20,27 +20,30 @@ namespace OpenWire.Core.IO
     public class SubscriptionInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new SubscriptionInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             SubscriptionInfo info = (SubscriptionInfo) command;
-            info.setClientId(dataIn.readUTF());
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setSelector(dataIn.readUTF());
-            info.setSubcriptionName(dataIn.readUTF());
+            info.ClientId = dataIn.ReadString();
+            info.Destination = ReadDestination(dataIn);
+            info.Selector = dataIn.ReadString();
+            info.SubcriptionName = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             SubscriptionInfo info = (SubscriptionInfo) command;
-            writeUTF(info.getClientId(), dataOut);
-            writeObject(info.getDestination(), dataOut);
-            writeUTF(info.getSelector(), dataOut);
-            writeUTF(info.getSubcriptionName(), dataOut);
+            dataOut.Write(info.ClientId);
+            WriteDestination(info.Destination, dataOut);
+            dataOut.Write(info.Selector);
+            dataOut.Write(info.SubcriptionName);
 
         }
     }

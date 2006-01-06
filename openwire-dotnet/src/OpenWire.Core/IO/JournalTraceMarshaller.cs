@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class JournalTraceMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new JournalTrace();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             JournalTrace info = (JournalTrace) command;
-            info.setMessage(dataIn.readUTF());
+            info.Message = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             JournalTrace info = (JournalTrace) command;
-            writeUTF(info.getMessage(), dataOut);
+            dataOut.Write(info.Message);
 
         }
     }

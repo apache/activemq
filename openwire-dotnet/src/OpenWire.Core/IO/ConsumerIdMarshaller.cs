@@ -20,25 +20,28 @@ namespace OpenWire.Core.IO
     public class ConsumerIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ConsumerId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ConsumerId info = (ConsumerId) command;
-            info.setConnectionId(dataIn.readUTF());
-            info.setSessionId(dataIn.readLong());
-            info.setConsumerId(dataIn.readLong());
+            info.ConnectionId = dataIn.ReadString();
+            info.SessionId = dataIn.ReadInt64();
+            info.ConsumerIdValue = dataIn.ReadInt64();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ConsumerId info = (ConsumerId) command;
-            writeUTF(info.getConnectionId(), dataOut);
-            dataOut.writeLong(info.getSessionId());
-            dataOut.writeLong(info.getConsumerId());
+            dataOut.Write(info.ConnectionId);
+            dataOut.Write(info.SessionId);
+            dataOut.Write(info.ConsumerIdValue);
 
         }
     }

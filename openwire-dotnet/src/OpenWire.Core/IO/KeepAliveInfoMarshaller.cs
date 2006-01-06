@@ -20,19 +20,18 @@ namespace OpenWire.Core.IO
     public class KeepAliveInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new KeepAliveInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
-            KeepAliveInfo info = (KeepAliveInfo) command;
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
-            KeepAliveInfo info = (KeepAliveInfo) command;
 
         }
     }

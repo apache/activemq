@@ -20,25 +20,28 @@ namespace OpenWire.Core.IO
     public class RemoveSubscriptionInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new RemoveSubscriptionInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) command;
-            info.setConnectionId((org.apache.activemq.command.ConnectionId) readObject(dataIn));
-            info.setSubcriptionName(dataIn.readUTF());
-            info.setClientId(dataIn.readUTF());
+            info.ConnectionId = ReadConnectionId(dataIn);
+            info.SubcriptionName = dataIn.ReadString();
+            info.ClientId = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) command;
-            writeObject(info.getConnectionId(), dataOut);
-            writeUTF(info.getSubcriptionName(), dataOut);
-            writeUTF(info.getClientId(), dataOut);
+            WriteConnectionId(info.ConnectionId, dataOut);
+            dataOut.Write(info.SubcriptionName);
+            dataOut.Write(info.ClientId);
 
         }
     }

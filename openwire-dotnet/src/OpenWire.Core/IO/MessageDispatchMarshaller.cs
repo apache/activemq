@@ -20,27 +20,30 @@ namespace OpenWire.Core.IO
     public class MessageDispatchMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new MessageDispatch();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             MessageDispatch info = (MessageDispatch) command;
-            info.setConsumerId((org.apache.activemq.command.ConsumerId) readObject(dataIn));
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setMessage((org.apache.activemq.command.Message) readObject(dataIn));
-            info.setRedeliveryCounter(dataIn.readInt());
+            info.ConsumerId = ReadConsumerId(dataIn);
+            info.Destination = ReadDestination(dataIn);
+            info.Message = ReadMessage(dataIn);
+            info.RedeliveryCounter = dataIn.ReadInt32();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             MessageDispatch info = (MessageDispatch) command;
-            writeObject(info.getConsumerId(), dataOut);
-            writeObject(info.getDestination(), dataOut);
-            writeObject(info.getMessage(), dataOut);
-            dataOut.writeInt(info.getRedeliveryCounter());
+            WriteConsumerId(info.ConsumerId, dataOut);
+            WriteDestination(info.Destination, dataOut);
+            WriteMessage(info.Message, dataOut);
+            dataOut.Write(info.RedeliveryCounter);
 
         }
     }

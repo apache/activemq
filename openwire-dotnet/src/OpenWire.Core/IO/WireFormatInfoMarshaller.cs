@@ -20,25 +20,28 @@ namespace OpenWire.Core.IO
     public class WireFormatInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new WireFormatInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             WireFormatInfo info = (WireFormatInfo) command;
-            info.setMagic((byte[]) readObject(dataIn));
-            info.setVersion(dataIn.readInt());
-            info.setOptions(dataIn.readInt());
+            info.Magic = Readbyte[](dataIn);
+            info.Version = dataIn.ReadInt32();
+            info.Options = dataIn.ReadInt32();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             WireFormatInfo info = (WireFormatInfo) command;
-            writeObject(info.getMagic(), dataOut);
-            dataOut.writeInt(info.getVersion());
-            dataOut.writeInt(info.getOptions());
+            Writebyte[](info.Magic, dataOut);
+            dataOut.Write(info.Version);
+            dataOut.Write(info.Options);
 
         }
     }

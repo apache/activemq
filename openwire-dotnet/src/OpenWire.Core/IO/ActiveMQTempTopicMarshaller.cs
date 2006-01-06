@@ -20,19 +20,18 @@ namespace OpenWire.Core.IO
     public class ActiveMQTempTopicMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ActiveMQTempTopic();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
-            ActiveMQTempTopic info = (ActiveMQTempTopic) command;
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
-            ActiveMQTempTopic info = (ActiveMQTempTopic) command;
 
         }
     }

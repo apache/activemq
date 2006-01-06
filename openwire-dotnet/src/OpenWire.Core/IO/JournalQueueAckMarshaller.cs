@@ -20,23 +20,26 @@ namespace OpenWire.Core.IO
     public class JournalQueueAckMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new JournalQueueAck();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             JournalQueueAck info = (JournalQueueAck) command;
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setMessageAck((org.apache.activemq.command.MessageAck) readObject(dataIn));
+            info.Destination = ReadDestination(dataIn);
+            info.MessageAck = ReadMessageAck(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             JournalQueueAck info = (JournalQueueAck) command;
-            writeObject(info.getDestination(), dataOut);
-            writeObject(info.getMessageAck(), dataOut);
+            WriteDestination(info.Destination, dataOut);
+            WriteMessageAck(info.MessageAck, dataOut);
 
         }
     }

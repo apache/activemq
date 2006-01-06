@@ -20,19 +20,18 @@ namespace OpenWire.Core.IO
     public class ActiveMQTopicMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ActiveMQTopic();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
-            ActiveMQTopic info = (ActiveMQTopic) command;
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
-            ActiveMQTopic info = (ActiveMQTopic) command;
 
         }
     }

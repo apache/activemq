@@ -20,23 +20,26 @@ namespace OpenWire.Core.IO
     public class SessionIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new SessionId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             SessionId info = (SessionId) command;
-            info.setConnectionId(dataIn.readUTF());
-            info.setSessionId(dataIn.readLong());
+            info.ConnectionId = dataIn.ReadString();
+            info.SessionIdValue = dataIn.ReadInt64();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             SessionId info = (SessionId) command;
-            writeUTF(info.getConnectionId(), dataOut);
-            dataOut.writeLong(info.getSessionId());
+            dataOut.Write(info.ConnectionId);
+            dataOut.Write(info.SessionIdValue);
 
         }
     }

@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class ExceptionResponseMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ExceptionResponse();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ExceptionResponse info = (ExceptionResponse) command;
-            info.setException((java.lang.Throwable) readObject(dataIn));
+            info.Exception = ReadThrowable(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ExceptionResponse info = (ExceptionResponse) command;
-            writeObject(info.getException(), dataOut);
+            WriteThrowable(info.Exception, dataOut);
 
         }
     }

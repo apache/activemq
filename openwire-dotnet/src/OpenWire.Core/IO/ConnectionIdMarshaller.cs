@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class ConnectionIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ConnectionId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ConnectionId info = (ConnectionId) command;
-            info.setConnectionId(dataIn.readUTF());
+            info.ConnectionIdValue = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ConnectionId info = (ConnectionId) command;
-            writeUTF(info.getConnectionId(), dataOut);
+            dataOut.Write(info.ConnectionIdValue);
 
         }
     }

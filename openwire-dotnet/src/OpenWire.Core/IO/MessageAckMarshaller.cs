@@ -20,33 +20,36 @@ namespace OpenWire.Core.IO
     public class MessageAckMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new MessageAck();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             MessageAck info = (MessageAck) command;
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setTransactionId((org.apache.activemq.command.TransactionId) readObject(dataIn));
-            info.setConsumerId((org.apache.activemq.command.ConsumerId) readObject(dataIn));
-            info.setAckType(dataIn.readByte());
-            info.setFirstMessageId((org.apache.activemq.command.MessageId) readObject(dataIn));
-            info.setLastMessageId((org.apache.activemq.command.MessageId) readObject(dataIn));
-            info.setMessageCount(dataIn.readInt());
+            info.Destination = ReadDestination(dataIn);
+            info.TransactionId = ReadTransactionId(dataIn);
+            info.ConsumerId = ReadConsumerId(dataIn);
+            info.AckType = dataIn.ReadByte();
+            info.FirstMessageId = ReadMessageId(dataIn);
+            info.LastMessageId = ReadMessageId(dataIn);
+            info.MessageCount = dataIn.ReadInt32();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             MessageAck info = (MessageAck) command;
-            writeObject(info.getDestination(), dataOut);
-            writeObject(info.getTransactionId(), dataOut);
-            writeObject(info.getConsumerId(), dataOut);
-            dataOut.writeByte(info.getAckType());
-            writeObject(info.getFirstMessageId(), dataOut);
-            writeObject(info.getLastMessageId(), dataOut);
-            dataOut.writeInt(info.getMessageCount());
+            WriteDestination(info.Destination, dataOut);
+            WriteTransactionId(info.TransactionId, dataOut);
+            WriteConsumerId(info.ConsumerId, dataOut);
+            dataOut.Write(info.AckType);
+            WriteMessageId(info.FirstMessageId, dataOut);
+            WriteMessageId(info.LastMessageId, dataOut);
+            dataOut.Write(info.MessageCount);
 
         }
     }

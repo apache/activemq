@@ -20,19 +20,18 @@ namespace OpenWire.Core.IO
     public class ShutdownInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ShutdownInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
-            ShutdownInfo info = (ShutdownInfo) command;
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
-            ShutdownInfo info = (ShutdownInfo) command;
 
         }
     }

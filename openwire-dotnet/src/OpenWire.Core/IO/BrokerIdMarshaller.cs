@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class BrokerIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new BrokerId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             BrokerId info = (BrokerId) command;
-            info.setBrokerId(dataIn.readUTF());
+            info.BrokerIdValue = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             BrokerId info = (BrokerId) command;
-            writeUTF(info.getBrokerId(), dataOut);
+            dataOut.Write(info.BrokerIdValue);
 
         }
     }

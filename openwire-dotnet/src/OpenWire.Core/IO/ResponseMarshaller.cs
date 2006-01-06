@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class ResponseMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new Response();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             Response info = (Response) command;
-            info.setCorrelationId(dataIn.readShort());
+            info.CorrelationId = dataIn.ReadInt16();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             Response info = (Response) command;
-            dataOut.writeShort(info.getCorrelationId());
+            dataOut.Write(info.CorrelationId);
 
         }
     }

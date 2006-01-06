@@ -17,24 +17,23 @@ using OpenWire.Core.IO;
 
 namespace OpenWire.Core.IO
 {
-    public class ActiveMQDestinationMarshaller : AbstractCommandMarshaller
+    public abstract class ActiveMQDestinationMarshaller : AbstractCommandMarshaller
     {
 
-        public override Command CreateCommand() {
-            return new ActiveMQDestination();
-        }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ActiveMQDestination info = (ActiveMQDestination) command;
-            info.setPhysicalName(dataIn.readUTF());
+            info.PhysicalName = dataIn.ReadString();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ActiveMQDestination info = (ActiveMQDestination) command;
-            writeUTF(info.getPhysicalName(), dataOut);
+            dataOut.Write(info.PhysicalName);
 
         }
     }

@@ -19,6 +19,16 @@ namespace OpenWire.Core
         {
         }
         
+        protected virtual BrokerId ReadBrokerId(BinaryReader dataIn)
+        {
+        	   return brokerIDMarshaller.ReadCommand();
+        }
+        
+        protected virtual void WriteBrokerId(BrokerId command, BinaryWriter dataOut)
+        {
+            brokerIDMarshaller.WriteCommand(command, dataOut);
+        }
+        
 	}
 }
 

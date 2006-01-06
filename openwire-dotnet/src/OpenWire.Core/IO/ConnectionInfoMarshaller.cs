@@ -20,29 +20,32 @@ namespace OpenWire.Core.IO
     public class ConnectionInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ConnectionInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ConnectionInfo info = (ConnectionInfo) command;
-            info.setConnectionId((org.apache.activemq.command.ConnectionId) readObject(dataIn));
-            info.setClientId(dataIn.readUTF());
-            info.setPassword(dataIn.readUTF());
-            info.setUserName(dataIn.readUTF());
-            info.setBrokerPath((org.apache.activemq.command.BrokerId[]) readObject(dataIn));
+            info.ConnectionId = ReadConnectionId(dataIn);
+            info.ClientId = dataIn.ReadString();
+            info.Password = dataIn.ReadString();
+            info.UserName = dataIn.ReadString();
+            info.BrokerPath = ReadBrokerIds(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ConnectionInfo info = (ConnectionInfo) command;
-            writeObject(info.getConnectionId(), dataOut);
-            writeUTF(info.getClientId(), dataOut);
-            writeUTF(info.getPassword(), dataOut);
-            writeUTF(info.getUserName(), dataOut);
-            writeObject(info.getBrokerPath(), dataOut);
+            WriteConnectionId(info.ConnectionId, dataOut);
+            dataOut.Write(info.ClientId);
+            dataOut.Write(info.Password);
+            dataOut.Write(info.UserName);
+            dataOut.WriteBrokerIds(info.BrokerPath);
 
         }
     }

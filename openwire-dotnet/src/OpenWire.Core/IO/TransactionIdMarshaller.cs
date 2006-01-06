@@ -20,19 +20,18 @@ namespace OpenWire.Core.IO
     public class TransactionIdMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new TransactionId();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
-            TransactionId info = (TransactionId) command;
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
-            TransactionId info = (TransactionId) command;
 
         }
     }

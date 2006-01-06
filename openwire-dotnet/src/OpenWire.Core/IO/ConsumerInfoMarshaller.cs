@@ -20,45 +20,48 @@ namespace OpenWire.Core.IO
     public class ConsumerInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new ConsumerInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             ConsumerInfo info = (ConsumerInfo) command;
-            info.setConsumerId((org.apache.activemq.command.ConsumerId) readObject(dataIn));
-            info.setBrowser(dataIn.readBoolean());
-            info.setDestination((org.apache.activemq.command.ActiveMQDestination) readObject(dataIn));
-            info.setPrefetchSize(dataIn.readInt());
-            info.setDispatchAsync(dataIn.readBoolean());
-            info.setSelector(dataIn.readUTF());
-            info.setSubcriptionName(dataIn.readUTF());
-            info.setNoLocal(dataIn.readBoolean());
-            info.setExclusive(dataIn.readBoolean());
-            info.setRetroactive(dataIn.readBoolean());
-            info.setPriority(dataIn.readByte());
-            info.setBrokerPath((org.apache.activemq.command.BrokerId[]) readObject(dataIn));
-            info.setNetworkSubscription(dataIn.readBoolean());
+            info.ConsumerId = ReadConsumerId(dataIn);
+            info.Browser = dataIn.ReadBoolean();
+            info.Destination = ReadDestination(dataIn);
+            info.PrefetchSize = dataIn.ReadInt32();
+            info.DispatchAsync = dataIn.ReadBoolean();
+            info.Selector = dataIn.ReadString();
+            info.SubcriptionName = dataIn.ReadString();
+            info.NoLocal = dataIn.ReadBoolean();
+            info.Exclusive = dataIn.ReadBoolean();
+            info.Retroactive = dataIn.ReadBoolean();
+            info.Priority = dataIn.ReadByte();
+            info.BrokerPath = ReadBrokerIds(dataIn);
+            info.NetworkSubscription = dataIn.ReadBoolean();
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             ConsumerInfo info = (ConsumerInfo) command;
-            writeObject(info.getConsumerId(), dataOut);
-            dataOut.writeBoolean(info.isBrowser());
-            writeObject(info.getDestination(), dataOut);
-            dataOut.writeInt(info.getPrefetchSize());
-            dataOut.writeBoolean(info.isDispatchAsync());
-            writeUTF(info.getSelector(), dataOut);
-            writeUTF(info.getSubcriptionName(), dataOut);
-            dataOut.writeBoolean(info.isNoLocal());
-            dataOut.writeBoolean(info.isExclusive());
-            dataOut.writeBoolean(info.isRetroactive());
-            dataOut.writeByte(info.getPriority());
-            writeObject(info.getBrokerPath(), dataOut);
-            dataOut.writeBoolean(info.isNetworkSubscription());
+            WriteConsumerId(info.ConsumerId, dataOut);
+            dataOut.Write(info.Browser);
+            WriteDestination(info.Destination, dataOut);
+            dataOut.Write(info.PrefetchSize);
+            dataOut.Write(info.DispatchAsync);
+            dataOut.Write(info.Selector);
+            dataOut.Write(info.SubcriptionName);
+            dataOut.Write(info.NoLocal);
+            dataOut.Write(info.Exclusive);
+            dataOut.Write(info.Retroactive);
+            dataOut.Write(info.Priority);
+            dataOut.WriteBrokerIds(info.BrokerPath);
+            dataOut.Write(info.NetworkSubscription);
 
         }
     }

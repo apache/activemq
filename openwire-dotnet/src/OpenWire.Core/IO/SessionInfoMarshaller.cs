@@ -20,21 +20,24 @@ namespace OpenWire.Core.IO
     public class SessionInfoMarshaller : AbstractCommandMarshaller
     {
 
+
         public override Command CreateCommand() {
             return new SessionInfo();
         }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
+
             SessionInfo info = (SessionInfo) command;
-            info.setSessionId((org.apache.activemq.command.SessionId) readObject(dataIn));
+            info.SessionId = ReadSessionId(dataIn);
 
         }
 
         public override void WriteCommand(Command command, BinaryWriter dataOut) {
             base.WriteCommand(command, dataOut);
+
             SessionInfo info = (SessionInfo) command;
-            writeObject(info.getSessionId(), dataOut);
+            WriteSessionId(info.SessionId, dataOut);
 
         }
     }
