@@ -175,7 +175,7 @@ abstract public class DataStreamMarshaller {
                     }
                     o.setStackTrace(ss);
                 } else {
-                    int size = dataIn.readInt();
+                    short size = dataIn.readShort();
                     for (int i = 0; i < size; i++) {
                         readString(dataIn, bs);
                         readString(dataIn, bs); 
