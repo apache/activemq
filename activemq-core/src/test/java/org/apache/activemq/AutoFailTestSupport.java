@@ -39,7 +39,7 @@ public class AutoFailTestSupport extends TestCase {
 
     private boolean       verbose     = true;
     private boolean       useAutoFail = false; // Disable auto fail by default
-    private AtomicBoolean isTestSuccess = new AtomicBoolean(false);
+    private AtomicBoolean isTestSuccess;
 
     protected void setUp() throws Exception {
         // Runs the auto fail thread before performing any setup
@@ -63,6 +63,7 @@ public class AutoFailTestSupport extends TestCase {
      */
     public void startAutoFailThread() {
         setAutoFail(true);
+        isTestSuccess = new AtomicBoolean(false);
         autoFailThread = new Thread(new Runnable() {
             public void run() {
                 try {
