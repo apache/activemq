@@ -259,7 +259,7 @@
         <dependency>
             <groupId>groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>1.0-jsr-01</version>
+            <version>1.0-jsr-04</version>
             <type>jar</type>
         </dependency>
         <dependency>

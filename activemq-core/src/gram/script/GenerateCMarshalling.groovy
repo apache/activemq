@@ -285,7 +285,7 @@ out << """/**
 """
          for (jclass in openwireClasses) {
 	
-	            def properties = jclass.declaredProperties.findAll { isValidProperty(it) }
+	            properties = jclass.declaredProperties.findAll { isValidProperty(it) }
 	            def name = jclass.simpleName;
 	            def type = ("ow_"+name).toUpperCase()+"_TYPE"
 	            
@@ -337,7 +337,7 @@ apr_status_t ow_marshal1_${name}(ow_bit_buffer *buffer, ow_${name} *object)
    ow_marshal1_${baseName}(buffer, (ow_${baseName}*)object);
 """
 
-	            def properties = jclass.declaredProperties.findAll { isValidProperty(it) }
+	             properties = jclass.declaredProperties.findAll { isValidProperty(it) }
                for (property in properties) {
                    def propname = toPropertyCase(property.simpleName);
                    def cached = isCachedProperty(property);
@@ -345,7 +345,7 @@ apr_status_t ow_marshal1_${name}(ow_bit_buffer *buffer, ow_${name} *object)
                    def size = annotation.getValue("size");
 
                    out << "   ";
-                   def type = property.type.qualifiedName
+                   type = property.type.qualifiedName
                    switch (type) {
                    
                    case "boolean":
@@ -404,7 +404,7 @@ apr_status_t ow_marshal2_${name}(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffe
    ow_marshal2_${baseName}(buffer, bitbuffer, (ow_${baseName}*)object);   
 """
 
-	            def properties = jclass.declaredProperties.findAll { isValidProperty(it) }
+	             properties = jclass.declaredProperties.findAll { isValidProperty(it) }
                for (property in properties) {
                    def annotation = property.getter.getAnnotation("openwire:property");
                    def size = annotation.getValue("size");
@@ -412,7 +412,7 @@ apr_status_t ow_marshal2_${name}(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffe
                    def cached = isCachedProperty(property);
                    
                    out << "   "
-                   def type = property.type.qualifiedName
+                   type = property.type.qualifiedName
                    switch (type) {                   
                    case "boolean": 
                        out << "ow_bit_buffer_read(bitbuffer);"; break;
@@ -478,7 +478,7 @@ apr_status_t ow_unmarshal_${name}(ow_byte_array *buffer, ow_bit_buffer *bitbuffe
    ow_unmarshal_${baseName}(buffer, bitbuffer, (ow_${baseName}*)object, pool);   
 """
 
-	            def properties = jclass.declaredProperties.findAll { isValidProperty(it) }
+	             properties = jclass.declaredProperties.findAll { isValidProperty(it) }
                for (property in properties) {
                    def annotation = property.getter.getAnnotation("openwire:property");
                    def size = annotation.getValue("size");
@@ -486,7 +486,7 @@ apr_status_t ow_unmarshal_${name}(ow_byte_array *buffer, ow_bit_buffer *bitbuffe
                    def cached = isCachedProperty(property);
                    
                    out << "   "
-                   def type = property.type.qualifiedName
+                   type = property.type.qualifiedName
                    switch (type) {                   
                    case "boolean":
                        out << "object->$propname = ow_bit_buffer_read(bitbuffer);"; break;
