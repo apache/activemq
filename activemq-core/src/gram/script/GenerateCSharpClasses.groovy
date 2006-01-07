@@ -73,6 +73,8 @@ namespace OpenWire.Core.Commands
 {
     public class ${jclass.simpleName} : $baseClass
     {
+    			public const int ID_${jclass.simpleName} = ${getEnum(jclass)};
+    			
 """
                 for (property in properties) {
 
@@ -91,7 +93,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return ${getEnum(jclass)};
+            return ID_${jclass.simpleName};
         }
 
 
