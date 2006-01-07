@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class BaseCommand : AbstractCommand
     {
+    			public const int ID_BaseCommand = 1;
+    			
         short commandId;
         bool responseRequired;
 
@@ -27,7 +29,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_BaseCommand;
         }
 
 

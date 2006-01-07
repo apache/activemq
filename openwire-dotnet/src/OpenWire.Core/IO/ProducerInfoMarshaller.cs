@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             ProducerInfo info = (ProducerInfo) command;
-            info.ProducerId = ReadProducerId(dataIn);
+            info.ProducerId = (ProducerId) CommandMarshallerRegistry.ProducerIdMarshaller.ReadCommand(dataIn);
             info.Destination = ReadDestination(dataIn);
             info.BrokerPath = ReadBrokerIds(dataIn);
 
@@ -39,9 +39,9 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             ProducerInfo info = (ProducerInfo) command;
-            WriteProducerId(info.ProducerId, dataOut);
+            CommandMarshallerRegistry.ProducerIdMarshaller.WriteCommand(info.ProducerId, dataOut);
             WriteDestination(info.Destination, dataOut);
-            dataOut.WriteBrokerIds(info.BrokerPath);
+            WriteBrokerIds(info.BrokerPath, dataOut);
 
         }
     }

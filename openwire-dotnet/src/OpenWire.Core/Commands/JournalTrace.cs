@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class JournalTrace : AbstractCommand
     {
+    			public const int ID_JournalTrace = 1;
+    			
         string message;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_JournalTrace;
         }
 
 

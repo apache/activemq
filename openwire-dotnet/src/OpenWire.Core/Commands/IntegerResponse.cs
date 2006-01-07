@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class IntegerResponse : AbstractCommand
     {
+    			public const int ID_IntegerResponse = 1;
+    			
         int result;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_IntegerResponse;
         }
 
 

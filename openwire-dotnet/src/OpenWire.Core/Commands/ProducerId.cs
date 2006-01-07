@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ProducerId : AbstractCommand
     {
+    			public const int ID_ProducerId = 1;
+    			
         string connectionId;
         long producerId;
         long sessionId;
@@ -28,7 +30,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ProducerId;
         }
 
 

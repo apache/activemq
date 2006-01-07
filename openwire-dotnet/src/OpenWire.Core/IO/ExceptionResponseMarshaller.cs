@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             ExceptionResponse info = (ExceptionResponse) command;
-            info.Exception = ReadThrowable(dataIn);
+            info.Exception = (Throwable) CommandMarshallerRegistry.ThrowableMarshaller.ReadCommand(dataIn);
 
         }
 
@@ -37,7 +37,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             ExceptionResponse info = (ExceptionResponse) command;
-            WriteThrowable(info.Exception, dataOut);
+            CommandMarshallerRegistry.ThrowableMarshaller.WriteCommand(info.Exception, dataOut);
 
         }
     }

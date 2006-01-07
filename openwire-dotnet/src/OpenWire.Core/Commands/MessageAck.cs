@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class MessageAck : AbstractCommand
     {
+    			public const int ID_MessageAck = 1;
+    			
         ActiveMQDestination destination;
         TransactionId transactionId;
         ConsumerId consumerId;
@@ -32,7 +34,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_MessageAck;
         }
 
 

@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ControlCommand : AbstractCommand
     {
+    			public const int ID_ControlCommand = 1;
+    			
         string command;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ControlCommand;
         }
 
 

@@ -29,9 +29,9 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             MessageDispatch info = (MessageDispatch) command;
-            info.ConsumerId = ReadConsumerId(dataIn);
+            info.ConsumerId = (ConsumerId) CommandMarshallerRegistry.ConsumerIdMarshaller.ReadCommand(dataIn);
             info.Destination = ReadDestination(dataIn);
-            info.Message = ReadMessage(dataIn);
+            info.Message = (Message) CommandMarshallerRegistry.MessageMarshaller.ReadCommand(dataIn);
             info.RedeliveryCounter = dataIn.ReadInt32();
 
         }
@@ -40,9 +40,9 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             MessageDispatch info = (MessageDispatch) command;
-            WriteConsumerId(info.ConsumerId, dataOut);
+            CommandMarshallerRegistry.ConsumerIdMarshaller.WriteCommand(info.ConsumerId, dataOut);
             WriteDestination(info.Destination, dataOut);
-            WriteMessage(info.Message, dataOut);
+            CommandMarshallerRegistry.MessageMarshaller.WriteCommand(info.Message, dataOut);
             dataOut.Write(info.RedeliveryCounter);
 
         }

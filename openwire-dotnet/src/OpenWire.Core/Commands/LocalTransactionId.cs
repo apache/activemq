@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class LocalTransactionId : AbstractCommand
     {
+    			public const int ID_LocalTransactionId = 1;
+    			
         long transactionId;
         ConnectionId connectionId;
 
@@ -27,7 +29,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_LocalTransactionId;
         }
 
 

@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             ConsumerInfo info = (ConsumerInfo) command;
-            info.ConsumerId = ReadConsumerId(dataIn);
+            info.ConsumerId = (ConsumerId) CommandMarshallerRegistry.ConsumerIdMarshaller.ReadCommand(dataIn);
             info.Browser = dataIn.ReadBoolean();
             info.Destination = ReadDestination(dataIn);
             info.PrefetchSize = dataIn.ReadInt32();
@@ -49,7 +49,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             ConsumerInfo info = (ConsumerInfo) command;
-            WriteConsumerId(info.ConsumerId, dataOut);
+            CommandMarshallerRegistry.ConsumerIdMarshaller.WriteCommand(info.ConsumerId, dataOut);
             dataOut.Write(info.Browser);
             WriteDestination(info.Destination, dataOut);
             dataOut.Write(info.PrefetchSize);
@@ -60,7 +60,7 @@ namespace OpenWire.Core.IO
             dataOut.Write(info.Exclusive);
             dataOut.Write(info.Retroactive);
             dataOut.Write(info.Priority);
-            dataOut.WriteBrokerIds(info.BrokerPath);
+            WriteBrokerIds(info.BrokerPath, dataOut);
             dataOut.Write(info.NetworkSubscription);
 
         }

@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class Response : AbstractCommand
     {
+    			public const int ID_Response = 1;
+    			
         short correlationId;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_Response;
         }
 
 

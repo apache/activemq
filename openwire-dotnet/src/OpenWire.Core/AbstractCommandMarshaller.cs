@@ -1,6 +1,9 @@
 using System;
 using System.IO;
 
+using OpenWire.Core.Commands;
+using OpenWire.Core.IO;
+
 namespace OpenWire.Core
 {
 	/// <summary>
@@ -11,6 +14,13 @@ namespace OpenWire.Core
 
         public abstract Command CreateCommand();
 
+        public virtual Command ReadCommand(BinaryReader dataIn) 
+        {
+            Command command = CreateCommand();
+            BuildCommand(command, dataIn);
+            return command;
+        }
+        
         public virtual void BuildCommand(Command command, BinaryReader dataIn) 
         {
         }
@@ -19,14 +29,76 @@ namespace OpenWire.Core
         {
         }
         
-        protected virtual BrokerId ReadBrokerId(BinaryReader dataIn)
+        protected virtual BrokerId[] ReadBrokerIds(BinaryReader dataIn)
         {
-        	   return brokerIDMarshaller.ReadCommand();
+            int size = dataIn.ReadInt32();
+            BrokerId[] answer = new BrokerId[size];
+            for (int i = 0; i < size; i++) {
+                answer[i] = (BrokerId) CommandMarshallerRegistry.BrokerIdMarshaller.ReadCommand(dataIn);
+            }
+            return answer;
+        }
+
+        protected virtual void WriteBrokerIds(BrokerId[] commands, BinaryWriter dataOut)
+        {
+            int size = commands.Length;
+            dataOut.Write(size);
+            for (int i = 0; i < size; i++) {
+                CommandMarshallerRegistry.BrokerIdMarshaller.WriteCommand(commands[i], dataOut);
+            }
+        }
+
+	        
+        protected virtual BrokerInfo[] ReadBrokerInfos(BinaryReader dataIn)
+        {
+            int size = dataIn.ReadInt32();
+            BrokerInfo[] answer = new BrokerInfo[size];
+            for (int i = 0; i < size; i++) {
+                answer[i] = (BrokerInfo) CommandMarshallerRegistry.BrokerInfoMarshaller.ReadCommand(dataIn);
+            }
+            return answer;
+        }
+
+        protected virtual void WriteBrokerInfos(BrokerInfo[] commands, BinaryWriter dataOut)
+        {
+            int size = commands.Length;
+            dataOut.Write(size);
+            for (int i = 0; i < size; i++) {
+                CommandMarshallerRegistry.BrokerInfoMarshaller.WriteCommand(commands[i], dataOut);
+            }
+        }
+
+	        
+        protected virtual DataStructure[] ReadDataStructures(BinaryReader dataIn)
+        {
+            int size = dataIn.ReadInt32();
+            DataStructure[] answer = new DataStructure[size];
+            for (int i = 0; i < size; i++) {
+                answer[i] = (DataStructure) CommandMarshallerRegistry.ReadCommand(dataIn);
+            }
+            return answer;
+        }
+
+        protected virtual void WriteDataStructures(DataStructure[] commands, BinaryWriter dataOut)
+        {
+            int size = commands.Length;
+            dataOut.Write(size);
+            for (int i = 0; i < size; i++) {
+                CommandMarshallerRegistry.WriteCommand((Command) commands[i], dataOut);
+            }
+        }
+
+	        
+        protected virtual byte[] ReadBytes(BinaryReader dataIn)
+        {
+            int size = dataIn.ReadInt32();
+        	   return dataIn.ReadBytes(size);
         }
         
-        protected virtual void WriteBrokerId(BrokerId command, BinaryWriter dataOut)
+        protected virtual void WriteBytes(byte[] command, BinaryWriter dataOut)
         {
-            brokerIDMarshaller.WriteCommand(command, dataOut);
+        	  dataOut.Write(command.Length);
+        	  dataOut.Write(command);
         }
         
 	}

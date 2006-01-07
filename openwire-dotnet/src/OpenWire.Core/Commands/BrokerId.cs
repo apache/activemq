@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class BrokerId : AbstractCommand
     {
+    			public const int ID_BrokerId = 1;
+    			
         string brokerId;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_BrokerId;
         }
 
 

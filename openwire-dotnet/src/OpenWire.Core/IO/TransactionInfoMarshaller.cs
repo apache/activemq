@@ -29,8 +29,8 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             TransactionInfo info = (TransactionInfo) command;
-            info.ConnectionId = ReadConnectionId(dataIn);
-            info.TransactionId = ReadTransactionId(dataIn);
+            info.ConnectionId = (ConnectionId) CommandMarshallerRegistry.ConnectionIdMarshaller.ReadCommand(dataIn);
+            info.TransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
             info.Type = dataIn.ReadByte();
 
         }
@@ -39,8 +39,8 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             TransactionInfo info = (TransactionInfo) command;
-            WriteConnectionId(info.ConnectionId, dataOut);
-            WriteTransactionId(info.TransactionId, dataOut);
+            CommandMarshallerRegistry.ConnectionIdMarshaller.WriteCommand(info.ConnectionId, dataOut);
+            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.TransactionId, dataOut);
             dataOut.Write(info.Type);
 
         }

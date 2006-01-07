@@ -30,8 +30,8 @@ namespace OpenWire.Core.IO
 
             XATransactionId info = (XATransactionId) command;
             info.FormatId = dataIn.ReadInt32();
-            info.GlobalTransactionId = Readbyte[](dataIn);
-            info.BranchQualifier = Readbyte[](dataIn);
+            info.GlobalTransactionId = ReadBytes(dataIn);
+            info.BranchQualifier = ReadBytes(dataIn);
 
         }
 
@@ -40,8 +40,8 @@ namespace OpenWire.Core.IO
 
             XATransactionId info = (XATransactionId) command;
             dataOut.Write(info.FormatId);
-            Writebyte[](info.GlobalTransactionId, dataOut);
-            Writebyte[](info.BranchQualifier, dataOut);
+            WriteBytes(info.GlobalTransactionId, dataOut);
+            WriteBytes(info.BranchQualifier, dataOut);
 
         }
     }

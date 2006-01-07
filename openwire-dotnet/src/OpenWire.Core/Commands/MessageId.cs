@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class MessageId : AbstractCommand
     {
+    			public const int ID_MessageId = 1;
+    			
         ProducerId producerId;
         long producerSequenceId;
         long brokerSequenceId;
@@ -28,7 +30,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_MessageId;
         }
 
 

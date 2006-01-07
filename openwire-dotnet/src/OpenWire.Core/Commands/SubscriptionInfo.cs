@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class SubscriptionInfo : AbstractCommand
     {
+    			public const int ID_SubscriptionInfo = 1;
+    			
         string clientId;
         ActiveMQDestination destination;
         string selector;
@@ -29,7 +31,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_SubscriptionInfo;
         }
 
 

@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class XATransactionId : AbstractCommand
     {
+    			public const int ID_XATransactionId = 1;
+    			
         int formatId;
         byte[] globalTransactionId;
         byte[] branchQualifier;
@@ -28,7 +30,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_XATransactionId;
         }
 
 

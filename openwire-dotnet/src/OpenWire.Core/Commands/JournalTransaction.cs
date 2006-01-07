@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class JournalTransaction : AbstractCommand
     {
+    			public const int ID_JournalTransaction = 1;
+    			
         TransactionId transactionId;
         byte type;
         bool wasPrepared;
@@ -28,7 +30,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_JournalTransaction;
         }
 
 

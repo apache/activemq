@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             JournalTransaction info = (JournalTransaction) command;
-            info.TransactionId = ReadTransactionId(dataIn);
+            info.TransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
             info.Type = dataIn.ReadByte();
             info.WasPrepared = dataIn.ReadBoolean();
 
@@ -39,7 +39,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             JournalTransaction info = (JournalTransaction) command;
-            WriteTransactionId(info.TransactionId, dataOut);
+            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.TransactionId, dataOut);
             dataOut.Write(info.Type);
             dataOut.Write(info.WasPrepared);
 
