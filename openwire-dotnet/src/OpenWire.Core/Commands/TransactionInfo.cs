@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class TransactionInfo : AbstractCommand
     {
+    			public const int ID_TransactionInfo = 1;
+    			
         ConnectionId connectionId;
         TransactionId transactionId;
         byte type;
@@ -28,7 +30,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_TransactionInfo;
         }
 
 

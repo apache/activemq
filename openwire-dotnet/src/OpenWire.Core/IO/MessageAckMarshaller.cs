@@ -30,11 +30,11 @@ namespace OpenWire.Core.IO
 
             MessageAck info = (MessageAck) command;
             info.Destination = ReadDestination(dataIn);
-            info.TransactionId = ReadTransactionId(dataIn);
-            info.ConsumerId = ReadConsumerId(dataIn);
+            info.TransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
+            info.ConsumerId = (ConsumerId) CommandMarshallerRegistry.ConsumerIdMarshaller.ReadCommand(dataIn);
             info.AckType = dataIn.ReadByte();
-            info.FirstMessageId = ReadMessageId(dataIn);
-            info.LastMessageId = ReadMessageId(dataIn);
+            info.FirstMessageId = (MessageId) CommandMarshallerRegistry.MessageIdMarshaller.ReadCommand(dataIn);
+            info.LastMessageId = (MessageId) CommandMarshallerRegistry.MessageIdMarshaller.ReadCommand(dataIn);
             info.MessageCount = dataIn.ReadInt32();
 
         }
@@ -44,11 +44,11 @@ namespace OpenWire.Core.IO
 
             MessageAck info = (MessageAck) command;
             WriteDestination(info.Destination, dataOut);
-            WriteTransactionId(info.TransactionId, dataOut);
-            WriteConsumerId(info.ConsumerId, dataOut);
+            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.TransactionId, dataOut);
+            CommandMarshallerRegistry.ConsumerIdMarshaller.WriteCommand(info.ConsumerId, dataOut);
             dataOut.Write(info.AckType);
-            WriteMessageId(info.FirstMessageId, dataOut);
-            WriteMessageId(info.LastMessageId, dataOut);
+            CommandMarshallerRegistry.MessageIdMarshaller.WriteCommand(info.FirstMessageId, dataOut);
+            CommandMarshallerRegistry.MessageIdMarshaller.WriteCommand(info.LastMessageId, dataOut);
             dataOut.Write(info.MessageCount);
 
         }

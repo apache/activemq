@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ActiveMQDestination : AbstractCommand
     {
+    			public const int ID_ActiveMQDestination = 1;
+    			
         string physicalName;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ActiveMQDestination;
         }
 
 

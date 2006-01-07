@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class JournalQueueAck : AbstractCommand
     {
+    			public const int ID_JournalQueueAck = 1;
+    			
         ActiveMQDestination destination;
         MessageAck messageAck;
 
@@ -27,7 +29,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_JournalQueueAck;
         }
 
 

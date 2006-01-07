@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             DataArrayResponse info = (DataArrayResponse) command;
-            info.Data = ReadDataStructure[](dataIn);
+            info.Data = ReadDataStructures(dataIn);
 
         }
 
@@ -37,7 +37,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             DataArrayResponse info = (DataArrayResponse) command;
-            WriteDataStructure[](info.Data, dataOut);
+            WriteDataStructures(info.Data, dataOut);
 
         }
     }

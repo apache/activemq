@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class SessionInfo : AbstractCommand
     {
+    			public const int ID_SessionInfo = 1;
+    			
         SessionId sessionId;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_SessionInfo;
         }
 
 

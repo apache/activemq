@@ -29,9 +29,9 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             BrokerInfo info = (BrokerInfo) command;
-            info.BrokerId = ReadBrokerId(dataIn);
+            info.BrokerId = (BrokerId) CommandMarshallerRegistry.BrokerIdMarshaller.ReadCommand(dataIn);
             info.BrokerURL = dataIn.ReadString();
-            info.PeerBrokerInfos = ReadBrokerInfo[](dataIn);
+            info.PeerBrokerInfos = ReadBrokerInfos(dataIn);
             info.BrokerName = dataIn.ReadString();
 
         }
@@ -40,9 +40,9 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             BrokerInfo info = (BrokerInfo) command;
-            WriteBrokerId(info.BrokerId, dataOut);
+            CommandMarshallerRegistry.BrokerIdMarshaller.WriteCommand(info.BrokerId, dataOut);
             dataOut.Write(info.BrokerURL);
-            WriteBrokerInfo[](info.PeerBrokerInfos, dataOut);
+            WriteBrokerInfos(info.PeerBrokerInfos, dataOut);
             dataOut.Write(info.BrokerName);
 
         }

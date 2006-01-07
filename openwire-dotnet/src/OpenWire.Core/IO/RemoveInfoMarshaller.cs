@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             RemoveInfo info = (RemoveInfo) command;
-            info.ObjectId = ReadDataStructure(dataIn);
+            info.ObjectId = (DataStructure) CommandMarshallerRegistry.DataStructureMarshaller.ReadCommand(dataIn);
 
         }
 
@@ -37,7 +37,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             RemoveInfo info = (RemoveInfo) command;
-            WriteDataStructure(info.ObjectId, dataOut);
+            CommandMarshallerRegistry.DataStructureMarshaller.WriteCommand(info.ObjectId, dataOut);
 
         }
     }

@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ActiveMQTopic : AbstractCommand
     {
+    			public const int ID_ActiveMQTopic = 1;
+    			
 
 
 
@@ -25,7 +27,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ActiveMQTopic;
         }
 
 

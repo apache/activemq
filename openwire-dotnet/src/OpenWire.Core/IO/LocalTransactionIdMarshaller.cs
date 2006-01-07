@@ -30,7 +30,7 @@ namespace OpenWire.Core.IO
 
             LocalTransactionId info = (LocalTransactionId) command;
             info.TransactionId = dataIn.ReadInt64();
-            info.ConnectionId = ReadConnectionId(dataIn);
+            info.ConnectionId = (ConnectionId) CommandMarshallerRegistry.ConnectionIdMarshaller.ReadCommand(dataIn);
 
         }
 
@@ -39,7 +39,7 @@ namespace OpenWire.Core.IO
 
             LocalTransactionId info = (LocalTransactionId) command;
             dataOut.Write(info.TransactionId);
-            WriteConnectionId(info.ConnectionId, dataOut);
+            CommandMarshallerRegistry.ConnectionIdMarshaller.WriteCommand(info.ConnectionId, dataOut);
 
         }
     }

@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             ConnectionInfo info = (ConnectionInfo) command;
-            info.ConnectionId = ReadConnectionId(dataIn);
+            info.ConnectionId = (ConnectionId) CommandMarshallerRegistry.ConnectionIdMarshaller.ReadCommand(dataIn);
             info.ClientId = dataIn.ReadString();
             info.Password = dataIn.ReadString();
             info.UserName = dataIn.ReadString();
@@ -41,11 +41,11 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             ConnectionInfo info = (ConnectionInfo) command;
-            WriteConnectionId(info.ConnectionId, dataOut);
+            CommandMarshallerRegistry.ConnectionIdMarshaller.WriteCommand(info.ConnectionId, dataOut);
             dataOut.Write(info.ClientId);
             dataOut.Write(info.Password);
             dataOut.Write(info.UserName);
-            dataOut.WriteBrokerIds(info.BrokerPath);
+            WriteBrokerIds(info.BrokerPath, dataOut);
 
         }
     }

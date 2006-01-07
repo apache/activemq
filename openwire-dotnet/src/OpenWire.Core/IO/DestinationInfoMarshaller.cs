@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             DestinationInfo info = (DestinationInfo) command;
-            info.ConnectionId = ReadConnectionId(dataIn);
+            info.ConnectionId = (ConnectionId) CommandMarshallerRegistry.ConnectionIdMarshaller.ReadCommand(dataIn);
             info.Destination = ReadDestination(dataIn);
             info.OperationType = dataIn.ReadByte();
             info.Timeout = dataIn.ReadInt64();
@@ -41,11 +41,11 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             DestinationInfo info = (DestinationInfo) command;
-            WriteConnectionId(info.ConnectionId, dataOut);
+            CommandMarshallerRegistry.ConnectionIdMarshaller.WriteCommand(info.ConnectionId, dataOut);
             WriteDestination(info.Destination, dataOut);
             dataOut.Write(info.OperationType);
             dataOut.Write(info.Timeout);
-            dataOut.WriteBrokerIds(info.BrokerPath);
+            WriteBrokerIds(info.BrokerPath, dataOut);
 
         }
     }

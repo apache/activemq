@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) command;
-            info.ConnectionId = ReadConnectionId(dataIn);
+            info.ConnectionId = (ConnectionId) CommandMarshallerRegistry.ConnectionIdMarshaller.ReadCommand(dataIn);
             info.SubcriptionName = dataIn.ReadString();
             info.ClientId = dataIn.ReadString();
 
@@ -39,7 +39,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) command;
-            WriteConnectionId(info.ConnectionId, dataOut);
+            CommandMarshallerRegistry.ConnectionIdMarshaller.WriteCommand(info.ConnectionId, dataOut);
             dataOut.Write(info.SubcriptionName);
             dataOut.Write(info.ClientId);
 

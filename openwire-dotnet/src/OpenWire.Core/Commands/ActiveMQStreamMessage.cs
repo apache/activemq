@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ActiveMQStreamMessage : ActiveMQMessage
     {
+    			public const int ID_ActiveMQStreamMessage = 1;
+    			
 
 
 
@@ -25,7 +27,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ActiveMQStreamMessage;
         }
 
 

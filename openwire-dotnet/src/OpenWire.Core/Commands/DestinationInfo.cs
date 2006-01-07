@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class DestinationInfo : AbstractCommand
     {
+    			public const int ID_DestinationInfo = 1;
+    			
         ConnectionId connectionId;
         ActiveMQDestination destination;
         byte operationType;
@@ -30,7 +32,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_DestinationInfo;
         }
 
 

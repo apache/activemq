@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ActiveMQTempTopic : AbstractCommand
     {
+    			public const int ID_ActiveMQTempTopic = 1;
+    			
 
 
 
@@ -25,7 +27,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ActiveMQTempTopic;
         }
 
 

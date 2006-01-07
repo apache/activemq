@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ExceptionResponse : AbstractCommand
     {
+    			public const int ID_ExceptionResponse = 1;
+    			
         string exception;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ExceptionResponse;
         }
 
 

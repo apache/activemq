@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             WireFormatInfo info = (WireFormatInfo) command;
-            info.Magic = Readbyte[](dataIn);
+            info.Magic = ReadBytes(dataIn);
             info.Version = dataIn.ReadInt32();
             info.Options = dataIn.ReadInt32();
 
@@ -39,7 +39,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             WireFormatInfo info = (WireFormatInfo) command;
-            Writebyte[](info.Magic, dataOut);
+            WriteBytes(info.Magic, dataOut);
             dataOut.Write(info.Version);
             dataOut.Write(info.Options);
 

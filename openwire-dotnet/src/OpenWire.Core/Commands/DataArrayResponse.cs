@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class DataArrayResponse : AbstractCommand
     {
+    			public const int ID_DataArrayResponse = 1;
+    			
         Command[] data;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_DataArrayResponse;
         }
 
 

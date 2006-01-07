@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             SessionInfo info = (SessionInfo) command;
-            info.SessionId = ReadSessionId(dataIn);
+            info.SessionId = (SessionId) CommandMarshallerRegistry.SessionIdMarshaller.ReadCommand(dataIn);
 
         }
 
@@ -37,7 +37,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             SessionInfo info = (SessionInfo) command;
-            WriteSessionId(info.SessionId, dataOut);
+            CommandMarshallerRegistry.SessionIdMarshaller.WriteCommand(info.SessionId, dataOut);
 
         }
     }

@@ -30,7 +30,7 @@ namespace OpenWire.Core.IO
 
             JournalQueueAck info = (JournalQueueAck) command;
             info.Destination = ReadDestination(dataIn);
-            info.MessageAck = ReadMessageAck(dataIn);
+            info.MessageAck = (MessageAck) CommandMarshallerRegistry.MessageAckMarshaller.ReadCommand(dataIn);
 
         }
 
@@ -39,7 +39,7 @@ namespace OpenWire.Core.IO
 
             JournalQueueAck info = (JournalQueueAck) command;
             WriteDestination(info.Destination, dataOut);
-            WriteMessageAck(info.MessageAck, dataOut);
+            CommandMarshallerRegistry.MessageAckMarshaller.WriteCommand(info.MessageAck, dataOut);
 
         }
     }

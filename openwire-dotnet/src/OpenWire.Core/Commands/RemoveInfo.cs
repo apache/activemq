@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class RemoveInfo : AbstractCommand
     {
+    			public const int ID_RemoveInfo = 1;
+    			
         Command objectId;
 
 
@@ -26,7 +28,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_RemoveInfo;
         }
 
 

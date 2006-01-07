@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ProducerInfo : AbstractCommand
     {
+    			public const int ID_ProducerInfo = 1;
+    			
         ProducerId producerId;
         ActiveMQDestination destination;
         BrokerId[] brokerPath;
@@ -28,7 +30,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ProducerInfo;
         }
 
 

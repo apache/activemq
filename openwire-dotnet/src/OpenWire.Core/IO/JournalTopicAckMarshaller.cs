@@ -30,11 +30,11 @@ namespace OpenWire.Core.IO
 
             JournalTopicAck info = (JournalTopicAck) command;
             info.Destination = ReadDestination(dataIn);
-            info.MessageId = ReadMessageId(dataIn);
+            info.MessageId = (MessageId) CommandMarshallerRegistry.MessageIdMarshaller.ReadCommand(dataIn);
             info.MessageSequenceId = dataIn.ReadInt64();
             info.SubscritionName = dataIn.ReadString();
             info.ClientId = dataIn.ReadString();
-            info.TransactionId = ReadTransactionId(dataIn);
+            info.TransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
 
         }
 
@@ -43,11 +43,11 @@ namespace OpenWire.Core.IO
 
             JournalTopicAck info = (JournalTopicAck) command;
             WriteDestination(info.Destination, dataOut);
-            WriteMessageId(info.MessageId, dataOut);
+            CommandMarshallerRegistry.MessageIdMarshaller.WriteCommand(info.MessageId, dataOut);
             dataOut.Write(info.MessageSequenceId);
             dataOut.Write(info.SubscritionName);
             dataOut.Write(info.ClientId);
-            WriteTransactionId(info.TransactionId, dataOut);
+            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.TransactionId, dataOut);
 
         }
     }

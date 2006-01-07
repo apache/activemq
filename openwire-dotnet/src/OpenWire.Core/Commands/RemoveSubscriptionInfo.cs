@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class RemoveSubscriptionInfo : AbstractCommand
     {
+    			public const int ID_RemoveSubscriptionInfo = 1;
+    			
         ConnectionId connectionId;
         string subcriptionName;
         string clientId;
@@ -28,7 +30,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_RemoveSubscriptionInfo;
         }
 
 

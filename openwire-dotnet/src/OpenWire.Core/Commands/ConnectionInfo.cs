@@ -16,6 +16,8 @@ namespace OpenWire.Core.Commands
 {
     public class ConnectionInfo : AbstractCommand
     {
+    			public const int ID_ConnectionInfo = 1;
+    			
         ConnectionId connectionId;
         string clientId;
         string password;
@@ -30,7 +32,7 @@ namespace OpenWire.Core.Commands
 
 
         public override int GetCommandType() {
-            return 1;
+            return ID_ConnectionInfo;
         }
 
 
