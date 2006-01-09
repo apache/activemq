@@ -20,7 +20,7 @@ import javax.jms.JMSException;
 import javax.jms.TemporaryTopic;
 
 /**
- * @openwire:marshaller
+ * @openwire:marshaller code="103"
  * @version $Revision: 1.6 $
  */
 public class ActiveMQTempTopic extends ActiveMQTempDestination implements TemporaryTopic {

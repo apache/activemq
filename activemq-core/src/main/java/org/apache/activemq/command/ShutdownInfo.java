@@ -20,7 +20,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="11"
  * @version $Revision$
  */
 public class ShutdownInfo extends BaseCommand {

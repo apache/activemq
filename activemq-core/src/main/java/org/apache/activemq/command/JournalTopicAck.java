@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="50"
  * @version $Revision$
  */
 public class JournalTopicAck implements DataStructure {

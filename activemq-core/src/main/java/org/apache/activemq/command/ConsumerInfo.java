@@ -22,7 +22,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="5"
  * @version $Revision: 1.20 $
  */
 public class ConsumerInfo extends BaseCommand {

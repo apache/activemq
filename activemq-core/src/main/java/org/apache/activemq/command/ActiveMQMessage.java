@@ -35,8 +35,9 @@ import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.TypeConversionSupport;
 
 /**
- * @version $Revision$
- * @openwire:marshaller
+ * @openwire:marshaller code="23"
+ * 
+ * @version $Revision:$
  */
 public class ActiveMQMessage extends Message implements javax.jms.Message {
 

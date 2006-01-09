@@ -19,7 +19,7 @@ package org.apache.activemq.command;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
- * @openwire:marshaller
+ * @openwire:marshaller code="10"
  * @version $Revision$
  */
 public class KeepAliveInfo implements Command {

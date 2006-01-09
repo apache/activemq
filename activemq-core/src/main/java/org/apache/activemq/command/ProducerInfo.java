@@ -20,7 +20,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="6"
  * @version $Revision: 1.13 $
  */
 public class ProducerInfo extends BaseCommand {

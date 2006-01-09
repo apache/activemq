@@ -20,7 +20,7 @@ import javax.jms.JMSException;
 import javax.jms.Topic;
 
 /**
- * @openwire:marshaller
+ * @openwire:marshaller code="101"
  * @version $Revision: 1.5 $
  */
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {

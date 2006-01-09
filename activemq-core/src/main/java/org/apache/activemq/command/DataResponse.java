@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="32"
  * @version $Revision$
  */
 public class DataResponse extends Response {

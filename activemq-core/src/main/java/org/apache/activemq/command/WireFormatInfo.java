@@ -22,7 +22,7 @@ import java.util.Arrays;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="1"
  * @version $Revision$
  */
 public class WireFormatInfo implements Command {

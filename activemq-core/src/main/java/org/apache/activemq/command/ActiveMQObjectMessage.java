@@ -54,7 +54,7 @@ import java.lang.reflect.Proxy;
  * the message at this point, a <CODE>MessageNotWriteableException</CODE> is thrown. If <CODE>clearBody</CODE> is
  * called, the message can now be both read from and written to.
  *
- * @openwire:marshaller
+ * @openwire:marshaller code="26"
  * @see javax.jms.Session#createObjectMessage()
  * @see javax.jms.Session#createObjectMessage(Serializable)
  * @see javax.jms.BytesMessage

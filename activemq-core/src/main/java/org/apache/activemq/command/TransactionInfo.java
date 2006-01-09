@@ -22,7 +22,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="7"
  * @version $Revision: 1.10 $
  */
 public class TransactionInfo extends BaseCommand {
