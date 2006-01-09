@@ -14,11 +14,11 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class RemoveInfo : AbstractCommand
+    public class RemoveInfo : BaseCommand
     {
-    			public const int ID_RemoveInfo = 1;
+    			public const byte ID_RemoveInfo = 12;
     			
-        Command objectId;
+        DataStructure objectId;
 
 
 
@@ -27,14 +27,14 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_RemoveInfo;
         }
 
 
         // Properties
 
-        public Command ObjectId
+        public DataStructure ObjectId
         {
             get
             {

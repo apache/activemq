@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class BrokerInfo : AbstractCommand
+    public class BrokerInfo : BaseCommand
     {
-    			public const int ID_BrokerInfo = 1;
+    			public const byte ID_BrokerInfo = 2;
     			
         BrokerId brokerId;
         string brokerURL;
@@ -30,7 +30,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_BrokerInfo;
         }
 

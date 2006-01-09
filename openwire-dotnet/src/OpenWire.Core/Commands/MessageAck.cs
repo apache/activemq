@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class MessageAck : AbstractCommand
+    public class MessageAck : BaseCommand
     {
-    			public const int ID_MessageAck = 1;
+    			public const byte ID_MessageAck = 22;
     			
         ActiveMQDestination destination;
         TransactionId transactionId;
@@ -33,7 +33,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_MessageAck;
         }
 

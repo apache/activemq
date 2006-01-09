@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class ConsumerInfo : AbstractCommand
+    public class ConsumerInfo : BaseCommand
     {
-    			public const int ID_ConsumerInfo = 1;
+    			public const byte ID_ConsumerInfo = 5;
     			
         ConsumerId consumerId;
         bool browser;
@@ -39,7 +39,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_ConsumerInfo;
         }
 

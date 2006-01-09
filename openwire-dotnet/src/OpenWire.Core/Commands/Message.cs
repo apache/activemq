@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class Message : AbstractCommand
+    public class Message : BaseCommand
     {
-    			public const int ID_Message = 1;
+    			public const byte ID_Message = 0;
     			
         ProducerId producerId;
         ActiveMQDestination destination;
@@ -35,7 +35,7 @@ namespace OpenWire.Core.Commands
         string type;
         byte[] content;
         byte[] marshalledProperties;
-        Command dataStructure;
+        DataStructure dataStructure;
         ConsumerId targetConsumerId;
         bool compressed;
         int redeliveryCounter;
@@ -51,7 +51,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_Message;
         }
 
@@ -262,7 +262,7 @@ namespace OpenWire.Core.Commands
             }            
         }
 
-        public Command DataStructure
+        public DataStructure DataStructure
         {
             get
             {

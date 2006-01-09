@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class JournalTrace : AbstractCommand
     {
-    			public const int ID_JournalTrace = 1;
+    			public const byte ID_JournalTrace = 53;
     			
         string message;
 
@@ -27,7 +27,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_JournalTrace;
         }
 

@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class JournalTopicAck : AbstractCommand
     {
-    			public const int ID_JournalTopicAck = 1;
+    			public const byte ID_JournalTopicAck = 50;
     			
         ActiveMQDestination destination;
         MessageId messageId;
@@ -32,7 +32,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_JournalTopicAck;
         }
 

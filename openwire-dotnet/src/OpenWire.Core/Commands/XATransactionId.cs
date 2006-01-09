@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class XATransactionId : AbstractCommand
+    public class XATransactionId : TransactionId
     {
-    			public const int ID_XATransactionId = 1;
+    			public const byte ID_XATransactionId = 112;
     			
         int formatId;
         byte[] globalTransactionId;
@@ -29,7 +29,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_XATransactionId;
         }
 

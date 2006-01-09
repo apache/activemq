@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class RemoveSubscriptionInfo : AbstractCommand
+    public class RemoveSubscriptionInfo : BaseCommand
     {
-    			public const int ID_RemoveSubscriptionInfo = 1;
+    			public const byte ID_RemoveSubscriptionInfo = 0;
     			
         ConnectionId connectionId;
         string subcriptionName;
@@ -29,7 +29,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_RemoveSubscriptionInfo;
         }
 

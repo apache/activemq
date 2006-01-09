@@ -34,7 +34,7 @@ namespace OpenWire.Core.IO
             info.MessageSequenceId = dataIn.ReadInt64();
             info.SubscritionName = dataIn.ReadString();
             info.ClientId = dataIn.ReadString();
-            info.TransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
+            info.TransactionId = (TransactionId) CommandMarshallerRegistry.ReadCommand(dataIn);
 
         }
 
@@ -47,7 +47,7 @@ namespace OpenWire.Core.IO
             dataOut.Write(info.MessageSequenceId);
             dataOut.Write(info.SubscritionName);
             dataOut.Write(info.ClientId);
-            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.TransactionId, dataOut);
+            CommandMarshallerRegistry.WriteCommand(info.TransactionId, dataOut);
 
         }
     }

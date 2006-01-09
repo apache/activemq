@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class IntegerResponse : AbstractCommand
+    public class IntegerResponse : Response
     {
-    			public const int ID_IntegerResponse = 1;
+    			public const byte ID_IntegerResponse = 34;
     			
         int result;
 
@@ -27,7 +27,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_IntegerResponse;
         }
 

@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class SessionInfo : AbstractCommand
+    public class SessionInfo : BaseCommand
     {
-    			public const int ID_SessionInfo = 1;
+    			public const byte ID_SessionInfo = 4;
     			
         SessionId sessionId;
 
@@ -27,7 +27,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_SessionInfo;
         }
 

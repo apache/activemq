@@ -7,7 +7,7 @@ namespace OpenWire.Core
 	/// </summary>
 	public interface DataStructure {
 	
-        int GetCommandType();
+        byte GetCommandType();
         
 	}
 }

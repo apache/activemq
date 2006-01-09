@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class JournalTransaction : AbstractCommand
     {
-    			public const int ID_JournalTransaction = 1;
+    			public const byte ID_JournalTransaction = 54;
     			
         TransactionId transactionId;
         byte type;
@@ -29,7 +29,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_JournalTransaction;
         }
 

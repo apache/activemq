@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class ConnectionInfo : AbstractCommand
+    public class ConnectionInfo : BaseCommand
     {
-    			public const int ID_ConnectionInfo = 1;
+    			public const byte ID_ConnectionInfo = 3;
     			
         ConnectionId connectionId;
         string clientId;
@@ -31,7 +31,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_ConnectionInfo;
         }
 

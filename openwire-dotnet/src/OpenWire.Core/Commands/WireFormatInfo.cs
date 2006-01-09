@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class WireFormatInfo : AbstractCommand
     {
-    			public const int ID_WireFormatInfo = 1;
+    			public const byte ID_WireFormatInfo = 1;
     			
         byte[] magic;
         int version;
@@ -29,7 +29,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_WireFormatInfo;
         }
 

@@ -17,13 +17,9 @@ using OpenWire.Core.IO;
 
 namespace OpenWire.Core.IO
 {
-    public class TransactionIdMarshaller : AbstractCommandMarshaller
+    public abstract class TransactionIdMarshaller : AbstractCommandMarshaller
     {
 
-
-        public override Command CreateCommand() {
-            return new TransactionId();
-        }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);

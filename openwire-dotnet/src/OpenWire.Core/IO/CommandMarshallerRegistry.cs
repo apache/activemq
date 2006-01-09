@@ -85,10 +85,6 @@ namespace OpenWire.Core.IO
 						return wireFormatInfoMarshaller.ReadCommand(dataIn);
 						
 
-				case TransactionId.ID_TransactionId:
-						return transactionIdMarshaller.ReadCommand(dataIn);
-						
-
 				case Response.ID_Response:
 						return responseMarshaller.ReadCommand(dataIn);
 						
@@ -109,20 +105,16 @@ namespace OpenWire.Core.IO
 						return activeMQTempTopicMarshaller.ReadCommand(dataIn);
 						
 
+				case DiscoveryEvent.ID_DiscoveryEvent:
+						return discoveryEventMarshaller.ReadCommand(dataIn);
+						
+
 				case ConnectionInfo.ID_ConnectionInfo:
 						return connectionInfoMarshaller.ReadCommand(dataIn);
 						
 
 				case KeepAliveInfo.ID_KeepAliveInfo:
 						return keepAliveInfoMarshaller.ReadCommand(dataIn);
-						
-
-				case Message.ID_Message:
-						return messageMarshaller.ReadCommand(dataIn);
-						
-
-				case BaseCommand.ID_BaseCommand:
-						return baseCommandMarshaller.ReadCommand(dataIn);
 						
 
 				case XATransactionId.ID_XATransactionId:
@@ -135,10 +127,6 @@ namespace OpenWire.Core.IO
 
 				case FlushCommand.ID_FlushCommand:
 						return flushCommandMarshaller.ReadCommand(dataIn);
-						
-
-				case ActiveMQTempDestination.ID_ActiveMQTempDestination:
-						return activeMQTempDestinationMarshaller.ReadCommand(dataIn);
 						
 
 				case ConsumerId.ID_ConsumerId:
@@ -225,201 +213,234 @@ namespace OpenWire.Core.IO
 
 				public static void WriteCommand(Command command, BinaryWriter dataOut) 
 				{
-				    int commandID = command.CommandType;
+				    byte commandID = command.GetCommandType();
 						dataOut.Write(commandID);
 						switch (commandID) 
 						{
 
 				case MessageId.ID_MessageId:
-						return messageIdMarshaller.ReadCommand(dataIn);
+						messageIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case BrokerInfo.ID_BrokerInfo:
-						return brokerInfoMarshaller.ReadCommand(dataIn);
+						brokerInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQTempQueue.ID_ActiveMQTempQueue:
-						return activeMQTempQueueMarshaller.ReadCommand(dataIn);
+						activeMQTempQueueMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case LocalTransactionId.ID_LocalTransactionId:
-						return localTransactionIdMarshaller.ReadCommand(dataIn);
+						localTransactionIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case RemoveSubscriptionInfo.ID_RemoveSubscriptionInfo:
-						return removeSubscriptionInfoMarshaller.ReadCommand(dataIn);
+						removeSubscriptionInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case IntegerResponse.ID_IntegerResponse:
-						return integerResponseMarshaller.ReadCommand(dataIn);
+						integerResponseMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQQueue.ID_ActiveMQQueue:
-						return activeMQQueueMarshaller.ReadCommand(dataIn);
+						activeMQQueueMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case DestinationInfo.ID_DestinationInfo:
-						return destinationInfoMarshaller.ReadCommand(dataIn);
+						destinationInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQBytesMessage.ID_ActiveMQBytesMessage:
-						return activeMQBytesMessageMarshaller.ReadCommand(dataIn);
+						activeMQBytesMessageMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ShutdownInfo.ID_ShutdownInfo:
-						return shutdownInfoMarshaller.ReadCommand(dataIn);
+						shutdownInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case DataResponse.ID_DataResponse:
-						return dataResponseMarshaller.ReadCommand(dataIn);
+						dataResponseMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case SessionId.ID_SessionId:
-						return sessionIdMarshaller.ReadCommand(dataIn);
+						sessionIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case DataArrayResponse.ID_DataArrayResponse:
-						return dataArrayResponseMarshaller.ReadCommand(dataIn);
+						dataArrayResponseMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case JournalQueueAck.ID_JournalQueueAck:
-						return journalQueueAckMarshaller.ReadCommand(dataIn);
+						journalQueueAckMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case WireFormatInfo.ID_WireFormatInfo:
-						return wireFormatInfoMarshaller.ReadCommand(dataIn);
-						
-
-				case TransactionId.ID_TransactionId:
-						return transactionIdMarshaller.ReadCommand(dataIn);
+						wireFormatInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case Response.ID_Response:
-						return responseMarshaller.ReadCommand(dataIn);
+						responseMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQObjectMessage.ID_ActiveMQObjectMessage:
-						return activeMQObjectMessageMarshaller.ReadCommand(dataIn);
+						activeMQObjectMessageMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ConsumerInfo.ID_ConsumerInfo:
-						return consumerInfoMarshaller.ReadCommand(dataIn);
+						consumerInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ConnectionId.ID_ConnectionId:
-						return connectionIdMarshaller.ReadCommand(dataIn);
+						connectionIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQTempTopic.ID_ActiveMQTempTopic:
-						return activeMQTempTopicMarshaller.ReadCommand(dataIn);
+						activeMQTempTopicMarshaller.WriteCommand(command, dataOut);
+						break;
+						
+
+				case DiscoveryEvent.ID_DiscoveryEvent:
+						discoveryEventMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ConnectionInfo.ID_ConnectionInfo:
-						return connectionInfoMarshaller.ReadCommand(dataIn);
+						connectionInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case KeepAliveInfo.ID_KeepAliveInfo:
-						return keepAliveInfoMarshaller.ReadCommand(dataIn);
-						
-
-				case Message.ID_Message:
-						return messageMarshaller.ReadCommand(dataIn);
-						
-
-				case BaseCommand.ID_BaseCommand:
-						return baseCommandMarshaller.ReadCommand(dataIn);
+						keepAliveInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case XATransactionId.ID_XATransactionId:
-						return xATransactionIdMarshaller.ReadCommand(dataIn);
+						xATransactionIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case JournalTrace.ID_JournalTrace:
-						return journalTraceMarshaller.ReadCommand(dataIn);
+						journalTraceMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case FlushCommand.ID_FlushCommand:
-						return flushCommandMarshaller.ReadCommand(dataIn);
-						
-
-				case ActiveMQTempDestination.ID_ActiveMQTempDestination:
-						return activeMQTempDestinationMarshaller.ReadCommand(dataIn);
+						flushCommandMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ConsumerId.ID_ConsumerId:
-						return consumerIdMarshaller.ReadCommand(dataIn);
+						consumerIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case JournalTopicAck.ID_JournalTopicAck:
-						return journalTopicAckMarshaller.ReadCommand(dataIn);
+						journalTopicAckMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQTextMessage.ID_ActiveMQTextMessage:
-						return activeMQTextMessageMarshaller.ReadCommand(dataIn);
+						activeMQTextMessageMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case BrokerId.ID_BrokerId:
-						return brokerIdMarshaller.ReadCommand(dataIn);
+						brokerIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case MessageDispatch.ID_MessageDispatch:
-						return messageDispatchMarshaller.ReadCommand(dataIn);
+						messageDispatchMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ProducerInfo.ID_ProducerInfo:
-						return producerInfoMarshaller.ReadCommand(dataIn);
+						producerInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case SubscriptionInfo.ID_SubscriptionInfo:
-						return subscriptionInfoMarshaller.ReadCommand(dataIn);
+						subscriptionInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQMapMessage.ID_ActiveMQMapMessage:
-						return activeMQMapMessageMarshaller.ReadCommand(dataIn);
+						activeMQMapMessageMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case SessionInfo.ID_SessionInfo:
-						return sessionInfoMarshaller.ReadCommand(dataIn);
+						sessionInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQMessage.ID_ActiveMQMessage:
-						return activeMQMessageMarshaller.ReadCommand(dataIn);
+						activeMQMessageMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case TransactionInfo.ID_TransactionInfo:
-						return transactionInfoMarshaller.ReadCommand(dataIn);
+						transactionInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQStreamMessage.ID_ActiveMQStreamMessage:
-						return activeMQStreamMessageMarshaller.ReadCommand(dataIn);
+						activeMQStreamMessageMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case MessageAck.ID_MessageAck:
-						return messageAckMarshaller.ReadCommand(dataIn);
+						messageAckMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ProducerId.ID_ProducerId:
-						return producerIdMarshaller.ReadCommand(dataIn);
+						producerIdMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ActiveMQTopic.ID_ActiveMQTopic:
-						return activeMQTopicMarshaller.ReadCommand(dataIn);
+						activeMQTopicMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case JournalTransaction.ID_JournalTransaction:
-						return journalTransactionMarshaller.ReadCommand(dataIn);
+						journalTransactionMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case RemoveInfo.ID_RemoveInfo:
-						return removeInfoMarshaller.ReadCommand(dataIn);
+						removeInfoMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ControlCommand.ID_ControlCommand:
-						return controlCommandMarshaller.ReadCommand(dataIn);
+						controlCommandMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 
 				case ExceptionResponse.ID_ExceptionResponse:
-						return exceptionResponseMarshaller.ReadCommand(dataIn);
+						exceptionResponseMarshaller.WriteCommand(command, dataOut);
+						break;
 						
 						
 								default:
@@ -611,18 +632,6 @@ namespace OpenWire.Core.IO
 
 
 	            
-	      private static TransactionIdMarshaller transactionIdMarshaller = new TransactionIdMarshaller();
-	      
-        public static TransactionIdMarshaller TransactionIdMarshaller
-        {
-            get
-            {
-                return transactionIdMarshaller;
-            }
-        }
-
-
-	            
 	      private static ResponseMarshaller responseMarshaller = new ResponseMarshaller();
 	      
         public static ResponseMarshaller ResponseMarshaller
@@ -683,6 +692,18 @@ namespace OpenWire.Core.IO
 
 
 	            
+	      private static DiscoveryEventMarshaller discoveryEventMarshaller = new DiscoveryEventMarshaller();
+	      
+        public static DiscoveryEventMarshaller DiscoveryEventMarshaller
+        {
+            get
+            {
+                return discoveryEventMarshaller;
+            }
+        }
+
+
+	            
 	      private static ConnectionInfoMarshaller connectionInfoMarshaller = new ConnectionInfoMarshaller();
 	      
         public static ConnectionInfoMarshaller ConnectionInfoMarshaller
@@ -702,30 +723,6 @@ namespace OpenWire.Core.IO
             get
             {
                 return keepAliveInfoMarshaller;
-            }
-        }
-
-
-	            
-	      private static MessageMarshaller messageMarshaller = new MessageMarshaller();
-	      
-        public static MessageMarshaller MessageMarshaller
-        {
-            get
-            {
-                return messageMarshaller;
-            }
-        }
-
-
-	            
-	      private static BaseCommandMarshaller baseCommandMarshaller = new BaseCommandMarshaller();
-	      
-        public static BaseCommandMarshaller BaseCommandMarshaller
-        {
-            get
-            {
-                return baseCommandMarshaller;
             }
         }
 
@@ -762,18 +759,6 @@ namespace OpenWire.Core.IO
             get
             {
                 return flushCommandMarshaller;
-            }
-        }
-
-
-	            
-	      private static ActiveMQTempDestinationMarshaller activeMQTempDestinationMarshaller = new ActiveMQTempDestinationMarshaller();
-	      
-        public static ActiveMQTempDestinationMarshaller ActiveMQTempDestinationMarshaller
-        {
-            get
-            {
-                return activeMQTempDestinationMarshaller;
             }
         }
 

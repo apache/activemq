@@ -5,10 +5,8 @@ namespace OpenWire.Core
 	/// <summary>
 	/// An OpenWire command
 	/// </summary>
-	public interface Command {
+	public interface Command : DataStructure {
 	
-        int GetCommandType();
-        
 	}
 }
 

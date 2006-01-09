@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class FlushCommand : AbstractCommand
+    public class FlushCommand : BaseCommand
     {
-    			public const int ID_FlushCommand = 1;
+    			public const byte ID_FlushCommand = 15;
     			
 
 
@@ -26,7 +26,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_FlushCommand;
         }
 

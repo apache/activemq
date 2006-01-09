@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class MessageId : AbstractCommand
     {
-    			public const int ID_MessageId = 1;
+    			public const byte ID_MessageId = 110;
     			
         ProducerId producerId;
         long producerSequenceId;
@@ -29,7 +29,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_MessageId;
         }
 
