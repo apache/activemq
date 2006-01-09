@@ -218,7 +218,7 @@ public class URISupport {
                 break;
             case ',':
                 if( depth == 0 ) {
-                    String s = str.substring(0, i-last);
+                    String s = str.substring(last, i);
                     l.add(s);
                     last=i+1;
                 }
