@@ -64,7 +64,7 @@ public class BrokerIdMarshaller extends org.apache.activemq.openwire.DataStreamM
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         BrokerId info = (BrokerId)o;
-        info.setBrokerId(readString(dataIn, bs));
+        info.setValue(readString(dataIn, bs));
 
     }
 
@@ -77,7 +77,7 @@ public class BrokerIdMarshaller extends org.apache.activemq.openwire.DataStreamM
         BrokerId info = (BrokerId)o;
 
         int rc = super.marshal1(wireFormat, o, bs);
-        rc += writeString(info.getBrokerId(), bs);
+        rc += writeString(info.getValue(), bs);
 
         return rc+0;
     }
@@ -93,7 +93,7 @@ public class BrokerIdMarshaller extends org.apache.activemq.openwire.DataStreamM
         super.marshal2(wireFormat, o, dataOut, bs);
 
         BrokerId info = (BrokerId)o;
-        writeString(info.getBrokerId(), dataOut, bs);
+        writeString(info.getValue(), dataOut, bs);
 
     }
 }

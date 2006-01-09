@@ -16,52 +16,48 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.state.CommandVisitor;
+
 
 /**
- * Represents a discovery event containing the details of the service
- *
- * @openwire:marshaller code="40"
- * @version $Revision:$
+ * 
+ * @openwire:marshaller code="16"
+ * @version $Revision$
  */
-public class DiscoveryEvent implements DataStructure {
+public class ConnectionError extends BaseCommand {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.DISCOVERY_EVENT;
+    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.CONNECTION_ERROR;
 
+    protected ConnectionId connectionId;
+    Throwable exception;
+    
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-
-    protected String serviceName;
-    protected String brokerName;
-
-    public DiscoveryEvent() {        
-    }
-    
-    public DiscoveryEvent(String serviceName) {
-        this.serviceName = serviceName;
+       
+    public Response visit(CommandVisitor visitor) throws Throwable {
+        return null;
     }
 
     /**
      * @openwire:property version=1
-     */
-    public String getServiceName() {
-        return serviceName;
-    }
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+     */    
+    public Throwable getException() {
+        return exception;
     }
     
-    /**
-     * @openwire:property version=1
-     */
-    public String getBrokerName(){
-        return brokerName;
-    }
-    public void setBrokerName(String name){
-        this.brokerName = name;
+    public void setException(Throwable exception) {
+        this.exception = exception;
     }
 
-    public boolean isMarshallAware() {
-        return false;
-    }    
+    /**
+     * @openwire:property version=1
+     */    
+    public ConnectionId getConnectionId() {
+        return connectionId;
+    }
+    public void setConnectionId(ConnectionId connectionId) {
+        this.connectionId = connectionId;
+    }
+    
 }

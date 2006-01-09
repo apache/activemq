@@ -36,7 +36,7 @@ public class ActiveMQTempQueue extends ActiveMQTempDestination implements Tempor
     }
     
     public ActiveMQTempQueue(ConnectionId connectionId, long sequenceId) {
-        super(connectionId.getConnectionId(), sequenceId);
+        super(connectionId.getValue(), sequenceId);
     }
     
     public byte getDataStructureType() {

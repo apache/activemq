@@ -49,7 +49,7 @@ public class ConsumerInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     
     protected transient BooleanExpression additionalPredicate;
-    protected transient boolean networkSubscription; //this subscription orginated from a network connection
+    protected transient boolean networkSubscription; //this subscription originated from a network connection
     
     public ConsumerInfo() {
     }

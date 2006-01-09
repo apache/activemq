@@ -62,7 +62,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
 
         // You don't need to be an admin to create temp destinations.
         if( !destination.isTemporary() 
-            || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getConnectionId()) ) {
+            || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
             
             Set allowedACLs = adminACLs.get(destination);
             if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
@@ -80,7 +80,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
 
         // You don't need to be an admin to remove temp destinations.
         if( !destination.isTemporary() 
-            || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getConnectionId()) ) {
+            || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
             
             Set allowedACLs = adminACLs.get(destination);
             if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))

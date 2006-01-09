@@ -66,7 +66,7 @@ public class ConsumerIdMarshaller extends org.apache.activemq.openwire.DataStrea
         ConsumerId info = (ConsumerId)o;
         info.setConnectionId(readString(dataIn, bs));
         info.setSessionId(unmarshalLong(wireFormat, dataIn, bs));
-        info.setConsumerId(unmarshalLong(wireFormat, dataIn, bs));
+        info.setValue(unmarshalLong(wireFormat, dataIn, bs));
 
     }
 
@@ -81,7 +81,7 @@ public class ConsumerIdMarshaller extends org.apache.activemq.openwire.DataStrea
         int rc = super.marshal1(wireFormat, o, bs);
         rc += writeString(info.getConnectionId(), bs);
         rc+=marshal1Long(wireFormat, info.getSessionId(), bs);
-        rc+=marshal1Long(wireFormat, info.getConsumerId(), bs);
+        rc+=marshal1Long(wireFormat, info.getValue(), bs);
 
         return rc+0;
     }
@@ -99,7 +99,7 @@ public class ConsumerIdMarshaller extends org.apache.activemq.openwire.DataStrea
         ConsumerId info = (ConsumerId)o;
         writeString(info.getConnectionId(), dataOut, bs);
         marshal2Long(wireFormat, info.getSessionId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getConsumerId(), dataOut, bs);
+        marshal2Long(wireFormat, info.getValue(), dataOut, bs);
 
     }
 }

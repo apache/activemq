@@ -36,7 +36,7 @@ public class ActiveMQTempTopic extends ActiveMQTempDestination implements Tempor
     }
     
     public ActiveMQTempTopic(ConnectionId connectionId, long sequenceId) {
-        super(connectionId.getConnectionId(), sequenceId);
+        super(connectionId.getValue(), sequenceId);
     }
 
     

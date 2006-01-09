@@ -55,6 +55,7 @@ public class MarshallerFactory {
         add(new JournalQueueAckMarshaller());
         add(new WireFormatInfoMarshaller());
         add(new ResponseMarshaller());
+        add(new ConnectionErrorMarshaller());
         add(new ActiveMQObjectMessageMarshaller());
         add(new ConsumerInfoMarshaller());
         add(new ConnectionIdMarshaller());

@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.*;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.activemq.Service;
@@ -28,6 +28,7 @@ import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
@@ -61,8 +62,6 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.InvalidClientIDException;
-
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 
@@ -84,6 +83,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     private WireFormatInfo wireFormatInfo;    
     protected boolean disposed=false;
+    protected boolean shuttingDown=false;
 
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
@@ -138,7 +138,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( disposed) 
             return;
         
-        disposed=true;            
+        disposed=true;
         //
         // Remove all logical connection associated with this connection
         // from the broker.
@@ -150,6 +150,8 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             } catch (Throwable ignore) {
             }
         }
+        
+        shuttingDown=false;
     }
     
     public void serviceTransportException(IOException e) {
@@ -163,12 +165,17 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
         
     public void serviceException(Throwable e) {
-        if( !disposed ) {
+        if( !disposed && !shuttingDown ) {
+            shuttingDown=true;
             if( log.isDebugEnabled() )
                 log.debug("Async error occurred: "+e,e);
-            // TODO: think about how to handle this.  Should we send the error down to the client
-            // so that he can report it to a registered error listener?
-            // Should we terminate the connection?
+            ConnectionError ce = new ConnectionError();
+            ce.setException(e);
+            dispatchAsync(ce);
+            try {
+                stop();
+            } catch (Exception ignore) {
+            }
         } 
     }
 
@@ -238,6 +245,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processShutdown(ShutdownInfo info) throws Throwable {
+        shuttingDown=true;
         stop();
         return null;
     }

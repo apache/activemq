@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ConnectionId
+ * Marshalling code for Open Wire Format for ConnectionError
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -36,21 +36,21 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class ConnectionIdMarshaller extends org.apache.activemq.openwire.DataStreamMarshaller {
+public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
      * @return short representation of the type data structure
      */
     public byte getDataStructureType() {
-        return ConnectionId.DATA_STRUCTURE_TYPE;
+        return ConnectionError.DATA_STRUCTURE_TYPE;
     }
     
     /**
      * @return a new object instance
      */
     public DataStructure createObject() {
-        return new ConnectionId();
+        return new ConnectionError();
     }
 
     /**
@@ -63,8 +63,9 @@ public class ConnectionIdMarshaller extends org.apache.activemq.openwire.DataStr
     public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
-        ConnectionId info = (ConnectionId)o;
-        info.setValue(readString(dataIn, bs));
+        ConnectionError info = (ConnectionError)o;
+        info.setException((java.lang.Throwable) unmarsalThrowable(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -74,10 +75,11 @@ public class ConnectionIdMarshaller extends org.apache.activemq.openwire.DataStr
      */
     public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
-        ConnectionId info = (ConnectionId)o;
+        ConnectionError info = (ConnectionError)o;
 
         int rc = super.marshal1(wireFormat, o, bs);
-        rc += writeString(info.getValue(), bs);
+        rc += marshalThrowable(wireFormat, info.getException(), bs);
+        rc += marshal1NestedObject(wireFormat, info.getConnectionId(), bs);
 
         return rc+0;
     }
@@ -92,8 +94,9 @@ public class ConnectionIdMarshaller extends org.apache.activemq.openwire.DataStr
     public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
         super.marshal2(wireFormat, o, dataOut, bs);
 
-        ConnectionId info = (ConnectionId)o;
-        writeString(info.getValue(), dataOut, bs);
+        ConnectionError info = (ConnectionError)o;
+        marshalThrowable(wireFormat, info.getException(), dataOut, bs);
+        marshal2NestedObject(wireFormat, info.getConnectionId(), dataOut, bs);
 
     }
 }

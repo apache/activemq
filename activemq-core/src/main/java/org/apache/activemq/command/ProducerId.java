@@ -38,7 +38,7 @@ public class ProducerId implements DataStructure {
     
     public ProducerId(SessionId sessionId, long producerId) {
         this.connectionId = sessionId.getConnectionId();
-        this.sessionId = sessionId.getSessionId();
+        this.sessionId = sessionId.getValue();
         this.producerId=producerId;
     }
 
@@ -88,13 +88,13 @@ public class ProducerId implements DataStructure {
      * @param sessionKey
      */
     private void setProducerSessionKey(String sessionKey) {
-        // Parse off the sessionId
+        // Parse off the value
         int p = sessionKey.lastIndexOf(":");
         if( p >= 0 ) {
             sessionId = Long.parseLong(sessionKey.substring(p+1));
             sessionKey = sessionKey.substring(0,p);
         }        
-        // The rest is the connectionId
+        // The rest is the value
         connectionId = sessionKey;
     }
 

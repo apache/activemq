@@ -26,33 +26,33 @@ public class ConnectionId implements DataStructure {
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.CONNECTION_ID;
     
-    protected String connectionId;
+    protected String value;
     
     public ConnectionId() {        
     }
     
     public ConnectionId(String connectionId) {
-        this.connectionId = connectionId;
+        this.value = connectionId;
     }
     
     public ConnectionId(ConnectionId id) {
-        this.connectionId = id.getConnectionId();
+        this.value = id.getValue();
     }
 
     public ConnectionId(SessionId id) {
-        this.connectionId = id.getConnectionId();
+        this.value = id.getConnectionId();
     }
 
     public ConnectionId(ProducerId id) {
-        this.connectionId = id.getConnectionId();
+        this.value = id.getConnectionId();
     }
     
     public ConnectionId(ConsumerId id) {
-        this.connectionId = id.getConnectionId();
+        this.value = id.getConnectionId();
     }
 
     public int hashCode() {
-        return connectionId.hashCode();
+        return value.hashCode();
     }
     
     public boolean equals(Object o) {
@@ -61,7 +61,7 @@ public class ConnectionId implements DataStructure {
         if( o == null || o.getClass()!=ConnectionId.class )
             return false;
         ConnectionId id = (ConnectionId) o;
-        return connectionId.equals(id.connectionId);
+        return value.equals(id.value);
     }
     
     public byte getDataStructureType() {
@@ -69,17 +69,17 @@ public class ConnectionId implements DataStructure {
     }
 
     public String toString() {
-        return connectionId;
+        return value;
     }
 
     /**
      * @openwire:property version=1
      */
-    public String getConnectionId() {
-        return connectionId;
+    public String getValue() {
+        return value;
     }
-    public void setConnectionId(String connectionId) {
-        this.connectionId = connectionId;
+    public void setValue(String connectionId) {
+        this.value = connectionId;
     }
     
     public boolean isMarshallAware() {

@@ -25,17 +25,17 @@ package org.apache.activemq.command;
 public class BrokerId implements DataStructure {
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.BROKER_ID;    
-    protected String brokerId;
+    protected String value;
     
     public BrokerId() {        
     }
     
     public BrokerId(String brokerId) {
-        this.brokerId = brokerId;
+        this.value = brokerId;
     }
     
     public int hashCode() {
-        return brokerId.hashCode();
+        return value.hashCode();
     }
     
     public boolean equals(Object o) {
@@ -44,7 +44,7 @@ public class BrokerId implements DataStructure {
         if( o == null || o.getClass()!=BrokerId.class )
             return false;
         BrokerId id = (BrokerId) o;
-        return brokerId.equals(id.brokerId);
+        return value.equals(id.value);
     }
     
     public byte getDataStructureType() {
@@ -52,17 +52,17 @@ public class BrokerId implements DataStructure {
     }
 
     public String toString() {
-        return brokerId;
+        return value;
     }
 
     /**
      * @openwire:property version=1
      */
-    public String getBrokerId() {
-        return brokerId;
+    public String getValue() {
+        return value;
     }
-    public void setBrokerId(String brokerId) {
-        this.brokerId = brokerId;
+    public void setValue(String brokerId) {
+        this.value = brokerId;
     }    
 
     public boolean isMarshallAware() {

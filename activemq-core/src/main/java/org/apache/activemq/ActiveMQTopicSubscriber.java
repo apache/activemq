@@ -101,7 +101,7 @@ public class ActiveMQTopicSubscriber extends ActiveMQMessageConsumer implements
 
     /**
      * @param theSession
-     * @param consumerId 
+     * @param value 
      * @param dest
      * @param name
      * @param selector

@@ -46,6 +46,7 @@ public interface CommandTypes {
     byte  REMOVE_INFO                       = 12;
     byte  CONTROL_COMMAND                   = 14;
     byte  FLUSH_COMMAND                     = 15;
+    byte  CONNECTION_ERROR                  = 16;
     
     ///////////////////////////////////////////////////
     //

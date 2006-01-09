@@ -499,7 +499,7 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
     }
 
     public String toString() {
-        return "ActiveMQMessageProducer { consumerId=" +info.getProducerId()+" }";
+        return "ActiveMQMessageProducer { value=" +info.getProducerId()+" }";
     }
 
 }

@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
@@ -70,6 +71,12 @@ public class TransportConnection extends AbstractConnection {
     }
 
     public void stop() throws Exception {
+
+        try {
+            transport.oneway(new ShutdownInfo());
+        } catch (IOException ignore) {
+        }
+
         transport.stop();
         active = false;
         super.stop();

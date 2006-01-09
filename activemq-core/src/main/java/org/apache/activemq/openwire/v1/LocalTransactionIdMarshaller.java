@@ -64,7 +64,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         LocalTransactionId info = (LocalTransactionId)o;
-        info.setTransactionId(unmarshalLong(wireFormat, dataIn, bs));
+        info.setValue(unmarshalLong(wireFormat, dataIn, bs));
         info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
 
     }
@@ -78,7 +78,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
         LocalTransactionId info = (LocalTransactionId)o;
 
         int rc = super.marshal1(wireFormat, o, bs);
-        rc+=marshal1Long(wireFormat, info.getTransactionId(), bs);
+        rc+=marshal1Long(wireFormat, info.getValue(), bs);
         rc += marshal1CachedObject(wireFormat, info.getConnectionId(), bs);
 
         return rc+0;
@@ -95,7 +95,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
         super.marshal2(wireFormat, o, dataOut, bs);
 
         LocalTransactionId info = (LocalTransactionId)o;
-        marshal2Long(wireFormat, info.getTransactionId(), dataOut, bs);
+        marshal2Long(wireFormat, info.getValue(), dataOut, bs);
         marshal2CachedObject(wireFormat, info.getConnectionId(), dataOut, bs);
 
     }

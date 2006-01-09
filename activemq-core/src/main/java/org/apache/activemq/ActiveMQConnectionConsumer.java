@@ -158,6 +158,6 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
     }
     
     public String toString() {
-        return "ActiveMQConnectionConsumer { consumerId=" +consumerInfo.getConsumerId()+" }";
+        return "ActiveMQConnectionConsumer { value=" +consumerInfo.getConsumerId()+" }";
     }
 }

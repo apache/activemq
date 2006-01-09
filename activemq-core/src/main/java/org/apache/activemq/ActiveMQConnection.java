@@ -1210,7 +1210,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         waitForBrokerInfo();
         if( brokerInfo==null )
             throw new JMSException("Connection failed before Broker info was received.");            
-        return brokerInfo.getBrokerId().getBrokerId();
+        return brokerInfo.getBrokerId().getValue();
     }
 
     /**
