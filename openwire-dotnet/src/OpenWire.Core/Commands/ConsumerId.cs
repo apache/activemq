@@ -20,7 +20,7 @@ namespace OpenWire.Core.Commands
     			
         string connectionId;
         long sessionId;
-        long consumerId;
+        long value;
 
 
 
@@ -60,15 +60,15 @@ namespace OpenWire.Core.Commands
             }            
         }
 
-        public long ConsumerIdValue
+        public long Value
         {
             get
             {
-                return consumerId;
+                return value;
             }
             set
             {
-                consumerId = value;
+                value = value;
             }            
         }
 

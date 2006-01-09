@@ -18,7 +18,7 @@ namespace OpenWire.Core.Commands
     {
     			public const byte ID_ConnectionId = 120;
     			
-        string connectionId;
+        string value;
 
 
 
@@ -34,15 +34,15 @@ namespace OpenWire.Core.Commands
 
         // Properties
 
-        public string ConnectionIdValue
+        public string Value
         {
             get
             {
-                return connectionId;
+                return value;
             }
             set
             {
-                connectionId = value;
+                value = value;
             }            
         }
 

@@ -107,7 +107,7 @@ apr_status_t ow_marshal1_SessionId(ow_bit_buffer *buffer, ow_SessionId *object)
 {
    ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    ow_marshal1_string(buffer, object->connectionId);
-   ow_marshal1_long(buffer, object->sessionId);
+   ow_marshal1_long(buffer, object->value);
    
 	return APR_SUCCESS;
 }
@@ -115,7 +115,7 @@ apr_status_t ow_marshal2_SessionId(ow_byte_buffer *buffer, ow_bit_buffer *bitbuf
 {
    ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->connectionId));
-   SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->sessionId));
+   SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->value));
    
 	return APR_SUCCESS;
 }
@@ -124,7 +124,7 @@ apr_status_t ow_unmarshal_SessionId(ow_byte_array *buffer, ow_bit_buffer *bitbuf
 {
    ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->connectionId, pool));
-   SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->sessionId, pool));
+   SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->value, pool));
    
 	return APR_SUCCESS;
 }
@@ -286,14 +286,14 @@ ow_ConnectionId *ow_ConnectionId_create(apr_pool_t *pool)
 apr_status_t ow_marshal1_ConnectionId(ow_bit_buffer *buffer, ow_ConnectionId *object)
 {
    ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
-   ow_marshal1_string(buffer, object->connectionId);
+   ow_marshal1_string(buffer, object->value);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_ConnectionId(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_ConnectionId *object)
 {
    ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
-   SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->connectionId));
+   SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->value));
    
 	return APR_SUCCESS;
 }
@@ -301,7 +301,7 @@ apr_status_t ow_marshal2_ConnectionId(ow_byte_buffer *buffer, ow_bit_buffer *bit
 apr_status_t ow_unmarshal_ConnectionId(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_ConnectionId *object, apr_pool_t *pool)
 {
    ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
-   SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->connectionId, pool));
+   SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->value, pool));
    
 	return APR_SUCCESS;
 }
@@ -414,6 +414,7 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
    case OW_DESTINATIONINFO_TYPE:
    case OW_SHUTDOWNINFO_TYPE:
    case OW_RESPONSE_TYPE:
+   case OW_CONNECTIONERROR_TYPE:
    case OW_CONSUMERINFO_TYPE:
    case OW_CONNECTIONINFO_TYPE:
    case OW_ACTIVEMQMESSAGE_TYPE:
@@ -627,7 +628,7 @@ apr_status_t ow_marshal1_ConsumerId(ow_bit_buffer *buffer, ow_ConsumerId *object
    ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    ow_marshal1_string(buffer, object->connectionId);
    ow_marshal1_long(buffer, object->sessionId);
-   ow_marshal1_long(buffer, object->consumerId);
+   ow_marshal1_long(buffer, object->value);
    
 	return APR_SUCCESS;
 }
@@ -636,7 +637,7 @@ apr_status_t ow_marshal2_ConsumerId(ow_byte_buffer *buffer, ow_bit_buffer *bitbu
    ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->connectionId));
    SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->sessionId));
-   SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->consumerId));
+   SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->value));
    
 	return APR_SUCCESS;
 }
@@ -646,7 +647,7 @@ apr_status_t ow_unmarshal_ConsumerId(ow_byte_array *buffer, ow_bit_buffer *bitbu
    ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->connectionId, pool));
    SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->sessionId, pool));
-   SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->consumerId, pool));
+   SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->value, pool));
    
 	return APR_SUCCESS;
 }
@@ -736,14 +737,14 @@ ow_BrokerId *ow_BrokerId_create(apr_pool_t *pool)
 apr_status_t ow_marshal1_BrokerId(ow_bit_buffer *buffer, ow_BrokerId *object)
 {
    ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
-   ow_marshal1_string(buffer, object->brokerId);
+   ow_marshal1_string(buffer, object->value);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_BrokerId(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_BrokerId *object)
 {
    ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
-   SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->brokerId));
+   SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->value));
    
 	return APR_SUCCESS;
 }
@@ -751,7 +752,7 @@ apr_status_t ow_marshal2_BrokerId(ow_byte_buffer *buffer, ow_bit_buffer *bitbuff
 apr_status_t ow_unmarshal_BrokerId(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_BrokerId *object, apr_pool_t *pool)
 {
    ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
-   SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->brokerId, pool));
+   SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->value, pool));
    
 	return APR_SUCCESS;
 }
@@ -1425,7 +1426,7 @@ ow_LocalTransactionId *ow_LocalTransactionId_create(apr_pool_t *pool)
 apr_status_t ow_marshal1_LocalTransactionId(ow_bit_buffer *buffer, ow_LocalTransactionId *object)
 {
    ow_marshal1_TransactionId(buffer, (ow_TransactionId*)object);
-   ow_marshal1_long(buffer, object->transactionId);
+   ow_marshal1_long(buffer, object->value);
    SUCCESS_CHECK(ow_marshal1_cached_object(buffer, (ow_DataStructure*)object->connectionId));
    
 	return APR_SUCCESS;
@@ -1433,7 +1434,7 @@ apr_status_t ow_marshal1_LocalTransactionId(ow_bit_buffer *buffer, ow_LocalTrans
 apr_status_t ow_marshal2_LocalTransactionId(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_LocalTransactionId *object)
 {
    ow_marshal2_TransactionId(buffer, bitbuffer, (ow_TransactionId*)object);   
-   SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->transactionId));
+   SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->value));
    SUCCESS_CHECK(ow_marshal2_cached_object(buffer, bitbuffer, (ow_DataStructure*)object->connectionId));
    
 	return APR_SUCCESS;
@@ -1442,7 +1443,7 @@ apr_status_t ow_marshal2_LocalTransactionId(ow_byte_buffer *buffer, ow_bit_buffe
 apr_status_t ow_unmarshal_LocalTransactionId(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_LocalTransactionId *object, apr_pool_t *pool)
 {
    ow_unmarshal_TransactionId(buffer, bitbuffer, (ow_TransactionId*)object, pool);   
-   SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->transactionId, pool));
+   SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->value, pool));
    SUCCESS_CHECK(ow_unmarshal_cached_object(buffer, bitbuffer, (ow_DataStructure**)&object->connectionId, pool));
    
 	return APR_SUCCESS;
@@ -1685,6 +1686,54 @@ apr_status_t ow_unmarshal_Response(ow_byte_array *buffer, ow_bit_buffer *bitbuff
 {
    ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
    SUCCESS_CHECK(ow_byte_array_read_short(buffer, &object->correlationId));
+   
+	return APR_SUCCESS;
+}
+
+ow_boolean ow_is_a_ConnectionError(ow_DataStructure *object) {
+   if( object == 0 )
+      return 0;
+      
+   switch(object->structType) {
+   case OW_CONNECTIONERROR_TYPE:
+      return 1;
+   }
+   return 0;
+}
+
+
+ow_ConnectionError *ow_ConnectionError_create(apr_pool_t *pool) 
+{
+   ow_ConnectionError *value = apr_pcalloc(pool,sizeof(ow_ConnectionError));
+   if( value!=0 ) {
+      ((ow_DataStructure*)value)->structType = OW_CONNECTIONERROR_TYPE;
+   }
+   return value;
+}
+
+
+apr_status_t ow_marshal1_ConnectionError(ow_bit_buffer *buffer, ow_ConnectionError *object)
+{
+   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
+   SUCCESS_CHECK(ow_marshal1_throwable(buffer, object->exception));
+   SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->connectionId));
+   
+	return APR_SUCCESS;
+}
+apr_status_t ow_marshal2_ConnectionError(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_ConnectionError *object)
+{
+   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   SUCCESS_CHECK(ow_marshal2_throwable(buffer, bitbuffer, object->exception));
+   SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->connectionId));
+   
+	return APR_SUCCESS;
+}
+
+apr_status_t ow_unmarshal_ConnectionError(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_ConnectionError *object, apr_pool_t *pool)
+{
+   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   SUCCESS_CHECK(ow_unmarshal_throwable(buffer, bitbuffer, &object->exception, pool));
+   SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->connectionId, pool));
    
 	return APR_SUCCESS;
 }
@@ -2532,6 +2581,7 @@ ow_DataStructure *ow_create_object(ow_byte type, apr_pool_t *pool)
       case OW_DESTINATIONINFO_TYPE: return (ow_DataStructure *)ow_DestinationInfo_create(pool);
       case OW_SHUTDOWNINFO_TYPE: return (ow_DataStructure *)ow_ShutdownInfo_create(pool);
       case OW_RESPONSE_TYPE: return (ow_DataStructure *)ow_Response_create(pool);
+      case OW_CONNECTIONERROR_TYPE: return (ow_DataStructure *)ow_ConnectionError_create(pool);
       case OW_CONSUMERINFO_TYPE: return (ow_DataStructure *)ow_ConsumerInfo_create(pool);
       case OW_CONNECTIONINFO_TYPE: return (ow_DataStructure *)ow_ConnectionInfo_create(pool);
       case OW_ACTIVEMQMESSAGE_TYPE: return (ow_DataStructure *)ow_ActiveMQMessage_create(pool);
@@ -2585,6 +2635,7 @@ apr_status_t ow_marshal1_object(ow_bit_buffer *buffer, ow_DataStructure *object)
       case OW_DESTINATIONINFO_TYPE: return ow_marshal1_DestinationInfo(buffer, (ow_DestinationInfo*)object);
       case OW_SHUTDOWNINFO_TYPE: return ow_marshal1_ShutdownInfo(buffer, (ow_ShutdownInfo*)object);
       case OW_RESPONSE_TYPE: return ow_marshal1_Response(buffer, (ow_Response*)object);
+      case OW_CONNECTIONERROR_TYPE: return ow_marshal1_ConnectionError(buffer, (ow_ConnectionError*)object);
       case OW_CONSUMERINFO_TYPE: return ow_marshal1_ConsumerInfo(buffer, (ow_ConsumerInfo*)object);
       case OW_CONNECTIONINFO_TYPE: return ow_marshal1_ConnectionInfo(buffer, (ow_ConnectionInfo*)object);
       case OW_ACTIVEMQMESSAGE_TYPE: return ow_marshal1_ActiveMQMessage(buffer, (ow_ActiveMQMessage*)object);
@@ -2638,6 +2689,7 @@ apr_status_t ow_marshal2_object(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer
       case OW_DESTINATIONINFO_TYPE: return ow_marshal2_DestinationInfo(buffer, bitbuffer, (ow_DestinationInfo*)object);
       case OW_SHUTDOWNINFO_TYPE: return ow_marshal2_ShutdownInfo(buffer, bitbuffer, (ow_ShutdownInfo*)object);
       case OW_RESPONSE_TYPE: return ow_marshal2_Response(buffer, bitbuffer, (ow_Response*)object);
+      case OW_CONNECTIONERROR_TYPE: return ow_marshal2_ConnectionError(buffer, bitbuffer, (ow_ConnectionError*)object);
       case OW_CONSUMERINFO_TYPE: return ow_marshal2_ConsumerInfo(buffer, bitbuffer, (ow_ConsumerInfo*)object);
       case OW_CONNECTIONINFO_TYPE: return ow_marshal2_ConnectionInfo(buffer, bitbuffer, (ow_ConnectionInfo*)object);
       case OW_ACTIVEMQMESSAGE_TYPE: return ow_marshal2_ActiveMQMessage(buffer, bitbuffer, (ow_ActiveMQMessage*)object);
@@ -2691,6 +2743,7 @@ apr_status_t ow_unmarshal_object(ow_byte_array *buffer, ow_bit_buffer *bitbuffer
       case OW_DESTINATIONINFO_TYPE: return ow_unmarshal_DestinationInfo(buffer, bitbuffer, (ow_DestinationInfo*)object, pool);
       case OW_SHUTDOWNINFO_TYPE: return ow_unmarshal_ShutdownInfo(buffer, bitbuffer, (ow_ShutdownInfo*)object, pool);
       case OW_RESPONSE_TYPE: return ow_unmarshal_Response(buffer, bitbuffer, (ow_Response*)object, pool);
+      case OW_CONNECTIONERROR_TYPE: return ow_unmarshal_ConnectionError(buffer, bitbuffer, (ow_ConnectionError*)object, pool);
       case OW_CONSUMERINFO_TYPE: return ow_unmarshal_ConsumerInfo(buffer, bitbuffer, (ow_ConsumerInfo*)object, pool);
       case OW_CONNECTIONINFO_TYPE: return ow_unmarshal_ConnectionInfo(buffer, bitbuffer, (ow_ConnectionInfo*)object, pool);
       case OW_ACTIVEMQMESSAGE_TYPE: return ow_unmarshal_ActiveMQMessage(buffer, bitbuffer, (ow_ActiveMQMessage*)object, pool);

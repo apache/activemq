@@ -31,7 +31,7 @@ namespace OpenWire.Core.IO
             ConsumerId info = (ConsumerId) command;
             info.ConnectionId = dataIn.ReadString();
             info.SessionId = dataIn.ReadInt64();
-            info.ConsumerIdValue = dataIn.ReadInt64();
+            info.Value = dataIn.ReadInt64();
 
         }
 
@@ -41,7 +41,7 @@ namespace OpenWire.Core.IO
             ConsumerId info = (ConsumerId) command;
             dataOut.Write(info.ConnectionId);
             dataOut.Write(info.SessionId);
-            dataOut.Write(info.ConsumerIdValue);
+            dataOut.Write(info.Value);
 
         }
     }

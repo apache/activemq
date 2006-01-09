@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             ConnectionId info = (ConnectionId) command;
-            info.ConnectionIdValue = dataIn.ReadString();
+            info.Value = dataIn.ReadString();
 
         }
 
@@ -37,7 +37,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             ConnectionId info = (ConnectionId) command;
-            dataOut.Write(info.ConnectionIdValue);
+            dataOut.Write(info.Value);
 
         }
     }

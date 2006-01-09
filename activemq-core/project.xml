@@ -344,6 +344,8 @@
 
                 <!-- This test currently fails -->
                 <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
+                <exclude>**/QueueBridgeTest.*</exclude>
+
             </excludes>
         </unitTest>
         <resources>

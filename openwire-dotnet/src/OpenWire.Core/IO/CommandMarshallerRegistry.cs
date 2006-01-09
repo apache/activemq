@@ -89,6 +89,10 @@ namespace OpenWire.Core.IO
 						return responseMarshaller.ReadCommand(dataIn);
 						
 
+				case ConnectionError.ID_ConnectionError:
+						return connectionErrorMarshaller.ReadCommand(dataIn);
+						
+
 				case ActiveMQObjectMessage.ID_ActiveMQObjectMessage:
 						return activeMQObjectMessageMarshaller.ReadCommand(dataIn);
 						
@@ -295,6 +299,11 @@ namespace OpenWire.Core.IO
 
 				case Response.ID_Response:
 						responseMarshaller.WriteCommand(command, dataOut);
+						break;
+						
+
+				case ConnectionError.ID_ConnectionError:
+						connectionErrorMarshaller.WriteCommand(command, dataOut);
 						break;
 						
 
@@ -639,6 +648,18 @@ namespace OpenWire.Core.IO
             get
             {
                 return responseMarshaller;
+            }
+        }
+
+
+	            
+	      private static ConnectionErrorMarshaller connectionErrorMarshaller = new ConnectionErrorMarshaller();
+	      
+        public static ConnectionErrorMarshaller ConnectionErrorMarshaller
+        {
+            get
+            {
+                return connectionErrorMarshaller;
             }
         }
 
