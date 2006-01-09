@@ -98,6 +98,16 @@ typedef struct ow_ConnectionId {
 ow_ConnectionId *ow_ConnectionId_create(apr_pool_t *pool);
 ow_boolean ow_is_a_ConnectionId(ow_DataStructure *object);
 
+typedef struct ow_DiscoveryEvent {
+
+   ow_byte structType;
+   ow_string *serviceName;
+   ow_string *brokerName;
+
+} ow_DiscoveryEvent;
+ow_DiscoveryEvent *ow_DiscoveryEvent_create(apr_pool_t *pool);
+ow_boolean ow_is_a_DiscoveryEvent(ow_DataStructure *object);
+
 typedef struct ow_KeepAliveInfo {
 
    ow_byte structType;

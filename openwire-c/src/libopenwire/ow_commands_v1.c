@@ -306,6 +306,54 @@ apr_status_t ow_unmarshal_ConnectionId(ow_byte_array *buffer, ow_bit_buffer *bit
 	return APR_SUCCESS;
 }
 
+ow_boolean ow_is_a_DiscoveryEvent(ow_DataStructure *object) {
+   if( object == 0 )
+      return 0;
+      
+   switch(object->structType) {
+   case OW_DISCOVERYEVENT_TYPE:
+      return 1;
+   }
+   return 0;
+}
+
+
+ow_DiscoveryEvent *ow_DiscoveryEvent_create(apr_pool_t *pool) 
+{
+   ow_DiscoveryEvent *value = apr_pcalloc(pool,sizeof(ow_DiscoveryEvent));
+   if( value!=0 ) {
+      ((ow_DataStructure*)value)->structType = OW_DISCOVERYEVENT_TYPE;
+   }
+   return value;
+}
+
+
+apr_status_t ow_marshal1_DiscoveryEvent(ow_bit_buffer *buffer, ow_DiscoveryEvent *object)
+{
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
+   ow_marshal1_string(buffer, object->serviceName);
+   ow_marshal1_string(buffer, object->brokerName);
+   
+	return APR_SUCCESS;
+}
+apr_status_t ow_marshal2_DiscoveryEvent(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_DiscoveryEvent *object)
+{
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
+   SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->serviceName));
+   SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->brokerName));
+   
+	return APR_SUCCESS;
+}
+
+apr_status_t ow_unmarshal_DiscoveryEvent(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_DiscoveryEvent *object, apr_pool_t *pool)
+{
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
+   SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->serviceName, pool));
+   SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->brokerName, pool));
+   
+	return APR_SUCCESS;
+}
+
 ow_boolean ow_is_a_KeepAliveInfo(ow_DataStructure *object) {
    if( object == 0 )
       return 0;
@@ -2458,6 +2506,7 @@ ow_DataStructure *ow_create_object(ow_byte type, apr_pool_t *pool)
       case OW_JOURNALQUEUEACK_TYPE: return (ow_DataStructure *)ow_JournalQueueAck_create(pool);
       case OW_WIREFORMATINFO_TYPE: return (ow_DataStructure *)ow_WireFormatInfo_create(pool);
       case OW_CONNECTIONID_TYPE: return (ow_DataStructure *)ow_ConnectionId_create(pool);
+      case OW_DISCOVERYEVENT_TYPE: return (ow_DataStructure *)ow_DiscoveryEvent_create(pool);
       case OW_KEEPALIVEINFO_TYPE: return (ow_DataStructure *)ow_KeepAliveInfo_create(pool);
       case OW_XATRANSACTIONID_TYPE: return (ow_DataStructure *)ow_XATransactionId_create(pool);
       case OW_JOURNALTRACE_TYPE: return (ow_DataStructure *)ow_JournalTrace_create(pool);
@@ -2510,6 +2559,7 @@ apr_status_t ow_marshal1_object(ow_bit_buffer *buffer, ow_DataStructure *object)
       case OW_JOURNALQUEUEACK_TYPE: return ow_marshal1_JournalQueueAck(buffer, (ow_JournalQueueAck*)object);
       case OW_WIREFORMATINFO_TYPE: return ow_marshal1_WireFormatInfo(buffer, (ow_WireFormatInfo*)object);
       case OW_CONNECTIONID_TYPE: return ow_marshal1_ConnectionId(buffer, (ow_ConnectionId*)object);
+      case OW_DISCOVERYEVENT_TYPE: return ow_marshal1_DiscoveryEvent(buffer, (ow_DiscoveryEvent*)object);
       case OW_KEEPALIVEINFO_TYPE: return ow_marshal1_KeepAliveInfo(buffer, (ow_KeepAliveInfo*)object);
       case OW_XATRANSACTIONID_TYPE: return ow_marshal1_XATransactionId(buffer, (ow_XATransactionId*)object);
       case OW_JOURNALTRACE_TYPE: return ow_marshal1_JournalTrace(buffer, (ow_JournalTrace*)object);
@@ -2562,6 +2612,7 @@ apr_status_t ow_marshal2_object(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer
       case OW_JOURNALQUEUEACK_TYPE: return ow_marshal2_JournalQueueAck(buffer, bitbuffer, (ow_JournalQueueAck*)object);
       case OW_WIREFORMATINFO_TYPE: return ow_marshal2_WireFormatInfo(buffer, bitbuffer, (ow_WireFormatInfo*)object);
       case OW_CONNECTIONID_TYPE: return ow_marshal2_ConnectionId(buffer, bitbuffer, (ow_ConnectionId*)object);
+      case OW_DISCOVERYEVENT_TYPE: return ow_marshal2_DiscoveryEvent(buffer, bitbuffer, (ow_DiscoveryEvent*)object);
       case OW_KEEPALIVEINFO_TYPE: return ow_marshal2_KeepAliveInfo(buffer, bitbuffer, (ow_KeepAliveInfo*)object);
       case OW_XATRANSACTIONID_TYPE: return ow_marshal2_XATransactionId(buffer, bitbuffer, (ow_XATransactionId*)object);
       case OW_JOURNALTRACE_TYPE: return ow_marshal2_JournalTrace(buffer, bitbuffer, (ow_JournalTrace*)object);
@@ -2614,6 +2665,7 @@ apr_status_t ow_unmarshal_object(ow_byte_array *buffer, ow_bit_buffer *bitbuffer
       case OW_JOURNALQUEUEACK_TYPE: return ow_unmarshal_JournalQueueAck(buffer, bitbuffer, (ow_JournalQueueAck*)object, pool);
       case OW_WIREFORMATINFO_TYPE: return ow_unmarshal_WireFormatInfo(buffer, bitbuffer, (ow_WireFormatInfo*)object, pool);
       case OW_CONNECTIONID_TYPE: return ow_unmarshal_ConnectionId(buffer, bitbuffer, (ow_ConnectionId*)object, pool);
+      case OW_DISCOVERYEVENT_TYPE: return ow_unmarshal_DiscoveryEvent(buffer, bitbuffer, (ow_DiscoveryEvent*)object, pool);
       case OW_KEEPALIVEINFO_TYPE: return ow_unmarshal_KeepAliveInfo(buffer, bitbuffer, (ow_KeepAliveInfo*)object, pool);
       case OW_XATRANSACTIONID_TYPE: return ow_unmarshal_XATransactionId(buffer, bitbuffer, (ow_XATransactionId*)object, pool);
       case OW_JOURNALTRACE_TYPE: return ow_unmarshal_JournalTrace(buffer, bitbuffer, (ow_JournalTrace*)object, pool);
