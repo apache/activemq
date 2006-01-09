@@ -83,8 +83,6 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     private WireFormatInfo wireFormatInfo;    
     protected boolean disposed=false;
-    protected boolean shuttingDown=false;
-
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
         private final ConnectionContext context;
@@ -150,8 +148,6 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             } catch (Throwable ignore) {
             }
         }
-        
-        shuttingDown=false;
     }
     
     public void serviceTransportException(IOException e) {
@@ -165,17 +161,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
         
     public void serviceException(Throwable e) {
-        if( !disposed && !shuttingDown ) {
-            shuttingDown=true;
+        if( !disposed ) {
             if( log.isDebugEnabled() )
                 log.debug("Async error occurred: "+e,e);
             ConnectionError ce = new ConnectionError();
             ce.setException(e);
             dispatchAsync(ce);
-            try {
-                stop();
-            } catch (Exception ignore) {
-            }
         } 
     }
 
@@ -245,7 +236,6 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processShutdown(ShutdownInfo info) throws Throwable {
-        shuttingDown=true;
         stop();
         return null;
     }
