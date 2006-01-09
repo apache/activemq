@@ -98,7 +98,7 @@ public class MessageIdList extends Assert implements MessageListener {
                 semaphore.notifyAll();
             }
             if (verbose) {
-                System.out.println("###Êreceived message: " + message);
+                System.out.println("Received message: " + message);
             }
         } catch (JMSException e) {
             e.printStackTrace();
