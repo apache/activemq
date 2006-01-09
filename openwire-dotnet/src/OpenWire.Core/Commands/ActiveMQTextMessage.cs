@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class ActiveMQTextMessage : ActiveMQMessage
     {
-    			public const int ID_ActiveMQTextMessage = 1;
+    			public const byte ID_ActiveMQTextMessage = 28;
     			
 
 
@@ -26,7 +26,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_ActiveMQTextMessage;
         }
 

@@ -17,13 +17,9 @@ using OpenWire.Core.IO;
 
 namespace OpenWire.Core.IO
 {
-    public class ActiveMQTempDestinationMarshaller : AbstractCommandMarshaller
+    public abstract class ActiveMQTempDestinationMarshaller : AbstractCommandMarshaller
     {
 
-
-        public override Command CreateCommand() {
-            return new ActiveMQTempDestination();
-        }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);

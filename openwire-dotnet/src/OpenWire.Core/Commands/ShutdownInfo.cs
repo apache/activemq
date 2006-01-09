@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class ShutdownInfo : AbstractCommand
+    public class ShutdownInfo : BaseCommand
     {
-    			public const int ID_ShutdownInfo = 1;
+    			public const byte ID_ShutdownInfo = 11;
     			
 
 
@@ -26,7 +26,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_ShutdownInfo;
         }
 

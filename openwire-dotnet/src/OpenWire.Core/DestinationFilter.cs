@@ -13,7 +13,7 @@ namespace OpenWire.Core
 
 		public bool matches(ActiveMQMessage message) 
 		{
-			return matches(message.getJMSDestination());
+			return matches(message.Destination);
 		}
 
 		public abstract bool matches(ActiveMQDestination destination);

@@ -17,13 +17,9 @@ using OpenWire.Core.IO;
 
 namespace OpenWire.Core.IO
 {
-    public class MessageMarshaller : AbstractCommandMarshaller
+    public abstract class MessageMarshaller : AbstractCommandMarshaller
     {
 
-
-        public override Command CreateCommand() {
-            return new Message();
-        }
 
         public override void BuildCommand(Command command, BinaryReader dataIn) {
             base.BuildCommand(command, dataIn);
@@ -31,10 +27,10 @@ namespace OpenWire.Core.IO
             Message info = (Message) command;
             info.ProducerId = (ProducerId) CommandMarshallerRegistry.ProducerIdMarshaller.ReadCommand(dataIn);
             info.Destination = ReadDestination(dataIn);
-            info.TransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
+            info.TransactionId = (TransactionId) CommandMarshallerRegistry.ReadCommand(dataIn);
             info.OriginalDestination = ReadDestination(dataIn);
             info.MessageId = (MessageId) CommandMarshallerRegistry.MessageIdMarshaller.ReadCommand(dataIn);
-            info.OriginalTransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
+            info.OriginalTransactionId = (TransactionId) CommandMarshallerRegistry.ReadCommand(dataIn);
             info.GroupID = dataIn.ReadString();
             info.GroupSequence = dataIn.ReadInt32();
             info.CorrelationId = dataIn.ReadString();
@@ -44,9 +40,9 @@ namespace OpenWire.Core.IO
             info.ReplyTo = ReadDestination(dataIn);
             info.Timestamp = dataIn.ReadInt64();
             info.Type = dataIn.ReadString();
-            info.Content = (ByteSequence) CommandMarshallerRegistry.ByteSequenceMarshaller.ReadCommand(dataIn);
-            info.MarshalledProperties = (ByteSequence) CommandMarshallerRegistry.ByteSequenceMarshaller.ReadCommand(dataIn);
-            info.DataStructure = (DataStructure) CommandMarshallerRegistry.DataStructureMarshaller.ReadCommand(dataIn);
+            info.Content = ReadBytes(dataIn);
+            info.MarshalledProperties = ReadBytes(dataIn);
+            info.DataStructure = CommandMarshallerRegistry.ReadCommand(dataIn);
             info.TargetConsumerId = (ConsumerId) CommandMarshallerRegistry.ConsumerIdMarshaller.ReadCommand(dataIn);
             info.Compressed = dataIn.ReadBoolean();
             info.RedeliveryCounter = dataIn.ReadInt32();
@@ -63,10 +59,10 @@ namespace OpenWire.Core.IO
             Message info = (Message) command;
             CommandMarshallerRegistry.ProducerIdMarshaller.WriteCommand(info.ProducerId, dataOut);
             WriteDestination(info.Destination, dataOut);
-            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.TransactionId, dataOut);
+            CommandMarshallerRegistry.WriteCommand(info.TransactionId, dataOut);
             WriteDestination(info.OriginalDestination, dataOut);
             CommandMarshallerRegistry.MessageIdMarshaller.WriteCommand(info.MessageId, dataOut);
-            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.OriginalTransactionId, dataOut);
+            CommandMarshallerRegistry.WriteCommand(info.OriginalTransactionId, dataOut);
             dataOut.Write(info.GroupID);
             dataOut.Write(info.GroupSequence);
             dataOut.Write(info.CorrelationId);
@@ -76,9 +72,9 @@ namespace OpenWire.Core.IO
             WriteDestination(info.ReplyTo, dataOut);
             dataOut.Write(info.Timestamp);
             dataOut.Write(info.Type);
-            CommandMarshallerRegistry.ByteSequenceMarshaller.WriteCommand(info.Content, dataOut);
-            CommandMarshallerRegistry.ByteSequenceMarshaller.WriteCommand(info.MarshalledProperties, dataOut);
-            CommandMarshallerRegistry.DataStructureMarshaller.WriteCommand(info.DataStructure, dataOut);
+            WriteBytes(info.Content, dataOut);
+            WriteBytes(info.MarshalledProperties, dataOut);
+            CommandMarshallerRegistry.WriteCommand((Command) info.DataStructure, dataOut);
             CommandMarshallerRegistry.ConsumerIdMarshaller.WriteCommand(info.TargetConsumerId, dataOut);
             dataOut.Write(info.Compressed);
             dataOut.Write(info.RedeliveryCounter);

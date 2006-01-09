@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class BrokerId : AbstractCommand
     {
-    			public const int ID_BrokerId = 1;
+    			public const byte ID_BrokerId = 124;
     			
         string brokerId;
 
@@ -27,7 +27,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_BrokerId;
         }
 

@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class Response : AbstractCommand
+    public class Response : BaseCommand
     {
-    			public const int ID_Response = 1;
+    			public const byte ID_Response = 30;
     			
         short correlationId;
 
@@ -27,7 +27,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_Response;
         }
 

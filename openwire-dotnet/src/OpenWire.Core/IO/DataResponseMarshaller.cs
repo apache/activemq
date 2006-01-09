@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             DataResponse info = (DataResponse) command;
-            info.Data = (DataStructure) CommandMarshallerRegistry.DataStructureMarshaller.ReadCommand(dataIn);
+            info.Data = CommandMarshallerRegistry.ReadCommand(dataIn);
 
         }
 
@@ -37,7 +37,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             DataResponse info = (DataResponse) command;
-            CommandMarshallerRegistry.DataStructureMarshaller.WriteCommand(info.Data, dataOut);
+            CommandMarshallerRegistry.WriteCommand((Command) info.Data, dataOut);
 
         }
     }

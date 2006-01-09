@@ -14,11 +14,11 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class ExceptionResponse : AbstractCommand
+    public class ExceptionResponse : Response
     {
-    			public const int ID_ExceptionResponse = 1;
+    			public const byte ID_ExceptionResponse = 31;
     			
-        string exception;
+        byte[] exception;
 
 
 
@@ -27,14 +27,14 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_ExceptionResponse;
         }
 
 
         // Properties
 
-        public string Exception
+        public byte[] Exception
         {
             get
             {

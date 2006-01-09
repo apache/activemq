@@ -30,7 +30,7 @@ namespace OpenWire.Core.IO
 
             MessageAck info = (MessageAck) command;
             info.Destination = ReadDestination(dataIn);
-            info.TransactionId = (TransactionId) CommandMarshallerRegistry.TransactionIdMarshaller.ReadCommand(dataIn);
+            info.TransactionId = (TransactionId) CommandMarshallerRegistry.ReadCommand(dataIn);
             info.ConsumerId = (ConsumerId) CommandMarshallerRegistry.ConsumerIdMarshaller.ReadCommand(dataIn);
             info.AckType = dataIn.ReadByte();
             info.FirstMessageId = (MessageId) CommandMarshallerRegistry.MessageIdMarshaller.ReadCommand(dataIn);
@@ -44,7 +44,7 @@ namespace OpenWire.Core.IO
 
             MessageAck info = (MessageAck) command;
             WriteDestination(info.Destination, dataOut);
-            CommandMarshallerRegistry.TransactionIdMarshaller.WriteCommand(info.TransactionId, dataOut);
+            CommandMarshallerRegistry.WriteCommand(info.TransactionId, dataOut);
             CommandMarshallerRegistry.ConsumerIdMarshaller.WriteCommand(info.ConsumerId, dataOut);
             dataOut.Write(info.AckType);
             CommandMarshallerRegistry.MessageIdMarshaller.WriteCommand(info.FirstMessageId, dataOut);

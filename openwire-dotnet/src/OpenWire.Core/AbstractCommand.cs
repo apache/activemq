@@ -23,7 +23,7 @@ namespace OpenWire.Core
 			
 		}
 		
-         public virtual int GetCommandType()
+         public virtual byte GetCommandType()
          {
          	    return 0;
  	    }

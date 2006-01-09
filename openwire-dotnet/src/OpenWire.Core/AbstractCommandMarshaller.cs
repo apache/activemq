@@ -23,10 +23,22 @@ namespace OpenWire.Core
         
         public virtual void BuildCommand(Command command, BinaryReader dataIn) 
         {
+        		// empty body to allow generated code to call base method
         }
         
         public virtual void WriteCommand(Command command, BinaryWriter dataOut)
         {
+        		// empty body to allow generated code to call base method
+        }
+        
+        protected virtual ActiveMQDestination ReadDestination(BinaryReader dataIn)
+        {
+        		return (ActiveMQDestination) CommandMarshallerRegistry.ReadCommand(dataIn);
+        }
+        
+        protected virtual void WriteDestination(ActiveMQDestination command, BinaryWriter dataOut)
+        {
+        		CommandMarshallerRegistry.WriteCommand(command, dataOut);
         }
         
         protected virtual BrokerId[] ReadBrokerIds(BinaryReader dataIn)

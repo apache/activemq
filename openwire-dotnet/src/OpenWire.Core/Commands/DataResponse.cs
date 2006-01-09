@@ -14,11 +14,11 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class DataResponse : AbstractCommand
+    public class DataResponse : Response
     {
-    			public const int ID_DataResponse = 1;
+    			public const byte ID_DataResponse = 32;
     			
-        Command data;
+        DataStructure data;
 
 
 
@@ -27,14 +27,14 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_DataResponse;
         }
 
 
         // Properties
 
-        public Command Data
+        public DataStructure Data
         {
             get
             {

@@ -16,7 +16,7 @@ namespace OpenWire.Core.Commands
 {
     public class BaseCommand : AbstractCommand
     {
-    			public const int ID_BaseCommand = 1;
+    			public const byte ID_BaseCommand = 0;
     			
         short commandId;
         bool responseRequired;
@@ -28,7 +28,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_BaseCommand;
         }
 

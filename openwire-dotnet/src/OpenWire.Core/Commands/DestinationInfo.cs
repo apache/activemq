@@ -14,9 +14,9 @@ using OpenWire.Core;
 
 namespace OpenWire.Core.Commands
 {
-    public class DestinationInfo : AbstractCommand
+    public class DestinationInfo : BaseCommand
     {
-    			public const int ID_DestinationInfo = 1;
+    			public const byte ID_DestinationInfo = 8;
     			
         ConnectionId connectionId;
         ActiveMQDestination destination;
@@ -31,7 +31,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_DestinationInfo;
         }
 
