@@ -59,6 +59,7 @@ public class MarshallerFactory {
         add(new ConsumerInfoMarshaller());
         add(new ConnectionIdMarshaller());
         add(new ActiveMQTempTopicMarshaller());
+        add(new DiscoveryEventMarshaller());
         add(new ConnectionInfoMarshaller());
         add(new KeepAliveInfoMarshaller());
         add(new XATransactionIdMarshaller());

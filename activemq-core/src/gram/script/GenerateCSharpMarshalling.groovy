@@ -54,7 +54,8 @@ class GenerateCSharpMarshalling extends OpenWireScript {
                 baseClass = "ActiveMQMessageMarshaller"
             }
             
-            def notAbstract = jclass.simpleName != "ActiveMQDestination"
+            //def notAbstract = jclass.simpleName != "ActiveMQDestination"
+            def notAbstract = jclass.isAbstract() == false
             def abstractText = (notAbstract) ? "" : "abstract "
 					
 					 def marshallerType = jclass.simpleName + "Marshaller"
@@ -82,6 +83,7 @@ class GenerateCSharpMarshalling extends OpenWireScript {
 						writeMethodBuffer << """
 				case ${jclass.simpleName}.ID_${jclass.simpleName}:
 						${marshallerField}.WriteCommand(command, dataOut);
+						break;
 						
 """						
 					 }
@@ -132,13 +134,13 @@ namespace OpenWire.Core.IO
                     }
                     out << "            info.${propertyName} = "
 
-                    type = property.type.simpleName
+                    type = toCSharpType(property.type)
                     switch (type) {
-                        case "String":
+                        case "string":
                             out << "dataIn.ReadString()"
                             break;
 
-                        case "boolean":
+                        case "bool":
                             out << "dataIn.ReadBoolean()"
                             break;
 
@@ -190,8 +192,19 @@ namespace OpenWire.Core.IO
                             out << "ReadDataStructures(dataIn)"
                             break;
 
+                        case "DataStructure":
+                            out << "CommandMarshallerRegistry.ReadCommand(dataIn)"
+                            break;
+
+                        case "Throwable":
+                            out << "ReadThrowable(dataIn)"
+                            break;
+
                         default:
-                            out << "(${type}) CommandMarshallerRegistry.${type}Marshaller.ReadCommand(dataIn)"
+                        		if (property.type.isAbstract()) 
+                            	out << "(${type}) CommandMarshallerRegistry.ReadCommand(dataIn)"
+                        		else
+                            	out << "(${type}) CommandMarshallerRegistry.${type}Marshaller.ReadCommand(dataIn)"
                     }
                     out << """;
 """
@@ -218,13 +231,13 @@ namespace OpenWire.Core.IO
                     def getter = "info." + propertyName
                     out << "            "
 
-                    type = property.type.simpleName
+                    type = toCSharpType(property.type)
                     switch (type) {
-                        case "String":
+                        case "string":
                             out << "dataOut.Write($getter);"
                             break;
 
-                        case "boolean":
+                        case "bool":
                             out << "dataOut.Write($getter);"
                             break;
 
@@ -276,8 +289,19 @@ namespace OpenWire.Core.IO
                             out << "WriteDataStructures($getter, dataOut);"
                             break;
 
+                        case "DataStructure":
+                            out << "CommandMarshallerRegistry.WriteCommand((Command) $getter, dataOut);"
+                            break;
+
+                        case "Throwable":
+                            out << "WriteThrowable($getter, dataOut);"
+                            break;
+
                         default:
-                            out << "CommandMarshallerRegistry.${type}Marshaller.WriteCommand($getter, dataOut);"
+                        		if (property.type.isAbstract()) 
+	                            out << "CommandMarshallerRegistry.WriteCommand($getter, dataOut);"
+  		   										else                         		
+	                            out << "CommandMarshallerRegistry.${type}Marshaller.WriteCommand($getter, dataOut);"
                     }
                     out << """
 """
@@ -328,11 +352,11 @@ $readMethodBuffer
 
 				public static void WriteCommand(Command command, BinaryWriter dataOut) 
 				{
-				    int commandID = command.CommandType;
+				    byte commandID = command.GetCommandType();
 						dataOut.Write(commandID);
 						switch (commandID) 
 						{
-$readMethodBuffer						
+$writeMethodBuffer						
 								default:
 										throw new Exception("Unknown command type: " + commandID);
 						}

@@ -31,6 +31,8 @@ class GenerateCSharpClasses extends OpenWireScript {
         		it.getAnnotation("openwire:marshaller")!=null
         }
 
+			  def destinationNames = ['ActiveMQDestination', 'ActiveMQTempDestination', 'ActiveMQQueue', 'ActiveMQTopic', 'ActiveMQTempQueue', 'ActiveMQTempTopic']
+			  
         println "Generating Java marshalling code to directory ${destDir}"
 
         def buffer = new StringBuffer()
@@ -40,15 +42,24 @@ class GenerateCSharpClasses extends OpenWireScript {
 
         for (jclass in messageClasses) {
 
+						if (destinationNames.contains(jclass.simpleName)) continue
+						
             println "Processing $jclass.simpleName"
 
             def properties = jclass.declaredProperties.findAll { isValidProperty(it) }
             def file = new File(destDir, jclass.simpleName + ".cs")
 
+
+            String baseClass = jclass.superclass.simpleName
+            if (baseClass == "Object") {
+            		baseClass = "AbstractCommand"
+        		 }
+            /*
             String baseClass = "AbstractCommand"
             if (jclass.superclass?.simpleName == "ActiveMQMessage") {
                 baseClass = "ActiveMQMessage"
             }
+            */
 
             buffer << """
 ${jclass.simpleName}.class
@@ -73,7 +84,7 @@ namespace OpenWire.Core.Commands
 {
     public class ${jclass.simpleName} : $baseClass
     {
-    			public const int ID_${jclass.simpleName} = ${getEnum(jclass)};
+    			public const byte ID_${jclass.simpleName} = ${getOpenWireOpCode(jclass)};
     			
 """
                 for (property in properties) {
@@ -92,7 +103,7 @@ namespace OpenWire.Core.Commands
         // TODO generate ToString method
 
 
-        public override int GetCommandType() {
+        public override byte GetCommandType() {
             return ID_${jclass.simpleName};
         }
 
@@ -131,36 +142,6 @@ namespace OpenWire.Core.Commands
 }
 """
             }
-        }
-    }
-
-    def getEnum(type) {
-    			return 1
-		}
-		
-    def toCSharpType(type) {
-        def name = type.qualifiedName
-        switch (type) {
-            case "java.lang.String":
-                return "string"
-            case "java.lang.Throwable":
-                return "string"
-            case "java.lang.Throwable":
-                return "string"
-            case "boolean":
-                return "bool"
-            case "org.activeio.ByteSequence":
-                return "byte[]"
-            case "org.apache.activemq.command.DataStructure[]":
-                return "Command[]"
-            case "org.apache.activemq.command.DataStructure":
-                return "Command"
-            case "org.apache.activemq.message.ActiveMQDestination":
-                return "ActiveMQDestination"
-            case "org.apache.activemq.message.ActiveMQXid":
-                return "ActiveMQXid"
-            default:
-                return type.simpleName
         }
     }
 }

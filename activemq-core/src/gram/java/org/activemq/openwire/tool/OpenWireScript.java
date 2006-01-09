@@ -17,6 +17,7 @@
 package org.apache.activemq.openwire.tool;
 
 import org.codehaus.gram.GramSupport;
+import org.codehaus.jam.JAnnotation;
 import org.codehaus.jam.JAnnotationValue;
 import org.codehaus.jam.JClass;
 import org.codehaus.jam.JField;
@@ -69,5 +70,27 @@ public abstract class OpenWireScript extends GramSupport {
             }
         }
         return false; //j.getSuperclass()!=null && isMarshallAware(j.getSuperclass());
+    }
+    
+    /**
+     * Converts the Java type to a C# type name
+     */
+    public String toCSharpType(JClass type) {
+        String name = type.getSimpleName();
+        if (name.equals("String")) {
+            return "string";
+        }
+        else if (name.equals("Throwable") || name.equals("Exception") || name.equals("ByteSequence")) {
+            return "byte[]";
+        }
+        else if (name.equals("boolean")) {
+            return "bool";
+        }
+        else {
+            return name;
+        }
+    }
+    public String getOpenWireOpCode(JClass aClass) {
+        return annotationValue(aClass, "openwire:marshaller", "code", "0");
     }
 }
