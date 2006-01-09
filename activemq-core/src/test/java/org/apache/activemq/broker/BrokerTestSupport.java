@@ -117,7 +117,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected ConnectionInfo createConnectionInfo() throws Throwable {
         ConnectionInfo info = new ConnectionInfo();
         info.setConnectionId(new ConnectionId("connection:"+(++idGenerator)));
-        info.setClientId( info.getConnectionId().getConnectionId() );
+        info.setClientId( info.getConnectionId().getValue() );
         return info;
     }
     

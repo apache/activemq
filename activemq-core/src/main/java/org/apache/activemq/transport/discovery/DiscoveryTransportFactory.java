@@ -54,7 +54,7 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
 //                                +components.length);
 //            }
 //            Map parameters=new HashMap(compositData.getParameters());
-//            DiscoveryTransportServer server=new DiscoveryTransportServer(TransportFactory.bind(brokerId,components[0]));
+//            DiscoveryTransportServer server=new DiscoveryTransportServer(TransportFactory.bind(value,components[0]));
 //            IntrospectionSupport.setProperties(server,parameters,"discovery");
 //            DiscoveryAgent discoveryAgent=DiscoveryAgentFactory.createDiscoveryAgent(server.getDiscovery());
 //            // Use the host name to configure the group of the discovery agent.
@@ -64,7 +64,7 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
 //                }
 //            }
 //            if(!parameters.containsKey("discovery.brokerName")){
-//                parameters.put("discovery.brokerName",brokerId);
+//                parameters.put("discovery.brokerName",value);
 //            }
 //            IntrospectionSupport.setProperties(discoveryAgent,parameters,"discovery.");
 //            server.setDiscoveryAgent(discoveryAgent);

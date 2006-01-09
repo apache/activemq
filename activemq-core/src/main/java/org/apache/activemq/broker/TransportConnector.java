@@ -233,7 +233,7 @@ public class TransportConnector implements Connector {
         if (broker == null) {
             throw new IllegalArgumentException("You must specify the broker property. Maybe this connector should be added to a broker?");
         }
-        return TransportFactory.bind(broker.getBrokerId().getBrokerId(),uri);
+        return TransportFactory.bind(broker.getBrokerId().getValue(),uri);
     }
     
     public DiscoveryAgent getDiscoveryAgent() throws IOException {

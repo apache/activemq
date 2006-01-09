@@ -116,7 +116,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * Create a MessageConsumer
      * 
      * @param session
-     * @param consumerId
+     * @param value
      * @param dest
      * @param name
      * @param selector
@@ -140,7 +140,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 throw new IllegalArgumentException("Physical name of Destination should be valid: " + dest);
             }
 
-            String connectionID = session.connection.getConnectionInfo().getConnectionId().getConnectionId();
+            String connectionID = session.connection.getConnectionInfo().getConnectionId().getValue();
 
             if (physicalName.indexOf(connectionID) < 0) {
                 throw new InvalidDestinationException("Cannot use a Temporary destination from another Connection");
@@ -211,7 +211,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     /**
-     * @return Returns the consumerId.
+     * @return Returns the value.
      */
     protected ConsumerId getConsumerId() {
         return info.getConsumerId();
@@ -752,7 +752,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
     
     public String toString() {
-        return "ActiveMQMessageConsumer { consumerId=" +info.getConsumerId()+", started=" +started.get()+" }";
+        return "ActiveMQMessageConsumer { value=" +info.getConsumerId()+", started=" +started.get()+" }";
     }
 
 }

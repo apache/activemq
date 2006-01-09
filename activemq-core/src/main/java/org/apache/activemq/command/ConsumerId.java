@@ -28,7 +28,7 @@ public class ConsumerId implements DataStructure {
     
     protected String connectionId;
     protected long sessionId;
-    protected long consumerId;
+    protected long value;
 
     protected transient int hashCode;
     protected transient String key;
@@ -39,14 +39,14 @@ public class ConsumerId implements DataStructure {
     
     public ConsumerId(SessionId sessionId, long consumerId) {
         this.connectionId = sessionId.getConnectionId();
-        this.sessionId = sessionId.getSessionId();
-        this.consumerId=consumerId;
+        this.sessionId = sessionId.getValue();
+        this.value=consumerId;
     }
     
     public ConsumerId(ConsumerId id) {
         this.connectionId = id.getConnectionId();
         this.sessionId = id.getSessionId();
-        this.consumerId=id.getConsumerId();
+        this.value=id.getValue();
     }
     
     public SessionId getParentId() {
@@ -58,7 +58,7 @@ public class ConsumerId implements DataStructure {
 
     public int hashCode() {
         if( hashCode == 0 ) {
-            hashCode = connectionId.hashCode() ^ (int)sessionId ^ (int)consumerId;
+            hashCode = connectionId.hashCode() ^ (int)sessionId ^ (int)value;
         }
         return hashCode;
     }
@@ -70,7 +70,7 @@ public class ConsumerId implements DataStructure {
             return false;
         ConsumerId id = (ConsumerId) o;
         return sessionId==id.sessionId 
-               && consumerId==id.consumerId
+               && value==id.value
                && connectionId.equals(id.connectionId);
     }
     
@@ -80,7 +80,7 @@ public class ConsumerId implements DataStructure {
 
     public String toString() {
         if( key==null ) {
-            key = connectionId+":"+sessionId+":"+consumerId;
+            key = connectionId+":"+sessionId+":"+value;
         }
         return key;
     }
@@ -109,11 +109,11 @@ public class ConsumerId implements DataStructure {
     /**
      * @openwire:property version=1
      */
-    public long getConsumerId() {
-        return consumerId;
+    public long getValue() {
+        return value;
     }
-    public void setConsumerId(long consumerId) {
-        this.consumerId = consumerId;
+    public void setValue(long consumerId) {
+        this.value = consumerId;
     }
 
     public boolean isMarshallAware() {

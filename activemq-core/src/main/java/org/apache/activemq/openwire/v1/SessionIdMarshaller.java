@@ -65,7 +65,7 @@ public class SessionIdMarshaller extends org.apache.activemq.openwire.DataStream
 
         SessionId info = (SessionId)o;
         info.setConnectionId(readString(dataIn, bs));
-        info.setSessionId(unmarshalLong(wireFormat, dataIn, bs));
+        info.setValue(unmarshalLong(wireFormat, dataIn, bs));
 
     }
 
@@ -79,7 +79,7 @@ public class SessionIdMarshaller extends org.apache.activemq.openwire.DataStream
 
         int rc = super.marshal1(wireFormat, o, bs);
         rc += writeString(info.getConnectionId(), bs);
-        rc+=marshal1Long(wireFormat, info.getSessionId(), bs);
+        rc+=marshal1Long(wireFormat, info.getValue(), bs);
 
         return rc+0;
     }
@@ -96,7 +96,7 @@ public class SessionIdMarshaller extends org.apache.activemq.openwire.DataStream
 
         SessionId info = (SessionId)o;
         writeString(info.getConnectionId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getSessionId(), dataOut, bs);
+        marshal2Long(wireFormat, info.getValue(), dataOut, bs);
 
     }
 }

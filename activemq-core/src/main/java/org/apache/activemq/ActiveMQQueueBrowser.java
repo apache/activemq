@@ -242,7 +242,7 @@ public class ActiveMQQueueBrowser implements
     }
     
     public String toString() {
-        return "ActiveMQQueueBrowser { consumerId=" +consumerId+" }";
+        return "ActiveMQQueueBrowser { value=" +consumerId+" }";
     }
 
 }

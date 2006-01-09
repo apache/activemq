@@ -25,7 +25,7 @@ public class LocalTransactionId extends TransactionId {
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_LOCAL_TRANSACTION_ID;
 
     protected ConnectionId connectionId;
-    protected long transactionId;
+    protected long value;
 
     private transient String transactionKey;
     private transient int hashCode;
@@ -35,7 +35,7 @@ public class LocalTransactionId extends TransactionId {
     
     public LocalTransactionId(ConnectionId connectionId, long transactionId) {
         this.connectionId=connectionId;
-        this.transactionId=transactionId;
+        this.value=transactionId;
     }
 
     public byte getDataStructureType() {
@@ -52,7 +52,7 @@ public class LocalTransactionId extends TransactionId {
 
     public String getTransactionKey() {
         if( transactionKey==null ) {
-            transactionKey = "TX:"+connectionId+":"+transactionId;
+            transactionKey = "TX:"+connectionId+":"+value;
         }
         return transactionKey;
     }
@@ -63,7 +63,7 @@ public class LocalTransactionId extends TransactionId {
 
     public int hashCode() {
         if( hashCode == 0 ) {
-            hashCode = connectionId.hashCode() ^ (int)transactionId;
+            hashCode = connectionId.hashCode() ^ (int)value;
         }
         return hashCode;
     }
@@ -74,18 +74,18 @@ public class LocalTransactionId extends TransactionId {
         if( o == null || o.getClass()!=LocalTransactionId.class )
             return false;
         LocalTransactionId tx = (LocalTransactionId) o;
-        return transactionId==tx.transactionId 
+        return value==tx.value 
                 && connectionId.equals(tx.connectionId);
     }
     
     /**
      * @openwire:property version=1
      */
-    public long getTransactionId() {
-        return transactionId;
+    public long getValue() {
+        return value;
     }
-    public void setTransactionId(long transactionId) {
-        this.transactionId = transactionId;
+    public void setValue(long transactionId) {
+        this.value = transactionId;
     }
 
     /**

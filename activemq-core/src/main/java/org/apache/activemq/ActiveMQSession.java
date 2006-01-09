@@ -214,7 +214,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.acknowledgementMode = acknowledgeMode;
         this.asyncDispatch=asyncDispatch;
         
-        this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getSessionId());
+        this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getValue());
         setTransactionContext(new TransactionContext(connection));
         connection.addSession(this);
         stats = new JMSSessionStatsImpl(producers, consumers);
@@ -1433,7 +1433,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Returns the session id.
      * 
-     * @return sessionId - session id.
+     * @return value - session id.
      */
     protected SessionId getSessionId() {
         return info.getSessionId();
@@ -1601,7 +1601,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException
      */
     protected SessionInfo getSessionInfo() throws JMSException {
-        SessionInfo info = new SessionInfo(connection.getConnectionInfo(), getSessionId().getSessionId());
+        SessionInfo info = new SessionInfo(connection.getConnectionInfo(), getSessionId().getValue());
         return info;
     }
 

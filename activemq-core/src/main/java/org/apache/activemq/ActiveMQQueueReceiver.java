@@ -59,7 +59,7 @@ public class ActiveMQQueueReceiver extends ActiveMQMessageConsumer implements
 
     /**
      * @param theSession
-     * @param consumerId
+     * @param value
      * @param destination
      * @param messageSelector
      * @param prefetch

@@ -26,7 +26,7 @@ public class SessionId implements DataStructure  {
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.SESSION_ID;
 
     protected String connectionId;
-    protected long sessionId;
+    protected long value;
     
     protected transient int hashCode;
     protected transient String key;
@@ -36,23 +36,23 @@ public class SessionId implements DataStructure  {
     }
         
     public SessionId(ConnectionId connectionId, long sessionId) {
-        this.connectionId = connectionId.getConnectionId();
-        this.sessionId=sessionId;
+        this.connectionId = connectionId.getValue();
+        this.value=sessionId;
     }
     
     public SessionId(SessionId id) {
         this.connectionId = id.getConnectionId();
-        this.sessionId=id.getSessionId();
+        this.value=id.getValue();
     }
 
     public SessionId(ProducerId id) {
         this.connectionId = id.getConnectionId();
-        this.sessionId=id.getSessionId();
+        this.value=id.getSessionId();
     }
     
     public SessionId(ConsumerId id) {
         this.connectionId = id.getConnectionId();
-        this.sessionId=id.getSessionId();
+        this.value=id.getSessionId();
     }
     
     public ConnectionId getParentId() {
@@ -64,7 +64,7 @@ public class SessionId implements DataStructure  {
 
     public int hashCode() {
         if( hashCode == 0 ) {
-            hashCode = connectionId.hashCode() ^ (int)sessionId;
+            hashCode = connectionId.hashCode() ^ (int)value;
         }
         return hashCode;
     }
@@ -75,7 +75,7 @@ public class SessionId implements DataStructure  {
         if( o == null || o.getClass()!=SessionId.class )
             return false;
         SessionId id = (SessionId) o;
-        return sessionId==id.sessionId 
+        return value==id.value 
                && connectionId.equals(id.connectionId);
     }
 
@@ -96,16 +96,16 @@ public class SessionId implements DataStructure  {
     /**
      * @openwire:property version=1
      */
-    public long getSessionId() {
-        return sessionId;
+    public long getValue() {
+        return value;
     }
-    public void setSessionId(long sessionId) {
-        this.sessionId = sessionId;
+    public void setValue(long sessionId) {
+        this.value = sessionId;
     }
     
     public String toString() {
         if( key==null ) {
-            key = connectionId+":"+sessionId;
+            key = connectionId+":"+value;
         }
         return key;
     }

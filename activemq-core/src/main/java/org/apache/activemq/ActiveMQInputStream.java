@@ -69,7 +69,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
                 throw new IllegalArgumentException("Physical name of Destination should be valid: " + dest);
             }
 
-            String connectionID = connection.getConnectionInfo().getConnectionId().getConnectionId();
+            String connectionID = connection.getConnectionInfo().getConnectionId().getValue();
 
             if (physicalName.indexOf(connectionID) < 0) {
                 throw new InvalidDestinationException("Cannot use a Temporary destination from another Connection");
@@ -226,7 +226,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     }
 
     public String toString() {
-        return "ActiveMQInputStream { consumerId="+info.getConsumerId()+", producerId=" +producerId+" }";
+        return "ActiveMQInputStream { value="+info.getConsumerId()+", producerId=" +producerId+" }";
     }
 
 }
