@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 
 /**
- * @openwire:marshaller
+ * @openwire:marshaller code="110"
  * @version $Revision: 1.12 $
  */
 public class MessageId implements DataStructure {

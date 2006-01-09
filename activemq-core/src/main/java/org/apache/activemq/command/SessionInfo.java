@@ -20,7 +20,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="4"
  * @version $Revision: 1.13 $
  */
 public class SessionInfo extends BaseCommand {

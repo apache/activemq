@@ -17,7 +17,7 @@
 package org.apache.activemq.command;
 
 /**
- * @openwire:marshaller
+ * @openwire:marshaller code="111"
  * @version $Revision: 1.11 $
  */
 public class LocalTransactionId extends TransactionId {

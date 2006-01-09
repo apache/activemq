@@ -21,7 +21,7 @@ import org.apache.activemq.state.CommandVisitor;
 /**
  * Used to start and stop transports as well as terminating clients.
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="14"
  * 
  * @version $Revision: 1.1 $
  */

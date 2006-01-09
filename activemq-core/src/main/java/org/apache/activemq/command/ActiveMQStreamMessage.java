@@ -96,7 +96,7 @@ import java.util.zip.InflaterInputStream;
  * support a <code>String</code> conversion, attempting to read a null value
  * as a <code>char</code> must throw a <code>NullPointerException</code>.
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="27"
  * @see javax.jms.Session#createStreamMessage()
  * @see javax.jms.BytesMessage
  * @see javax.jms.MapMessage

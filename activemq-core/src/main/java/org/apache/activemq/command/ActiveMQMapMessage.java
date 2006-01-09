@@ -68,7 +68,7 @@ import org.apache.activemq.util.MarshallingSupport;
  * <code>String</code> conversion, attempting to read a null value as a <code>char</code> must throw a
  * <code>NullPointerException</code>.
  *
- * @openwire:marshaller
+ * @openwire:marshaller code="25"
  * @see javax.jms.Session#createMapMessage()
  * @see javax.jms.BytesMessage
  * @see javax.jms.Message

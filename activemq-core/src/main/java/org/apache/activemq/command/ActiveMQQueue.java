@@ -20,7 +20,7 @@ import javax.jms.JMSException;
 import javax.jms.Queue;
 
 /**
- * @openwire:marshaller
+ * @openwire:marshaller code="100"
  * @version $Revision: 1.5 $
  */
 public class ActiveMQQueue extends ActiveMQDestination implements Queue {

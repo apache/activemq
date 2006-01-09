@@ -63,7 +63,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * <CODE>MessageNotReadableException</CODE> is thrown. <P> If a client attempts to write a message in read-only mode, a
  * <CODE>MessageNotWriteableException</CODE> is thrown.
  *
- * @openwire:marshaller
+ * @openwire:marshaller code=24
  * @see javax.jms.Session#createBytesMessage()
  * @see javax.jms.MapMessage
  * @see javax.jms.Message

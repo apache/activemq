@@ -44,7 +44,6 @@ public interface CommandTypes {
     byte  KEEP_ALIVE_INFO                   = 10;
     byte  SHUTDOWN_INFO                     = 11;
     byte  REMOVE_INFO                       = 12;
-    byte  REDELIVERY_POLICY                 = 13;
     byte  CONTROL_COMMAND                   = 14;
     byte  FLUSH_COMMAND                     = 15;
     

@@ -25,7 +25,7 @@ import org.apache.activemq.state.CommandVisitor;
  * that the node has in his cluster.  This is the broker helping the client out
  * in discovering other nodes in the cluster.
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="2"
  * @version $Revision: 1.7 $
  */
 public class BrokerInfo extends BaseCommand {

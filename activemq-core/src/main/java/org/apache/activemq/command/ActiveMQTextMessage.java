@@ -38,7 +38,7 @@ import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="28"
  * @version $Revision$
  */
 public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage {

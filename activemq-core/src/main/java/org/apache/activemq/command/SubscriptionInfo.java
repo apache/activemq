@@ -21,7 +21,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * 
- * @openwire:marshaller
+ * @openwire:marshaller code="55"
  * @version $Revision: 1.6 $
  */
 public class SubscriptionInfo implements DataStructure {

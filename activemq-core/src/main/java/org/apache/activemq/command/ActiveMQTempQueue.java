@@ -20,7 +20,7 @@ import javax.jms.JMSException;
 import javax.jms.TemporaryQueue;
 
 /**
- * @openwire:marshaller
+ * @openwire:marshaller code="102"
  * @version $Revision: 1.6 $
  */
 public class ActiveMQTempQueue extends ActiveMQTempDestination implements TemporaryQueue {
