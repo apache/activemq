@@ -19,7 +19,7 @@ namespace OpenWire.Core.Commands
     			public const byte ID_SessionId = 121;
     			
         string connectionId;
-        long sessionId;
+        long value;
 
 
 
@@ -47,15 +47,15 @@ namespace OpenWire.Core.Commands
             }            
         }
 
-        public long SessionIdValue
+        public long Value
         {
             get
             {
-                return sessionId;
+                return value;
             }
             set
             {
-                sessionId = value;
+                value = value;
             }            
         }
 

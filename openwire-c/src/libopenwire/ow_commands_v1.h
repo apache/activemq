@@ -54,7 +54,7 @@ typedef struct ow_SessionId {
 
    ow_byte structType;
    ow_string *connectionId;
-   ow_long sessionId;
+   ow_long value;
 
 } ow_SessionId;
 ow_SessionId *ow_SessionId_create(apr_pool_t *pool);
@@ -92,7 +92,7 @@ ow_boolean ow_is_a_TransactionId(ow_DataStructure *object);
 typedef struct ow_ConnectionId {
 
    ow_byte structType;
-   ow_string *connectionId;
+   ow_string *value;
 
 } ow_ConnectionId;
 ow_ConnectionId *ow_ConnectionId_create(apr_pool_t *pool);
@@ -161,7 +161,7 @@ typedef struct ow_ConsumerId {
    ow_byte structType;
    ow_string *connectionId;
    ow_long sessionId;
-   ow_long consumerId;
+   ow_long value;
 
 } ow_ConsumerId;
 ow_ConsumerId *ow_ConsumerId_create(apr_pool_t *pool);
@@ -184,7 +184,7 @@ ow_boolean ow_is_a_JournalTopicAck(ow_DataStructure *object);
 typedef struct ow_BrokerId {
 
    ow_byte structType;
-   ow_string *brokerId;
+   ow_string *value;
 
 } ow_BrokerId;
 ow_BrokerId *ow_BrokerId_create(apr_pool_t *pool);
@@ -349,7 +349,7 @@ ow_boolean ow_is_a_BrokerInfo(ow_DataStructure *object);
 typedef struct ow_LocalTransactionId {
 
    ow_byte structType;
-   ow_long transactionId;
+   ow_long value;
    struct ow_ConnectionId *connectionId;
 
 } ow_LocalTransactionId;
@@ -413,6 +413,18 @@ typedef struct ow_Response {
 } ow_Response;
 ow_Response *ow_Response_create(apr_pool_t *pool);
 ow_boolean ow_is_a_Response(ow_DataStructure *object);
+
+typedef struct ow_ConnectionError {
+
+   ow_byte structType;
+   ow_short commandId;
+   ow_boolean responseRequired;
+   ow_throwable *exception;
+   struct ow_ConnectionId *connectionId;
+
+} ow_ConnectionError;
+ow_ConnectionError *ow_ConnectionError_create(apr_pool_t *pool);
+ow_boolean ow_is_a_ConnectionError(ow_DataStructure *object);
 
 typedef struct ow_ConsumerInfo {
 

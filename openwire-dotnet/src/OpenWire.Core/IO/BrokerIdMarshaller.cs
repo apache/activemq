@@ -29,7 +29,7 @@ namespace OpenWire.Core.IO
             base.BuildCommand(command, dataIn);
 
             BrokerId info = (BrokerId) command;
-            info.BrokerIdValue = dataIn.ReadString();
+            info.Value = dataIn.ReadString();
 
         }
 
@@ -37,7 +37,7 @@ namespace OpenWire.Core.IO
             base.WriteCommand(command, dataOut);
 
             BrokerId info = (BrokerId) command;
-            dataOut.Write(info.BrokerIdValue);
+            dataOut.Write(info.Value);
 
         }
     }

@@ -18,7 +18,7 @@ namespace OpenWire.Core.Commands
     {
     			public const byte ID_LocalTransactionId = 111;
     			
-        long transactionId;
+        long value;
         ConnectionId connectionId;
 
 
@@ -35,15 +35,15 @@ namespace OpenWire.Core.Commands
 
         // Properties
 
-        public long TransactionId
+        public long Value
         {
             get
             {
-                return transactionId;
+                return value;
             }
             set
             {
-                transactionId = value;
+                value = value;
             }            
         }
 
