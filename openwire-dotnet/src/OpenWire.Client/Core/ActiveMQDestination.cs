@@ -7,7 +7,7 @@ namespace OpenWire.Client.Core {
         /// <summary>
         /// Summary description for ActiveMQDestination.
         /// </summary>
-        public abstract class ActiveMQDestination : AbstractCommand, Destination {
+        public abstract class ActiveMQDestination : AbstractCommand, IDestination {
 
                 /**
                  * Topic Destination object
@@ -165,7 +165,7 @@ namespace OpenWire.Client.Core {
                  * @return a descriptive string for this queue or topic
                  */
                 public static String Inspect(ActiveMQDestination destination) {
-                        if (destination is Topic) {
+                        if (destination is ITopic) {
                                 return "Topic(" + destination.ToString() + ")"; 
                         } else {
                                 return "Queue(" + destination.ToString() + ")"; 
@@ -177,20 +177,20 @@ namespace OpenWire.Client.Core {
                  * @return @throws JMSException
                  * @throws javax.jms.JMSException
                  */
-                public static ActiveMQDestination transformDestination(Destination destination) {
+                public static ActiveMQDestination transformDestination(IDestination destination) {
                         ActiveMQDestination result = null;
                         if (destination != null) {
                                 if (destination is ActiveMQDestination) {
                                         result = (ActiveMQDestination) destination; 
                                 } else {
-                                        if (destination is TemporaryQueue) {
-                                                result = new ActiveMQTempQueue(((Queue) destination).QueueName); 
-                                        } else if (destination is TemporaryTopic) {
-                                                result = new ActiveMQTempTopic(((Topic) destination).TopicName); 
-                                        } else if (destination is Queue) {
-                                                result = new ActiveMQQueue(((Queue) destination).QueueName); 
-                                        } else if (destination is Topic) {
-                                                result = new ActiveMQTopic(((Topic) destination).TopicName); 
+                                        if (destination is ITemporaryQueue) {
+                                                result = new ActiveMQTempQueue(((IQueue) destination).QueueName); 
+                                        } else if (destination is ITemporaryTopic) {
+                                                result = new ActiveMQTempTopic(((ITopic) destination).TopicName); 
+                                        } else if (destination is IQueue) {
+                                                result = new ActiveMQQueue(((IQueue) destination).QueueName); 
+                                        } else if (destination is ITopic) {
+                                                result = new ActiveMQTopic(((ITopic) destination).TopicName); 
                                         } 
                                 } 
                         }

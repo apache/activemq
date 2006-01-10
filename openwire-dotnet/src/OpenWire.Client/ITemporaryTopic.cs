@@ -5,6 +5,6 @@ namespace OpenWire.Client {
         /// <summary>
         /// Summary description for TemporaryTopic.
         /// </summary>
-        public interface TemporaryTopic : Destination {
+        public interface ITemporaryTopic : IDestination {
         } 
 }

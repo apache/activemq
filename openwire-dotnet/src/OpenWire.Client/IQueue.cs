@@ -3,11 +3,11 @@ using OpenWire.Client.Commands;
 
 namespace OpenWire.Client {
         /// <summary>
-        /// Summary description for Topic.
+        /// Summary description for IQueue.
         /// </summary>
-        public interface Topic : Destination {
+        public interface IQueue : IDestination {
 
-                String TopicName {
+                String QueueName {
                         get; 
                 } 
         } 
