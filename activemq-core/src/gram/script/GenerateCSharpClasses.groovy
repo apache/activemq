@@ -31,7 +31,8 @@ class GenerateCSharpClasses extends OpenWireScript {
         		it.getAnnotation("openwire:marshaller")!=null
         }
 
-			  def manuallyMaintainedClasses = ['ActiveMQDestination', 'ActiveMQTempDestination', 'ActiveMQQueue', 'ActiveMQTopic', 'ActiveMQTempQueue', 'ActiveMQTempTopic', 'BaseCommand']
+			  def manuallyMaintainedClasses = ['ActiveMQDestination', 'ActiveMQTempDestination', 'ActiveMQQueue', 'ActiveMQTopic', 'ActiveMQTempQueue', 'ActiveMQTempTopic', 'BaseCommand',
+			  'ActiveMQMessage', 'ActiveMQTextMessage', 'ActiveMQMapMessage', 'ActiveMQBytesMessage', 'ActiveMQStreamMessage', 'ActiveMQStreamMessage']
 			  
         println "Generating Java marshalling code to directory ${destDir}"
 
