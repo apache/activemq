@@ -50,6 +50,7 @@ import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
@@ -1276,6 +1277,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             }
             else if (command instanceof ControlCommand) {
                 onControlCommand((ControlCommand) command);
+            }
+            else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
+                onAsyncException(((ConnectionError)command).getException());
             }
         }
     }
