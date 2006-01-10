@@ -27,7 +27,7 @@ public class ProducerId implements DataStructure {
 
     protected String connectionId;
     protected long sessionId;
-    protected long producerId;
+    protected long value;
 
     protected transient int hashCode;
     protected transient String key;
@@ -39,20 +39,20 @@ public class ProducerId implements DataStructure {
     public ProducerId(SessionId sessionId, long producerId) {
         this.connectionId = sessionId.getConnectionId();
         this.sessionId = sessionId.getValue();
-        this.producerId=producerId;
+        this.value=producerId;
     }
 
     public ProducerId(ProducerId id) {
         this.connectionId = id.getConnectionId();
         this.sessionId = id.getSessionId();
-        this.producerId=id.getProducerId();
+        this.value=id.getValue();
     }
 
     public ProducerId(String producerKey) {
         // Parse off the producerId
         int p = producerKey.lastIndexOf(":");
         if( p >= 0 ) {
-            producerId = Long.parseLong(producerKey.substring(p+1));
+            value = Long.parseLong(producerKey.substring(p+1));
             producerKey = producerKey.substring(0,p);
         }
         setProducerSessionKey(producerKey);
@@ -67,7 +67,7 @@ public class ProducerId implements DataStructure {
 
     public int hashCode() {
         if( hashCode == 0 ) {
-            hashCode = connectionId.hashCode() ^ (int)sessionId ^ (int)producerId;
+            hashCode = connectionId.hashCode() ^ (int)sessionId ^ (int)value;
         }
         return hashCode;
     }
@@ -79,7 +79,7 @@ public class ProducerId implements DataStructure {
             return false;
         ProducerId id = (ProducerId) o;
         return sessionId==id.sessionId 
-               && producerId==id.producerId
+               && value==id.value
                && connectionId.equals(id.connectionId);
     }
 
@@ -100,7 +100,7 @@ public class ProducerId implements DataStructure {
 
     public String toString() {
         if( key == null ) {
-            key=connectionId+":"+sessionId+":"+producerId;
+            key=connectionId+":"+sessionId+":"+value;
         }
         return key;
     }
@@ -120,11 +120,11 @@ public class ProducerId implements DataStructure {
     /**
      * @openwire:property version=1
      */
-    public long getProducerId() {
-        return producerId;
+    public long getValue() {
+        return value;
     }
-    public void setProducerId(long producerId) {
-        this.producerId = producerId;
+    public void setValue(long producerId) {
+        this.value = producerId;
     }
     
     /**

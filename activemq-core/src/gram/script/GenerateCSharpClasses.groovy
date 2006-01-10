@@ -31,7 +31,7 @@ class GenerateCSharpClasses extends OpenWireScript {
         		it.getAnnotation("openwire:marshaller")!=null
         }
 
-			  def destinationNames = ['ActiveMQDestination', 'ActiveMQTempDestination', 'ActiveMQQueue', 'ActiveMQTopic', 'ActiveMQTempQueue', 'ActiveMQTempTopic']
+			  def manuallyMaintainedClasses = ['ActiveMQDestination', 'ActiveMQTempDestination', 'ActiveMQQueue', 'ActiveMQTopic', 'ActiveMQTempQueue', 'ActiveMQTempTopic', 'BaseCommand']
 			  
         println "Generating Java marshalling code to directory ${destDir}"
 
@@ -42,7 +42,7 @@ class GenerateCSharpClasses extends OpenWireScript {
 
         for (jclass in messageClasses) {
 
-						if (destinationNames.contains(jclass.simpleName)) continue
+						if (manuallyMaintainedClasses.contains(jclass.simpleName)) continue
 						
             println "Processing $jclass.simpleName"
 
@@ -114,10 +114,6 @@ namespace OpenWire.Core.Commands
                     def type = toCSharpType(property.type)
                     def name = decapitalize(property.simpleName)
                     def propertyName = property.simpleName
-                    if (propertyName == jclass.simpleName) {
-                        // TODO think of a better naming convention :)
-                    		propertyName += "Value"
-                    }
                     def getter = capitalize(property.getter.simpleName)
                     def setter = capitalize(property.setter.simpleName)
 
@@ -125,14 +121,8 @@ namespace OpenWire.Core.Commands
                     out << """
         public $type $propertyName
         {
-            get
-            {
-                return $name;
-            }
-            set
-            {
-                $name = value;
-            }            
+            get { return $name; }
+            set { this.$name = value; }            
         }
 """
                 }
