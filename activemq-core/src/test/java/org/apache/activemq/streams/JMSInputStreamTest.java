@@ -58,6 +58,7 @@ public class JMSInputStreamTest extends JmsTestSupport {
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
+        super.setAutoFail(true);
         super.setUp();
         connection2 = (ActiveMQConnection) factory.createConnection(userName, password);
         connections.add(connection2);
