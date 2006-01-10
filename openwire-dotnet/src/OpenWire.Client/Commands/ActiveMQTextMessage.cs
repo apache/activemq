@@ -13,26 +13,34 @@ using System.Collections;
 using OpenWire.Client;
 using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Commands
-{
-    public class ActiveMQTextMessage : ActiveMQMessage
-    {
-    			public const byte ID_ActiveMQTextMessage = 28;
-    			
+namespace OpenWire.Client.Commands {
+        public class ActiveMQTextMessage : ActiveMQMessage, ITextMessage {
+                public const byte ID_ActiveMQTextMessage = 28;
 
 
-
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+                private String text;
 
 
-        public override byte GetCommandType() {
-            return ID_ActiveMQTextMessage;
-        }
+                // TODO generate Equals method
+                // TODO generate GetHashCode method
+                // TODO generate ToString method
 
 
-        // Properties
+                public override byte GetCommandType() {
+                        return ID_ActiveMQTextMessage; 
+                }
 
-    }
+
+                // Properties
+
+                public string Text {
+                        get {
+                                if (text == null) {
+                                        // TODO parse from the content
+                                }
+                                return text; 
+                        }
+                        set { this.text = value; } 
+                } 
+        } 
 }

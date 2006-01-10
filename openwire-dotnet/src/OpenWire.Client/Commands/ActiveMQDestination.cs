@@ -2,7 +2,7 @@ using System;
 using OpenWire.Client.Commands;
 using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Core {
+namespace OpenWire.Client.Commands {
         
         /// <summary>
         /// Summary description for ActiveMQDestination.
@@ -177,7 +177,7 @@ namespace OpenWire.Client.Core {
                  * @return @throws JMSException
                  * @throws javax.jms.JMSException
                  */
-                public static ActiveMQDestination transformDestination(IDestination destination) {
+                public static ActiveMQDestination Transform(IDestination destination) {
                         ActiveMQDestination result = null;
                         if (destination != null) {
                                 if (destination is ActiveMQDestination) {
