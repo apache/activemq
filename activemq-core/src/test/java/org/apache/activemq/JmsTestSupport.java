@@ -103,6 +103,7 @@ public class JmsTestSupport extends CombinationTestSupport {
     }
 
     protected void setUp() throws Exception {
+        super.setUp();
         broker = createBroker();
         broker.start();
         factory = createConnectionFactory();
@@ -119,6 +120,7 @@ public class JmsTestSupport extends CombinationTestSupport {
             }
         }
         broker.stop();
+        super.tearDown();
     }
     
     protected void safeClose(Connection c) {
