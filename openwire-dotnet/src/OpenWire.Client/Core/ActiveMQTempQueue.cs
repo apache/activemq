@@ -7,7 +7,7 @@ namespace OpenWire.Client.Core {
         /// <summary>
         /// Summary description for ActiveMQTempQueue.
         /// </summary>
-        public class ActiveMQTempQueue : ActiveMQDestination, TemporaryQueue {
+        public class ActiveMQTempQueue : ActiveMQDestination, ITemporaryQueue {
                 public const byte ID_ActiveMQTempQueue = 102;
 
                 public ActiveMQTempQueue() : base() {

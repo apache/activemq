@@ -7,7 +7,7 @@ namespace OpenWire.Client.Core {
         /// <summary>
         /// Summary description for ActiveMQTopic.
         /// </summary>
-        public class ActiveMQTopic : ActiveMQDestination, Topic {
+        public class ActiveMQTopic : ActiveMQDestination, ITopic {
                 public const byte ID_ActiveMQTopic = 101;
 
                 public ActiveMQTopic() : base() {

@@ -7,7 +7,7 @@ namespace OpenWire.Client.Core {
         /// <summary>
         /// Summary description for ActiveMQQueue.
         /// </summary>
-        public class ActiveMQQueue : ActiveMQDestination, Queue {
+        public class ActiveMQQueue : ActiveMQDestination, IQueue {
                 public const byte ID_ActiveMQQueue = 100;
 
                 public ActiveMQQueue() : base() {

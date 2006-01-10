@@ -3,8 +3,8 @@ using OpenWire.Client.Commands;
 
 namespace OpenWire.Client {
         /// <summary>
-        /// Summary description for TemporaryQueue.
+        /// Summary description for ITemporaryQueue.
         /// </summary>
-        public interface TemporaryQueue : Destination {
+        public interface ITemporaryQueue : IDestination {
         } 
 }

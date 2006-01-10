@@ -7,7 +7,7 @@ namespace OpenWire.Client.Core {
         /// <summary>
         /// Summary description for ActiveMQTempTopic.
         /// </summary>
-        public class ActiveMQTempTopic : ActiveMQDestination, TemporaryTopic {
+        public class ActiveMQTempTopic : ActiveMQDestination, ITemporaryTopic {
                 public const byte ID_ActiveMQTempTopic = 103;
 
                 public ActiveMQTempTopic() : base() {
