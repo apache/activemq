@@ -359,8 +359,12 @@ public class DemandForwardingBridge implements Bridge {
                             
                         }
                     }
-                    localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched));
-                                   
+                    sub.dispatched++;
+                    if( sub.dispatched > (sub.localInfo.getPrefetchSize()*.75) ) {
+                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, sub.dispatched));
+                        sub.dispatched=0;
+                    } 
+                                                     
                 }
             } else if ( command.isBrokerInfo() ) {
                 synchronized( this ) {
