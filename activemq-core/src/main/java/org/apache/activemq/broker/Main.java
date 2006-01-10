@@ -62,7 +62,7 @@ public class Main {
 
     public static final String BROKER_FACTORY_CLASS = "org.apache.activemq.broker.BrokerFactory";
     public static final String DEFAULT_CONFIG_URI   = "xbean:activemq.xml";
-    public static final String DEFAULT_JMX_URL      = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxconnector";
+    public static final String DEFAULT_JMX_URL      = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi";
     public static final String DEFAULT_JMX_DOMAIN   = "org.apache.activemq";
 
     private static final String DEFAULT_KEY_BROKER_NAME = "BrokerName";

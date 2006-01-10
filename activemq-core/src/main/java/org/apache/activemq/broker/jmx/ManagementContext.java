@@ -58,7 +58,7 @@ public class ManagementContext implements Service {
 
     private boolean createConnector = true;
     private int connectorPort = 1099;
-    private String connectorPath = "/jmxconnector";
+    private String connectorPath = "/jmxrmi";
 
     private JMXConnectorServer connectorServer;
 
