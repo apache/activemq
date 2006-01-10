@@ -22,15 +22,15 @@ import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.transport.TransportFactory;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.ArrayList;
 import java.net.URI;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClientsTest {
-    protected List bridges = new ArrayList();
+    protected List bridges;
 
     protected void bridgeAllBrokers(String groupName) throws Exception {
         for (int i=1; i<=BROKER_COUNT; i++) {
@@ -77,5 +77,7 @@ public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClien
         for (Iterator i=brokers.values().iterator(); i.hasNext();) {
             ((BrokerItem)i.next()).broker.addConnector("tcp://localhost:" + (61616 + j++));
         }
+
+        bridges = new ArrayList();
     }
 }

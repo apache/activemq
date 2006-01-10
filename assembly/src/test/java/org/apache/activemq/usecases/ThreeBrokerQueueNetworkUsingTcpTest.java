@@ -29,7 +29,7 @@ import java.net.URI;
  * @version $Revision: 1.1.1.1 $
  */
 public class ThreeBrokerQueueNetworkUsingTcpTest extends ThreeBrokerQueueNetworkTest {
-    protected List bridges = new ArrayList();
+    protected List bridges;
 
     protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {
         List remoteTransports = remoteBroker.getTransportConnectors();
@@ -56,5 +56,11 @@ public class ThreeBrokerQueueNetworkUsingTcpTest extends ThreeBrokerQueueNetwork
         }
 
         MAX_SETUP_TIME = 2000;
+    }
+
+    public void setUp() throws Exception {
+        super.setUp();
+
+        bridges = new ArrayList();
     }
 }
