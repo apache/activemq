@@ -50,11 +50,23 @@ namespace OpenWire.Client {
                 }
 
                 public IQueue GetQueue(string name) {
-                        return new ActiveMQQueue(name);
+                        return new ActiveMQQueue(name); 
                 }
 
                 public ITopic GetTopic(string name) {
                         return new ActiveMQTopic(name); 
+                }
+
+                public IMessage CreateMessage() {
+                        return new ActiveMQMessage(); 
+                }
+
+                public ITextMessage CreateTextMessage() {
+                        return new ActiveMQTextMessage(); 
+                }
+
+                public ITextMessage CreateTextMessage(string text) {
+                        return new ActiveMQTextMessage(text); 
                 }
 
                 // Implementation methods

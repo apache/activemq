@@ -14,6 +14,14 @@ namespace OpenWire.Client {
                 private string password;
                 private string clientId;
 
+                public ConnectionFactory() {
+                }
+
+                public ConnectionFactory(string host, int port) {
+                        this.host = host;
+                        this.port = port; 
+                }
+
                 public IConnection CreateConnection() {
                         return CreateConnection(userName, password); 
                 }
