@@ -177,6 +177,10 @@ namespace OpenWire.Client.IO
                             out << "ReadDestination(dataIn)"
                             break;
 
+                        case "BrokerError":
+                            out << "ReadBrokerError(dataIn)"
+                            break;
+
                         case "BrokerId[]":
                             out << "ReadBrokerIds(dataIn)"
                             break;
@@ -272,6 +276,10 @@ namespace OpenWire.Client.IO
 
                         case "ActiveMQDestination":
                             out << "WriteDestination($getter, dataOut);"
+                            break;
+
+                        case "BrokerError":
+                            out << "WriteBrokerError($getter, dataOut);"
                             break;
 
                         case "BrokerId[]":

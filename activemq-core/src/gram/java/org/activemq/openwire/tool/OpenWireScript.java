@@ -80,7 +80,10 @@ public abstract class OpenWireScript extends GramSupport {
         if (name.equals("String")) {
             return "string";
         }
-        else if (name.equals("Throwable") || name.equals("Exception") || name.equals("ByteSequence")) {
+        else if (name.equals("Throwable") || name.equals("Exception")) {
+            return "BrokerError";
+        }
+        else if (name.equals("ByteSequence")) {
             return "byte[]";
         }
         else if (name.equals("boolean")) {
