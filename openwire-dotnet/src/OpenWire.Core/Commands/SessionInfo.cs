@@ -36,14 +36,8 @@ namespace OpenWire.Core.Commands
 
         public SessionId SessionId
         {
-            get
-            {
-                return sessionId;
-            }
-            set
-            {
-                sessionId = value;
-            }            
+            get { return sessionId; }
+            set { this.sessionId = value; }            
         }
 
     }

@@ -30,7 +30,7 @@ namespace OpenWire.Core.IO
 
             ProducerId info = (ProducerId) command;
             info.ConnectionId = dataIn.ReadString();
-            info.ProducerIdValue = dataIn.ReadInt64();
+            info.Value = dataIn.ReadInt64();
             info.SessionId = dataIn.ReadInt64();
 
         }
@@ -40,7 +40,7 @@ namespace OpenWire.Core.IO
 
             ProducerId info = (ProducerId) command;
             dataOut.Write(info.ConnectionId);
-            dataOut.Write(info.ProducerIdValue);
+            dataOut.Write(info.Value);
             dataOut.Write(info.SessionId);
 
         }

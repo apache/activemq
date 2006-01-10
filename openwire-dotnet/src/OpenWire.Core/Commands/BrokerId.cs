@@ -36,14 +36,8 @@ namespace OpenWire.Core.Commands
 
         public string Value
         {
-            get
-            {
-                return value;
-            }
-            set
-            {
-                value = value;
-            }            
+            get { return value; }
+            set { this.value = value; }            
         }
 
     }

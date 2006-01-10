@@ -38,38 +38,20 @@ namespace OpenWire.Core.Commands
 
         public byte[] Magic
         {
-            get
-            {
-                return magic;
-            }
-            set
-            {
-                magic = value;
-            }            
+            get { return magic; }
+            set { this.magic = value; }            
         }
 
         public int Version
         {
-            get
-            {
-                return version;
-            }
-            set
-            {
-                version = value;
-            }            
+            get { return version; }
+            set { this.version = value; }            
         }
 
         public int Options
         {
-            get
-            {
-                return options;
-            }
-            set
-            {
-                options = value;
-            }            
+            get { return options; }
+            set { this.options = value; }            
         }
 
     }

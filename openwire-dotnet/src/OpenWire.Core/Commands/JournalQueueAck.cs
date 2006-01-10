@@ -37,26 +37,14 @@ namespace OpenWire.Core.Commands
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public MessageAck MessageAck
         {
-            get
-            {
-                return messageAck;
-            }
-            set
-            {
-                messageAck = value;
-            }            
+            get { return messageAck; }
+            set { this.messageAck = value; }            
         }
 
     }

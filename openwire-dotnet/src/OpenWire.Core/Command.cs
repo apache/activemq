@@ -1,12 +1,9 @@
 using System;
 
-namespace OpenWire.Core
-{
-	/// <summary>
-	/// An OpenWire command
-	/// </summary>
-	public interface Command : DataStructure {
-	
-	}
+namespace OpenWire.Core {
+        /// <summary>
+        /// An OpenWire command
+        /// </summary>
+        public interface Command : DataStructure {
+        } 
 }
-

@@ -48,158 +48,80 @@ namespace OpenWire.Core.Commands
 
         public ConsumerId ConsumerId
         {
-            get
-            {
-                return consumerId;
-            }
-            set
-            {
-                consumerId = value;
-            }            
+            get { return consumerId; }
+            set { this.consumerId = value; }            
         }
 
         public bool Browser
         {
-            get
-            {
-                return browser;
-            }
-            set
-            {
-                browser = value;
-            }            
+            get { return browser; }
+            set { this.browser = value; }            
         }
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public int PrefetchSize
         {
-            get
-            {
-                return prefetchSize;
-            }
-            set
-            {
-                prefetchSize = value;
-            }            
+            get { return prefetchSize; }
+            set { this.prefetchSize = value; }            
         }
 
         public bool DispatchAsync
         {
-            get
-            {
-                return dispatchAsync;
-            }
-            set
-            {
-                dispatchAsync = value;
-            }            
+            get { return dispatchAsync; }
+            set { this.dispatchAsync = value; }            
         }
 
         public string Selector
         {
-            get
-            {
-                return selector;
-            }
-            set
-            {
-                selector = value;
-            }            
+            get { return selector; }
+            set { this.selector = value; }            
         }
 
         public string SubcriptionName
         {
-            get
-            {
-                return subcriptionName;
-            }
-            set
-            {
-                subcriptionName = value;
-            }            
+            get { return subcriptionName; }
+            set { this.subcriptionName = value; }            
         }
 
         public bool NoLocal
         {
-            get
-            {
-                return noLocal;
-            }
-            set
-            {
-                noLocal = value;
-            }            
+            get { return noLocal; }
+            set { this.noLocal = value; }            
         }
 
         public bool Exclusive
         {
-            get
-            {
-                return exclusive;
-            }
-            set
-            {
-                exclusive = value;
-            }            
+            get { return exclusive; }
+            set { this.exclusive = value; }            
         }
 
         public bool Retroactive
         {
-            get
-            {
-                return retroactive;
-            }
-            set
-            {
-                retroactive = value;
-            }            
+            get { return retroactive; }
+            set { this.retroactive = value; }            
         }
 
         public byte Priority
         {
-            get
-            {
-                return priority;
-            }
-            set
-            {
-                priority = value;
-            }            
+            get { return priority; }
+            set { this.priority = value; }            
         }
 
         public BrokerId[] BrokerPath
         {
-            get
-            {
-                return brokerPath;
-            }
-            set
-            {
-                brokerPath = value;
-            }            
+            get { return brokerPath; }
+            set { this.brokerPath = value; }            
         }
 
         public bool NetworkSubscription
         {
-            get
-            {
-                return networkSubscription;
-            }
-            set
-            {
-                networkSubscription = value;
-            }            
+            get { return networkSubscription; }
+            set { this.networkSubscription = value; }            
         }
 
     }

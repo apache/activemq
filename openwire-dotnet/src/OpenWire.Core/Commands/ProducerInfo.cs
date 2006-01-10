@@ -38,38 +38,20 @@ namespace OpenWire.Core.Commands
 
         public ProducerId ProducerId
         {
-            get
-            {
-                return producerId;
-            }
-            set
-            {
-                producerId = value;
-            }            
+            get { return producerId; }
+            set { this.producerId = value; }            
         }
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public BrokerId[] BrokerPath
         {
-            get
-            {
-                return brokerPath;
-            }
-            set
-            {
-                brokerPath = value;
-            }            
+            get { return brokerPath; }
+            set { this.brokerPath = value; }            
         }
 
     }

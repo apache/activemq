@@ -40,62 +40,32 @@ namespace OpenWire.Core.Commands
 
         public ConnectionId ConnectionId
         {
-            get
-            {
-                return connectionId;
-            }
-            set
-            {
-                connectionId = value;
-            }            
+            get { return connectionId; }
+            set { this.connectionId = value; }            
         }
 
         public string ClientId
         {
-            get
-            {
-                return clientId;
-            }
-            set
-            {
-                clientId = value;
-            }            
+            get { return clientId; }
+            set { this.clientId = value; }            
         }
 
         public string Password
         {
-            get
-            {
-                return password;
-            }
-            set
-            {
-                password = value;
-            }            
+            get { return password; }
+            set { this.password = value; }            
         }
 
         public string UserName
         {
-            get
-            {
-                return userName;
-            }
-            set
-            {
-                userName = value;
-            }            
+            get { return userName; }
+            set { this.userName = value; }            
         }
 
         public BrokerId[] BrokerPath
         {
-            get
-            {
-                return brokerPath;
-            }
-            set
-            {
-                brokerPath = value;
-            }            
+            get { return brokerPath; }
+            set { this.brokerPath = value; }            
         }
 
     }

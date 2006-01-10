@@ -36,14 +36,8 @@ namespace OpenWire.Core.Commands
 
         public short CorrelationId
         {
-            get
-            {
-                return correlationId;
-            }
-            set
-            {
-                correlationId = value;
-            }            
+            get { return correlationId; }
+            set { this.correlationId = value; }            
         }
 
     }

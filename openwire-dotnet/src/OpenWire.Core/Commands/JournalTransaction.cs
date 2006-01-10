@@ -38,38 +38,20 @@ namespace OpenWire.Core.Commands
 
         public TransactionId TransactionId
         {
-            get
-            {
-                return transactionId;
-            }
-            set
-            {
-                transactionId = value;
-            }            
+            get { return transactionId; }
+            set { this.transactionId = value; }            
         }
 
         public byte Type
         {
-            get
-            {
-                return type;
-            }
-            set
-            {
-                type = value;
-            }            
+            get { return type; }
+            set { this.type = value; }            
         }
 
         public bool WasPrepared
         {
-            get
-            {
-                return wasPrepared;
-            }
-            set
-            {
-                wasPrepared = value;
-            }            
+            get { return wasPrepared; }
+            set { this.wasPrepared = value; }            
         }
 
     }

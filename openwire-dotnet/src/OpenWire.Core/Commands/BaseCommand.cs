@@ -12,52 +12,51 @@ using System.Collections;
 
 using OpenWire.Core;
 
-namespace OpenWire.Core.Commands
-{
-    public class BaseCommand : AbstractCommand
-    {
-    			public const byte ID_BaseCommand = 0;
-    			
-        short commandId;
-        bool responseRequired;
+namespace OpenWire.Core.Commands {
+
+        public class BaseCommand : AbstractCommand {
+                public const byte ID_BaseCommand = 0;
+
+                short commandId;
+                bool responseRequired;
 
 
+                public override int GetHashCode() {
+                        return commandId;
+                }
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+                public override bool Equals(Object that) {
+                        if (that is BaseCommand) {
+                                BaseCommand thatCommand = (BaseCommand) that;
+                                return this.GetCommandType() == thatCommand.GetCommandType()
+                                        && this.CommandId == thatCommand.CommandId; 
+                        }
+                        return false; 
+                }
+
+                public override String ToString() {
+                        string answer = GetCommandTypeAsString(GetCommandType());
+                        if (answer.Length == 0) {
+                                answer = base.ToString(); 
+                        }
+                        return answer + ": id = " + CommandId; 
+                }
+
+                public override byte GetCommandType() {
+                        return ID_BaseCommand; 
+                }
 
 
-        public override byte GetCommandType() {
-            return ID_BaseCommand;
-        }
+                // Properties
 
+                public short CommandId {
+                        get { return commandId; }
+                        set { this.commandId = value; } 
+                }
 
-        // Properties
-
-        public short CommandId
-        {
-            get
-            {
-                return commandId;
-            }
-            set
-            {
-                commandId = value;
-            }            
-        }
-
-        public bool ResponseRequired
-        {
-            get
-            {
-                return responseRequired;
-            }
-            set
-            {
-                responseRequired = value;
-            }            
-        }
-
-    }
+                public bool ResponseRequired {
+                        get { return responseRequired; }
+                        set { this.responseRequired = value; } 
+                } 
+        } 
 }

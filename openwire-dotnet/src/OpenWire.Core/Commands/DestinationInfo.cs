@@ -40,62 +40,32 @@ namespace OpenWire.Core.Commands
 
         public ConnectionId ConnectionId
         {
-            get
-            {
-                return connectionId;
-            }
-            set
-            {
-                connectionId = value;
-            }            
+            get { return connectionId; }
+            set { this.connectionId = value; }            
         }
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public byte OperationType
         {
-            get
-            {
-                return operationType;
-            }
-            set
-            {
-                operationType = value;
-            }            
+            get { return operationType; }
+            set { this.operationType = value; }            
         }
 
         public long Timeout
         {
-            get
-            {
-                return timeout;
-            }
-            set
-            {
-                timeout = value;
-            }            
+            get { return timeout; }
+            set { this.timeout = value; }            
         }
 
         public BrokerId[] BrokerPath
         {
-            get
-            {
-                return brokerPath;
-            }
-            set
-            {
-                brokerPath = value;
-            }            
+            get { return brokerPath; }
+            set { this.brokerPath = value; }            
         }
 
     }

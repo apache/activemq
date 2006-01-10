@@ -38,38 +38,20 @@ namespace OpenWire.Core.Commands
 
         public ProducerId ProducerId
         {
-            get
-            {
-                return producerId;
-            }
-            set
-            {
-                producerId = value;
-            }            
+            get { return producerId; }
+            set { this.producerId = value; }            
         }
 
         public long ProducerSequenceId
         {
-            get
-            {
-                return producerSequenceId;
-            }
-            set
-            {
-                producerSequenceId = value;
-            }            
+            get { return producerSequenceId; }
+            set { this.producerSequenceId = value; }            
         }
 
         public long BrokerSequenceId
         {
-            get
-            {
-                return brokerSequenceId;
-            }
-            set
-            {
-                brokerSequenceId = value;
-            }            
+            get { return brokerSequenceId; }
+            set { this.brokerSequenceId = value; }            
         }
 
     }
