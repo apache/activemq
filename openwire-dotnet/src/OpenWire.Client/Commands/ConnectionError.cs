@@ -19,7 +19,7 @@ namespace OpenWire.Client.Commands
     {
     			public const byte ID_ConnectionError = 16;
     			
-        byte[] exception;
+        BrokerError exception;
         ConnectionId connectionId;
 
 
@@ -36,7 +36,7 @@ namespace OpenWire.Client.Commands
 
         // Properties
 
-        public byte[] Exception
+        public BrokerError Exception
         {
             get { return exception; }
             set { this.exception = value; }            

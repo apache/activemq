@@ -13,6 +13,7 @@ namespace OpenWire.Client {
                 private Transport transport;
                 IList sessions = new ArrayList();
                 private bool transacted;
+                private bool connected;
                 private bool closed;
                 private AcknowledgementMode acknowledgementMode;
                 private long sessionCounter;
@@ -33,8 +34,9 @@ namespace OpenWire.Client {
                 /// Creates a new session to work on this connection
                 /// </summary>
                 public ISession CreateSession(bool transacted, AcknowledgementMode acknowledgementMode) {
-                        CheckClosed();
+                        CheckConnected();
                         SessionInfo info = CreateSessionInfo(transacted, acknowledgementMode);
+                        SyncRequest(info);
                         Session session = new Session(this, info);
                         sessions.Add(session);
                         return session; 
@@ -65,13 +67,23 @@ namespace OpenWire.Client {
                         set { this.acknowledgementMode = value; } 
                 }
 
+                public string ClientId {
+                        get { return info.ClientId; }
+                        set {
+                                if (connected) {
+                                        throw new OpenWireException("You cannot change the ClientId once the Connection is connected"); 
+                                }
+                                info.ClientId = value;
+                        }
+                }
+
                 // Implementation methods
 
                 /// <summary>
                 /// Performs a synchronous request-response with the broker
                 /// </summary>
                 public Response SyncRequest(Command command) {
-                        CheckClosed();
+                        CheckConnected();
                         Response response = Transport.Request(command);
                         if (response is ExceptionResponse) {
                                 ExceptionResponse exceptionResponse = (ExceptionResponse) response;
@@ -93,9 +105,13 @@ namespace OpenWire.Client {
                         return answer; 
                 }
 
-                protected void CheckClosed() {
+                protected void CheckConnected() {
                         if (closed) {
                                 throw new ConnectionClosedException(); 
+                        }
+                        if (!connected) {
+                                SyncRequest(info);
+                                connected = true; 
                         } 
                 } 
         } 

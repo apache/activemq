@@ -28,6 +28,18 @@ namespace OpenWire.Client.Core {
                         // empty body to allow generated code to call base method
                 }
 
+                protected virtual BrokerError ReadBrokerError(BinaryReader dataIn) {
+                        BrokerError answer = new BrokerError();
+                        answer.ExceptionClass = dataIn.ReadString();
+                        answer.StackTrace = dataIn.ReadString();
+                        return answer;
+                }
+
+                protected virtual void WriteBrokerError(BrokerError command, BinaryWriter dataOut) {
+                        dataOut.Write(command.ExceptionClass);
+                        dataOut.Write(command.StackTrace);
+                }
+
                 protected virtual ActiveMQDestination ReadDestination(BinaryReader dataIn) {
                         return (ActiveMQDestination) CommandMarshallerRegistry.ReadCommand(dataIn); 
                 }
