@@ -3,7 +3,7 @@ using OpenWire.Client;
 using OpenWire.Client.Commands;
 using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Core {
+namespace OpenWire.Client.Commands {
         /// <summary>
         /// Summary description for ActiveMQTopic.
         /// </summary>
