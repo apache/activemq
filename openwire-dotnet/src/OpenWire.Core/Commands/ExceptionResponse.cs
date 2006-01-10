@@ -36,14 +36,8 @@ namespace OpenWire.Core.Commands
 
         public byte[] Exception
         {
-            get
-            {
-                return exception;
-            }
-            set
-            {
-                exception = value;
-            }            
+            get { return exception; }
+            set { this.exception = value; }            
         }
 
     }

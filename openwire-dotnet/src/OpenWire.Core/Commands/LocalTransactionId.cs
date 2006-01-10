@@ -37,26 +37,14 @@ namespace OpenWire.Core.Commands
 
         public long Value
         {
-            get
-            {
-                return value;
-            }
-            set
-            {
-                value = value;
-            }            
+            get { return value; }
+            set { this.value = value; }            
         }
 
         public ConnectionId ConnectionId
         {
-            get
-            {
-                return connectionId;
-            }
-            set
-            {
-                connectionId = value;
-            }            
+            get { return connectionId; }
+            set { this.connectionId = value; }            
         }
 
     }

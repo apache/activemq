@@ -37,26 +37,14 @@ namespace OpenWire.Core.Commands
 
         public string ServiceName
         {
-            get
-            {
-                return serviceName;
-            }
-            set
-            {
-                serviceName = value;
-            }            
+            get { return serviceName; }
+            set { this.serviceName = value; }            
         }
 
         public string BrokerName
         {
-            get
-            {
-                return brokerName;
-            }
-            set
-            {
-                brokerName = value;
-            }            
+            get { return brokerName; }
+            set { this.brokerName = value; }            
         }
 
     }

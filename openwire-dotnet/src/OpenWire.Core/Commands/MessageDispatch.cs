@@ -39,50 +39,26 @@ namespace OpenWire.Core.Commands
 
         public ConsumerId ConsumerId
         {
-            get
-            {
-                return consumerId;
-            }
-            set
-            {
-                consumerId = value;
-            }            
+            get { return consumerId; }
+            set { this.consumerId = value; }            
         }
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public Message Message
         {
-            get
-            {
-                return message;
-            }
-            set
-            {
-                message = value;
-            }            
+            get { return message; }
+            set { this.message = value; }            
         }
 
         public int RedeliveryCounter
         {
-            get
-            {
-                return redeliveryCounter;
-            }
-            set
-            {
-                redeliveryCounter = value;
-            }            
+            get { return redeliveryCounter; }
+            set { this.redeliveryCounter = value; }            
         }
 
     }

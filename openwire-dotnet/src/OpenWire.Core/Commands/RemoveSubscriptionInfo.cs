@@ -38,38 +38,20 @@ namespace OpenWire.Core.Commands
 
         public ConnectionId ConnectionId
         {
-            get
-            {
-                return connectionId;
-            }
-            set
-            {
-                connectionId = value;
-            }            
+            get { return connectionId; }
+            set { this.connectionId = value; }            
         }
 
         public string SubcriptionName
         {
-            get
-            {
-                return subcriptionName;
-            }
-            set
-            {
-                subcriptionName = value;
-            }            
+            get { return subcriptionName; }
+            set { this.subcriptionName = value; }            
         }
 
         public string ClientId
         {
-            get
-            {
-                return clientId;
-            }
-            set
-            {
-                clientId = value;
-            }            
+            get { return clientId; }
+            set { this.clientId = value; }            
         }
 
     }

@@ -41,74 +41,38 @@ namespace OpenWire.Core.Commands
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public MessageId MessageId
         {
-            get
-            {
-                return messageId;
-            }
-            set
-            {
-                messageId = value;
-            }            
+            get { return messageId; }
+            set { this.messageId = value; }            
         }
 
         public long MessageSequenceId
         {
-            get
-            {
-                return messageSequenceId;
-            }
-            set
-            {
-                messageSequenceId = value;
-            }            
+            get { return messageSequenceId; }
+            set { this.messageSequenceId = value; }            
         }
 
         public string SubscritionName
         {
-            get
-            {
-                return subscritionName;
-            }
-            set
-            {
-                subscritionName = value;
-            }            
+            get { return subscritionName; }
+            set { this.subscritionName = value; }            
         }
 
         public string ClientId
         {
-            get
-            {
-                return clientId;
-            }
-            set
-            {
-                clientId = value;
-            }            
+            get { return clientId; }
+            set { this.clientId = value; }            
         }
 
         public TransactionId TransactionId
         {
-            get
-            {
-                return transactionId;
-            }
-            set
-            {
-                transactionId = value;
-            }            
+            get { return transactionId; }
+            set { this.transactionId = value; }            
         }
 
     }

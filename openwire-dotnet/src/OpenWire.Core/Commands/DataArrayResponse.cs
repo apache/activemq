@@ -36,14 +36,8 @@ namespace OpenWire.Core.Commands
 
         public DataStructure[] Data
         {
-            get
-            {
-                return data;
-            }
-            set
-            {
-                data = value;
-            }            
+            get { return data; }
+            set { this.data = value; }            
         }
 
     }

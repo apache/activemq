@@ -36,14 +36,8 @@ namespace OpenWire.Core.Commands
 
         public DataStructure ObjectId
         {
-            get
-            {
-                return objectId;
-            }
-            set
-            {
-                objectId = value;
-            }            
+            get { return objectId; }
+            set { this.objectId = value; }            
         }
 
     }

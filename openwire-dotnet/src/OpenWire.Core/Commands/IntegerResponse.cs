@@ -36,14 +36,8 @@ namespace OpenWire.Core.Commands
 
         public int Result
         {
-            get
-            {
-                return result;
-            }
-            set
-            {
-                result = value;
-            }            
+            get { return result; }
+            set { this.result = value; }            
         }
 
     }

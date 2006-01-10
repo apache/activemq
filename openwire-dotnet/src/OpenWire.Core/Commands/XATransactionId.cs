@@ -38,38 +38,20 @@ namespace OpenWire.Core.Commands
 
         public int FormatId
         {
-            get
-            {
-                return formatId;
-            }
-            set
-            {
-                formatId = value;
-            }            
+            get { return formatId; }
+            set { this.formatId = value; }            
         }
 
         public byte[] GlobalTransactionId
         {
-            get
-            {
-                return globalTransactionId;
-            }
-            set
-            {
-                globalTransactionId = value;
-            }            
+            get { return globalTransactionId; }
+            set { this.globalTransactionId = value; }            
         }
 
         public byte[] BranchQualifier
         {
-            get
-            {
-                return branchQualifier;
-            }
-            set
-            {
-                branchQualifier = value;
-            }            
+            get { return branchQualifier; }
+            set { this.branchQualifier = value; }            
         }
 
     }

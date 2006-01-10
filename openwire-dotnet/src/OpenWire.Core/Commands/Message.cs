@@ -60,302 +60,152 @@ namespace OpenWire.Core.Commands
 
         public ProducerId ProducerId
         {
-            get
-            {
-                return producerId;
-            }
-            set
-            {
-                producerId = value;
-            }            
+            get { return producerId; }
+            set { this.producerId = value; }            
         }
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public TransactionId TransactionId
         {
-            get
-            {
-                return transactionId;
-            }
-            set
-            {
-                transactionId = value;
-            }            
+            get { return transactionId; }
+            set { this.transactionId = value; }            
         }
 
         public ActiveMQDestination OriginalDestination
         {
-            get
-            {
-                return originalDestination;
-            }
-            set
-            {
-                originalDestination = value;
-            }            
+            get { return originalDestination; }
+            set { this.originalDestination = value; }            
         }
 
         public MessageId MessageId
         {
-            get
-            {
-                return messageId;
-            }
-            set
-            {
-                messageId = value;
-            }            
+            get { return messageId; }
+            set { this.messageId = value; }            
         }
 
         public TransactionId OriginalTransactionId
         {
-            get
-            {
-                return originalTransactionId;
-            }
-            set
-            {
-                originalTransactionId = value;
-            }            
+            get { return originalTransactionId; }
+            set { this.originalTransactionId = value; }            
         }
 
         public string GroupID
         {
-            get
-            {
-                return groupID;
-            }
-            set
-            {
-                groupID = value;
-            }            
+            get { return groupID; }
+            set { this.groupID = value; }            
         }
 
         public int GroupSequence
         {
-            get
-            {
-                return groupSequence;
-            }
-            set
-            {
-                groupSequence = value;
-            }            
+            get { return groupSequence; }
+            set { this.groupSequence = value; }            
         }
 
         public string CorrelationId
         {
-            get
-            {
-                return correlationId;
-            }
-            set
-            {
-                correlationId = value;
-            }            
+            get { return correlationId; }
+            set { this.correlationId = value; }            
         }
 
         public bool Persistent
         {
-            get
-            {
-                return persistent;
-            }
-            set
-            {
-                persistent = value;
-            }            
+            get { return persistent; }
+            set { this.persistent = value; }            
         }
 
         public long Expiration
         {
-            get
-            {
-                return expiration;
-            }
-            set
-            {
-                expiration = value;
-            }            
+            get { return expiration; }
+            set { this.expiration = value; }            
         }
 
         public byte Priority
         {
-            get
-            {
-                return priority;
-            }
-            set
-            {
-                priority = value;
-            }            
+            get { return priority; }
+            set { this.priority = value; }            
         }
 
         public ActiveMQDestination ReplyTo
         {
-            get
-            {
-                return replyTo;
-            }
-            set
-            {
-                replyTo = value;
-            }            
+            get { return replyTo; }
+            set { this.replyTo = value; }            
         }
 
         public long Timestamp
         {
-            get
-            {
-                return timestamp;
-            }
-            set
-            {
-                timestamp = value;
-            }            
+            get { return timestamp; }
+            set { this.timestamp = value; }            
         }
 
         public string Type
         {
-            get
-            {
-                return type;
-            }
-            set
-            {
-                type = value;
-            }            
+            get { return type; }
+            set { this.type = value; }            
         }
 
         public byte[] Content
         {
-            get
-            {
-                return content;
-            }
-            set
-            {
-                content = value;
-            }            
+            get { return content; }
+            set { this.content = value; }            
         }
 
         public byte[] MarshalledProperties
         {
-            get
-            {
-                return marshalledProperties;
-            }
-            set
-            {
-                marshalledProperties = value;
-            }            
+            get { return marshalledProperties; }
+            set { this.marshalledProperties = value; }            
         }
 
         public DataStructure DataStructure
         {
-            get
-            {
-                return dataStructure;
-            }
-            set
-            {
-                dataStructure = value;
-            }            
+            get { return dataStructure; }
+            set { this.dataStructure = value; }            
         }
 
         public ConsumerId TargetConsumerId
         {
-            get
-            {
-                return targetConsumerId;
-            }
-            set
-            {
-                targetConsumerId = value;
-            }            
+            get { return targetConsumerId; }
+            set { this.targetConsumerId = value; }            
         }
 
         public bool Compressed
         {
-            get
-            {
-                return compressed;
-            }
-            set
-            {
-                compressed = value;
-            }            
+            get { return compressed; }
+            set { this.compressed = value; }            
         }
 
         public int RedeliveryCounter
         {
-            get
-            {
-                return redeliveryCounter;
-            }
-            set
-            {
-                redeliveryCounter = value;
-            }            
+            get { return redeliveryCounter; }
+            set { this.redeliveryCounter = value; }            
         }
 
         public BrokerId[] BrokerPath
         {
-            get
-            {
-                return brokerPath;
-            }
-            set
-            {
-                brokerPath = value;
-            }            
+            get { return brokerPath; }
+            set { this.brokerPath = value; }            
         }
 
         public long Arrival
         {
-            get
-            {
-                return arrival;
-            }
-            set
-            {
-                arrival = value;
-            }            
+            get { return arrival; }
+            set { this.arrival = value; }            
         }
 
         public string UserID
         {
-            get
-            {
-                return userID;
-            }
-            set
-            {
-                userID = value;
-            }            
+            get { return userID; }
+            set { this.userID = value; }            
         }
 
         public bool RecievedByDFBridge
         {
-            get
-            {
-                return recievedByDFBridge;
-            }
-            set
-            {
-                recievedByDFBridge = value;
-            }            
+            get { return recievedByDFBridge; }
+            set { this.recievedByDFBridge = value; }            
         }
 
     }

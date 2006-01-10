@@ -39,50 +39,26 @@ namespace OpenWire.Core.Commands
 
         public string ClientId
         {
-            get
-            {
-                return clientId;
-            }
-            set
-            {
-                clientId = value;
-            }            
+            get { return clientId; }
+            set { this.clientId = value; }            
         }
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public string Selector
         {
-            get
-            {
-                return selector;
-            }
-            set
-            {
-                selector = value;
-            }            
+            get { return selector; }
+            set { this.selector = value; }            
         }
 
         public string SubcriptionName
         {
-            get
-            {
-                return subcriptionName;
-            }
-            set
-            {
-                subcriptionName = value;
-            }            
+            get { return subcriptionName; }
+            set { this.subcriptionName = value; }            
         }
 
     }

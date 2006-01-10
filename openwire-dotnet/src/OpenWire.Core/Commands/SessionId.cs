@@ -37,26 +37,14 @@ namespace OpenWire.Core.Commands
 
         public string ConnectionId
         {
-            get
-            {
-                return connectionId;
-            }
-            set
-            {
-                connectionId = value;
-            }            
+            get { return connectionId; }
+            set { this.connectionId = value; }            
         }
 
         public long Value
         {
-            get
-            {
-                return value;
-            }
-            set
-            {
-                value = value;
-            }            
+            get { return value; }
+            set { this.value = value; }            
         }
 
     }

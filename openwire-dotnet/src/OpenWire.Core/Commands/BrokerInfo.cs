@@ -39,50 +39,26 @@ namespace OpenWire.Core.Commands
 
         public BrokerId BrokerId
         {
-            get
-            {
-                return brokerId;
-            }
-            set
-            {
-                brokerId = value;
-            }            
+            get { return brokerId; }
+            set { this.brokerId = value; }            
         }
 
         public string BrokerURL
         {
-            get
-            {
-                return brokerURL;
-            }
-            set
-            {
-                brokerURL = value;
-            }            
+            get { return brokerURL; }
+            set { this.brokerURL = value; }            
         }
 
         public BrokerInfo[] PeerBrokerInfos
         {
-            get
-            {
-                return peerBrokerInfos;
-            }
-            set
-            {
-                peerBrokerInfos = value;
-            }            
+            get { return peerBrokerInfos; }
+            set { this.peerBrokerInfos = value; }            
         }
 
         public string BrokerName
         {
-            get
-            {
-                return brokerName;
-            }
-            set
-            {
-                brokerName = value;
-            }            
+            get { return brokerName; }
+            set { this.brokerName = value; }            
         }
 
     }

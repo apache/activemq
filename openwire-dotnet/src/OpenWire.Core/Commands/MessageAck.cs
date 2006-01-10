@@ -42,86 +42,44 @@ namespace OpenWire.Core.Commands
 
         public ActiveMQDestination Destination
         {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-            }            
+            get { return destination; }
+            set { this.destination = value; }            
         }
 
         public TransactionId TransactionId
         {
-            get
-            {
-                return transactionId;
-            }
-            set
-            {
-                transactionId = value;
-            }            
+            get { return transactionId; }
+            set { this.transactionId = value; }            
         }
 
         public ConsumerId ConsumerId
         {
-            get
-            {
-                return consumerId;
-            }
-            set
-            {
-                consumerId = value;
-            }            
+            get { return consumerId; }
+            set { this.consumerId = value; }            
         }
 
         public byte AckType
         {
-            get
-            {
-                return ackType;
-            }
-            set
-            {
-                ackType = value;
-            }            
+            get { return ackType; }
+            set { this.ackType = value; }            
         }
 
         public MessageId FirstMessageId
         {
-            get
-            {
-                return firstMessageId;
-            }
-            set
-            {
-                firstMessageId = value;
-            }            
+            get { return firstMessageId; }
+            set { this.firstMessageId = value; }            
         }
 
         public MessageId LastMessageId
         {
-            get
-            {
-                return lastMessageId;
-            }
-            set
-            {
-                lastMessageId = value;
-            }            
+            get { return lastMessageId; }
+            set { this.lastMessageId = value; }            
         }
 
         public int MessageCount
         {
-            get
-            {
-                return messageCount;
-            }
-            set
-            {
-                messageCount = value;
-            }            
+            get { return messageCount; }
+            set { this.messageCount = value; }            
         }
 
     }

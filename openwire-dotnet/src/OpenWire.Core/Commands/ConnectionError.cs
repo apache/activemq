@@ -37,26 +37,14 @@ namespace OpenWire.Core.Commands
 
         public byte[] Exception
         {
-            get
-            {
-                return exception;
-            }
-            set
-            {
-                exception = value;
-            }            
+            get { return exception; }
+            set { this.exception = value; }            
         }
 
         public ConnectionId ConnectionId
         {
-            get
-            {
-                return connectionId;
-            }
-            set
-            {
-                connectionId = value;
-            }            
+            get { return connectionId; }
+            set { this.connectionId = value; }            
         }
 
     }
