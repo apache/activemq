@@ -39,6 +39,20 @@ namespace OpenWire.Client {
                 /// </summary>
                 ITopic GetTopic(string name); 
                 
-                
+        
+                /// <summary>
+                /// Creates a new message with an empty body
+                /// </summary>
+                IMessage CreateMessage();
+        
+                /// <summary>
+                /// Creates a new text message with an empty body
+                /// </summary>
+                ITextMessage CreateTextMessage();
+        
+                /// <summary>
+                /// Creates a new text message with the given body
+                /// </summary>
+                ITextMessage CreateTextMessage(string text);
         } 
 }
