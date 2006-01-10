@@ -114,8 +114,13 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
             try {
                 MessageId id = new MessageId(value);
                 this.setMessageId(id);
-            } catch (Throwable e) {
-                throw JMSExceptionSupport.create("Invalid message id '" + value + "', reason: " + e.getMessage(), e);
+            }
+            catch (NumberFormatException e) {
+                // we must be some foreign JMS provider or strange user-supplied String
+                // so lets set the IDs to be 1
+                MessageId id = new MessageId();
+                id.setTextView(value);
+                this.setMessageId(messageId);
             }
         } else {
             this.setMessageId(null);

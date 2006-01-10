@@ -129,6 +129,11 @@ public class ActiveMQMessageTest extends TestCase {
         assertTrue(test);
     }
 
+    public void testSetToForeignJMSID() throws Exception {
+        ActiveMQMessage msg = new ActiveMQMessage();
+        msg.setJMSMessageID("ID:EMS-SERVER.8B443C380083:429");
+        
+    }
     /*
      * Class to test for boolean equals(Object)
      */

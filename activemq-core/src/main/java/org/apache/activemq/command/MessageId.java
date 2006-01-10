@@ -42,7 +42,7 @@ public class MessageId implements DataStructure {
     }
 
     public MessageId(String messageKey) {
-        setMessageKey(messageKey);
+        setValue(messageKey);
     }
     
     public MessageId(String producerId, long producerSequenceId) {
@@ -54,17 +54,28 @@ public class MessageId implements DataStructure {
         this.producerSequenceId = producerSequenceId;        
     }
     
-    public void setMessageKey(String messageKey) {
+    /**
+     * Sets the value as a String
+     */
+    public void setValue(String messageKey) {
         key = messageKey;
-        // Parse off the sequenceId
-        int p = messageKey.lastIndexOf(":");
-        if( p >= 0 ) {
-            producerSequenceId = Long.parseLong(messageKey.substring(p+1));
-            messageKey = messageKey.substring(0,p);
-        }
-        producerId = new ProducerId(messageKey);
+            // Parse off the sequenceId
+            int p = messageKey.lastIndexOf(":");
+            if( p >= 0 ) {
+                producerSequenceId = Long.parseLong(messageKey.substring(p+1));
+                messageKey = messageKey.substring(0,p);
+            }
+            producerId = new ProducerId(messageKey);
     }
     
+    /**
+     * Sets the transient text view of the message which will be ignored
+     * if the message is marshaled on a transport; so is only for in-JVM changes
+     * to accommodate foreign JMS message IDs
+     */
+    public void setTextView(String key) {
+        this.key = key;
+    }
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
