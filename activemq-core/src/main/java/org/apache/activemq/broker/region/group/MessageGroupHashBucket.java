@@ -102,6 +102,10 @@ public class MessageGroupHashBucket implements MessageGroupMap {
     }
 
     protected int getBucketNumber(String groupId) {
-        return groupId.hashCode() % bucketCount;
+        int bucket = groupId.hashCode() % bucketCount;
+        // bucket could be negative
+        if( bucket < 0 )
+            bucket *= -1;
+        return bucket;
     }
 }

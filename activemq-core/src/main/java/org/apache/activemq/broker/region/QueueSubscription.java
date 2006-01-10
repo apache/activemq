@@ -81,7 +81,7 @@ public class QueueSubscription extends PrefetchSubscription {
             MessageGroupMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();            
             
             // If we can own the first, then no-one else should own the rest.
-            if( sequence==1 ) {
+            if( sequence==0 ) {
                 if( node.lock(this) ) {
                     messageGroupOwners.put(groupId, info.getConsumerId());
                     return true;
@@ -107,7 +107,7 @@ public class QueueSubscription extends PrefetchSubscription {
             
             if( groupOwner.equals(info.getConsumerId()) ) {
                 // A group sequence < 1 is an end of group signal.
-                if ( sequence < 1 ) {
+                if ( sequence < 0 ) {
                     messageGroupOwners.removeGroup(groupId);
                 }
                 return true;
