@@ -128,10 +128,6 @@ namespace OpenWire.Core.IO
 							 }
                 for (property in propertyList) {
                 		 def propertyName = property.simpleName
-                    if (propertyName == jclass.simpleName) {
-                        // TODO think of a better naming convention :)
-                    		propertyName += "Value"
-                    }
                     out << "            info.${propertyName} = "
 
                     type = toCSharpType(property.type)

@@ -65,7 +65,7 @@ public class ProducerIdMarshaller extends org.apache.activemq.openwire.DataStrea
 
         ProducerId info = (ProducerId)o;
         info.setConnectionId(readString(dataIn, bs));
-        info.setProducerId(unmarshalLong(wireFormat, dataIn, bs));
+        info.setValue(unmarshalLong(wireFormat, dataIn, bs));
         info.setSessionId(unmarshalLong(wireFormat, dataIn, bs));
 
     }
@@ -80,7 +80,7 @@ public class ProducerIdMarshaller extends org.apache.activemq.openwire.DataStrea
 
         int rc = super.marshal1(wireFormat, o, bs);
         rc += writeString(info.getConnectionId(), bs);
-        rc+=marshal1Long(wireFormat, info.getProducerId(), bs);
+        rc+=marshal1Long(wireFormat, info.getValue(), bs);
         rc+=marshal1Long(wireFormat, info.getSessionId(), bs);
 
         return rc+0;
@@ -98,7 +98,7 @@ public class ProducerIdMarshaller extends org.apache.activemq.openwire.DataStrea
 
         ProducerId info = (ProducerId)o;
         writeString(info.getConnectionId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getProducerId(), dataOut, bs);
+        marshal2Long(wireFormat, info.getValue(), dataOut, bs);
         marshal2Long(wireFormat, info.getSessionId(), dataOut, bs);
 
     }
