@@ -24,7 +24,7 @@ import org.apache.activemq.openwire.tool.OpenWireScript
 class GenerateCSharpClasses extends OpenWireScript {
 
     Object run() {
-        def destDir = new File("../openwire-dotnet/src/OpenWire.Core/Commands")
+        def destDir = new File("../openwire-dotnet/src/OpenWire.Client/Commands")
         destDir.mkdirs()
 
         def messageClasses = classes.findAll {
@@ -78,9 +78,10 @@ ${jclass.simpleName}.class
 using System;
 using System.Collections;
 
-using OpenWire.Core;
+using OpenWire.Client;
+using OpenWire.Client.Core;
 
-namespace OpenWire.Core.Commands
+namespace OpenWire.Client.Commands
 {
     public class ${jclass.simpleName} : $baseClass
     {

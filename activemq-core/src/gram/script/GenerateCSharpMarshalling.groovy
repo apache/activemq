@@ -24,7 +24,7 @@ import org.apache.activemq.openwire.tool.OpenWireScript
 class GenerateCSharpMarshalling extends OpenWireScript {
 
     Object run() {
-        def destDir = new File("../openwire-dotnet/src/OpenWire.Core/IO")
+        def destDir = new File("../openwire-dotnet/src/OpenWire.Client/IO")
         destDir.mkdirs()
 
         def messageClasses = classes.findAll {
@@ -101,11 +101,12 @@ using System;
 using System.Collections;
 using System.IO;
 
-using OpenWire.Core;
-using OpenWire.Core.Commands;
-using OpenWire.Core.IO;
+using OpenWire.Client;
+using OpenWire.Client.Commands;
+using OpenWire.Client.Core;
+using OpenWire.Client.IO;
 
-namespace OpenWire.Core.IO
+namespace OpenWire.Client.IO
 {
     public ${abstractText}class $marshallerType : $baseClass
     {
@@ -326,11 +327,12 @@ using System;
 using System.Collections;
 using System.IO;
 
-using OpenWire.Core;
-using OpenWire.Core.Commands;
-using OpenWire.Core.IO;
+using OpenWire.Client;
+using OpenWire.Client.Commands;
+using OpenWire.Client.Core;
+using OpenWire.Client.IO;
 
-namespace OpenWire.Core.IO
+namespace OpenWire.Client.IO
 {
     public class CommandMarshallerRegistry
     {
