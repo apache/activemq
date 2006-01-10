@@ -105,7 +105,7 @@
                 <attribute type="AssemblyConfigurationAttribute" value="${project.release.type}" />
                 <attribute type="AssemblyCompanyAttribute" value="http://activemq.org/" />
                 <attribute type="AssemblyProductAttribute" value="OpenWire" />
-                <attribute type="AssemblyCopyrightAttribute" value="Copyright (C) 2005-${datetime::get-year(datetime::now())} Gerry Shaw" />
+                <attribute type="AssemblyCopyrightAttribute" value="Copyright (C) 2005-${datetime::get-year(datetime::now())} Apache Software Foundation" />
                 <attribute type="AssemblyTrademarkAttribute" value="" />
                 <attribute type="AssemblyCultureAttribute" value="" />
                 <attribute type="AssemblyVersionAttribute" value="${project.version}.${build.number}.0" />
@@ -148,8 +148,8 @@
                 <exclude name="scvs.exe" />
             </fileset>
         </copy>
-        <!-- build OpenWire.Core assembly -->
-        <nant buildfile="src/OpenWire.Core/OpenWire.Core.build" target="build" />
+        <!-- build OpenWire.Client assembly -->
+        <nant buildfile="src/OpenWire.Client/OpenWire.Client.build" target="build" />
         <!-- build task assemblies -->
         <nant target="build">
             <buildfiles refid="tas.core"/>
@@ -162,8 +162,8 @@
         <nant target="build" if="${platform::is-win32()}">
             <buildfiles refid="tas.win32" />
         </nant>
-        <!-- build OpenWire.Core.Tests assembly -->
-        <nant buildfile="tests/OpenWire.Core/OpenWire.Core.build" target="build" />
+        <!-- build OpenWire.Client.Tests assembly -->
+        <nant buildfile="tests/OpenWire.Client/OpenWire.Client.build" target="build" />
         <!-- build tests for task assemblies -->
         <nant target="build">
             <buildfiles refid="tas.core.tests"/>
