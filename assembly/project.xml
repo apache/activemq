@@ -322,6 +322,20 @@
           
           <!-- HTTP not yet implemented -->
           <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
+
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-472 -->
+          <exclude>**/TopicClusterTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-473 -->
+          <exclude>**/MultiBrokersMultiClientsTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-474 -->
+          <exclude>**/MultiBrokersMultiClientsUsingTcpTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-475 -->
+          <exclude>**/ThreeBrokerQueueNetworkTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-476 -->
+          <exclude>**/ThreeBrokerTopicNetworkTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-477 -->
+          <exclude>**/ThreeBrokerTopicNetworkUsingTcpTest.*</exclude>
+
       </excludes>
     </unitTest>
 
