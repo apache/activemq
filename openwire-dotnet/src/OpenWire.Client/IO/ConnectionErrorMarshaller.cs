@@ -30,7 +30,7 @@ namespace OpenWire.Client.IO
             base.BuildCommand(command, dataIn);
 
             ConnectionError info = (ConnectionError) command;
-            info.Exception = ReadBytes(dataIn);
+            info.Exception = ReadBrokerError(dataIn);
             info.ConnectionId = (ConnectionId) CommandMarshallerRegistry.ConnectionIdMarshaller.ReadCommand(dataIn);
 
         }
@@ -39,7 +39,7 @@ namespace OpenWire.Client.IO
             base.WriteCommand(command, dataOut);
 
             ConnectionError info = (ConnectionError) command;
-            WriteBytes(info.Exception, dataOut);
+            WriteBrokerError(info.Exception, dataOut);
             CommandMarshallerRegistry.ConnectionIdMarshaller.WriteCommand(info.ConnectionId, dataOut);
 
         }

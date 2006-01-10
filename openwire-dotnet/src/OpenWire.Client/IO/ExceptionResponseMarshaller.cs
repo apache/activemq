@@ -30,7 +30,7 @@ namespace OpenWire.Client.IO
             base.BuildCommand(command, dataIn);
 
             ExceptionResponse info = (ExceptionResponse) command;
-            info.Exception = ReadBytes(dataIn);
+            info.Exception = ReadBrokerError(dataIn);
 
         }
 
@@ -38,7 +38,7 @@ namespace OpenWire.Client.IO
             base.WriteCommand(command, dataOut);
 
             ExceptionResponse info = (ExceptionResponse) command;
-            WriteBytes(info.Exception, dataOut);
+            WriteBrokerError(info.Exception, dataOut);
 
         }
     }
