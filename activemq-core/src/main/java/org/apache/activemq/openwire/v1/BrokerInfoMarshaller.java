@@ -79,6 +79,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
 		        }
         			
         info.setBrokerName(readString(dataIn, bs));
+        info.setSlaveBroker(bs.readBoolean());
 
     }
 
@@ -95,6 +96,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         rc += writeString(info.getBrokerURL(), bs);
         rc += marshalObjectArray(wireFormat, info.getPeerBrokerInfos(), bs);
         rc += writeString(info.getBrokerName(), bs);
+        bs.writeBoolean(info.isSlaveBroker());
 
         return rc+0;
     }
@@ -114,6 +116,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         writeString(info.getBrokerURL(), dataOut, bs);
         marshalObjectArray(wireFormat, info.getPeerBrokerInfos(), dataOut, bs);
         writeString(info.getBrokerName(), dataOut, bs);
+        bs.readBoolean();
 
     }
 }
