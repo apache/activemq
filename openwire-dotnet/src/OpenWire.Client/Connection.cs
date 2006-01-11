@@ -10,7 +10,7 @@ namespace OpenWire.Client {
         public class Connection : IConnection {
 
                 private ConnectionInfo info;
-                private Transport transport;
+                private ITransport transport;
                 IList sessions = new ArrayList();
                 private bool transacted;
                 private bool connected;
@@ -18,7 +18,7 @@ namespace OpenWire.Client {
                 private AcknowledgementMode acknowledgementMode;
                 private long sessionCounter;
 
-                public Connection(Transport transport, ConnectionInfo info) {
+                public Connection(ITransport transport, ConnectionInfo info) {
                         this.transport = transport;
                         this.info = info; 
                 }
@@ -52,7 +52,7 @@ namespace OpenWire.Client {
 
                 // Properties
 
-                public Transport Transport {
+                public ITransport ITransport {
                         get { return transport; }
                         set { this.transport = value; } 
                 }
@@ -84,7 +84,7 @@ namespace OpenWire.Client {
                 /// </summary>
                 public Response SyncRequest(Command command) {
                         CheckConnected();
-                        Response response = Transport.Request(command);
+                        Response response = ITransport.Request(command);
                         if (response is ExceptionResponse) {
                                 ExceptionResponse exceptionResponse = (ExceptionResponse) response;
                                 // TODO include stack trace
