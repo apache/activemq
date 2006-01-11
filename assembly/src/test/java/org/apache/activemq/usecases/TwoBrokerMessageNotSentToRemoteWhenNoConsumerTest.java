@@ -36,6 +36,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
  * @version $Revision: 1.1.1.1 $
  */
 public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultipleBrokersTestSupport {
+    protected static final int MESSAGE_COUNT = 10;
+
     protected List bridges;
     protected AtomicInteger msgDispatchCount;
 
@@ -56,20 +58,20 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
         MessageConsumer clientB = createConsumer("BrokerB", dest);
 
         // Send messages
-        sendMessages("BrokerA", dest, 10);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT);
 
         // Get message count
         MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
         MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
 
-        msgsA.waitForMessagesToArrive(10);
-        msgsB.waitForMessagesToArrive(10);
+        msgsA.waitForMessagesToArrive(MESSAGE_COUNT);
+        msgsB.waitForMessagesToArrive(MESSAGE_COUNT);
 
-        assertEquals(10, msgsA.getMessageCount());
-        assertEquals(10, msgsB.getMessageCount());
+        assertEquals(MESSAGE_COUNT, msgsA.getMessageCount());
+        assertEquals(MESSAGE_COUNT, msgsB.getMessageCount());
 
         // Check that 10 message dispatch commands are send over the network
-        assertEquals(10, msgDispatchCount.get());
+        assertEquals(MESSAGE_COUNT, msgDispatchCount.get());
     }
 
     /**
@@ -88,14 +90,14 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
         MessageConsumer clientA = createConsumer("BrokerA", dest);
 
         // Send messages
-        sendMessages("BrokerA", dest, 10);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT);
 
         // Get message count
         MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
 
-        msgsA.waitForMessagesToArrive(10);
+        msgsA.waitForMessagesToArrive(MESSAGE_COUNT);
 
-        assertEquals(10, msgsA.getMessageCount());
+        assertEquals(MESSAGE_COUNT, msgsA.getMessageCount());
 
         // Check that no message dispatch commands are send over the network
         assertEquals(0, msgDispatchCount.get());

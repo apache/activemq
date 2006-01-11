@@ -56,6 +56,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     protected int messageSize = 1;
 
+    protected boolean persistentDelivery = true;
     protected boolean verbose = false;
 
     protected void bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
@@ -140,6 +141,14 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         return broker;
     }
 
+    protected ConnectionFactory getConnectionFactory(String brokerName) throws Exception {
+        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        if (brokerItem != null) {
+            return brokerItem.factory;
+        }
+        return null;
+    }
+
     protected Connection createConnection(String brokerName) throws Exception {
         BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
         if (brokerItem != null) {
@@ -188,6 +197,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         MessageProducer producer = brokerItem.createProducer(destination, sess);
+        producer.setDeliveryMode(persistentDelivery ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
 
         for (int i = 0; i < count; i++) {
             TextMessage msg = createTextMessage(sess, conn.getClientID() + ": Message-" + i);
@@ -350,7 +360,6 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
                 try {
                     c.close();
                 } catch (ConnectionClosedException e) {
-                    e.printStackTrace();
                 }
             }
 
