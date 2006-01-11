@@ -17,10 +17,15 @@ namespace OpenWire.Client {
                         Assert.IsTrue(factory != null, "created valid factory: " + factory);
                         
                         Console.WriteLine("Worked!");
-                        /*
+                        
                         using (IConnection connection = factory.CreateConnection()) {
                                 ISession session = connection.CreateSession();
+                                Console.WriteLine("Created a session: " + session);
+                                
                                 IDestination destination = session.GetQueue("FOO.BAR");
+                                Assert.IsTrue(destination != null, "No queue available!");
+                                Console.WriteLine("Using destination: " + destination);
+
                                 IMessageConsumer consumer = session.CreateConsumer(destination);
                                 
                                 IMessageProducer producer = session.CreateProducer(destination);
@@ -32,7 +37,6 @@ namespace OpenWire.Client {
                                 
                                 Assert.AreEqual(expected, message.Text); 
                         } 
-                        */
                 } 
         } 
 }

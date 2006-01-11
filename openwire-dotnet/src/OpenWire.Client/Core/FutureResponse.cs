@@ -32,12 +32,18 @@ namespace OpenWire.Client.Core {
                 }
 
                 public Response Response {
-                        get { return response; }
+                        get {
+                                // TODO use the proper .Net version of notify/wait()
+                                while (response == null) {
+                                        Thread.Sleep(100);
+                                }
+                                return response;
+                        }
                         set {
                                 asyncWaitHandle.WaitOne();
                                 response = value;
                                 isCompleted = true;
-                                asyncWaitHandle.ReleaseMutex();
+                                asyncWaitHandle.ReleaseMutex(); 
                         }
                 } 
         } 
