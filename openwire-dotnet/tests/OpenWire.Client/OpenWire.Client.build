@@ -29,8 +29,6 @@
         <include name="log4net.dll" />
         <include name="${build.dir}/bin/${project.name}.dll" />
       </references>
-
-
       <resources failonempty="false" basedir="Resources"
         dynamicprefix="true" prefix="XML:">
         <include name="**/*.xml" />

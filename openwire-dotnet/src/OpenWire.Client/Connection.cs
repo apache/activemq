@@ -47,6 +47,7 @@ namespace OpenWire.Client {
                                 session.Dispose(); 
                         }
                         sessions.Clear();
+                        transport.Dispose();
                         closed = true; 
                 }
 

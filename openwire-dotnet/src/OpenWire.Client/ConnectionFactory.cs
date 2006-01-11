@@ -78,8 +78,7 @@ namespace OpenWire.Client {
                 }
 
                 protected ITransport CreateITransport() {
-                        // TODO
-                        return null; 
+                        return new SocketTransport(host, port); 
                 } 
         } 
 }

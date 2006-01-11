@@ -12,7 +12,7 @@ namespace OpenWire.Client.Core {
         /// <summary>
         /// Represents the logical networking transport layer.
         /// </summary>
-        public interface ITransport {
+        public interface ITransport : IDisposable {
                 void Oneway(Command command);
 
                 FutureResponse AsyncRequest(Command command);
