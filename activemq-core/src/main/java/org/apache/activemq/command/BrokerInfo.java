@@ -33,6 +33,7 @@ public class BrokerInfo extends BaseCommand {
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.BROKER_INFO;
     BrokerId brokerId;
     String brokerURL;
+    boolean slaveBroker;
     
     BrokerInfo peerBrokerInfos[];
     String brokerName;
@@ -87,6 +88,18 @@ public class BrokerInfo extends BaseCommand {
 	
     public Response visit(CommandVisitor visitor) throws Throwable {
         return visitor.processBrokerInfo( this );
+    }
+
+    /**
+     * @openwire:property version=1 cache=true
+     */
+    public boolean isSlaveBroker(){
+        return slaveBroker;
+    }
+
+   
+    public void setSlaveBroker(boolean slaveBroker){
+        this.slaveBroker=slaveBroker;
     }
 
 }
