@@ -27,6 +27,7 @@ import java.net.URI;
  * @version $Revision: 1.1.1.1 $
  */
 public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
+    protected static final int MESSAGE_COUNT = 100;
 
     /**
      * BrokerA -> BrokerB -> BrokerC
@@ -45,7 +46,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientC = createConsumer("BrokerC", dest);
 
         // Send messages
-        sendMessages("BrokerA", dest, 10);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT);
 
         // Let's try to wait for any messages. Should be none.
         Thread.sleep(1000);
@@ -73,7 +74,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientC = createConsumer("BrokerC", dest);
 
         // Send messages
-        sendMessages("BrokerB", dest, 10);
+        sendMessages("BrokerB", dest, MESSAGE_COUNT);
 
         // Let's try to wait for any messages.
         Thread.sleep(1000);
@@ -82,8 +83,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
         MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
 
-        // Total received should be 10
-        assertEquals(10, msgsA.getMessageCount() + msgsC.getMessageCount());
+        // Total received should be 100
+        assertEquals(MESSAGE_COUNT, msgsA.getMessageCount() + msgsC.getMessageCount());
     }
 
     /**
@@ -103,15 +104,15 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientB = createConsumer("BrokerB", dest);
 
         // Send messages
-        sendMessages("BrokerA", dest, 10);
-        sendMessages("BrokerC", dest, 10);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT);
+        sendMessages("BrokerC", dest, MESSAGE_COUNT);
 
         // Get message count
         MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
 
-        msgsB.waitForMessagesToArrive(20);
+        msgsB.waitForMessagesToArrive(MESSAGE_COUNT * 2);
 
-        assertEquals(20, msgsB.getMessageCount());
+        assertEquals(MESSAGE_COUNT * 2, msgsB.getMessageCount());
     }
 
     /**
@@ -137,9 +138,9 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientC = createConsumer("BrokerC", dest);
 
         // Send messages
-        sendMessages("BrokerA", dest, 10);
-        sendMessages("BrokerB", dest, 10);
-        sendMessages("BrokerC", dest, 10);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT);
+        sendMessages("BrokerB", dest, MESSAGE_COUNT);
+        sendMessages("BrokerC", dest, MESSAGE_COUNT);
 
         // Let's try to wait for any messages.
         Thread.sleep(1000);
@@ -149,7 +150,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
         MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
 
-        assertEquals(30, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
+        assertEquals(MESSAGE_COUNT * 3, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
     }
 
     /**
@@ -170,9 +171,9 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientC = createConsumer("BrokerC", dest);
 
         // Send messages
-        sendMessages("BrokerA", dest, 10);
-        sendMessages("BrokerB", dest, 10);
-        sendMessages("BrokerC", dest, 10);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT);
+        sendMessages("BrokerB", dest, MESSAGE_COUNT);
+        sendMessages("BrokerC", dest, MESSAGE_COUNT);
 
         // Let's try to wait for any messages.
         Thread.sleep(1000);
@@ -182,7 +183,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
         MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
 
-        assertEquals(30, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
+        assertEquals(MESSAGE_COUNT * 3, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
     }
 
     public void setUp() throws Exception {
