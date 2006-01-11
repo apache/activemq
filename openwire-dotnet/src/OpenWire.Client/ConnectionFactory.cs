@@ -28,7 +28,7 @@ namespace OpenWire.Client {
 
                 public IConnection CreateConnection(string userName, string password) {
                         ConnectionInfo info = CreateConnectionInfo(userName, password);
-                        Transport transport = CreateTransport();
+                        ITransport transport = CreateITransport();
                         Connection connection = new Connection(transport, info);
                         connection.ClientId = clientId;
                         return connection; 
@@ -77,7 +77,7 @@ namespace OpenWire.Client {
                         return Guid.NewGuid().ToString(); 
                 }
 
-                protected Transport CreateTransport() {
+                protected ITransport CreateITransport() {
                         // TODO
                         return null; 
                 } 

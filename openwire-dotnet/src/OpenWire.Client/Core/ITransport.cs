@@ -6,13 +6,13 @@ using OpenWire.Client.Core;
 
 namespace OpenWire.Client.Core {
         
-        public delegate void CommandHandler(Transport sender, Command command);
-        public delegate void ExceptionHandler(Transport sender, Exception command);
+        public delegate void CommandHandler(ITransport sender, Command command);
+        public delegate void ExceptionHandler(ITransport sender, Exception command);
 
         /// <summary>
         /// Represents the logical networking transport layer.
         /// </summary>
-        public interface Transport {
+        public interface ITransport {
                 void Oneway(Command command);
 
                 FutureResponse AsyncRequest(Command command);

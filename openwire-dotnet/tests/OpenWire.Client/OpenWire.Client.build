@@ -1,40 +1,47 @@
 <?xml version="1.0"?>
 <project name="OpenWire.Core" default="test">
-    <!--
-        Required properties:
-            * build.dir             - (path) root level to build to, assemblies will go in ${build.dir}/bin
-            * build.debug           - (true|false) debug build?
-            * current.build.defines - framework-specific build defines
-    -->
-    <target name="build">
-        <!-- build test assembly -->
-        <csc target="library" define="${current.build.defines}" warnaserror="true" debug="${build.debug}" output="${build.dir}/bin/${project.name}.Tests.dll">
-            <nowarn>
-                <!-- do not report warnings for missing XML comments -->
-                <warning number="1591" />
-                <!-- do not report deprecation warnings -->
-                <warning number="0618" />
-            </nowarn>
-            <sources failonempty="true">
-                <include name="**/*.cs" />
-                <!-- common assembly-level attributes -->
-                <include name="../../src/CommonAssemblyInfo.cs" />
-            </sources>
-            <references>
-                <include name="${lib.framework.dir}/log4net.dll" />
-                <include name="${build.dir}/bin/openwire.dll" />
-                <include name="${lib.framework.dir}/nunit.framework.dll" />
-            </references>
-            <resources failonempty="false" basedir="Resources" dynamicprefix="true" prefix="XML:">
-                <include name="**/*.xml"/>
-            </resources>
-        </csc>
-    </target>
-    <target name="test" depends="build">
-         <nunit2>
-            <formatter type="Plain" />
-            <test assemblyname="${build.dir}/bin/${project.name}.Tests.dll" appconfig="${path::combine(nant.location, 'nant.tests.config')}">
-            </test>
-         </nunit2>
-    </target>
+  <!--
+    Required properties:
+    * build.dir             - (path) root level to build to, assemblies will go in ${build.dir}/bin
+    * build.debug           - (true|false) debug build?
+    * current.build.defines - framework-specific build defines
+  -->
+  <target name="build">
+    <!-- build test assembly -->
+    <csc target="library" define="${current.build.defines}"
+      warnaserror="true" debug="${build.debug}"
+      output="${build.dir}/bin/${project.name}.Tests.dll">
+      <nowarn>
+        <!-- do not report warnings for missing XML comments -->
+        <warning number="1591" />
+        <!-- do not report deprecation warnings -->
+        <warning number="0618" />
+      </nowarn>
+      <sources failonempty="true">
+        <include name="**/*.cs" />
+        <!-- common assembly-level attributes -->
+        <include name="../../src/CommonAssemblyInfo.cs" />
+      </sources>
+      <references defaultexcludes="true">
+        <include name="mscorlib.dll" />
+        <include name="System.dll" />
+        <include name="nunit.framework.dll" />
+        <include name="log4net.dll" />
+        <include name="${build.dir}/bin/${project.name}.dll" />
+      </references>
+
+
+      <resources failonempty="false" basedir="Resources"
+        dynamicprefix="true" prefix="XML:">
+        <include name="**/*.xml" />
+      </resources>
+    </csc>
+  </target>
+  <target name="test" depends="build">
+    <nunit2>
+      <formatter type="Plain" />
+      <test assemblyname="${build.dir}/bin/${project.name}.Tests.dll">
+      </test>
+    </nunit2>
+  </target>
 </project>
