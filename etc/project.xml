@@ -22,124 +22,67 @@
 
   <pomVersion>3</pomVersion>
 
+  <!-- ============== -->
+  <!-- Identification -->
+  <!-- ============== -->
+
   <name>ActiveMQ</name>
   <id>activemq</id>
   <groupId>activemq</groupId>
   <currentVersion>4.0-SNAPSHOT</currentVersion>
 
   <organization>
-    <name>LogicBlaze, Inc.</name>
-    <url>http://logicblaze.com</url>
-    <logo>http://logicblaze.com/images/logo.jpg</logo>
+    <name>Apache Software Foundation</name>
+    <url>http://geronimo.apache.org.apache.activemq</url>
+    <logo>http://geronimo.apache.org/images/geronimo-logo.png</logo>
   </organization>
 
-  <logo></logo>
   <inceptionYear>2004</inceptionYear>
-
-  <package>org.activemq</package>
-  <packageGroups>
-    <packageGroup>
-      <title>Core JMS Client API</title>
-      <packages>org.activemq:org.activemq.message</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>JMS Broker and Container</title>
-      <packages>org.activemq.broker:org.activemq.broker.*</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>JCA Managed Connections, Resource Adapters and Management Statistics</title>
-      <packages>org.activemq.ra:org.activemq.management</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>JNDI support</title>
-      <packages>org.activemq.jndi</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Message filter and router</title>
-      <packages>org.activemq.filter:org.activemq.filter.*:org.activemq.selector</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Web Connector for REST API and Streamlets support</title>
-      <packages>org.activemq.web</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Web Service and Apache Axis support</title>
-      <packages>org.activemq.axis</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Spring support</title>
-      <packages>org.activemq.spring</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Geronimo / GBean support</title>
-      <packages>org.activemq.gbean</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Security strategies and implementations</title>
-      <packages>org.activemq.security</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Transport and WireFormat strategies and implementations</title>
-      <packages>org.activemq.transport:org.activemq.transport.*</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Message persistence strategies and implementations</title>
-      <packages>org.activemq.store:org.activemq.store.*</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Journal strategies, implementations and adapters</title>
-      <packages>org.activemq.journal:org.activemq.journal.*</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Core router services</title>
-      <packages>org.activemq.service:org.activemq.service.*</packages>
-    </packageGroup>
-    <packageGroup>
-      <title>Utilities</title>
-      <packages>org.activemq.capacity:org.activemq.io.util:org.activemq.util</packages>
-    </packageGroup>
-  </packageGroups>
-
-
+  <logo>http://geronimo.apache.org/images/geronimo-logo.png</logo>
+  <description>ActiveMQ is an open source message broker and JMS 1.1 provider</description>
   <shortDescription>ActiveMQ is a message broker and a JMS 1.1 provider</shortDescription>
-
+  <url>http://geronimo.apache.org.apache.activemq</url>
+  <issueTrackingUrl>https://jira.logicblaze.com/jira/browse/AMQ</issueTrackingUrl>
   <gumpRepositoryId>activemq</gumpRepositoryId>
 
-  <description>
-  	    ActiveMQ is an open source message broker and JMS 1.1 provider
-  </description>
+  <!-- Used for artifact deployment -->
+  <siteAddress>geronimo.apache.org</siteAddress>
+  <siteDirectory>/www/geronimo.apache.org.apache.activemq</siteDirectory>
+  <distributionSite>geronimo.apache.org</distributionSite>
+  <distributionDirectory>/www/geronimo.apache.org/builds</distributionDirectory>
 
-  <url>http://activemq.org/</url>
-  <issueTrackingUrl>http://jira.codehaus.org</issueTrackingUrl>
-
-  <siteAddress>activemq.org</siteAddress>
-  <siteDirectory>/home/projects/activemq/public_html/maven/${pom.artifactId}</siteDirectory>
-  <distributionSite>dist.codehaus.org</distributionSite>
-  <distributionDirectory>/dist</distributionDirectory>
-
-   <repository>
-    <connection>scm:subversion:svn+ssh://svn.activemq.org/home/projects/activemq/scm/trunk/activemq</connection>
-    <developerConnection>scm:subversion:svn+ssh://svn.activemq.org/home/projects/activemq/scm/trunk/activemq</developerConnection>
-    <url>http://svn.activemq.codehaus.org/trunk/activemq/</url>
-    </repository>
+  <!-- SCM Information-->
+  <repository>
+    <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
+    <developerConnection>scm:subversion:https://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk</url>
+  </repository>
+  <branches>
+    <branch>
+      <tag>trunk</tag>
+    </branch>
+  </branches>
+  <versions>
+    <version>
+      <id>4.0-SNAPSHOT</id>
+      <name>4.0-SNAPSHOT</name>
+      <tag>trunk</tag>
+    </version>
+  </versions>
+  <branches>
+  </branches>
 
   <mailingLists>
     <mailingList>
       <name>ActiveMQ Developer List</name>
       <subscribe>dev-subscribe@activemq.codehaus.org</subscribe>
       <unsubscribe>dev-unsubscribe@activemq.codehaus.org</unsubscribe>
-      <!--
-      <archive>http://archive.activemq.codehaus.org/dev/</archive>
-      -->
       <archive>http://dir.gmane.org/gmane.comp.java.activemq.devel</archive>
     </mailingList>
     <mailingList>
       <name>ActiveMQ User List</name>
       <subscribe>user-subscribe@activemq.codehaus.org</subscribe>
       <unsubscribe>user-unsubscribe@activemq.codehaus.org</unsubscribe>
-      <!--
-      <archive>http://archive.activemq.codehaus.org/user/</archive>
-      -->
       <archive>http://dir.gmane.org/gmane.comp.java.activemq.user</archive>
     </mailingList>
     <mailingList>
@@ -150,86 +93,69 @@
     </mailingList>
   </mailingLists>
 
-  <branches>
-    <branch>
-      <tag>trunk</tag>
-    </branch>
-  </branches>
-
-  <versions>
-    <version>
-      <id>3.1-SNAPSHOT</id>
-      <name>3.1-SNAPSHOT</name>
-      <tag>trunk</tag>
-    </version>
-    <version>
-      <id>3.0</id>
-      <name>3.0</name>
-      <tag>ACTIVEMQ_3_0</tag>
-    </version>
-    <version>
-      <id>2.2</id>
-      <name>2.2</name>
-      <tag>ACTIVEMQ_2_2</tag>
-    </version>
-    <version>
-      <id>2.1</id>
-      <name>2.1</name>
-      <tag>ACTIVEMQ_2_1</tag>
-    </version>
-    <version>
-      <id>2.0</id>
-      <name>2.0</name>
-      <tag>ACTIVEMQ_2_0</tag>
-    </version>
-    <version>
-      <id>1.6-SNAPSHOT</id>
-      <name>1.6-SNAPSHOT</name>
-      <tag>ACTIVEMQ_1_BRANCH</tag>
-    </version>
-    <version>
-      <id>1.5</id>
-      <name>1.5</name>
-      <tag>ACTIVEMQ_1_5</tag>
-    </version>
-    <version>
-      <id>1.4</id>
-      <name>1.4</name>
-      <tag>ACTIVEMQ_1_4</tag>
-    </version>
-    <version>
-      <id>1.3</id>
-      <name>1.3</name>
-      <tag>ACTIVEMQ_1_3</tag>
-    </version>
-    <version>
-      <id>1.2</id>
-      <name>1.2</name>
-      <tag>ACTIVEMQ_1_2</tag>
-    </version>
-    <version>
-      <id>1.1-G1M3</id>
-      <name>1.1-G1M3</name>
-      <tag>GERONIMO_1_0_M3</tag>
-    </version>
-    <version>
-      <id>1.1</id>
-      <name>1.1</name>
-      <tag>ACTIVEMQ_1_1</tag>
-    </version>
-    <version>
-      <id>1.0</id>
-      <name>1.0</name>
-      <tag>ACTIVEMQ_1_0</tag>
-    </version>
-    <version>
-      <id>1.0-beta-1</id>
-      <name>1.0-beta-1</name>
-      <tag>1.0-beta-1</tag>
-    </version>
-  </versions>
-  <branches></branches>
-
+  <package>org.apache.activemq</package>
+  <packageGroups>
+    <packageGroup>
+      <title>Core JMS Client API</title>
+      <packages>org.apache.activemq:org.apache.activemq.message</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>JMS Broker and Container</title>
+      <packages>org.apache.activemq.broker:org.apache.activemq.broker.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>JCA Managed Connections, Resource Adapters and Management Statistics</title>
+      <packages>org.apache.activemq.ra:org.apache.activemq.management</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>JNDI support</title>
+      <packages>org.apache.activemq.jndi</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Message filter and router</title>
+      <packages>org.apache.activemq.filter:org.apache.activemq.filter.*:org.apache.activemq.selector</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Web Connector for REST API and Streamlets support</title>
+      <packages>org.apache.activemq.web</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Web Service and Apache Axis support</title>
+      <packages>org.apache.activemq.axis</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Spring support</title>
+      <packages>org.apache.activemq.spring</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Geronimo / GBean support</title>
+      <packages>org.apache.activemq.gbean</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Security strategies and implementations</title>
+      <packages>org.apache.activemq.security</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Transport and WireFormat strategies and implementations</title>
+      <packages>org.apache.activemq.transport:org.apache.activemq.transport.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Message persistence strategies and implementations</title>
+      <packages>org.apache.activemq.store:org.apache.activemq.store.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Journal strategies, implementations and adapters</title>
+      <packages>org.apache.activemq.journal:org.apache.activemq.journal.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Core router services</title>
+      <packages>org.apache.activemq.service:org.apache.activemq.service.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Utilities</title>
+      <packages>org.apache.activemq.capacity:org.apache.activemq.io.util:org.apache.activemq.util</packages>
+    </packageGroup>
+  </packageGroups>
 
   <developers>
     <developer>
