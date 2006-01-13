@@ -54,6 +54,8 @@ public class Main {
     private ClassLoader   classLoader;
     private List          extensions = new ArrayList(5);
 
+    private static boolean useDefExt = true;
+
     public static void main(String[] args) {
         Main app = new Main();
 
@@ -67,7 +69,7 @@ public class Main {
         app.parseExtensions(tokens);
 
         // Add default extension directories
-        if(app.canUseExtdir()) {
+        if(useDefExt && app.canUseExtdir()) {
             app.addExtensionDirectory(new File(app.getActiveMQHome(), "conf"));
             app.addExtensionDirectory(new File(app.getActiveMQHome(), "lib"));
             app.addExtensionDirectory(new File(new File(app.getActiveMQHome(), "lib"), "optional"));
@@ -147,7 +149,10 @@ public class Main {
             }
 
             addExtensionDirectory(extDir);
-        }
+        } else if (token.equals("--noDefExt")) { // If token is --noDefExt option
+                useDefExt = false;
+		  }
+
     }
 
     public void runTaskClass(String taskClass, List tokens) throws Throwable {
