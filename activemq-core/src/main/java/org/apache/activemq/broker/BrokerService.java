@@ -144,7 +144,9 @@ public class BrokerService implements Service {
      */
     public TransportConnector addConnector(TransportConnector connector) throws Exception {
         if (isUseJmx()) {
+            URI discoveryUri = connector.getDiscoveryUri();
             connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
+            connector.setDiscoveryUri(discoveryUri);
         }
         connector.setBroker(getBroker());
         transportConnectors.add(connector);
