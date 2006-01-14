@@ -7,6 +7,18 @@
   <packaging>pom</packaging>
   <name>ActiveIO Project</name>
 
+  <ciManagement>
+    <system>continuum</system>
+    <url>http://ci.gbuild.org/continuum</url>
+    <notifiers>
+      <notifier>
+        <configuration>
+          <address>activemq-commits@geronimo.apache.org</address>
+        </configuration>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+
   <mailingLists>
     <mailingList>
       <name>Development List</name>
@@ -25,7 +37,7 @@
   <repositories>
       <repository>
           <id>openejb</id>
-          <name>Open EJB OpenORB Repository</name>
+          <name>OpenEJB OpenORB Repository</name>
           <url>http://www.openejb.org/maven</url>
           <layout>legacy</layout>
       </repository>
