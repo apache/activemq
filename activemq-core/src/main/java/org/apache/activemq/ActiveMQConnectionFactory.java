@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Enumeration;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -29,6 +30,9 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
+import javax.naming.Referenceable;
+import javax.naming.Reference;
+import javax.naming.NamingException;
 
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
@@ -53,7 +57,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
  * @version $Revision: 1.9 $
  * @see javax.jms.ConnectionFactory
  */
-public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable {
+public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable, Referenceable {
 
     public static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
     public static final String DEFAULT_USER = null;
@@ -377,6 +381,25 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
         }
     }
 
+    public Properties getProperties() {
+        Properties props = new Properties();
+        props.setProperty("asyncDispatch", Boolean.toString(isAsyncDispatch()));
+        props.setProperty("brokerURL", getBrokerURL());
+        props.setProperty("clientID", getClientID());
+        props.setProperty("copyMessageOnSend", Boolean.toString(isCopyMessageOnSend()));
+        props.setProperty("disableTimeStampsByDefault", Boolean.toString(isDisableTimeStampsByDefault()));
+        props.setProperty("objectMessageSerializationDefered", Boolean.toString(isObjectMessageSerializationDefered()));
+        props.setProperty("onSendPrepareMessageBody", Boolean.toString(isOnSendPrepareMessageBody()));
+        props.setProperty("optimizedMessageDispatch", Boolean.toString(isOptimizedMessageDispatch()));
+        props.setProperty("password", getPassword());
+        props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
+        props.setProperty("useCompression", Boolean.toString(isUseCompression()));
+        props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
+        props.setProperty("username", getUserName());
+
+        return props;
+    }
+
     public boolean isOnSendPrepareMessageBody() {
         return onSendPrepareMessageBody;
     }
@@ -407,6 +430,29 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
 
     public void setAsyncDispatch(boolean asyncDispatch) {
         this.asyncDispatch = asyncDispatch;
+    }
+
+    /**
+     * Retrieve a Reference for this instance to store in JNDI
+     *
+     * @return the built Reference
+     * @throws NamingException if error on building Reference
+     */
+    public Reference getReference() throws NamingException {
+        Reference ref = new Reference(this.getClass().getName());
+
+        try {
+            Properties props = getProperties();
+            for (Enumeration iter = props.propertyNames(); iter.hasMoreElements();) {
+                String key = (String) iter.nextElement();
+                String value = props.getProperty(key);
+                javax.naming.StringRefAddr addr = new javax.naming.StringRefAddr(key, value);
+                ref.add(addr);
+            }
+        } catch (Exception e) {
+            throw new NamingException(e.getMessage());
+        }
+        return ref;
     }
 
 }
