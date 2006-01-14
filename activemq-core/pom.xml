@@ -144,6 +144,12 @@
     <dependency>
       <groupId>stax</groupId>
       <artifactId>stax</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>xmlbeans</groupId>
+          <artifactId>xmlbeans-jsr173-api</artifactId>
+	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>xalan</groupId>
