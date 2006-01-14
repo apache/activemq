@@ -18,9 +18,9 @@ package org.apache.activemq.broker.console;
 
 import java.util.List;
 
-public class ListTask extends AbstractJmxTask {
+public class ListCommand extends AbstractJmxCommand {
 
-    protected void startTask(List tokens) {
+    protected void execute(List tokens) {
         try {
             AmqJmxSupport.printBrokerList(AmqJmxSupport.getAllBrokers(createJmxConnector().getMBeanServerConnection()));
             closeJmxConnector();

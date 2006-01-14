@@ -24,10 +24,10 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.HashSet;
 
-public class ShutdownTask extends AbstractJmxTask {
+public class ShutdownCommand extends AbstractJmxCommand {
     private boolean isStopAllBrokers = false;
 
-    protected void startTask(List brokerNames) {
+    protected void execute(List brokerNames) {
         try {
             Set mbeans = new HashSet();
             MBeanServerConnection server = createJmxConnector().getMBeanServerConnection();
