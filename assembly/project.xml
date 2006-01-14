@@ -29,7 +29,7 @@
   <dependencies>
 
       <dependency>
-        <groupId>activemq</groupId>
+        <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-core</artifactId>
         <version>${pom.currentVersion}</version>
         <properties>
@@ -62,13 +62,13 @@
 
 
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core-test</artifactId>
       <version>${pom.currentVersion}</version>
     </dependency>
 
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
       <version>${pom.currentVersion}</version>
       <type>rar</type>

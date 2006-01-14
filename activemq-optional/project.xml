@@ -44,7 +44,7 @@
   <dependencies>
 
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <version>${pom.currentVersion}</version>
       <properties>
@@ -163,7 +163,7 @@
 
     <!-- Used for unit tests -->
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core-test</artifactId>
       <version>${pom.currentVersion}</version>
     </dependency>
