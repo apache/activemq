@@ -18,21 +18,35 @@ package org.apache.activemq.broker.console;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
 
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public abstract class AbstractTask implements Task {
+public abstract class AbstractCommand implements Command {
     private boolean isPrintHelp    = false;
     private boolean isPrintVersion = false;
+    protected PrintStream out;
 
-    public void runTask(List tokens) throws Exception {
-        parseOptions(tokens);
+    public int main(String[] args, InputStream in, PrintStream out) {
+        this.out = out;
+        try {
+            List tokens = new ArrayList(Arrays.asList(args));
+            parseOptions(tokens);
 
-        if (isPrintHelp) {
-            printHelp();
-        } else if (isPrintVersion) {
-            printVersion();
-        } else {
-            startTask(tokens);
+            if (isPrintHelp) {
+                printHelp();
+            } else if (isPrintVersion) {
+                printVersion();
+            } else {
+                execute(tokens);
+            }
+            return 0;
+        } catch (Exception e) {
+            out.println("Failed to execute main task. Reason: " + e);
+            e.printStackTrace(out);
+            return -1;
         }
     }
 
@@ -77,23 +91,23 @@ public abstract class AbstractTask implements Task {
 
         // Token is unrecognized
         else {
-            System.out.println("Ignoring unrecognized option: " + token);
+            out.println("Ignoring unrecognized option: " + token);
         }
     }
 
     protected void printVersion() {
-        System.out.println();
-        System.out.println("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION);
-        System.out.println("For help or more information please see: http://www.logicblaze.com");
-        System.out.println();
+        out.println();
+        out.println("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION);
+        out.println("For help or more information please see: http://www.logicblaze.com");
+        out.println();
     }
 
     protected void printError(String message) {
         isPrintHelp = true;
-        System.out.println(message);
-        System.out.println();
+        out.println(message);
+        out.println();
     }
 
-    abstract protected void startTask(List tokens) throws Exception;
+    abstract protected void execute(List tokens) throws Exception;
     abstract protected void printHelp();
 }

@@ -27,7 +27,7 @@ import java.util.StringTokenizer;
 import java.util.Set;
 import java.util.Iterator;
 
-public class QueryTask extends AbstractJmxTask {
+public class QueryCommand extends AbstractJmxCommand {
     // Predefined type=identifier query
     private static final Properties PREDEFINED_OBJNAME_QUERY = new Properties();
 
@@ -44,7 +44,7 @@ public class QueryTask extends AbstractJmxTask {
     private final List querySubObjects = new ArrayList(10);
     private final List queryViews      = new ArrayList(10);
 
-    protected void startTask(List tokens) {
+    protected void execute(List tokens) {
         try {
             // Connect to jmx server
             JMXConnector jmxConnector = createJmxConnector();

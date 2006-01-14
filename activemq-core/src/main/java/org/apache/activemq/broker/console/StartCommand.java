@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class StartTask extends AbstractTask {
+public class StartCommand extends AbstractCommand {
 
     public static final String DEFAULT_CONFIG_URI   = "xbean:activemq.xml";
 
@@ -37,7 +37,7 @@ public class StartTask extends AbstractTask {
      * The default task to start a broker or a group of brokers
      * @param brokerURIs
      */
-    protected void startTask(List brokerURIs) {
+    protected void execute(List brokerURIs) {
         try {
             // If no config uri, use default setting
             if (brokerURIs.isEmpty()) {

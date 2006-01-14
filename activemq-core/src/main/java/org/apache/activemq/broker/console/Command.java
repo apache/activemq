@@ -17,8 +17,9 @@
 
 package org.apache.activemq.broker.console;
 
-import java.util.List;
+import java.io.InputStream;
+import java.io.PrintStream;
 
-public interface Task {
-    public void runTask(List tokens) throws Exception;
+public interface Command {
+    public int main(String[] args, InputStream in, PrintStream out);
 }

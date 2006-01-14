@@ -17,6 +17,8 @@
 package org.apache.activemq.broker;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.JarURLConnection;
@@ -25,10 +27,10 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.LinkedList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Main class that can bootstrap an ActiveMQ broker console. Handles command line
@@ -37,19 +39,9 @@ import java.util.Iterator;
  * @version $Revision$
  */
 public class Main {
-    public static final int TASK_DEFAULT = 0;
-    public static final int TASK_START   = 1;
-    public static final int TASK_STOP    = 2;
-    public static final int TASK_LIST    = 3;
-    public static final int TASK_QUERY   = 4;
 
-    public static final String TASK_DEFAULT_CLASS  = "org.apache.activemq.broker.console.DefaultTask";
-    public static final String TASK_START_CLASS    = "org.apache.activemq.broker.console.StartTask";
-    public static final String TASK_SHUTDOWN_CLASS = "org.apache.activemq.broker.console.ShutdownTask";
-    public static final String TASK_LIST_CLASS     = "org.apache.activemq.broker.console.ListTask";
-    public static final String TASK_QUERY_CLASS    = "org.apache.activemq.broker.console.QueryTask";
+    public static final String TASK_DEFAULT_CLASS  = "org.apache.activemq.broker.console.DefaultCommand";
 
-    private int           taskType;
     private File          activeMQHome;
     private ClassLoader   classLoader;
     private List          extensions = new ArrayList(5);
@@ -62,9 +54,6 @@ public class Main {
         // Convert arguments to collection for easier management
         List tokens =  new LinkedList(Arrays.asList(args));
 
-        // First token should be task type (start|stop|list|query)
-        app.setTaskType(app.parseTask(tokens));
-
         // Parse for extension directory option
         app.parseExtensions(tokens);
 
@@ -75,42 +64,10 @@ public class Main {
             app.addExtensionDirectory(new File(new File(app.getActiveMQHome(), "lib"), "optional"));
         }
 
-        // Succeeding tokens should be the task data
         try {
-            switch (app.getTaskType()) {
-                case TASK_START:   app.runTaskClass(TASK_START_CLASS, tokens);    break;
-                case TASK_STOP:    app.runTaskClass(TASK_SHUTDOWN_CLASS, tokens); break;
-                case TASK_LIST:    app.runTaskClass(TASK_LIST_CLASS, tokens);     break;
-                case TASK_QUERY:   app.runTaskClass(TASK_QUERY_CLASS, tokens);    break;
-                case TASK_DEFAULT: app.runTaskClass(TASK_DEFAULT_CLASS, tokens);  break;
-                default:
-                    System.out.println("Encountered unknown task type: " + app.getTaskType());
-            }
+            app.runTaskClass(tokens);
         } catch (Throwable e) {
             System.out.println("Failed to execute main task. Reason: " + e);
-        }
-    }
-
-    public int parseTask(List tokens) {
-        if (tokens.isEmpty()) {
-            // If no task, run the default task
-            return TASK_DEFAULT;
-        }
-
-        // Process task token
-        String taskToken = (String)tokens.remove(0);
-        if (taskToken.equals("start")) {
-            return TASK_START;
-        } else if (taskToken.equals("stop")) {
-            return TASK_STOP;
-        } else if (taskToken.equals("list")) {
-            return TASK_LIST;
-        } else if (taskToken.equals("query")) {
-            return TASK_QUERY;
-        } else {
-            // If not valid task, push back to list
-            tokens.add(0, taskToken);
-            return TASK_DEFAULT;
         }
     }
 
@@ -155,16 +112,17 @@ public class Main {
 
     }
 
-    public void runTaskClass(String taskClass, List tokens) throws Throwable {
+    public void runTaskClass(List tokens) throws Throwable {
         System.out.println("ACTIVEMQ_HOME: "+ getActiveMQHome());
 
         ClassLoader cl = getClassLoader();
 
         // Use reflection to run the task.
         try {
-            Class task = cl.loadClass(taskClass);
-            Method runTask = task.getMethod("runTask", new Class[] { List.class });
-            runTask.invoke(task.newInstance(), new Object[] { tokens });
+            String[] args = (String[]) tokens.toArray(new String[tokens.size()]);
+            Class task = cl.loadClass(TASK_DEFAULT_CLASS);
+            Method runTask = task.getMethod("main", new Class[] { String[].class, InputStream.class, PrintStream.class });
+            runTask.invoke(task.newInstance(), new Object[] { args, System.in, System.out });
         } catch (InvocationTargetException e) {
             throw e.getCause();
         } catch (Throwable e) {
@@ -218,14 +176,6 @@ public class Main {
             Thread.currentThread().setContextClassLoader(classLoader);
         }
         return classLoader;
-    }
-
-    public int getTaskType() {
-        return taskType;
-    }
-
-    public void setTaskType(int taskType) {
-        this.taskType = taskType;
     }
 
     public void setActiveMQHome(File activeMQHome) {

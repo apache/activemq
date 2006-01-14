@@ -23,7 +23,7 @@ import java.util.List;
 import java.net.MalformedURLException;
 import java.io.IOException;
 
-public abstract class AbstractJmxTask extends AbstractTask {
+public abstract class AbstractJmxCommand extends AbstractCommand {
     public static final String DEFAULT_JMX_URL    = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi";
 
     private JMXServiceURL jmxServiceUrl;
