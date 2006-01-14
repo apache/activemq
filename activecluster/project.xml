@@ -171,7 +171,7 @@
 
     <!-- default JMS provider used for implementation -->
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <version>4.0-SNAPSHOT</version>
     </dependency>

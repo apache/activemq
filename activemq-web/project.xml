@@ -43,8 +43,8 @@
   <dependencies>
 
     <dependency>
-      <groupId>activemq</groupId>
-      <artifactId>activemq</artifactId>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core</artifactId>
       <version>${pom.currentVersion}</version>
       <properties>
         <war.bundle>true</war.bundle>

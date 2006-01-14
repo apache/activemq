@@ -138,6 +138,21 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
           <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>assembly</goal>
+            </goals>
+            <configuration>
+              <descriptor>src/main/descriptors/jar.xml</descriptor>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
             <phase>install</phase>
             <goals>
               <goal>assembly</goal>

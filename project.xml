@@ -21,7 +21,7 @@
 
     <name>ActiveMQ</name>
     <id>activemq</id>
-    <groupId>activemq</groupId>
+    <groupId>incubator-activemq</groupId>
     <currentVersion>4.0-SNAPSHOT</currentVersion>
 
     <build>

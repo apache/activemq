@@ -50,7 +50,7 @@
     </dependency>
 
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <version>${pom.currentVersion}</version>
       <properties>

@@ -19,7 +19,6 @@
 <project>
     <pomVersion>3</pomVersion>
     <artifactId>activemq-jaas</artifactId>
-    <groupId>activemq</groupId>
     <extend>${basedir}/../etc/project.xml</extend>
     <name>ActiveMQ :: JAAS</name>
     <id>activemq-jaas</id>

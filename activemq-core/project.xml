@@ -81,7 +81,7 @@
     <!-- ============ -->
     <dependencies>
         <dependency>
-            <groupId>activemq</groupId>
+            <groupId>${pom.groupId}</groupId>
             <artifactId>activemq-jaas</artifactId>
             <version>${pom.currentVersion}</version>
             <properties>
@@ -308,7 +308,7 @@
 
         <!-- JAAS Login Modules -->
         <dependency>
-            <groupId>activemq</groupId>
+            <groupId>${pom.groupId}</groupId>
             <artifactId>activemq-jaas</artifactId>
             <version>${pom.currentVersion}</version>
         </dependency>
