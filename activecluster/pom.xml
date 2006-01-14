@@ -25,6 +25,18 @@
   <name>ActiveCluster Project</name>
   <url>http://maven.apache.org</url>
 
+  <ciManagement>
+    <system>continuum</system>
+    <url>http://ci.gbuild.org/continuum</url>
+    <notifiers>
+      <notifier>
+        <configuration>
+          <address>activemq-commits@geronimo.apache.org</address>
+        </configuration>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/servicemix/trunk/activecluster</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/servicemix/trunk/activecluster</developerConnection>
