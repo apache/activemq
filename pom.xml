@@ -6,6 +6,18 @@
   <packaging>pom</packaging>
   <name>ActiveMQ Project</name>
 
+  <ciManagement>
+    <system>continuum</system>
+    <url>http://ci.gbuild.org/continuum</url>
+    <notifiers>
+      <notifier>
+        <configuration>
+          <address>activemq-commits@geronimo.apache.org</address>
+        </configuration>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+
   <mailingLists>
     <mailingList>
       <name>Development List</name>
