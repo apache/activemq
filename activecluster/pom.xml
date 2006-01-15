@@ -38,9 +38,9 @@
   </ciManagement>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/servicemix/trunk/activecluster</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/servicemix/trunk/activecluster</developerConnection>
-    <url>http://svn.apache.org/viewcvs.cgi/incubator/servicemix/trunk/activecluster/</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk/activecluster</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/activecluster</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/activecluster/</url>
   </scm>
 
   <dependencies>
