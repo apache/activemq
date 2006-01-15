@@ -78,6 +78,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     protected final TaskRunner taskRunner;
     protected final Connector connector;
     private ConnectionStatistics statistics = new ConnectionStatistics();
+    private boolean inServiceException=false;
 
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
     
@@ -161,12 +162,17 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
         
     public void serviceException(Throwable e) {
-        if( !disposed ) {
-            if( log.isDebugEnabled() )
-                log.debug("Async error occurred: "+e,e);
-            ConnectionError ce = new ConnectionError();
-            ce.setException(e);
-            dispatchAsync(ce);
+        if( !disposed && !inServiceException ) {
+            inServiceException = true;
+                try {
+                if( log.isDebugEnabled() )
+                    log.debug("Async error occurred: "+e,e);
+                ConnectionError ce = new ConnectionError();
+                ce.setException(e);
+                dispatchAsync(ce);
+            } finally {
+                inServiceException = false;
+            }
         } 
     }
 
