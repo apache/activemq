@@ -53,6 +53,7 @@
     </ant:jar>
 
     <mkdir dir="${maven.repo.local}/${pom.groupId}/jars" />
+    <echo>Copying ${maven.build.dir}/${pom.artifactId}-test-${pom.currentVersion}.jar to ${maven.repo.local}/${pom.groupId}/jars</echo>
     <copy todir="${maven.repo.local}/${pom.groupId}/jars" file="${maven.build.dir}/${pom.artifactId}-test-${pom.currentVersion}.jar" />
 
   </postGoal>

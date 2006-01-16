@@ -53,7 +53,7 @@
     </dependency>
 
     <dependency><!-- Used for unit tests -->
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core-test</artifactId>
       <version>${pom.currentVersion}</version>
     </dependency>
