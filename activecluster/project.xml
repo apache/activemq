@@ -173,7 +173,7 @@
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>4.0-SNAPSHOT</version>
+      <version>${pom.currentVersion}</version>
     </dependency>
 
      <dependency>
