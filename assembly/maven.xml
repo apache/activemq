@@ -204,11 +204,12 @@
     <ant:copy todir="${maven.dist.src.assembly.dir}">
       <ant:fileset dir="${project.root}">
          <ant:exclude name="**/target/**"/>
-     <ant:exclude name="**/CVS/**"/>
-     <ant:exclude name="**/.*/**"/>
-     <ant:exclude name="**/junit*.properties"/>
-     <ant:exclude name="**/*~"/>
-     <ant:exclude name="**/*.bak"/>
+         <ant:exclude name="*/bin/**"/>
+         <ant:exclude name="**/CVS/**"/>
+         <ant:exclude name="**/.*/**"/>
+         <ant:exclude name="**/junit*.properties"/>
+         <ant:exclude name="**/*~"/>
+         <ant:exclude name="**/*.bak"/>
       </ant:fileset>
     </ant:copy>
 

@@ -61,7 +61,7 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>${pom.groupId}:activemq-ra</include>
+          <!-- <include>${pom.groupId}:activemq-ra</include> -->
          <include>commons-beanutils:commons-beanutils</include>
          <include>commons-collections:commons-collections</include>
          <include>commons-httpclient:commons-httpclient</include>
