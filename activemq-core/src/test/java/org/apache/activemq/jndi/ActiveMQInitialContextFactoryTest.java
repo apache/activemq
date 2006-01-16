@@ -38,7 +38,7 @@ public class ActiveMQInitialContextFactoryTest extends JNDITestSupport {
 
         InitialContext context = new InitialContext();
 
-        //make sure contest is not null
+        //make sure context is not null
         assertTrue("Created context", context != null);
 
         Object topicDestination = context.lookup("MyTopic");

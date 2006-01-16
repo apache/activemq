@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Properties;
-import java.util.Enumeration;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -34,17 +33,16 @@ import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
-import javax.naming.Reference;
-import javax.naming.NamingException;
-import javax.naming.Referenceable;
 
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.jndi.JNDIBaseStorable;
 
 /**
  * @openwire:marshaller
  * @version $Revision: 1.10 $
  */
-abstract public class ActiveMQDestination implements DataStructure, Destination, Externalizable, Comparable, Referenceable {
+abstract public class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination, Externalizable, Comparable {
 
     private static final long serialVersionUID = -3885260014960795889L;
 
@@ -335,43 +333,15 @@ abstract public class ActiveMQDestination implements DataStructure, Destination,
         return false;
     }
 
-    public Properties getProperties() {
-        Properties props = new Properties();
+    public void buildFromProperties(Properties properties) {
+        if (properties == null) {
+            properties = new Properties();
+        }
 
-        props.setProperty("composite", Boolean.toString(isComposite()));
-        props.setProperty("destinationType", Byte.toString(getDestinationType()));
-        props.setProperty("destinationTypeAsString", getDestinationTypeAsString());
-        props.setProperty("marshallAware", Boolean.toString(isMarshallAware()));
-        props.setProperty("physicalName", getPhysicalName());
-        props.setProperty("qualifiedName", getQualifiedName());
-        props.setProperty("qualifiedPrefix", getQualifiedPrefix());
-        props.setProperty("queue", Boolean.toString(isQueue()));
-        props.setProperty("temporary", Boolean.toString(isTemporary()));
-        props.setProperty("topic", Boolean.toString(isTopic()));
-
-        return props;
+        IntrospectionSupport.setProperties(this, properties);
     }
 
-    /**
-     * Retrieve a Reference for this instance to store in JNDI
-     *
-     * @return the built Reference
-     * @throws javax.naming.NamingException if error on building Reference
-     */
-    public Reference getReference() throws NamingException {
-        Reference ref = new Reference(this.getClass().getName());
-
-        try {
-            Properties props = getProperties();
-            for (Enumeration iter = props.propertyNames(); iter.hasMoreElements();) {
-                String key = (String) iter.nextElement();
-                String value = props.getProperty(key);
-                javax.naming.StringRefAddr addr = new javax.naming.StringRefAddr(key, value);
-                ref.add(addr);
-            }
-        } catch (Exception e) {
-            throw new NamingException(e.getMessage());
-        }
-        return ref;
+    public void populateProperties(Properties props) {
+        props.setProperty("physicalName", getPhysicalName());
     }
 }
