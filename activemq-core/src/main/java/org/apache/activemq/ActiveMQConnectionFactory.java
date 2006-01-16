@@ -43,6 +43,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
+import org.apache.activemq.jndi.JNDIBaseStorable;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -57,7 +58,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
  * @version $Revision: 1.9 $
  * @see javax.jms.ConnectionFactory
  */
-public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable, Referenceable {
+public class ActiveMQConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable {
 
     public static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
     public static final String DEFAULT_USER = null;
@@ -359,12 +360,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
         this.redeliveryPolicy = redeliveryPolicy;
     }
 
-    /**
-     * set the properties for this instance as retrieved from JNDI
-     * 
-     * @param properties
-     */
-    public void setProperties(Properties properties) throws URISyntaxException {
+    public void buildFromProperties(Properties properties) {
         
         if (properties == null) {
             properties = new Properties();
@@ -381,11 +377,12 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
         }
     }
 
-    public Properties getProperties() {
-        Properties props = new Properties();
+    public void populateProperties(Properties props) {
         props.setProperty("asyncDispatch", Boolean.toString(isAsyncDispatch()));
+        props.setProperty(Context.PROVIDER_URL, getBrokerURL());
         props.setProperty("brokerURL", getBrokerURL());
-        props.setProperty("clientID", getClientID());
+        if (getClientID() != null)
+            props.setProperty("clientID", getClientID());
         props.setProperty("copyMessageOnSend", Boolean.toString(isCopyMessageOnSend()));
         props.setProperty("disableTimeStampsByDefault", Boolean.toString(isDisableTimeStampsByDefault()));
         props.setProperty("objectMessageSerializationDefered", Boolean.toString(isObjectMessageSerializationDefered()));
@@ -395,9 +392,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
         props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
-        props.setProperty("username", getUserName());
-
-        return props;
+        props.setProperty("userName", getUserName());
     }
 
     public boolean isOnSendPrepareMessageBody() {
@@ -431,28 +426,4 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     public void setAsyncDispatch(boolean asyncDispatch) {
         this.asyncDispatch = asyncDispatch;
     }
-
-    /**
-     * Retrieve a Reference for this instance to store in JNDI
-     *
-     * @return the built Reference
-     * @throws NamingException if error on building Reference
-     */
-    public Reference getReference() throws NamingException {
-        Reference ref = new Reference(this.getClass().getName());
-
-        try {
-            Properties props = getProperties();
-            for (Enumeration iter = props.propertyNames(); iter.hasMoreElements();) {
-                String key = (String) iter.nextElement();
-                String value = props.getProperty(key);
-                javax.naming.StringRefAddr addr = new javax.naming.StringRefAddr(key, value);
-                ref.add(addr);
-            }
-        } catch (Exception e) {
-            throw new NamingException(e.getMessage());
-        }
-        return ref;
-    }
-
 }
