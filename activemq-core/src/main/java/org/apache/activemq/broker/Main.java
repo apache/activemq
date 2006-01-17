@@ -76,40 +76,44 @@ public class Main {
             return;
         }
         
-        String token = (String)tokens.get(0);
+        for (int i = 0; i < tokens.size(); i++)
+        {
+            String token = (String)tokens.get(i);
+            // If token is an extension dir option
+            if (token.equals("--extdir")) {
+                // Process token
+                tokens.remove(0);
 
-        // If token is an extension dir option
-        if (token.equals("--extdir")) {
-            // Process token
-            tokens.remove(0);
+                // If no extension directory is specified, or next token is another option
+                if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                    System.out.println("Extension directory not specified.");
+                    System.out.println("Ignoring extension directory option.");
+                    return;
+                }
 
-            // If no extension directory is specified, or next token is another option
-            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                System.out.println("Extension directory not specified.");
-                System.out.println("Ignoring extension directory option.");
-                return;
+                // Process extension dir token
+                File extDir = new File((String)tokens.remove(0));
+
+                if(!canUseExtdir()) {
+                    System.out.println("Extension directory feature not available due to the system classpath being able to load: " + TASK_DEFAULT_CLASS);
+                    System.out.println("Ignoring extension directory option.");
+                    return;
+                }
+
+                if (!extDir.isDirectory()) {
+                    System.out.println("Extension directory specified is not valid directory: " + extDir);
+                    System.out.println("Ignoring extension directory option.");
+                    return;
+                }
+
+                addExtensionDirectory(extDir);
+            } else if (token.equals("--noDefExt")) { // If token is --noDefExt option
+                    useDefExt = false;
+            } else
+            {
+                break;
             }
-
-            // Process extension dir token
-            File extDir = new File((String)tokens.remove(0));
-
-            if(!canUseExtdir()) {
-                System.out.println("Extension directory feature not available due to the system classpath being able to load: " + TASK_DEFAULT_CLASS);
-                System.out.println("Ignoring extension directory option.");
-                return;
-            }
-
-            if (!extDir.isDirectory()) {
-                System.out.println("Extension directory specified is not valid directory: " + extDir);
-                System.out.println("Ignoring extension directory option.");
-                return;
-            }
-
-            addExtensionDirectory(extDir);
-        } else if (token.equals("--noDefExt")) { // If token is --noDefExt option
-                useDefExt = false;
-		  }
-
+        }
     }
 
     public void runTaskClass(List tokens) throws Throwable {
