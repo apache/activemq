@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -23,6 +24,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.commons.logging.Log;
@@ -52,15 +54,39 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
     int preLoadSize=0;
     boolean dispatching=false;
     
-    public PrefetchSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        super(context, info);
+    public PrefetchSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        super(broker,context, info);
     }
 
     synchronized public void add(MessageReference node) throws Throwable {
-        if( !isFull() ) {
+        if( !isFull()  && !isSlaveBroker()) {
             dispatch(node);
         } else {
-            matched.addLast(node);
+            synchronized(matched){
+                matched.addLast(node);
+            }
+        }
+        
+    }
+    
+    public void processMessageDispatchNotification(MessageDispatchNotification  mdn){
+        synchronized(matched){
+            for (Iterator i = matched.iterator(); i.hasNext();){
+                MessageReference node = (MessageReference)i.next();
+                if (node.getMessageId().equals(mdn.getMessageId())){
+                    i.remove();
+                    try {
+                    MessageDispatch md = createMessageDispatch(node, node.getMessage());
+                    dispatched.addLast(node);
+                    
+                    incrementPreloadSize(node.getMessage().getSize()); 
+                    node.decrementReferenceCount();
+                    }catch(Exception e){
+                        log.error("Problem processing MessageDispatchNotification: " + mdn,e);
+                    }
+                    break;
+                }
+            }
         }
     }
     
@@ -244,6 +270,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
             }
         }
     }
+    
+    
 
     private void dispatch(final MessageReference node) throws IOException {
         node.incrementReferenceCount();
@@ -254,7 +282,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
         }       
         
         // Make sure we can dispatch a message.
-        if( canDispatch(node) ) {
+        if( canDispatch(node) && !isSlaveBroker()) {
 
             MessageDispatch md = createMessageDispatch(node, message);
             dispatched.addLast(node);

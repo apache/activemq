@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
@@ -69,6 +70,8 @@ public class FailoverTransport implements CompositeTransport {
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
     private boolean useExponentialBackOff = true;
+    private boolean randomize = true;
+    private boolean initialized;
     private int maxReconnectAttempts;
     private int connectFailures;
     private long reconnectDelay = initialReconnectDelay;
@@ -78,6 +81,20 @@ public class FailoverTransport implements CompositeTransport {
         public void onCommand(Command command) {
             if (command.isResponse()) {
                 requestMap.remove(new Short(((Response) command).getCorrelationId()));
+            }
+            if (!initialized){
+                if (command.isBrokerInfo()){
+                    BrokerInfo info = (BrokerInfo)command;
+                    BrokerInfo[] peers = info.getPeerBrokerInfos();
+                    if (peers!= null){
+                        for (int i =0; i < peers.length;i++){
+                            String brokerString = peers[i].getBrokerURL();
+                            add(brokerString);
+                        }
+                    }
+                initialized = true;
+                }
+                
             }
             transportListener.onCommand(command);
         }
@@ -173,6 +190,7 @@ public class FailoverTransport implements CompositeTransport {
         synchronized (reconnectMutex) {
             log.debug("Transport failed, starting up reconnect task", e);
             if (connectedTransport != null) {
+                initialized = false;
                 ServiceSupport.dispose(connectedTransport);
                 connectedTransport = null;
                 connectedTransportURI = null;
@@ -256,6 +274,20 @@ public class FailoverTransport implements CompositeTransport {
         this.maxReconnectAttempts = maxReconnectAttempts;
     }
 
+    /**
+     * @return Returns the randomize.
+     */
+    public boolean isRandomize(){
+        return randomize;
+    }
+
+    /**
+     * @param randomize The randomize to set.
+     */
+    public void setRandomize(boolean randomize){
+        this.randomize=randomize;
+    }
+
     public void oneway(Command command) throws IOException {
         Exception error = null;
         try {
@@ -335,6 +367,19 @@ public class FailoverTransport implements CompositeTransport {
         }
         reconnect();
     }
+    
+    public void add(String u){
+        try {
+        URI uri = new URI(u);
+        if (!uris.contains(uri))
+            uris.add(uri);
+
+        reconnect();
+        }catch(Exception e){
+            log.error("Failed to parse URI: " + u);
+        }
+    }
+
 
     public void reconnect() {
         log.debug("Waking up reconnect task");
@@ -345,17 +390,18 @@ public class FailoverTransport implements CompositeTransport {
         }
     }
 
-    private ArrayList getConnectList() {
-        ArrayList l = new ArrayList(uris);
-
-        // Randomly, reorder the list by random swapping
-        Random r = new Random();
-        r.setSeed(System.currentTimeMillis());
-        for (int i = 0; i < l.size(); i++) {
-            int p = r.nextInt(l.size());
-            Object t = l.get(p);
-            l.set(p, l.get(i));
-            l.set(i, t);
+    private ArrayList getConnectList(){
+        ArrayList l=new ArrayList(uris);
+        if (randomize){
+            // Randomly, reorder the list by random swapping
+            Random r=new Random();
+            r.setSeed(System.currentTimeMillis());
+            for (int i=0;i<l.size();i++){
+                int p=r.nextInt(l.size());
+                Object t=l.get(p);
+                l.set(p,l.get(i));
+                l.set(i,t);
+            }
         }
         return l;
     }

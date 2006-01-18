@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -31,7 +32,7 @@ import org.apache.activemq.command.TransactionId;
  * @version $Revision: 1.10 $
  */
 public class BrokerBroadcaster extends BrokerFilter{
-    protected transient volatile Broker[] listeners=new Broker[0];
+    protected volatile Broker[] listeners=new Broker[0];
 
     public BrokerBroadcaster(Broker next){
         super(next);
@@ -202,30 +203,39 @@ public class BrokerBroadcaster extends BrokerFilter{
     }
 
     public void gc(){
+        next.gc();
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
             brokers[i].gc();
         }
-        next.gc();
+    }
+    
+    public void addBroker(Connection connection,BrokerInfo info){
+        next.addBroker(connection,info);
+        Broker brokers[]=getListeners();
+        for(int i=0;i<brokers.length;i++){
+            brokers[i].addBroker(connection, info);
+        }    
     }
 
+    
     protected Broker[] getListeners(){
         return listeners;
     }
 
-    public synchronized void addInteceptor(Broker broker){
-        List tmp=getInterceptorsAsList();
+    public synchronized void addListener(Broker broker){
+        List tmp=getListenersAsList();
         tmp.add(broker);
         listeners=(Broker[]) tmp.toArray(new Broker[tmp.size()]);
     }
 
-    public synchronized void removeInterceptor(Broker broker){
-        List tmp=getInterceptorsAsList();
+    public synchronized void removeListener(Broker broker){
+        List tmp=getListenersAsList();
         tmp.remove(broker);
         listeners=(Broker[]) tmp.toArray(new Broker[tmp.size()]);
     }
 
-    protected List getInterceptorsAsList(){
+    protected List getListenersAsList(){
         List tmp=new ArrayList();
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){

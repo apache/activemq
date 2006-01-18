@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -37,8 +38,8 @@ public class ManagedRegionBroker extends RegionBroker {
     private final MBeanServer mbeanServer;
     private final ObjectName brokerObjectName;
 
-    public ManagedRegionBroker(MBeanServer mbeanServer, ObjectName brokerObjectName, TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, PolicyMap policyMap) throws IOException {
-        super(taskRunnerFactory, memoryManager, adapter, policyMap);
+    public ManagedRegionBroker(BrokerService brokerService,MBeanServer mbeanServer, ObjectName brokerObjectName, TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, PolicyMap policyMap) throws IOException {
+        super(brokerService,taskRunnerFactory, memoryManager, adapter, policyMap);
         this.mbeanServer = mbeanServer;
         this.brokerObjectName = brokerObjectName;
     }

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
@@ -29,7 +30,7 @@ public class ManagedTempTopicRegion extends TempTopicRegion {
     private final ManagedRegionBroker regionBroker;
 
     public ManagedTempTopicRegion(ManagedRegionBroker regionBroker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        super(destinationStatistics, memoryManager, taskRunnerFactory);
+        super(regionBroker,destinationStatistics, memoryManager, taskRunnerFactory);
         this.regionBroker = regionBroker;
     }
 

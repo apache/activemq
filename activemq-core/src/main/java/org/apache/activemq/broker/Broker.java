@@ -20,7 +20,10 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
@@ -33,6 +36,13 @@ import org.apache.activemq.command.TransactionId;
  * @version $Revision: 1.8 $
  */
 public interface Broker extends Region, Service {
+    
+    /**
+     * Get a Broker from the Broker Stack that is a particular class
+     * @param type
+     * @return
+     */
+    public Broker getAdaptor(Class type);
 
     /**
      * Get the id of the broker
@@ -46,6 +56,22 @@ public interface Broker extends Region, Service {
      * Get the name of the broker
      */
     public String getBrokerName();
+    
+    /**
+     * A remote Broker connects
+     * @param contection
+     * @param info 
+     * @param client
+     */
+    public void addBroker(Connection connection, BrokerInfo info);
+    
+    /**
+     * Remove a BrokerInfo
+     * @param connection
+     * @param info
+     */
+    public void removeBroker(Connection connection,BrokerInfo info);
+    
 
     /**
      * A client is establishing a connection with the broker.
@@ -149,5 +175,31 @@ public interface Broker extends Region, Service {
      * @throws Throwable 
      */
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Throwable;
+    
+    /**
+     * Get the BrokerInfo's of any connected Brokers
+     * @return array of peer BrokerInfos
+     */
+    BrokerInfo[] getPeerBrokerInfos();
+    
+    
+    /**
+     * Notify the Broker that a dispatch has happened
+     * @param messageDispatch
+     */
+    public void processDispatch(MessageDispatch messageDispatch);
+    
+    /**
+     * Notify the Broker of a MessageDispatchNotification
+     * @param messageDispatchNotification
+     * @throws Throwable 
+     */
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable;
+    
+    /**
+     * 
+     * @return true if the broker is running as a slave
+     */
+    public boolean isSlaveBroker();
     
 }

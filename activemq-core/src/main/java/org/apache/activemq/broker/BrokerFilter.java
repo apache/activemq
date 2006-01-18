@@ -19,10 +19,13 @@ package org.apache.activemq.broker;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionInfo;
@@ -41,6 +44,15 @@ public class BrokerFilter implements Broker {
     public BrokerFilter(Broker next) {
         this.next=next;
     }
+    
+   
+    public Broker getAdaptor(Class type){
+        if (type.isInstance(this)){
+            return this;
+        }
+        return next.getAdaptor(type);
+    }
+
     
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
         next.acknowledge(context, ack);
@@ -144,6 +156,32 @@ public class BrokerFilter implements Broker {
 	
     public void gc() {
         next.gc();
+    }
+
+
+    public void addBroker(Connection connection,BrokerInfo info){
+        next.addBroker(connection, info);
+    }
+    
+    public void removeBroker(Connection connection,BrokerInfo info){
+        next.removeBroker(connection, info);
+    }
+
+
+    public BrokerInfo[] getPeerBrokerInfos(){
+        return next.getPeerBrokerInfos();
+    }
+    
+    public void processDispatch(MessageDispatch messageDispatch){
+        next.processDispatch(messageDispatch);
+    }
+    
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable{
+        next.processDispatchNotification(messageDispatchNotification);
+    }
+    
+    public boolean isSlaveBroker(){
+        return next.isSlaveBroker();
     }
 
 }

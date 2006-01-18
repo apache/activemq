@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-
-import javax.jms.InvalidSelectorException;
-
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.command.ConsumerId;
@@ -27,12 +24,14 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.transaction.Synchronization;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import javax.jms.InvalidSelectorException;
+
+import java.io.IOException;
 
 public class QueueSubscription extends PrefetchSubscription {
     
-    public QueueSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        super(context, info);
+    public QueueSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        super(broker,context, info);
     }
     
     public void add(MessageReference node) throws Throwable {

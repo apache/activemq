@@ -21,6 +21,7 @@ import java.util.Iterator;
 
 import javax.jms.InvalidSelectorException;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -39,14 +40,14 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     boolean active=true;
     boolean recovered=true;
     
-    public DurableTopicSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        super(context, info);
+    public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        super(broker,context, info);
         this.clientId = context.getClientId();
         this.subscriptionName = info.getSubcriptionName();
     }
     
-    public DurableTopicSubscription(SubscriptionInfo info) throws InvalidSelectorException {
-        super(null, createFakeConsumerInfo(info));
+    public DurableTopicSubscription(Broker broker,SubscriptionInfo info) throws InvalidSelectorException {
+        super(broker,null, createFakeConsumerInfo(info));
         this.clientId = info.getClientId();
         this.subscriptionName = info.getSubcriptionName();
         active=false;

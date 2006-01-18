@@ -76,4 +76,8 @@ public class KeepAliveInfo implements Command {
         return false;
     }
 
+    public boolean isMessageDispatchNotification(){
+        return false;
+    }
+
 }

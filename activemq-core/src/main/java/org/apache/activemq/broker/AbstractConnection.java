@@ -41,6 +41,7 @@ import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -77,6 +78,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     protected final List dispatchQueue = Collections.synchronizedList(new LinkedList());
     protected final TaskRunner taskRunner;
     protected final Connector connector;
+    protected BrokerInfo brokerInfo;
     private ConnectionStatistics statistics = new ConnectionStatistics();
     private boolean inServiceException=false;
 
@@ -148,6 +150,9 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
                 processRemoveConnection(connectionId);
             } catch (Throwable ignore) {
             }
+        }
+        if (brokerInfo != null){
+            broker.removeBroker(this, brokerInfo);
         }
     }
     
@@ -337,8 +342,14 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         broker.acknowledge(lookupConnectionState(ack.getConsumerId()).getContext(), ack);
         return null;
     }
+    
+    public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Throwable{
+        broker.processDispatchNotification(notification);
+        return null;
+    }
 
     public Response processBrokerInfo(BrokerInfo info) {
+        broker.addBroker(this, info);
         return null;
     }
 
@@ -501,6 +512,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             
             MessageDispatch md = (MessageDispatch) command;
             Runnable sub = (Runnable) md.getConsumer();
+            broker.processDispatch(md);
             
             try {
                 dispatch( command );
@@ -516,6 +528,10 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public void dispatchAsync(Command message) {
+        if (message.isMessageDispatch()){
+            MessageDispatch md = (MessageDispatch) message;
+            broker.processDispatch(md);
+        }
         if( taskRunner==null ) {
             dispatchSync( message );
         } else {

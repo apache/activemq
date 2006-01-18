@@ -22,6 +22,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 /**
@@ -86,6 +87,13 @@ public interface Region extends Service {
      * @param context the environment the operation is being executed under.
      */
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable;
+    
+    /**
+     * Process a notification of a dispatch - used by a Slave Broker
+     * @param messageDispatchNotification
+     * @throws Throwable
+     */
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable;
 
     public void gc();
     

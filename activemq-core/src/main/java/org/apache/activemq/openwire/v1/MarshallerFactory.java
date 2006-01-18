@@ -58,8 +58,8 @@ public class MarshallerFactory {
         add(new ConnectionErrorMarshaller());
         add(new ActiveMQObjectMessageMarshaller());
         add(new ConsumerInfoMarshaller());
-        add(new ConnectionIdMarshaller());
         add(new ActiveMQTempTopicMarshaller());
+        add(new ConnectionIdMarshaller());
         add(new DiscoveryEventMarshaller());
         add(new ConnectionInfoMarshaller());
         add(new KeepAliveInfoMarshaller());
@@ -74,6 +74,7 @@ public class MarshallerFactory {
         add(new ProducerInfoMarshaller());
         add(new SubscriptionInfoMarshaller());
         add(new ActiveMQMapMessageMarshaller());
+        add(new MessageDispatchNotificationMarshaller());
         add(new SessionInfoMarshaller());
         add(new ActiveMQMessageMarshaller());
         add(new TransactionInfoMarshaller());

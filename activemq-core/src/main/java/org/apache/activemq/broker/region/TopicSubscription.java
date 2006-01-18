@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -30,6 +31,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.transaction.Synchronization;
 
@@ -41,18 +43,34 @@ public class TopicSubscription extends AbstractSubscription {
     protected int dispatched=0;
     protected int delivered=0;
     
-    public TopicSubscription(ConnectionContext context, ConsumerInfo info, UsageManager usageManager) throws InvalidSelectorException {
-        super(context, info);
+    public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, UsageManager usageManager) throws InvalidSelectorException {
+        super(broker,context, info);
         this.usageManager=usageManager;
     }
 
     public void add(MessageReference node) throws InterruptedException, IOException {
         node.incrementReferenceCount();
-        if( !isFull() ) {
+        if( !isFull() && !isSlaveBroker() ) {
             dispatch(node);
         } else {
+            synchronized(matched){
             matched.addLast(node);
+            }
         }        
+    }
+    
+    public void processMessageDispatchNotification(MessageDispatchNotification  mdn){
+        synchronized(matched){
+            for (Iterator i = matched.iterator(); i.hasNext();){
+                MessageReference node = (MessageReference)i.next();
+                if (node.getMessageId().equals(mdn.getMessageId())){
+                    i.remove();
+                    dispatched++;
+                    node.decrementReferenceCount();
+                    break;
+                }
+            }
+        }
     }
     
     public void acknowledge(final ConnectionContext context, final MessageAck ack) throws Throwable {

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -40,9 +41,9 @@ public class QueueRegion extends AbstractRegion {
 
     private final PolicyMap policyMap;
 
-    public QueueRegion(DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+    public QueueRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
             PersistenceAdapter persistenceAdapter, PolicyMap policyMap) {
-        super(destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
         this.policyMap = policyMap;
     }
 
@@ -71,10 +72,10 @@ public class QueueRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         if (info.isBrowser()) {
-            return new QueueBrowserSubscription(context, info);
+            return new QueueBrowserSubscription(broker,context, info);
         }
         else {
-            return new QueueSubscription(context, info);
+            return new QueueSubscription(broker,context, info);
         }
     }
 

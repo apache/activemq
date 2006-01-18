@@ -21,11 +21,13 @@ import java.util.Set;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.memory.UsageManager;
@@ -50,11 +52,13 @@ abstract public class AbstractRegion implements Region {
     protected final UsageManager memoryManager;
     protected final PersistenceAdapter persistenceAdapter;
     protected final DestinationStatistics destinationStatistics;
+    protected final Broker broker;
     protected boolean autoCreateDestinations=true;
     protected final TaskRunnerFactory taskRunnerFactory;
     protected final Object destinationsMutex = new Object();
     
-    public AbstractRegion(DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+    public AbstractRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+        this.broker = broker;
         this.destinationStatistics = destinationStatistics;
         this.memoryManager = memoryManager;
         this.taskRunnerFactory = taskRunnerFactory;
@@ -206,6 +210,12 @@ abstract public class AbstractRegion implements Region {
         }
     }
     
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable{
+        Subscription sub = (Subscription) subscriptions.get(messageDispatchNotification.getConsumerId());
+        if (sub != null){
+            sub.processMessageDispatchNotification(messageDispatchNotification);
+        }
+    }
     public void gc() {
         for (Iterator iter = subscriptions.values().iterator(); iter.hasNext();) {
             Subscription sub = (Subscription) iter.next();

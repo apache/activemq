@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -32,8 +33,8 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  */
 public class TempQueueRegion extends AbstractRegion {
 
-    public TempQueueRegion(DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        super(destinationStatistics, memoryManager, taskRunnerFactory, null);
+    public TempQueueRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, null);
         setAutoCreateDestinations(false);
     }
 
@@ -55,9 +56,9 @@ public class TempQueueRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         if( info.isBrowser() ) {
-            return new QueueBrowserSubscription(context, info);
+            return new QueueBrowserSubscription(broker,context, info);
         } else {
-            return new QueueSubscription(context, info);
+            return new QueueSubscription(broker,context, info);
         }
     }
     
