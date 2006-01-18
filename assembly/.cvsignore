@@ -1,6 +1,0 @@
-bin
-target
-.classpath
-.project
-junit*.properties
-derby.log

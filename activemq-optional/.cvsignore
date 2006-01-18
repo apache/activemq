@@ -1,9 +1,0 @@
-target
-.classpath
-.project
-*.iws
-*.ipr
-*.iml
-build.properties
-
-bin
