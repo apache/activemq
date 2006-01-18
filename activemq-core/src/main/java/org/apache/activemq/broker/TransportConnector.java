@@ -113,6 +113,7 @@ public class TransportConnector implements Connector {
     public void setBroker(Broker broker) {
         this.broker = broker;
         brokerInfo.setBrokerId(broker.getBrokerId());
+        brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
     }
 	
     public void setBrokerName(String brokerName) {
@@ -121,6 +122,7 @@ public class TransportConnector implements Connector {
 
     public void setServer(TransportServer server) {
         this.server = server;
+        this.brokerInfo.setBrokerURL(server.getConnectURI().toString());
         this.server.setAcceptListener(new TransportAcceptListener() {
             public void onAccept(Transport transport) {
                 try {

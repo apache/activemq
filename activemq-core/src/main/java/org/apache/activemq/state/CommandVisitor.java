@@ -26,6 +26,7 @@ import org.apache.activemq.command.FlushCommand;
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -70,6 +71,7 @@ public interface CommandVisitor {
     Response processRecoverTransactions(TransactionInfo info) throws Throwable;
     Response processForgetTransaction(TransactionInfo info) throws Throwable;
     Response processEndTransaction(TransactionInfo info) throws Throwable;
+    Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Throwable;
     
 }
 

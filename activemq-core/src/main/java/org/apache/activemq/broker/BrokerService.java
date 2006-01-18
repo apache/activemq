@@ -16,27 +16,19 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
+import org.apache.activemq.broker.ft.MasterConnector;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.FTConnectorView;
+import org.apache.activemq.broker.jmx.JmsConnectorView;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
@@ -62,8 +54,19 @@ import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a running broker service which consists of a number of transport
@@ -82,6 +85,7 @@ public class BrokerService implements Service {
     private boolean populateJMSXUserID = false;
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors = false;
+    private boolean shutdownOnMasterFailure = false;
     private String brokerName = "localhost";
     private File dataDirectory;
     private Broker broker;
@@ -96,10 +100,12 @@ public class BrokerService implements Service {
     private List proxyConnectors = new CopyOnWriteArrayList();
     private List registeredMBeanNames = new CopyOnWriteArrayList();
     private List jmsConnectors = new CopyOnWriteArrayList();
+    private MasterConnector masterConnector;
     private Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
     private String[] proxyConnectorURIs;
+    private String masterConnectorURI;
     private JmsConnector[] jmsBridgeConnectors; //these are Jms to Jms bridges to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
     private URI vmConnectorURI;
@@ -143,6 +149,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public TransportConnector addConnector(TransportConnector connector) throws Exception {
+        int what = System.identityHashCode(connector);
         if (isUseJmx()) {
             URI discoveryUri = connector.getDiscoveryUri();
             connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
@@ -230,9 +237,12 @@ public class BrokerService implements Service {
         return connector;
     }
     
-    public JmsConnector addJmsConnector(JmsConnector connector){
+    public JmsConnector addJmsConnector(JmsConnector connector) throws Exception{
         connector.setBrokerService(this);
         jmsConnectors.add(connector);
+        if (isUseJmx()) {
+            registerJmsConnectorMBean(connector);
+        }
         return connector;
     }
     
@@ -242,6 +252,64 @@ public class BrokerService implements Service {
         }
         return null;
     }
+    
+    public void initializeMasterConnector(URI remoteURI) throws Exception {
+        if (masterConnector != null){
+            throw new IllegalStateException("Can only be the Slave to one Master");
+        }
+        URI localURI = getVmConnectorURI();
+        TransportConnector connector = null;
+        if (!transportConnectors.isEmpty()){
+            connector = (TransportConnector)transportConnectors.get(0);
+        }
+        masterConnector = new MasterConnector(this,connector);
+        masterConnector.setLocalURI(localURI);
+        masterConnector.setRemoteURI(remoteURI);
+        
+        if (isUseJmx()) {
+            registerFTConnectorMBean(masterConnector);
+        }
+    }
+    
+    /**
+     * @return Returns the masterConnectorURI.
+     */
+    public String getMasterConnectorURI(){
+        return masterConnectorURI;
+    }
+
+    /**
+     * @param masterConnectorURI The masterConnectorURI to set.
+     */
+    public void setMasterConnectorURI(String masterConnectorURI){
+        this.masterConnectorURI=masterConnectorURI;
+    }
+
+    /**
+     * @return true if this Broker is a slave to a Master
+     */
+    public boolean isSlave(){
+        return masterConnector != null && masterConnector.isSlave();
+    }
+    
+    public void masterFailed(){
+        if (shutdownOnMasterFailure){
+            log.fatal("The Master has failed ... shutting down");
+            try {
+            stop();
+            }catch(Exception e){
+                log.error("Failed to stop for master failure",e);
+            }
+        }else {
+            log.warn("Master Failed - starting all connectors");
+            try{
+                startAllConnectors();
+            }catch(Exception e){
+               log.error("Failed to startAllConnectors");
+            }
+        }
+    }
+    
     
     // Service interface
     // -------------------------------------------------------------------------
@@ -269,26 +337,15 @@ public class BrokerService implements Service {
         }
 
         getBroker().start();
-
-        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = (TransportConnector) iter.next();
-            connector.start();
-        }
-
-        for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = (NetworkConnector) iter.next();
-            connector.start();
+        if (masterConnectorURI!=null){
+            initializeMasterConnector(new URI(masterConnectorURI));
+            if (masterConnector!=null){
+                masterConnector.start();
+            }
         }
         
-        for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = (ProxyConnector) iter.next();
-            connector.start();
-        }
+        startAllConnectors();
         
-        for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = (JmsConnector) iter.next();
-            connector.start();
-        }
 
         log.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ") started");
     }
@@ -303,8 +360,12 @@ public class BrokerService implements Service {
         removeShutdownHook();
 
         ServiceStopper stopper = new ServiceStopper();
+        if (masterConnector != null){
+            masterConnector.stop();
+        }
 
         for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
+            
             TransportConnector connector = (TransportConnector) iter.next();
             stopper.stop(connector);
         }
@@ -630,8 +691,8 @@ public class BrokerService implements Service {
             }
         }
         if (networkConnectorURIs != null) {
-            for (int i = 0; i < transportConnectorURIs.length; i++) {
-                String uri = transportConnectorURIs[i];
+            for (int i = 0; i < networkConnectorURIs.length; i++) {
+                String uri = networkConnectorURIs[i];
                 addNetworkConnector(uri);
             }
         }
@@ -641,11 +702,13 @@ public class BrokerService implements Service {
                 addProxyConnector(uri);
             }
         }
+        
         if (jmsBridgeConnectors != null){
             for (int i = 0; i < jmsBridgeConnectors.length; i++){
                 addJmsConnector(jmsBridgeConnectors[i]);
             }
         }
+        
     }
 
     protected void registerConnectorMBean(TransportConnector connector) throws IOException, URISyntaxException {
@@ -701,6 +764,42 @@ public class BrokerService implements Service {
         }
     }
     
+    protected void registerFTConnectorMBean(MasterConnector connector) throws IOException {
+        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+        FTConnectorView view = new FTConnectorView(connector);
+        Hashtable map = new Hashtable();
+        map.put("Type", "MasterConnector");
+        map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
+        // map.put("ConnectorName",
+        // JMXSupport.encodeObjectNamePart(connector.()));
+        try {
+            ObjectName objectName = new ObjectName("org.apache.activemq", map);
+            mbeanServer.registerMBean(view, objectName);
+            registeredMBeanNames.add(objectName);
+        }
+        catch (Throwable e) {
+            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+        }
+    }
+    
+    protected void registerJmsConnectorMBean(JmsConnector connector) throws IOException {
+        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+        JmsConnectorView view = new JmsConnectorView(connector);
+        Hashtable map = new Hashtable();
+        map.put("Type", "JmsConnector");
+        map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
+        // map.put("ConnectorName",
+        // JMXSupport.encodeObjectNamePart(connector.()));
+        try {
+            ObjectName objectName = new ObjectName("org.apache.activemq", map);
+            mbeanServer.registerMBean(view, objectName);
+            registeredMBeanNames.add(objectName);
+        }
+        catch (Throwable e) {
+            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+        }
+    }
+    
     /**
      * Factory method to create a new broker
      *
@@ -733,6 +832,7 @@ public class BrokerService implements Service {
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
         }
+        
 
         return broker;
 
@@ -751,11 +851,11 @@ public class BrokerService implements Service {
 		RegionBroker regionBroker = null;
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            regionBroker = new ManagedRegionBroker(mbeanServer, getBrokerObjectName(),
+            regionBroker = new ManagedRegionBroker(this,mbeanServer, getBrokerObjectName(),
                     getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter(), getDestinationPolicy());
         }
         else {
-			regionBroker = new RegionBroker(getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter(),
+			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter(),
                     getDestinationPolicy());
         }
 		regionBroker.setBrokerName(getBrokerName());
@@ -884,6 +984,34 @@ public class BrokerService implements Service {
             System.err.println("Failed to shut down: " + e);
         }
     }
+    
+    /**
+     * Start all transport and network connections, proxies and bridges
+     * @throws Exception
+     */
+    protected void startAllConnectors() throws Exception{
+        if (!isSlave()){
+            for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
+                TransportConnector connector = (TransportConnector) iter.next();
+                connector.start();
+            }
+
+            for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+                NetworkConnector connector = (NetworkConnector) iter.next();
+                connector.start();
+            }
+            
+            for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
+                ProxyConnector connector = (ProxyConnector) iter.next();
+                connector.start();
+            }
+            
+            for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
+                JmsConnector connector = (JmsConnector) iter.next();
+                connector.start();
+            }
+            }
+    }
 
     public boolean isDeleteAllMessagesOnStartup() {
         return deleteAllMessagesOnStartup;
@@ -910,5 +1038,19 @@ public class BrokerService implements Service {
 
     public void setVmConnectorURI(URI vmConnectorURI) {
         this.vmConnectorURI = vmConnectorURI;
+    }
+
+    /**
+     * @return Returns the shutdownOnMasterFailure.
+     */
+    public boolean isShutdownOnMasterFailure(){
+        return shutdownOnMasterFailure;
+    }
+
+    /**
+     * @param shutdownOnMasterFailure The shutdownOnMasterFailure to set.
+     */
+    public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure){
+        this.shutdownOnMasterFailure=shutdownOnMasterFailure;
     }
 }

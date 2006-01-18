@@ -22,6 +22,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
@@ -86,5 +87,16 @@ public interface Subscription {
      * reclaim memory.
      */
     void gc();
+    
+    /**
+     * Used by a Slave Broker to update dispatch infomation
+     * @param mdn
+     */
+    void processMessageDispatchNotification(MessageDispatchNotification  mdn);
+    
+    /**
+     * @return true if the broker is currently in slave mode
+     */
+    boolean isSlaveBroker();
     
 }

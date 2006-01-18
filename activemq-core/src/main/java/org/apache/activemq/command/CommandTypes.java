@@ -112,6 +112,14 @@ public interface CommandTypes {
     
     ///////////////////////////////////////////////////
     //
+    // Broker to Broker command objects
+    //
+    /////////////////////////////////////////////////// 
+    
+    byte  MESSAGE_DISPATCH_NOTIFICATION     = 90;
+    
+    ///////////////////////////////////////////////////
+    //
     // Data structures contained in the command objects.
     //
     ///////////////////////////////////////////////////    
@@ -129,6 +137,8 @@ public interface CommandTypes {
     byte  CONSUMER_ID                       = 122;
     byte  PRODUCER_ID                       = 123;
     byte  BROKER_ID                         = 124;
+    
+   
 
 
 }

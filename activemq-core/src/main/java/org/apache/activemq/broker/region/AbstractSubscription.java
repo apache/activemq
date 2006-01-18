@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
@@ -38,6 +39,7 @@ abstract public class AbstractSubscription implements Subscription {
     
     static private final Log log = LogFactory.getLog(AbstractSubscription.class);
     
+    protected Broker broker;
     protected ConnectionContext context;
     protected ConsumerInfo info;
     final protected DestinationFilter destinationFilter;
@@ -45,7 +47,8 @@ abstract public class AbstractSubscription implements Subscription {
    
     final protected CopyOnWriteArrayList destinations = new CopyOnWriteArrayList();
 
-    public AbstractSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {        
+    public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {        
+        this.broker = broker;
         this.context = context;
         this.info = info;
         this.destinationFilter = DestinationFilter.parseFilter(info.getDestination());
@@ -105,5 +108,9 @@ abstract public class AbstractSubscription implements Subscription {
     }
     
     public void gc() {        
+    }
+    
+    public boolean isSlaveBroker(){
+        return broker.isSlaveBroker();
     }
 }

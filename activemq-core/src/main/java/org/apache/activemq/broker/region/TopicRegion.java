@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -50,9 +51,9 @@ public class TopicRegion extends AbstractRegion {
     protected final ConcurrentHashMap durableSubscriptions = new ConcurrentHashMap();
     private final PolicyMap policyMap;
 
-    public TopicRegion(DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+    public TopicRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
             PersistenceAdapter persistenceAdapter, PolicyMap policyMap) {
-        super(destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
         this.policyMap = policyMap;
     }
 
@@ -168,7 +169,7 @@ public class TopicRegion extends AbstractRegion {
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if (sub == null) {
-                sub = new DurableTopicSubscription(context, info);
+                sub = new DurableTopicSubscription(broker,context, info);
                 durableSubscriptions.put(key, sub);
             }
             else {
@@ -177,14 +178,14 @@ public class TopicRegion extends AbstractRegion {
             return sub;
         }
         else {
-            return new TopicSubscription(context, info, memoryManager);
+            return new TopicSubscription(broker,context, info, memoryManager);
         }
     }
     
     public Subscription createDurableSubscription(SubscriptionInfo info) throws JMSException {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubcriptionName());
         DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
-        sub = new DurableTopicSubscription(info);
+        sub = new DurableTopicSubscription(broker,info);
         durableSubscriptions.put(key, sub);
         return sub;
     }

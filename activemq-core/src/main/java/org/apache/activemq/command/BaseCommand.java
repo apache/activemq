@@ -60,6 +60,10 @@ abstract public class BaseCommand implements Command {
     public boolean isMessageAck() {
         return false;
     }
+    
+    public boolean isMessageDispatchNotification(){
+        return false;
+    }
 
     /**
      * @openwire:property version=1

@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -31,8 +32,8 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  */
 public class TempTopicRegion extends AbstractRegion {
 
-    public TempTopicRegion(DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        super(destinationStatistics, memoryManager, taskRunnerFactory, null);
+    public TempTopicRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, null);
         setAutoCreateDestinations(false);
     }
 
@@ -56,7 +57,7 @@ public class TempTopicRegion extends AbstractRegion {
         if( info.isDurable() ) {
             throw new JMSException("A durable subscription cannot be created for a temporary topic.");
         } else {
-            return new TopicSubscription(context, info, this.memoryManager);
+            return new TopicSubscription(broker,context, info, this.memoryManager);
         }
     }
         

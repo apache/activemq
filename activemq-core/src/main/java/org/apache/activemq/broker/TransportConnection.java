@@ -18,19 +18,23 @@ package org.apache.activemq.broker;
 
 import java.io.IOException;
 
+import org.apache.activemq.broker.ft.MasterBroker;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
  * @version $Revision: 1.8 $
  */
 public class TransportConnection extends AbstractConnection {
-
+    private static final Log log = LogFactory.getLog(TransportConnection.class);
     private final Transport transport;
     private boolean slow;
     private boolean markedCandidate;
@@ -39,6 +43,7 @@ public class TransportConnection extends AbstractConnection {
     private boolean connected;
     private boolean active;
     private long timeStamp=0;
+    private MasterBroker masterBroker; //used if this connection is used by a Slave
 
     /**
      * @param connector
@@ -71,10 +76,14 @@ public class TransportConnection extends AbstractConnection {
     }
 
     public void stop() throws Exception {
-
         try {
+            if (masterBroker != null){
+                masterBroker.stop();
+            }
             transport.oneway(new ShutdownInfo());
-        } catch (IOException ignore) {
+            Thread.sleep(1000);
+        } catch (Exception ignore) {
+            //ignore.printStackTrace();
         }
 
         transport.stop();
@@ -179,6 +188,19 @@ public class TransportConnection extends AbstractConnection {
      */
     public void setActive(boolean active){
         this.active=active;
+    }
+    
+    public Response processBrokerInfo(BrokerInfo info) {
+        if (info.isSlaveBroker()){
+            //stream messages from this broker (the master) to 
+            //the slave
+            MutableBrokerFilter parent = (MutableBrokerFilter)broker.getAdaptor(MutableBrokerFilter.class);
+            masterBroker = new MasterBroker(parent,transport);  
+            masterBroker.startProcessing();
+            log.info("Slave Broker " + info.getBrokerName() + " is attached");
+        }
+        
+        return super.processBrokerInfo(info);
     }
     
     

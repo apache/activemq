@@ -20,15 +20,19 @@ import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionInfo;
@@ -46,8 +50,8 @@ import javax.jms.JMSException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.*;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -62,22 +66,25 @@ public class RegionBroker implements Broker {
     private final Region topicRegion;
     private final Region tempQueueRegion;
     private final Region tempTopicRegion;
+    private BrokerService brokerService;
     
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     
     private final CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
     private final CopyOnWriteArraySet destinations = new CopyOnWriteArraySet();
+    private final CopyOnWriteArrayList brokerInfos = new CopyOnWriteArrayList();
 
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();    
     private BrokerId brokerId;
     private String brokerName;
     private Map clientIdSet = new HashMap(); // we will synchronize access
 
-    public RegionBroker(TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter) throws IOException {
-        this(taskRunnerFactory, memoryManager, createDefaultPersistenceAdapter(memoryManager), null);
+    public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter) throws IOException {
+        this(brokerService,taskRunnerFactory, memoryManager, createDefaultPersistenceAdapter(memoryManager), null);
     }
     
-    public RegionBroker(TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, PolicyMap policyMap) throws IOException {
+    public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, PolicyMap policyMap) throws IOException {
+        this.brokerService = brokerService;
         this.sequenceGenerator.setLastSequenceId( adapter.getLastMessageBrokerSequenceId() );
         
         queueRegion = createQueueRegion(memoryManager, taskRunnerFactory, adapter, policyMap);
@@ -86,21 +93,28 @@ public class RegionBroker implements Broker {
         tempQueueRegion = createTempQueueRegion(memoryManager, taskRunnerFactory);
         tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory);        
     }
+    
+    public Broker getAdaptor(Class type){
+        if (type.isInstance(this)){
+            return this;
+        }
+        return null;
+    }
 
     protected Region createTempTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        return new TempTopicRegion(destinationStatistics, memoryManager, taskRunnerFactory);
+        return new TempTopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory);
     }
 
     protected Region createTempQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        return new TempQueueRegion(destinationStatistics, memoryManager, taskRunnerFactory);
+        return new TempQueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory);
     }
 
     protected Region createTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter adapter, PolicyMap policyMap) {
-        return new TopicRegion(destinationStatistics, memoryManager, taskRunnerFactory, adapter, policyMap);
+        return new TopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, adapter, policyMap);
     }
 
     protected Region createQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter adapter, PolicyMap policyMap) {
-        return new QueueRegion(destinationStatistics, memoryManager, taskRunnerFactory, adapter, policyMap);
+        return new QueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, adapter, policyMap);
     }
     
     private static PersistenceAdapter createDefaultPersistenceAdapter(UsageManager memoryManager) throws IOException {
@@ -279,7 +293,6 @@ public class RegionBroker implements Broker {
     }
 
     public void send(ConnectionContext context,  Message message) throws Throwable {
-        
         message.getMessageId().setBrokerSequenceId(sequenceGenerator.getNextSequenceId());
         ActiveMQDestination destination = message.getDestination();
         switch(destination.getDestinationType()) {
@@ -385,5 +398,51 @@ public class RegionBroker implements Broker {
     protected void throwUnknownDestinationType(ActiveMQDestination destination) throws JMSException {
         throw new JMSException("Unknown destination type: " + destination.getDestinationType());
     }
+
+    public synchronized void addBroker(Connection connection,BrokerInfo info){
+            brokerInfos.add(info);
+    }
+    
+    public synchronized void removeBroker(Connection connection,BrokerInfo info){
+        if (info != null){
+            brokerInfos.remove(info);
+        }   
+    }
+
+    public synchronized BrokerInfo[] getPeerBrokerInfos(){
+        BrokerInfo[] result = new BrokerInfo[brokerInfos.size()];
+        result = (BrokerInfo[])brokerInfos.toArray(result);
+        return result;
+    }
+    
+    public void processDispatch(MessageDispatch messageDispatch){
+        
+    }
+    
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable {
+        ActiveMQDestination destination = messageDispatchNotification.getDestination();
+        switch(destination.getDestinationType()) {
+        case ActiveMQDestination.QUEUE_TYPE:
+            queueRegion.processDispatchNotification(messageDispatchNotification);
+            break;
+        case ActiveMQDestination.TOPIC_TYPE:
+            topicRegion.processDispatchNotification(messageDispatchNotification);
+            break;
+        case ActiveMQDestination.TEMP_QUEUE_TYPE:
+            tempQueueRegion.processDispatchNotification(messageDispatchNotification);
+            break;
+        case ActiveMQDestination.TEMP_TOPIC_TYPE:
+            tempTopicRegion.processDispatchNotification(messageDispatchNotification);
+            break;
+        default:
+            throwUnknownDestinationType(destination);
+        }
+    }
+    
+    public boolean isSlaveBroker(){
+        return brokerService.isSlave();
+    }
+
+    
 
 }
