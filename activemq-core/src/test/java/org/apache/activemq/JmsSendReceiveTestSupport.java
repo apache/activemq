@@ -93,6 +93,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
             }
             
             producer.send(producerDestination, message);
+            messageSent();
         }
         
         assertMessagesAreReceived();
@@ -200,5 +201,14 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      */
     protected List createConcurrentList() {
         return Collections.synchronizedList(new ArrayList());
+    }
+    
+    /**
+     * Just a hook so can insert failure tests
+     * @throws Exception 
+     *
+     */
+    protected void messageSent() throws Exception{
+        
     }
 }
