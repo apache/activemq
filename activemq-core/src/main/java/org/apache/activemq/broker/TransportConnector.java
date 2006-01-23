@@ -27,7 +27,6 @@ import javax.management.ObjectName;
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -51,7 +50,6 @@ public class TransportConnector implements Connector {
     private static final Log log = LogFactory.getLog(TransportConnector.class);
 
     private Broker broker;
-    private BrokerFilter brokerFilter;
     private TransportServer server;
     private URI uri;
     private BrokerInfo brokerInfo = new BrokerInfo();
@@ -195,8 +193,8 @@ public class TransportConnector implements Connector {
         }
         this.statusDector.stop();
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            ConnectionContext context = (ConnectionContext) iter.next();
-            ss.stop(context.getConnection());
+            TransportConnection c = (TransportConnection) iter.next();
+            ss.stop(c);
         }
         ss.throwFirstException();
     }
@@ -204,28 +202,7 @@ public class TransportConnector implements Connector {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Connection createConnection(Transport transport) throws IOException {
-        return new TransportConnection(this, transport, getBrokerFilter(), taskRunnerFactory);
-    }
-
-    protected BrokerFilter getBrokerFilter() {
-        if (brokerFilter == null) {
-            if (broker == null) {
-                throw new IllegalArgumentException("You must specify the broker property. Maybe this connector should be added to a broker?");
-            }
-            this.brokerFilter = new BrokerFilter(broker) {
-                public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
-                    connections.add(context);
-                    super.addConnection(context, info);
-                }
-
-                public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
-                    connections.remove(context);
-                    super.removeConnection(context, info, error);
-                }
-            };
-
-        }
-        return brokerFilter;
+        return new TransportConnection(this, transport, broker, taskRunnerFactory);
     }
 
     protected TransportServer createTransportServer() throws IOException, URISyntaxException {
@@ -276,6 +253,14 @@ public class TransportConnector implements Connector {
 
     public void setConnectUri(URI transportUri) {
         this.connectUri = transportUri;
+    }
+
+    public void onStarted(TransportConnection connection) {
+        connections.add(connection);
+    }
+
+    public void onStopped(TransportConnection connection) {
+        connections.remove(connection);
     }
 
 }

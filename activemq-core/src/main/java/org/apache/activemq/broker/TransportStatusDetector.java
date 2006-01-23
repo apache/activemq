@@ -75,14 +75,10 @@ public class TransportStatusDetector implements Service,Runnable{
     }
     protected void doSweep(){
         for(Iterator i=connector.getConnections().iterator();i.hasNext();){
-            ConnectionContext cc=(ConnectionContext) i.next();
-            Connection connection=cc.getConnection();
-            if(connection instanceof TransportConnection){
-                TransportConnection tc=(TransportConnection) connection;
-                if(tc.isMarkedCandidate()){
-                    tc.doMark();
-                    collectionCandidates.add(tc);
-                }
+            TransportConnection connection=(TransportConnection) i.next();
+            if(connection.isMarkedCandidate()){
+                connection.doMark();
+                collectionCandidates.add(connection);
             }
         }
     }

@@ -77,7 +77,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     protected final List dispatchQueue = Collections.synchronizedList(new LinkedList());
     protected final TaskRunner taskRunner;
-    protected final Connector connector;
+    protected final TransportConnector connector;
     protected BrokerInfo brokerInfo;
     private ConnectionStatistics statistics = new ConnectionStatistics();
     private boolean inServiceException=false;
@@ -107,7 +107,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
      * @param broker
      * @param taskRunnerFactory - can be null if you want direct dispatch to the transport else commands are sent async.
      */
-    public AbstractConnection(Connector connector, Broker broker, TaskRunnerFactory taskRunnerFactory) {
+    public AbstractConnection(TransportConnector connector, Broker broker, TaskRunnerFactory taskRunnerFactory) {
         
         this.connector = connector;
         this.broker = broker;
