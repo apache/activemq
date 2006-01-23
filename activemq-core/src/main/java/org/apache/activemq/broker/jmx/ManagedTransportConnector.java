@@ -57,7 +57,7 @@ public class ManagedTransportConnector extends TransportConnector {
             connectionId = "" + (nextConnectionId++);
         }
 
-        return new ManagedTransportConnection(this, transport, getBrokerFilter(), getTaskRunnerFactory(), mbeanServer, connectorName, connectionId);
+        return new ManagedTransportConnection(this, transport, getBroker(), getTaskRunnerFactory(), mbeanServer, connectorName, connectionId);
     }
 
 }

@@ -73,9 +73,11 @@ public class TransportConnection extends AbstractConnection {
         transport.start();
         active = true;
         super.start();
+        connector.onStarted(this);
     }
 
     public void stop() throws Exception {
+        connector.onStopped(this);
         try {
             if (masterBroker != null){
                 masterBroker.stop();
