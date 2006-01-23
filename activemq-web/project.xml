@@ -69,6 +69,13 @@
       </properties>
     </dependency>
 
+    <!-- Derby SQL DB used for testing JDBC message store -->
+    <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derby</artifactId>
+        <version>${derby_version}</version>
+    </dependency>
+
     <!-- For Spring servlet -->
     <dependency>
       <id>springframework</id>

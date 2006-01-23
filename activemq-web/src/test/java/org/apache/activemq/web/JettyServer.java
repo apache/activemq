@@ -34,7 +34,7 @@ public class JettyServer {
     
     public static final int PORT = 8080;
 
-    public static final String WEBAPP_DIR = "src/webapp";
+    public static final String WEBAPP_DIR = "src/main/webapp";
 
     public static final String WEBAPP_CTX = "/";
 
