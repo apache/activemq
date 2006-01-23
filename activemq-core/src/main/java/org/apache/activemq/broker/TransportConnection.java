@@ -81,7 +81,6 @@ public class TransportConnection extends AbstractConnection {
                 masterBroker.stop();
             }
             transport.oneway(new ShutdownInfo());
-            Thread.sleep(1000);
         } catch (Exception ignore) {
             //ignore.printStackTrace();
         }
