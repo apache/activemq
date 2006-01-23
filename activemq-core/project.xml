@@ -346,6 +346,9 @@
                 <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
                 <exclude>**/QueueBridgeTest.*</exclude>
 
+		<!-- https://jira.logicblaze.com/jira/browse/AMQ-502 -->
+                <exclude>**/StompTest.*</exclude>
+
             </excludes>
         </unitTest>
         <resources>
