@@ -57,6 +57,18 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
         if (info.getUserName() == null)
             info.setUserName(baseInfo.getUserName());
     }
+    
+    public boolean equals(Object object) {
+        if( object == null || object.getClass()!=ActiveMQManagedConnectionFactory.class ) {
+            return false;
+        }
+        return ((ActiveMQManagedConnectionFactory)object).info.equals(info);
+    }
+    
+    public int hashCode() {
+        return info.hashCode();
+    }
+    
 
     public ResourceAdapter getResourceAdapter() {
         return adapter;
@@ -145,10 +157,6 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
         return info.getPassword();
     }
 
-    public String getServerUrl() {
-        return info.getServerUrl();
-    }
-
     public String getUserName() {
         return info.getUserName();
     }
@@ -159,10 +167,6 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
 
     public void setPassword(String password) {
         info.setPassword(password);
-    }
-
-    public void setServerUrl(String url) {
-        info.setServerUrl(url);
     }
 
     public void setUserName(String userid) {

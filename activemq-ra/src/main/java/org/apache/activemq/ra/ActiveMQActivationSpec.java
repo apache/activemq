@@ -18,6 +18,7 @@ package org.apache.activemq.ra;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -42,8 +43,10 @@ import org.apache.activemq.selector.SelectorParser;
  * 
  * @version $Revision$ $Date$
  */
-public class ActiveMQActivationSpec implements ActivationSpec {
+public class ActiveMQActivationSpec implements ActivationSpec, Serializable {
 
+    private static final long serialVersionUID = -7153087544100459975L;
+    
     /** Auto-acknowledge constant for <code>acknowledgeMode</code> property **/
     public static final String AUTO_ACKNOWLEDGE_MODE = "Auto-acknowledge";
     /** Dups-ok-acknowledge constant for <code>acknowledgeMode</code> property * */
@@ -55,7 +58,7 @@ public class ActiveMQActivationSpec implements ActivationSpec {
     
     public static final int INVALID_ACKNOWLEDGE_MODE = -1;
     
-    private ActiveMQResourceAdapter resourceAdapter;
+    private transient ActiveMQResourceAdapter resourceAdapter;
     private String destinationType;
     private String messageSelector;
     private String destination;
