@@ -53,7 +53,6 @@ public class Main {
 
         // Convert arguments to collection for easier management
         List tokens =  new LinkedList(Arrays.asList(args));
-
         // Parse for extension directory option
         app.parseExtensions(tokens);
 
@@ -75,44 +74,55 @@ public class Main {
         if (tokens.isEmpty()) {
             return;
         }
-        
-        for (int i = 0; i < tokens.size(); i++)
+        int tokencnt = tokens.size();
+        String token = (String) tokens.remove(0);
+
+        for (int processedcnt = 0; processedcnt < tokencnt; processedcnt++)
         {
-            String token = (String)tokens.get(i);
             // If token is an extension dir option
             if (token.equals("--extdir")) {
-                // Process token
-                tokens.remove(0);
 
                 // If no extension directory is specified, or next token is another option
-                if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                    System.out.println("Extension directory not specified.");
-                    System.out.println("Ignoring extension directory option.");
-                    return;
+                if (!tokens.isEmpty()) {
+                    token = (String) tokens.remove(0);
+                    if (token.startsWith("-"))
+                    {
+                        System.out.println("Extension directory not specified.");
+                        System.out.println("Ignoring extension directory option.");
+                        continue;
+                    }
+                } else
+                {
+                    break;
                 }
 
-                // Process extension dir token
-                File extDir = new File((String)tokens.remove(0));
-
+                // Process token
+                processedcnt++;
+                
                 if(!canUseExtdir()) {
                     System.out.println("Extension directory feature not available due to the system classpath being able to load: " + TASK_DEFAULT_CLASS);
                     System.out.println("Ignoring extension directory option.");
-                    return;
-                }
+                } else
+                {
+                    // Process extension dir token
+                    File extDir = new File(token);
 
-                if (!extDir.isDirectory()) {
-                    System.out.println("Extension directory specified is not valid directory: " + extDir);
-                    System.out.println("Ignoring extension directory option.");
-                    return;
-                }
+                    if (!extDir.isDirectory()) {
+                        System.out.println("Extension directory specified is not valid directory: " + extDir);
+                        System.out.println("Ignoring extension directory option.");
+                        continue;
+                    }
 
-                addExtensionDirectory(extDir);
+                    addExtensionDirectory(extDir);
+                }
             } else if (token.equals("--noDefExt")) { // If token is --noDefExt option
-                    useDefExt = false;
+                System.out.println("Bypassing default ext add.");
+                useDefExt = false;
             } else
             {
                 break;
             }
+            if (!tokens.isEmpty()) token = (String) tokens.remove(0);
         }
     }
 
@@ -162,11 +172,13 @@ public class Main {
                 ArrayList urls = new ArrayList();
                 for (Iterator iter = extensions.iterator(); iter.hasNext();) {
                     File dir = (File) iter.next();
+                    try{ System.out.println("Adding to classpath: " + dir.getCanonicalPath()); }catch(Exception e){}
                     urls.add(dir.toURL());
                     File[] files = dir.listFiles();
                     if( files!=null ) {
                         for (int j = 0; j < files.length; j++) {
                             if( files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar") ) {
+                                try{ System.out.println("Adding to classpath: " + files[j].getCanonicalPath()); }catch(Exception e){}
                                 urls.add(files[j].toURL());
                             }
                         }
