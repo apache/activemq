@@ -14,44 +14,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.console;
+package org.apache.activemq.broker.console.command;
+
+import org.apache.activemq.broker.console.JmxMBeansUtil;
+import org.apache.activemq.broker.console.formatter.GlobalWriter;
 
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.ObjectInstance;
+import javax.management.remote.JMXServiceURL;
 import java.util.List;
-import java.util.Set;
 import java.util.Iterator;
+import java.util.Collection;
 import java.util.HashSet;
 
 public class ShutdownCommand extends AbstractJmxCommand {
     private boolean isStopAllBrokers = false;
 
-    protected void execute(List brokerNames) {
+    /**
+     * Shuts down the specified broker or brokers
+     * @param brokerNames - names of brokers to shutdown
+     * @throws Exception
+     */
+    protected void runTask(List brokerNames) throws Exception {
         try {
-            Set mbeans = new HashSet();
-            MBeanServerConnection server = createJmxConnector().getMBeanServerConnection();
+            Collection mbeans;
 
             // Stop all brokers
             if (isStopAllBrokers) {
-                mbeans = AmqJmxSupport.getAllBrokers(server);
+                mbeans = JmxMBeansUtil.getAllBrokers(useJmxServiceUrl());
                 brokerNames.clear();
             }
 
             // Stop the default broker
             else if (brokerNames.isEmpty()) {
-                mbeans = AmqJmxSupport.getAllBrokers(server);
+                mbeans = JmxMBeansUtil.getAllBrokers(useJmxServiceUrl());
 
                 // If there is no broker to stop
                 if (mbeans.isEmpty()) {
-                    System.out.println("There are no brokers to stop.");
+                    GlobalWriter.printInfo("There are no brokers to stop.");
                     return;
 
                 // There should only be one broker to stop
                 } else if (mbeans.size() > 1) {
-                    System.out.println("There are multiple brokers to stop. Please select the broker(s) to stop or use --all to stop all brokers.");
-                    System.out.println();
-                    AmqJmxSupport.printBrokerList(mbeans);
+                    GlobalWriter.printInfo("There are multiple brokers to stop. Please select the broker(s) to stop or use --all to stop all brokers.");
                     return;
 
                 // Get the first broker only
@@ -65,11 +71,12 @@ public class ShutdownCommand extends AbstractJmxCommand {
             // Stop each specified broker
             else {
                 String brokerName;
+                mbeans = new HashSet();
                 while (!brokerNames.isEmpty()) {
                     brokerName = (String)brokerNames.remove(0);
-                    Set matchedBrokers = AmqJmxSupport.getBrokers(server, brokerName);
+                    Collection matchedBrokers = JmxMBeansUtil.getBrokersByName(useJmxServiceUrl(), brokerName);
                     if (matchedBrokers.isEmpty()) {
-                        System.out.println(brokerName + " did not match any running brokers.");
+                        GlobalWriter.printInfo(brokerName + " did not match any running brokers.");
                     } else {
                         mbeans.addAll(matchedBrokers);
                     }
@@ -77,49 +84,47 @@ public class ShutdownCommand extends AbstractJmxCommand {
             }
 
             // Stop all brokers in set
-            stopBrokers(server, mbeans);
-            
-            closeJmxConnector();
-        } catch (Throwable e) {
-            System.out.println("Failed to execute stop task. Reason: " + e);
+            stopBrokers(useJmxServiceUrl(), mbeans);
+        } catch (Exception e) {
+            GlobalWriter.printException(new RuntimeException("Failed to execute stop task. Reason: " + e));
+            throw new Exception(e);
         }
     }
 
-    protected void stopBrokers(MBeanServerConnection server, Set brokerBeans) throws Exception {
+    /**
+     * Stops the list of brokers.
+     * @param jmxServiceUrl - JMX service url to connect to
+     * @param brokerBeans - broker mbeans to stop
+     * @throws Exception
+     */
+    protected void stopBrokers(JMXServiceURL jmxServiceUrl, Collection brokerBeans) throws Exception {
+        MBeanServerConnection server = createJmxConnector().getMBeanServerConnection();
+
         ObjectName brokerObjName;
         for (Iterator i=brokerBeans.iterator(); i.hasNext();) {
             brokerObjName = ((ObjectInstance)i.next()).getObjectName();
 
             String brokerName = brokerObjName.getKeyProperty("BrokerName");
-            System.out.println("Stopping broker: " + brokerName);
+            GlobalWriter.print("Stopping broker: " + brokerName);
 
             try {
                 server.invoke(brokerObjName, "terminateJVM", new Object[] {new Integer(0)}, new String[] {"int"});
-                System.out.println("Succesfully stopped broker: " + brokerName);
+                GlobalWriter.print("Succesfully stopped broker: " + brokerName);
             } catch (Exception e) {
                 // TODO: Check exceptions throwned
                 //System.out.println("Failed to stop broker: [ " + brokerName + " ]. Reason: " + e.getMessage());
             }
         }
+
+        closeJmxConnector();
     }
 
-    protected void printHelp() {
-        System.out.println("Task Usage: Main stop [stop-options] [broker-name1] [broker-name2] ...");
-        System.out.println("Description: Stops a running broker.");
-        System.out.println("");
-        System.out.println("Stop Options:");
-        System.out.println("    --jmxurl <url>      Set the JMX URL to connect to.");
-        System.out.println("    --all               Stop all brokers.");
-        System.out.println("    --version           Display the version information.");
-        System.out.println("    -h,-?,--help        Display the stop broker help information.");
-        System.out.println("");
-        System.out.println("Broker Names:");
-        System.out.println("    Name of the brokers that will be stopped.");
-        System.out.println("    If omitted, it is assumed that there is only one broker running, and it will be stopped.");
-        System.out.println("    Use -all to stop all running brokers.");
-        System.out.println("");
-    }
-
+    /**
+     * Handle the --all option.
+     * @param token - option token to handle
+     * @param tokens - succeeding command arguments
+     * @throws Exception
+     */
     protected void handleOption(String token, List tokens) throws Exception {
         // Try to handle the options first
         if (token.equals("--all")) {
@@ -129,4 +134,28 @@ public class ShutdownCommand extends AbstractJmxCommand {
             super.handleOption(token, tokens);
         }
     }
+
+    /**
+     * Print the help messages for the browse command
+     */
+    protected void printHelp() {
+        GlobalWriter.printHelp(helpFile);
+    }
+
+    protected String[] helpFile = new String[] {
+        "Task Usage: Main stop [stop-options] [broker-name1] [broker-name2] ...",
+        "Description: Stops a running broker.",
+        "",
+        "Stop Options:",
+        "    --jmxurl <url>      Set the JMX URL to connect to.",
+        "    --all               Stop all brokers.",
+        "    --version           Display the version information.",
+        "    -h,-?,--help        Display the stop broker help information.",
+        "",
+        "Broker Names:",
+        "    Name of the brokers that will be stopped.",
+        "    If omitted, it is assumed that there is only one broker running, and it will be stopped.",
+        "    Use -all to stop all running brokers.",
+        ""
+    };
 }

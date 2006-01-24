@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.broker.console;
+package org.apache.activemq.broker.console.command;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.console.formatter.GlobalWriter;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public class StartCommand extends AbstractCommand {
      * The default task to start a broker or a group of brokers
      * @param brokerURIs
      */
-    protected void execute(List brokerURIs) {
+    protected void runTask(List brokerURIs) throws Exception {
         try {
             // If no config uri, use default setting
             if (brokerURIs.isEmpty()) {
@@ -54,7 +55,7 @@ public class StartCommand extends AbstractCommand {
                     try {
                         setConfigUri(new URI(strConfigURI));
                     } catch (URISyntaxException e) {
-                        printError("Invalid broker configuration URI: " + strConfigURI + ", reason: " + e.getMessage());
+                        GlobalWriter.printException(e);
                         return;
                     }
 
@@ -64,8 +65,9 @@ public class StartCommand extends AbstractCommand {
 
             // Prevent the main thread from exiting unless it is terminated elsewhere
             waitForShutdown();
-        } catch (Throwable e) {
-            System.out.println("Failed to execute start task. Reason: " + e);
+        } catch (Exception e) {
+            GlobalWriter.printException(new RuntimeException("Failed to execute start task. Reason: " + e));
+            throw new Exception(e);
         }
     }
 
@@ -115,37 +117,6 @@ public class StartCommand extends AbstractCommand {
     }
 
     /**
-     * Prints the help for the start broker task
-     */
-    protected void printHelp() {
-        System.out.println("Task Usage: Main start [start-options] [uri]");
-        System.out.println("Description: Creates and starts a broker using a configuration file, or a broker URI.");
-        System.out.println("");
-        System.out.println("Start Options:");
-        System.out.println("    --extdir <dir>        Add the jar files in the directory to the classpath.");
-        System.out.println("    -D<name>=<value>      Define a system property.");
-        System.out.println("    --version             Display the version information.");
-        System.out.println("    -h,-?,--help          Display the start broker help information.");
-        System.out.println("");
-        System.out.println("URI:");
-        System.out.println("");
-        System.out.println("    XBean based broker configuration:");
-        System.out.println("");
-        System.out.println("        Example: Main xbean:file:activemq.xml");
-        System.out.println("            Loads the xbean configuration file from the current working directory");
-        System.out.println("        Example: Main xbean:activemq.xml");
-        System.out.println("            Loads the xbean configuration file from the classpath");
-        System.out.println("");
-        System.out.println("    URI Parameter based broker configuration:");
-        System.out.println("");
-        System.out.println("        Example: Main broker:(tcp://localhost:61616, tcp://localhost:5000)?useJmx=true");
-        System.out.println("            Configures the broker with 2 transport connectors and jmx enabled");
-        System.out.println("        Example: Main broker:(tcp://localhost:61616, network:tcp://localhost:5000)?persistent=false");
-        System.out.println("            Configures the broker with 1 transport connector, and 1 network connector and persistence disabled");
-        System.out.println("");
-    }
-
-    /**
      * Sets the current configuration URI used by the start task
      * @param uri
      */
@@ -160,4 +131,38 @@ public class StartCommand extends AbstractCommand {
     public URI getConfigUri() {
         return configURI;
     }
+
+    /**
+     * Print the help messages for the browse command
+     */
+    protected void printHelp() {
+        GlobalWriter.printHelp(helpFile);
+    }
+
+    protected String[] helpFile = new String[] {
+        "Task Usage: Main start [start-options] [uri]",
+        "Description: Creates and starts a broker using a configuration file, or a broker URI.",
+        "",
+        "Start Options:",
+        "    -D<name>=<value>      Define a system property.",
+        "    --version             Display the version information.",
+        "    -h,-?,--help          Display the start broker help information.",
+        "",
+        "URI:",
+        "",
+        "    XBean based broker configuration:",
+        "",
+        "        Example: Main xbean:file:activemq.xml",
+        "            Loads the xbean configuration file from the current working directory",
+        "        Example: Main xbean:activemq.xml",
+        "            Loads the xbean configuration file from the classpath",
+        "",
+        "    URI Parameter based broker configuration:",
+        "",
+        "        Example: Main broker:(tcp://localhost:61616, tcp://localhost:5000)?useJmx=true",
+        "            Configures the broker with 2 transport connectors and jmx enabled",
+        "        Example: Main broker:(tcp://localhost:61616, network:tcp://localhost:5000)?persistent=false",
+        "            Configures the broker with 1 transport connector, and 1 network connector and persistence disabled",
+        ""
+    };
 }

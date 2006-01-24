@@ -14,42 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.console;
+package org.apache.activemq.broker.console.command;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
+import org.apache.activemq.broker.console.formatter.GlobalWriter;
 
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class AbstractCommand implements Command {
+    public static final String COMMAND_OPTION_DELIMETER = ",";
+
     private boolean isPrintHelp    = false;
     private boolean isPrintVersion = false;
-    protected PrintStream out;
 
-    public int main(String[] args, InputStream in, PrintStream out) {
-        this.out = out;
-        try {
-            List tokens = new ArrayList(Arrays.asList(args));
-            parseOptions(tokens);
+    /**
+     * Exceute a generic command, which includes parsing the options for the command and running the specific task.
+     * @param tokens - command arguments
+     * @throws Exception
+     */
+    public void execute(List tokens) throws Exception {
+        // Parse the options specified by "-"
+        parseOptions(tokens);
 
-            if (isPrintHelp) {
-                printHelp();
-            } else if (isPrintVersion) {
-                printVersion();
-            } else {
-                execute(tokens);
-            }
-            return 0;
-        } catch (Exception e) {
-            out.println("Failed to execute main task. Reason: " + e);
-            e.printStackTrace(out);
-            return -1;
+        // Print the help file of the task
+        if (isPrintHelp) {
+            printHelp();
+
+        // Print the AMQ version
+        } else if (isPrintVersion) {
+            GlobalWriter.printVersion(ActiveMQConnectionMetaData.PROVIDER_VERSION);
+
+        // Run the specified task
+        } else {
+            runTask(tokens);
         }
     }
 
+    /**
+     * Parse any option parameters in the command arguments specified by a '-' as the first character of the token.
+     * @param tokens - command arguments
+     * @throws Exception
+     */
     protected void parseOptions(List tokens) throws Exception {
         while (!tokens.isEmpty()) {
             String token = (String)tokens.remove(0);
@@ -64,6 +69,12 @@ public abstract class AbstractCommand implements Command {
         }
     }
 
+    /**
+     * Handle the general options for each command, which includes -h, -?, --help, -D, --version.
+     * @param token - option token to handle
+     * @param tokens - succeeding command arguments
+     * @throws Exception
+     */
     protected void handleOption(String token, List tokens) throws Exception {
         // If token is a help option
         if (token.equals("-h") || token.equals("-?") || token.equals("--help")) {
@@ -91,23 +102,19 @@ public abstract class AbstractCommand implements Command {
 
         // Token is unrecognized
         else {
-            out.println("Ignoring unrecognized option: " + token);
+            GlobalWriter.printInfo("Ignoring unrecognized option: " + token);
         }
     }
 
-    protected void printVersion() {
-        out.println();
-        out.println("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION);
-        out.println("For help or more information please see: http://www.logicblaze.com");
-        out.println();
-    }
+    /**
+     * Run the specific task.
+     * @param tokens - command arguments
+     * @throws Exception
+     */
+    abstract protected void runTask(List tokens) throws Exception;
 
-    protected void printError(String message) {
-        isPrintHelp = true;
-        out.println(message);
-        out.println();
-    }
-
-    abstract protected void execute(List tokens) throws Exception;
+    /**
+     * Print the help messages for the specific task
+     */
     abstract protected void printHelp();
 }
