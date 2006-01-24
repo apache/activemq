@@ -90,6 +90,9 @@ echo.
 
 if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dderby.system.home="..\data" -Dderby.storage.fileSyncTransactionLog=true
 
+rem set SUNJMX=
+set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
+
 REM Uncomment to enable YourKit profiling
 REM SET ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
 
@@ -99,9 +102,8 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 set LOCALCLASSPATH=%ACTIVEMQ_HOME%\conf;%LOCALCLASSPATH%
 
 set ACTIVEMQ_TASK="start"
-"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
-
-
+"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Dactivemq.home="%ACTIVEMQ_HOME%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_CMD_LINE_ARGS% %ACTIVEMQ_TASK%
+pause
 goto end
 
 
