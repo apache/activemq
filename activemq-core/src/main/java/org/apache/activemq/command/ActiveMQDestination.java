@@ -175,7 +175,7 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
             if( i!=0 )
                 sb.append(COMPOSITE_SEPERATOR);
             if( getDestinationType()==destinations[i].getDestinationType()) {
-                sb.append(destinations[i].getQualifiedName());
+                sb.append(destinations[i].getPhysicalName());
             } else {
                 sb.append(destinations[i].getQualifiedName());
             }
