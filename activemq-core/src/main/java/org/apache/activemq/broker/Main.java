@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Main {
 
-    public static final String TASK_DEFAULT_CLASS  = "org.apache.activemq.broker.console.DefaultCommand";
+    public static final String TASK_DEFAULT_CLASS  = "org.apache.activemq.broker.console.command.ShellCommand";
 
     private File          activeMQHome;
     private ClassLoader   classLoader;
@@ -74,56 +74,52 @@ public class Main {
         if (tokens.isEmpty()) {
             return;
         }
-        int tokencnt = tokens.size();
-        String token = (String) tokens.remove(0);
 
-        for (int processedcnt = 0; processedcnt < tokencnt; processedcnt++)
-        {
+        int count = tokens.size();
+        int i = 0;
+
+        // Parse for all --extdir and --noDefExt options
+        while (i < count) {
+            String token = (String)tokens.get(i);
             // If token is an extension dir option
             if (token.equals("--extdir")) {
+                // Process token
+                count--;
+                tokens.remove(i);
 
                 // If no extension directory is specified, or next token is another option
-                if (!tokens.isEmpty()) {
-                    token = (String) tokens.remove(0);
-                    if (token.startsWith("-"))
-                    {
-                        System.out.println("Extension directory not specified.");
-                        System.out.println("Ignoring extension directory option.");
-                        continue;
-                    }
-                } else
-                {
-                    break;
+                if (i >= count || ((String)tokens.get(i)).startsWith("-")) {
+                    System.out.println("Extension directory not specified.");
+                    System.out.println("Ignoring extension directory option.");
+                    continue;
                 }
 
-                // Process token
-                processedcnt++;
-                
+                // Process extension dir token
+                count--;
+                File extDir = new File((String)tokens.remove(i));
+
                 if(!canUseExtdir()) {
                     System.out.println("Extension directory feature not available due to the system classpath being able to load: " + TASK_DEFAULT_CLASS);
                     System.out.println("Ignoring extension directory option.");
-                } else
-                {
-                    // Process extension dir token
-                    File extDir = new File(token);
-
-                    if (!extDir.isDirectory()) {
-                        System.out.println("Extension directory specified is not valid directory: " + extDir);
-                        System.out.println("Ignoring extension directory option.");
-                        continue;
-                    }
-
-                    addExtensionDirectory(extDir);
+                    continue;
                 }
+
+                if (!extDir.isDirectory()) {
+                    System.out.println("Extension directory specified is not valid directory: " + extDir);
+                    System.out.println("Ignoring extension directory option.");
+                    continue;
+                }
+
+                addExtensionDirectory(extDir);
             } else if (token.equals("--noDefExt")) { // If token is --noDefExt option
-                System.out.println("Bypassing default ext add.");
+                count--;
+                tokens.remove(i);
                 useDefExt = false;
-            } else
-            {
-                break;
+            } else {
+                i++;
             }
-            if (!tokens.isEmpty()) token = (String) tokens.remove(0);
-        }
+		}
+
     }
 
     public void runTaskClass(List tokens) throws Throwable {
@@ -139,8 +135,6 @@ public class Main {
             runTask.invoke(task.newInstance(), new Object[] { args, System.in, System.out });
         } catch (InvocationTargetException e) {
             throw e.getCause();
-        } catch (Throwable e) {
-            throw e;
         }
     }
 

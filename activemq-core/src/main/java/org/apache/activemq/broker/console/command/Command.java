@@ -15,11 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.broker.console;
+package org.apache.activemq.broker.console.command;
 
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.util.List;
 
 public interface Command {
-    public int main(String[] args, InputStream in, PrintStream out);
+    /**
+     * Execute the specified command
+     * @param tokens - arguments to the command
+     * @throws Exception
+     */
+    public void execute(List tokens) throws Exception;
 }

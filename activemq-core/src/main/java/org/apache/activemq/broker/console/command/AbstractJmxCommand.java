@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.console;
+package org.apache.activemq.broker.console.command;
+
+import org.apache.activemq.broker.console.formatter.GlobalWriter;
 
 import javax.management.remote.JMXServiceURL;
 import javax.management.remote.JMXConnector;
@@ -29,19 +31,51 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     private JMXServiceURL jmxServiceUrl;
     private JMXConnector  jmxConnector;
 
-    protected JMXServiceURL getJmxServiceUrl() throws Exception {
+    /**
+     * Get the current specified JMX service url.
+     * @return JMX service url
+     */
+    protected JMXServiceURL getJmxServiceUrl() {
         return jmxServiceUrl;
     }
 
+    /**
+     * Get the current JMX service url being used, or create a default one if no JMX service url has been specified.
+     * @return JMX service url
+     * @throws MalformedURLException
+     */
+    protected JMXServiceURL useJmxServiceUrl() throws MalformedURLException {
+        if (getJmxServiceUrl() == null) {
+            setJmxServiceUrl(DEFAULT_JMX_URL);
+        }
+
+        return getJmxServiceUrl();
+    }
+
+    /**
+     * Sets the JMX service url to use.
+     * @param jmxServiceUrl - new JMX service url to use
+     */
     protected void setJmxServiceUrl(JMXServiceURL jmxServiceUrl) {
         this.jmxServiceUrl = jmxServiceUrl;
     }
 
-    protected void setJmxServiceUrl(String jmxServiceUrl) throws Exception {
+    /**
+     * Sets the JMX service url to use.
+     * @param jmxServiceUrl - new JMX service url to use
+     * @throws MalformedURLException
+     */
+    protected void setJmxServiceUrl(String jmxServiceUrl) throws MalformedURLException {
         setJmxServiceUrl(new JMXServiceURL(jmxServiceUrl));
     }
 
-    protected JMXConnector createJmxConnector() throws Exception {
+    /**
+     * Create a JMX connector using the current specified JMX service url. If there is an existing connection,
+     * it tries to reuse this connection.
+     * @return created JMX connector
+     * @throws IOException
+     */
+    protected JMXConnector createJmxConnector() throws IOException {
         // Reuse the previous connection
         if (jmxConnector != null) {
             jmxConnector.connect();
@@ -49,13 +83,13 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         }
 
         // Create a new JMX connector
-        if (getJmxServiceUrl() == null) {
-            setJmxServiceUrl(DEFAULT_JMX_URL);
-        }
-        jmxConnector = JMXConnectorFactory.connect(getJmxServiceUrl());
+        jmxConnector = JMXConnectorFactory.connect(useJmxServiceUrl());
         return jmxConnector;
     }
 
+    /**
+     * Close the current JMX connector
+     */
     protected void closeJmxConnector() {
         try {
             if (jmxConnector != null) {
@@ -66,17 +100,23 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         }
     }
 
+    /**
+     * Handle the --jmxurl option.
+     * @param token - option token to handle
+     * @param tokens - succeeding command arguments
+     * @throws Exception
+     */
     protected void handleOption(String token, List tokens) throws Exception {
         // Try to handle the options first
         if (token.equals("--jmxurl")) {
             // If no jmx url specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                printError("JMX URL not specified.");
+                GlobalWriter.printException(new IllegalArgumentException("JMX URL not specified."));
             }
 
             // If jmx url already specified
             if (getJmxServiceUrl() != null) {
-                printError("Multiple JMX URL cannot be specified.");
+                GlobalWriter.printException(new IllegalArgumentException("Multiple JMX URL cannot be specified."));
                 tokens.clear();
             }
 
@@ -84,7 +124,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
             try {
                 this.setJmxServiceUrl(new JMXServiceURL(strJmxUrl));
             } catch (MalformedURLException e) {
-                printError("Invalid JMX URL format: " + strJmxUrl);
+                GlobalWriter.printException(e);
                 tokens.clear();
             }
         } else {
