@@ -233,6 +233,6 @@ public class MasterConnector implements Service{
     private void shutDown(){
         masterActive.set(false);
         broker.masterFailed();
-        //ServiceSupport.dispose(this);
+        ServiceSupport.dispose(this);
     }
 }

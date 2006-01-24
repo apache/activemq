@@ -57,6 +57,8 @@ public class IndirectMessageReference implements MessageReference {
     private Message message;    
     /** The number of times the message has requested being hardened */
     private int referenceCount;
+    /** the size of the message **/
+    private int cachedSize = 0;
     
     /**
      * Only used by the END_OF_BROWSE_MARKER singleton
@@ -69,6 +71,7 @@ public class IndirectMessageReference implements MessageReference {
         this.groupID = null;
         this.groupSequence = 0;
         this.targetConsumerId=null;
+        this.cachedSize = message != null ? message.getSize() : 0;
     }
 
     public IndirectMessageReference(Destination destination, Message message) {
@@ -81,7 +84,8 @@ public class IndirectMessageReference implements MessageReference {
         this.targetConsumerId=message.getTargetConsumerId();
         
         this.referenceCount=1;
-        message.incrementReferenceCount();        
+        message.incrementReferenceCount();     
+        this.cachedSize = message != null ? message.getSize() : 0;
     }
     
     synchronized public Message getMessageHardRef() {
@@ -201,5 +205,13 @@ public class IndirectMessageReference implements MessageReference {
 
     public ConsumerId getTargetConsumerId() {
         return targetConsumerId;
+    }
+
+    public int getSize(){
+       Message msg = message;
+       if (msg != null){
+           return msg.getSize();
+       }
+       return cachedSize;
     }
 }

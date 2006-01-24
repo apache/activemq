@@ -23,6 +23,7 @@ import org.apache.activemq.broker.InsertableMutableBrokerFilter;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -30,6 +31,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
@@ -131,6 +133,17 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
         super.removeProducer(context, info);
         sendAsyncToSlave(new RemoveInfo(info.getProducerId()));
     }
+    
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+        super.addConsumer(context, info);
+        sendAsyncToSlave(info);
+    }
+
+    
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {
+        super.removeSubscription(context, info);
+        sendAsyncToSlave(info);
+    }
       
     
 
@@ -163,6 +176,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
         super.rollbackTransaction(context, xid);
         TransactionInfo info = new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.ROLLBACK);
         sendAsyncToSlave(info);
+        
     }
 
     /**
@@ -174,7 +188,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
     public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Throwable{
         super.commitTransaction(context, xid,onePhase);
         TransactionInfo info = new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.COMMIT_ONE_PHASE);
-        sendAsyncToSlave(info);
+        sendSyncToSlave(info);
     }
 
     /**
@@ -205,26 +219,40 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
     }
     
     public void send(ConnectionContext context, Message message) throws Throwable{
+        /**
+         * A message can be dispatched before the super.send() method returns
+         * so - here the order is switched to avoid problems on the slave
+         * with receiving acks for messages not received yey
+         */
+        sendToSlave(message);
         super.send(context,message);
-        sendAsyncToSlave(message);
     }
     
    
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable{
         super.acknowledge(context, ack);
-        sendAsyncToSlave(ack);
+        sendToSlave(ack);
     }
     
 
     protected void sendToSlave(Message message){
-        /*
-        if (message.isPersistent()){
+        
+        if (message.isPersistent() && !message.isInTransaction()){
             sendSyncToSlave(message);
         }else{
             sendAsyncToSlave(message);
         }
-        */
-        sendAsyncToSlave(message);
+        
+        
+    }
+    
+    protected void sendToSlave(MessageAck ack){
+       
+        if (ack.isInTransaction()){
+            sendAsyncToSlave(ack);
+        }else{
+            sendSyncToSlave(ack);
+        }
     }
 
     protected void sendAsyncToSlave(Command command){
