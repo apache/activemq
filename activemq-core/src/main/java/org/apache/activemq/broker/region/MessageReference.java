@@ -46,5 +46,6 @@ public interface MessageReference {
     public int incrementReferenceCount();
     public int decrementReferenceCount();
     public ConsumerId getTargetConsumerId();
+    public int getSize();
     
 }
