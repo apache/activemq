@@ -24,10 +24,57 @@
     <groupId>incubator-activemq</groupId>
     <currentVersion>4.0-SNAPSHOT</currentVersion>
 
-    <build>
-        <sourceDirectory></sourceDirectory>
-        <unitTestSourceDirectory></unitTestSourceDirectory>
-    </build>    
+    <organization>
+        <name>Apache Software Foundation</name>
+        <url>http://incubator.apache.org/activemq</url>
+        <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
+    </organization>
+
+    <inceptionYear>2003</inceptionYear>
+    <package>org.apache.activemq</package>
+    <logo>http://www.logicblaze.com/images/logos/products/ActiveMQ/ActiveMQ_logo_200.jpg</logo>
+    <description>
+    ActiveMQ is a fast open source JMS 1.1 provider and Message Fabric supporting
+    clustering, peer networks, discovery, TCP, SSL, multicast, persistence, XA
+    and integrates seamlessly into J2EE 1.4 containers, light weight
+    containers and any Java application.
+    </description>
+    <shortDescription>An open source JMS 1.1 provider</shortDescription>
+
+    <url>http://activemq.org/</url>
+    <issueTrackingUrl>ihttps://jira.logicblaze.com/jira/browse/AMQ</issueTrackingUrl>
+
+    <siteAddress>http://incubator.apache.org/activemq</siteAddress>
+    <siteDirectory>/www/geronimo.apache.org.apache.servicemix/${pom.artifactId}</siteDirectory>
+    <distributionSite>geronimo.apache.org</distributionSite>
+    <distributionDirectory>/www/geronimo.apache.org/builds</distributionDirectory>
+
+    <repository>
+       <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</connection>
+       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</developerConnection>
+       <url>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</url>
+    </repository>     
+
+    <mailingLists>
+        <mailingList>
+            <name>ActiveMQ User List</name>
+            <subscribe>mailto:activemq-users-subscribe@geronimo.apache.org</subscribe>
+            <unsubscribe>mailto:activemq-users-unsubscribe@geronimo.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-users/</archive>
+        </mailingList>
+        <mailingList>
+            <name>ActiveMQ Developer List</name>
+            <subscribe>mailto:activemq-dev-subscribe@geronimo.apache.org</subscribe>
+            <unsubscribe>mailto:activemq-dev-unsubscribe@geronimo.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>ActiveMQ SCM List</name>
+            <subscribe>mailto:activemq-commits-subscribe@geronimo.apache.org</subscribe>
+            <unsubscribe>mailto:activemq-commits-unsubscribe@geronimo.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-commits/</archive>
+        </mailingList>
+    </mailingLists>
 
     <developers>
         <developer>
@@ -106,14 +153,36 @@
         </developer>              
     </developers>
 
+    <build>
+        <nagEmailAddress>mailto:activemq-dev@geronimo.apache.org</nagEmailAddress>
+        <sourceDirectory />
+        <unitTestSourceDirectory />
+        <unitTest>
+            <includes>
+                <include>**/*Test.java</include>
+            </includes>
+            <excludes>
+                <exclude />
+            </excludes>
+        </unitTest>
+    </build>    
+
     <reports>
+        <report>maven-changelog-plugin</report>
+        <report>maven-changes-plugin</report>
+        <report>maven-checkstyle-plugin</report>
+        <!-- <report>maven-cobertura-plugin</report> -->
         <report>maven-developer-activity-plugin</report>
+        <report>maven-faq-plugin</report>
+        <report>maven-file-activity-plugin</report>
+        <!-- <report>maven-findbugs-plugin</report> -->
+        <report>maven-javadoc-plugin</report>
+        <report>maven-jdepend-plugin</report>
+        <report>maven-junit-report-plugin</report>
+        <report>maven-jxr-plugin</report>
+        <report>maven-pmd-plugin</report>
+        <report>maven-simian-plugin</report>
+        <report>maven-tasklist-plugin</report>
     </reports>
 
-    <repository>
-       <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</connection>
-       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</developerConnection>
-       <url>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</url>
-    </repository>     
-    
 </project>
