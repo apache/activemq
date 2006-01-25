@@ -18,6 +18,9 @@ package org.apache.activemq;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -72,7 +75,7 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
         log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
 
-        consumer = receiveSession.createConsumer(consumerDestination);
+        consumer = createConsumer(receiveSession,consumerDestination);
         consumer.setMessageListener(this);
 
 
@@ -85,6 +88,10 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
 
     protected Connection createSendConnection() throws Exception {
         return createConnection();
+    }
+    
+    protected MessageConsumer createConsumer(Session session, Destination dest) throws JMSException{
+        return session.createConsumer(dest);
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
