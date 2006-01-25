@@ -194,10 +194,6 @@
     <attainGoal name="site" />
   </goal>
   
-  <goal name="javadoc:api">
-      <attainGoal name="javadoc:install"/>
-  </goal>
-  
   <!-- ================================================================== -->
   <!-- GOALs for deploying resources -->
   <!-- ================================================================== -->
@@ -219,7 +215,7 @@
   </goal>
   
   <goal name="jar:deploy-javadoc" 
-      description="Deploys javadoc binary" prereqs="javadoc:api">
+      description="Deploys javadoc binary" prereqs="javadoc:install">
         
       <artifact:deploy
         artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}_javadoc.jar"
@@ -232,13 +228,13 @@
       description="Deploys xsd generated files" prereqs="xbean:generate">
           
       <artifact:deploy
-        artifact="${basedir}/target/${pom.groupId}-${pom.currentVersion}.xsd"
+        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}.xsd"
         type="distribution"
         project="${pom}"
       />
 
       <artifact:deploy
-        artifact="${basedir}/target/${pom.groupId}-${pom.currentVersion}.xsd.html"
+        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}.xsd.html"
         type="distribution"
         project="${pom}"
       />      
