@@ -79,6 +79,9 @@ public class FailoverTransport implements CompositeTransport {
 
     private final TransportListener myTransportListener = new TransportListener() {
         public void onCommand(Command command) {
+            if (command == null) {
+                return;
+            }
             if (command.isResponse()) {
                 requestMap.remove(new Short(((Response) command).getCorrelationId()));
             }
