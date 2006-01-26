@@ -408,6 +408,7 @@
       <version>${log4j_version}</version>
       <properties>
         <optional>true</optional>
+        <rar.bundle>true</rar.bundle>
       </properties>
     </dependency>
 
