@@ -107,21 +107,21 @@
                 <connectionfactory-interface>javax.jms.ConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
                 <connection-interface>javax.jms.Connection</connection-interface>
-                <connection-impl-class>org.apache.activemq.ra.JMSConnectionProxy</connection-impl-class>
+                <connection-impl-class>org.apache.activemq.ra.ManagedConnectionProxy</connection-impl-class>
             </connection-definition>
             <connection-definition>
                 <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
                 <connectionfactory-interface>javax.jms.QueueConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
                 <connection-interface>javax.jms.QueueConnection</connection-interface>
-                <connection-impl-class>org.apache.activemq.ra.JMSConnectionProxy</connection-impl-class>
+                <connection-impl-class>org.apache.activemq.ra.ManagedConnectionProxy</connection-impl-class>
             </connection-definition>
             <connection-definition>
                 <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
                 <connectionfactory-interface>javax.jms.TopicConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.apache.activemq.ra.ActiveMQConnectionFactory</connectionfactory-impl-class>
                 <connection-interface>javax.jms.TopicConnection</connection-interface>
-                <connection-impl-class>org.apache.activemq.ra.JMSConnectionProxy</connection-impl-class>
+                <connection-impl-class>org.apache.activemq.ra.ManagedConnectionProxy</connection-impl-class>
             </connection-definition>
             <transaction-support>XATransaction</transaction-support>
             <authentication-mechanism>
