@@ -19,6 +19,7 @@ package org.apache.activemq.ra;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.io.Serializable;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -43,13 +44,13 @@ import org.apache.activemq.util.ServiceSupport;
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
  * and deliver messages to those end points using the connection configure in the
  * resource adapter. <p/>Must override equals and hashCode (JCA spec 16.4)
- * 
+ *
  * @org.xbean.XBean element="resourceAdapter" rootElement="true"
  * description="The JCA Resource Adaptor for ActiveMQ"
- * 
+ *
  * @version $Revision$
  */
-public class ActiveMQResourceAdapter implements ResourceAdapter {
+public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
 
     private final HashMap endpointWorkers = new HashMap();
     private final ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
@@ -85,7 +86,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
             return makeConnection(info);
         }
     }
-    
+
     /**
      */
     public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info) throws JMSException {
@@ -121,10 +122,10 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
     }
 
     /**
-     * @param info 
+     * @param info
      * @return
-     * @throws JMSException 
-     * @throws URISyntaxException 
+     * @throws JMSException
+     * @throws URISyntaxException
      */
     synchronized private ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo info) throws JMSException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(info.getServerUrl());
@@ -226,7 +227,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
     /**
      * We only connect to one resource manager per ResourceAdapter instance, so
      * any ActivationSpec will return the same XAResource.
-     * 
+     *
      * @see javax.resource.spi.ResourceAdapter#getXAResources(javax.resource.spi.ActivationSpec[])
      */
     public XAResource[] getXAResources(ActivationSpec[] activationSpecs) throws ResourceException {
@@ -320,7 +321,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
      * Sets the <a href="http://activemq.org/Xml+Configuration">XML
      * configuration file </a> used to configure the ActiveMQ broker via Spring
      * if using embedded mode.
-     * 
+     *
      * @param brokerXmlConfig
      *            is the filename which is assumed to be on the classpath unless
      *            a URL is specified. So a value of <code>foo/bar.xml</code>
@@ -439,7 +440,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter {
 
         return true;
     }
-    
+
     private boolean notEqual(Object o1, Object o2) {
         return (o1 == null ^ o2 == null) || (o1 != null && !o1.equals(o2));
     }
