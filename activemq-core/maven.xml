@@ -198,7 +198,7 @@
   <!-- GOALs for deploying resources -->
   <!-- ================================================================== -->
   
-  <goal name="jar:deploy" 
+  <!-- goal name="jar:deploy" 
       description="Deploy the core and core test binaries" prereqs="test:compile">
       
       <artifact:deploy 
@@ -212,7 +212,7 @@
         type="jar"
         project="${pom}"
       />
-  </goal>
+  </goal -->
   
   <goal name="jar:deploy-javadoc" 
       description="Deploys javadoc binary" prereqs="javadoc:install">
@@ -228,13 +228,13 @@
       description="Deploys xsd generated files" prereqs="xbean:generate">
           
       <artifact:deploy
-        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}.xsd"
+        artifact="${basedir}/target/activemq-${pom.currentVersion}.xsd"
         type="distribution"
         project="${pom}"
       />
 
       <artifact:deploy
-        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}.xsd.html"
+        artifact="${basedir}/target/activemq-${pom.currentVersion}.xsd.html"
         type="distribution"
         project="${pom}"
       />      
