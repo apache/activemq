@@ -716,10 +716,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     listener.onMessage(message);
                     afterMessageIsConsumed(md, false);
                 } else {
+                    unconsumedMessages.enqueue(md);
                     if (availableListener != null) {
                         availableListener.onMessageAvailable(this);
                     }
-                    unconsumedMessages.enqueue(md);
                 }
             }
         } catch (Exception e) {
