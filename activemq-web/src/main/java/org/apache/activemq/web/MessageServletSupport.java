@@ -136,7 +136,7 @@ public abstract class MessageServletSupport extends HttpServlet {
     /**
      * @return the destination to use for the current request
      */
-    protected Destination getDestination(WebClient client, HttpServletRequest request) throws JMSException, NoDestinationSuppliedException {
+    protected Destination getDestination(WebClient client, HttpServletRequest request) throws JMSException {
         String destinationName = request.getParameter(destinationParameter);
         if (destinationName == null) {
             if (defaultDestination == null) {
@@ -154,16 +154,17 @@ public abstract class MessageServletSupport extends HttpServlet {
      * @return the destination to use for the current request using the relative URI from
      *         where this servlet was invoked as the destination name
      */
-    protected Destination getDestinationFromURI(WebClient client, HttpServletRequest request) throws NoDestinationSuppliedException, JMSException {
+    protected Destination getDestinationFromURI(WebClient client, HttpServletRequest request) throws JMSException {
         String uri = request.getPathInfo();
         if (uri == null) {
-            throw new NoDestinationSuppliedException();
+            return null;
         }
         // replace URI separator with JMS destination separator
         if (uri.startsWith("/")) {
             uri = uri.substring(1);
         }
         uri = uri.replace('/', '.');
+        System.err.println("destination uri="+uri);
         return getDestination(client, request, uri);
     }
 
@@ -182,9 +183,7 @@ public abstract class MessageServletSupport extends HttpServlet {
     /**
      * @return true if the current request is for a topic destination, else false if its for a queue
      */
-    protected boolean isTopic
-            (HttpServletRequest
-            request) {
+    protected boolean isTopic(HttpServletRequest request) {
         boolean aTopic = defaultTopicFlag;
         String aTopicText = request.getParameter(topicParameter);
         if (aTopicText != null) {

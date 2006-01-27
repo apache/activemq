@@ -1,7 +1,7 @@
 // Technique borrowed from scriptaculous to do includes.
 
 var DefaultJS = {
-  Version: 'Jetty Test',
+  Version: 'AMQ default JS',
   script: function(libraryName) {
     document.write('<script type="text/javascript" src="'+libraryName+'"></script>');
   },
@@ -19,6 +19,7 @@ var DefaultJS = {
         this.script(path + 'ricoAjax.js');
         
         this.script(path + 'scriptaculous.js');
+        this.script(path + 'amq.js');
         break;
       }
     }
@@ -26,3 +27,4 @@ var DefaultJS = {
 }
 
 DefaultJS.load();
+
