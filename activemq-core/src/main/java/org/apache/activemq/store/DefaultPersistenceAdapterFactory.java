@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.activeio.journal.Journal;
 import org.activeio.journal.active.JournalImpl;
 import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.journal.QuickJournalPersistenceAdapter;
@@ -169,6 +170,22 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
 
     public void setUseQuickJournal(boolean useQuickJournal) {
         this.useQuickJournal = useQuickJournal;
+    }
+
+    public JDBCAdapter getAdapter() throws IOException {
+        return jdbcAdapter.getAdapter();
+    }
+
+    public String getAdapterClass() {
+        return jdbcAdapter.getAdapterClass();
+    }
+
+    public void setAdapter(JDBCAdapter adapter) {
+        jdbcAdapter.setAdapter(adapter);
+    }
+
+    public void setAdapterClass(String adapterClass) {
+        jdbcAdapter.setAdapterClass(adapterClass);
     }
 
     // Implementation methods
