@@ -86,6 +86,8 @@ public class MessageServlet extends MessageServletSupport {
 
             // lets create the destination from the URI?
             Destination destination = getDestination(client, request);
+            if (destination==null)
+                throw new NoDestinationSuppliedException();
 
             if (log.isDebugEnabled()) {
                 log.debug("Sending message to: " + destination + " with text: " + text);
@@ -134,6 +136,8 @@ public class MessageServlet extends MessageServletSupport {
         try {
             WebClient client = getWebClient(request);
             Destination destination = getDestination(client, request);
+            if (destination==null)
+                throw new NoDestinationSuppliedException();
             long timeout = getReadTimeout(request);
             boolean ajax = isRicoAjax(request);
             if (!ajax)

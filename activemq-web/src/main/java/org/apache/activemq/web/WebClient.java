@@ -21,7 +21,10 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.ConnectionFactory;
@@ -227,6 +230,18 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
                 return pair.consumer;
             }
         }
+    }
+    
+    public synchronized List getConsumers()
+    {
+        ArrayList list = new ArrayList(topicConsumers.size()+queueConsumers.size());
+        
+        // TODO check this double synchronization on queue but not on topics
+        synchronized (queueConsumers) {
+            list.addAll(queueConsumers.values());
+        }
+        list.addAll(topicConsumers.values());
+        return list;
     }
 
     protected ActiveMQSession createSession() throws JMSException {

@@ -45,11 +45,11 @@
 
 
     <!-- servlet mappings -->
-
-    <!-- the main REST servlet -->
+    
+    <!-- the subscription REST servlet -->
     <servlet>
-        <servlet-name>MessageServlet</servlet-name>
-        <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
+        <servlet-name>MessageListenerServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.MessageListenerServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -59,11 +59,12 @@
         <servlet-class>org.apache.activemq.web.PortfolioPublishServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
+    
     <servlet-mapping>
-        <servlet-name>MessageServlet</servlet-name>
-        <url-pattern>/jms/*</url-pattern>
+        <servlet-name>MessageListenerServlet</servlet-name>
+        <url-pattern>/amq/*</url-pattern>
     </servlet-mapping>
+    
     <servlet-mapping>
         <servlet-name>PortfolioPublishServlet</servlet-name>
         <url-pattern>/portfolioPublish</url-pattern>
