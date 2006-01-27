@@ -100,6 +100,10 @@ public class TransactionContext {
     public void close() throws IOException {
         if( !inTx ) {
             try {
+                executeBatch();
+                
+                /**
+                 * we are not in a transaction so should not be committing
                 try{
                     executeBatch();
                 } finally {
@@ -107,6 +111,7 @@ public class TransactionContext {
                         connection.commit();
                     }
                 }
+                */
             } catch (SQLException e) {
                 throw IOExceptionSupport.create(e);
             } finally {
