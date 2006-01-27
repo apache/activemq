@@ -218,8 +218,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         TransactionContext c = getTransactionContext();
         try {
 
-            // If the adapter class is not specified.. try to detect they
-            // right
+            // If the adapter class is not specified.. try to detect the right
             // type by getting info from the database.
             if (adapterClass == null) {
 
