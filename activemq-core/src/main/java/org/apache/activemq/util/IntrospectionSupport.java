@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.util;
 
+import org.apache.activemq.command.ActiveMQDestination;
+
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.lang.reflect.Field;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 public class IntrospectionSupport {
@@ -149,7 +152,34 @@ public class IntrospectionSupport {
     static public String toString(Object target, Class stopClass) {
         LinkedHashMap map = new LinkedHashMap();
         addFields(target, target.getClass(), stopClass, map);
-        return simpleName(target.getClass())+" "+map;
+        StringBuffer buffer = new StringBuffer(simpleName(target.getClass()));
+        buffer.append(" {");
+        Set entrySet = map.entrySet();
+        boolean first = true;
+        for (Iterator iter = entrySet.iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            if (first) {
+                first = false;
+            }
+            else {
+                buffer.append(", ");
+            }
+            buffer.append(entry.getKey());
+            buffer.append(" = ");
+            appendToString(buffer, entry.getValue());
+        }
+        buffer.append("}");
+        return buffer.toString();
+    }
+
+    protected static void appendToString(StringBuffer buffer, Object value) {
+        if (value instanceof ActiveMQDestination) {
+            ActiveMQDestination destination = (ActiveMQDestination) value;
+            buffer.append(destination.getQualifiedName());
+        }
+        else {
+            buffer.append(value);
+        }
     }
 
     static public String simpleName(Class clazz) {
