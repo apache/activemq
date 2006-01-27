@@ -190,6 +190,8 @@ public class ActiveMQMessageTest extends TestCase {
         assertTrue(msg1.getJMSExpiration() == msg2.getJMSExpiration());
         assertTrue(msg1.getJMSPriority() == msg2.getJMSPriority());
         assertTrue(msg1.getJMSTimestamp() == msg2.getJMSTimestamp());
+        
+        System.out.println("Message is:  " + msg1);
     }
 
     public void testGetAndSetJMSMessageID() throws Exception {
