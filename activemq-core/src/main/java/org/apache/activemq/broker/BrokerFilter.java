@@ -183,5 +183,9 @@ public class BrokerFilter implements Broker {
     public boolean isSlaveBroker(){
         return next.isSlaveBroker();
     }
+    
+    public boolean isStopped(){
+        return next.isStopped();
+    }
 
 }

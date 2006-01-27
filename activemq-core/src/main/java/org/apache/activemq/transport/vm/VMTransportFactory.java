@@ -88,8 +88,9 @@ public class VMTransportFactory extends TransportFactory {
             location = new URI("vm://"+host);
         }
         
-        VMTransportServer server = (VMTransportServer) servers.get(host);        
-        if( server == null ) {
+        VMTransportServer server = (VMTransportServer) servers.get(host);   
+        //validate the broker is still active
+        if( !validateBroker(host) || server == null ) {
             BrokerService broker = BrokerRegistry.getInstance().lookup(host);
             if (broker == null) {
                 try {
@@ -112,6 +113,8 @@ public class VMTransportFactory extends TransportFactory {
                 connector.start();
                 connectors.put(host, connector);
             }
+        }else {
+            
         }
 
         VMTransport vmtransport = server.connect();
@@ -171,4 +174,25 @@ public class VMTransportFactory extends TransportFactory {
         this.brokerFactoryHandler = brokerFactoryHandler;
     }
 
+    
+    private boolean validateBroker(String host){
+        boolean result=true;
+        if(brokers.containsKey(host)||servers.containsKey(host)||connectors.containsKey(host)){
+            //check the broker is still in the BrokerRegistry
+            TransportConnector connector=(TransportConnector) connectors.get(host);
+            if(BrokerRegistry.getInstance().lookup(host)==null||(connector!=null&&connector.getBroker().isStopped())){
+                result=false;
+                //clean-up
+                brokers.remove(host);
+                servers.remove(host);
+                if(connector!=null){
+                    connectors.remove(host);
+                    if(connector!=null){
+                        ServiceSupport.dispose(connector);
+                    }
+                }
+            }
+        }
+        return result;
+    }
 }

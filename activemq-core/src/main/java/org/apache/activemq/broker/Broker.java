@@ -197,9 +197,13 @@ public interface Broker extends Region, Service {
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable;
     
     /**
-     * 
      * @return true if the broker is running as a slave
      */
     public boolean isSlaveBroker();
+    
+    /**
+     * @return true if the broker has stopped
+     */
+    public boolean isStopped();
     
 }

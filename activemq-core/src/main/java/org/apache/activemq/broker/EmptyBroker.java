@@ -181,5 +181,9 @@ public class EmptyBroker implements Broker{
     public boolean isSlaveBroker(){
         return false;
     }
+    
+    public boolean isStopped(){
+        return false;
+    }
 
 }
