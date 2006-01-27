@@ -193,5 +193,9 @@ public class MutableBrokerFilter implements Broker {
     public boolean isSlaveBroker(){
         return getNext().isSlaveBroker();
     }
+    
+    public boolean isStopped(){
+        return getNext().isStopped();
+    }
 
 }

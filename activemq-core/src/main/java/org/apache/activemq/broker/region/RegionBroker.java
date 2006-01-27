@@ -67,6 +67,7 @@ public class RegionBroker implements Broker {
     private final Region tempQueueRegion;
     private final Region tempTopicRegion;
     private BrokerService brokerService;
+    private boolean stopped = false;
     
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     
@@ -130,6 +131,7 @@ public class RegionBroker implements Broker {
     }
 
     public void stop() throws Exception {
+        stopped = true;
         ServiceStopper ss = new ServiceStopper();
         ss.stop(queueRegion);
         ss.stop(topicRegion);
@@ -441,6 +443,10 @@ public class RegionBroker implements Broker {
     
     public boolean isSlaveBroker(){
         return brokerService.isSlave();
+    }
+    
+    public boolean isStopped(){
+        return stopped;
     }
 
     

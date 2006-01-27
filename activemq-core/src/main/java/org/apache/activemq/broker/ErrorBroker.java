@@ -180,5 +180,9 @@ public class ErrorBroker implements Broker {
         throw new IllegalStateException(this.message);
     }
     
+    public boolean isStopped(){
+        return true;
+    }
+    
    
 }
