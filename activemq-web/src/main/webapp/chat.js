@@ -4,8 +4,8 @@
 
 
 var connection = null;
-var chatTopic = "CHAT.DEMO";
-var chatMembership = "CHAT.DEMO";
+var chatTopic = "topic://CHAT.DEMO";
+var chatMembership = "topic://CHAT.DEMO";
 
 
 
@@ -40,10 +40,9 @@ var room =
     {
        username=name;
        
-       amq.addTopicListener('chat',chatTopic,room);
-       // amq.sendMessage(chatSubscription, "<subscribe>" + username + "</subscribe>");
-      
-       // switch the input form
+       $('join').className='hidden';
+       Behaviour.apply();
+       amq.addListener('chat',chatTopic,this._chat);
        $('join').className='hidden';
        $('joined').className='';
        $('phrase').focus();
@@ -76,7 +75,7 @@ var room =
     }
   },
   
-  amqMessage: function(message) 
+  _chat: function(message) 
   {
      var chat=$('chat');
      var type=message.attributes['type'].value;

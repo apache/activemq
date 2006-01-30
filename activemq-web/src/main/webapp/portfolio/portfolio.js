@@ -3,7 +3,7 @@
 
 var priceHandler = 
 {
-  amqMessage: function(message) 
+  _price: function(message) 
   {
     if (message != null) {
 		
@@ -36,7 +36,7 @@ function portfolioPoll(first)
 {
    if (first)
    {
-     amq.addTopicListener('stocks','STOCKS.*',priceHandler);
+     amq.addListener('stocks','topic://STOCKS.*',priceHandler._price);
    }
 }
 

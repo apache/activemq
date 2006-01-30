@@ -156,13 +156,16 @@ public abstract class MessageServletSupport extends HttpServlet {
      */
     protected Destination getDestinationFromURI(WebClient client, HttpServletRequest request) throws JMSException {
         String uri = request.getPathInfo();
-        if (uri == null) {
+        if (uri == null)
             return null;
-        }
+        
         // replace URI separator with JMS destination separator
         if (uri.startsWith("/")) {
             uri = uri.substring(1);
+            if (uri.length()==0)
+                return null;
         }
+        
         uri = uri.replace('/', '.');
         System.err.println("destination uri="+uri);
         return getDestination(client, request, uri);
@@ -172,7 +175,24 @@ public abstract class MessageServletSupport extends HttpServlet {
      * @return the Destination object for the given destination name
      */
     protected Destination getDestination(WebClient client, HttpServletRequest request, String destinationName) throws JMSException {
-        if (isTopic(request)) {
+
+        // TODO cache destinations ???
+        
+        boolean is_topic=defaultTopicFlag;
+        if (destinationName.startsWith("topic://"))
+        {
+            is_topic=true;
+            destinationName=destinationName.substring(8);
+        }
+        else if (destinationName.startsWith("channel://"))
+        {
+            is_topic=true;
+            destinationName=destinationName.substring(10);
+        }
+        else 
+            is_topic=isTopic(request);
+             
+        if (is_topic) {
             return client.getSession().createTopic(destinationName);
         }
         else {
@@ -202,7 +222,7 @@ public abstract class MessageServletSupport extends HttpServlet {
      */
     protected String getPostedMessageBody(HttpServletRequest request) throws IOException {
         String answer = request.getParameter(bodyParameter);
-        if (answer == null) {
+        if (answer == null && "text/xml".equals(request.getContentType())) {
             // lets read the message body instead
             BufferedReader reader = request.getReader();
             StringBuffer buffer = new StringBuffer();

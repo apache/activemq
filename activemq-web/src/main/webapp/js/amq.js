@@ -3,13 +3,87 @@
 // AMQ  handler
 var amq = 
 {
-  first: true,
-  pollEvent: function(first) {},
+  _first: true,
+  _pollEvent: function(first) {},
+  _handlers: new Array(),
+  
+  _messages:0,
+  _messageQueue: '',
+  _queueMessages: false,
+  
+  _messageHandler: function(request) 
+  {
+    try
+    {
+      if (request.status == 200)
+      {
+        var response = request.responseXML.getElementsByTagName("ajax-response");
+        if (response != null && response.length == 1)
+        {
+          for ( var i = 0 ; i < response[0].childNodes.length ; i++ ) 
+          {
+            var responseElement = response[0].childNodes[i];
+	    
+            // only process nodes of type element.....
+            if ( responseElement.nodeType != 1 )
+              continue;
+
+            var id   = responseElement.getAttribute('id');
+            
+            
+            var handler = amq._handlers[id];
+            if (handler!=null)
+            {
+              for (var j = 0; j < responseElement.childNodes.length; j++) 
+              {
+                var child = responseElement.childNodes[j]
+                if (child.nodeType == 1) 
+                {
+                  handler(child);
+                }
+        	      }
+            }
+          }
+        }
+      }
+    }
+    catch(e)
+    {
+      alert(e);
+    }
+  },
+  
+  _pollHandler: function(request) 
+  {
+    this._queueMessages=true;
+    try
+    {
+      amq._messageHandler(request);
+      amq._pollEvent(amq._first);
+      amq._first=false;
+    }
+    catch(e)
+    {
+        alert(e);
+    }
+    
+    this._queueMessages=false;
+    
+    if (this._messages==0)
+      new Ajax.Request('/amq', { method: 'get', onSuccess: amq._pollHandler }); 
+    else
+    {
+      var body = this._messageQueue+'&poll=true';
+      this._messageQueue='';
+      this._messages=0;
+      new Ajax.Request('/amq', { method: 'post', onSuccess: amq._pollHandler, postBody: body }); 
+    }
+  },
   
   addPollHandler : function(func)
   {
-    var old = this.pollEvent;
-    this.pollEvent = function(first) 
+    var old = this._pollEvent;
+    this._pollEvent = function(first) 
     {
       old(first);
       func(first);
@@ -18,63 +92,37 @@ var amq =
   
   sendMessage : function(destination,message)
   {
-      ajaxEngine.sendRequestWithData('amqSend', message, 'destination='+destination); 
+   this._sendMessage(destination,message,'send');
   },
   
-  // Listen on a topic.   handler must have a amqMessage method taking a message arguement
-  addTopicListener : function(id,topic,handler)
+  // Listen on a channel or topic.   handler must be a function taking a message arguement
+  addListener : function(id,destination,handler)
   {   
-      var ajax2amq = { ajaxUpdate: function(msg) { handler.amqMessage(amqFirstElement(msg)) } };
-      ajaxEngine.registerAjaxObject(id, ajax2amq);
-      ajaxEngine.sendRequest('amqListen', 'destination='+topic+'&topic=true&id='+id+'&listen=true'); 
+    amq._handlers[id]=handler;
+    this._sendMessage(destination,id,'listen');
   },
   
-  // Listen on a channel.   handler must have a amqMessage method taking a message arguement
-  addChannelListener: function(id,channel,handler)
+  // remove Listener from channel or topic.  
+  removeListener : function(destination)
   {   
-      var ajax2amq = { ajaxUpdate: function(msg) { handler.amqMessage(amqFirstElement(msg)) } };
-      ajaxEngine.registerAjaxObject(id, ajax2amq);
-      ajaxEngine.sendRequest('amqListen', 'destination='+channel+'&topic=false&id='+id+'&listen=true'); 
+    this._sendMessage(destination,'','unlisten');
+  },
+  
+  _sendMessage : function(destination,message,type)
+  {
+    if (this._queueMessages)
+    {
+      this._messageQueue+=(this._messages==0?'destination=':'&destination=')+destination+'&message='+message+'&type='+type;
+      this._messages++;
+    }
+    else
+    {
+      new Ajax.Request('/amq', { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type});
+    }
   }
+  
   
 };
 
-function initAMQ()
-{
-  // Register URLs.  All the same at the moment and params are used to distinguish types
-  ajaxEngine.registerRequest('amqListen','/amq');
-  ajaxEngine.registerRequest('amqPoll', '/amq');
-  ajaxEngine.registerRequest('amqSend', '/amq');
-  
-  var pollHandler = {
-       ajaxUpdate: function(ajaxResponse) 
-       {
-           // Poll again for events
-           amq.pollEvent(amq.first);
-           amq.first=false;
-           ajaxEngine.sendRequest('amqPoll');
-       }
-  };
-  ajaxEngine.registerAjaxObject('amqPoll', pollHandler);
-  
-  var sendHandler = {
-       ajaxUpdate: function(ajaxResponse) 
-       {
-       }
-  };
-  ajaxEngine.registerAjaxObject('amqSend', sendHandler);
-  
-  ajaxEngine.sendRequest('amqPoll',"timeout=0"); // first poll to establish polling session ID
-}
-Behaviour.addLoadEvent(initAMQ);  
+Behaviour.addLoadEvent(function(){new Ajax.Request('/amq', { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });});  
 
-
-function amqFirstElement(t) {
-    for (i = 0; i < t.childNodes.length; i++) {
-        var child = t.childNodes[i]
-        if (child.nodeType == 1) {
-            return child
-        }
-    }
-    return null
-}

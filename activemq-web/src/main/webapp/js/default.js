@@ -12,13 +12,7 @@ var DefaultJS = {
         var path = scriptTags[i].src.replace(/default\.js$/,'');
         this.script(path + 'prototype.js');
         this.script(path + 'behaviour.js');
-        
-        /* Ignore non-UI parts of Rico
-        this.script(path + 'rico.js');
-        */
-        this.script(path + 'ricoAjax.js');
-        
-        this.script(path + 'scriptaculous.js');
+        // this.script(path + 'scriptaculous.js');
         this.script(path + 'amq.js');
         break;
       }
