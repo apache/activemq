@@ -1215,6 +1215,23 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
+     * Returns the broker name if one is available or null if one is not available yet.
+     */
+    public String getBrokerName() {
+        if (brokerInfo == null) {
+            return null;
+        }
+        return brokerInfo.getBrokerName();
+    }
+   
+    /**
+     * Returns the broker information if it is available or null if it is not available yet.
+     */
+    public BrokerInfo getBrokerInfo() {
+        return brokerInfo;
+    }
+
+    /**
      * @return Returns the RedeliveryPolicy.
      * @throws JMSException
      */

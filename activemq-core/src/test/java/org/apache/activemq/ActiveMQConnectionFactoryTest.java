@@ -60,6 +60,18 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertNull( BrokerRegistry.getInstance().lookup("localhost") );
     }
     
+    public void testGetBrokerName() throws URISyntaxException, JMSException {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        connection.start();
+        
+        String brokerName = connection.getBrokerName();
+        System.out.println("Got broker name: " + brokerName);
+        
+        assertNotNull("No broker name available!", brokerName);
+        connection.close();
+    }
+    
     public void testCreateTcpConnectionUsingAllocatedPort() throws Exception {
         assertCreateConnection("tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true");
     }
