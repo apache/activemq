@@ -41,6 +41,7 @@ import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mortbay.jetty.RetryRequest;
 import org.mortbay.util.ajax.Continuation;
 import org.mortbay.util.ajax.ContinuationSupport;
 
@@ -61,7 +62,7 @@ public class MessageListenerServlet extends MessageServletSupport {
 
     private long defaultReadTimeout = -1;
 
-    private long maximumReadTimeout = 20000;
+    private long maximumReadTimeout = 10000;
 
     private int maximumMessages = 100;
 
@@ -90,44 +91,85 @@ public class MessageListenerServlet extends MessageServletSupport {
      * @throws IOException
      */
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        
         // lets turn the HTTP post into a JMS Message
-        try {
-            WebClient client = getWebClient(request);
-            // System.err.println("POST client="+client+"
-            // session="+request.getSession().getId()+"
-            // info="+request.getPathInfo()+" query="+request.getQueryString());
-
-            String text = getPostedMessageBody(request);
-
-            // lets create the destination from the URI?
-            Destination destination = getDestination(client, request);
-            if (destination == null)
-                throw new NoDestinationSuppliedException();
-
-            if (log.isDebugEnabled()) {
-                log.debug("Sending message to: " + destination + " with text: " + text);
+        
+        WebClient client = getWebClient(request);
+        
+        synchronized (client) {
+            
+            // System.err.println("POST client="+client+" session="+request.getSession().getId()+" info="+request.getPathInfo()+" contentType="+request.getContentType());
+            
+            String[] destinations = request.getParameterValues("destination");
+            String[] messages = request.getParameterValues("message");
+            String[] types = request.getParameterValues("type");
+            
+            if (destinations.length!=messages.length || messages.length!=types.length)
+            {
+                // System.err.println("ERROR destination="+destinations.length+" message="+messages.length+" type="+types.length);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST,"missmatched destination, message or type");
+                return;
             }
-
-            TextMessage message = client.getSession().createTextMessage(text);
-            appendParametersToMessage(request, message);
-            client.send(destination, message);
-
-            // lets return a unique URI for reliable messaging
-            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            // System.err.println("Sent "+message+" to "+destination);
-            /*
-             * StringWriter swriter = new StringWriter(); PrintWriter writer =
-             * new PrintWriter(swriter);
-             * 
-             * writer.println("<ajax-response><response type='object'
-             * id='amqSend'><amq jmsid='"+message.getJMSMessageID()+"'/></response></ajax-response>");
-             * writer.flush(); String m=swriter.toString();
-             * System.err.println(m); response.getWriter().write(m);
-             * response.getWriter().flush();
-             */
-        } catch (JMSException e) {
-            throw new ServletException("Could not post JMS message: " + e, e);
+            
+            for (int i=0;i<types.length;i++)
+            {
+                try {
+                    // System.err.println(i+" destination="+destinations[i]+" message="+messages[i]+" type="+types[i]);
+                    
+                    String type=types[i];
+                    Destination destination=getDestination(client,request,destinations[i]);
+                    
+                    if ("listen".equals(type))
+                    {
+                        Listener listener = getListener(request);
+                        Map consumerIdMap = getConsumerIdMap(request);
+                        MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
+                        
+                        consumer.setAvailableListener(listener);
+                        consumerIdMap.put(consumer, messages[i]);
+                        // System.err.println("Subscribed: "+consumer+" to "+destination+" id="+messages[i]);
+                    }
+                    else if ("unlisten".equals(type))
+                    {
+                        Map consumerIdMap = getConsumerIdMap(request);
+                        MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
+                        
+                        // TODO should we destroy consumer on unsubscribe?
+                        consumer.setAvailableListener(null);
+                        consumerIdMap.remove(consumer);
+                        // System.err.println("Unsubscribed: "+consumer);
+                        
+                    }
+                    else if ("send".equals(type))
+                    {
+                        TextMessage message = client.getSession().createTextMessage(messages[i]);
+                        // TODO sent message parameters
+                        client.send(destination, message);
+                        // System.err.println("Sent "+messages[i]+" to "+destination);
+                        // TODO return message ID.
+                    }
+                    else
+                        log.warn("unknown type "+type);
+                    
+                } 
+                catch (JMSException e) {
+                    log.warn("jms", e);
+                }
+            }
         }
+            
+        if ("true".equals(request.getParameter("poll")))
+        {
+            try
+            {
+                doMessages(client,request,response);
+            }
+            catch (JMSException e) 
+            {
+                throw new ServletException("JMS problem: " + e, e);
+            }
+        }
+        // System.err.println("==");
     }
 
     /**
@@ -136,21 +178,24 @@ public class MessageListenerServlet extends MessageServletSupport {
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+        String end="--";
         try {
             WebClient client = getWebClient(request);
-            // System.err.println("GET client="+client+"
-            // session="+request.getSession().getId()+"
-            // info="+request.getPathInfo()+" query="+request.getQueryString());
+            // System.err.println("GET client="+client+" session="+request.getSession().getId()+" uri="+request.getRequestURI()+" query="+request.getQueryString());
 
-            Destination destination = getDestination(client, request);
-            if (destination != null)
-                doSubscription(client, destination, request, response);
-            else
-                doMessages(client, request, response);
+            doMessages(client, request, response);
         }
-
+        catch(RetryRequest r)
+        {
+            end="??";
+            throw r;
+        }
         catch (JMSException e) {
             throw new ServletException("JMS problem: " + e, e);
+        }
+        finally
+        {
+            // System.err.println(end);
         }
 
     }
@@ -171,7 +216,8 @@ public class MessageListenerServlet extends MessageServletSupport {
         // This is a poll for any messages
 
         long timeout = getReadTimeout(request);
-
+        // System.err.println("doMessage timeout="+timeout);
+        
         Continuation continuation = null;
         Message message = null;
 
@@ -220,9 +266,9 @@ public class MessageListenerServlet extends MessageServletSupport {
             // Send any message we already have
             if (message != null) {
                 String id = (String) consumerIdMap.get(consumer);
-                writer.print("<response type='object' id='");
+                writer.print("<response id='");
                 writer.print(id);
-                writer.print("'>\n");
+                writer.print("'>");
                 writeMessageResponse(writer, message);
                 writer.println("</response>");
                 messages++;
@@ -238,9 +284,8 @@ public class MessageListenerServlet extends MessageServletSupport {
                 message = consumer.receiveNoWait();
                 // System.err.println("received "+message+" from "+consumer);
                 while (message != null && messages < maximumMessages) {
-                    Destination destination = message.getJMSDestination();
                     String id = (String) consumerIdMap.get(consumer);
-                    writer.print("<response type='object' id='");
+                    writer.print("<response id='");
                     writer.print(id);
                     writer.print("'>");
                     writeMessageResponse(writer, message);
@@ -251,13 +296,13 @@ public class MessageListenerServlet extends MessageServletSupport {
             }
 
             // Add poll message
-            writer.println("<response type='object' id='amqPoll'><ok/></response>");
-            writer.println("</ajax-response>");
+            // writer.println("<response type='object' id='amqPoll'><ok/></response>");
+            writer.print("</ajax-response>");
 
             writer.flush();
             String m = swriter.toString();
             // System.err.println(m);
-            response.getWriter().write(m);
+            response.getWriter().println(m);
         }
 
     }
@@ -273,6 +318,7 @@ public class MessageListenerServlet extends MessageServletSupport {
      */
     protected void doSubscription(WebClient client, Destination destination, HttpServletRequest request, HttpServletResponse response) throws JMSException, ServletException, IOException {
 
+        // System.err.println("doSubscription destination="+destination);
         String s = request.getParameter("listen");
         if (s == null || s.length() == 0) {
             log.warn("No listen paramenter for subscribe");
