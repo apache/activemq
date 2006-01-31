@@ -170,22 +170,21 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
 
-                
-                try {
-                    log.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
-                    Thread.sleep(reconnectDelay);
+                if(!disposed){
+                    try{
+                        log.debug("Waiting "+reconnectDelay+" ms before attempting connection. ");
+                        Thread.sleep(reconnectDelay);
+                    }catch(InterruptedException e1){
+                        Thread.currentThread().interrupt();
+                    }
+                    if(useExponentialBackOff){
+                        // Exponential increment of reconnect delay.
+                        reconnectDelay*=backOffMultiplier;
+                        if(reconnectDelay>maxReconnectDelay)
+                            reconnectDelay=maxReconnectDelay;
+                    }
                 }
-                catch (InterruptedException e1) {
-                    Thread.currentThread().interrupt();
-                }
-
-                if (useExponentialBackOff) {
-                    // Exponential increment of reconnect delay.
-                    reconnectDelay *= backOffMultiplier;
-                    if (reconnectDelay > maxReconnectDelay)
-                        reconnectDelay = maxReconnectDelay;
-                }
-                return true;
+                return !disposed;
             }
 
         });
