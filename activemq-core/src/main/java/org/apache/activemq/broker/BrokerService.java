@@ -47,6 +47,7 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
@@ -190,7 +191,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public NetworkConnector addNetworkConnector(URI discoveryAddress) throws Exception{
-        NetworkConnector connector=new NetworkConnector();
+        NetworkConnector connector=new NetworkConnector(this);
         // add the broker name to the parameters if not set
         connector.setUri(discoveryAddress);
         return addNetworkConnector(connector);
@@ -219,7 +220,6 @@ public class BrokerService implements Service {
         map.put("network", "true");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         connector.setLocalUri(uri);
-        connector.setBrokerName(getBrokerName());
         networkConnectors.add(connector);
         if (isUseJmx()) {
             registerNetworkConnectorMBean(connector);
@@ -356,6 +356,8 @@ public class BrokerService implements Service {
         }
         log.info("ActiveMQ Message Broker (" + getBrokerName() + ") is shutting down");
         BrokerRegistry.getInstance().unbind(getBrokerName());
+        //remove any VMTransports connected
+        VMTransportFactory.stopped(getBrokerName());
 
         removeShutdownHook();
 

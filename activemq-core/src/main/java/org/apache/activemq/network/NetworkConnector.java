@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -41,17 +42,19 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 public class NetworkConnector implements Service, DiscoveryListener {
 
     private static final Log log = LogFactory.getLog(NetworkConnector.class);
+    private BrokerService brokerService;
     private DiscoveryAgent discoveryAgent;
     private URI localURI;
 
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
-    private String brokerName;
     boolean failover=true;
     
-    public NetworkConnector() {
+    public NetworkConnector(BrokerService service) {
+        this.brokerService = service;
     }
 
-    public NetworkConnector(URI localURI, DiscoveryAgent discoveryAgent) throws IOException {
+    public NetworkConnector(BrokerService service,URI localURI, DiscoveryAgent discoveryAgent) throws IOException {
+        this.brokerService = service;
         this.localURI = localURI;
         setDiscoveryAgent(discoveryAgent);
     }
@@ -161,7 +164,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
         this.discoveryAgent = discoveryAgent;
         if (discoveryAgent != null) {
             this.discoveryAgent.setDiscoveryListener(this);
-            this.discoveryAgent.setBrokerName(brokerName);
+            this.discoveryAgent.setBrokerName(brokerService.getBrokerName());
         }
     }
 
@@ -180,7 +183,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Bridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
-        return new DemandForwardingBridge(localTransport, remoteTransport) {
+        DemandForwardingBridge result =  new DemandForwardingBridge(localTransport, remoteTransport) {
             protected void serviceRemoteException(IOException error) {
                 super.serviceRemoteException(error);
                 try {
@@ -190,14 +193,11 @@ public class NetworkConnector implements Service, DiscoveryListener {
                 }
             }
         };
+        result.setLocalBrokerName(brokerService.getBrokerName());
+        return result;
     }
 
-    public void setBrokerName(String brokerName) {
-        this.brokerName = brokerName;
-        if( discoveryAgent!=null ) {
-            discoveryAgent.setBrokerName(brokerName);
-        }
-    }
+    
 
     public boolean isFailover() {
         return failover;

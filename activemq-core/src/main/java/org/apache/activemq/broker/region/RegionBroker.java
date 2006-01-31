@@ -147,7 +147,7 @@ public class RegionBroker implements Broker {
         }
         synchronized (clientIdSet ) {
             if (clientIdSet.containsKey(clientId)) {
-                throw new InvalidClientIDException("Client: " + clientId + " already connected");
+                throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected");
             }
             else {
                 clientIdSet.put(clientId, info);

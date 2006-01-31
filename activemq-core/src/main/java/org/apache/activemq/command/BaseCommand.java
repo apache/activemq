@@ -64,6 +64,10 @@ abstract public class BaseCommand implements Command {
     public boolean isMessageDispatchNotification(){
         return false;
     }
+    
+    public boolean isShutdownInfo(){
+        return false;
+    }
 
     /**
      * @openwire:property version=1
