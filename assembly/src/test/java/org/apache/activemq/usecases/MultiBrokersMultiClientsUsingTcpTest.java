@@ -57,7 +57,7 @@ public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClien
             if (remoteURI.toString().startsWith("tcp:") && localURI.toString().startsWith("tcp:")) {
                 DemandForwardingBridge bridge = new DemandForwardingBridge(TransportFactory.connect(localURI),
                                                                            TransportFactory.connect(remoteURI));
-                bridge.setClientId(localBroker.getBrokerName() + "_to_" + remoteBroker.getBrokerName());
+                bridge.setLocalBrokerName(localBroker.getBrokerName());
                 bridges.add(bridge);
 
                 bridge.start();

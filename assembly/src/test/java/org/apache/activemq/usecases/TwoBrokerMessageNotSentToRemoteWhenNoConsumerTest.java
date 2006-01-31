@@ -125,7 +125,7 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
                         super.serviceLocalCommand(command);
                     }
                 };
-                bridge.setClientId(localBroker.getBrokerName() + "_to_" + remoteBroker.getBrokerName());
+                bridge.setLocalBrokerName(localBroker.getBrokerName());
                 bridges.add(bridge);
 
                 bridge.start();
