@@ -99,7 +99,9 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 
             }
-            transportListener.onCommand(command);
+            if (transportListener != null) {
+                transportListener.onCommand(command);
+            }
         }
 
         public void onException(IOException error) {
