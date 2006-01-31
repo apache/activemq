@@ -40,12 +40,8 @@ function portfolioPoll(first)
    }
 }
 
-function portfolioInit()
-{
-  amq.addPollHandler(portfolioPoll);
-}
+amq.addPollHandler(portfolioPoll);
 
-Behaviour.addLoadEvent(portfolioInit);  
 
 /// -----------------
 // Original code by Joe Walnes

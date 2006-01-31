@@ -119,10 +119,13 @@ var amq =
     {
       new Ajax.Request('/amq', { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type});
     }
+  },
+  
+  _startPolling : function()
+  {
+    new Ajax.Request('/amq', { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
   }
-  
-  
 };
 
-Behaviour.addLoadEvent(function(){new Ajax.Request('/amq', { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });});  
+Behaviour.addLoadEvent(amq._startPolling);  
 
