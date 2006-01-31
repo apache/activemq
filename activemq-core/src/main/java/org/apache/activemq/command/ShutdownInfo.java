@@ -34,6 +34,10 @@ public class ShutdownInfo extends BaseCommand {
     public Response visit(CommandVisitor visitor) throws Throwable {
         return visitor.processShutdown( this );
     }
+    
+    public boolean isShutdownInfo(){
+        return true;
+    }
 
 
 }

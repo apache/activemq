@@ -172,5 +172,9 @@ public class WireFormatInfo implements Command {
     public boolean isMessageDispatchNotification(){
         return false;
     }
+    
+    public boolean isShutdownInfo(){
+        return false;
+    }
 
 }
