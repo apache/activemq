@@ -58,9 +58,9 @@ var room =
        $('join').className='';
        $('joined').className='hidden';
        $('username').focus();
-       room._username=null;
        Behaviour.apply();
        amq.sendMessage(chatMembership, "<message type='leave' from='" + room._username + "'/>");
+       room._username=null;
   },
   
   chat: function()

@@ -20,7 +20,9 @@ package org.apache.activemq.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +64,7 @@ public class MessageListenerServlet extends MessageServletSupport {
 
     private long defaultReadTimeout = -1;
 
-    private long maximumReadTimeout = 10000;
+    private long maximumReadTimeout = 25000;
 
     private int maximumMessages = 100;
 
@@ -99,7 +101,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         synchronized (client) {
             
             // System.err.println("POST client="+client+" session="+request.getSession().getId()+" info="+request.getPathInfo()+" contentType="+request.getContentType());
-            
+            // dump(request.getParameterMap());
             String[] destinations = request.getParameterValues("destination");
             String[] messages = request.getParameterValues("message");
             String[] types = request.getParameterValues("type");
@@ -169,6 +171,10 @@ public class MessageListenerServlet extends MessageServletSupport {
                 throw new ServletException("JMS problem: " + e, e);
             }
         }
+        else
+        {
+            response.getWriter().print("<ajax-response></ajax-response>");
+        }
         // System.err.println("==");
     }
 
@@ -178,26 +184,16 @@ public class MessageListenerServlet extends MessageServletSupport {
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        String end="--";
         try {
             WebClient client = getWebClient(request);
             // System.err.println("GET client="+client+" session="+request.getSession().getId()+" uri="+request.getRequestURI()+" query="+request.getQueryString());
 
             doMessages(client, request, response);
         }
-        catch(RetryRequest r)
-        {
-            end="??";
-            throw r;
-        }
         catch (JMSException e) {
             throw new ServletException("JMS problem: " + e, e);
         }
-        finally
-        {
-            // System.err.println(end);
-        }
-
+        // System.err.println("--");
     }
 
     /**
@@ -307,55 +303,6 @@ public class MessageListenerServlet extends MessageServletSupport {
 
     }
 
-    /**
-     * Subscribe or unsubscribe to a destination. The listen request parameter
-     * is used to indicate subscribe (tree) or unsubscribe (false).
-     * 
-     * @param request
-     * @param response
-     * @throws ServletException
-     * @throws IOException
-     */
-    protected void doSubscription(WebClient client, Destination destination, HttpServletRequest request, HttpServletResponse response) throws JMSException, ServletException, IOException {
-
-        // System.err.println("doSubscription destination="+destination);
-        String s = request.getParameter("listen");
-        if (s == null || s.length() == 0) {
-            log.warn("No listen paramenter for subscribe");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No listen parameter");
-            return;
-        }
-        boolean listen = Boolean.valueOf(s).booleanValue();
-
-        String id = request.getParameter("id");
-        if (listen && (id == null || id.length() == 0)) {
-            log.warn("No id paramenter for subscribe");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No id parameter");
-            return;
-        }
-
-        Listener listener = getListener(request);
-        Map consumerIdMap = getConsumerIdMap(request);
-
-        synchronized (client) {
-            MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
-
-            if (listen) {
-                consumer.setAvailableListener(listener);
-                consumerIdMap.put(consumer, id);
-                // System.err.println("Subscribed: "+consumer+" to
-                // "+destination);
-            } else {
-                // TODO should we destroy consumer on unsubscribe?
-                consumer.setAvailableListener(null);
-                consumerIdMap.remove(consumer);
-                // System.err.println("Unsubscribed: "+consumer);
-            }
-        }
-
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-    }
-
     protected void writeMessageResponse(PrintWriter writer, Message message) throws JMSException, IOException {
         if (message instanceof TextMessage) {
             TextMessage textMsg = (TextMessage) message;
@@ -441,4 +388,15 @@ public class MessageListenerServlet extends MessageServletSupport {
 
     }
 
+    private static void dump(Map map)
+    {
+        Iterator iter=map.entrySet().iterator();
+        while(iter.hasNext())
+        {
+            Map.Entry entry=(Map.Entry)iter.next();
+            String k=(String)entry.getKey();
+            String[] v=(String[])entry.getValue();
+            System.err.println(k+":"+(v==null?"[]":Arrays.asList(v).toString()));
+        }
+    }
 }
