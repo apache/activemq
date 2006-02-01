@@ -665,6 +665,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 messageListener.onMessage(message);
             } catch ( Throwable e ) {  
                 // TODO: figure out proper way to handle error.
+                log.error("error dispatching message: ",e);
+                connection.onAsyncException(e);
             }
 
             try {
