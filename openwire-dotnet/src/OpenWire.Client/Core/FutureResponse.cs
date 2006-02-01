@@ -12,6 +12,8 @@ namespace OpenWire.Client.Core {
 
                 private Response response;
                 private Mutex asyncWaitHandle = new Mutex();
+                private Object semaphore = new Object();
+                private int maxWait = 3000;
                 private bool isCompleted;
 
                 public WaitHandle AsyncWaitHandle {
@@ -20,7 +22,7 @@ namespace OpenWire.Client.Core {
 
                 public object AsyncState {
                         get { return response; }
-                        set { response = (Response) value; } 
+                        set { Response = (Response) value; } 
                 }
 
                 public bool IsCompleted {
@@ -32,18 +34,21 @@ namespace OpenWire.Client.Core {
                 }
 
                 public Response Response {
+                        // Blocks the caller until a value has been set
                         get {
-                                // TODO use the proper .Net version of notify/wait()
-                                while (response == null) {
-                                        Thread.Sleep(100);
-                                }
-                                return response;
+                                lock (semaphore) {
+                                        while (response == null) {
+                                                Monitor.Wait(semaphore, maxWait); 
+                                        }
+                                        return response; 
+                                } 
                         }
                         set {
-                                asyncWaitHandle.WaitOne();
-                                response = value;
-                                isCompleted = true;
-                                asyncWaitHandle.ReleaseMutex(); 
+                                lock (semaphore) {
+                                        response = value;
+                                        isCompleted = true;
+                                        Monitor.PulseAll(semaphore); 
+                                } 
                         }
                 } 
         } 
