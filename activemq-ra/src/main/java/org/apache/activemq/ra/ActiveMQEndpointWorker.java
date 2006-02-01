@@ -145,7 +145,9 @@ public class ActiveMQEndpointWorker {
                     connection.start();
                     connection.setExceptionListener(new ExceptionListener() {
                         public void onException(JMSException error) {
-                            reconnect(error);
+                            if (!serverSessionPool.isClosing()) {
+                                reconnect(error);
+                            }
                         }
                     });
 
@@ -233,23 +235,21 @@ public class ActiveMQEndpointWorker {
     }
 
     synchronized private void reconnect(JMSException error){
-        if(!serverSessionPool.isClosing()){
-            log.debug("Reconnect cause: ",error);
-            // Only log errors if the server is really down.. And not a temp failure.
-            if(reconnectDelay==MAX_RECONNECT_DELAY){
-                log.info("Endpoint connection to JMS broker failed: "+error.getMessage());
-                log.info("Endpoint will try to reconnect to the JMS broker in "+(MAX_RECONNECT_DELAY/1000)+" seconds");
-            }
-            try{
-                disconnect();
-                Thread.sleep(reconnectDelay);
-                // Use exponential rollback.
-                reconnectDelay*=2;
-                if(reconnectDelay>MAX_RECONNECT_DELAY)
-                    reconnectDelay=MAX_RECONNECT_DELAY;
-                connect();
-            }catch(InterruptedException e){}
+        log.debug("Reconnect cause: ",error);
+        // Only log errors if the server is really down.. And not a temp failure.
+        if (reconnectDelay == MAX_RECONNECT_DELAY) {
+            log.info("Endpoint connection to JMS broker failed: " + error.getMessage());
+            log.info("Endpoint will try to reconnect to the JMS broker in "+(MAX_RECONNECT_DELAY/1000)+" seconds");
         }
+        try {
+            disconnect();
+            Thread.sleep(reconnectDelay);
+            // Use exponential rollback.
+            reconnectDelay*=2;
+            if (reconnectDelay > MAX_RECONNECT_DELAY)
+                reconnectDelay=MAX_RECONNECT_DELAY;
+            connect();
+        } catch(InterruptedException e) {}
     }
 
     protected void registerThreadSession(Session session) {
