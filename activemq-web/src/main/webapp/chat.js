@@ -1,9 +1,4 @@
-// -----------------
-// Original code by Joe Walnes
-// -----------------
 
-
-var connection = null;
 var chatTopic = "topic://CHAT.DEMO";
 var chatMembership = "topic://CHAT.DEMO";
 
