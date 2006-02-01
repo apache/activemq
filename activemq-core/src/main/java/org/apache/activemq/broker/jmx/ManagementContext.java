@@ -145,6 +145,14 @@ public class ManagementContext implements Service {
         }
         return beanServer;
     }
+    
+    /**
+     * Set the MBeanServer
+     * @param beanServer
+     */
+    public void setMBeanServer(MBeanServer beanServer){
+        this.beanServer = beanServer;
+    }
 
     /**
      * @return Returns the useMBeanServer.
