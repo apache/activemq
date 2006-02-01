@@ -3,6 +3,7 @@
 // AMQ  handler
 var amq = 
 {
+  poll: true,
   _first: true,
   _pollEvent: function(first) {},
   _handlers: new Array(),
@@ -70,10 +71,13 @@ var amq =
     this._queueMessages=false;
     
     if (this._messages==0)
-      new Ajax.Request('/amq', { method: 'get', onSuccess: amq._pollHandler }); 
+    {
+      if (amq.poll)
+        new Ajax.Request('/amq', { method: 'get', onSuccess: amq._pollHandler }); 
+    }
     else
     {
-      var body = this._messageQueue+'&poll=true';
+      var body = this._messageQueue+'&poll='+amq.poll;
       this._messageQueue='';
       this._messages=0;
       new Ajax.Request('/amq', { method: 'post', onSuccess: amq._pollHandler, postBody: body }); 
@@ -123,7 +127,8 @@ var amq =
   
   _startPolling : function()
   {
-    new Ajax.Request('/amq', { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
+    if (amq.poll)
+      new Ajax.Request('/amq', { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
   }
 };
 
