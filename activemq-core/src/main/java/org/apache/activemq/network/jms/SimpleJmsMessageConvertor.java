@@ -29,7 +29,8 @@ import javax.jms.Message;
 public class SimpleJmsMessageConvertor implements  JmsMesageConvertor {
     
     /**
-     * Convert a foreign JMS Message to a native ActiveMQ Message
+     * Convert a foreign JMS Message to a native ActiveMQ Message - Inbound
+     * or visa-versa outbound
      * @param message
      * @return the converted message
      * @throws JMSException
