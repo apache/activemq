@@ -199,4 +199,18 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         }
     }
 
+    /**
+     * @return Returns the closing.
+     */
+    public boolean isClosing(){
+        return closing;
+    }
+
+    /**
+     * @param closing The closing to set.
+     */
+    public void setClosing(boolean closing){
+        this.closing=closing;
+    }
+
 }
