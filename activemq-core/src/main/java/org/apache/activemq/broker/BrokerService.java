@@ -191,7 +191,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public NetworkConnector addNetworkConnector(URI discoveryAddress) throws Exception{
-        NetworkConnector connector=new NetworkConnector(this);
+        NetworkConnector connector=new NetworkConnector();
         // add the broker name to the parameters if not set
         connector.setUri(discoveryAddress);
         return addNetworkConnector(connector);
@@ -1000,6 +1000,7 @@ public class BrokerService implements Service {
 
             for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 NetworkConnector connector = (NetworkConnector) iter.next();
+                connector.setBrokerName(getBrokerName());
                 connector.start();
             }
             

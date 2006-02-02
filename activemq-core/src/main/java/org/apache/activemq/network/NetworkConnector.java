@@ -42,19 +42,20 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 public class NetworkConnector implements Service, DiscoveryListener {
 
     private static final Log log = LogFactory.getLog(NetworkConnector.class);
-    private BrokerService brokerService;
+    private String brokerName = "localhost";
     private DiscoveryAgent discoveryAgent;
     private URI localURI;
 
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
     boolean failover=true;
     
-    public NetworkConnector(BrokerService service) {
-        this.brokerService = service;
+    
+    public NetworkConnector(){
+        
     }
+    
 
-    public NetworkConnector(BrokerService service,URI localURI, DiscoveryAgent discoveryAgent) throws IOException {
-        this.brokerService = service;
+    public NetworkConnector(URI localURI, DiscoveryAgent discoveryAgent) throws IOException {
         this.localURI = localURI;
         setDiscoveryAgent(discoveryAgent);
     }
@@ -164,7 +165,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
         this.discoveryAgent = discoveryAgent;
         if (discoveryAgent != null) {
             this.discoveryAgent.setDiscoveryListener(this);
-            this.discoveryAgent.setBrokerName(brokerService.getBrokerName());
+            this.discoveryAgent.setBrokerName(brokerName);
         }
     }
 
@@ -193,7 +194,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
                 }
             }
         };
-        result.setLocalBrokerName(brokerService.getBrokerName());
+        result.setLocalBrokerName(brokerName);
         return result;
     }
 
@@ -205,6 +206,22 @@ public class NetworkConnector implements Service, DiscoveryListener {
 
     public void setFailover(boolean reliable) {
         this.failover = reliable;
+    }
+
+
+    /**
+     * @return Returns the brokerName.
+     */
+    public String getBrokerName(){
+        return brokerName;
+    }
+
+
+    /**
+     * @param brokerName The brokerName to set.
+     */
+    public void setBrokerName(String brokerName){
+        this.brokerName=brokerName;
     }
 
 }
