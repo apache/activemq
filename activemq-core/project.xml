@@ -339,7 +339,7 @@
                 <exclude>**/TcpTransportBrokerTest.*</exclude>
                 <exclude>**/activeio/*</exclude>
                 
-		        <!-- These are performance tests so take too long to run -->
+		<!-- These are performance tests so take too long to run -->
                 <exclude>**/perf/*</exclude>
 
                 <!-- This test currently fails -->
@@ -348,6 +348,9 @@
 
 		<!-- https://jira.logicblaze.com/jira/browse/AMQ-502 -->
                 <exclude>**/StompTest.*</exclude>
+                
+                <!-- http://jira.activemq.org/jira/browse/AMQ-522 -->
+                <exclude>**/ProxyConnectorTest.*</exclude>
 
             </excludes>
         </unitTest>
