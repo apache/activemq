@@ -27,7 +27,7 @@
     </mailingList>
   </mailingLists>
 
-  <repositories>
+  <repositories> 
     <repository>
       <snapshots>
         <enabled>true</enabled>
