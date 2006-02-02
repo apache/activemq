@@ -37,6 +37,7 @@ import org.apache.activemq.command.DataArrayResponse;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.FlushCommand;
+import org.apache.activemq.command.IntegerResponse;
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -278,8 +279,9 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( cs!=null ) {
            context = cs.getContext();
         }
-        broker.prepareTransaction(context, info.getTransactionId());
-        return null;
+        int result = broker.prepareTransaction(context, info.getTransactionId());
+        IntegerResponse response = new IntegerResponse(result);
+        return response;
     }
 
     public Response processCommitTransactionOnePhase(TransactionInfo info) throws Throwable {
