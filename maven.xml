@@ -88,6 +88,14 @@
     </j:forEach>
   </goal>
 
+  <!-- Build failure reports: initial file creation and data-->  
+  <preGoal name="default">
+    <j:set var="generateBuildReports" value="${buildreport.generate}"/>
+    <j:if test="${generateBuildReports == 'true'}">
+      <attainGoal name="build-failure-report:init-report"/>
+    </j:if>
+  </preGoal>
+
   <goal name="null" description="temp target for Continuum 1.0 alpha 2">
     <attainGoal name="nightly-build"/>
   </goal>
