@@ -269,7 +269,7 @@ public class JmsTopicConnector extends JmsConnector{
             if(outboundTopicConnectionFactory==null){
                 // look it up from JNDI
                 if(outboundTopicConnectionFactoryName!=null){
-                    outboundTopicConnectionFactory=(TopicConnectionFactory) jndiTemplate.lookup(
+                    outboundTopicConnectionFactory=(TopicConnectionFactory) jndiOutboundTemplate.lookup(
                                     outboundTopicConnectionFactoryName,TopicConnectionFactory.class);
                     if(outboundUsername!=null){
                         outboundTopicConnection=outboundTopicConnectionFactory.createTopicConnection(outboundUsername,
@@ -299,7 +299,7 @@ public class JmsTopicConnector extends JmsConnector{
                 if(embeddedConnectionFactory==null){
                     // look it up from JNDI
                     if(localConnectionFactoryName!=null){
-                        localTopicConnectionFactory=(TopicConnectionFactory) jndiTemplate.lookup(
+                        localTopicConnectionFactory=(TopicConnectionFactory) jndiLocalTemplate.lookup(
                                         localConnectionFactoryName,TopicConnectionFactory.class);
                         if(localUsername!=null){
                             localTopicConnection=localTopicConnectionFactory.createTopicConnection(localUsername,
@@ -418,7 +418,7 @@ public class JmsTopicConnector extends JmsConnector{
         }catch(JMSException e){
             //look-up the Topic
             try{
-                result = (Topic) jndiTemplate.lookup(topicName, Topic.class);
+                result = (Topic) jndiOutboundTemplate.lookup(topicName, Topic.class);
             }catch(NamingException e1){
                 String errStr = "Failed to look-up Topic for name: " + topicName;
                 log.error(errStr,e);

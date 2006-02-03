@@ -269,7 +269,7 @@ public class JmsQueueConnector extends JmsConnector{
             if(outboundQueueConnectionFactory==null){
                 // look it up from JNDI
                 if(outboundQueueConnectionFactoryName!=null){
-                    outboundQueueConnectionFactory=(QueueConnectionFactory) jndiTemplate.lookup(
+                    outboundQueueConnectionFactory=(QueueConnectionFactory) jndiOutboundTemplate.lookup(
                                     outboundQueueConnectionFactoryName,QueueConnectionFactory.class);
                     if(outboundUsername!=null){
                         outboundQueueConnection=outboundQueueConnectionFactory.createQueueConnection(outboundUsername,
@@ -299,7 +299,7 @@ public class JmsQueueConnector extends JmsConnector{
                 if(embeddedConnectionFactory==null){
                     // look it up from JNDI
                     if(localConnectionFactoryName!=null){
-                        localQueueConnectionFactory=(QueueConnectionFactory) jndiTemplate.lookup(
+                        localQueueConnectionFactory=(QueueConnectionFactory) jndiLocalTemplate.lookup(
                                         localConnectionFactoryName,QueueConnectionFactory.class);
                         if(localUsername!=null){
                             localQueueConnection=localQueueConnectionFactory.createQueueConnection(localUsername,
@@ -418,7 +418,7 @@ public class JmsQueueConnector extends JmsConnector{
         }catch(JMSException e){
             //look-up the Queue
             try{
-                result = (Queue) jndiTemplate.lookup(queueName, Queue.class);
+                result = (Queue) jndiOutboundTemplate.lookup(queueName, Queue.class);
             }catch(NamingException e1){
                 String errStr = "Failed to look-up Queue for name: " + queueName;
                 log.error(errStr,e);
