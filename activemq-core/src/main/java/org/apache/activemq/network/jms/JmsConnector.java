@@ -38,7 +38,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class JmsConnector implements Service{
     private static final Log log=LogFactory.getLog(JmsConnector.class);
-    protected JndiTemplate jndiTemplate;
+    protected JndiTemplate jndiLocalTemplate;
+    protected JndiTemplate jndiOutboundTemplate;
     protected JmsMesageConvertor jmsMessageConvertor;
     private List inboundBridges = new CopyOnWriteArrayList();
     private List outboundBridges = new CopyOnWriteArrayList();
@@ -67,8 +68,11 @@ public abstract class JmsConnector implements Service{
     public boolean init(){
         boolean result=initialized.compareAndSet(false,true);
         if(result){
-            if(jndiTemplate==null){
-                jndiTemplate=new JndiTemplate();
+            if(jndiLocalTemplate==null){
+                jndiLocalTemplate=new JndiTemplate();
+            }
+            if(jndiOutboundTemplate==null){
+                jndiOutboundTemplate=new JndiTemplate();
             }
             if(jmsMessageConvertor==null){
                 jmsMessageConvertor=new SimpleJmsMessageConvertor();
@@ -117,16 +121,30 @@ public abstract class JmsConnector implements Service{
     /**
      * @return Returns the jndiTemplate.
      */
-    public JndiTemplate getJndiTemplate(){
-        return jndiTemplate;
+    public JndiTemplate getJndiLocalTemplate(){
+        return jndiLocalTemplate;
     }
 
     /**
      * @param jndiTemplate
      *            The jndiTemplate to set.
      */
-    public void setJndiTemplate(JndiTemplate jndiTemplate){
-        this.jndiTemplate=jndiTemplate;
+    public void setJndiLocalTemplate(JndiTemplate jndiTemplate){
+        this.jndiLocalTemplate=jndiTemplate;
+    }
+
+    /**
+     * @return Returns the jndiOutboundTemplate.
+     */
+    public JndiTemplate getJndiOutboundTemplate(){
+        return jndiOutboundTemplate;
+    }
+
+    /**
+     * @param jndiOutboundTemplate The jndiOutboundTemplate to set.
+     */
+    public void setJndiOutboundTemplate(JndiTemplate jndiOutboundTemplate){
+        this.jndiOutboundTemplate=jndiOutboundTemplate;
     }
 
     /**

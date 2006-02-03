@@ -24,6 +24,7 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
@@ -94,6 +95,9 @@ abstract class DestinationBridge implements Service,MessageListener{
                     message.setJMSReplyTo(null);
                 }
                 Message converted=jmsMessageConvertor.convert(message);
+                if (converted == message && converted instanceof ActiveMQMessage){
+                    converted = (Message) ((ActiveMQMessage)converted).copy();
+                }
                 sendMessage(converted);
                 message.acknowledge();
             }catch(JMSException e){
