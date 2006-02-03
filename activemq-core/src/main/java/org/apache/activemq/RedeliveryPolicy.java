@@ -16,13 +16,15 @@
  */
 package org.apache.activemq;
 
+import java.io.Serializable;
+
 /**
  * Configuration options used to control how messages are re-delivered when they
  * are rolled back.
  * 
  * @version $Revision: 1.11 $
  */
-public class RedeliveryPolicy implements Cloneable {
+public class RedeliveryPolicy implements Cloneable, Serializable {
 
     protected int maximumRedeliveries = 5;
     protected long initialRedeliveryDelay = 1000L;
