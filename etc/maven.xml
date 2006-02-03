@@ -63,6 +63,7 @@
     <!-- Default Global Goals -->
     <!-- ==================== -->
 
+
     <goal name="default">
         <attainGoal name="${maven.multiproject.type}:install"/>
     </goal>
@@ -76,8 +77,15 @@
         <attainGoal name="build"/>
     </goal>
 
+
     <!-- Remove classes which depend on changed files, so they will rebuild. -->
     <preGoal name="java:compile">
+        <!-- Build failure reports: initialize compile result to fail -->
+        <j:set var="generateBuildReports" value="${buildreport.generate}"/>
+        <j:if test="${generateBuildReports == 'true'}">
+            <attainGoal name="build-failure-report:set-compile-fail"/>
+        </j:if>
+
         <j:if test="${sourcesPresent}">
             <ant:depend srcdir="${maven.compile.source}"
                 destdir="${maven.build.dest}"
@@ -132,6 +140,13 @@
         <j:set var="maven.test.skip" value="true"/>
     </goal>
 
+    <!-- Build failure reports: initialize test result to fail -->
+    <preGoal name="test:test">
+        <j:if test="${generateBuildReports == 'true'}">
+            <attainGoal name="build-failure-report:set-test-fail"/>
+        </j:if>
+    </preGoal>
+
     <!-- Check if the tests need to run -->
     <preGoal name="test:test">
         <j:if test="${context.getVariable('maven.test.force') == null}">
@@ -152,17 +167,39 @@
                     <ant:echo>NOTICE: Skipping tests; they seem to have passed already</ant:echo>
                     <j:set var="maven.test.skip" value="true"/>
                     <j:set var="unitTestSourcesPresent" value="false"/>
+		    <!-- Build failure reports: generate test reports even if 
+                    already passed -->
+                    <j:if test="${generateBuildReports == 'true'}">
+                        <attainGoal name="build-failure-report:set-test-results"/>
+                    </j:if>
                 </j:if>
             </j:if>
         </j:if>
     </preGoal>
-
     <!-- Update the timestamp of the last successful test -->
     <postGoal name="test:test">
         <j:if test="${context.getVariable('maven.test.failure') == null}">
             <ant:touch file="${basedir}/target/test-reports/tstamp"/>
         </j:if>
     </postGoal>
+
+    <!-- Build failure reports: ignore failures so test failures can be checked 
+    (postGoal not run if tests fail) -->
+    <j:if test="${generateBuildReports == 'true'}">
+        <j:set var="maven.test.failure.ignore" value="true"/>
+    </j:if>
+    <!-- Build failure reports: write test results. Set build to success if no 
+    test failures -->
+    <postGoal name="test:test">
+        <j:if test="${generateBuildReports == 'true'}">
+            <attainGoal name="build-failure-report:set-test-results"/>
+	    <!-- Build failure reports: manually fail since failures are ignored
+            -->
+            <j:if test="${maven.test.failure}">
+                <fail message="There were test failures."/>
+            </j:if>
+        </j:if>
+    </postGoal> 
 
     <!--
     <postGoal name="site">
