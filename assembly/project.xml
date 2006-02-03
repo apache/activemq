@@ -339,6 +339,8 @@
           <exclude>**/TwoBrokerTopicSendReceiveUsingTcpTest.*</exclude>
           <!-- https://jira.logicblaze.com/jira/browse/AMQ-479 -->
           <exclude>**/TwoBrokerQueueClientsReconnectTest.*</exclude>
+          <!--http://jira.activemq.org/jira/browse/AMQ-526-->
+          <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
 
       </excludes>
     </unitTest>
