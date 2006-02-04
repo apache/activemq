@@ -3,22 +3,6 @@ var chatTopic = "topic://CHAT.DEMO";
 var chatMembership = "topic://CHAT.DEMO";
 
 
-
-// returns the text of an XML element
-function elementText(element) {
-    var answer = ""
-    var node = element.firstChild
-    while (node != null) {
-        var tmp = node.nodeValue
-        if (tmp != null) {
-            answer += tmp
-        }
-        node = node.nextSibling
-    }
-    return answer
-}
-
-
 var room = 
 {
   _last: "",
@@ -97,8 +81,6 @@ var room =
        
        case 'ping' :
        {
-          var li = document.createElement('li');
-          li.innerHtml=from;
           $('members').innerHTML+="<span class=\"member\">"+from+"</span><br/>";
 	  break;
        }
