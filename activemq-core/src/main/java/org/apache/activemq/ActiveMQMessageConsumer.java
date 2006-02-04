@@ -415,7 +415,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @return
      */
     private ActiveMQMessage createActiveMQMessage(final MessageDispatch md) {
-        ActiveMQMessage m = (ActiveMQMessage) md.getMessage();
+        ActiveMQMessage m = (ActiveMQMessage) md.getMessage().copy();
         if (session.isClientAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
                 public void execute() throws Throwable {
@@ -623,6 +623,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         // Acknowledge the last message.
         MessageDispatch lastMd = (MessageDispatch) deliveredMessages.get(0);
+        System.err.println(this + " ACKING " + lastMd.getMessage().getMessageId() + " size = " + deliveredMessages.size());
         MessageAck ack = new MessageAck(lastMd, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
         if (session.isTransacted()) {
             session.doStartTransaction();
