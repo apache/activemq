@@ -56,15 +56,15 @@ abstract class DestinationBridge implements Service,MessageListener{
     }
 
     /**
-     * @return Returns the jmsMessageConvertor.
+     * @return Returns the inboundMessageConvertor.
      */
     public JmsMesageConvertor getJmsMessageConvertor(){
         return jmsMessageConvertor;
     }
 
     /**
-     * @param jmsMessageConvertor
-     *            The jmsMessageConvertor to set.
+     * @param inboundMessageConvertor
+     *            The inboundMessageConvertor to set.
      */
     public void setJmsMessageConvertor(JmsMesageConvertor jmsMessageConvertor){
         this.jmsMessageConvertor=jmsMessageConvertor;
@@ -95,9 +95,6 @@ abstract class DestinationBridge implements Service,MessageListener{
                     message.setJMSReplyTo(null);
                 }
                 Message converted=jmsMessageConvertor.convert(message);
-                if (converted == message && converted instanceof ActiveMQMessage){
-                    converted = (Message) ((ActiveMQMessage)converted).copy();
-                }
                 sendMessage(converted);
                 message.acknowledge();
             }catch(JMSException e){

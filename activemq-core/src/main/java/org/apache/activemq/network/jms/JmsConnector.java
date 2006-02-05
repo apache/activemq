@@ -40,7 +40,8 @@ public abstract class JmsConnector implements Service{
     private static final Log log=LogFactory.getLog(JmsConnector.class);
     protected JndiTemplate jndiLocalTemplate;
     protected JndiTemplate jndiOutboundTemplate;
-    protected JmsMesageConvertor jmsMessageConvertor;
+    protected JmsMesageConvertor inboundMessageConvertor;
+    protected JmsMesageConvertor outboundMessageConvertor;
     private List inboundBridges = new CopyOnWriteArrayList();
     private List outboundBridges = new CopyOnWriteArrayList();
     protected int replyToDestinationCacheSize=10000;
@@ -74,8 +75,11 @@ public abstract class JmsConnector implements Service{
             if(jndiOutboundTemplate==null){
                 jndiOutboundTemplate=new JndiTemplate();
             }
-            if(jmsMessageConvertor==null){
-                jmsMessageConvertor=new SimpleJmsMessageConvertor();
+            if(inboundMessageConvertor==null){
+                inboundMessageConvertor=new SimpleJmsMessageConvertor();
+            }
+            if (outboundMessageConvertor==null){
+                outboundMessageConvertor=new SimpleJmsMessageConvertor();
             }
             replyToBridges.setMaxCacheSize(getReplyToDestinationCacheSize());
         }
@@ -148,18 +152,32 @@ public abstract class JmsConnector implements Service{
     }
 
     /**
-     * @return Returns the jmsMessageConvertor.
+     * @return Returns the inboundMessageConvertor.
      */
-    public JmsMesageConvertor getJmsMessageConvertor(){
-        return jmsMessageConvertor;
+    public JmsMesageConvertor getInboundMessageConvertor(){
+        return inboundMessageConvertor;
     }
 
     /**
-     * @param jmsMessageConvertor
-     *            The jmsMessageConvertor to set.
+     * @param inboundMessageConvertor
+     *            The inboundMessageConvertor to set.
      */
-    public void setJmsMessageConvertor(JmsMesageConvertor jmsMessageConvertor){
-        this.jmsMessageConvertor=jmsMessageConvertor;
+    public void setInboundMessageConvertor(JmsMesageConvertor jmsMessageConvertor){
+        this.inboundMessageConvertor=jmsMessageConvertor;
+    }
+
+    /**
+     * @return Returns the outboundMessageConvertor.
+     */
+    public JmsMesageConvertor getOutboundMessageConvertor(){
+        return outboundMessageConvertor;
+    }
+
+    /**
+     * @param outboundMessageConvertor The outboundMessageConvertor to set.
+     */
+    public void setOutboundMessageConvertor(JmsMesageConvertor outboundMessageConvertor){
+        this.outboundMessageConvertor=outboundMessageConvertor;
     }
 
     /**

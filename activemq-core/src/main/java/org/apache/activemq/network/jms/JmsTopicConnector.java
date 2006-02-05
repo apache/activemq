@@ -339,7 +339,7 @@ public class JmsTopicConnector extends JmsConnector{
                 bridge.setProducerConnection(localTopicConnection);
                 bridge.setConsumerConnection(outboundTopicConnection);
                 if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getJmsMessageConvertor());
+                    bridge.setJmsMessageConvertor(getInboundMessageConvertor());
                 }
                 bridge.setJmsTopicConnector(this);
                 addInboundBridge(bridge);
@@ -364,7 +364,7 @@ public class JmsTopicConnector extends JmsConnector{
                 bridge.setConsumerConnection(localTopicConnection);
                 bridge.setDoHandleReplyTo(false);
                 if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getJmsMessageConvertor());
+                    bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
                 bridge.setJmsTopicConnector(this);
                 addOutboundBridge(bridge);
@@ -393,7 +393,7 @@ public class JmsTopicConnector extends JmsConnector{
                 bridge.setConsumerConnection(localTopicConnection);
                 bridge.setDoHandleReplyTo(false);
                 if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getJmsMessageConvertor());
+                    bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
                 bridge.setJmsTopicConnector(this);
                 bridge.start();
