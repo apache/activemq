@@ -339,7 +339,7 @@ public class JmsQueueConnector extends JmsConnector{
                 bridge.setProducerConnection(localQueueConnection);
                 bridge.setConsumerConnection(outboundQueueConnection);
                 if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getJmsMessageConvertor());
+                    bridge.setJmsMessageConvertor(getInboundMessageConvertor());
                 }
                 bridge.setJmsQueueConnector(this);
                 addInboundBridge(bridge);
@@ -364,7 +364,7 @@ public class JmsQueueConnector extends JmsConnector{
                 bridge.setConsumerConnection(localQueueConnection);
                 bridge.setDoHandleReplyTo(false);
                 if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getJmsMessageConvertor());
+                    bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
                 bridge.setJmsQueueConnector(this);
                 addOutboundBridge(bridge);
@@ -393,7 +393,7 @@ public class JmsQueueConnector extends JmsConnector{
                 bridge.setConsumerConnection(localQueueConnection);
                 bridge.setDoHandleReplyTo(false);
                 if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getJmsMessageConvertor());
+                    bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
                 bridge.setJmsQueueConnector(this);
                 bridge.start();
