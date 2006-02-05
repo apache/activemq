@@ -144,6 +144,9 @@
     <preGoal name="test:test">
         <j:if test="${generateBuildReports == 'true'}">
             <attainGoal name="build-failure-report:set-test-fail"/>
+	    <!-- Build failure reports: ignore failures so test failures can be 
+            checked (postGoal not run if tests fail) -->
+            <j:set var="maven.test.failure.ignore" value="true"/>
         </j:if>
     </preGoal>
 
@@ -183,11 +186,6 @@
         </j:if>
     </postGoal>
 
-    <!-- Build failure reports: ignore failures so test failures can be checked 
-    (postGoal not run if tests fail) -->
-    <j:if test="${generateBuildReports == 'true'}">
-        <j:set var="maven.test.failure.ignore" value="true"/>
-    </j:if>
     <!-- Build failure reports: write test results. Set build to success if no 
     test failures -->
     <postGoal name="test:test">
