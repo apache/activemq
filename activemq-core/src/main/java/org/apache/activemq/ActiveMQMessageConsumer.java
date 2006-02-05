@@ -623,7 +623,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         // Acknowledge the last message.
         MessageDispatch lastMd = (MessageDispatch) deliveredMessages.get(0);
-        System.err.println(this + " ACKING " + lastMd.getMessage().getMessageId() + " size = " + deliveredMessages.size());
         MessageAck ack = new MessageAck(lastMd, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
         if (session.isTransacted()) {
             session.doStartTransaction();
