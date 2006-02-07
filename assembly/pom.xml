@@ -44,6 +44,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-console</artifactId>
+      <version>${version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-optional</artifactId>
       <version>${version}</version>
     </dependency>

@@ -149,50 +149,6 @@
       <path refid="maven.dependency.classpath" />
     </path>
   </goal>
-
-  <!-- ================================================================ -->
-  <!-- GOALS for running benchmarks -->
-  <!-- ================================================================ -->
-
-  <goal name="run:broker" description="Runs the broker" prereqs="setclasspath">
-    <j:if test="${empty(uri)}">
-      <j:set var="uri" value="broker://(tcp://localhost:61616)?useJmx=true" />
-    </j:if>
-
-    <echo>Running the ActiveMQ broker for the URI ${uri}</echo>
-    <java classname="org.apache.activemq.broker.Main" fork="true">
-      <classpath refid="test.classpath" />
-      <arg value="${uri}" />
-      <sysproperty key="com.sun.management.jmxremote.port" value="5001" />
-      <sysproperty key="com.sun.management.jmxremote.authenticate" value="false" />
-      <sysproperty key="com.sun.management.jmxremote.ssl" value="false" />
-    </java>
-  </goal>
-
-  <goal name="run:consumer" description="Runs the broker" prereqs="setclasspath">
-    <j:if test="${empty(uri)}">
-      <j:set var="uri" value="tcp://localhost:61616" />
-    </j:if>
-
-    <echo>Running the ActiveMQ consumer for the URI ${uri}</echo>
-    <java classname="org.apache.activemq.simple.Consumer" fork="false">
-      <classpath refid="test.classpath" />
-      <arg value="${uri}" />
-    </java>
-  </goal>
-
-  <goal name="setclasspath" prereqs="java:compile, test:compile">
-    <path id="test.classpath">
-      <pathelement path="${maven.build.dest}" />
-      <pathelement path="target/classes" />
-      <pathelement path="target/test-classes" />
-      <path refid="maven.dependency.classpath" />
-    </path>
-  </goal>
-
-  <goal name="reports:site">
-    <attainGoal name="site" />
-  </goal>
   
   <!-- ================================================================== -->
   <!-- GOALs for deploying resources -->

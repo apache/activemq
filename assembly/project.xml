@@ -66,6 +66,16 @@
       <artifactId>activemq-core-test</artifactId>
       <version>${pom.currentVersion}</version>
     </dependency>
+    
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-console</artifactId>
+      <version>${pom.currentVersion}</version>
+      <properties>
+          <activemq.module>true</activemq.module>
+          <lib>true</lib>
+        </properties>
+    </dependency>
 
     <dependency>
       <groupId>${pom.groupId}</groupId>

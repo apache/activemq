@@ -102,6 +102,7 @@
   <modules>
 
     <module>activemq-core</module>
+    <module>activemq-console</module>
     <module>activemq-ra</module>
     <module>activemq-jaas</module>
     <module>activemq-optional</module>
