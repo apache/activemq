@@ -35,6 +35,10 @@ public class ConnectionFailedException extends JMSException {
         initCause(cause);
         setLinkedException(cause);
     }
+    
+    public ConnectionFailedException() {
+        super("The JMS connection has failed due ti a Transport problem");
+    }
 
     static private String extractMessage(IOException cause) {
         String m = cause.getMessage();
