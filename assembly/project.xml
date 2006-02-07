@@ -351,6 +351,19 @@
           <exclude>**/TwoBrokerQueueClientsReconnectTest.*</exclude>
           <!--http://jira.activemq.org/jira/browse/AMQ-526-->
           <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-535 --> 
+          <exclude>**/JDBCDurableSubscriptionTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-536 --> 
+          <exclude>**/JournalDurableSubscriptionTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-537 --> 
+          <exclude>**/PublishOnQueueConsumedMessageUsingActivemqXMLTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-538 --> 
+          <exclude>**/PublishOnTopicConsumerMessageUsingActivemqXMLTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-539 --> 
+          <exclude>**/ThreeBrokerQueueNetworkUsingTcpTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-540 --> 
+          <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
+	
 
       </excludes>
     </unitTest>
