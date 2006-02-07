@@ -107,9 +107,9 @@
     </ant:chmod>
 
     <ant:jar destfile="${maven.dist.bin.assembly.dir}/bin/run.jar" basedir="${maven.build.dir}/classes">
-      <ant:include name="org/apache/activemq/broker/Main*.class"/>
+      <ant:include name="org/apache/activemq/console/Main*.class"/>
       <ant:manifest>
-        <ant:attribute name="Main-Class" value="org.apache.activemq.broker.Main"/>
+        <ant:attribute name="Main-Class" value="org.apache.activemq.console.Main"/>
       </ant:manifest>
     </ant:jar>
     <ant:copy todir="${maven.dist.bin.assembly.dir/conf}">
@@ -254,7 +254,7 @@
         </j:if>
 
         <echo>Running an ActiveMQ server with $$config = ${config}</echo>
-        <java classname="org.apache.activemq.broker.Main" fork="yes" maxmemory="512M">
+        <java classname="org.apache.activemq.console.Main" fork="yes" maxmemory="512M">
           <classpath refid="test.classpath"/>
           <arg value="${config}"/>
           <j:if test="${!empty(debug)}">
@@ -274,7 +274,7 @@
         <!-- run simple server using just a URL -->
 
         <echo>Running an ActiveMQ server at $$url = ${url}</echo>
-        <java classname="org.apache.activemq.broker.Main" fork="yes" maxmemory="512M">
+        <java classname="org.apache.activemq.console.Main" fork="yes" maxmemory="512M">
           <classpath refid="test.classpath"/>
           <arg value="${url}"/>
 
@@ -319,7 +319,7 @@
           <jvmarg value="-Xbootclasspath/a:${OPTIT_HOME}/lib/oibcp.jar"/>
           <jvmarg value="-Xnoclassgc"/>
           <arg value="-pause"/>
-          <arg value="org.apache.activemq.spring.Main"/>
+          <arg value="org.apache.activemq.console.Main"/>
           <arg value="${config}"/>
         </java>
       </j:when>
@@ -336,7 +336,7 @@
           <jvmarg value="-Xbootclasspath/a:${OPTIT_HOME}/lib/oibcp.jar"/>
           <jvmarg value="-Xnoclassgc"/>
           <arg value="-pause"/>
-          <arg value="org.apache.activemq.broker.Main"/>
+          <arg value="org.apache.activemq.console.Main"/>
           <arg value="${url}"/>
           <sysproperty key="derby.system.home" value="target/derby"/>
           <sysproperty key="derby.storage.fileSyncTransactionLog" value="true"/>
