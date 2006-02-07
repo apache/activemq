@@ -80,6 +80,7 @@ public class DemandForwardingBridge implements Bridge{
     private boolean disposed=false;
     BrokerId localBrokerId;
     BrokerId remoteBrokerId;
+    private Object brokerInfoMutex = new Object();
     private static class DemandSubscription{
         ConsumerInfo remoteInfo;
         ConsumerInfo localInfo;
@@ -235,7 +236,7 @@ public class DemandForwardingBridge implements Bridge{
                         demandConsumerDispatched=0;
                     }
                 }else if(command.isBrokerInfo()){
-                    synchronized(this){
+                    synchronized(brokerInfoMutex){
                         BrokerInfo remoteBrokerInfo=(BrokerInfo) command;
                         remoteBrokerId=remoteBrokerInfo.getBrokerId();
                         remoteBrokerPath[0]=remoteBrokerId;
@@ -245,9 +246,10 @@ public class DemandForwardingBridge implements Bridge{
                                 log.info("Disconnecting loop back connection.");
                                 waitStarted();
                                 ServiceSupport.dispose(this);
-                            }else{
-                                triggerLocalStartBridge();
                             }
+                        }
+                        if (!disposed){
+                            triggerLocalStartBridge();
                         }
                     }
                 }else{
@@ -381,7 +383,7 @@ public class DemandForwardingBridge implements Bridge{
                         }
                     }
                 }else if(command.isBrokerInfo()){
-                    synchronized(this){
+                    synchronized(brokerInfoMutex){
                         localBrokerId=((BrokerInfo) command).getBrokerId();
                         localBrokerPath[0]=localBrokerId;
                         if(remoteBrokerId!=null){
