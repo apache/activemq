@@ -16,12 +16,15 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.broker.Broker;
+import javax.jms.JMSException;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TempTopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
 
@@ -32,6 +35,17 @@ public class ManagedTempTopicRegion extends TempTopicRegion {
     public ManagedTempTopicRegion(ManagedRegionBroker regionBroker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
         super(regionBroker,destinationStatistics, memoryManager, taskRunnerFactory);
         this.regionBroker = regionBroker;
+    }
+    
+    protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
+        Subscription sub = super.createSubscription(context, info);
+        regionBroker.registerSubscription(sub);
+        return sub;
+    }
+    
+    protected void destroySubscription(Subscription sub) {
+        regionBroker.unregisterSubscription(sub);
+        super.destroySubscription(sub);
     }
 
     protected Destination createDestination(ActiveMQDestination destination) throws Throwable {

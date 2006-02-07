@@ -170,6 +170,11 @@ abstract public class AbstractRegion implements Region {
             Destination dest = (Destination) iter.next();
             dest.removeSubscription(context, sub);
         }
+        
+        destroySubscription(sub);
+    }
+
+    protected void destroySubscription(Subscription sub) {        
     }
 
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {

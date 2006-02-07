@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Topic;
 
-public class DestinationView implements DestinationViewMBean {
+public class TopicView implements TopicViewMBean {
 
-    private final Destination destination;
+    private final Topic destination;
 
-    public DestinationView(Destination destination) {
+    public TopicView(Topic destination) {
         this.destination = destination;
     }
 
