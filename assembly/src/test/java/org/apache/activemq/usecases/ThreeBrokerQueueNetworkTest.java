@@ -72,7 +72,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         // Setup consumers
         MessageConsumer clientA = createConsumer("BrokerA", dest);
         MessageConsumer clientC = createConsumer("BrokerC", dest);
-
+        Thread.sleep(2000); //et subscriptions get propagated
         // Send messages
         sendMessages("BrokerB", dest, MESSAGE_COUNT);
 
