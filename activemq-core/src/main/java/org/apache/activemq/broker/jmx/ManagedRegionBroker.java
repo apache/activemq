@@ -18,8 +18,11 @@ package org.apache.activemq.broker.jmx;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.memory.UsageManager;
@@ -68,9 +71,15 @@ public class ManagedRegionBroker extends RegionBroker {
         map.put("Destination", JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
         ObjectName destObjectName= new ObjectName(brokerObjectName.getDomain(), map);
         
-        DestinationViewMBean view = new DestinationView(destination);
+        Object view;
+        if( destination instanceof Queue ) {
+            view = new QueueView((Queue) destination);
+        } else {
+            view = new TopicView((Topic) destination);
+        }
         
         mbeanServer.registerMBean(view, destObjectName);        
+        
     }
 
     public void unregister(ActiveMQDestination destName) throws Throwable {
@@ -81,5 +90,13 @@ public class ManagedRegionBroker extends RegionBroker {
         ObjectName destObjectName= new ObjectName(brokerObjectName.getDomain(), map);
         
         mbeanServer.unregisterMBean(destObjectName);        
+    }
+
+    public void registerSubscription(Subscription sub) {
+        // TODO: Use this to expose subscriptions to the JMX bus for management
+    }
+
+    public void unregisterSubscription(Subscription sub) {
+        // TODO: Use this to expose subscriptions to the JMX bus for management
     }
 }

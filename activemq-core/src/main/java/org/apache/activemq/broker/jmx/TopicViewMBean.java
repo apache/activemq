@@ -17,7 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 
-public interface DestinationViewMBean {
+public interface TopicViewMBean {
     
     public void gc();
     public void resetStatistics();

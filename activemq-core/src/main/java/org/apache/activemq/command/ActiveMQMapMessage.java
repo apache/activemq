@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -660,5 +661,10 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         return super.toString() + " ActiveMQMapMessage{ " +
                 "theTable = " + map +
                 " }";
+    }
+    
+    public Map getContentMap() throws JMSException {
+        initializeReading();
+        return map;
     }
 }

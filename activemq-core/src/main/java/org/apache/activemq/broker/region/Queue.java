@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.broker.region;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucket;
@@ -41,10 +45,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -139,7 +140,7 @@ public class Queue implements Destination {
                 for (Iterator iter = messages.iterator(); iter.hasNext();) {
 
                     IndirectMessageReference node = (IndirectMessageReference) iter.next();
-                    if (node.isDropped() ) {
+                    if (node.isDropped()) {
                         continue;
                     }
 
@@ -148,15 +149,13 @@ public class Queue implements Destination {
                         if (sub.matches(node, msgContext)) {
                             sub.add(node);
                         }
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         log.warn("Could not load message: " + e, e);
                     }
                 }
             }
 
-        }
-        finally {
+        } finally {
             msgContext.clear();
             dispatchValve.turnOn();
         }
@@ -193,17 +192,18 @@ public class Queue implements Destination {
                     MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
                     try {
                         msgContext.setDestination(destination);
-                        
+
                         for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                            IndirectMessageReference node = (IndirectMessageReference) iter.next();                            
-                            if (node.isDropped() ) {
+                            IndirectMessageReference node = (IndirectMessageReference) iter.next();
+                            if (node.isDropped()) {
                                 continue;
                             }
-    
+
                             String groupID = node.getGroupID();
-    
+
                             // Re-deliver all messages that the sub locked
-                            if (node.getLockOwner() == sub || wasExclusiveOwner || (groupID != null && ownedGroups.contains(groupID))) {
+                            if (node.getLockOwner() == sub || wasExclusiveOwner
+                                    || (groupID != null && ownedGroups.contains(groupID))) {
                                 node.incrementRedeliveryCounter();
                                 node.unlock();
                                 msgContext.setMessageReference(node);
@@ -216,8 +216,7 @@ public class Queue implements Destination {
                 }
             }
 
-        }
-        finally {
+        } finally {
             dispatchValve.turnOn();
         }
 
@@ -225,9 +224,9 @@ public class Queue implements Destination {
 
     public void send(final ConnectionContext context, final Message message) throws Throwable {
 
-        if( context.isProducerFlowControl() )
+        if (context.isProducerFlowControl())
             usageManager.waitForSpace();
-        
+
         message.setRegionDestination(this);
 
         if (store != null && message.isPersistent())
@@ -242,8 +241,7 @@ public class Queue implements Destination {
                         dispatch(context, node, message);
                     }
                 });
-            }
-            else {
+            } else {
                 dispatch(context, node, message);
             }
         } finally {
@@ -274,7 +272,7 @@ public class Queue implements Destination {
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
                 // Remove dropped messages from the queue.
                 IndirectMessageReference node = (IndirectMessageReference) iter.next();
-                if (node.isDropped()) {                    
+                if (node.isDropped()) {
                     garbageSize--;
                     iter.remove();
                     continue;
@@ -283,7 +281,8 @@ public class Queue implements Destination {
         }
     }
 
-    public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException {
+    public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack,
+            final MessageReference node) throws IOException {
         if (store != null && node.isPersistent()) {
             store.removeMessage(context, ack);
         }
@@ -291,15 +290,16 @@ public class Queue implements Destination {
 
     public Message loadMessage(MessageId messageId) throws IOException {
         Message msg = store.getMessage(messageId);
-        if( msg!=null ) {
+        if (msg != null) {
             msg.setRegionDestination(this);
         }
         return msg;
     }
 
     public String toString() {
-        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size() + ", memory=" + usageManager.getPercentUsage()
-                + "%, size=" + messages.size() + ", in flight groups=" + messageGroupOwners;
+        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size()
+                + ", memory=" + usageManager.getPercentUsage() + "%, size=" + messages.size() + ", in flight groups="
+                + messageGroupOwners;
     }
 
     public void start() throws Exception {
@@ -324,7 +324,7 @@ public class Queue implements Destination {
 
     public MessageGroupMap getMessageGroupOwners() {
         if (messageGroupOwners == null) {
-            messageGroupOwners = new MessageGroupHashBucket(messageGroupHashBucketCount );
+            messageGroupOwners = new MessageGroupHashBucket(messageGroupHashBucketCount);
         }
         return messageGroupOwners;
     }
@@ -352,7 +352,6 @@ public class Queue implements Destination {
     public void setMessageGroupHashBucketCount(int messageGroupHashBucketCount) {
         this.messageGroupHashBucketCount = messageGroupHashBucketCount;
     }
-    
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -370,7 +369,7 @@ public class Queue implements Destination {
                 messages.add(node);
             }
 
-            synchronized(consumers) {
+            synchronized (consumers) {
                 if (consumers.isEmpty()) {
                     log.debug("No subscriptions registered, will not dispatch message at this time.");
                     return;
@@ -381,8 +380,7 @@ public class Queue implements Destination {
             msgContext.setMessageReference(node);
 
             dispatchPolicy.dispatch(context, node, msgContext, consumers);
-        }
-        finally {
+        } finally {
             msgContext.clear();
             dispatchValve.decrement();
         }
@@ -404,5 +402,94 @@ public class Queue implements Destination {
     public MessageStore getMessageStore() {
         return store;
     }
+
+    public Message[] browse() {
+
+        ArrayList l = new ArrayList();
+        synchronized (messages) {
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                try {
+                    MessageReference r = (MessageReference) iter.next();
+                    try {
+                        Message m = r.getMessage();
+                        if (m != null) {
+                            l.add(m);
+                        }
+                    } finally {
+                        r.decrementReferenceCount();
+                    }
+                } catch (IOException e) {
+                }
+            }
+        }
+
+        return (Message[]) l.toArray(new Message[l.size()]);
+    }
+
+    public void removeMessage(String messageId) {
+        synchronized (messages) {
+            ConnectionContext c = new ConnectionContext();
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                try {
+                    IndirectMessageReference r = (IndirectMessageReference) iter.next();
+                    if (messageId.equals(r.getMessageId().toString())) {
+                        MessageAck ack = new MessageAck();
+                        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+                        ack.setDestination(destination);
+                        ack.setMessageID(r.getMessageId());
+                        acknowledge(c, null, ack, r);
+                        r.drop();
+                        dropEvent();
+                    }
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    public Message getMessage(String messageId) {
+        synchronized (messages) {
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                try {
+                    MessageReference r = (MessageReference) iter.next();
+                    if (messageId.equals(r.getMessageId().toString())) {
+                        r.incrementReferenceCount();
+                        try {
+                            Message m = r.getMessage();
+                            if (m != null) {
+                                return m;
+                            }
+                        } finally {
+                            r.decrementReferenceCount();
+                        }
+                        break;
+                    }
+                } catch (IOException e) {
+                }
+            }
+        }
+        return null;
+    }
+
+    public void purge() {
+        synchronized (messages) {
+            ConnectionContext c = new ConnectionContext();
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                try {
+                    IndirectMessageReference r = (IndirectMessageReference) iter.next();
+                    MessageAck ack = new MessageAck();
+                    ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+                    ack.setDestination(destination);
+                    ack.setMessageID(r.getMessageId());
+                    acknowledge(c, null, ack, r);
+                    r.drop();
+                    dropEvent();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+
 
 }
