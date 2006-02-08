@@ -19,15 +19,20 @@ package org.apache.activemq.proxy;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Iterator;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @org.xbean.XBean
@@ -41,6 +46,8 @@ public class ProxyConnector implements Service {
     private URI bind;
     private URI remote;
     private URI localUri;
+    
+    CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
        
     public void start() throws Exception {
         
@@ -49,7 +56,8 @@ public class ProxyConnector implements Service {
                 try {
                     Transport remoteTransport = createRemoteTransport();
                     ProxyConnection connection = new ProxyConnection(localTransport, remoteTransport);
-                    connection.start();
+                    connections.add(connection);
+                    connection.start();                    
                 }
                 catch (Exception e) {
                     onAcceptError(e);
@@ -65,9 +73,15 @@ public class ProxyConnector implements Service {
     }
 
     public void stop() throws Exception {
+    	ServiceStopper ss = new ServiceStopper();
         if( this.server!=null ) {
-            this.server.stop();
+            ss.stop(this.server);
         }
+        for (Iterator iter = connections.iterator(); iter.hasNext();) {
+    	   System.out.println("Connector stopped: Stopping proxy.");
+		   ss.stop((Service) iter.next());
+		}
+        ss.throwFirstException();
     }
     
     // Properties
@@ -121,6 +135,15 @@ public class ProxyConnector implements Service {
         if( ct !=null && localUri!=null ) {
             ct.add(new URI[]{localUri});
         }
+        
+        // Add a transport filter so that can track the transport life cycle
+        transport = new TransportFilter(transport) {
+        	public void stop() throws Exception {
+        		System.out.println("Stopping proxy.");
+        		super.stop();
+        		connections.remove(this);
+        	}
+        };
         return transport;
     }
 
