@@ -19,6 +19,10 @@ package org.apache.activemq.network.jms;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.Queue;
+import javax.jms.QueueConnection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
@@ -44,10 +48,14 @@ public abstract class JmsConnector implements Service{
     protected JmsMesageConvertor outboundMessageConvertor;
     private List inboundBridges = new CopyOnWriteArrayList();
     private List outboundBridges = new CopyOnWriteArrayList();
-    protected int replyToDestinationCacheSize=10000;
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean started = new AtomicBoolean(false);
     protected ActiveMQConnectionFactory  embeddedConnectionFactory;
+    protected int replyToDestinationCacheSize=10000;
+    protected  String outboundUsername;
+    protected String outboundPassword;
+    protected String localUsername;
+    protected  String localPassword;
     protected LRUCache replyToBridges=new LRUCache(){
         protected boolean removeEldestEntry(Map.Entry enty){
             if(size()>maxCacheSize){
@@ -112,6 +120,8 @@ public abstract class JmsConnector implements Service{
             }
         }
     }
+    
+    protected abstract Destination createReplyToBridge(Destination destination, Connection consumerConnection, Connection producerConnection);
     
     /**
      * One way to configure the local connection - this is called by
@@ -196,6 +206,62 @@ public abstract class JmsConnector implements Service{
     }
     
     
+    /**
+     * @return Returns the localPassword.
+     */
+    public String getLocalPassword(){
+        return localPassword;
+    }
+
+    /**
+     * @param localPassword The localPassword to set.
+     */
+    public void setLocalPassword(String localPassword){
+        this.localPassword=localPassword;
+    }
+
+    /**
+     * @return Returns the localUsername.
+     */
+    public String getLocalUsername(){
+        return localUsername;
+    }
+
+    /**
+     * @param localUsername The localUsername to set.
+     */
+    public void setLocalUsername(String localUsername){
+        this.localUsername=localUsername;
+    }
+
+    /**
+     * @return Returns the outboundPassword.
+     */
+    public String getOutboundPassword(){
+        return outboundPassword;
+    }
+
+    /**
+     * @param outboundPassword The outboundPassword to set.
+     */
+    public void setOutboundPassword(String outboundPassword){
+        this.outboundPassword=outboundPassword;
+    }
+
+    /**
+     * @return Returns the outboundUsername.
+     */
+    public String getOutboundUsername(){
+        return outboundUsername;
+    }
+
+    /**
+     * @param outboundUsername The outboundUsername to set.
+     */
+    public void setOutboundUsername(String outboundUsername){
+        this.outboundUsername=outboundUsername;
+    }
+
     protected void addInboundBridge(DestinationBridge bridge){
         inboundBridges.add(bridge);
     }

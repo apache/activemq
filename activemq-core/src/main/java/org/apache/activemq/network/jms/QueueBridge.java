@@ -42,7 +42,7 @@ class QueueBridge extends DestinationBridge{
     protected QueueSender producer;
     protected QueueConnection consumerConnection;
     protected QueueConnection producerConnection;
-    protected JmsQueueConnector jmsQueueConnector;
+    
 
     public void stop() throws Exception{
         super.stop();
@@ -54,9 +54,7 @@ class QueueBridge extends DestinationBridge{
         }
     }
     
-    protected void setJmsQueueConnector(JmsQueueConnector connector){
-        this.jmsQueueConnector = connector;
-    }
+    
 
     protected MessageConsumer createConsumer() throws JMSException{
         // set up the consumer
@@ -79,12 +77,7 @@ class QueueBridge extends DestinationBridge{
     }
     
         
-    protected Destination processReplyToDestination (Destination destination){
-        Queue queue = (Queue)destination;
-        return jmsQueueConnector.createReplyToQueueBridge(queue, getConsumerConnection(), getProducerConnection());
-    }
-    
-    
+        
     
     protected void sendMessage(Message message) throws JMSException{
         producer.send(producerQueue,message);

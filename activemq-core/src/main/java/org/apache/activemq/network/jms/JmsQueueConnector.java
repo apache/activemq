@@ -19,6 +19,7 @@ package org.apache.activemq.network.jms;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
@@ -44,10 +45,7 @@ public class JmsQueueConnector extends JmsConnector{
     private QueueConnection localQueueConnection;
     private InboundQueueBridge[] inboundQueueBridges;
     private OutboundQueueBridge[] outboundQueueBridges;
-    private String outboundUsername;
-    private String outboundPassword;
-    private String localUsername;
-    private String localPassword;
+    
    
    
    
@@ -189,80 +187,7 @@ public class JmsQueueConnector extends JmsConnector{
         this.outboundQueueConnectionFactory=foreignQueueConnectionFactory;
     }
 
-    /**
-     * @return Returns the outboundPassword.
-     */
-    public String getOutboundPassword(){
-        return outboundPassword;
-    }
-
-    /**
-     * @param outboundPassword
-     *            The outboundPassword to set.
-     */
-    public void setOutboundPassword(String foreignPassword){
-        this.outboundPassword=foreignPassword;
-    }
-
-    /**
-     * @return Returns the outboundUsername.
-     */
-    public String getOutboundUsername(){
-        return outboundUsername;
-    }
-
-    /**
-     * @param outboundUsername
-     *            The outboundUsername to set.
-     */
-    public void setOutboundUsername(String foreignUsername){
-        this.outboundUsername=foreignUsername;
-    }
-
-    /**
-     * @return Returns the localPassword.
-     */
-    public String getLocalPassword(){
-        return localPassword;
-    }
-
-    /**
-     * @param localPassword
-     *            The localPassword to set.
-     */
-    public void setLocalPassword(String localPassword){
-        this.localPassword=localPassword;
-    }
-
-    /**
-     * @return Returns the localUsername.
-     */
-    public String getLocalUsername(){
-        return localUsername;
-    }
-
-    /**
-     * @param localUsername
-     *            The localUsername to set.
-     */
-    public void setLocalUsername(String localUsername){
-        this.localUsername=localUsername;
-    }
     
-    /**
-     * @return Returns the replyToDestinationCacheSize.
-     */
-    public int getReplyToDestinationCacheSize(){
-        return replyToDestinationCacheSize;
-    }
-
-    /**
-     * @param replyToDestinationCacheSize The replyToDestinationCacheSize to set.
-     */
-    public void setReplyToDestinationCacheSize(int temporaryQueueCacheSize){
-        this.replyToDestinationCacheSize=temporaryQueueCacheSize;
-    }
-
     protected void initializeForeignQueueConnection() throws NamingException,JMSException{
         if(outboundQueueConnection==null){
             // get the connection factories
@@ -341,7 +266,7 @@ public class JmsQueueConnector extends JmsConnector{
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getInboundMessageConvertor());
                 }
-                bridge.setJmsQueueConnector(this);
+                bridge.setJmsConnector(this);
                 addInboundBridge(bridge);
             }
             outboundSession.close();
@@ -366,7 +291,7 @@ public class JmsQueueConnector extends JmsConnector{
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
-                bridge.setJmsQueueConnector(this);
+                bridge.setJmsConnector(this);
                 addOutboundBridge(bridge);
             }
             outboundSession.close();
@@ -374,7 +299,8 @@ public class JmsQueueConnector extends JmsConnector{
         }
     }
     
-    protected Destination createReplyToQueueBridge(Queue queue, QueueConnection consumerConnection, QueueConnection producerConnection){
+    protected Destination createReplyToBridge(Destination destination, Connection consumerConnection, Connection producerConnection){
+        Queue queue = (Queue)destination;
         OutboundQueueBridge bridge = (OutboundQueueBridge) replyToBridges.get(queue);
         if (bridge == null){
             bridge = new OutboundQueueBridge(){
@@ -395,7 +321,7 @@ public class JmsQueueConnector extends JmsConnector{
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
-                bridge.setJmsQueueConnector(this);
+                bridge.setJmsConnector(this);
                 bridge.start();
                 log.info("Created replyTo bridge for " + queue);
             }catch(Exception e){

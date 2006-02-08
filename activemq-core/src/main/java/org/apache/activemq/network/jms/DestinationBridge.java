@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network.jms;
 
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -39,6 +40,7 @@ abstract class DestinationBridge implements Service,MessageListener{
     protected AtomicBoolean started=new AtomicBoolean(false);
     protected JmsMesageConvertor jmsMessageConvertor;
     protected boolean doHandleReplyTo = true;
+    protected JmsConnector jmsConnector;
 
     /**
      * @return Returns the consumer.
@@ -56,6 +58,12 @@ abstract class DestinationBridge implements Service,MessageListener{
     }
 
     /**
+     * @param connector
+     */
+    public void setJmsConnector(JmsConnector connector){
+        this.jmsConnector = connector;
+    }
+    /**
      * @return Returns the inboundMessageConvertor.
      */
     public JmsMesageConvertor getJmsMessageConvertor(){
@@ -63,13 +71,17 @@ abstract class DestinationBridge implements Service,MessageListener{
     }
 
     /**
-     * @param inboundMessageConvertor
-     *            The inboundMessageConvertor to set.
+     * @param jmsMessageConvertor 
      */
     public void setJmsMessageConvertor(JmsMesageConvertor jmsMessageConvertor){
         this.jmsMessageConvertor=jmsMessageConvertor;
     }
 
+   
+    protected Destination processReplyToDestination (Destination destination){
+        return jmsConnector.createReplyToBridge(destination, getConsumerConnection(), getProducerConnection());
+    }
+    
     public void start() throws Exception{
         if(started.compareAndSet(false,true)){
             MessageConsumer consumer=createConsumer();
@@ -128,7 +140,9 @@ abstract class DestinationBridge implements Service,MessageListener{
 
     protected abstract void sendMessage(Message message) throws JMSException;
 
-    protected abstract Destination processReplyToDestination(Destination destination);
+    protected abstract Connection getConsumerConnection();
+    
+    protected abstract Connection getProducerConnection();
 
     
 }
