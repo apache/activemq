@@ -35,6 +35,7 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -128,6 +129,7 @@ public class TransportConnector implements Connector {
                     connection.start();
                 }
                 catch (Exception e) {
+                	ServiceSupport.dispose(transport);
                     onAcceptError(e);
                 }
             }
