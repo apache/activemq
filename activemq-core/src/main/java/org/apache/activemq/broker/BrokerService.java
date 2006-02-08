@@ -319,8 +319,8 @@ public class BrokerService implements Service {
             // as its way too easy to not be completely sure if start() has been 
             // called or not with the gazillion of different configuration mechanisms
             
-            //throw new IllegalStateException("Allready started.");
-            return;
+            throw new IllegalStateException("Allready started.");
+            //return;
         }
         
         processHelperProperties();
@@ -408,7 +408,7 @@ public class BrokerService implements Service {
             stopper.stop(getManagementContext());
         }
 
-        log.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ") stopped");
+        log.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ") stopped: "+broker);
 
         stopper.throwFirstException();
     }
@@ -818,7 +818,7 @@ public class BrokerService implements Service {
         broker = new MutableBrokerFilter(broker) {
             public void stop() throws Exception {
                 super.stop();
-                setNext(new ErrorBroker("Broker has been stopped.") {
+                setNext(new ErrorBroker("Broker has been stopped: "+this) {
                     // Just ignore additional stop actions.
                     public void stop() throws Exception {
                     }
