@@ -41,7 +41,7 @@ class TopicBridge extends DestinationBridge{
     protected TopicPublisher producer;
     protected TopicConnection consumerConnection;
     protected TopicConnection producerConnection;
-    protected JmsTopicConnector jmsTopicConnector;
+    
 
     public void stop() throws Exception{
         super.stop();
@@ -53,9 +53,7 @@ class TopicBridge extends DestinationBridge{
         }
     }
     
-    protected void setJmsTopicConnector(JmsTopicConnector connector){
-        this.jmsTopicConnector = connector;
-    }
+   
 
     protected MessageConsumer createConsumer() throws JMSException{
         // set up the consumer
@@ -78,10 +76,7 @@ class TopicBridge extends DestinationBridge{
         return consumer;
     }
     
-    protected Destination processReplyToDestination (Destination destination){
-        Topic topic = (Topic)destination;
-        return jmsTopicConnector.createReplyToTopicBridge(topic, getConsumerConnection(), getProducerConnection());
-    }
+    
     
     protected MessageProducer createProducer() throws JMSException{
         producer = producerSession.createPublisher(null);

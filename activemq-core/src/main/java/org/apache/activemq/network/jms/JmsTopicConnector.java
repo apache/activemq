@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network.jms;
 
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -44,10 +45,7 @@ public class JmsTopicConnector extends JmsConnector{
     private TopicConnection localTopicConnection;
     private InboundTopicBridge[] inboundTopicBridges;
     private OutboundTopicBridge[] outboundTopicBridges;
-    private String outboundUsername;
-    private String outboundPassword;
-    private String localUsername;
-    private String localPassword;
+    
    
    
    
@@ -189,79 +187,7 @@ public class JmsTopicConnector extends JmsConnector{
         this.outboundTopicConnectionFactory=foreignTopicConnectionFactory;
     }
 
-    /**
-     * @return Returns the outboundPassword.
-     */
-    public String getOutboundPassword(){
-        return outboundPassword;
-    }
-
-    /**
-     * @param outboundPassword
-     *            The outboundPassword to set.
-     */
-    public void setOutboundPassword(String foreignPassword){
-        this.outboundPassword=foreignPassword;
-    }
-
-    /**
-     * @return Returns the outboundUsername.
-     */
-    public String getOutboundUsername(){
-        return outboundUsername;
-    }
-
-    /**
-     * @param outboundUsername
-     *            The outboundUsername to set.
-     */
-    public void setOutboundUsername(String foreignUsername){
-        this.outboundUsername=foreignUsername;
-    }
-
-    /**
-     * @return Returns the localPassword.
-     */
-    public String getLocalPassword(){
-        return localPassword;
-    }
-
-    /**
-     * @param localPassword
-     *            The localPassword to set.
-     */
-    public void setLocalPassword(String localPassword){
-        this.localPassword=localPassword;
-    }
-
-    /**
-     * @return Returns the localUsername.
-     */
-    public String getLocalUsername(){
-        return localUsername;
-    }
-
-    /**
-     * @param localUsername
-     *            The localUsername to set.
-     */
-    public void setLocalUsername(String localUsername){
-        this.localUsername=localUsername;
-    }
     
-    /**
-     * @return Returns the replyToDestinationCacheSize.
-     */
-    public int getReplyToDestinationCacheSize(){
-        return replyToDestinationCacheSize;
-    }
-
-    /**
-     * @param replyToDestinationCacheSize The replyToDestinationCacheSize to set.
-     */
-    public void setReplyToDestinationCacheSize(int temporaryTopicCacheSize){
-        this.replyToDestinationCacheSize=temporaryTopicCacheSize;
-    }
 
     protected void initializeForeignTopicConnection() throws NamingException,JMSException{
         if(outboundTopicConnection==null){
@@ -341,7 +267,7 @@ public class JmsTopicConnector extends JmsConnector{
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getInboundMessageConvertor());
                 }
-                bridge.setJmsTopicConnector(this);
+                bridge.setJmsConnector(this);
                 addInboundBridge(bridge);
             }
             outboundSession.close();
@@ -366,7 +292,7 @@ public class JmsTopicConnector extends JmsConnector{
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
-                bridge.setJmsTopicConnector(this);
+                bridge.setJmsConnector(this);
                 addOutboundBridge(bridge);
             }
             outboundSession.close();
@@ -374,7 +300,9 @@ public class JmsTopicConnector extends JmsConnector{
         }
     }
     
-    protected Destination createReplyToTopicBridge(Topic topic, TopicConnection consumerConnection, TopicConnection producerConnection){
+    protected  Destination createReplyToBridge(Destination destination, Connection consumerConnection, Connection producerConnection){
+        Topic topic =(Topic)destination;
+        
         OutboundTopicBridge bridge = (OutboundTopicBridge) replyToBridges.get(topic);
         if (bridge == null){
             bridge = new OutboundTopicBridge(){
@@ -395,7 +323,7 @@ public class JmsTopicConnector extends JmsConnector{
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
-                bridge.setJmsTopicConnector(this);
+                bridge.setJmsConnector(this);
                 bridge.start();
                 log.info("Created replyTo bridge for " + topic);
             }catch(Exception e){
