@@ -319,8 +319,8 @@ public class BrokerService implements Service {
             // as its way too easy to not be completely sure if start() has been 
             // called or not with the gazillion of different configuration mechanisms
             
-            throw new IllegalStateException("Allready started.");
-            //return;
+            //throw new IllegalStateException("Allready started.");
+            return;
         }
         
         processHelperProperties();
