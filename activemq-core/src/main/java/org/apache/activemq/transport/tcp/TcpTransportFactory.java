@@ -16,6 +16,14 @@
  */
 package org.apache.activemq.transport.tcp;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
+import javax.net.ServerSocketFactory;
+import javax.net.SocketFactory;
 import org.activeio.command.WireFormat;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.MutexTransport;
@@ -28,19 +36,11 @@ import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
-
-import javax.net.ServerSocketFactory;
-import javax.net.SocketFactory;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class TcpTransportFactory extends TransportFactory {
-
+    private static final Log log = LogFactory.getLog(TcpTransportFactory.class);
     public TransportServer doBind(String brokerId, final URI location) throws IOException {
         try {
             Map options = new HashMap(URISupport.parseParamters(location));
@@ -90,8 +90,24 @@ public class TcpTransportFactory extends TransportFactory {
         return transport;
     }
 
-    protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
-        return new TcpTransport(wf, location);
+    protected Transport createTransport(URI location,WireFormat wf) throws UnknownHostException,IOException{
+        URI localLocation=null;
+        String path=location.getPath();
+        // see if the path is a local URI location
+        if(path!=null&&path.length()>0){
+            int localPortIndex=path.indexOf(':');
+            try{
+                Integer.parseInt(path.substring((localPortIndex+1),path.length()));
+                String localString=location.getScheme()+ ":/" + path;
+                localLocation=new URI(localString);
+            }catch(Exception e){
+                log.warn("path isn't a valid local location for TcpTransport to use",e);
+            }
+        }
+        if(localLocation!=null){
+            return new TcpTransport(wf,location,localLocation);
+        }
+        return new TcpTransport(wf,location);
     }
 
     protected ServerSocketFactory createServerSocketFactory() {
