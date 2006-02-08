@@ -79,7 +79,7 @@ abstract class DestinationBridge implements Service,MessageListener{
 
    
     protected Destination processReplyToDestination (Destination destination){
-        return jmsConnector.createReplyToBridge(destination, getConsumerConnection(), getProducerConnection());
+        return jmsConnector.createReplyToBridge(destination, getConnnectionForConsumer(), getConnectionForProducer());
     }
     
     public void start() throws Exception{
@@ -140,9 +140,9 @@ abstract class DestinationBridge implements Service,MessageListener{
 
     protected abstract void sendMessage(Message message) throws JMSException;
 
-    protected abstract Connection getConsumerConnection();
+    protected abstract Connection getConnnectionForConsumer();
     
-    protected abstract Connection getProducerConnection();
+    protected abstract Connection getConnectionForProducer();
 
     
 }

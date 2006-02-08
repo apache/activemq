@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network.jms;
 
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -151,6 +152,14 @@ class QueueBridge extends DestinationBridge{
      */
     public void setSelector(String selector){
         this.selector=selector;
+    }
+    
+    protected Connection getConnnectionForConsumer(){
+        return getConsumerConnection();
+    }
+    
+    protected Connection getConnectionForProducer(){
+        return getProducerConnection();
     }
     
   
