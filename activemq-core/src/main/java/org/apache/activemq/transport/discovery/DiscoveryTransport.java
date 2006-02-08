@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -59,21 +60,10 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     }
 
     public void stop() throws Exception {
-        IOException firstError = null;
-        try {
-            discoveryAgent.stop();
-        } catch (IOException e) {
-            firstError = e;
-        }
-        try {
-            next.stop();
-        } catch (IOException e) {
-            if (firstError != null)
-                firstError = e;
-        }
-        if (firstError != null) {
-            throw firstError;
-        }
+    	ServiceStopper ss = new ServiceStopper();
+    	ss.stop(discoveryAgent);
+    	ss.stop(next);
+    	ss.throwFirstException();
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
