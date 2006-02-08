@@ -36,6 +36,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -193,6 +194,7 @@ public class FanoutTransport implements CompositeTransport {
                         
                         URI uri = fanoutHandler.uri;
                         try {
+                            log.debug("Stopped: "+this);
                             log.debug("Attempting connect to: " + uri);
                             Transport t = TransportFactory.compositeConnect(uri);
                             log.debug("Connection established");
@@ -273,18 +275,24 @@ public class FanoutTransport implements CompositeTransport {
 
     public void stop() throws Exception {
         synchronized (reconnectMutex) {
-            log.debug("Stopped.");
+        	ServiceStopper ss = new ServiceStopper();
+        	
             if (!started)
                 return;
             started = false;
             disposed = true;
-
+            
+            reconnectTask.shutdown();
+            
             for (Iterator iter = transports.iterator(); iter.hasNext();) {
                 FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
                 if( th.transport != null ) {
-                    th.transport.stop();
+                	ss.stop(th.transport);
                 }
             }
+            
+            log.debug("Stopped: "+this);
+            ss.throwFirstException();
         }
     }
 
