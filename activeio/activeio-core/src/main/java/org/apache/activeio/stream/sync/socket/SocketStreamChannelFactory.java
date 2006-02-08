@@ -61,7 +61,26 @@ public class SocketStreamChannelFactory implements StreamChannelFactory {
      */
     public StreamChannel openStreamChannel(URI location) throws IOException {
         Socket socket=null;
-        socket = socketFactory.createSocket(location.getHost(), location.getPort());
+        String path=location.getPath();
+        // see if the path is a local URI location
+        if(path!=null&&path.length()>0){
+            if (path.indexOf('/')==0){
+                //strip leading slash
+                path = path.substring(1,path.length());
+            }
+            int localPortIndex=path.indexOf(':');
+            try{
+                int localPort = Integer.parseInt(path.substring((localPortIndex+1),path.length()));
+                InetAddress localAddress = InetAddress.getByName(path);
+                socket = socketFactory.createSocket(location.getHost(), location.getPort(),localAddress,localPort);
+            }catch(Exception e){
+                System.err.println("Could not define local address and port from path: " + path);
+                e.printStackTrace();
+            }
+        }
+        if (socket==null){
+            socket = socketFactory.createSocket(location.getHost(), location.getPort());
+        }
         return createStreamChannel(socket);
     }
 
