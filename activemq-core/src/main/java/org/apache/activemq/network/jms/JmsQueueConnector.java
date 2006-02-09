@@ -31,7 +31,7 @@ import javax.naming.NamingException;
 /**
  * A Bridge to other JMS Queue providers
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  *
  * @version $Revision: 1.1.1.1 $
  */

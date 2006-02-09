@@ -21,7 +21,7 @@ import org.springframework.beans.factory.FactoryBean;
 /**
  * Creates a default persistence model using the Journal and JDBC
  * 
- * @org.xbean.XBean element="journaledJDBC"
+ * @org.apache.xbean.XBean element="journaledJDBC"
  * 
  * @version $Revision: 1.1 $
  */

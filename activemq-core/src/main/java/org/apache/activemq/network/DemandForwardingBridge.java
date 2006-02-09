@@ -53,7 +53,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Forwards messages from the local broker to the remote broker based on demand.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

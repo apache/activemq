@@ -200,9 +200,9 @@
       <!-- =============================== -->
       <!--  for custom XML parsing -->
       <dependency>
-        <groupId>xbean</groupId>
+        <groupId>org.apache.xbean</groupId>
         <artifactId>xbean-spring</artifactId>
-        <version>2.1</version>
+        <version>2.2-SNAPSHOT</version>
       </dependency>
  
       <!-- Used to configure the activemq logs -->

@@ -33,7 +33,7 @@ import org.apache.activemq.store.TransactionStore;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.4 $
  */

@@ -29,7 +29,7 @@ import java.util.List;
  * Simple dispatch policy that sends a message to every subscription that 
  * matches the message.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

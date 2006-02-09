@@ -22,7 +22,7 @@ import javax.jms.Message;
 /**
  * Converts Message from one JMS to another
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.1.1.1 $
  */

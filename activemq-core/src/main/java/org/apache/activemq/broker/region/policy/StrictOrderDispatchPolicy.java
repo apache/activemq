@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * Dispatch policy that causes every subscription to see messages in the same order.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

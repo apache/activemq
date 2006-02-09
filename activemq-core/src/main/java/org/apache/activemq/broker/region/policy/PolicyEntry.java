@@ -24,7 +24,7 @@ import org.apache.activemq.filter.DestinationMapEntry;
  * Represents an entry in a {@link PolicyMap} for assigning policies to a
  * specific destination or a hierarchical wildcard area of destinations.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.1 $
  */

@@ -22,8 +22,8 @@ import java.net.URI;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerFactory.BrokerFactoryHandler;
 import org.springframework.beans.BeansException;
-import org.xbean.spring.context.ClassPathXmlApplicationContext;
-import org.xbean.spring.context.impl.URIEditor;
+import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
+import org.apache.xbean.spring.context.impl.URIEditor;
 
 /**
  * @version $Revision$

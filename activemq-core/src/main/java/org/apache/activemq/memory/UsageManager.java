@@ -30,7 +30,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
  * 
  * Main use case is manage memory usage.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.3 $
  */

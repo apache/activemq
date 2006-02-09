@@ -24,8 +24,8 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
-import org.xbean.spring.context.ResourceXmlApplicationContext;
-import org.xbean.spring.context.impl.URIEditor;
+import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
+import org.apache.xbean.spring.context.impl.URIEditor;
 
 import java.beans.PropertyEditorManager;
 import java.net.URI;

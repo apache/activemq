@@ -33,7 +33,7 @@ import java.util.List;
  * amount of memory available in RAM for message history which is evicted in
  * time order.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

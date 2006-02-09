@@ -24,7 +24,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * A {@link DeadLetterStrategy} where each destination has its own individual
  * DLQ using the subject naming hierarchy.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.network.jms;
 
+import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.xbean.spring.context.ClassPathXmlApplicationContext;
 
 /**
  * 

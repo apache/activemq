@@ -20,7 +20,7 @@ package org.apache.activemq.network.jms;
 /**
  * Create an Inbound Topic Bridge
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.1.1.1 $
  */

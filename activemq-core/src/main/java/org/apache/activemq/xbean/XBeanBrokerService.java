@@ -25,7 +25,7 @@ import org.springframework.beans.factory.InitializingBean;
  * connectors, network connectors and a bunch of properties which can be used to
  * configure the broker as its lazily created.
  * 
- * @org.xbean.XBean element="broker" rootElement="true" description="An ActiveMQ
+ * @org.apache.xbean.XBean element="broker" rootElement="true" description="An ActiveMQ
  *                  Message Broker which consists of a number of transport
  *                  connectors, network connectors and a persistence adaptor"
  * 
