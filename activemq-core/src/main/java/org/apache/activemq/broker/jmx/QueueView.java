@@ -69,7 +69,6 @@ public class QueueView implements QueueViewMBean {
         CompositeData c[] = new CompositeData[messages.length];
         for (int i = 0; i < c.length; i++) {
             try {
-                System.out.println(messages[i].getMessageId());
                 c[i] = OpenTypeSupport.convert(messages[i]);
             } catch (Throwable e) {
                 // TODO Auto-generated catch block
@@ -87,7 +86,6 @@ public class QueueView implements QueueViewMBean {
         TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[]{"JMSMessageID"});
         TabularDataSupport rc = new TabularDataSupport(tt);
         for (int i = 0; i < messages.length; i++) {
-            System.out.println(messages[i].getMessageId());
             rc.put(new CompositeDataSupport(ct, factory.getFields(messages[i])));
         }
         
