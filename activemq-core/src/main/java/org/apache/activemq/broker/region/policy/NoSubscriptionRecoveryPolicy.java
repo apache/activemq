@@ -24,7 +24,7 @@ import org.apache.activemq.broker.region.Topic;
 /**
  * This is the default Topic recovery policy which does not recover any messages.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

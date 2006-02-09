@@ -42,7 +42,7 @@ import javax.jms.MessageListener;
  * This implementation of {@link SubscriptionRecoveryPolicy} will perform a user
  * specific query mechanism to load any messages they may have missed.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

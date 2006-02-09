@@ -52,7 +52,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
  * but it will not keep track of local transaction commits so that operations
  * performed against the Message store are done as a single uow.
  * 
- * @org.xbean.XBean element="jdbcPersistenceAdapter"
+ * @org.apache.xbean.XBean element="jdbcPersistenceAdapter"
  * 
  * @version $Revision: 1.9 $
  */

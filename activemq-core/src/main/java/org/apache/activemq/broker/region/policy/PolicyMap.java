@@ -26,7 +26,7 @@ import java.util.List;
  * destinations or wildcard hierarchies of destinations can be configured using
  * different policies.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.1 $
  */
@@ -45,7 +45,7 @@ public class PolicyMap extends DestinationMap {
     /**
      * Sets the individual entries on the policy map
      * 
-     * @org.xbean.ElementType class="org.apache.activemq.broker.region.policy.PolicyEntry"
+     * @org.apache.xbean.ElementType class="org.apache.activemq.broker.region.policy.PolicyEntry"
      */
     public void setPolicyEntries(List entries) {
         super.setEntries(entries);

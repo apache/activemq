@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * A Bridge to other JMS Topic providers
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.1.1.1 $
  */

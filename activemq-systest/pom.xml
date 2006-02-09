@@ -70,7 +70,7 @@
     </dependency>
  
     <dependency>
-      <groupId>xbean</groupId>
+      <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
     </dependency>
     <dependency>

@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.ra;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.io.Serializable;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -45,7 +45,7 @@ import org.apache.activemq.util.ServiceSupport;
  * and deliver messages to those end points using the connection configure in the
  * resource adapter. <p/>Must override equals and hashCode (JCA spec 16.4)
  *
- * @org.xbean.XBean element="resourceAdapter" rootElement="true"
+ * @org.apache.xbean.XBean element="resourceAdapter" rootElement="true"
  * description="The JCA Resource Adaptor for ActiveMQ"
  *
  * @version $Revision$

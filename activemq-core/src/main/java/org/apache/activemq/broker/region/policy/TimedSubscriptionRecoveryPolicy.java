@@ -34,7 +34,7 @@ import java.util.List;
  * buffer of messages around in memory and use that to recover new
  * subscriptions.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

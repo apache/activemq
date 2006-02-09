@@ -70,7 +70,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  * {@link Journal} and then check pointing asynchronously on a timeout with some
  * other long term persistent storage.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision: 1.17 $
  */

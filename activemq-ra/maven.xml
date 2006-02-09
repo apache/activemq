@@ -42,7 +42,7 @@
       <path refid="maven.dependency.classpath" />
     </path>
 
-    <taskdef name="xsdGenerate" classname="org.xbean.spring.generator.MappingGeneratorTask">
+    <taskdef name="xsdGenerate" classname="org.apache.xbean.spring.generator.MappingGeneratorTask">
       <classpath refid="test.classpath" />
     </taskdef>
     <xsdGenerate destFile="target/activemq-ra.xsd" namespace="http://activemq.org/ra/config/1.0" classpathref="test.classpath" srcdir="src/main/java" />

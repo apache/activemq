@@ -26,7 +26,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * This implementation of {@link SubscriptionRecoveryPolicy} will only keep 
  * the last message.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

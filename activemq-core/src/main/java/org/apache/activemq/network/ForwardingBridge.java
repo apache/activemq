@@ -43,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Forwards all messages from the local broker to the remote broker.
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

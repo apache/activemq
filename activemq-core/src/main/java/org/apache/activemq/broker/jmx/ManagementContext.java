@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * A Flow provides different dispatch policies within the NMR
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

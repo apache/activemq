@@ -24,7 +24,7 @@ import org.apache.activemq.command.ActiveMQQueue;
  * a constant destination.
  * 
  * 
- * @org.xbean.XBean
+ * @org.apache.xbean.XBean
  * 
  * @version $Revision$
  */

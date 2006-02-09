@@ -68,7 +68,7 @@
          <include>xstream:xstream</include>
          <include>xmlpull:xmlpull</include>
          <include>activecluster:activecluster</include>
-         <include>xbean:xbean-spring</include>
+         <include>org.apache.xbean:xbean-spring</include>
          <include>springframework:spring</include>
          <include>commons-dbcp:commons-dbcp</include>
          <include>commons-pool:commons-pool</include>
