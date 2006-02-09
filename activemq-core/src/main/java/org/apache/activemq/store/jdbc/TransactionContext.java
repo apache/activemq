@@ -103,7 +103,11 @@ public class TransactionContext {
                 executeBatch();
                 
                 /**
-                 * we are not in a transaction so should not be committing
+                 * we are not in a transaction so should not be committing ??
+                 * This was previously commented out - but had
+                 * adverse affects on testing - so it's back!
+                 * 
+                 */
                 try{
                     executeBatch();
                 } finally {
@@ -111,7 +115,7 @@ public class TransactionContext {
                         connection.commit();
                     }
                 }
-                */
+                
             } catch (SQLException e) {
                 throw IOExceptionSupport.create(e);
             } finally {
