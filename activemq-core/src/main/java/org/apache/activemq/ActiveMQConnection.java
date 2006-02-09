@@ -1329,13 +1329,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             } else {
                 log.warn("Async exception with no exception listener: " + error, error);
             }
-            transportFailed(error);
         }
     }
 
     
     public void onException(IOException error) {
         onAsyncException(error);
+        transportFailed(error);
         ServiceSupport.dispose(this.transport);
         brokerInfoReceived.countDown();
     }
