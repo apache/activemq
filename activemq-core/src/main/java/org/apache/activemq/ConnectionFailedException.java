@@ -37,7 +37,7 @@ public class ConnectionFailedException extends JMSException {
     }
     
     public ConnectionFailedException() {
-        super("The JMS connection has failed due ti a Transport problem");
+        super("The JMS connection has failed due to a Transport problem");
     }
 
     static private String extractMessage(IOException cause) {

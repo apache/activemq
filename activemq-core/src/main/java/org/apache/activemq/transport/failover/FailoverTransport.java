@@ -319,9 +319,6 @@ public class FailoverTransport implements CompositeTransport {
                             }
                             break;
                         }
-                        
-                        // Send the message.
-                        connectedTransport.oneway(command);
 
                         // If it was a request and it was not being tracked by
                         // the state tracker,
@@ -330,6 +327,20 @@ public class FailoverTransport implements CompositeTransport {
                         if (!stateTracker.track(command) && command.isResponseRequired()) {
                             requestMap.put(new Short(command.getCommandId()), command);
                         }
+                                                
+                        // Send the message.
+                        try {
+                            connectedTransport.oneway(command);
+                        } catch (IOException e) {
+                            // If there is an IOException in the send, remove the command from the requestMap
+                            if (!stateTracker.track(command) && command.isResponseRequired()) {
+                                requestMap.remove(new Short(command.getCommandId()), command);
+                            }
+                            
+                            // Rethrow the exception so it will handled by the outer catch
+                            throw e;
+                        }
+                        
                         return;
 
                     }
