@@ -499,6 +499,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 subscription.setSelector(rs.getString(1));
                 subscription.setSubcriptionName(rs.getString(2));
                 subscription.setClientId(rs.getString(3));
+                rc.add(subscription);
             }
 
             return (SubscriptionInfo[]) rc.toArray(new SubscriptionInfo[rc.size()]);            
@@ -616,6 +617,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         s.setString(2,clientId);
         s.setString(3,subscriptionName);
         printQuery(s,System.out);
+    }
+    
+    public void dumpTables(Connection c) throws SQLException {
+        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out);
+        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
     }
 
     private void printQuery(Connection c, String query, PrintStream out) throws SQLException {
