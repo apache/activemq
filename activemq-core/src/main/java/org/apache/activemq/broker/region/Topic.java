@@ -149,7 +149,7 @@ public class Topic implements Destination {
 
             boolean persistenceWasOptimized = canOptimizeOutPersistence();
             if (initialActivation) {
-                synchronized(consumers) {                    
+                synchronized(consumers) {           
                     consumers.add(sub);
                     durableSubscriberCounter.incrementAndGet();
                 }
@@ -169,7 +169,7 @@ public class Topic implements Destination {
                         info = null;
                     }
                 }
-                // Do we need to crate the subscription?
+                // Do we need to create the subscription?
                 if (info == null) {
                     store.addSubsciption(clientId, subscriptionName, selector, sub.getConsumerInfo().isRetroactive());
                 }
@@ -222,9 +222,6 @@ public class Topic implements Destination {
         destinationStatistics.getConsumers().decrement();
         synchronized(consumers) {
             consumers.remove(sub);
-            if( sub.getConsumerInfo().isDurable() ) {
-                durableSubscriberCounter.decrementAndGet();
-            }
         }
         sub.remove(context, this);
     }
@@ -265,9 +262,14 @@ public class Topic implements Destination {
         return durableSubscriberCounter.get()==0;
     }
 
+    public void createSubscription(SubscriptionKey key) {
+        durableSubscriberCounter.incrementAndGet();
+    }
+    
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
         if (store != null) {
             store.deleteSubscription(key.clientId, key.subscriptionName);
+            durableSubscriberCounter.decrementAndGet();
         }
     }
 
