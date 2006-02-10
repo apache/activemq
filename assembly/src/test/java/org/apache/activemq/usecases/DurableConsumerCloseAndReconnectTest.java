@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.TestSupport;
 
 import javax.jms.Connection;
@@ -39,6 +40,10 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     private MessageConsumer consumer;
     private MessageProducer producer;
     private Destination destination;
+
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory("vm://localhost?broker.persistent=true");
+    }
 
     public void testCreateDurableConsumerCloseThenReconnect() throws Exception {
         // force the server to stay up across both connection tests
