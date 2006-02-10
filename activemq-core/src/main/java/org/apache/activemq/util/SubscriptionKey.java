@@ -39,4 +39,8 @@ public class SubscriptionKey {
             return false;
         }
     }
+    
+    public String toString() {
+        return clientId+":"+subscriptionName;
+    }
 }
