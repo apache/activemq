@@ -173,6 +173,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
         else
         {
+            response.setContentType("text/xml");
             response.getWriter().print("<ajax-response></ajax-response>");
         }
         // System.err.println("==");
