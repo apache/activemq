@@ -1666,5 +1666,16 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         return "ActiveMQSession {id="+info.getSessionId()+",started="+started.get()+"}";
     }
 
+    public void checkMessageListener() throws JMSException {
+        if (messageListener != null) {
+            throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
+        }
+        for (Iterator i = consumers.iterator(); i.hasNext();) {
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) i.next();
+            if( consumer.getMessageListener()!=null ) {
+                throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
+            }
+        }
+    }
 
 }

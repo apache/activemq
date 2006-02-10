@@ -528,10 +528,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
 
-    protected void checkMessageListener() throws IllegalStateException {
-        if (messageListener != null) {
-            throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
-        }
+    protected void checkMessageListener() throws JMSException {
+        session.checkMessageListener();
     }
 
     private void beforeMessageIsConsumed(MessageDispatch md) {
@@ -713,8 +711,17 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 if (listener != null && started.get()) {
                     ActiveMQMessage message = createActiveMQMessage(md);
                     beforeMessageIsConsumed(md);
-                    listener.onMessage(message);
-                    afterMessageIsConsumed(md, false);
+                    try {
+                        listener.onMessage(message);
+                        afterMessageIsConsumed(md, false);
+                    } catch (RuntimeException e) {
+                        if ( session.isDupsOkAcknowledge() || session.isAutoAcknowledge() ) {
+                            // Redeliver the message
+                        } else {
+                            // Transacted or Client ack: Deliver the next message.
+                            afterMessageIsConsumed(md, false);
+                        }
+                    }
                 } else {
                     unconsumedMessages.enqueue(md);
                     if (availableListener != null) {
