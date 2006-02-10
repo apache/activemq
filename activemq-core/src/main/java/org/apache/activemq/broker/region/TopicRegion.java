@@ -59,6 +59,13 @@ public class TopicRegion extends AbstractRegion {
 
     public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
         if (info.isDurable()) {
+
+            ActiveMQDestination destination = info.getDestination();
+            if( !destination.isPattern() ) {
+                // Make sure the destination is created.
+                lookup(context, destination);
+            }
+
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if (sub != null) {
@@ -148,7 +155,7 @@ public class TopicRegion extends AbstractRegion {
             SubscriptionInfo[] infos = store.getAllSubscriptions();
             for (int i = 0; i < infos.length; i++) {
                 log.info("Restoring durable subscription: "+infos[i]);
-                createDurableSubscription(infos[i]);
+                createDurableSubscription(topic, infos[i]);
             }            
         }
         
@@ -182,10 +189,12 @@ public class TopicRegion extends AbstractRegion {
         }
     }
     
-    public Subscription createDurableSubscription(SubscriptionInfo info) throws JMSException {
+    public Subscription createDurableSubscription(Topic topic, SubscriptionInfo info) throws Throwable {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubcriptionName());
+        topic.createSubscription(key);
         DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
         sub = new DurableTopicSubscription(broker,info);
+        sub.add(null, topic);
         durableSubscriptions.put(key, sub);
         return sub;
     }
