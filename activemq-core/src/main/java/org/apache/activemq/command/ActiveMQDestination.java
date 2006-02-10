@@ -344,4 +344,8 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
     public void populateProperties(Properties props) {
         props.setProperty("physicalName", getPhysicalName());
     }
+
+    public boolean isPattern() {
+        return isPattern;
+    }
 }
