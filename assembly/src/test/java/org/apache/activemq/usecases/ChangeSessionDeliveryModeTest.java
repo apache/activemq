@@ -16,7 +16,6 @@
  */
 
 package org.apache.activemq.usecases;
-import java.util.HashMap;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
@@ -24,8 +23,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
 import org.apache.activemq.test.TestSupport;
@@ -34,8 +31,6 @@ import org.apache.activemq.test.TestSupport;
  * @version $Revision: 1.1.1.1 $
  */
 public class ChangeSessionDeliveryModeTest extends TestSupport implements MessageListener {
-    private static final int COUNT = 200;
-    private static final String VALUE_NAME = "value";
 
     /**
      * test following condition- which are defined by JMS Spec 1.1: MessageConsumers cannot use a MessageListener and
@@ -52,13 +47,14 @@ public class ChangeSessionDeliveryModeTest extends TestSupport implements Messag
         consumer1.setMessageListener(this);
         JMSException jmsEx = null;
         MessageConsumer consumer2 = consumerSession.createConsumer(destination);
+        
         try {
             consumer2.receive(10);
+            fail("Did not receive expected exception.");
         }
         catch (JMSException e) {
-            jmsEx = e;
+            assertTrue(e instanceof IllegalStateException);
         }
-        assertTrue(jmsEx != null && jmsEx instanceof IllegalStateException);
     }
 
     public void onMessage(Message msg) {
