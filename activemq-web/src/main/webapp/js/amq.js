@@ -56,7 +56,7 @@ var amq =
   
   _pollHandler: function(request) 
   {
-    this._queueMessages=true;
+    amq._queueMessages=true;
     try
     {
       amq._messageHandler(request);
@@ -68,26 +68,26 @@ var amq =
         alert(e);
     }
     
-    this._queueMessages=false;
+    amq._queueMessages=false;
     
-    if (this._messages==0)
+    if (amq._messages==0)
     {
       if (amq.poll)
         new Ajax.Request('/amq', { method: 'get', onSuccess: amq._pollHandler }); 
     }
     else
     {
-      var body = this._messageQueue+'&poll='+amq.poll;
-      this._messageQueue='';
-      this._messages=0;
+      var body = amq._messageQueue+'&poll='+amq.poll;
+      amq._messageQueue='';
+      amq._messages=0;
       new Ajax.Request('/amq', { method: 'post', onSuccess: amq._pollHandler, postBody: body }); 
     }
   },
   
   addPollHandler : function(func)
   {
-    var old = this._pollEvent;
-    this._pollEvent = function(first) 
+    var old = amq._pollEvent;
+    amq._pollEvent = function(first) 
     {
       old(first);
       func(first);
@@ -96,28 +96,28 @@ var amq =
   
   sendMessage : function(destination,message)
   {
-   this._sendMessage(destination,message,'send');
+   amq._sendMessage(destination,message,'send');
   },
   
   // Listen on a channel or topic.   handler must be a function taking a message arguement
   addListener : function(id,destination,handler)
   {   
     amq._handlers[id]=handler;
-    this._sendMessage(destination,id,'listen');
+    amq._sendMessage(destination,id,'listen');
   },
   
   // remove Listener from channel or topic.  
   removeListener : function(destination)
   {   
-    this._sendMessage(destination,'','unlisten');
+    amq._sendMessage(destination,'','unlisten');
   },
   
   _sendMessage : function(destination,message,type)
   {
-    if (this._queueMessages)
+    if (amq._queueMessages)
     {
-      this._messageQueue+=(this._messages==0?'destination=':'&destination=')+destination+'&message='+message+'&type='+type;
-      this._messages++;
+      amq._messageQueue+=(amq._messages==0?'destination=':'&destination=')+destination+'&message='+message+'&type='+type;
+      amq._messages++;
     }
     else
     {
