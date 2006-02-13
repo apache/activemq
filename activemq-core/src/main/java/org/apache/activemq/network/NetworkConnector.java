@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Set;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
@@ -47,6 +48,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
     private URI localURI;
 
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
+    private Set durableDestinations;
     boolean failover=true;
     
     
@@ -222,6 +224,22 @@ public class NetworkConnector implements Service, DiscoveryListener {
      */
     public void setBrokerName(String brokerName){
         this.brokerName=brokerName;
+    }
+
+
+    /**
+     * @return Returns the durableDestinations.
+     */
+    public Set getDurableDestinations(){
+        return durableDestinations;
+    }
+
+
+    /**
+     * @param durableDestinations The durableDestinations to set.
+     */
+    public void setDurableDestinations(Set durableDestinations){
+        this.durableDestinations=durableDestinations;
     }
 
 }
