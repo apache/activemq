@@ -186,8 +186,8 @@ public class JmsBenchmark extends JmsTestSupport {
         for( int i=0; i < SAMPLES; i ++) {
             
             long start = System.currentTimeMillis();
-            receivedMessages.set(0);
             producedMessages.set(0);
+            receivedMessages.set(0);
             
             Thread.sleep(SAMPLE_DURATION);
             
