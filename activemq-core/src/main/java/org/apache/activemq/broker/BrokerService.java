@@ -1001,6 +1001,7 @@ public class BrokerService implements Service {
             for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 NetworkConnector connector = (NetworkConnector) iter.next();
                 connector.setBrokerName(getBrokerName());
+                connector.setDurableDestinations(getBroker().getDurableDestinations());
                 connector.start();
             }
             
