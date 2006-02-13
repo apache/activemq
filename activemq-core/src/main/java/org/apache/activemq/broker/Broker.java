@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Set;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -205,5 +206,10 @@ public interface Broker extends Region, Service {
      * @return true if the broker has stopped
      */
     public boolean isStopped();
+    
+    /**
+     * @return a Set of all durable destinations
+     */
+    public Set getDurableDestinations();
     
 }

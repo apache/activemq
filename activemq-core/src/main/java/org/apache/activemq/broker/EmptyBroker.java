@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
@@ -184,6 +185,10 @@ public class EmptyBroker implements Broker{
     
     public boolean isStopped(){
         return false;
+    }
+    
+    public Set getDurableDestinations(){
+        return null;
     }
 
 }
