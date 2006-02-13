@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
@@ -196,6 +197,10 @@ public class MutableBrokerFilter implements Broker {
     
     public boolean isStopped(){
         return getNext().isStopped();
+    }
+    
+    public Set getDurableDestinations(){
+        return getNext().getDurableDestinations();
     }
 
 }

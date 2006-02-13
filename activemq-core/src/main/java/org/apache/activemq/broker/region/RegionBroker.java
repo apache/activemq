@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -79,6 +80,7 @@ public class RegionBroker implements Broker {
     private BrokerId brokerId;
     private String brokerName;
     private Map clientIdSet = new HashMap(); // we will synchronize access
+    private PersistenceAdapter adaptor;
 
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter) throws IOException {
         this(brokerService,taskRunnerFactory, memoryManager, createDefaultPersistenceAdapter(memoryManager), null);
@@ -87,7 +89,7 @@ public class RegionBroker implements Broker {
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, PolicyMap policyMap) throws IOException {
         this.brokerService = brokerService;
         this.sequenceGenerator.setLastSequenceId( adapter.getLastMessageBrokerSequenceId() );
-        
+        this.adaptor = adaptor;
         queueRegion = createQueueRegion(memoryManager, taskRunnerFactory, adapter, policyMap);
         topicRegion = createTopicRegion(memoryManager, taskRunnerFactory, adapter, policyMap);
         
@@ -451,6 +453,10 @@ public class RegionBroker implements Broker {
     
     public boolean isStopped(){
         return stopped;
+    }
+    
+    public Set getDurableDestinations(){
+        return adaptor.getDestinations();
     }
 
     
