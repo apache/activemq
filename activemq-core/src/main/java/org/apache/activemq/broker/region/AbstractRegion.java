@@ -149,9 +149,17 @@ abstract public class AbstractRegion implements Region {
         }
         
     }
+    
+    /**
+     * Get all the Destinations that are in storage
+     * @return Set of all stored destinations
+     */
+    public Set getDurableDestinations(){
+        return persistenceAdapter.getDestinations();
+    }
 
     /**
-     * @return
+     * @return all Destinations that don't have active consumers
      */
     protected Set getInactiveDestinations() {
         Set inactiveDests = persistenceAdapter.getDestinations();
