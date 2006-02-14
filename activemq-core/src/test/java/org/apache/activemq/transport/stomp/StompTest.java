@@ -16,27 +16,25 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQQueue;
+
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.URI;
 import java.net.SocketTimeoutException;
-
-
-import javax.jms.*;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.transport.stomp.Stomp;
+import java.net.URI;
 
 public class StompTest extends CombinationTestSupport {
 
@@ -62,12 +60,16 @@ public class StompTest extends CombinationTestSupport {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
         connection = cf.createConnection();
         session = connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        queue = new ActiveMQQueue("TEST");
+        queue = new ActiveMQQueue(getQueueName());
         connection.start();
 
 
     }
     
+    protected String getQueueName() {
+        return getClass().getName() + "." + getName();
+    }
+
     protected void tearDown() throws Exception {
         connection.close();
         stompSocket.close();
@@ -129,23 +131,51 @@ public class StompTest extends CombinationTestSupport {
             "passcode: wombats\n\n"+
             Stomp.NULL;
         sendFrame(frame);
+        
+        frame = receiveFrame(10000);
+        assertTrue(frame.startsWith("CONNECTED"));
+        
+        frame =
+            "SEND\n" +
+            "destination:/queue/" + getQueueName() + "\n\n" +
+            "Hello World" +
+            Stomp.NULL;
+        
+        sendFrame(frame);
+        
+        TextMessage message = (TextMessage) consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals("Hello World", message.getText());
+    }
+    
+    
+    public void testSendMessageWithHeaders() throws Exception {
+        
+        MessageConsumer consumer = session.createConsumer(queue, "foo = 'abc'");
+        
+        String frame = 
+            "CONNECT\n" + 
+            "login: brianm\n" + 
+            "passcode: wombats\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
      
         frame = receiveFrame(10000);
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
             "SEND\n" +
-            "destination:/queue/TEST\n\n" +
+            "foo:abc\n" +
+            "bar:123\n" +
+            "destination:/queue/" + getQueueName() + "\n\n" +
             "Hello World" +
             Stomp.NULL;
 
         sendFrame(frame);
 
-        TextMessage message = (TextMessage) consumer.receive(1000);
+        TextMessage message = (TextMessage) consumer.receive(60000);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
-
-
     }
 
     public void testSubscribeWithAutoAck() throws Exception {
@@ -162,7 +192,7 @@ public class StompTest extends CombinationTestSupport {
 
         frame =
             "SUBSCRIBE\n" +
-            "destination:/queue/TEST\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
         sendFrame(frame);
@@ -197,7 +227,7 @@ public class StompTest extends CombinationTestSupport {
 
        frame =
             "SUBSCRIBE\n" +
-            "destination:/queue/TEST\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
             "ack:client\n\n"+
             Stomp.NULL;
 
@@ -236,13 +266,13 @@ public class StompTest extends CombinationTestSupport {
 
         frame =
             "SUBSCRIBE\n" +
-            "destination:/queue/TEST\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
         sendFrame(frame);
 
         //send a message to our queue
-        sendMessage(getName());
+        sendMessage("first message");
 
 
         //receive message from socket
@@ -252,17 +282,18 @@ public class StompTest extends CombinationTestSupport {
         //remove suscription
         frame =
             "UNSUBSCRIBE\n" +
-            "destination:/queue/TEST\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
             "\n\n" +
             Stomp.NULL;
                 sendFrame(frame);
 
         //send a message to our queue
-        sendMessage(getName());
+        sendMessage("second message");
 
 
         try {
             frame = receiveFrame(1000);
+            System.out.println("Received frame: " + frame);
             fail("No message should have been received since subscription was removed");
         }catch (SocketTimeoutException e){
 
@@ -291,7 +322,7 @@ public class StompTest extends CombinationTestSupport {
 
         frame =
             "SEND\n" +
-            "destination:/queue/TEST\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
             "transaction: tx1\n" +
             "\n\n" +
             "Hello World" +
@@ -335,7 +366,7 @@ public class StompTest extends CombinationTestSupport {
 
         frame =
             "SEND\n" +
-            "destination:/queue/TEST\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
             "transaction: tx1\n" +
             "\n\n" +
             "first message" +
@@ -352,7 +383,7 @@ public class StompTest extends CombinationTestSupport {
 
         frame =
             "SEND\n" +
-            "destination:/queue/TEST\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
             "transaction: tx1\n" +
             "\n\n" +
             "second message" +
