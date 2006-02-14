@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import java.io.DataInput;
-import java.io.IOException;
-import java.util.Properties;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.util.IntrospectionSupport;
+
+import java.io.DataInput;
+import java.io.IOException;
+import java.util.Properties;
 
 class Subscribe implements StompCommand {
     private HeaderParser headerParser = new HeaderParser();
@@ -43,6 +43,9 @@ class Subscribe implements StompCommand {
         ci.setPrefetchSize(1000);
         ci.setDispatchAsync(true);
 
+        String selector = (String) headers.remove(Stomp.Headers.Subscribe.SELECTOR);
+        ci.setSelector(selector);
+        
         IntrospectionSupport.setProperties(ci, headers, "activemq.");
         
         ci.setDestination(DestinationNamer.convert(destination));

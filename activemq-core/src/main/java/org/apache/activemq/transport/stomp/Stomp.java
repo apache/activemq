@@ -79,6 +79,7 @@ public interface Stomp {
             String DESTINATION = "destination";
             String ACK_MODE = "ack";
             String ID = "id";
+            String SELECTOR = "selector";
 
             public interface AckModeValues {
                 String AUTO = "auto";
