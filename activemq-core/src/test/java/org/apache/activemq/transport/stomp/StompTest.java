@@ -178,7 +178,7 @@ public class StompTest extends CombinationTestSupport {
 
         sendFrame(frame);
 
-        TextMessage message = (TextMessage) consumer.receive(60000);
+        TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
     }
@@ -323,8 +323,11 @@ public class StompTest extends CombinationTestSupport {
             "destination:/queue/" + getQueueName() + "\n" +
             "\n\n" +
             Stomp.NULL;
-                sendFrame(frame);
+        sendFrame(frame);
 
+        // lets wait for the unsubscribe to take effect
+        Thread.sleep(1000);
+        
         //send a message to our queue
         sendMessage("second message");
 
