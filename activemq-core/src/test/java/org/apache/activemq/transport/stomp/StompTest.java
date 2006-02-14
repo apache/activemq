@@ -23,6 +23,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -103,12 +104,16 @@ public class StompTest extends CombinationTestSupport {
         } 
     }
 
+    
     public void sendMessage(String msg) throws Exception {
+        sendMessage(msg, "foo", "xyz");
+    }
 
+    public void sendMessage(String msg, String propertyName, String propertyValue) throws JMSException {
         MessageProducer producer = session.createProducer(queue);
         TextMessage message = session.createTextMessage(msg);
+        message.setStringProperty(propertyName, propertyValue);
         producer.send(message);
-
     }
 
     public void testConnect() throws Exception {
@@ -177,8 +182,40 @@ public class StompTest extends CombinationTestSupport {
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
     }
-
+    
     public void testSubscribeWithAutoAck() throws Exception {
+        
+        String frame =
+            "CONNECT\n" +
+            "login: brianm\n" +
+            "passcode: wombats\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
+        
+        frame = receiveFrame(100000);
+        assertTrue(frame.startsWith("CONNECTED"));
+        
+        frame =
+            "SUBSCRIBE\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
+            "ack:auto\n\n" +
+            Stomp.NULL;
+        sendFrame(frame);
+        
+        sendMessage(getName());
+        
+        frame = receiveFrame(10000);
+        assertTrue(frame.startsWith("MESSAGE"));
+        
+        frame =
+            "DISCONNECT\n" +
+            "\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
+    }
+    
+
+    public void testSubscribeWithAutoAckAndSelector() throws Exception {
 
         String frame =
             "CONNECT\n" +
@@ -193,22 +230,23 @@ public class StompTest extends CombinationTestSupport {
         frame =
             "SUBSCRIBE\n" +
             "destination:/queue/" + getQueueName() + "\n" +
+            "selector: foo = 'zzz'\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
         sendFrame(frame);
 
-        sendMessage(getName());
+        sendMessage("Ignored message", "foo", "1234");
+        sendMessage("Real message", "foo", "zzz");
 
         frame = receiveFrame(10000);
         assertTrue(frame.startsWith("MESSAGE"));
+        assertTrue("Should have received the real message but got: " + frame, frame.indexOf("Real message") > 0);
 
        frame =
             "DISCONNECT\n" +
             "\n\n"+
             Stomp.NULL;
        sendFrame(frame);
-
-
     }
 
 
