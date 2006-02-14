@@ -344,9 +344,6 @@
 
                 <!-- This test currently fails -->
                 <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
-
-                <!-- https://jira.logicblaze.com/jira/browse/AMQ-502 -->
-                <exclude>**/StompTest.*</exclude>
                 
                 <!-- http://jira.activemq.org/jira/browse/AMQ-522 -->
                 <exclude>**/ProxyConnectorTest.*</exclude>
