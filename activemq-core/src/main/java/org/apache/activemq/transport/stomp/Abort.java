@@ -44,6 +44,7 @@ class Abort implements StompCommand {
 
         TransactionId txnId = format.getTransactionId(user_tx_id);
         TransactionInfo tx = new TransactionInfo();
+        tx.setConnectionId(format.getConnectionId());
         tx.setTransactionId(txnId);
         tx.setType(TransactionInfo.ROLLBACK);
         format.clearTransactionId(user_tx_id);

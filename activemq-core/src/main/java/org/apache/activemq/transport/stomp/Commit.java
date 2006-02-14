@@ -39,12 +39,15 @@ class Commit implements StompCommand {
 
         String user_tx_id = headers.getProperty(Stomp.Headers.TRANSACTION);
 
-        if (!headers.containsKey(Stomp.Headers.TRANSACTION)) {
+        if (user_tx_id == null) {
             throw new ProtocolException("Must specify the transaction you are committing");
         }
 
         TransactionId tx_id = format.getTransactionId(user_tx_id);
+        if (tx_id == null)
+            throw new ProtocolException(user_tx_id + " is an invalid transaction id");
         TransactionInfo tx = new TransactionInfo();
+        tx.setConnectionId(format.getConnectionId());
         tx.setTransactionId(tx_id);
         tx.setType(TransactionInfo.COMMIT_ONE_PHASE);
         format.clearTransactionId(user_tx_id);
