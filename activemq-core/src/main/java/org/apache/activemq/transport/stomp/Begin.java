@@ -44,6 +44,7 @@ public class Begin implements StompCommand {
         }
         int tx_id = StompWireFormat.generateTransactionId();
         TransactionId transactionId = format.registerTransactionId(user_tx_id, tx_id);
+        tx.setConnectionId(format.getConnectionId());
         tx.setTransactionId(transactionId);
         tx.setType(TransactionInfo.BEGIN);
         return new CommandEnvelope(tx, headers);

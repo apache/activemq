@@ -314,7 +314,7 @@ public class StompTest extends CombinationTestSupport {
 
 
         //receive message from socket
-        frame = receiveFrame(10000);
+        frame = receiveFrame(1000);
         assertTrue(frame.startsWith("MESSAGE"));
 
         //remove suscription
@@ -325,8 +325,7 @@ public class StompTest extends CombinationTestSupport {
             Stomp.NULL;
         sendFrame(frame);
 
-        // lets wait for the unsubscribe to take effect
-        Thread.sleep(1000);
+        waitForFrameToTakeEffect();
         
         //send a message to our queue
         sendMessage("second message");
@@ -344,6 +343,8 @@ public class StompTest extends CombinationTestSupport {
 
 
     public void testTransactionCommit() throws Exception {
+        MessageConsumer consumer = session.createConsumer(queue);
+
         String frame =
             "CONNECT\n" +
             "login: brianm\n" +
@@ -353,7 +354,7 @@ public class StompTest extends CombinationTestSupport {
 
         String f = receiveFrame(1000);
         assertTrue(f.startsWith("CONNECTED"));
-
+        
         frame =
             "BEGIN\n" +
             "transaction: tx1\n" +
@@ -370,7 +371,6 @@ public class StompTest extends CombinationTestSupport {
             Stomp.NULL;
         sendFrame(frame);
 
-
         frame =
             "COMMIT\n" +
             "transaction: tx1\n" +
@@ -378,16 +378,15 @@ public class StompTest extends CombinationTestSupport {
             Stomp.NULL;
         sendFrame(frame);
 
-        // This test case is currently failing
-
-        MessageConsumer consumer = session.createConsumer(queue);
+        waitForFrameToTakeEffect();
+        
         TextMessage message = (TextMessage) consumer.receive(1000);
-        assertNotNull(message);
-
-
+        assertNotNull("Should have received a message", message);
     }
 
     public void testTransactionRollback() throws Exception {
+        MessageConsumer consumer = session.createConsumer(queue);
+
         String frame =
             "CONNECT\n" +
             "login: brianm\n" +
@@ -409,7 +408,7 @@ public class StompTest extends CombinationTestSupport {
             "SEND\n" +
             "destination:/queue/" + getQueueName() + "\n" +
             "transaction: tx1\n" +
-            "\n\n" +
+            "\n" +
             "first message" +
             Stomp.NULL;
         sendFrame(frame);
@@ -423,10 +422,17 @@ public class StompTest extends CombinationTestSupport {
         sendFrame(frame);
 
         frame =
+            "BEGIN\n" +
+            "transaction: tx1\n" +
+            "\n\n" +
+            Stomp.NULL;
+        sendFrame(frame);
+
+        frame =
             "SEND\n" +
             "destination:/queue/" + getQueueName() + "\n" +
             "transaction: tx1\n" +
-            "\n\n" +
+            "\n" +
             "second message" +
             Stomp.NULL;
         sendFrame(frame);
@@ -439,17 +445,18 @@ public class StompTest extends CombinationTestSupport {
         sendFrame(frame);
 
         // This test case is currently failing
+        waitForFrameToTakeEffect();
 
         //only second msg should be received since first msg was rolled back
-        MessageConsumer consumer = session.createConsumer(queue);
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
-        assertEquals("second message", message.getText());
-
-
+        assertEquals("second message", message.getText().trim());
     }
 
-
-
-
+    protected void waitForFrameToTakeEffect() throws InterruptedException {
+        // bit of a dirty hack :)
+        // another option would be to force some kind of receipt to be returned
+        // from the frame
+        Thread.sleep(2000);
+    }
 }
