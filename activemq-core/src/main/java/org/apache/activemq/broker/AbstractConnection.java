@@ -72,7 +72,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class AbstractConnection implements Service, Connection, Task, CommandVisitor {
 
-    private static final Log log = LogFactory.getLog(AbstractConnection.class);
+    private static final Log transportLog = LogFactory.getLog(AbstractConnection.class.getName() + ".Transport");
+    private static final Log serviceLog = LogFactory.getLog(AbstractConnection.class.getName() + ".Service");
     
     protected final Broker broker;
     
@@ -159,10 +160,8 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     public void serviceTransportException(IOException e) {
         if( !disposed ) {
-            if( log.isDebugEnabled() )
-                log.debug("Transport failed: "+e,e);
-            
-            log.debug("Transport failed: "+e,e);
+            if( transportLog.isDebugEnabled() )
+                transportLog.debug("Transport failed: "+e,e);
             ServiceSupport.dispose(this);
         }
     }
@@ -171,8 +170,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( !disposed && !inServiceException ) {
             inServiceException = true;
                 try {
-                if( log.isDebugEnabled() )
-                    log.debug("Async error occurred: "+e,e);
+                serviceLog.info("Async error occurred: "+e,e);
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
                 dispatchAsync(ce);
@@ -191,8 +189,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             response = command.visit(this);
         } catch ( Throwable e ) {
             if( responseRequired ) {
-                if( log.isDebugEnabled() )
-                    log.debug("Sync error occurred: "+e,e);
+                serviceLog.info("Sync error occurred: "+e,e);
                 response = new ExceptionResponse(e);
             } else {
                 serviceException(e);
