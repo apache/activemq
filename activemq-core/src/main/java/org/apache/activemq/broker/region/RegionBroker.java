@@ -50,6 +50,7 @@ import javax.jms.JMSException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -456,7 +457,7 @@ public class RegionBroker implements Broker {
     }
     
     public Set getDurableDestinations(){
-        return adaptor.getDestinations();
+        return adaptor != null ? adaptor.getDestinations() : Collections.EMPTY_SET;
     }
 
     
