@@ -66,6 +66,7 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doAddMessage(c, message.getMessageId(), destination, data, message.getExpiration());
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to broker message: " + message.getMessageId() + " in container: "
                     + e, e);
         } finally {
@@ -79,6 +80,7 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doAddMessageReference(c, messageId, destination, expirationTime, messageRef);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: "
                     + e, e);
         } finally {
@@ -102,6 +104,7 @@ public class JDBCMessageStore implements MessageStore {
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
@@ -118,6 +121,7 @@ public class JDBCMessageStore implements MessageStore {
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
@@ -132,6 +136,7 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doRemoveMessage(c, seq);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to broker message: " + ack.getLastMessageId() + " in container: " + e, e);
         } finally {
             c.close();
@@ -155,6 +160,7 @@ public class JDBCMessageStore implements MessageStore {
                 }
             });
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to recover container. Reason: " + e, e);
         } finally {
             c.close();
@@ -176,6 +182,7 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doRemoveAllMessages(c, destination);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to broker remove all messages: " + e, e);
         } finally {
             c.close();

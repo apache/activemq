@@ -48,6 +48,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         try {
             adapter.doSetLastAck(c, destination, clientId, subscriptionName, seq);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to store acknowledgment for: " + clientId + " on message "
                     + messageId + " in container: " + e, e);
         } finally {
@@ -76,6 +77,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                         }
                     });
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to recover subscription: " + clientId + ". Reason: " + e, e);
         } finally {
             c.close();
@@ -93,6 +95,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             c = persistenceAdapter.getTransactionContext();
             adapter.doSetSubscriberEntry(c, destination, clientId, subscriptionName, selector, retroactive);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport
                     .create("Failed to lookup subscription for info: " + clientId + ". Reason: " + e, e);
         } finally {
@@ -109,6 +112,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         try {
             return adapter.doGetSubscriberEntry(c, destination, clientId, subscriptionName);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to lookup subscription for: " + clientId + ". Reason: " + e, e);
         } finally {
             c.close();
@@ -120,6 +124,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         try {
             adapter.doDeleteSubscription(c, destination, clientId, subscriptionName);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to remove subscription for: " + clientId + ". Reason: " + e, e);
         } finally {
             c.close();
@@ -131,6 +136,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         try {
             return adapter.doGetAllSubscriptions(c, destination);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to lookup subscriptions. Reason: " + e, e);
         } finally {
             c.close();
