@@ -17,9 +17,12 @@
 package org.apache.activemq.security;
 
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.jaas.GroupPrincipal;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 /**
  * Represents an entry in a {@link DefaultAuthorizationMap} for assigning
@@ -60,4 +63,27 @@ public class AuthorizationEntry extends DestinationMapEntry {
         this.writeACLs = writeACLs;
     }
 
+    // helper methods for easier configuration in Spring
+    // -------------------------------------------------------------------------
+    public void setAdmin(String roles) {
+        setAdminACLs(parseACLs(roles));
+    }
+
+    public void setRead(String roles) {
+        setReadACLs(parseACLs(roles));
+    }
+
+    public void setWrite(String roles) {
+        setWriteACLs(parseACLs(roles));
+    }
+
+    protected Set parseACLs(String roles) {
+        Set answer = new HashSet();
+        StringTokenizer iter = new StringTokenizer(roles, ",");
+        while (iter.hasMoreTokens()) {
+            String name = iter.nextToken().trim();
+            answer.add(new GroupPrincipal(name));
+        }
+        return answer;
+    }
 }

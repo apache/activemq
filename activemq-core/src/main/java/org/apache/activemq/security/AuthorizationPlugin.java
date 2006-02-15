@@ -29,28 +29,28 @@ import org.apache.activemq.broker.BrokerPlugin;
  */
 public class AuthorizationPlugin implements BrokerPlugin {
 
-    private AuthorizationMap authorizationMap;
+    private AuthorizationMap map;
 
     public AuthorizationPlugin() {
     }
 
-    public AuthorizationPlugin(AuthorizationMap authorizationMap) {
-        this.authorizationMap = authorizationMap;
+    public AuthorizationPlugin(AuthorizationMap map) {
+        this.map = map;
     }
 
     public Broker installPlugin(Broker broker) {
-        if (authorizationMap == null) {
-            throw new IllegalArgumentException("You must configure an 'authorizationMap'");
+        if (map == null) {
+            throw new IllegalArgumentException("You must configure a 'map' property");
         }
-        return new AuthorizationBroker(broker, authorizationMap);
+        return new AuthorizationBroker(broker, map);
     }
 
-    public AuthorizationMap getAuthorizationMap() {
-        return authorizationMap;
+    public AuthorizationMap getMap() {
+        return map;
     }
 
-    public void setAuthorizationMap(AuthorizationMap authorizationMap) {
-        this.authorizationMap = authorizationMap;
+    public void setMap(AuthorizationMap map) {
+        this.map = map;
     }
 
 }

@@ -46,10 +46,8 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
 
     
     public Set getAdminACLs(ActiveMQDestination destination) {
+        Set entries = getAllEntries(destination);
         Set answer = new HashSet();
-        Set entries = get(destination);
-        entries.add(defaultEntry);
-        
         // now lets go through each entry adding individual 
         for (Iterator iter = entries.iterator(); iter.hasNext();) {
             AuthorizationEntry entry = (AuthorizationEntry) iter.next();
@@ -59,9 +57,8 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     }
 
     public Set getReadACLs(ActiveMQDestination destination) {
+        Set entries = getAllEntries(destination);
         Set answer = new HashSet();
-        Set entries = get(destination);
-        entries.add(defaultEntry);
         
         // now lets go through each entry adding individual 
         for (Iterator iter = entries.iterator(); iter.hasNext();) {
@@ -72,9 +69,8 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     }
 
     public Set getWriteACLs(ActiveMQDestination destination) {
+        Set entries = getAllEntries(destination);
         Set answer = new HashSet();
-        Set entries = get(destination);
-        entries.add(defaultEntry);
         
         // now lets go through each entry adding individual 
         for (Iterator iter = entries.iterator(); iter.hasNext();) {
@@ -112,4 +108,13 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     protected Class getEntryClass() {
         return AuthorizationEntry.class;
     }
+    protected Set getAllEntries(ActiveMQDestination destination) {
+        Set entries = get(destination);
+        if (defaultEntry != null) {
+        entries.add(defaultEntry);
+        }
+        return entries;
+    }
+
+
 }
