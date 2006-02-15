@@ -507,9 +507,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             connection.asyncSendPacket(info.createRemoveCommand());
         }
     }
-    
 
-    public void dispose() throws JMSException {
+    synchronized public void dispose() throws JMSException {
         if (!closed) {
             
             for (Iterator iter = consumers.iterator(); iter.hasNext();) {
