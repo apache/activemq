@@ -16,17 +16,26 @@
  */
 package org.apache.activemq.util;
 
+import org.apache.activemq.command.SubscriptionInfo;
+
 public class SubscriptionKey {
+    
     public final String clientId;
     public final String subscriptionName;
     private final int hashValue;
+
+
+    public SubscriptionKey(SubscriptionInfo info) {
+        this(info.getClientId(), info.getSubcriptionName());
+    }
 
     public SubscriptionKey(String clientId, String subscriptionName) {
         this.clientId = clientId;
         this.subscriptionName = subscriptionName;
         hashValue = clientId.hashCode()^subscriptionName.hashCode();
     }
-    
+
+
     public int hashCode() {
         return hashValue;
     }
@@ -42,5 +51,13 @@ public class SubscriptionKey {
     
     public String toString() {
         return clientId+":"+subscriptionName;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public String getSubscriptionName() {
+        return subscriptionName;
     }
 }

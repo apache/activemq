@@ -42,8 +42,8 @@ import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.SubscriptionKey;
 
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The Topic is a destination that sends a copy of a message to every active
@@ -64,7 +64,7 @@ public class Topic implements Destination {
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new FixedCountSubscriptionRecoveryPolicy();
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
-    private AtomicInteger durableSubscriberCounter = new AtomicInteger();
+    private final ConcurrentHashMap durableSubcribers = new ConcurrentHashMap();
     
     public Topic(ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory) {
@@ -72,15 +72,6 @@ public class Topic implements Destination {
         this.destination = destination;
         this.store = store;
         this.usageManager = memoryManager;
-
-        // TODO: switch back when cache is working again.
-        // this.cache = cache;
-        // destinationStatistics.setMessagesCached(cache.getMessagesCached());
-        // CacheEvictionUsageListener listener = new
-        // CacheEvictionUsageListener(memoryManager, 90, 50, taskFactory);
-        // listener.add(cache);
-        // this.memoryManager.addUsageListener(listener);
-
         this.destinationStatistics.setParent(parentStats);
     }
 
@@ -89,142 +80,147 @@ public class Topic implements Destination {
     }
 
     public void addSubscription(ConnectionContext context, final Subscription sub) throws Throwable {
-        destinationStatistics.getConsumers().increment();
+        
         sub.add(context, this);
-        if (sub.getConsumerInfo().isDurable()) {
-            recover(context, (DurableTopicSubscription) sub, true);
-        }
-        else {
-            recover(context, sub);
-        }
-    }
 
-    /**
-     * Used to recover the message list non durable subscriptions.  Recovery only happens if the consumer is
-     * retroactive.
-     * 
-     * @param context
-     * @param sub
-     * @throws Throwable
-     */
-    private void recover(ConnectionContext context, final Subscription sub) throws Throwable {
-        if (sub.getConsumerInfo().isRetroactive()) {
+        if ( !sub.getConsumerInfo().isDurable() ) {
             
-            // synchronize with dispatch method so that no new messages are sent
-            // while we are recovering a subscription to avoid out of order messages.
-            dispatchValve.turnOff();
-            try {
+            destinationStatistics.getConsumers().increment();
+            
+            // Do a retroactive recovery if needed.
+            if (sub.getConsumerInfo().isRetroactive()) {
                 
+                // synchronize with dispatch method so that no new messages are sent
+                // while we are recovering a subscription to avoid out of order messages.
+                dispatchValve.turnOff();
+                try {
+                    
+                    synchronized(consumers) {
+                        consumers.add(sub);
+                    }
+                    subscriptionRecoveryPolicy.recover(context, this, sub);
+                    
+                } finally {
+                    dispatchValve.turnOn();
+                }
+                
+            } else {
                 synchronized(consumers) {
                     consumers.add(sub);
                 }
-                subscriptionRecoveryPolicy.recover(context, this, sub);
-                
-            } finally {
-                dispatchValve.turnOn();
-            }
-            
+            }            
         } else {
-            synchronized(consumers) {
-                consumers.add(sub);
-            }
+            DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
+            durableSubcribers.put(dsub.getSubscriptionKey(), dsub);
         }
     }
-
-    /**
-     * Used to recover the message list for a durable subscription.
-     * 
-     * @param context
-     * @param sub
-     * @param initialActivation
-     * @throws Throwable
-     */
-    public void recover(ConnectionContext context, final DurableTopicSubscription sub, boolean initialActivation) throws Throwable {
-
+    
+    public void removeSubscription(ConnectionContext context, Subscription sub) throws Throwable {
+        if ( !sub.getConsumerInfo().isDurable() ) {
+            destinationStatistics.getConsumers().decrement();
+            synchronized(consumers) {
+                consumers.remove(sub);
+            }
+        }
+        sub.remove(context, this);
+    }
+    
+    public void addInactiveSubscription(ConnectionContext context, DurableTopicSubscription sub) throws Throwable {
+        sub.add(context, this);        
+        destinationStatistics.getConsumers().increment();
+        durableSubcribers.put(sub.getSubscriptionKey(), sub);
+    }
+   
+    public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
+        if (store != null) {
+            store.deleteSubscription(key.clientId, key.subscriptionName);
+            durableSubcribers.remove(key);
+            destinationStatistics.getConsumers().decrement();
+        }
+    }
+    
+    public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Throwable {
+        
         // synchronize with dispatch method so that no new messages are sent
         // while
         // we are recovering a subscription to avoid out of order messages.
         dispatchValve.turnOff();
         try {
-
-            boolean persistenceWasOptimized = canOptimizeOutPersistence();
-            if (initialActivation) {
-                synchronized(consumers) {           
-                    consumers.add(sub);
-                    durableSubscriberCounter.incrementAndGet();
+        
+            synchronized(consumers) {           
+                consumers.add(subscription);
+            }
+            
+            if (store == null )
+                return;
+            
+            // Recover the durable subscription.
+            String clientId = subscription.getClientId();
+            String subscriptionName = subscription.getSubscriptionName();
+            String selector = subscription.getConsumerInfo().getSelector();
+            SubscriptionInfo info = store.lookupSubscription(clientId, subscriptionName);
+            if (info != null) {
+                // Check to see if selector changed.
+                String s1 = info.getSelector();
+                if (s1 == null ^ selector == null || (s1 != null && !s1.equals(selector))) {
+                    // Need to delete the subscription
+                    store.deleteSubscription(clientId, subscriptionName);
+                    info = null;
                 }
             }
-
-            if (store != null) {
-                String clientId = sub.getClientId();
-                String subscriptionName = sub.getSubscriptionName();
-                String selector = sub.getConsumerInfo().getSelector();
-                SubscriptionInfo info = store.lookupSubscription(clientId, subscriptionName);
-                if (info != null) {
-                    // Check to see if selector changed.
-                    String s1 = info.getSelector();
-                    if (s1 == null ^ selector == null || (s1 != null && !s1.equals(selector))) {
-                        // Need to delete the subscription
-                        store.deleteSubscription(clientId, subscriptionName);
-                        info = null;
-                    }
-                }
-                // Do we need to create the subscription?
-                if (info == null) {
-                    store.addSubsciption(clientId, subscriptionName, selector, sub.getConsumerInfo().isRetroactive());
-                }
-
-                if (sub.isRecovered()) {
-                    final MessageEvaluationContext msgContext = new MessageEvaluationContext();
-                    msgContext.setDestination(destination);
-                    store.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
-                        public void recoverMessage(Message message) throws Throwable {
-                            message.setRegionDestination(Topic.this);
-                            try {
-                                msgContext.setMessageReference(message);
-                                if (sub.matches(message, msgContext)) {
-                                    sub.add(message);
-                                }
-                            }
-                            catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                            catch (IOException e) {
-                                // TODO: Need to handle this better.
-                                e.printStackTrace();
-                            }
-                        }
-
-                        public void recoverMessageReference(String messageReference) throws Throwable {
-                            throw new RuntimeException("Should not be called.");
-                        }
-                    });
-                    
-                    if( initialActivation && sub.getConsumerInfo().isRetroactive() ) {
-                        // Then use the subscriptionRecoveryPolicy since there will not be any messages in the persistent store.
-                        if( persistenceWasOptimized ) {
-                            subscriptionRecoveryPolicy.recover(context, this, sub);
-                        } else {
-                            // TODO: implement something like
-                            // subscriptionRecoveryPolicy.recoverNonPersistent(context, this, sub);
+            // Do we need to create the subscription?
+            if (info == null) {
+                store.addSubsciption(clientId, subscriptionName, selector, subscription.getConsumerInfo().isRetroactive());
+            }
+    
+            final MessageEvaluationContext msgContext = new MessageEvaluationContext();
+            msgContext.setDestination(destination);
+            store.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
+                public void recoverMessage(Message message) throws Throwable {
+                    message.setRegionDestination(Topic.this);
+                    try {
+                        msgContext.setMessageReference(message);
+                        if (subscription.matches(message, msgContext)) {
+                            subscription.add(message);
                         }
                     }
+                    catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    catch (IOException e) {
+                        // TODO: Need to handle this better.
+                        e.printStackTrace();
+                    }
+                }
+    
+                public void recoverMessageReference(String messageReference) throws Throwable {
+                    throw new RuntimeException("Should not be called.");
+                }
+            });
+            
+            if( true && subscription.getConsumerInfo().isRetroactive() ) {
+                // If nothing was in the persistent store, then try to use the recovery policy.
+                if( subscription.getEnqueueCounter() == 0 ) {
+                    subscriptionRecoveryPolicy.recover(context, this, subscription);
+                } else {
+                    // TODO: implement something like
+                    // subscriptionRecoveryPolicy.recoverNonPersistent(context, this, sub);
                 }
             }
-
+        
         }
         finally {
             dispatchValve.turnOn();
         }
     }
 
-    public void removeSubscription(ConnectionContext context, Subscription sub) throws Throwable {
-        destinationStatistics.getConsumers().decrement();
-        synchronized(consumers) {
+    public void deactivate(ConnectionContext context, DurableTopicSubscription sub) throws Throwable {        
+        synchronized(consumers) {           
             consumers.remove(sub);
         }
         sub.remove(context, this);
-    }
+    }    
+
 
     public void send(final ConnectionContext context, final Message message) throws Throwable {
 
@@ -259,18 +255,7 @@ public class Topic implements Destination {
     }
 
     private boolean canOptimizeOutPersistence() {
-        return durableSubscriberCounter.get()==0;
-    }
-
-    public void createSubscription(SubscriptionKey key) {
-        durableSubscriberCounter.incrementAndGet();
-    }
-    
-    public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
-        if (store != null) {
-            store.deleteSubscription(key.clientId, key.subscriptionName);
-            durableSubscriberCounter.decrementAndGet();
-        }
+        return durableSubcribers.size()==0;
     }
 
     public String toString() {
@@ -423,5 +408,6 @@ public class Topic implements Destination {
             }
         }
     }
+
 
 }

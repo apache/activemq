@@ -347,6 +347,9 @@
                 
                 <!-- http://jira.activemq.org/jira/browse/AMQ-522 -->
                 <exclude>**/ProxyConnectorTest.*</exclude>
+                <!-- http://jira.activemq.org/jira/browse/AMQ-560 -->
+                <exclude>**/FanoutTransportBrokerTest.*</exclude>
+
 
             </excludes>
         </unitTest>

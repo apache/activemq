@@ -27,46 +27,24 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.util.SubscriptionKey;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 public class DurableTopicSubscription extends PrefetchSubscription {
     
-    final protected String clientId;
-    final protected String subscriptionName;
-    final ConcurrentHashMap redeliveredMessages = new ConcurrentHashMap();
-    
-    boolean active=true;
-    boolean recovered=true;
+    private final ConcurrentHashMap redeliveredMessages = new ConcurrentHashMap();
+    private final ConcurrentHashMap destinations = new ConcurrentHashMap();
+    private final SubscriptionKey subscriptionKey;
+    private boolean active=false;
     
     public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         super(broker,context, info);
-        this.clientId = context.getClientId();
-        this.subscriptionName = info.getSubcriptionName();
+        subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
     }
     
-    public DurableTopicSubscription(Broker broker,SubscriptionInfo info) throws InvalidSelectorException {
-        super(broker,null, createFakeConsumerInfo(info));
-        this.clientId = info.getClientId();
-        this.subscriptionName = info.getSubcriptionName();
-        active=false;
-        recovered=false;        
-    }
-
-    private static ConsumerInfo createFakeConsumerInfo(SubscriptionInfo info) {
-        ConsumerInfo rc = new ConsumerInfo();
-        rc.setSelector(info.getSelector());
-        rc.setSubcriptionName(info.getSubcriptionName());
-        rc.setDestination(info.getDestination());
-        return rc;
-    }
-
     synchronized public boolean isActive() {
         return active;
-    }
-    synchronized public boolean isRecovered() {
-        return recovered;
     }
     
     protected boolean isFull() {
@@ -74,29 +52,41 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     }
     
     synchronized public void gc() {
-        if( !active && recovered ) {
-            recovered = false;
-            
-            for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-                MessageReference node = (MessageReference) iter.next();
-                // node.decrementTargetCount();
-                iter.remove();
+    }
+
+    synchronized public void add(ConnectionContext context, Destination destination) throws Throwable {
+        super.add(context, destination);
+        destinations.put(destination.getActiveMQDestination(), destination);
+        if( active ) {
+            Topic topic = (Topic) destination;            
+            topic.activate(context, this);
+        }
+    }
+   
+    synchronized public void activate(ConnectionContext context, ConsumerInfo info) throws Throwable {
+        if( !active ) {
+            this.active = true;
+            this.context = context;
+            this.info = info;
+            for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                Topic topic = (Topic) iter.next();
+                topic.activate(context, this);
             }
-            
-            for (Iterator iter = matched.iterator(); iter.hasNext();) {
-                MessageReference node = (MessageReference) iter.next();
-                // node.decrementTargetCount();
-                iter.remove();
+            if( !isFull() ) {                            
+                dispatchMatched();
             }
-            
-            delivered=0;
         }
     }
 
-    synchronized public void deactivate() {        
+    synchronized public void deactivate() throws Throwable {        
         active=false;
+        for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+            Topic topic = (Topic) iter.next();
+            topic.deactivate(context, this);
+        }
         for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-            
+
+            // Mark the dispatched messages as redelivered for next time.
             MessageReference node = (MessageReference) iter.next();
             Integer count = (Integer) redeliveredMessages.get(node.getMessageId());
             if( count !=null ) {
@@ -105,30 +95,14 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                 redeliveredMessages.put(node.getMessageId(), new Integer(1));
             }
             
-            // Undo the dispatch.
-            matched.addFirst(node);
             iter.remove();
         }
+        for (Iterator iter = matched.iterator(); iter.hasNext();) {
+            MessageReference node = (MessageReference) iter.next();
+            // node.decrementTargetCount();
+            iter.remove();
+        }        
         delivered=0;
-    }
-
-    synchronized public void activate(ConnectionContext context, ConsumerInfo info) throws Throwable {
-        if( !active ) {
-            this.active = true;
-            this.context = context;
-            this.info = info;
-            if( !recovered ) {
-                recovered=true;
-                for (Iterator iter = destinations.iterator(); iter.hasNext();) {
-                    Topic topic = (Topic) iter.next();
-                    topic.recover(context, this, false);
-                }
-            } else {
-                if( !isFull() ) {                            
-                    dispatchMatched();
-                }
-            }
-        }
     }
 
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
@@ -141,7 +115,9 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     }
 
     synchronized public void add(MessageReference node) throws Throwable {
-        assert recovered;
+        if( !active ) {
+            return;
+        }
         node = new IndirectMessageReference(node.getRegionDestination(), (Message) node);
         super.add(node);
         node.decrementReferenceCount();
@@ -152,7 +128,6 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     }
     
     public synchronized void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
-        assert recovered;
         super.acknowledge(context, ack);
     }
 
@@ -163,7 +138,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     }
     
     public String getSubscriptionName() {
-        return subscriptionName;
+        return subscriptionKey.getSubscriptionName();
     }
     
     public String toString() {
@@ -177,7 +152,11 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     }
 
     public String getClientId() {
-        return clientId;
+        return subscriptionKey.getClientId();
+    }
+
+    public SubscriptionKey getSubscriptionKey() {
+        return subscriptionKey;
     }
 
 }

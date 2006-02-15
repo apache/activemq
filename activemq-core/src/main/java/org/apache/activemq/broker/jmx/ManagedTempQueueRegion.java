@@ -48,8 +48,8 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
         super.destroySubscription(sub);
     }
 
-    protected Destination createDestination(ActiveMQDestination destination) throws Throwable {
-        Destination rc = super.createDestination(destination);
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+        Destination rc = super.createDestination(context, destination);
         regionBroker.register(destination, rc);
         return rc;
     }
