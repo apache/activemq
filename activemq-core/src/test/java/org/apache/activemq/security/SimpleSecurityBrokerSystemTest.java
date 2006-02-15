@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 import junit.framework.Test;
 
@@ -46,7 +47,27 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     public BrokerPlugin authorizationPlugin;
     public BrokerPlugin authenticationPlugin;
 
-    public AuthorizationMap createAuthorizationMap() {
+    static {
+        String path = System.getProperty("java.security.auth.login.config");
+        if (path == null) {
+            URL resource = SimpleSecurityBrokerSystemTest.class.getClassLoader().getResource("login.config");
+            if (resource != null) {
+                path = resource.getFile();
+                System.setProperty("java.security.auth.login.config", path);
+            }
+        }
+        System.out.println("Path to login config: " + path);
+    }
+
+    public static Test suite() {
+        return suite(SimpleSecurityBrokerSystemTest.class);
+    }
+
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
+    }
+
+    public static AuthorizationMap createAuthorizationMap() {
         DestinationMap readAccess = new DestinationMap();
         readAccess.put(new ActiveMQQueue(">"), admins);
         readAccess.put(new ActiveMQQueue("USERS.>"), users);
@@ -102,26 +123,6 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         }
     }
 
-    static {
-        String path = System.getProperty("java.security.auth.login.config");
-        if (path == null) {
-            URL resource = SimpleSecurityBrokerSystemTest.class.getClassLoader().getResource("login.config");
-            if (resource != null) {
-                path = resource.getFile();
-                System.setProperty("java.security.auth.login.config", path);
-            }
-        }
-        System.out.println("Path to login config: " + path);
-    }
-
-    public static Test suite() {
-        return suite(SimpleSecurityBrokerSystemTest.class);
-    }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     public void initCombos() {
         addCombinationValues("authorizationPlugin", new Object[] { new AuthorizationPlugin(createAuthorizationMap()), });
         addCombinationValues("authenticationPlugin", new Object[] { new SimpleAuthenticationFactory(), new JassAuthenticationPlugin(), });
@@ -134,60 +135,5 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         return broker;
     }
 
-    public void initCombosForTestUserReceiveFails() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("GUEST.BAR"),
-                new ActiveMQTopic("GUEST.BAR"), });
-    }
 
-    public void initCombosForTestInvalidAuthentication() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-    }
-
-    public void initCombosForTestUserReceiveSucceeds() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO"), });
-    }
-
-    public void initCombosForTestGuestReceiveSucceeds() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"), });
-    }
-
-    public void initCombosForTestGuestReceiveFails() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"),
-                new ActiveMQTopic("USERS.FOO"), });
-    }
-
-    public void initCombosForTestUserSendSucceeds() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("USERS.FOO"), new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("USERS.FOO"),
-                new ActiveMQTopic("GUEST.BAR"), });
-    }
-
-    public void initCombosForTestUserSendFails() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
-    }
-
-    public void initCombosForTestGuestSendFails() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"),
-                new ActiveMQTopic("USERS.FOO"), });
-    }
-
-    public void initCombosForTestGuestSendSucceeds() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"), });
-    }
 }

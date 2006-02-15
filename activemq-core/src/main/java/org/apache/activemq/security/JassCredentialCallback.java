@@ -39,10 +39,23 @@ public class JassCredentialCallback implements CallbackHandler {
 
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         for (int i = 0; i < callbacks.length; i++) {
-            if (callbacks[i] instanceof PasswordCallback) {
-                ((PasswordCallback) callbacks[i]).setPassword(password.toCharArray());
-            } else if (callbacks[i] instanceof NameCallback) {
-                ((NameCallback) callbacks[i]).setName(username);
+            Callback callback = callbacks[i];
+            if (callback instanceof PasswordCallback) {
+                PasswordCallback passwordCallback = (PasswordCallback) callback;
+                if (password == null) {
+                    passwordCallback.setPassword(null);
+                }
+                else {
+                    passwordCallback.setPassword(password.toCharArray());
+                }
+            } else if (callback instanceof NameCallback) {
+                NameCallback nameCallback = (NameCallback) callback;
+                if (username == null) {
+                    nameCallback.setName(null);
+                }
+                else {
+                    nameCallback.setName(username);
+                }
             }
         }
     }
