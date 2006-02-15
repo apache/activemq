@@ -28,6 +28,7 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -42,8 +43,11 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
     private TopicSubscriber consumer;
     private MessageProducer producer;
     private BrokerService broker;
-    private boolean init;
-
+    
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory("vm://durable-broker");
+    }
+    
     protected Connection createConnection() throws Exception {
         Connection rc = super.createConnection();
         rc.setClientID(getName());
@@ -55,8 +59,8 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         super.setUp();
     }
     protected void tearDown() throws Exception {
-        destroyBroker();
         super.tearDown();
+        destroyBroker();
     }
     protected void restartBroker() throws Exception {
         destroyBroker();
@@ -65,13 +69,10 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
     private void createBroker() throws Exception {
         try {
             broker = new BrokerService();
-            broker.setBrokerName("durable_broker");
+            broker.setBrokerName("durable-broker");
             broker.setDeleteAllMessagesOnStartup(true);
             broker.setPersistenceAdapter(createPersistenceAdapter());
             broker.setPersistent(true);
-            broker.addConnector("vm://localhost");
-            init = true;
-
             broker.start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,11 +84,10 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
     private void createRestartedBroker() throws Exception {
         try {
             broker = new BrokerService();
-            broker.setBrokerName("durable_broker");
+            broker.setBrokerName("durable-broker");
             broker.setDeleteAllMessagesOnStartup(false);
             broker.setPersistenceAdapter(createPersistenceAdapter());
             broker.setPersistent(true);
-            broker.addConnector("vm://localhost");
             broker.start();
             
         } catch (Exception e) {
