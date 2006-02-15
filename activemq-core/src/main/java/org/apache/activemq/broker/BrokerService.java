@@ -919,7 +919,7 @@ public class BrokerService implements Service {
             Hashtable map = new Hashtable();
             map.put("Type", "Broker");
             map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
-            return new ObjectName("org.apache.activemq", map);
+            return new ObjectName(getManagementContext().getJmxDomainName(), map);
         }
         catch (Throwable e) {
             throw IOExceptionSupport.create("Invalid JMX broker name: " + brokerName, e);
