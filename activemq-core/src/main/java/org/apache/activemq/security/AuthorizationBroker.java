@@ -28,7 +28,6 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.BooleanExpression;
-import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 import javax.jms.JMSException;
@@ -37,22 +36,18 @@ import java.util.Set;
 
 
 /**
- * Verifies if a authenticated user can do an operation against the broker.
+ * Verifies if a authenticated user can do an operation against the broker using an authorization map.
  * 
  * @version $Revision$
  */
-public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityAdminMBean {
+public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMBean {
     
-    private final DestinationMap writeACLs;
-    private final DestinationMap readACLs;
-    private final DestinationMap adminACLs;
+    private final AuthorizationMap authorizationMap;
     private boolean filterReads = true;
 
-    public SimpleAuthorizationBroker(Broker next, DestinationMap writeACLs, DestinationMap readACLs, DestinationMap adminACLs) {
+    public AuthorizationBroker(Broker next, AuthorizationMap authorizationMap) {
         super(next);
-        this.writeACLs = writeACLs;
-        this.readACLs = readACLs;
-        this.adminACLs = adminACLs;
+        this.authorizationMap = authorizationMap;
     }
     
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
@@ -64,7 +59,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
         if( !destination.isTemporary() 
             || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
             
-            Set allowedACLs = adminACLs.get(destination);
+            Set allowedACLs = authorizationMap.getAdminACLs(destination);
             if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
                 throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to create: "+destination);
         }
@@ -82,7 +77,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
         if( !destination.isTemporary() 
             || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
             
-            Set allowedACLs = adminACLs.get(destination);
+            Set allowedACLs = authorizationMap.getAdminACLs(destination);
             if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
                 throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to remove: "+destination);
         }
@@ -96,7 +91,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
         if( subject == null )
             throw new SecurityException("User is not authenticated.");
         
-        Set allowedACLs = readACLs.get(info.getDestination());
+        Set allowedACLs = authorizationMap.getReadACLs(info.getDestination());
         if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
             throw new SecurityException("User "+subject.getUserName()+" is not authorized to read from: "+info.getDestination());
         subject.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());
@@ -108,7 +103,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
             info.setAdditionalPredicate(new BooleanExpression() {
                 public boolean matches(MessageEvaluationContext message) throws JMSException {
                     if( !subject.getAuthorizedReadDests().contains(message.getDestination()) ) {
-                        Set allowedACLs = readACLs.get(message.getDestination());
+                        Set allowedACLs = authorizationMap.getReadACLs(message.getDestination());
                         if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
                             return false;
                         subject.getAuthorizedReadDests().put(message.getDestination(), message.getDestination());
@@ -132,7 +127,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
             throw new SecurityException("User is not authenticated.");
         
         if( info.getDestination()!=null ) {
-            Set allowedACLs = writeACLs.get(info.getDestination());
+            Set allowedACLs = authorizationMap.getWriteACLs(info.getDestination());
             if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
                 throw new SecurityException("User "+subject.getUserName()+" is not authorized to write to: "+info.getDestination());
             subject.getAuthorizedWriteDests().put(info.getDestination(), info.getDestination());
@@ -147,7 +142,7 @@ public class SimpleAuthorizationBroker extends BrokerFilter implements SecurityA
             throw new SecurityException("User is not authenticated.");
         
         if( !subject.getAuthorizedWriteDests().contains(messageSend.getDestination()) ) {
-            Set allowedACLs = writeACLs.get(messageSend.getDestination());            
+            Set allowedACLs = authorizationMap.getWriteACLs(messageSend.getDestination());            
             if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
                 throw new SecurityException("User "+subject.getUserName()+" is not authorized to write to: "+messageSend.getDestination());
             subject.getAuthorizedWriteDests().put(messageSend.getDestination(), messageSend.getDestination());

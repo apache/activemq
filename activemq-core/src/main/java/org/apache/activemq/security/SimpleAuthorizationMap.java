@@ -16,26 +16,44 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
 
+import java.util.Set;
+
 /**
- * A simple authorization plugin
+ * An AuthorizationMap which is configured with individual DestinationMaps for
+ * each operation.
  * 
- * @org.apache.xbean.XBean element="simpleAuthorizationPlugin" description="Provides a simple authorization
- * plugin where each ACL is a destination map of destinations to role names"
- *
+ * @org.apache.xbean.XBean
+ * 
  * @version $Revision$
  */
-public class SimpleAuthorizationPlugin implements BrokerPlugin {
+public class SimpleAuthorizationMap implements AuthorizationMap {
 
     private DestinationMap writeACLs;
     private DestinationMap readACLs;
     private DestinationMap adminACLs;
 
-    public Broker installPlugin(Broker broker) {
-        return new SimpleAuthorizationBroker(broker, writeACLs, readACLs, adminACLs);
+    public SimpleAuthorizationMap() {
+    }
+
+    public SimpleAuthorizationMap(DestinationMap writeACLs, DestinationMap readACLs, DestinationMap adminACLs) {
+        this.writeACLs = writeACLs;
+        this.readACLs = readACLs;
+        this.adminACLs = adminACLs;
+    }
+
+    public Set getAdminACLs(ActiveMQDestination destination) {
+        return adminACLs.get(destination);
+    }
+
+    public Set getReadACLs(ActiveMQDestination destination) {
+        return readACLs.get(destination);
+    }
+
+    public Set getWriteACLs(ActiveMQDestination destination) {
+        return writeACLs.get(destination);
     }
 
     public DestinationMap getAdminACLs() {
