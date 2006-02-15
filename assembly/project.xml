@@ -318,12 +318,6 @@
       </includes>
       <excludes>
 
-
-          <!-- This test currently fails [boxes: jafar], [jira: AMQ-228] -->
-          <!-- Temporarily enable this test
-          <exclude>**/SubscribeClosePublishThenConsumeTest.*</exclude>
-          -->
-          
           <exclude>**/ChangeSessionDeliveryModeTest.*</exclude>
           <exclude>**/DeadLetterTest.*</exclude>
           <exclude>**/TwoMulticastDiscoveryBrokerTopicSendReceiveTest.*</exclude>
