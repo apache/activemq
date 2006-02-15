@@ -38,6 +38,12 @@
     </dependency>
              
     <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${version}</version>
+    </dependency>
+             
+    <dependency>
       <groupId>backport-util-concurrent</groupId>
       <artifactId>backport-util-concurrent</artifactId>
     </dependency>
