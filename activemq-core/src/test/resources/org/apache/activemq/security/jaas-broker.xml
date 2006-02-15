@@ -23,7 +23,7 @@
 
     <plugins>
       <!--  use JAAS to authenticate using the login.config file on the classpath to configure JAAS -->
-      <jassAuthenticationPlugin configuration="activemq-domain" />
+      <jaasAuthenticationPlugin configuration="activemq-domain" />
 
       <!--  lets configure a destination based authorization mechanism -->
       <authorizationPlugin>

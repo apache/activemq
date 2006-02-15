@@ -28,7 +28,7 @@ import java.net.URL;
  * 
  * @version $Revision$
  */
-public class JassAuthenticationPlugin implements BrokerPlugin {
+public class JaasAuthenticationPlugin implements BrokerPlugin {
 
     private String configuration = "activemq-domain";
     private boolean discoverLoginConfig = true;
