@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Helps keep track of the current transaction/JDBC connection.
@@ -32,8 +34,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  */
 public class TransactionContext {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(TransactionContext.class);
+    private static final Log log = LogFactory.getLog(TransactionContext.class);
     
     private final DataSource dataSource;
     private Connection connection;
@@ -52,6 +53,7 @@ public class TransactionContext {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(!inTx);
             } catch (SQLException e) {
+                JDBCPersistenceAdapter.log("Could not get JDBC connection: ", e);
                 throw IOExceptionSupport.create(e);
             }
             
@@ -117,6 +119,7 @@ public class TransactionContext {
                 }
                 
             } catch (SQLException e) {
+                JDBCPersistenceAdapter.log("Error while closing connection: ", e);
                 throw IOExceptionSupport.create(e);
             } finally {
                 try {
@@ -146,11 +149,7 @@ public class TransactionContext {
             executeBatch();
             connection.commit();
         } catch (SQLException e) {
-            log.info("commit failed: "+e.getMessage(), e);
-            while( e.getNextException() !=null ) {
-                e = e.getNextException();
-                log.info("Nested exception: "+e);
-            }
+            JDBCPersistenceAdapter.log("Commit failed: ", e);
             throw IOExceptionSupport.create(e);
         } finally {
             inTx=false;
@@ -177,6 +176,7 @@ public class TransactionContext {
             connection.rollback();
             
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("Rollback failed: ", e);
             throw IOExceptionSupport.create(e);
         } finally {
             inTx=false;

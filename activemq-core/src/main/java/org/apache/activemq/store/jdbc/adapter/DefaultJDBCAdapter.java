@@ -30,6 +30,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.StatementProvider;
 import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.commons.logging.Log;
@@ -112,6 +113,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                         log.warn("Could not create JDBC tables; they could already exist." +
                             " Failure was: " + createStatments[i] + " Message: " + e.getMessage() +
                             " SQLState: " + e.getSQLState() + " Vendor code: " + e.getErrorCode() );
+                        JDBCPersistenceAdapter.log("Failure details: ",e);
                     }
                 }
             }
@@ -142,6 +144,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     log.warn("Could not drop JDBC tables; they may not exist." +
                         " Failure was: " + dropStatments[i] + " Message: " + e.getMessage() +
                         " SQLState: " + e.getSQLState() + " Vendor code: " + e.getErrorCode() );
+                    JDBCPersistenceAdapter.log("Failure details: ",e);
                 }
             }
             c.getConnection().commit();

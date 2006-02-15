@@ -87,6 +87,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         } catch (IOException e) {
             return Collections.EMPTY_SET;
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             return Collections.EMPTY_SET;
         } finally {
             try {
@@ -125,6 +126,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         try {
             return getAdapter().doGetLastMessageBrokerSequenceId(c);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create("Failed to get last broker message id: " + e, e);
         } finally {
             c.close();
@@ -141,7 +143,8 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
             try {
                 getAdapter().doCreateTables(transactionContext);
             } catch (SQLException e) {
-                log.warn("Cannot create tables due to: " + e, e);
+                log.warn("Cannot create tables due to: " + e);
+                JDBCPersistenceAdapter.log("Failure Details: ",e);
             }
         } finally {
             transactionContext.commit();
@@ -176,7 +179,8 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         } catch (IOException e) {
             log.warn("Old message cleanup failed due to: " + e, e);
         } catch (SQLException e) {
-            log.warn("Old message cleanup failed due to: " + e, e);
+            log.warn("Old message cleanup failed due to: " + e);
+            JDBCPersistenceAdapter.log("Failure Details: ",e);
         } finally {
             try {
                 c.close();
@@ -237,10 +241,9 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
                     }
 
                 } catch (SQLException e) {
-                    log
-                            .warn("JDBC error occured while trying to detect database type.  Will use default JDBC implementation: "
+                    log.warn("JDBC error occurred while trying to detect database type.  Will use default JDBC implementation: "
                                     + e.getMessage());
-                    log.debug("Reason: " + e, e);
+                    JDBCPersistenceAdapter.log("Failure Details: ",e);
                 }
 
             } else {
@@ -348,6 +351,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
             getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
             getAdapter().doCreateTables(c);
         } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport.create(e);
         } finally {
             c.close();
@@ -361,4 +365,14 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
     public void setUseExternalMessageReferences(boolean useExternalMessageReferences) {
         this.useExternalMessageReferences = useExternalMessageReferences;
     }
+    
+    static public void log(String msg, SQLException e) {
+        String s = msg+e.getMessage();
+        while( e.getNextException() != null ) {
+            e = e.getNextException();
+            s += ", due to: "+e.getMessage();
+        }
+        log.debug(s, e);
+    }
+
 }
