@@ -43,6 +43,7 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
                            +", PRIMARY KEY ( ID ) )",                          
                      "CREATE INDEX "+getTablePrefix()+messageTableName+"_MIDX ON "+getTablePrefix()+messageTableName+" (MSGID_PROD,MSGID_SEQ)",
                      "CREATE INDEX "+getTablePrefix()+messageTableName+"_CIDX ON "+getTablePrefix()+messageTableName+" (CONTAINER)",                                       
+                     "CREATE INDEX "+getFullMessageTableName()+"_EIDX ON "+getFullMessageTableName()+" (EXPIRATION)",                 
                      "CREATE TABLE "+getTablePrefix()+durableSubAcksTableName+"("
                            +"CONTAINER "+containerNameDataType+" NOT NULL"
                            +", CLIENT_ID "+stringIdDataType+" NOT NULL"
