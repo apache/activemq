@@ -16,32 +16,20 @@
  */
 package org.apache.activemq.security;
 
-import java.io.IOException;
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.jaas.GroupPrincipal;
+
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-
 import junit.framework.Test;
-
-import org.apache.activemq.JmsTestSupport;
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.filter.DestinationMap;
-import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.activemq.security.JaasAuthenticationBroker;
-import org.apache.activemq.security.SimpleAuthenticationBroker;
-import org.apache.activemq.security.SimpleAuthorizationBroker;
 
 /**
  * Tests that the broker allows/fails access to destinations based on the
@@ -49,22 +37,18 @@ import org.apache.activemq.security.SimpleAuthorizationBroker;
  *
  * @version $Revision$
  */
-public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
+public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 
     static final GroupPrincipal guests = new GroupPrincipal("guests");
     static final GroupPrincipal users = new GroupPrincipal("users");
     static final GroupPrincipal admins = new GroupPrincipal("admins");
 
-    public ActiveMQDestination destination;
-    public SecurityFactory authorizationFactory;
-    public SecurityFactory authenticationFactory;
+    public BrokerPlugin authorizationPlugin;
+    public BrokerPlugin authenticationPlugin;
 
-    interface SecurityFactory {
-        public  Broker create(Broker broker);
-    }
 
-    class SimpleAuthorizationFactory implements SecurityFactory {
-        public  Broker create(Broker broker) {
+    class SimpleAuthorizationFactory implements BrokerPlugin {
+        public  Broker installPlugin(Broker broker) {
 
             DestinationMap readAccess = new DestinationMap();
             readAccess.put(new ActiveMQQueue(">"), admins);
@@ -104,8 +88,8 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
         }
     }
 
-    class SimpleAuthenticationFactory implements SecurityFactory {
-        public  Broker create(Broker broker) {
+    class SimpleAuthenticationFactory implements BrokerPlugin {
+        public  Broker installPlugin(Broker broker) {
 
             HashMap u = new HashMap();
             u.put("system", "manager");
@@ -136,15 +120,6 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
         System.out.println("Path to login config: "+path);
     }
 
-    class JaasAuthenticationFactory implements SecurityFactory {
-        public  Broker create(Broker broker) {
-            return new JaasAuthenticationBroker(broker, "activemq-test-domain");
-        }
-        public String toString() {
-            return "JassAuthenticationBroker";
-        }
-    }
-
     public static Test suite() {
         return suite(SimpleSecurityBrokerSystemTest.class);
     }
@@ -154,24 +129,18 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
     }
 
     public void initCombos() {
-        addCombinationValues("authorizationFactory", new Object[] {
+        addCombinationValues("authorizationPlugin", new Object[] {
                 new SimpleAuthorizationFactory(),
         });
-        addCombinationValues("authenticationFactory", new Object[] {
+        addCombinationValues("authenticationPlugin", new Object[] {
                 new SimpleAuthenticationFactory(),
-                new JaasAuthenticationFactory(),
+                new JassAuthenticationPlugin(),
         });
     }
 
     protected BrokerService createBroker() throws Exception {
-        BrokerService broker = new BrokerService() {
-            protected Broker addInterceptors(Broker broker) throws IOException {
-                broker = super.addInterceptors(broker);
-                broker = authorizationFactory.create(broker);
-                broker = authenticationFactory.create(broker);
-                return broker;
-            }
-        };
+        BrokerService broker = new BrokerService();
+        broker.setPlugins(new BrokerPlugin[] {authorizationPlugin, authenticationPlugin});
         broker.setPersistent(false);
         return broker;
     }
@@ -186,44 +155,10 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQTopic("GUEST.BAR"),
         });
     }
-    public void testUserReceiveFails() throws JMSException {
-        doReceive(true);
-    }
-
-
     public void initCombosForTestInvalidAuthentication() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
     }
-    public void testInvalidAuthentication() throws JMSException {
-        try {
-            // No user id
-            Connection c= factory.createConnection();
-            connections.add(c);
-            c.start();
-            fail("Expected exception.");
-        } catch (JMSException e) {
-        }
-
-        try {
-            // Bad password
-            Connection c = factory.createConnection("user", "krap");
-            connections.add(c);
-            c.start();
-            fail("Expected exception.");
-        } catch (JMSException e) {
-        }
-
-        try {
-            // Bad userid
-            Connection c = factory.createConnection("userkrap", null);
-            connections.add(c);
-            c.start();
-            fail("Expected exception.");
-        } catch (JMSException e) {
-        }
-    }
-
     public void initCombosForTestUserReceiveSucceeds() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
@@ -232,11 +167,6 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQTopic("USERS.FOO"),
         });
     }
-    public void testUserReceiveSucceeds() throws JMSException {
-        doReceive(false);
-    }
-
-
     public void initCombosForTestGuestReceiveSucceeds() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
@@ -245,10 +175,6 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQTopic("GUEST.BAR"),
         });
     }
-    public void testGuestReceiveSucceeds() throws JMSException {
-        doReceive(false);
-    }
-
     public void initCombosForTestGuestReceiveFails() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
@@ -259,11 +185,6 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQTopic("USERS.FOO"),
         });
     }
-    public void testGuestReceiveFails() throws JMSException {
-        doReceive(true);
-    }
-
-
     public void initCombosForTestUserSendSucceeds() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
@@ -274,10 +195,6 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQTopic("GUEST.BAR"),
         });
     }
-    public void testUserSendSucceeds() throws JMSException {
-        doSend(false);
-    }
-
     public void initCombosForTestUserSendFails() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
@@ -286,11 +203,6 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQTopic("TEST"),
         });
     }
-    public void testUserSendFails() throws JMSException {
-        doSend(true);
-    }
-
-
     public void initCombosForTestGuestSendFails() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
@@ -301,10 +213,6 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQTopic("USERS.FOO"),
         });
     }
-    public void testGuestSendFails() throws JMSException {
-        doSend(true);
-    }
-
     public void initCombosForTestGuestSendSucceeds() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
@@ -312,72 +220,5 @@ public class SimpleSecurityBrokerSystemTest extends JmsTestSupport {
                 new ActiveMQQueue("GUEST.BAR"),
                 new ActiveMQTopic("GUEST.BAR"),
         });
-    }
-    public void testGuestSendSucceeds() throws JMSException {
-        doSend(false);
-    }
-
-    /**
-     * @throws JMSException
-     */
-    public void doSend(boolean fail) throws JMSException {
-
-        Connection adminConnection = factory.createConnection("system", "manager");
-        connections.add(adminConnection);
-
-        adminConnection.start();
-        Session adminSession = adminConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = adminSession.createConsumer(destination);
-
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        try {
-            sendMessages(session, destination, 1);
-        } catch (JMSException e) {
-            // If test is expected to fail, the cause must only be a SecurityException
-            // otherwise rethrow the exception
-            if (!fail || !(e.getCause() instanceof SecurityException)) {
-            	throw e;
-            }
-        }
-
-        Message m = consumer.receive(1000);
-        if(fail)
-            assertNull(m);
-        else {
-            assertNotNull(m);
-            assertEquals("0", ((TextMessage)m).getText());
-            assertNull(consumer.receiveNoWait());
-        }
-
-    }
-
-    /**
-     * @throws JMSException
-     */
-    public void doReceive(boolean fail) throws JMSException {
-
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer=null;
-        try {
-            consumer = session.createConsumer(destination);
-            if( fail )
-                fail("Expected failure due to security constraint.");
-        } catch (JMSException e) {
-            if (fail && e.getCause() instanceof SecurityException)
-                return;
-            throw e;
-        }
-
-        Connection adminConnection = factory.createConnection("system", "manager");
-        connections.add(adminConnection);
-        Session adminSession = adminConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        sendMessages(adminSession, destination, 1);
-
-        Message m = consumer.receive(1000);
-        assertNotNull(m);
-        assertEquals("0", ((TextMessage)m).getText());
-        assertNull(consumer.receiveNoWait());
-
     }
 }
