@@ -318,25 +318,20 @@
       </includes>
       <excludes>
 
-          <exclude>**/ChangeSessionDeliveryModeTest.*</exclude>
-          <exclude>**/DeadLetterTest.*</exclude>
-          <exclude>**/TwoMulticastDiscoveryBrokerTopicSendReceiveTest.*</exclude>
-          
-          <!-- HTTP not yet implemented -->
+          <!-- http://jira.activemq.org/jira/browse/AMQ-563: HTTP not yet implemented -->
           <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-537 --> 
+          <exclude>**/PublishOnQueueConsumedMessageUsingActivemqXMLTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-538 --> 
+          <exclude>**/PublishOnTopicConsumerMessageUsingActivemqXMLTest.*</exclude>
 
           <!-- https://jira.logicblaze.com/jira/browse/AMQ-472 -->
           <exclude>**/TopicClusterTest.*</exclude>
-          <!-- https://jira.logicblaze.com/jira/browse/AMQ-473 -->
-          <exclude>**/MultiBrokersMultiClientsTest.*</exclude>
-          <!-- https://jira.logicblaze.com/jira/browse/AMQ-474 -->
-          <exclude>**/MultiBrokersMultiClientsUsingTcpTest.*</exclude>
-          <!-- https://jira.logicblaze.com/jira/browse/AMQ-475 -->
-          <exclude>**/ThreeBrokerQueueNetworkTest.*</exclude>
-          <!-- https://jira.logicblaze.com/jira/browse/AMQ-476 -->
-          <exclude>**/ThreeBrokerTopicNetworkTest.*</exclude>
-          <!-- https://jira.logicblaze.com/jira/browse/AMQ-477 -->
-          <exclude>**/ThreeBrokerTopicNetworkUsingTcpTest.*</exclude>
+
+	  <!-- http://jira.activemq.org/jira/browse/AMQ-562 -->
+          <exclude>**/TwoMulticastDiscoveryBrokerTopicSendReceiveTest.*</exclude>
+          <!-- http://jira.activemq.org/jira/browse/AMQ-540 --> 
+          <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
           <!-- https://jira.logicblaze.com/jira/browse/AMQ-478 -->
           <exclude>**/TwoBrokerTopicSendReceiveUsingTcpTest.*</exclude>
           <!-- https://jira.logicblaze.com/jira/browse/AMQ-479 -->
@@ -344,15 +339,19 @@
           <!--http://jira.activemq.org/jira/browse/AMQ-526-->
           <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
 
-          <!-- http://jira.activemq.org/jira/browse/AMQ-537 --> 
-          <exclude>**/PublishOnQueueConsumedMessageUsingActivemqXMLTest.*</exclude>
-          <!-- http://jira.activemq.org/jira/browse/AMQ-538 --> 
-          <exclude>**/PublishOnTopicConsumerMessageUsingActivemqXMLTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-475 -->
+          <exclude>**/ThreeBrokerQueueNetworkTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-476 -->
+          <exclude>**/ThreeBrokerTopicNetworkTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-477 -->
+          <exclude>**/ThreeBrokerTopicNetworkUsingTcpTest.*</exclude>
           <!-- http://jira.activemq.org/jira/browse/AMQ-539 --> 
           <exclude>**/ThreeBrokerQueueNetworkUsingTcpTest.*</exclude>
-          <!-- http://jira.activemq.org/jira/browse/AMQ-540 --> 
-          <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
-	
+
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-473 -->
+          <exclude>**/MultiBrokersMultiClientsTest.*</exclude>
+          <!-- https://jira.logicblaze.com/jira/browse/AMQ-474 -->
+          <exclude>**/MultiBrokersMultiClientsUsingTcpTest.*</exclude>
 
       </excludes>
     </unitTest>
