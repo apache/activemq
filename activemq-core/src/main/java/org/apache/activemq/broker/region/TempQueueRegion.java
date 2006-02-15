@@ -38,7 +38,7 @@ public class TempQueueRegion extends AbstractRegion {
         setAutoCreateDestinations(false);
     }
 
-    protected Destination createDestination(ActiveMQDestination destination) throws Throwable {
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
         final ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destination;
         return new Queue(destination, memoryManager, null, destinationStatistics, taskRunnerFactory) {
             

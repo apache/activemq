@@ -86,19 +86,21 @@ public class TopicRegion extends AbstractRegion {
                     super.removeConsumer(context, sub.getConsumerInfo());
 
                     super.addConsumer(context, info);
-
+                    sub = (DurableTopicSubscription) durableSubscriptions.get(key);
                 }
                 else {
                     // Change the consumer id key of the durable sub.
                     if( sub.getConsumerInfo().getConsumerId()!=null )
                         subscriptions.remove(sub.getConsumerInfo().getConsumerId());
                     subscriptions.put(info.getConsumerId(), sub);
-                    sub.activate(context, info);
                 }
             }
             else {
                 super.addConsumer(context, info);
+                sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             }
+            
+            sub.activate(context, info);
         }
         else {
             super.addConsumer(context, info);
@@ -145,7 +147,7 @@ public class TopicRegion extends AbstractRegion {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected Destination createDestination(ActiveMQDestination destination) throws Throwable {
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
         TopicMessageStore store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
         Topic topic = new Topic(destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
         configureTopic(topic, destination);
@@ -154,12 +156,29 @@ public class TopicRegion extends AbstractRegion {
         if (store != null) {            
             SubscriptionInfo[] infos = store.getAllSubscriptions();
             for (int i = 0; i < infos.length; i++) {
-                log.info("Restoring durable subscription: "+infos[i]);
-                createDurableSubscription(topic, infos[i]);
+                
+                SubscriptionInfo info = infos[i];
+                log.debug("Restoring durable subscription: "+infos);
+                SubscriptionKey key = new SubscriptionKey(info);
+                
+                // A single durable sub may be subscribing to multiple topics.  so it might exist already.
+                DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
+                if( sub == null ) {
+                    sub = (DurableTopicSubscription) createSubscription(context, createInactiveConsumerInfo(info));
+                }
+                topic.addInactiveSubscription(context, sub);
             }            
         }
         
         return topic;
+    }
+    
+    private static ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
+        ConsumerInfo rc = new ConsumerInfo();
+        rc.setSelector(info.getSelector());
+        rc.setSubcriptionName(info.getSubcriptionName());
+        rc.setDestination(info.getDestination());
+        return rc;
     }
 
     protected void configureTopic(Topic topic, ActiveMQDestination destination) {
@@ -188,17 +207,6 @@ public class TopicRegion extends AbstractRegion {
             return new TopicSubscription(broker,context, info, memoryManager);
         }
     }
-    
-    public Subscription createDurableSubscription(Topic topic, SubscriptionInfo info) throws Throwable {
-        SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubcriptionName());
-        topic.createSubscription(key);
-        DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
-        sub = new DurableTopicSubscription(broker,info);
-        sub.add(null, topic);
-        durableSubscriptions.put(key, sub);
-        return sub;
-    }
-    
 
     /**
      */

@@ -73,7 +73,7 @@ abstract public class AbstractRegion implements Region {
     
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
         log.debug("Adding destination: "+destination);
-        Destination dest = createDestination(destination);
+        Destination dest = createDestination(context, destination);
         dest.start();
         synchronized(destinationsMutex){
             destinations.put(destination,dest);
@@ -241,7 +241,7 @@ abstract public class AbstractRegion implements Region {
     }
 
     protected abstract Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws Throwable;
-    abstract protected Destination createDestination(ActiveMQDestination destination) throws Throwable;
+    abstract protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable;
 
     public boolean isAutoCreateDestinations() {
         return autoCreateDestinations;

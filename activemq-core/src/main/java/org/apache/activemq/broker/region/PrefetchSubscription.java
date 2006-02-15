@@ -37,6 +37,7 @@ import java.util.LinkedList;
  * @version $Revision: 1.15 $
  */
 abstract public class PrefetchSubscription extends AbstractSubscription{
+    
     static private final Log log=LogFactory.getLog(PrefetchSubscription.class);
     final protected LinkedList matched=new LinkedList();
     final protected LinkedList dispatched=new LinkedList();
@@ -44,13 +45,17 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     int preLoadLimit=1024*100;
     int preLoadSize=0;
     boolean dispatching=false;
-
+    
+    long enqueueCounter;
+    long dispatchCounter;
+    
     public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info)
                     throws InvalidSelectorException{
         super(broker,context,info);
     }
 
     synchronized public void add(MessageReference node) throws Throwable{
+        enqueueCounter++;
         if(!isFull()&&!isSlaveBroker()){
             dispatch(node);
         }else{
@@ -244,8 +249,9 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         }
         // Make sure we can dispatch a message.
         if(canDispatch(node)&&!isSlaveBroker()){
+            dispatchCounter++;
             MessageDispatch md=createMessageDispatch(node,message);
-            dispatched.addLast(node);
+            dispatched.addLast(node);            
             incrementPreloadSize(node.getMessage().getSize());
             if(info.isDispatchAsync()){
                 md.setConsumer(new Runnable(){
@@ -325,4 +331,13 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      */
     protected void acknowledge(ConnectionContext context,final MessageAck ack,final MessageReference node)
                     throws IOException{}
+
+
+    public long getDispatchCounter() {
+        return dispatchCounter;
+    }
+
+    public long getEnqueueCounter() {
+        return enqueueCounter;
+    }
 }

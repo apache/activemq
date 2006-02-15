@@ -185,7 +185,10 @@ public class JmsRedeliveredTest extends TestCase {
         Topic topic = session.createTopic("topic-"+getName());
         MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
 
-        MessageProducer producer = createProducer(session, topic);
+        // This case only works with persistent messages since transient messages
+        // are dropped when the consumer goes offline.
+        MessageProducer producer = session.createProducer(topic);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
         producer.send(createTextMessage(session));
 
         // Consume the message...
