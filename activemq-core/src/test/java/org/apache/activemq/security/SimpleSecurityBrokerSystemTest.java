@@ -125,7 +125,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 
     public void initCombos() {
         addCombinationValues("authorizationPlugin", new Object[] { new AuthorizationPlugin(createAuthorizationMap()), });
-        addCombinationValues("authenticationPlugin", new Object[] { new SimpleAuthenticationFactory(), new JassAuthenticationPlugin(), });
+        addCombinationValues("authenticationPlugin", new Object[] { new SimpleAuthenticationFactory(), new JaasAuthenticationPlugin(), });
     }
 
     protected BrokerService createBroker() throws Exception {
