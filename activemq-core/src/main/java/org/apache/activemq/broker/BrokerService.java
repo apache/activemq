@@ -158,6 +158,8 @@ public class BrokerService implements Service {
             connector.setDiscoveryUri(discoveryUri);
         }
         connector.setBroker(getBroker());
+        connector.setBrokerName(getBrokerName());
+        connector.setTaskRunnerFactory(getTaskRunnerFactory());
         transportConnectors.add(connector);
         if (isUseJmx()) {
             registerConnectorMBean(connector);
@@ -630,8 +632,6 @@ public class BrokerService implements Service {
     public void setTransportConnectors(List transportConnectors) throws Exception {
         for (Iterator iter = transportConnectors.iterator(); iter.hasNext();) {
             TransportConnector connector = (TransportConnector) iter.next();
-            connector.setBroker(getBroker());
-            connector.setBrokerName(getBrokerName());
             addConnector(connector);
         }
     }
