@@ -19,17 +19,18 @@ package org.apache.activemq.store;
 import java.io.File;
 import java.io.IOException;
 
+import javax.sql.DataSource;
+
 import org.activeio.journal.Journal;
 import org.activeio.journal.active.JournalImpl;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.journal.QuickJournalPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
-
-import javax.sql.DataSource;
 
 /**
  * Factory class that can create PersistenceAdapter objects.
@@ -48,20 +49,20 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
     private boolean useJournal=true;
     private boolean useQuickJournal=false;
     private File journalArchiveDirectory;
-    private JDBCPersistenceAdapter jdbcAdapter = new JDBCPersistenceAdapter();
+    private JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
     
     public PersistenceAdapter createPersistenceAdapter() throws IOException {
         File dataDirectory = getDataDirectory();                
-        jdbcAdapter.setDataSource(getDataSource());
+        jdbcPersistenceAdapter.setDataSource(getDataSource());
         
         if( !useJournal )
-            return jdbcAdapter;
+            return jdbcPersistenceAdapter;
         
         // Setup the Journal
         if( useQuickJournal ) {
-            return new QuickJournalPersistenceAdapter(getJournal(), jdbcAdapter, getMemManager(), getTaskRunnerFactory());
+            return new QuickJournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getMemManager(), getTaskRunnerFactory());
         }  else {
-            return new JournalPersistenceAdapter(getJournal(), jdbcAdapter, getMemManager(), getTaskRunnerFactory());
+            return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getMemManager(), getTaskRunnerFactory());
         }
     }
 
@@ -115,11 +116,11 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
     }
 
     public JDBCPersistenceAdapter getJdbcAdapter() {
-        return jdbcAdapter;
+        return jdbcPersistenceAdapter;
     }
 
     public void setJdbcAdapter(JDBCPersistenceAdapter jdbcAdapter) {
-        this.jdbcAdapter = jdbcAdapter;
+        this.jdbcPersistenceAdapter = jdbcAdapter;
     }
 
     public boolean isUseJournal() {
@@ -173,19 +174,18 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
     }
 
     public JDBCAdapter getAdapter() throws IOException {
-        return jdbcAdapter.getAdapter();
-    }
-
-    public String getAdapterClass() {
-        return jdbcAdapter.getAdapterClass();
+        return jdbcPersistenceAdapter.getAdapter();
     }
 
     public void setAdapter(JDBCAdapter adapter) {
-        jdbcAdapter.setAdapter(adapter);
+        jdbcPersistenceAdapter.setAdapter(adapter);
     }
 
-    public void setAdapterClass(String adapterClass) {
-        jdbcAdapter.setAdapterClass(adapterClass);
+    public Statements getStatements() {
+        return jdbcPersistenceAdapter.getStatements();
+    }
+    public void setStatements(Statements statements) {
+        jdbcPersistenceAdapter.setStatements(statements);
     }
 
     // Implementation methods

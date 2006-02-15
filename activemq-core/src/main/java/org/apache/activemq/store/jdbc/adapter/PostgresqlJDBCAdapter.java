@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import org.apache.activemq.store.jdbc.StatementProvider;
+import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * Implements all the default JDBC operations that are used
@@ -38,17 +38,9 @@ import org.apache.activemq.store.jdbc.StatementProvider;
  */
 public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
 
-    public static StatementProvider createStatementProvider() {
-        DefaultStatementProvider answer = new DefaultStatementProvider();
-        answer.setBinaryDataType("BYTEA");
-        return answer;
+    public void setStatements(Statements statements) {
+        statements.setBinaryDataType("BYTEA");
+        super.setStatements(statements);
     }
-    
-    public PostgresqlJDBCAdapter() {
-        this(createStatementProvider());
-    }
-    
-    public PostgresqlJDBCAdapter(StatementProvider provider) {
-        super(provider);        
-    }
+
 }

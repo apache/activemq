@@ -20,30 +20,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.activemq.store.jdbc.StatementProvider;
-
 /**
  * This JDBCAdapter inserts and extracts BLOB data using the 
  * setBytes()/getBytes() operations.
  * 
  * The databases/JDBC drivers that use this adapter are:
- * <ul>
- * <li></li> 
- * </ul>
+ * 
+ * @org.apache.xbean.XBean element="bytesJDBCAdapter"
  * 
  * @version $Revision: 1.2 $
  */
 public class BytesJDBCAdapter extends DefaultJDBCAdapter {
 
-	
-    public BytesJDBCAdapter() {
-        super();
-    }
-
-	public BytesJDBCAdapter(StatementProvider provider) {
-        super(provider);
-    }
-    
+	    
     /**
      * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#getBinaryData(java.sql.ResultSet, int)
      */

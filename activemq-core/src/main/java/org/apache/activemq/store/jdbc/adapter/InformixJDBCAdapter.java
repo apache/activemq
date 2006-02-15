@@ -1,6 +1,6 @@
 /**
  * 
- * Copyright 2005 Pawel Tucholski
+ * Copyright 2005-2006 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License. 
@@ -17,30 +17,24 @@
  **/
 package org.apache.activemq.store.jdbc.adapter;
 
-import org.apache.activemq.store.jdbc.StatementProvider;
+import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * JDBC Adapter for Informix database.
  * Because Informix database restricts length of composite primary keys, length of 
- * <i>container name</i> field and <i>subscription id</i> field must be reducted to 150 characters.
- * Therefore be sure not to use longer names for container name and subscription id than 150 characters. 
+ * <i>container name</i> field and <i>subscription id</i> field must be reduced to 150 characters.
+ * Therefore be sure not to use longer names for container name and subscription id than 150 characters.
+ *  
+ * @org.apache.xbean.XBean element="informixJDBCAdapter"
  */
 public class InformixJDBCAdapter extends BlobJDBCAdapter {
 
-    public static StatementProvider createStatementProvider() {
-        DefaultStatementProvider answer = new DefaultStatementProvider();
-        answer.setContainerNameDataType("VARCHAR(150)");
-        answer.setStringIdDataType("VARCHAR(150)");
-        answer.setLongDataType("INT8");
-        answer.setBinaryDataType("BYTE");
-        return answer;
-    }	
-	
-	public InformixJDBCAdapter() {
-		this(createStatementProvider());
-	}
-	
-	public InformixJDBCAdapter(StatementProvider provider) {
-		super(provider);
-	}
+    public void setStatements(Statements statements) {
+        statements.setContainerNameDataType("VARCHAR(150)");
+        statements.setStringIdDataType("VARCHAR(150)");
+        statements.setLongDataType("INT8");
+        statements.setBinaryDataType("BYTE");
+        super.setStatements(statements);
+    }
+
 }

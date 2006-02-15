@@ -31,7 +31,7 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.activemq.store.jdbc.StatementProvider;
+import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,13 +52,15 @@ import org.apache.commons.logging.LogFactory;
  * <li></li>
  * </ul>
  *
+ * @org.apache.xbean.XBean element="defaultJDBCAdapter"
+ * 
  * @version $Revision: 1.10 $
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
 
     private static final Log log = LogFactory.getLog(DefaultJDBCAdapter.class);
 
-    final protected StatementProvider statementProvider;
+    protected Statements statements;
     protected boolean batchStatments=true;
 
     protected void setBinaryData(PreparedStatement s, int index, byte data[]) throws SQLException {
@@ -67,17 +69,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
         return rs.getBytes(index);
-    }
-
-    /**
-     * @param provider
-     */
-    public DefaultJDBCAdapter(StatementProvider provider) {
-        this.statementProvider = new CachingStatementProvider(provider);
-    }
-
-    public DefaultJDBCAdapter() {
-        this(new DefaultStatementProvider());
     }
 
     public void doCreateTables(TransactionContext c) throws SQLException, IOException {
@@ -89,7 +80,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             boolean alreadyExists = false;
             ResultSet rs=null;
             try {
-                rs= c.getConnection().getMetaData().getTables(null,null, statementProvider.getFullMessageTableName(), new String[] {"TABLE"});
+                rs= c.getConnection().getMetaData().getTables(null,null, statements.getFullMessageTableName(), new String[] {"TABLE"});
                 alreadyExists = rs.next();                
             } catch (Throwable ignore) {
             } finally {
@@ -97,7 +88,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             
             s = c.getConnection().createStatement();
-            String[] createStatments = statementProvider.getCreateSchemaStatments();
+            String[] createStatments = statements.getCreateSchemaStatements();
             for (int i = 0; i < createStatments.length; i++) {
                 // This will fail usually since the tables will be
                 // created already.
@@ -133,7 +124,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         Statement s = null;
         try {
             s = c.getConnection().createStatement();
-            String[] dropStatments = statementProvider.getDropSchemaStatments();
+            String[] dropStatments = statements.getDropSchemaStatements();
             for (int i = 0; i < dropStatments.length; i++) {
                 // This will fail usually since the tables will be
                 // created already.
@@ -161,7 +152,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(statementProvider.getFindLastSequenceIdInMsgs());
+            s = c.getConnection().prepareStatement(statements.getFindLastSequenceIdInMsgsStatement());
             rs = s.executeQuery();
             long seq1 = 0;
             if (rs.next()) {
@@ -169,7 +160,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             rs.close();
             s.close();
-            s = c.getConnection().prepareStatement(statementProvider.getFindLastSequenceIdInAcks());
+            s = c.getConnection().prepareStatement(statements.getFindLastSequenceIdInAcksStatement());
             rs = s.executeQuery();
             long seq2 = 0;
             if (rs.next()) {
@@ -188,7 +179,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = c.getAddMessageStatement();
         try {
             if( s == null ) {
-                s = c.getConnection().prepareStatement(statementProvider.getAddMessageStatment());
+                s = c.getConnection().prepareStatement(statements.getAddMessageStatement());
                 if( batchStatments ) {
                     c.setAddMessageStatement(s);
                 }
@@ -215,7 +206,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = c.getAddMessageStatement();
         try {
             if( s == null ) {
-                s = c.getConnection().prepareStatement(statementProvider.getAddMessageStatment());
+                s = c.getConnection().prepareStatement(statements.getAddMessageStatement());
                 if( batchStatments ) {
                     c.setAddMessageStatement(s);
                 }
@@ -243,7 +234,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
 
-            s = c.getConnection().prepareStatement(statementProvider.getFindMessageSequenceIdStatment());
+            s = c.getConnection().prepareStatement(statements.getFindMessageSequenceIdStatement());
             s.setString(1, messageID.getProducerId().toString());
             s.setLong(2, messageID.getProducerSequenceId());
             rs = s.executeQuery();
@@ -265,7 +256,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
 
-            s = c.getConnection().prepareStatement(statementProvider.getFindMessageStatment());
+            s = c.getConnection().prepareStatement(statements.getFindMessageStatement());
             s.setLong(1, seq);
             rs = s.executeQuery();
 
@@ -286,7 +277,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
 
-            s = c.getConnection().prepareStatement(statementProvider.getFindMessageStatment());
+            s = c.getConnection().prepareStatement(statements.getFindMessageStatement());
             s.setLong(1, seq);
             rs = s.executeQuery();
 
@@ -307,7 +298,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = c.getAddMessageStatement();
         try {
             if( s == null ) {
-                s = c.getConnection().prepareStatement(statementProvider.getRemoveMessageStatment());
+                s = c.getConnection().prepareStatement(statements.getRemoveMessageStatment());
                 if( batchStatments ) {
                     c.setRemovedMessageStatement(s);
                 }
@@ -333,11 +324,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
 
-            s = c.getConnection().prepareStatement(statementProvider.getFindAllMessagesStatment());
+            s = c.getConnection().prepareStatement(statements.getFindAllMessagesStatement());
             s.setString(1, destination.getQualifiedName());
             rs = s.executeQuery();
 
-            if( statementProvider.isUseExternalMessageReferences() ) {
+            if( statements.isUseExternalMessageReferences() ) {
                 while (rs.next()) {
                     listener.recoverMessageReference(rs.getString(2));
                 }
@@ -360,7 +351,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = c.getAddMessageStatement();
         try {
             if( s == null ) {
-                s = c.getConnection().prepareStatement(statementProvider.getUpdateLastAckOfDurableSub());
+                s = c.getConnection().prepareStatement(statements.getUpdateLastAckOfDurableSubStatement());
                 if( batchStatments ) {
                     c.setUpdateLastAckStatement(s);
                 }
@@ -391,13 +382,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
 
-            s = c.getConnection().prepareStatement(statementProvider.getFindAllDurableSubMessagesStatment());
+            s = c.getConnection().prepareStatement(statements.getFindAllDurableSubMessagesStatement());
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
             rs = s.executeQuery();
 
-            if( statementProvider.isUseExternalMessageReferences() ) {
+            if( statements.isUseExternalMessageReferences() ) {
                 while (rs.next()) {
                     listener.recoverMessageReference(rs.getString(2));
                 }
@@ -427,7 +418,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             
             long lastMessageId = -1;
             if(!retroactive) {
-                s = c.getConnection().prepareStatement(statementProvider.getFindLastSequenceIdInMsgs());
+                s = c.getConnection().prepareStatement(statements.getFindLastSequenceIdInMsgsStatement());
                 ResultSet rs=null;
                 try {
                     rs = s.executeQuery();
@@ -440,7 +431,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
             
-            s = c.getConnection().prepareStatement(statementProvider.getCreateDurableSubStatment());
+            s = c.getConnection().prepareStatement(statements.getCreateDurableSubStatement());
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -462,7 +453,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
 
-            s = c.getConnection().prepareStatement(statementProvider.getFindDurableSubStatment());
+            s = c.getConnection().prepareStatement(statements.getFindDurableSubStatement());
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -491,7 +482,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         try {
 
-            s = c.getConnection().prepareStatement(statementProvider.getFindAllDurableSubsStatment());
+            s = c.getConnection().prepareStatement(statements.getFindAllDurableSubsStatement());
             s.setString(1, destination.getQualifiedName());
             rs = s.executeQuery();
 
@@ -516,12 +507,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doRemoveAllMessages(TransactionContext c, ActiveMQDestination destinationName) throws SQLException, IOException {
         PreparedStatement s = null;
         try {
-            s = c.getConnection().prepareStatement(statementProvider.getRemoveAllMessagesStatment());
+            s = c.getConnection().prepareStatement(statements.getRemoveAllMessagesStatement());
             s.setString(1, destinationName.getQualifiedName());
             s.executeUpdate();
             s.close();
             
-            s = c.getConnection().prepareStatement(statementProvider.getRemoveAllSubscriptionsStatment());
+            s = c.getConnection().prepareStatement(statements.getRemoveAllSubscriptionsStatement());
             s.setString(1, destinationName.getQualifiedName());
             s.executeUpdate();
             
@@ -534,7 +525,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doDeleteSubscription(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
         try {
-            s = c.getConnection().prepareStatement(statementProvider.getDeleteSubscriptionStatment());
+            s = c.getConnection().prepareStatement(statements.getDeleteSubscriptionStatement());
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -548,7 +539,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         try {
-            s = c.getConnection().prepareStatement(statementProvider.getDeleteOldMessagesStatment());
+            s = c.getConnection().prepareStatement(statements.getDeleteOldMessagesStatement());
             s.setLong(1, System.currentTimeMillis());
             int i = s.executeUpdate();
             log.debug("Deleted "+i+" old message(s).");
@@ -579,7 +570,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(statementProvider.getFindAllDestinationsStatment());
+            s = c.getConnection().prepareStatement(statements.getFindAllDestinationsStatement());
             rs = s.executeQuery();
 
             while (rs.next()) {
@@ -602,7 +593,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     public void setUseExternalMessageReferences(boolean useExternalMessageReferences) {
-        statementProvider.setUseExternalMessageReferences(useExternalMessageReferences);
+        statements.setUseExternalMessageReferences(useExternalMessageReferences);
+    }
+
+    public Statements getStatements() {
+        return statements;
+    }
+
+    public void setStatements(Statements statements) {
+        this.statements = statements;
     }
 
     /*

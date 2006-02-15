@@ -28,7 +28,9 @@ import org.apache.activemq.command.SubscriptionInfo;
  * @version $Revision: 1.5 $
  */
 public interface JDBCAdapter {
-
+    
+    public void setStatements(Statements statementProvider);
+    
     public abstract void doCreateTables(TransactionContext c) throws SQLException, IOException;
 
     public abstract void doDropTables(TransactionContext c) throws SQLException, IOException;
