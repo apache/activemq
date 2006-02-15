@@ -50,7 +50,8 @@ public class DefaultStatementProvider implements StatementProvider {
             			   +", MSG "+(useExternalMessageReferences ? stringIdDataType : binaryDataType)
             			   +", PRIMARY KEY ( ID ) )",						   
             "CREATE INDEX "+getFullMessageTableName()+"_MIDX ON "+getFullMessageTableName()+" (MSGID_PROD,MSGID_SEQ)",
-            "CREATE INDEX "+getFullMessageTableName()+"_CIDX ON "+getFullMessageTableName()+" (CONTAINER)",			
+            "CREATE INDEX "+getFullMessageTableName()+"_CIDX ON "+getFullMessageTableName()+" (CONTAINER)",		
+            "CREATE INDEX "+getFullMessageTableName()+"_EIDX ON "+getFullMessageTableName()+" (EXPIRATION)",                 
             "CREATE TABLE "+getTablePrefix()+durableSubAcksTableName+"("
                         +"CONTAINER "+containerNameDataType+" NOT NULL"
                         +", CLIENT_ID "+stringIdDataType+" NOT NULL"
