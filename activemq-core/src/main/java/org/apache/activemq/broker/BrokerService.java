@@ -112,6 +112,7 @@ public class BrokerService implements Service {
     private URI vmConnectorURI;
     private PolicyMap destinationPolicy;
     private AtomicBoolean started = new AtomicBoolean(false);
+    private BrokerPlugin[] plugins;
 
     /**
      * Adds a new transport connector for the given bind address
@@ -677,6 +678,17 @@ public class BrokerService implements Service {
         this.destinationPolicy = policyMap;
     }
 
+    public BrokerPlugin[] getPlugins() {
+        return plugins;
+    }
+
+    /**
+     * Sets a number of broker plugins to install such as for security authentication or authorization
+     */
+    public void setPlugins(BrokerPlugin[] plugins) {
+        this.plugins = plugins;
+    }
+
     // Implementation methods
     // -------------------------------------------------------------------------
     /**
@@ -875,6 +887,12 @@ public class BrokerService implements Service {
         broker = new CompositeDestinationBroker(broker);
         if (isPopulateJMSXUserID()) {
             broker = new UserIDBroker(broker);
+        }
+        if (plugins != null) {
+            for (int i = 0; i < plugins.length; i++) {
+                BrokerPlugin plugin = plugins[i];
+                broker = plugin.installPlugin(broker);
+            }
         }
         return broker;
     }
