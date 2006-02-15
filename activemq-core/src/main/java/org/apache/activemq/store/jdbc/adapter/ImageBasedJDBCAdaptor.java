@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import org.apache.activemq.store.jdbc.StatementProvider;
+import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * Provides JDBCAdapter since that uses
@@ -28,22 +28,13 @@ import org.apache.activemq.store.jdbc.StatementProvider;
  * <li>MS SQL</li>
  * </ul>
  * 
+ * @org.apache.xbean.XBean element="imageBasedJDBCAdaptor"
  */
 public class ImageBasedJDBCAdaptor extends DefaultJDBCAdapter {
 
-	public static StatementProvider createStatementProvider() {
-		DefaultStatementProvider answer = new DefaultStatementProvider();
-		answer.setBinaryDataType("IMAGE");
-		return answer;
-	}
-	
-	public ImageBasedJDBCAdaptor() {
-		super(createStatementProvider());
-	}
-
-	public ImageBasedJDBCAdaptor(StatementProvider provider) {
-		super(provider);
-		
-	}
-
+    public void setStatements(Statements statements) {
+        statements.setBinaryDataType("IMAGE");
+        super.setStatements(statements);
+    }
+    
 }

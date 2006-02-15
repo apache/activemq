@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import org.apache.activemq.store.jdbc.StatementProvider;
+import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * Axion specific Adapter.
@@ -25,51 +25,39 @@ import org.apache.activemq.store.jdbc.StatementProvider;
  * - We cannot auto upgrade the schema was we roll out new versions of ActiveMQ
  * - We cannot delete durable sub messages that have be acknowledged by all consumers.
  * 
+ * @org.apache.xbean.XBean element="axionJDBCAdapter"
  * @version $Revision: 1.4 $
  */
 public class AxionJDBCAdapter extends StreamJDBCAdapter {
 
-    public static StatementProvider createStatementProvider() {
-        DefaultStatementProvider answer = new DefaultStatementProvider() {
-            public String [] getCreateSchemaStatments() {
-                return new String[]{
-                    "CREATE TABLE "+getTablePrefix()+messageTableName+"("
-                           +"ID "+sequenceDataType+" NOT NULL"
-                           +", CONTAINER "+containerNameDataType
-                           +", MSGID_PROD "+msgIdDataType
-                           +", MSGID_SEQ "+sequenceDataType
-                           +", EXPIRATION "+longDataType
-                           +", MSG "+(useExternalMessageReferences ? stringIdDataType : binaryDataType)
-                           +", PRIMARY KEY ( ID ) )",                          
-                     "CREATE INDEX "+getTablePrefix()+messageTableName+"_MIDX ON "+getTablePrefix()+messageTableName+" (MSGID_PROD,MSGID_SEQ)",
-                     "CREATE INDEX "+getTablePrefix()+messageTableName+"_CIDX ON "+getTablePrefix()+messageTableName+" (CONTAINER)",                                       
-                     "CREATE INDEX "+getFullMessageTableName()+"_EIDX ON "+getFullMessageTableName()+" (EXPIRATION)",                 
-                     "CREATE TABLE "+getTablePrefix()+durableSubAcksTableName+"("
-                           +"CONTAINER "+containerNameDataType+" NOT NULL"
-                           +", CLIENT_ID "+stringIdDataType+" NOT NULL"
-                           +", SUB_NAME "+stringIdDataType+" NOT NULL"
-                           +", SELECTOR "+stringIdDataType
-                           +", LAST_ACKED_ID "+sequenceDataType
-                           +", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))",
-                        
-                };
-            }
-            
-            public String getDeleteOldMessagesStatment() {
-                return "DELETE FROM "+getTablePrefix()+messageTableName+
-                    " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)";
-            }
-
-        };
-        answer.setLongDataType("LONG");
-        return answer;
+    public void setStatements(Statements statements) {
+        
+        statements.setCreateSchemaStatements(
+                new String[]{
+                        "CREATE TABLE "+statements.getFullMessageTableName()+"("
+                               +"ID "+statements.getSequenceDataType()+" NOT NULL"
+                               +", CONTAINER "+statements.getContainerNameDataType()
+                               +", MSGID_PROD "+statements.getMsgIdDataType()
+                               +", MSGID_SEQ "+statements.getSequenceDataType()
+                               +", EXPIRATION "+statements.getLongDataType()
+                               +", MSG "+(statements.isUseExternalMessageReferences() ? statements.getStringIdDataType() : statements.getBinaryDataType())
+                               +", PRIMARY KEY ( ID ) )",                          
+                         "CREATE INDEX "+statements.getFullMessageTableName()+"_MIDX ON "+statements.getFullMessageTableName()+" (MSGID_PROD,MSGID_SEQ)",
+                         "CREATE INDEX "+statements.getFullMessageTableName()+"_CIDX ON "+statements.getFullMessageTableName()+" (CONTAINER)",                                       
+                         "CREATE INDEX "+statements.getFullMessageTableName()+"_EIDX ON "+statements.getFullMessageTableName()+" (EXPIRATION)",                 
+                         "CREATE TABLE "+statements.getFullAckTableName()+"("
+                               +"CONTAINER "+statements.getContainerNameDataType()+" NOT NULL"
+                               +", CLIENT_ID "+statements.getStringIdDataType()+" NOT NULL"
+                               +", SUB_NAME "+statements.getStringIdDataType()+" NOT NULL"
+                               +", SELECTOR "+statements.getStringIdDataType()
+                               +", LAST_ACKED_ID "+statements.getSequenceDataType()
+                               +", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))",
+                    }
+        );
+        statements.setDeleteOldMessagesStatement("DELETE FROM "+statements.getFullMessageTableName()+ " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)");
+        statements.setLongDataType("LONG");
+        
+        super.setStatements(statements);
     }
     
-    public AxionJDBCAdapter() {
-        this(createStatementProvider());
-    }
-
-    public AxionJDBCAdapter(StatementProvider provider) {
-        super(provider);        
-    }
 }

@@ -28,7 +28,6 @@ import java.sql.SQLException;
 import javax.jms.JMSException;
 
 import org.activeio.ByteArrayOutputStream;
-import org.apache.activemq.store.jdbc.StatementProvider;
 import org.apache.activemq.store.jdbc.TransactionContext;
 
 
@@ -46,17 +45,11 @@ import org.apache.activemq.store.jdbc.TransactionContext;
  * <li></li> 
  * </ul>
  * 
+ * @org.apache.xbean.XBean element="blobJDBCAdapter"
+ * 
  * @version $Revision: 1.2 $
  */
 public class BlobJDBCAdapter extends DefaultJDBCAdapter {
-
-    public BlobJDBCAdapter() {
-        super();
-    }
-
-    public BlobJDBCAdapter(StatementProvider provider) {
-        super(provider);
-    }
     
     public void doAddMessage(Connection c, long seq, String messageID, String destinationName, byte[] data) throws SQLException,
             JMSException {
@@ -65,7 +58,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
         try {
             
             // Add the Blob record.
-            s = c.prepareStatement(statementProvider.getAddMessageStatment());
+            s = c.prepareStatement(statements.getAddMessageStatement());
             s.setLong(1, seq);
             s.setString(2, destinationName);
             s.setString(3, messageID);
@@ -77,7 +70,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.close();
 
             // Select the blob record so that we can update it.
-            s = c.prepareStatement(statementProvider.getFindMessageStatment());
+            s = c.prepareStatement(statements.getFindMessageStatement());
             s.setLong(1, seq);
             rs = s.executeQuery();
             if (!rs.next())
@@ -92,7 +85,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.close();
 
             // Update the row with the updated blob
-            s = c.prepareStatement(statementProvider.getUpdateMessageStatment());
+            s = c.prepareStatement(statements.getUpdateMessageStatement());
             s.setBlob(1, blob);
             s.setLong(2, seq);
 
@@ -115,7 +108,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 	    PreparedStatement s=null; ResultSet rs=null;
 	    try {
 	        
-	        s = c.getConnection().prepareStatement(statementProvider.getFindMessageStatment());
+	        s = c.getConnection().prepareStatement(statements.getFindMessageStatement());
 	        s.setLong(1, seq); 
 	        rs = s.executeQuery();
 	        

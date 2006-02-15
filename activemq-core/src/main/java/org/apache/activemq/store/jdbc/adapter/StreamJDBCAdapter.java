@@ -24,7 +24,6 @@ import java.sql.SQLException;
 
 import org.activeio.ByteArrayInputStream;
 import org.activeio.ByteArrayOutputStream;
-import org.apache.activemq.store.jdbc.StatementProvider;
 
 /**
  * This JDBCAdapter inserts and extracts BLOB data using the 
@@ -35,17 +34,11 @@ import org.apache.activemq.store.jdbc.StatementProvider;
  * <li>Axion</li> 
  * </ul>
  * 
+ * @org.apache.xbean.XBean element="streamJDBCAdapter"
+ * 
  * @version $Revision: 1.2 $
  */
 public class StreamJDBCAdapter extends DefaultJDBCAdapter {
-    
-    public StreamJDBCAdapter() {
-        super();
-    }
-
-    public StreamJDBCAdapter(StatementProvider provider) {
-        super(provider);
-    }
     
     /**
      * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#getBinaryData(java.sql.ResultSet, int)

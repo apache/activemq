@@ -20,7 +20,7 @@ import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.activemq.store.jdbc.StatementProvider;
+import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * Implements all the default JDBC operations that are used
@@ -38,26 +38,18 @@ import org.apache.activemq.store.jdbc.StatementProvider;
  * <li></li>
  * </ul>
  *
+ * @org.apache.xbean.XBean element="oracleJDBCAdapter"
+ *
  * @version $Revision: 1.2 $
  */
 public class OracleJDBCAdapter extends DefaultJDBCAdapter {
 
-    public static StatementProvider createStatementProvider() {
-        DefaultStatementProvider answer = new DefaultStatementProvider();
-        answer.setLongDataType("NUMBER");
-        return answer;
-    }
-    
-    public OracleJDBCAdapter() {
-        this(createStatementProvider());
-    }
-
-    public OracleJDBCAdapter(StatementProvider provider) {
-        super(provider);        
+    public void setStatements(Statements statements) {
+        statements.setLongDataType("NUMBER");
+        super.setStatements(statements);
     }
     
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
-
         // Get as a BLOB
         Blob aBlob = rs.getBlob(1);
         return aBlob.getBytes(1, (int) aBlob.length());

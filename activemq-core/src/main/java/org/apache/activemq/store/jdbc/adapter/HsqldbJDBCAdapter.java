@@ -16,27 +16,17 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import org.apache.activemq.store.jdbc.StatementProvider;
+import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * 
  * @version $Revision: 1.2 $
  */
 public class HsqldbJDBCAdapter extends BytesJDBCAdapter {
-	
-	public static class HSQLStatementProvider extends DefaultStatementProvider {
-		public HSQLStatementProvider() {
-			setBinaryDataType("OTHER");
-		}
-	}
-
-    public HsqldbJDBCAdapter() {
-        super(new HSQLStatementProvider());
+	   
+    public void setStatements(Statements statements) {
+        statements.setBinaryDataType("OTHER");
+        super.setStatements(statements);
     }
-
-    public HsqldbJDBCAdapter(StatementProvider provider) {
-        super(provider);
-    }
-    
     
 }

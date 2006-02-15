@@ -63,8 +63,8 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
 
     private WireFormat wireFormat = new OpenWireFormat(false);
     private DataSource dataSource;
+    private Statements statements;
     private JDBCAdapter adapter;
-    private String adapterClass;
     private MemoryTransactionStore transactionStore;
     private ScheduledThreadPoolExecutor clockDaemon;
     private ScheduledFuture clockTicket;
@@ -209,7 +209,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
 
     public JDBCAdapter getAdapter() throws IOException {
         if (adapter == null) {
-            adapter = createAdapter();
+            setAdapter(createAdapter());
         }
         return adapter;
     }
@@ -222,39 +222,24 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         TransactionContext c = getTransactionContext();
         try {
 
-            // If the adapter class is not specified.. try to detect the right
-            // type by getting info from the database.
-            if (adapterClass == null) {
+            try {
+
+                // Make the filename file system safe.
+                String dirverName = c.getConnection().getMetaData().getDriverName();
+                dirverName = dirverName.replaceAll("[^a-zA-Z0-9\\-]", "_").toLowerCase();
 
                 try {
-
-                    // Make the filename file system safe.
-                    String dirverName = c.getConnection().getMetaData().getDriverName();
-                    dirverName = dirverName.replaceAll("[^a-zA-Z0-9\\-]", "_").toLowerCase();
-
-                    try {
-                        adapter = (DefaultJDBCAdapter) factoryFinder.newInstance(dirverName);
-                        log.info("Database driver recognized: [" + dirverName + "]");
-                    } catch (Throwable e) {
-                        log.warn("Database driver NOT recognized: [" + dirverName
-                                + "].  Will use default JDBC implementation.");
-                    }
-
-                } catch (SQLException e) {
-                    log.warn("JDBC error occurred while trying to detect database type.  Will use default JDBC implementation: "
-                                    + e.getMessage());
-                    JDBCPersistenceAdapter.log("Failure Details: ",e);
-                }
-
-            } else {
-                try {
-                    Class clazz = JDBCPersistenceAdapter.class.getClassLoader().loadClass(adapterClass);
-                    adapter = (DefaultJDBCAdapter) clazz.newInstance();
+                    adapter = (DefaultJDBCAdapter) factoryFinder.newInstance(dirverName);
+                    log.info("Database driver recognized: [" + dirverName + "]");
                 } catch (Throwable e) {
-                    log.warn("Invalid JDBC adapter class class (" + adapterClass
-                            + ").  Will use default JDBC implementation.");
-                    log.debug("Reason: " + e, e);
+                    log.warn("Database driver NOT recognized: [" + dirverName
+                            + "].  Will use default JDBC implementation.");
                 }
+
+            } catch (SQLException e) {
+                log.warn("JDBC error occurred while trying to detect database type.  Will use default JDBC implementation: "
+                                + e.getMessage());
+                JDBCPersistenceAdapter.log("Failure Details: ",e);
             }
 
             // Use the default JDBC adapter if the
@@ -271,6 +256,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
 
     public void setAdapter(JDBCAdapter adapter) {
         this.adapter = adapter;
+        this.adapter.setStatements(getStatements());
     }
 
     public DataSource getDataSource() {
@@ -321,21 +307,6 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         transactionContext.rollback();
     }
 
-    /**
-     * @return Returns the adapterClass.
-     */
-    public String getAdapterClass() {
-        return adapterClass;
-    }
-
-    /**
-     * @param adapterClass
-     *            The adapterClass to set.
-     */
-    public void setAdapterClass(String adapterClass) {
-        this.adapterClass = adapterClass;
-    }
-
     public int getCleanupPeriod() {
         return cleanupPeriod;
     }
@@ -373,6 +344,17 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
             s += ", due to: "+e.getMessage();
         }
         log.debug(s, e);
+    }
+
+    public Statements getStatements() {
+        if( statements == null ) {
+            statements = new Statements();
+        }
+        return statements;
+    }
+
+    public void setStatements(Statements statements) {
+        this.statements = statements;
     }
 
 }
