@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- START SNIPPET: sample -->
+
+<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
+<beans>
+
+  <!-- A default example of the deployment descriptor -->
+
+  <broker>
+    <connector>
+      <tcpServerTransport uri="tcp://localhost:61616" backlog="1000" useAsyncSend="true" maxOutstandingMessages="50"/>
+    </connector>
+    
+    <persistence>
+      <!-- you can point this to a different datasource -->
+      <jdbcPersistence dataSourceRef="derby-ds"/>
+    </persistence>
+  </broker>
+
+  <!-- ==================================================================== -->
+  <!-- JDBC DataSource Configurations -->
+  <!-- ==================================================================== -->
+  <!-- The Derby Datasource that will be used by the Broker -->
+  <bean id="derby-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName">
+      <value>org.apache.derby.jdbc.EmbeddedDriver</value>
+    </property>
+    <property name="url">
+      <!-- Use a URL like 'jdbc:hsqldb:hsql://localhost:9001' if you want to connect to a remote hsqldb -->
+      <value>jdbc:derby:target/data/derbydb;create=true</value>
+    </property>
+    <property name="username">
+      <value></value>
+    </property>
+    <property name="password">
+      <value></value>
+    </property>
+    <property name="poolPreparedStatements">
+      <value>true</value>
+    </property>
+  </bean>
+
+</beans>
+
+<!-- END SNIPPET: sample -->
