@@ -16,7 +16,7 @@
 -->
 <project default="default" xmlns:j="jelly:core">
 
-  <goal name="default" prereqs="clean, test"/>
+  <goal name="default" prereqs="jar:install"/>
 
   <goal name="dc">
     <attain>
