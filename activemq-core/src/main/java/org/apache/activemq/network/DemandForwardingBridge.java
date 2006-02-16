@@ -81,6 +81,7 @@ public class DemandForwardingBridge implements Bridge{
     BrokerId localBrokerId;
     BrokerId remoteBrokerId;
     private Object brokerInfoMutex = new Object();
+    
     private static class DemandSubscription{
         ConsumerInfo remoteInfo;
         ConsumerInfo localInfo;
@@ -91,11 +92,13 @@ public class DemandForwardingBridge implements Bridge{
             localInfo=info.copy();
         }
     }
+    
     ConcurrentHashMap subscriptionMapByLocalId=new ConcurrentHashMap();
     ConcurrentHashMap subscriptionMapByRemoteId=new ConcurrentHashMap();
     protected final BrokerId localBrokerPath[]=new BrokerId[] { null };
     protected final BrokerId remoteBrokerPath[]=new BrokerId[] { null };
     private CountDownLatch startedLatch = new CountDownLatch(2);
+    private boolean decreaseNetowrkConsumerPriority;
 
     public DemandForwardingBridge(Transport localBroker,Transport remoteBroker){
         this.localBroker=localBroker;
@@ -289,12 +292,16 @@ public class DemandForwardingBridge implements Bridge{
                             .getNextSequenceId()));
             sub.localInfo.setDispatchAsync(dispatchAsync);
             sub.localInfo.setPrefetchSize(prefetchSize);
-            byte priority=ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
-            if(priority>Byte.MIN_VALUE&&info.getBrokerPath()!=null&&info.getBrokerPath().length>1){
-                // The longer the path to the consumer, the less it's consumer priority.
-                priority-=info.getBrokerPath().length+1;
+            
+            if( decreaseNetowrkConsumerPriority ) {
+                byte priority=ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
+                if(priority>Byte.MIN_VALUE&&info.getBrokerPath()!=null&&info.getBrokerPath().length>1){
+                    // The longer the path to the consumer, the less it's consumer priority.
+                    priority-=info.getBrokerPath().length+1;
+                }
+                sub.localInfo.setPriority(priority);
             }
-            sub.localInfo.setPriority(priority);
+            
             subscriptionMapByLocalId.put(sub.localInfo.getConsumerId(),sub);
             subscriptionMapByRemoteId.put(sub.remoteInfo.getConsumerId(),sub);
             sub.localInfo.setBrokerPath(info.getBrokerPath());
@@ -472,5 +479,13 @@ public class DemandForwardingBridge implements Bridge{
     
     private void waitStarted() throws InterruptedException {
         startedLatch.await();
+    }
+
+    public boolean isDecreaseNetowrkConsumerPriority() {
+        return decreaseNetowrkConsumerPriority;
+    }
+
+    public void setDecreaseNetowrkConsumerPriority(boolean decreaseNetowrkConsumerPriority) {
+        this.decreaseNetowrkConsumerPriority = decreaseNetowrkConsumerPriority;
     }
 }
