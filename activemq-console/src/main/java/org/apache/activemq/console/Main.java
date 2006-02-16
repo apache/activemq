@@ -166,7 +166,7 @@ public class Main {
                 ArrayList urls = new ArrayList();
                 for (Iterator iter = extensions.iterator(); iter.hasNext();) {
                     File dir = (File) iter.next();
-                    try{ System.out.println("Adding to classpath: " + dir.getCanonicalPath()); }catch(Exception e){}
+                    // try{ System.out.println("Adding to classpath: " + dir.getCanonicalPath()); }catch(Exception e){}
                     urls.add(dir.toURL());
                     File[] files = dir.listFiles();
                     if( files!=null ) {
