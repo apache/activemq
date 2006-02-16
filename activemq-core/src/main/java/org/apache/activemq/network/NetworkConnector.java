@@ -22,7 +22,6 @@ import java.net.URISyntaxException;
 import java.util.Set;
 
 import org.apache.activemq.Service;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -49,8 +48,8 @@ public class NetworkConnector implements Service, DiscoveryListener {
 
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
     private Set durableDestinations;
-    boolean failover=true;
-    
+    private boolean failover=true;
+    private boolean decreaseNetowrkConsumerPriority;
     
     public NetworkConnector(){
         
@@ -196,6 +195,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
                 }
             }
         };
+        result.setDecreaseNetowrkConsumerPriority(isDecreaseNetowrkConsumerPriority());
         result.setLocalBrokerName(brokerName);
         return result;
     }
@@ -240,6 +240,16 @@ public class NetworkConnector implements Service, DiscoveryListener {
      */
     public void setDurableDestinations(Set durableDestinations){
         this.durableDestinations=durableDestinations;
+    }
+
+
+    public boolean isDecreaseNetowrkConsumerPriority() {
+        return decreaseNetowrkConsumerPriority;
+    }
+
+
+    public void setDecreaseNetowrkConsumerPriority(boolean decreaseNetowrkConsumerPriority) {
+        this.decreaseNetowrkConsumerPriority = decreaseNetowrkConsumerPriority;
     }
 
 }
