@@ -72,6 +72,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class AbstractConnection implements Service, Connection, Task, CommandVisitor {
 
+    private static final Log log = LogFactory.getLog(AbstractConnection.class.getName());
     private static final Log transportLog = LogFactory.getLog(AbstractConnection.class.getName() + ".Transport");
     private static final Log serviceLog = LogFactory.getLog(AbstractConnection.class.getName() + ".Service");
     
@@ -441,7 +442,6 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processRemoveSession(SessionId id) throws Throwable {
-        
         ConnectionId connectionId = id.getParentId();
         
         ConnectionState cs = lookupConnectionState(connectionId);
@@ -451,10 +451,22 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         // Cascade the connection stop to the consumers and producers.
         for (Iterator iter = session.getConsumerIds().iterator(); iter.hasNext();) {
-            processRemoveConsumer((ConsumerId) iter.next());
+            ConsumerId consumerId = (ConsumerId) iter.next();
+            try {
+                processRemoveConsumer(consumerId);
+            }
+            catch (Throwable e) {
+                log.warn("Failed to remove consumer: " + consumerId + ". Reason: " + e, e);
+            }
         }
         for (Iterator iter = session.getProducerIds().iterator(); iter.hasNext();) {
-            processRemoveProducer((ProducerId) iter.next());
+            ProducerId producerId = (ProducerId) iter.next();
+            try {
+                processRemoveProducer(producerId);
+            }
+            catch (Throwable e) {
+                log.warn("Failed to remove producer: " + producerId + ". Reason: " + e, e);
+            }
         }
         cs.removeSession(id);
         broker.removeSession(cs.getContext(), session.getInfo());
