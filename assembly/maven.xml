@@ -211,7 +211,8 @@
          <ant:exclude name="**/*~"/>
          <ant:exclude name="**/*.bak"/>
          <ant:exclude name="**/activemq-data/**"/>
-         <ant:exclude name="data"/>
+         <ant:exclude name="activemq-core/foo/**"/>
+         <ant:exclude name="data/**"/>
       </ant:fileset>
     </ant:copy>
 
