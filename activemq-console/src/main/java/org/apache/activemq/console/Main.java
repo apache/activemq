@@ -172,7 +172,7 @@ public class Main {
                     if( files!=null ) {
                         for (int j = 0; j < files.length; j++) {
                             if( files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar") ) {
-                                try{ System.out.println("Adding to classpath: " + files[j].getCanonicalPath()); }catch(Exception e){}
+                                // try{ System.out.println("Adding to classpath: " + files[j].getCanonicalPath()); }catch(Exception e){}
                                 urls.add(files[j].toURL());
                             }
                         }
