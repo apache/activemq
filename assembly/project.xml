@@ -182,9 +182,9 @@
     </dependency>
 
     <dependency>
-      <groupId>activecluster</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activecluster</artifactId>
-      <version>${activecluster_version}</version>
+      <version>${pom.currentVersion}</version>
       <properties>
         <optional>true</optional>
       </properties>

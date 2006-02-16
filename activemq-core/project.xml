@@ -106,12 +106,6 @@
             <version>${javacc_version}</version>
             <jar>JavaCC.zip</jar>
         </dependency>
-        <!-- an optional discovery agent -->
-        <dependency>
-            <groupId>activecluster</groupId>
-            <artifactId>activecluster</artifactId>
-            <version>${activecluster_version}</version>
-        </dependency>
         <dependency>
             <groupId>activemq</groupId>
             <artifactId>jmdns</artifactId>
