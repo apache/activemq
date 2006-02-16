@@ -27,8 +27,6 @@ import org.apache.activemq.store.PersistenceAdapter;
  */
 public class JournalDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 
-    private boolean init;
-
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         File dataDir = new File("target/test-data/durableJournal");
         DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
