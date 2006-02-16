@@ -92,7 +92,7 @@ public class TransactionContext {
             int[] rc = p.executeBatch();
             for (int i = 0; i < rc.length; i++) {
                 int code = rc[i];
-                if ( code > 0 || code == Statement.SUCCESS_NO_INFO ) {
+                if ( code < 0 && code != Statement.SUCCESS_NO_INFO ) {
                     throw new SQLException(message + ". Response code: " + code);
                 }
             }
