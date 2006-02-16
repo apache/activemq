@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE project>
+<project>
+  <pomVersion>3</pomVersion>
+  <extend>${basedir}/../etc/project.xml</extend>
+
+  <name>ActiveMQ :: Optional</name>
+  <id>activemq-optional</id>
+  <shortDescription>ActiveMQ Optional Tools</shortDescription>
+  <description>ActiveMQ Optional Tools</description>
+
+  <package>org.apache.activemq</package>
+  <packageGroups>
+    <packageGroup>
+      <title>HTTP Message Transport</title>
+      <packages>org.apache.activemq.transport.http</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Web Service and Apache Axis support</title>
+      <packages>org.apache.activemq.axis</packages>
+    </packageGroup>
+
+  </packageGroups>
+
+
+  <!-- ============ -->
+  <!-- Dependencies -->
+  <!-- ============ -->
+  <dependencies>
+
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${pom.currentVersion}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+        <eclipse.dependency>true</eclipse.dependency>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>activeio</groupId>
+      <artifactId>activeio</artifactId>
+      <version>${activeio_version}</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>geronimo</groupId>
+      <artifactId>geronimo-kernel</artifactId>
+      <version>${geronimo_kernel_version}</version>
+    </dependency>
+    <dependency>
+      <groupId>geronimo</groupId>
+      <artifactId>geronimo-system</artifactId>
+      <version>${geronimo_system_version}</version>
+    </dependency>
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-j2ee-connector</artifactId>
+      <version>${geronimo_spec_j2ee_connector_version}</version>
+    </dependency>
+
+
+    <dependency>
+      <id>springframework</id>
+      <artifactId>spring</artifactId>
+      <version>${spring_version}</version>
+      <url>http://www.springframework.org</url>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <id>commons-pool</id>
+      <artifactId>commons-pool</artifactId>
+      <version>${commons_pool_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <id>commons-collections</id>
+      <artifactId>commons-collections</artifactId>
+      <version>${commons_collections_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <!-- this should be an optional dependency now, when 1.1.2 of Spring is out -->
+    <dependency>
+      <id>aopalliance</id>
+      <artifactId>aopalliance</artifactId>
+      <version>1.0</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis</artifactId>
+      <version>${axis_version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>${commons_httpclient_version}</version>
+    </dependency>
+
+    <!-- web container -->
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>${servlet_api_version}</version>
+    </dependency>
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty</artifactId>
+      <version>${jetty_version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>${xstream_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>xmlpull</groupId>
+      <artifactId>xmlpull</artifactId>
+      <version>${xmlpull_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>jmdns</artifactId>
+      <version>${jmdns_version}</version>
+    </dependency>
+
+    <!-- Used for unit tests -->
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core-test</artifactId>
+      <version>${pom.currentVersion}</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+
+    <unitTest>
+      <resources>
+        <resource>
+          <directory>src/test/resources</directory>
+          <includes>
+            <include>**/*.properties</include>
+            <include>**/*.xml</include>
+          </includes>
+        </resource>
+      </resources>
+      <includes>
+        <include>**/*Test.*</include>
+      </includes>
+      <excludes>
+      </excludes>
+    </unitTest>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+
+
+</project>

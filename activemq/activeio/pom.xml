@@ -1,0 +1,128 @@
+<project>
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.activeio</groupId>
+  <artifactId>activeio-project</artifactId>
+  <version>3.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>ActiveIO Project</name>
+
+  <ciManagement>
+    <system>continuum</system>
+    <url>http://ci.gbuild.org/continuum</url>
+    <notifiers>
+      <notifier>
+        <configuration>
+          <address>activemq-commits@geronimo.apache.org</address>
+        </configuration>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+
+  <mailingLists>
+    <mailingList>
+      <name>Development List</name>
+      <subscribe>activemq-dev@geronimo.apache.org</subscribe>
+      <unsubscribe>activemq-dev@geronimo.apache.org</unsubscribe>
+      <post>activemq-dev@geronimo.apache.org</post>
+    </mailingList>
+  </mailingLists>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/activeio</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/activeio</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/activeio</url>
+  </scm>
+
+  <repositories>
+      <repository>
+          <id>openejb</id>
+          <name>OpenEJB OpenORB Repository</name>
+          <url>http://www.openejb.org/maven</url>
+          <layout>legacy</layout>
+      </repository>
+  </repositories>
+
+  <modules>
+      <module>activeio-core</module>
+<!-- 
+    Disable this optional module from the default build since this contains a dependency that cannot 
+    be automatically downloaded from a maven repository
+      <module>activeio-aio</module>
+      <module>activeio-oneport-jetty</module>
+      <module>activeio-oneport-openorb</module>
+      <module>activeio-jxta</module>
+-->
+
+  </modules>
+
+  <dependencyManagement>
+      <dependencies>
+
+          <dependency>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>3.8.1</version>
+              <scope>test</scope>
+          </dependency>
+
+          <dependency>
+              <groupId>org.apache.activemq</groupId>
+              <artifactId>activemq-core</artifactId>
+              <version>4.0-SNAPSHOT</version>
+          </dependency>
+
+          <dependency>
+              <groupId>backport-util-concurrent</groupId>
+              <artifactId>backport-util-concurrent</artifactId>
+              <version>2.0_01_pd</version>
+          </dependency>
+
+          <dependency>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+              <version>1.0.4</version>
+          </dependency>
+
+          <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.8</version>
+          </dependency>
+
+     </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.4</source>
+          <target>1.4</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.1.1</version>
+        <configuration>
+          <!-- <forkMode>pertest</forkMode> -->
+          <forkMode>none</forkMode>
+          <includes>
+            <include implementation="java.lang.String">**/*Test.*</include>
+          </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <outputDirectory>bin</outputDirectory>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

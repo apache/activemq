@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project>
+
+  <pomVersion>3</pomVersion>
+  <extend>${basedir}/../etc/project.xml</extend>
+
+  <name>ActiveCluster</name>
+  <artifactId>activecluster</artifactId>
+
+  <package>org.apache.activecluster</package>
+  <packageGroups>
+    <packageGroup>
+      <title>Core ActiveCluster API</title>
+      <packages>org.apache.activecluster</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Group organisation protocols</title>
+      <packages>org.apache.activecluster.group</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Election protocols</title>
+      <packages>org.apache.activecluster.election</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>ActiveMQ specific implementation classes</title>
+      <packages>org.apache.activecluster.activemq</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Implementation classes</title>
+      <packages>org.apache.activecluster.impl:org.apache.activecluster.election.impl</packages>
+    </packageGroup>
+  </packageGroups>
+
+  <shortDescription>ActiveCluster is a framework for building cluster-aware software</shortDescription>
+  <gumpRepositoryId>activecluster</gumpRepositoryId>
+
+  <description>
+  	ActiveCluster is a framework for building cluster-aware software
+  </description>
+
+  <url>http://activecluster.codehaus.org/</url>
+  <issueTrackingUrl>http://jira.codehaus.org/browse/ACL</issueTrackingUrl>
+
+  <dependencies>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.0.4</version>
+      <url>http://jakarta.apache.org/commons/logging/</url>
+    </dependency>
+   
+    <dependency>
+      <id>geronimo-spec+jms</id>
+      <version>1.1-rc4</version>
+    </dependency>
+    <dependency>
+      <id>geronimo-spec+jta</id>
+      <version>1.0.1B-rc4</version>
+    </dependency>
+    <dependency>
+      <id>geronimo-spec+j2ee-management</id>
+      <version>1.0-rc4</version>
+    </dependency>
+
+    <!-- default JMS provider used for implementation -->
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${pom.currentVersion}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>activeio</groupId>
+      <artifactId>activeio</artifactId>
+      <version>2.1-SNAPSHOT</version>
+    </dependency>
+
+    <!-- for unit test cases -->
+    <dependency>
+      <id>junit</id>
+      <version>3.8.1</version>
+    </dependency>
+
+    <!--concurrency -->
+    <dependency>
+      <id>backport-util-concurrent</id>
+      <version>2.0_01_pd</version>
+    </dependency>
+
+    <!-- for multi-threaded unit test cases -->
+    <dependency>
+      <id>sysunit</id>
+      <version>1.0-beta-13</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>${derby_version}</version>
+    </dependency>
+    
+  </dependencies>
+
+    
+  <build>
+    <nagEmailAddress>scm@activecluster.codehaus.org</nagEmailAddress>
+    <sourceDirectory>src/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+
+    <integrationUnitTestSourceDirectory/>
+    <aspectSourceDirectory/>
+
+    <unitTest>
+      <resources>
+        <resource>
+          <directory>src/java</directory>
+          <includes>
+            <include>**/*.properties</include>
+          </includes>
+        </resource>
+      </resources>
+      <includes>
+        <include>**/*Test.*</include>
+      </includes>
+    </unitTest>
+
+    <resources>
+      <!--
+            <resource>
+              <directory>src/jar</directory>
+              <includes>
+                <include>**/*.properties</include>
+                <include>**/*.xml</include>
+              </includes>
+            </resource>
+      -->
+    </resources>
+  </build>
+</project>

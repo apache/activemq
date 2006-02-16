@@ -1,0 +1,16 @@
+==========================================================================
+Setting up MS Visual Studio
+==========================================================================
+
+1) Download Apache APR 1.2.2 from http://apr.apache.org/download.cgi
+2) Follow the Win32 build instructions: http://apr.apache.org/compiling_win32.html
+3) Configure MS Visual Studio so that it know the location of APR:
+
+
+    1) Click Tools->Options...
+    2) Navigate to Projects->VC++ Directories
+    3) Change "show directories for" Library files to "Library files"
+    4) Add the apr library directory to the list
+    5) Change "show directories for" Library files to "Include files"
+    6) Add the apr include directory to the list
+    

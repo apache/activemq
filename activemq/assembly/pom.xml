@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<model>
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.activemq</groupId>
+    <artifactId>activemq-project</artifactId>
+    <version>4.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>activemq</artifactId>
+  <packaging>pom</packaging>
+  <name>ActiveMQ :: Assembly</name>
+  <description>Puts together the ActiveMQ distribution</description>
+  
+  <dependencies>
+  
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${version}</version>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-console</artifactId>
+      <version>${version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-optional</artifactId>
+      <version>${version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-ra</artifactId>
+      <type>rar</type>
+      <version>${version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-jaas</artifactId>
+      <version>${version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-web</artifactId>
+      <type>war</type>
+      <version>${version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>backport-util-concurrent</groupId>
+      <artifactId>backport-util-concurrent</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>activeio</groupId>
+      <artifactId>activeio</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-jms</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-jsp</artifactId>
+    </dependency>
+ 
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>servlet-api</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty</artifactId>
+    </dependency>
+    
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <!-- Configure which tests are included/excuded -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.1.2-SNAPSHOT</version>
+        <configuration>
+          <forkMode>pertest</forkMode>
+          <excludes>
+            <!-- These tests run too slow to execute as part of the unit tests -->
+            <exclude implementation="java.lang.String">**/DefaultStoreBrokerTest.*</exclude>
+            <exclude implementation="java.lang.String">**/ActiveIOTransportBrokerTest.*</exclude>
+            <!-- These tests fails -->
+            <exclude implementation="java.lang.String">**/SpringTest.*</exclude>
+            <exclude implementation="java.lang.String">**/*QuickJournalRecoveryBrokerTest.*</exclude>
+          </excludes>
+          <includes>
+            <include implementation="java.lang.String">**/*RetroactiveConsumerTestWithDestinationBasedBufferTest.*</include>
+          </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>assembly</goal>
+            </goals>
+            <configuration>
+              <descriptor>src/main/descriptors/jar.xml</descriptor>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.1-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>assembly</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                 <descriptor>src/main/descriptors/all-jar.xml</descriptor>
+                 <descriptor>src/main/descriptors/bin.xml</descriptor>
+             </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</model>

@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../etc/project.xml</extend>
+
+    <name>ActiveMQ :: Console</name>
+    <artifactId>activemq-console</artifactId>
+
+    <description>ActiveMQ Console is an open source management console that is use to monitor a JMX enabled ActiveMQ broker.</description>
+    <shortDescription>ActiveMQ Management Console</shortDescription>
+
+    <package>org.apache.activemq.console</package>
+    <packageGroups>
+        <packageGroup>
+            <title>Console Commands</title>
+            <packages>org.apache.activemq.console.command</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Query Filters</title>
+            <packages>org.apache.activemq.console.filter</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Console Output Formatter</title>
+            <packages>org.apache.activemq.console.formatter</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Utilities</title>
+            <packages>org.apache.activemq.console.util</packages>
+        </packageGroup>
+    </packageGroups>
+    <!-- ============ -->
+    <!-- Dependencies -->
+    <!-- ============ -->
+    <dependencies>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activemq-core</artifactId>
+            <version>${pom.currentVersion}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activemq-core-test</artifactId>
+            <version>${pom.currentVersion}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>activeio</groupId>
+            <artifactId>activeio</artifactId>
+            <version>${activeio_version}</version>
+        </dependency>
+        
+        <!-- used to support optional transport configuration via URI query strings -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${commons_beanutils_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons_collections_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>${commons_httpclient_version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.xbean</groupId>
+            <artifactId>xbean-spring</artifactId>
+            <version>${xbean_spring_version}</version>
+            <url>http://www.gbean.org</url>
+        </dependency>
+
+        <dependency>
+            <id>springframework</id>
+            <artifactId>spring</artifactId>
+            <version>${spring_version}</version>
+            <url>http://www.springframework.org</url>
+        </dependency>
+        
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j</artifactId>
+            <version>${mx4j_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-remote</artifactId>
+            <version>${mx4j_remote_version}</version>
+        </dependency>
+        
+        <!-- Derby DB used for testing JDBC message store -->
+        <dependency>
+          <groupId>org.apache.derby</groupId>
+          <artifactId>derby</artifactId>
+          <version>${derby_version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.derby</groupId>
+          <artifactId>derbynet</artifactId>
+          <version>${derbynet_version}</version>
+        </dependency>
+    
+        <dependency>
+          <groupId>xerces</groupId>
+          <artifactId>xercesImpl</artifactId>
+          <version>${xercesImpl_version}</version>
+        </dependency>
+        <dependency>
+          <groupId>xerces</groupId>
+          <artifactId>xmlParserAPIs</artifactId>
+          <version>${xercesImpl_version}</version>
+        </dependency>
+                
+    </dependencies>
+
+    <build>
+        <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+        <unitTest>
+            <resources>
+                <resource>
+                    <directory>src/test/resources</directory>
+                    <includes>
+                        <include>**/*.properties</include>
+                        <include>**/*.xml</include>
+                    </includes>
+                    <filtering>false</filtering>
+                </resource>
+            </resources>
+            <includes>
+                <include>**/*Test.*</include>
+            </includes>
+            <excludes>
+               
+            </excludes>
+        </unitTest>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>target/generated</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+    </build>
+    
+    <developers>
+        <developer>
+            <name>James Strachan</name>
+            <id>jstrachan</id>
+            <email>jstrachan@logicblaze.com</email>
+        </developer>
+        <developer>
+            <name>Hiram Chirino</name>
+            <id>chirino</id>
+            <email>hiram@logicblaze.com</email>
+        </developer>
+        <developer>
+            <name>Rob Davies</name>
+            <id>Rob</id>
+            <email>rajdavies@gmail.com</email>
+        </developer>
+        <developer>
+            <name>Jonas Lim</name>
+            <id>jlim</id>
+            <email>jlim@exist.com</email>
+        </developer>
+        <developer>
+            <name>Frederick Oconer</name>
+            <id>foconer</id>
+            <email>foconer@exist.com</email>
+        </developer>
+        <developer>
+            <name>Joseph Gapuz</name>
+            <id>jgapuz</id>
+            <email>jgapuz@exist.com</email>
+        </developer>
+        <developer>
+            <name>Patrick Villacorta</name>
+            <id>pvillacorta</id>
+            <email>pvillacorta@exist.com</email>
+        </developer>
+        <developer>
+            <name>Darwin Flores</name>
+            <id>dflores</id>
+            <email>dflores@exist.com</email>
+        </developer>
+        <developer>
+            <name>Merwin Yap</name>
+            <id>myap</id>
+            <email>myap@exist.com</email>
+        </developer>
+        <developer>
+            <name>Adrian Co</name>
+            <id>aco</id>
+            <email>aco@exist.com</email>
+        </developer>
+        <developer>
+            <name>Dennis Cook</name>
+            <id>dcook</id>
+            <email>dennis@bevocal.com</email>
+        </developer>
+        <developer>
+            <name>Dag Liodden</name>
+            <id>daggerrz</id>
+            <email>dag.liodden@giantleap.no</email>
+        </developer>
+        <developer>
+            <name>Peter Brooke</name>
+            <id>pbrooke</id>
+        </developer>  
+        <developer>
+            <name>Ramzi Saba</name>
+            <id>rsaba</id>
+            <email>rsaba@optaros.com</email>
+        </developer>
+        <developer>
+            <name>Brian McCallister</name>
+            <id>brianm</id>
+            <email>brianm@apache.org</email>
+        </developer>              
+    </developers>
+    
+    <reports>
+      <report>maven-javadoc-plugin</report>
+      <report>maven-junit-report-plugin</report>
+    </reports>
+    
+    <repository>
+       <connection>scm:svn:svn://svn.activemq.org/activemq/scm/branches/activemq-4-0/activemq</connection>
+       <developerConnection>scm:svn:svn://svn.activemq.org/activemq/branches/activemq-4-0/activemq</developerConnection>
+       <url>https://svn.activemq.org/activemq/branches/activemq-4-0/activemq/</url>
+    </repository>  
+</project>
+

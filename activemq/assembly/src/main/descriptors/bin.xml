@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<assembly>
+  <id>bin</id>
+  <formats>
+    <format>tar.gz</format>
+    <format>tar.bz2</format>
+    <format>zip</format>
+  </formats>
+  <fileSets>
+    <fileSet>
+      <includes>
+        <include>README*</include>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>/lib</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
+         <include>activeio:activeio</include>
+         <include>mx4j:mx4j</include>
+         <include>${pom.groupId}:activemq-core</include>
+         <include>backport-util-concurrent:backport-util-concurrent</include>
+         <include>commons-logging:commons-logging</include>
+         <include>geronimo-spec:geronimo-spec-jms</include>
+         <include>geronimo-spec:geronimo-spec-j2ee-management</include>
+      </includes>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>/lib/optional</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
+          <!-- <include>${pom.groupId}:activemq-ra</include> -->
+         <include>commons-beanutils:commons-beanutils</include>
+         <include>commons-collections:commons-collections</include>
+         <include>commons-httpclient:commons-httpclient</include>
+         <include>xstream:xstream</include>
+         <include>xmlpull:xmlpull</include>
+         <include>activecluster:activecluster</include>
+         <include>org.apache.xbean:xbean-spring</include>
+         <include>springframework:spring</include>
+         <include>commons-dbcp:commons-dbcp</include>
+         <include>commons-pool:commons-pool</include>
+         <include>org.apache.derby:derby</include>
+         <include>geronimo-spec:geronimo-spec-j2ee-connector</include>
+         <include>mx4j:mx4j-remote</include>
+         <include>geronimo-spec:geronimo-spec-j2ee-jacc</include>
+         <include>log4j:log4j</include>
+         <include>activeio:activeio</include>
+         <include>activeio:activeio</include>
+         <include>activeio:activeio</include>
+         <include>activeio:activeio</include>
+         <include>activeio:activeio</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>
+  
+  <!--
+  <fileSet>
+      <includes>
+        <include>README*</include>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+        <include>pom.xml</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>src</directory>
+    </fileSet>
+  </fileSets>
+  
+  
+  <fileSets>
+    <fileSet>
+      <directory>target/classes</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>/</outputDirectory>
+      <unpack>true</unpack>
+      <scope>runtime</scope>
+    </dependencySet>
+  </dependencySets>
+  -->
+  
+</assembly>

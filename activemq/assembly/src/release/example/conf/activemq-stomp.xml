@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC  "-//ACTIVEMQ//DTD//EN" "http://activemq.org/dtd/activemq.dtd">
+<beans>
+
+  <!-- ==================================================================== -->
+  <!-- ActiveMQ Broker Configuration -->
+  <!-- ==================================================================== -->
+  <broker>
+    <connector>
+      <tcpServerTransport uri="tcp://localhost:61616" backlog="1000" useAsyncSend="true" maxOutstandingMessages="50"/>
+    </connector>
+
+    <!-- lets listen for stomp clients -->
+    <connector>
+      <serverTransport uri="stomp://localhost:61626"/>
+    </connector>
+
+    <persistence>
+      <cachePersistence>
+        <journalPersistence directory="../data/journal">
+          <jdbcPersistence dataSourceRef="derby-ds"/>
+
+          <!-- Choose one of the following three configurationss to work with mysql-ds-->
+          <!--
+          <jdbcPersistence dataSourceRef="mysql-ds"
+                         adapterClass="org.apache.activemq.store.jdbc.adapter.BytesJDBCAdaptor"/>
+          <jdbcPersistence dataSourceRef="mysql-ds"
+                         adapterClass="org.apache.activemq.store.jdbc.adapter.BlobJDBCAdaptor"/>
+          <jdbcPersistence dataSourceRef="mysql-ds"
+                         adapterClass="org.apache.activemq.store.jdbc.adapter.StreamJDBCAdaptor"/>
+          -->
+        </journalPersistence>
+      </cachePersistence>
+    </persistence>
+  </broker>
+
+  <!-- ==================================================================== -->
+  <!-- JDBC DataSource Configurations -->
+  <!-- ==================================================================== -->
+
+  <!-- The Derby Datasource that will be used by the Broker -->
+  <bean id="derby-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName">
+      <value>org.apache.derby.jdbc.EmbeddedDriver</value>
+    </property>
+    <property name="url">
+      <!-- Use a URL like 'jdbc:hsqldb:hsql://localhost:9001' if you want to connect to a remote hsqldb -->
+      <value>jdbc:derby:derbydb;create=true</value>
+    </property>
+    <property name="username">
+      <value></value>
+    </property>
+    <property name="password">
+      <value></value>
+    </property>
+    <property name="poolPreparedStatements">
+      <value>true</value>
+    </property>
+  </bean>
+
+  <!-- The MYSQL Datasource that will be used by the Broker -->
+  <bean id="mysql-ds"
+        class="org.apache.commons.dbcp.BasicDataSource"
+        destroy-method="close">
+    <property name="driverClassName">
+      <value>com.mysql.jdbc.Driver</value>
+    </property>
+    <property name="url">
+      <value>jdbc:mysql://localhost/activemq</value>
+    </property>
+    <property name="username">
+      <value>myname</value>
+    </property>
+    <property name="password">
+      <value>mypassword</value>
+    </property>
+    <property name="poolPreparedStatements">
+      <value>true</value>
+    </property>
+  </bean>
+
+
+</beans>
+

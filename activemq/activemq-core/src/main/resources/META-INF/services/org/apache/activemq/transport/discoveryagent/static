@@ -1,0 +1,1 @@
+class=org.apache.activemq.transport.discovery.simple.SimpleDiscoveryAgentFactory
