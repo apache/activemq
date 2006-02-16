@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 
 /**
  * @version $Revision: 1.1.1.1 $
