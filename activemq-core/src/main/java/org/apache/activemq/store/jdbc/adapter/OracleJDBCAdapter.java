@@ -51,7 +51,7 @@ public class OracleJDBCAdapter extends DefaultJDBCAdapter {
     
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
         // Get as a BLOB
-        Blob aBlob = rs.getBlob(1);
+        Blob aBlob = rs.getBlob(index);
         return aBlob.getBytes(1, (int) aBlob.length());
     }
 }

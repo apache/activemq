@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.sql.DataSource;
 
@@ -90,8 +91,9 @@ public class TransactionContext {
         try {
             int[] rc = p.executeBatch();
             for (int i = 0; i < rc.length; i++) {
-                if ( rc[i]!= 1 ) {
-                    throw new SQLException(message);
+                int code = rc[i];
+                if ( code > 0 || code == Statement.SUCCESS_NO_INFO ) {
+                    throw new SQLException(message + ". Response code: " + code);
                 }
             }
         } finally {
