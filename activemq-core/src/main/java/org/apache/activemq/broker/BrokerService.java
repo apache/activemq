@@ -151,17 +151,14 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public TransportConnector addConnector(TransportConnector connector) throws Exception {
-        int what = System.identityHashCode(connector);
-        if (isUseJmx()) {
-            URI discoveryUri = connector.getDiscoveryUri();
-            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
-            connector.setDiscoveryUri(discoveryUri);
-        }
+        
         connector.setBroker(getBroker());
         connector.setBrokerName(getBrokerName());
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
         transportConnectors.add(connector);
+
         if (isUseJmx()) {
+            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
             registerConnectorMBean(connector);
         }
         return connector;
