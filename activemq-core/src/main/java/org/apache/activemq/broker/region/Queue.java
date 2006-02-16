@@ -187,12 +187,14 @@ public class Queue implements Destination {
             ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
             MessageGroupSet ownedGroups = getMessageGroupOwners().removeConsumer(consumerId);
 
-            synchronized (messages) {
-                if (!sub.getConsumerInfo().isBrowser()) {
-                    MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-                    try {
-                        msgContext.setDestination(destination);
+            if (!sub.getConsumerInfo().isBrowser()) {
+                MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
+                try {
+                    msgContext.setDestination(destination);
 
+                    // lets copy the messages to dispatch to avoid deadlock
+                    List messagesToDispatch = new ArrayList();
+                    synchronized (messages) {
                         for (Iterator iter = messages.iterator(); iter.hasNext();) {
                             IndirectMessageReference node = (IndirectMessageReference) iter.next();
                             if (node.isDropped()) {
@@ -202,20 +204,25 @@ public class Queue implements Destination {
                             String groupID = node.getGroupID();
 
                             // Re-deliver all messages that the sub locked
-                            if (node.getLockOwner() == sub || wasExclusiveOwner
-                                    || (groupID != null && ownedGroups.contains(groupID))) {
-                                node.incrementRedeliveryCounter();
-                                node.unlock();
-                                msgContext.setMessageReference(node);
-                                dispatchPolicy.dispatch(context, node, msgContext, consumers);
+                            if (node.getLockOwner() == sub || wasExclusiveOwner || (groupID != null && ownedGroups.contains(groupID))) {
+                                messagesToDispatch.add(node);
                             }
                         }
-                    } finally {
-                        msgContext.clear();
+                    }
+                    
+                    // now lets dispatch from the copy of the collection to avoid deadlocks
+                    for (Iterator iter = messagesToDispatch.iterator(); iter.hasNext();) {
+                        IndirectMessageReference node = (IndirectMessageReference) iter.next();
+                        node.incrementRedeliveryCounter();
+                        node.unlock();
+                        msgContext.setMessageReference(node);
+                        dispatchPolicy.dispatch(context, node, msgContext, consumers);
                     }
                 }
+                finally {
+                    msgContext.clear();
+                }
             }
-
         } finally {
             dispatchValve.turnOn();
         }
