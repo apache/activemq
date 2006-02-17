@@ -16,8 +16,19 @@
  */
 package org.apache.activemq.broker;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
@@ -30,7 +41,6 @@ import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.FTConnectorView;
 import org.apache.activemq.broker.jmx.JmsConnectorView;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
-import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
@@ -55,19 +65,8 @@ import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Represents a running broker service which consists of a number of transport
@@ -152,15 +151,16 @@ public class BrokerService implements Service {
      */
     public TransportConnector addConnector(TransportConnector connector) throws Exception {
         
+        if (isUseJmx()) {
+            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
+            registerConnectorMBean(connector);
+        }
+        
         connector.setBroker(getBroker());
         connector.setBrokerName(getBrokerName());
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
         transportConnectors.add(connector);
 
-        if (isUseJmx()) {
-            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
-            registerConnectorMBean(connector);
-        }
         return connector;
     }
 
@@ -924,15 +924,8 @@ public class BrokerService implements Service {
     }
 
     protected TransportConnector createTransportConnector(Broker broker, URI brokerURI) throws Exception {
-
         TransportServer transport = TransportFactory.bind(getBrokerName(),brokerURI);
-        if (isUseJmx()) {
-            MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            return new ManagedTransportConnector(mbeanServer, getBrokerObjectName(), broker, transport);
-        }
-        else {
-            return new TransportConnector(broker, transport);
-        }
+        return new TransportConnector(broker, transport);
     }
 
     /**
