@@ -103,6 +103,11 @@ class Send implements StompCommand {
 
         msg.setJMSReplyTo(DestinationNamer.convert((String) headers.remove(Stomp.Headers.Send.REPLY_TO)));
 
+        Object persistent = headers.remove(Stomp.Headers.Send.PERSISTENT);
+        if (persistent != null) {
+            msg.setPersistent(asBool(persistent));
+        }
+        
         // now the general headers
         msg.setProperties(headers);
 
