@@ -89,8 +89,8 @@ for (pkg in jclass.importedPackages) {
     }
 }
 
-def baseClass = "org.apache.activemq.openwire.DataStreamMarshaller"
-if( !jclass.superclass.simpleName.equals("Object") ) {
+def baseClass = "DataStreamMarshaller"
+if (!jclass.superclass.simpleName.equals("JNDIBaseStorable") && !jclass.superclass.simpleName.equals("Object") ) {
    baseClass = jclass.superclass.simpleName + "Marshaller";
 }
 
