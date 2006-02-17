@@ -151,14 +151,14 @@ public class BrokerService implements Service {
      */
     public TransportConnector addConnector(TransportConnector connector) throws Exception {
         
-        if (isUseJmx()) {
-            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
-            registerConnectorMBean(connector);
-        }
-        
         connector.setBroker(getBroker());
         connector.setBrokerName(getBrokerName());
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
+
+        if (isUseJmx()) {
+            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
+            registerConnectorMBean(connector);
+        }        
         transportConnectors.add(connector);
 
         return connector;
