@@ -67,7 +67,7 @@ public class BrokerInfo extends BaseCommand {
     }
 
     /**
-     * @openwire:property version=1
+     * @openwire:property version=1 testSize=0
      */
     public BrokerInfo[] getPeerBrokerInfos() {
         return peerBrokerInfos;
