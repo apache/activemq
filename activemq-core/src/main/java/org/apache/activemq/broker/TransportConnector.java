@@ -83,7 +83,13 @@ public class TransportConnector implements Connector {
      * Factory method to create a JMX managed version of this transport connector
      */
     public ManagedTransportConnector asManagedConnector(MBeanServer mbeanServer, ObjectName connectorName) throws IOException, URISyntaxException {
-        return new ManagedTransportConnector(mbeanServer,connectorName,  getBroker(), getServer());    
+        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer,connectorName,  getBroker(), getServer());
+        rc.setTaskRunnerFactory(getTaskRunnerFactory());
+        rc.setUri(uri);
+        rc.setConnectUri(connectUri);
+        rc.setDiscoveryAgent(discoveryAgent);
+        rc.setDiscoveryUri(discoveryUri);
+        return rc;
     }
     
     public BrokerInfo getBrokerInfo() {
