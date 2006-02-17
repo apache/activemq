@@ -143,6 +143,10 @@
   </goal>
   
   <goal name="clean" prereqs="init">
+    <!-- should remove the base dir target and xdocs as well -->
+    <ant:delete dir="${basedir}/target"/>
+    <ant:delete dir="${basedir}/xdocs"/>
+    
     <j:set var="goal" value="clean"/>
     <attainGoal name="multiproject:goal"/>
   </goal>
