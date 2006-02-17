@@ -46,39 +46,36 @@ class GenerateCMarshalling extends OpenWireScript {
 	def sort(classes) {
    
       classes = (java.util.List)classes;      
-		def rc = [];
+	  def rc = [];
       def objectClass;
+     
+      // lets make a map of all the class names
+      def classNames = [:]
+	 for (c in classes) {
+	     def name = c.simpleName
+	     classNames[name] = name
+	 }
       
-      // Prime with the Object class
-      def x = classes[0];
-      while( !x.simpleName.equals("Object") ) {
-         x = x.superclass;
-      }
-      rc[0]=x;
-
-      // Add all classes that have a parent in the rc list
-      while( classes.size() > 0 ) {
-         for (c in classes) {
-            for( i in rc ) {
-               if( c.superclass.equals(i) ) {
-                  rc.add(c);
-                  break;
-               }
-            }
-         }
-         classes.removeAll(rc);         
+      // Add all classes that have no parent first
+     for (c in classes) {
+       if( !classNames.containsKey(c.superclass))
+          rc.add(c)
       }
       
-      // Get rid of that primed Object class
-      rc.remove(0);
-		return rc;
+      // now lets add the rest
+     for (c in classes) {
+         if (!rc.contains(c))
+             rc.add(c)
+      }
+      
+	return rc;
 	}
    
    
    def generateFields(out, jclass) {
    
       println("getting fields for: ${jclass.simpleName}");
-      if( jclass.superclass.simpleName.equals("Object") ) {
+      if( jclass.superclass == null || jclass.superclass.simpleName.equals("Object") ) {
 out << """
    ow_byte structType;
 """;

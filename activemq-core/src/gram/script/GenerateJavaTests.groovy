@@ -45,15 +45,20 @@ class GenerateJavaTests extends OpenWireScript {
 
             println "Processing ${jclass.simpleName}"
             def abstractText = "abstract "
-            def isAbstract = isAbstract(jclass);
-            if( !isAbstract ) {
+            def classIsAbstract = isAbstract(jclass);
+            def isBaseAbstract = isAbstract(jclass.superclass);
+            if( !classIsAbstract ) {
               concreteClasses.add(jclass)
               abstractText = ""
             }
             
             def properties = jclass.declaredProperties.findAll { isValidProperty(it) }
             
-            def file = new File(destDir, jclass.simpleName + "Test.java")
+            def testClassName = jclass.simpleName + "Test"
+            if (classIsAbstract) 
+                testClassName += "Support"
+
+            def file = new File(destDir, testClassName + ".java")
 
             buffer << """
 ${jclass.simpleName}Test.class
@@ -94,10 +99,12 @@ for (pkg in jclass.importedPackages) {
 def baseClass = "DataFileGeneratorTestSupport"
 if (!jclass.superclass.simpleName.equals("JNDIBaseStorable") && !jclass.superclass.simpleName.equals("Object") ) {
    baseClass = jclass.superclass.simpleName + "Test";
+   if (isBaseAbstract) 
+       baseClass += "Support"
 }
 
 def marshallerAware = isMarshallAware(jclass);
-
+    
 out << """
 
 /**
@@ -111,9 +118,9 @@ out << """
  *
  * @version \$Revision: \$
  */
-public ${abstractText}class ${jclass.simpleName}Test extends $baseClass {
+public ${abstractText}class $testClassName extends $baseClass {
 """
-	if (!isAbstract) 
+	if (!classIsAbstract) 
 		out << """
 
     public static ${jclass.simpleName}Test SINGLETON = new ${jclass.simpleName}Test();
