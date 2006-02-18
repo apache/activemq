@@ -14,44 +14,38 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<model>
+<project>
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.apache.activemq</groupId>
-    <artifactId>activemq-project</artifactId>
+    <artifactId>activemq</artifactId>
     <version>4.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-core</artifactId>
-  <packaging>jar</packaging>
   <name>ActiveMQ :: Core</name>
   <description>The ActiveMQ Message Broker and Client implementations</description>
 
   <dependencies>
-  
+
+    <!--
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <groupId>org.apache.activemq.activeio</groupId>
+      <artifactId>activeio-core</artifactId>
+      <version>3.0-SNAPSHOT</version>
     </dependency>
-         
+    -->
     <dependency>
       <groupId>activeio</groupId>
       <artifactId>activeio</artifactId>
+      <version>2.1</version>
     </dependency>
-         
     <dependency>
       <groupId>backport-util-concurrent</groupId>
       <artifactId>backport-util-concurrent</artifactId>
     </dependency>
  
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
@@ -74,16 +68,6 @@
       <artifactId>geronimo-spec-j2ee-jacc</artifactId>
     </dependency>
     
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>activecluster</groupId>
-      <artifactId>activecluster</artifactId>
-    </dependency>
-  
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
@@ -148,7 +132,7 @@
         <exclusion>
           <groupId>xmlbeans</groupId>
           <artifactId>xmlbeans-jsr173-api</artifactId>
-	</exclusion>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -216,22 +200,7 @@
             <exclude>**/*ItStillMarshallsTheSameTest.*</exclude>
 
           </excludes>
-          <includes>
-            <include>**/*Test.*</include>
-          </includes>
         </configuration>
-      </plugin>
-
-      <!-- generate the attached tests jar -->
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>
@@ -245,7 +214,7 @@
                 <mkdir dir="${basedir}/target/generated"/>
                 <taskdef name="xsdGenerate" classname="org.apache.xbean.spring.generator.MappingGeneratorTask"/>
                 <xsdGenerate 
-                    destFile="${basedir}/target/activemq-${version}.xsd" 
+                    destFile="${basedir}/target/activemq-${project.version}.xsd" 
                     namespace="http://activemq.org/config/1.0"
                     srcdir="${basedir}/src/main/java"  
                     metaInfDir="${basedir}/target/generated/"/>
@@ -253,8 +222,8 @@
                 <copy todir="${basedir}/target/classes">
                   <fileset dir="${basedir}/target/generated"/>
                 </copy>
-                <copy file="${basedir}/target/activemq-${version}.xsd" todir="${basedir}/../xdocs"/>
-                <copy file="${basedir}/target/activemq-${version}.xsd.html" todir="${basedir}/../xdocs"/>
+                <copy file="${basedir}/target/activemq-${project.version}.xsd" todir="${basedir}/../xdocs"/>
+                <copy file="${basedir}/target/activemq-${project.version}.xsd.html" todir="${basedir}/../xdocs"/>
 
               </tasks>
             </configuration>
@@ -267,7 +236,7 @@
           <dependency>
             <groupId>org.apache.xbean</groupId>
             <artifactId>xbean-spring</artifactId>
-            <version>2.2-SNAPSHOT</version>
+            <version>2.2</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -293,4 +262,4 @@
     </plugins>
   </build>
 
-</model>
+</project>

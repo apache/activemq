@@ -18,9 +18,8 @@
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.apache.activeio</groupId>
-    <artifactId>activeio-project</artifactId>
-    <relativePath>../pom.xml</relativePath>
+    <groupId>org.apache.activemq.activeio</groupId>
+    <artifactId>activeio</artifactId>
     <version>3.0-SNAPSHOT</version>
   </parent>
 
@@ -31,15 +30,16 @@
   <dependencies>
     <!-- Required Dependencies -->
     <dependency>
-      <groupId>org.apache.activeio</groupId>
+      <groupId>org.apache.activemq.activeio</groupId>
       <artifactId>activeio-core</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.activeio</groupId>
+      <groupId>org.apache.activemq.activeio</groupId>
       <artifactId>activeio-core</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
       <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>backport-util-concurrent</groupId>
@@ -53,23 +53,9 @@
       <version>5.1.2</version>
     </dependency>
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee</artifactId>
-      <version>1.4-rc4</version>
-    </dependency>
-
-    <!-- Unit Test Dependencies -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.3</version>
     </dependency>
 
   </dependencies>

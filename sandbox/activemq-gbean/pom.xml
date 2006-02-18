@@ -1,14 +1,13 @@
-<model>
+<project>
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>activemq</groupId>
-    <artifactId>activemq</artifactId>
+    <groupId>org.apache.activemq.sandbox</groupId>
+    <artifactId>activemq-sandbox</artifactId>
     <version>4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-gbean</artifactId>
-  <packaging>jar</packaging>
   <name>ActiveMQ :: GBeans</name>
   
   <build>
@@ -21,18 +20,20 @@
       <dependency>
         <groupId>activemq</groupId>
         <artifactId>activemq-core</artifactId>
-	<version>${version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>activemq</groupId>
         <artifactId>activemq-gbean-management</artifactId>
-	<version>${version}</version>
+        <version>${project.version}</version>
       </dependency>
       
-      <dependency> <!-- Used for unit tests -->
+      <dependency>
         <groupId>activemq</groupId>
-        <artifactId>activemq-core-test</artifactId>
-	<version>${version}</version>
+        <artifactId>activemq-core</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -61,43 +62,7 @@
         <groupId>mx4j</groupId>
         <artifactId>mx4j</artifactId>
       </dependency>
-      
-      
-      <dependency>
-         <groupId>geronimo-spec</groupId>
-         <artifactId>geronimo-spec-jms</artifactId>
-      </dependency>
 
-      <dependency>
-         <groupId>geronimo-spec</groupId>
-         <artifactId>geronimo-spec-jta</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>geronimo-spec</groupId>
-         <artifactId>geronimo-spec-j2ee-management</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>geronimo-spec</groupId>
-         <artifactId>geronimo-spec-j2ee-jacc</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>backport-util-concurrent</groupId>
-         <artifactId>backport-util-concurrent</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>log4j</groupId>
-         <artifactId>log4j</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
-      </dependency>
-      
    </dependencies> 
 
-</model>
+</project>

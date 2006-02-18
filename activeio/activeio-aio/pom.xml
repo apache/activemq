@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+?xml version="1.0" encoding="UTF-8"?>
 <!--
     Copyright 2005-2006 The Apache Software Foundation
    
@@ -18,51 +18,33 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.apache.activeio</groupId>
-    <artifactId>activeio-project</artifactId>
-    <relativePath>../pom.xml</relativePath>
+    <groupId>org.apache.activemq.activeio</groupId>
+    <artifactId>activeio</artifactId>
     <version>3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activeio-aio</artifactId>
-  <packaging>jar</packaging>
   <name>ActiveIO :: AIO</name>
-  <url>http://activeio.org</url>
 
   <dependencies>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activeio</groupId>
+      <groupId>org.apache.activemq.activeio</groupId>
       <artifactId>activeio-core</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.activeio</groupId>
+      <groupId>org.apache.activemq.activeio</groupId>
       <artifactId>activeio-core</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
       <type>test-jar</type>
-    </dependency>
-
-
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>ibmaio</groupId>
+      <groupId>com.ibm.io</groupId>
       <artifactId>ibmaio</artifactId>
-      <version>1.0</version>
+      <version>20040616</version>
     </dependency>
 
   </dependencies>

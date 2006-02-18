@@ -18,9 +18,8 @@
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.apache.activeio</groupId>
-    <artifactId>activeio-project</artifactId>
-    <relativePath>../pom.xml</relativePath>
+    <groupId>org.apache.activemq.activeio</groupId>
+    <artifactId>activeio</artifactId>
     <version>3.0-SNAPSHOT</version>
   </parent>
 
@@ -42,37 +41,22 @@
       <version>0.1.8</version>
     </dependency>
 
-    <!-- Unit Test Dependencies -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
 
-    <!-- Used by journal performance testing tools -->
-    <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee</artifactId>
-      <version>1.4-rc4</version>
-    </dependency>
-
-    <!-- Used in testing -->
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
       <version>1.6.1</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
       <version>2.1</version>
+      <scope>test</scope>
     </dependency>
 
     <!-- Used by xnet GBean code -->
@@ -93,20 +77,5 @@
     </dependency>
     
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>

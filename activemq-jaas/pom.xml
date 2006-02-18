@@ -14,18 +14,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<model>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.apache.activemq</groupId>
-    <artifactId>activemq-project</artifactId>
+    <artifactId>activemq</artifactId>
     <version>4.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-jaas</artifactId>
-  <packaging>jar</packaging>
   <name>ActiveMQ :: JAAS</name>
   <description>A collection of generic JAAS Login Modules</description>
 
@@ -59,38 +59,6 @@
 
   <dependencies>
   
-    <dependency>
-      <groupId>activeio</groupId>
-      <artifactId>activeio</artifactId>
-    </dependency>
-    
-      
-    <dependency>
-      <groupId>backport-util-concurrent</groupId>
-      <artifactId>backport-util-concurrent</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-      
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>axion</groupId>
-      <artifactId>axion</artifactId>
-    </dependency>
-
-
         <dependency>
             <groupId>directory</groupId>
             <artifactId>apacheds-core</artifactId>
@@ -121,6 +89,12 @@
             <groupId>directory-asn1</groupId>
             <artifactId>asn1-ber</artifactId>
             <version>0.3.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-test</groupId>
+                    <artifactId>commons-test</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>directory-asn1</groupId>
@@ -139,11 +113,25 @@
             <artifactId>mina</artifactId>
             <version>0.7.3</version>
         </dependency>
+        <!--
+        <dependency>
+            <groupId>org.apache.directory.server</groupId>
+            <artifactId>apacheds-protocol-kerberos</artifactId>
+            <version>0.7-SNAPSHOT</version>
+        </dependency>
+        -->
         <dependency>
             <groupId>directory-protocols</groupId>
             <artifactId>kerberos-protocol</artifactId>
             <version>0.5</version>
         </dependency>
+        <!--
+        <dependency>
+            <groupId>org.apache.directory.server</groupId>
+            <artifactId>apacheds-protocol-ldap</artifactId>
+            <version>1.0-RC1-SNAPSHOT</version>
+        </dependency>
+        -->
         <dependency>
             <groupId>directory-protocols</groupId>
             <artifactId>ldap-protocol</artifactId>
@@ -152,4 +140,4 @@
 
   </dependencies>
 
-</model>
+</project>

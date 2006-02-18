@@ -1,10 +1,13 @@
-<model>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.activemq</groupId>
-  <artifactId>activemq-project</artifactId>
+  <artifactId>activemq</artifactId>
   <version>4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>ActiveMQ Project</name>
+  <name>ActiveMQ</name>
 
   <ciManagement>
     <system>continuum</system>
@@ -27,49 +30,34 @@
     </mailingList>
   </mailingLists>
 
-  <repositories> 
+  <repositories>
     <repository>
+      <id>apache.snapshots</id>
+      <name>Apache Snapshots Repository</name>
+      <url>http://cvs.apache.org/maven-snapshot-repository</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
-      <id>codehaus</id>
-      <name>Codehaus Repository</name>
-      <url>http://dist.codehaus.org</url>
-      <layout>legacy</layout>
-    </repository>
-    <repository>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <id>codehaus</id>
-      <name>Ibiblio Repository</name>
-      <url>http://www.ibiblio.org/maven</url>
-      <layout>legacy</layout>
-    </repository>
-    <repository>
-      <id>apache</id>
-      <name>Apche Repository</name>
-      <url>http://cvs.apache.org/repository</url>
-      <layout>legacy</layout>
-    </repository>
-    <repository>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <id>central</id>
-      <name>Maven Repository Switchboard</name>
-      <url>http://repo1.maven.org/maven2</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
     </repository>
   </repositories>
    
   <pluginRepositories>
     <pluginRepository>
-      <id>snapshots</id>
+      <id>codehaus.snapshots</id>
       <name>Maven Central Plugins Development Repository</name>
       <url>http://snapshots.maven.codehaus.org/maven2</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
     </pluginRepository>
   </pluginRepositories>
- 
+
   <build>
     <plugins>
       <plugin>
@@ -95,6 +83,17 @@
           <!-- <forkMode>pertest</forkMode> -->
           <forkMode>none</forkMode>
         </configuration>
+      </plugin>
+      <!-- generate the attached tests jar -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -140,12 +139,6 @@
       <!-- =============================== -->
       <!-- Required dependencies -->
       <!-- =============================== -->
-      <dependency>
-        <groupId>activeio</groupId>
-        <artifactId>activeio</artifactId>
-        <version>2.1</version>
-      </dependency>
-      
       <dependency>
         <groupId>backport-util-concurrent</groupId>
         <artifactId>backport-util-concurrent</artifactId>
@@ -202,7 +195,7 @@
       <dependency>
         <groupId>org.apache.xbean</groupId>
         <artifactId>xbean-spring</artifactId>
-        <version>2.2-SNAPSHOT</version>
+        <version>2.2</version>
       </dependency>
  
       <!-- Used to configure the activemq logs -->
@@ -273,7 +266,7 @@
       <dependency>
       <groupId>hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
-        <version>1.7.2.2}</version>
+        <version>1.7.2.2</version>
       </dependency>
       <dependency>
         <groupId>commons-dbcp</groupId>
@@ -483,20 +476,39 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>jmock</groupId>
       <artifactId>jmock</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>jmock</groupId>
       <artifactId>jmock-cglib</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib-full</artifactId>
+      <scope>test</scope>
     </dependency>
  
   </dependencies>
 
-</model>
+  <distributionManagement>
+    <!--
+    <repository>
+      <id>apache.releases</id>
+      <name>Apache Repository</name>
+      <url>scpexe://minotaur.apache.org/www/www.apache.org/dist/maven-repository</url>
+    </repository>
+    -->
+    <snapshotRepository>
+      <id>apache.snapshots</id>
+      <name>Apache Development Repository</name>
+      <url>scpexe://minotaur.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+</project>
