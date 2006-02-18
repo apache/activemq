@@ -88,20 +88,24 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         subscriberDatabase.remove(key);
     }
     
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Throwable {
-        MessageId lastAck = (MessageId) ackDatabase.get(new SubscriptionKey(clientId, subscriptionName));
-        boolean pastLastAck = lastAck==null;        
-        for (Iterator iter = messageTable.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Entry) iter.next();
-            if( pastLastAck ) {
-                Object msg = entry.getValue();
-                if( msg.getClass() == String.class ) {
-                    listener.recoverMessageReference((String) msg);
-                } else {
-                    listener.recoverMessage((Message) msg);
+    public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
+                    throws Throwable{
+        MessageId lastAck=(MessageId) ackDatabase.get(new SubscriptionKey(clientId,subscriptionName));
+        boolean pastLastAck=lastAck==null;
+        // the message table is a synchronizedMap - so just have to synchronize here
+        synchronized(messageTable){
+            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
+                Map.Entry entry=(Entry) iter.next();
+                if(pastLastAck){
+                    Object msg=entry.getValue();
+                    if(msg.getClass()==String.class){
+                        listener.recoverMessageReference((String) msg);
+                    }else{
+                        listener.recoverMessage((Message) msg);
+                    }
+                }else{
+                    pastLastAck=entry.getKey().equals(lastAck);
                 }
-            } else {
-                pastLastAck = entry.getKey().equals(lastAck);
             }
         }
     }
