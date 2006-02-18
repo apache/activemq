@@ -31,6 +31,7 @@ import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -77,7 +78,7 @@ public class FailoverTransport implements CompositeTransport {
     private long reconnectDelay = initialReconnectDelay;
     private Exception connectionFailure;
 
-    private final TransportListener myTransportListener = new TransportListener() {
+    private final TransportListener myTransportListener = new DefaultTransportListener() {
         public void onCommand(Command command) {
             if (command == null) {
                 return;
@@ -152,6 +153,9 @@ public class FailoverTransport implements CompositeTransport {
                                     connectedTransport = t;
                                     reconnectMutex.notifyAll();
                                     connectFailures = 0;
+                                    if (transportListener != null){
+                                        transportListener.transportResumed();
+                                    }
                                     return false;
                                 }
                                 catch (Exception e) {
@@ -191,6 +195,9 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private void handleTransportFailure(IOException e) throws InterruptedException {
+        if (transportListener != null){
+            transportListener.transportInterupted();
+        }
         synchronized (reconnectMutex) {
             log.debug("Transport failed, starting up reconnect task", e);
             if (connectedTransport != null) {

@@ -31,6 +31,7 @@ import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -91,7 +92,7 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
-    class FanoutTransportHandler implements TransportListener {
+    class FanoutTransportHandler extends DefaultTransportListener {
         
         private final URI uri;
         private Transport transport;

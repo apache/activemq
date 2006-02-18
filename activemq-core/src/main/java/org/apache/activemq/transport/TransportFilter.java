@@ -25,7 +25,7 @@ import org.apache.activemq.command.Response;
 /**
  * @version $Revision: 1.5 $
  */
-public class TransportFilter implements Transport, TransportListener {
+public class TransportFilter extends DefaultTransportListener implements Transport {
 
     final protected Transport next;
     protected TransportListener commandListener;

@@ -17,17 +17,16 @@
 package org.apache.activemq.proxy;
 
 import java.io.IOException;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 class ProxyConnection implements Service {
@@ -59,7 +58,7 @@ class ProxyConnection implements Service {
             return;            
         }
             
-        this.localTransport.setTransportListener(new TransportListener() {
+        this.localTransport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Command command) {
                 boolean shutdown=false;
                 if( command.getClass() == ShutdownInfo.class ) {
@@ -81,7 +80,7 @@ class ProxyConnection implements Service {
             }
         });
         
-        this.remoteTransport.setTransportListener(new TransportListener() {
+        this.remoteTransport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Command command) {
                 try {
                     localTransport.oneway(command);

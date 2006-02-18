@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
@@ -29,7 +30,7 @@ import org.apache.activemq.transport.TransportListener;
 /**
  * @version $Revision: 1.5 $
  */
-public class MockTransport implements Transport, TransportListener {
+public class MockTransport extends DefaultTransportListener implements Transport {
 
     protected Transport next;
     protected TransportListener commandListener;
