@@ -72,12 +72,15 @@ public class MemoryMessageStore implements MessageStore {
     }
 
     public void recover(MessageRecoveryListener listener) throws Throwable {
-        for (Iterator iter = messageTable.values().iterator(); iter.hasNext();) {
-            Object msg = (Object) iter.next();
-            if( msg.getClass() == String.class ) {
-                listener.recoverMessageReference((String) msg);
-            } else {
-                listener.recoverMessage((Message) msg);
+        // the message table is a synchronizedMap - so just have to synchronize here
+        synchronized(messageTable){
+            for(Iterator iter=messageTable.values().iterator();iter.hasNext();){
+                Object msg=(Object) iter.next();
+                if(msg.getClass()==String.class){
+                    listener.recoverMessageReference((String) msg);
+                }else{
+                    listener.recoverMessage((Message) msg);
+                }
             }
         }
     }
