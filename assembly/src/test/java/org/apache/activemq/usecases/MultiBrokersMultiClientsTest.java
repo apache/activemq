@@ -29,7 +29,7 @@ import java.net.URI;
  * @version $Revision: 1.1.1.1 $
  */
 public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport {
-    public static final int BROKER_COUNT   = 5;  // number of brokers to network
+    public static final int BROKER_COUNT   = 2;  // number of brokers to network
     public static final int CONSUMER_COUNT = 3;  // consumers per broker
     public static final int PRODUCER_COUNT = 3;  // producers per broker
     public static final int MESSAGE_COUNT  = 10; // messages per producer
@@ -50,6 +50,8 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
                 consumerMap.put("Consumer:" + i + ":" + j, createConsumer("Broker" + i, dest));
             }
         }
+        //wait for consumers to get propagated
+        Thread.sleep(2000);
 
         // Send messages
         for (int i=1; i<=BROKER_COUNT; i++) {
@@ -82,6 +84,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
                 consumerMap.put("Consumer:" + i + ":" + j, createConsumer("Broker" + i, dest));
             }
         }
+        Thread.sleep(2000);
 
         // Send messages
         for (int i=1; i<=BROKER_COUNT; i++) {
