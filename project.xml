@@ -45,7 +45,7 @@
     <issueTrackingUrl>ihttps://jira.logicblaze.com/jira/browse/AMQ</issueTrackingUrl>
 
     <siteAddress>http://incubator.apache.org/activemq</siteAddress>
-    <siteDirectory>/www/geronimo.apache.org.apache.servicemix/${pom.artifactId}</siteDirectory>
+    <siteDirectory>/www/geronimo.apache.org.apache.activemq/${pom.artifactId}</siteDirectory>
     <distributionSite>geronimo.apache.org</distributionSite>
     <distributionDirectory>/www/geronimo.apache.org/builds</distributionDirectory>
 
