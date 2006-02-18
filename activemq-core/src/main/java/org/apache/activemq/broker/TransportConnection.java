@@ -24,6 +24,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.logging.Log;
@@ -55,7 +56,7 @@ public class TransportConnection extends AbstractConnection {
         super(connector, broker, taskRunnerFactory);
         connector.setBrokerName(broker.getBrokerName());
         this.transport = transport;
-        this.transport.setTransportListener(new TransportListener() {
+        this.transport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Command command) {
                 Response response = service(command);
                 if( response!=null ) {

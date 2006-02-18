@@ -442,6 +442,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processRemoveSession(SessionId id) throws Throwable {
+        
         ConnectionId connectionId = id.getParentId();
         
         ConnectionState cs = lookupConnectionState(connectionId);
@@ -491,22 +492,37 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processRemoveConnection(ConnectionId id) throws Throwable {
+    public Response processRemoveConnection(ConnectionId id)  {
         
         ConnectionState cs = lookupConnectionState(id);
         
         // Cascade the connection stop to the sessions.
         for (Iterator iter = cs.getSessionIds().iterator(); iter.hasNext();) {
-            processRemoveSession((SessionId) iter.next());
+           
+                SessionId sessionId = (SessionId) iter.next();
+                try{
+                processRemoveSession(sessionId);
+            }catch(Throwable e){
+                serviceLog.warn("Failed to remove session " + sessionId,e);
+            }
         }
         
         // Cascade the connection stop to temp destinations.
         for (Iterator iter = cs.getTempDesinations().iterator(); iter.hasNext();) {
-            broker.removeDestination(cs.getContext(), (ActiveMQDestination) iter.next(), 0);
+            ActiveMQDestination dest = (ActiveMQDestination) iter.next();
+            try{
+                broker.removeDestination(cs.getContext(), dest, 0);
+            }catch(Throwable e){
+               serviceLog.warn("Failed to remove tmp destination " + dest,e);
+            }
             iter.remove();
         }
         
-        broker.removeConnection(cs.getContext(), cs.getInfo(), null);
+        try{
+            broker.removeConnection(cs.getContext(), cs.getInfo(), null);
+        }catch(Throwable e){
+            serviceLog.warn("Failed to remove connection " +  cs.getInfo(),e);
+        }
         connectionStates.remove(id);
         
         return null;

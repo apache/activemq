@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.broker.ft;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-
+import java.io.IOException;
+import java.net.URI;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -31,17 +31,15 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
-import java.net.URI;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Used by a Slave Broker to Connect to the Master
@@ -83,7 +81,7 @@ public class MasterConnector implements Service{
         remoteBroker=TransportFactory.connect(remoteURI);
         log.info("Starting a network connection between "+localBroker+" and "+remoteBroker+" has been established.");
 
-        localBroker.setTransportListener(new TransportListener(){
+        localBroker.setTransportListener(new DefaultTransportListener(){
             public void onCommand(Command command){
             }
             public void onException(IOException error){
@@ -93,7 +91,7 @@ public class MasterConnector implements Service{
             }
         });
 
-        remoteBroker.setTransportListener(new TransportListener(){
+        remoteBroker.setTransportListener(new DefaultTransportListener(){
             public void onCommand(Command command){
                 if( started.get() ) {
                     serviceRemoteCommand(command);

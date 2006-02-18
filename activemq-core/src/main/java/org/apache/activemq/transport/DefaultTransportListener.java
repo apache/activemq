@@ -25,30 +25,34 @@ import org.apache.activemq.command.Command;
  *
  * @version $Revision$
  */
-public interface TransportListener {
+public class DefaultTransportListener implements TransportListener {
     
     /**
      * called to process a command
      * @param command
      */
-    public void onCommand(Command command);
+    public void onCommand(Command command){
+    }
     /**
      * An unrecoverable exception has occured on the transport
      * @param error
      */
-    public void onException(IOException error);
+    public void onException(IOException error){
+    }
     
     /**
      * The transport has suffered an interuption from which it hopes to recover
      *
      */
-    public void transportInterupted();
+    public void transportInterupted(){
+    }
     
     
     /**
      * The transport has resumed after an interuption
      *
      */
-    public void transportResumed();
+    public void transportResumed(){
+    }
     
 }
