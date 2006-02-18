@@ -32,6 +32,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
@@ -80,7 +81,7 @@ public class ForwardingBridge implements Bridge {
     public void start() throws Exception {
         log.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
 
-        localBroker.setTransportListener(new TransportListener(){
+        localBroker.setTransportListener(new DefaultTransportListener(){
             public void onCommand(Command command) {
                 serviceLocalCommand(command);
             }
@@ -89,7 +90,7 @@ public class ForwardingBridge implements Bridge {
             }
         });
         
-        remoteBroker.setTransportListener(new TransportListener(){
+        remoteBroker.setTransportListener(new DefaultTransportListener(){
             public void onCommand(Command command) {
                 serviceRemoteCommand(command);
             }
@@ -192,7 +193,7 @@ public class ForwardingBridge implements Bridge {
                     }
                 }
             } else {
-                System.out.println("Unexpected remote command: "+command);
+                log.warn("Unexpected remote command: "+command);
             }
         } catch (IOException e) {
             serviceLocalException(e);

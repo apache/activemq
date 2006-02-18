@@ -22,6 +22,8 @@ import java.net.URISyntaxException;
 import java.util.Set;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -49,7 +51,14 @@ public class NetworkConnector implements Service, DiscoveryListener {
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
     private Set durableDestinations;
     private boolean failover=true;
-    private boolean decreaseNetowrkConsumerPriority;
+    private ActiveMQDestination[] excludedDestinations;
+    private ActiveMQDestination[] dynamicallyIncludedDestinations;
+    private ActiveMQDestination[] staticallyIncludedDestinations;
+    private boolean dynamicOnly = false;
+    private boolean conduitSubscriptions = true;
+    private boolean decreaseNetworkConsumerPriority;
+    private int networkTTL = 1;
+    
     
     public NetworkConnector(){
         
@@ -182,24 +191,6 @@ public class NetworkConnector implements Service, DiscoveryListener {
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
     }    
 
-    // Implementation methods
-    // -------------------------------------------------------------------------
-    protected Bridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
-        DemandForwardingBridge result =  new DemandForwardingBridge(localTransport, remoteTransport) {
-            protected void serviceRemoteException(IOException error) {
-                super.serviceRemoteException(error);
-                try {
-                    // Notify the discovery agent that the remote broker failed.
-                    discoveryAgent.serviceFailed(event);
-                } catch (IOException e) {
-                }
-            }
-        };
-        result.setDecreaseNetowrkConsumerPriority(isDecreaseNetowrkConsumerPriority());
-        result.setLocalBrokerName(brokerName);
-        return result;
-    }
-
     
 
     public boolean isFailover() {
@@ -243,13 +234,167 @@ public class NetworkConnector implements Service, DiscoveryListener {
     }
 
 
-    public boolean isDecreaseNetowrkConsumerPriority() {
-        return decreaseNetowrkConsumerPriority;
+    /**
+     * @return Returns the dynamicallyIncludedDestinations.
+     */
+    public ActiveMQDestination[] getDynamicallyIncludedDestinations(){
+        return dynamicallyIncludedDestinations;
     }
 
 
-    public void setDecreaseNetowrkConsumerPriority(boolean decreaseNetowrkConsumerPriority) {
-        this.decreaseNetowrkConsumerPriority = decreaseNetowrkConsumerPriority;
+    /**
+     * @param dynamicallyIncludedDestinations The dynamicallyIncludedDestinations to set.
+     */
+    public void setDynamicallyIncludedDestinations(ActiveMQDestination[] dynamicallyIncludedDestinations){
+        this.dynamicallyIncludedDestinations=dynamicallyIncludedDestinations;
     }
+
+
+    /**
+     * @return Returns the dynamicOnly.
+     */
+    public boolean isDynamicOnly(){
+        return dynamicOnly;
+    }
+
+
+    /**
+     * @param dynamicOnly The dynamicOnly to set.
+     */
+    public void setDynamicOnly(boolean dynamicOnly){
+        this.dynamicOnly=dynamicOnly;
+    }
+    
+    /**
+     * @return Returns the conduitSubscriptions.
+     */
+    public boolean isConduitSubscriptions(){
+        return conduitSubscriptions;
+    }
+
+
+    /**
+     * @param conduitSubscriptions The conduitSubscriptions to set.
+     */
+    public void setConduitSubscriptions(boolean conduitSubscriptions){
+        this.conduitSubscriptions=conduitSubscriptions;
+    }
+    
+    /**
+     * @return Returns the decreaseNetworkConsumerPriority.
+     */
+    public boolean isDecreaseNetworkConsumerPriority(){
+        return decreaseNetworkConsumerPriority;
+    }
+
+    /**
+     * @param decreaseNetworkConsumerPriority The decreaseNetworkConsumerPriority to set.
+     */
+    public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority){
+        this.decreaseNetworkConsumerPriority=decreaseNetworkConsumerPriority;
+    }
+    
+    /**
+     * @return Returns the networkTTL.
+     */
+    public int getNetworkTTL(){
+        return networkTTL;
+    }
+
+    /**
+     * @param networkTTL The networkTTL to set.
+     */
+    public void setNetworkTTL(int networkTTL){
+        this.networkTTL=networkTTL;
+    }
+
+
+    /**
+     * @return Returns the excludedDestinations.
+     */
+    public ActiveMQDestination[] getExcludedDestinations(){
+        return excludedDestinations;
+    }
+
+
+    /**
+     * @param excludedDestinations The excludedDestinations to set.
+     */
+    public void setExcludedDestinations(ActiveMQDestination[] exludedDestinations){
+        this.excludedDestinations=exludedDestinations;
+    }
+
+
+    /**
+     * @return Returns the staticallyIncludedDestinations.
+     */
+    public ActiveMQDestination[] getStaticallyIncludedDestinations(){
+        return staticallyIncludedDestinations;
+    }
+
+
+    /**
+     * @param staticallyIncludedDestinations The staticallyIncludedDestinations to set.
+     */
+    public void setStaticallyIncludedDestinations(ActiveMQDestination[] staticallyIncludedDestinations){
+        this.staticallyIncludedDestinations=staticallyIncludedDestinations;
+    }
+    
+   
+
+    
+    // Implementation methods
+    // -------------------------------------------------------------------------
+    protected Bridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
+        DemandForwardingBridge result = null;
+        if (conduitSubscriptions){
+            if (dynamicOnly){
+                result = new ConduitBridge(localTransport, remoteTransport) {
+                    protected void serviceRemoteException(IOException error) {
+                        super.serviceRemoteException(error);
+                        try {
+                            // Notify the discovery agent that the remote broker failed.
+                            discoveryAgent.serviceFailed(event);
+                        } catch (IOException e) {
+                        }
+                    }
+                };
+            }else {
+                result = new DurableConduitBridge(localTransport, remoteTransport) {
+                    protected void serviceRemoteException(IOException error) {
+                        super.serviceRemoteException(error);
+                        try {
+                            // Notify the discovery agent that the remote broker failed.
+                            discoveryAgent.serviceFailed(event);
+                        } catch (IOException e) {
+                        }
+                    }
+                };
+            }
+        }else {
+         result = new DemandForwardingBridge(localTransport, remoteTransport) {
+            protected void serviceRemoteException(IOException error) {
+                super.serviceRemoteException(error);
+                try {
+                    // Notify the discovery agent that the remote broker failed.
+                    discoveryAgent.serviceFailed(event);
+                } catch (IOException e) {
+                }
+            }
+        };
+        }
+        result.setLocalBrokerName(brokerName);
+        result.setNetworkTTL(getNetworkTTL());
+        result.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
+        result.setDynamicallyIncludedDestinations(getDynamicallyIncludedDestinations());
+        result.setExcludedDestinations(getExcludedDestinations());
+        result.setStaticallyIncludedDestinations(getStaticallyIncludedDestinations());
+        if (durableDestinations != null){
+            ActiveMQDestination[] dest = new ActiveMQDestination[durableDestinations.size()];
+            dest = (ActiveMQDestination[]) durableDestinations.toArray(dest);
+            result.setDurableDestinations(dest);
+        }
+        return result;
+    } 
 
 }
