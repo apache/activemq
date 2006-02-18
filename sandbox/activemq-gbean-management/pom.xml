@@ -1,14 +1,13 @@
-<model>
+<project>
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>activemq</groupId>
-    <artifactId>activemq</artifactId>
+    <groupId>org.apache.activemq.sandbox</groupId>
+    <artifactId>activemq-sandbox</artifactId>
     <version>4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-gbean-management</artifactId>
-  <packaging>jar</packaging>
   <name>ActiveMQ :: GBean Interfaces</name>
 
     <build>
@@ -21,7 +20,6 @@
          <groupId>geronimo</groupId>
          <artifactId>geronimo-management</artifactId>
       </dependency>
-      
       
       <dependency>
          <groupId>geronimo-spec</groupId>
@@ -53,11 +51,6 @@
          <artifactId>log4j</artifactId>
       </dependency>
 
-      <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
-      </dependency>
-      
    </dependencies> 
 
-</model>
+</project>

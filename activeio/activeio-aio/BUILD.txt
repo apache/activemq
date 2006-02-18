@@ -8,7 +8,7 @@ download the package from ibm here;
 https://www7b.software.ibm.com/dl/AW-0H8/AW-0H8-p 
 
 unpack the zip and install the file like this; 
-mvn install:install-file -Dfile=./ibmaio.jar -DartifactId=ibmaio -DgroupId=ibmaio -Dversion=1.0 -Dpackaging=jar 
+mvn install:install-file -Dfile=./ibmaio.jar -DartifactId=ibmaio -DgroupId=com.ibm.io -Dversion=20040616 -Dpackaging=jar 
 
 You should now be able to build this module with maven using:
 

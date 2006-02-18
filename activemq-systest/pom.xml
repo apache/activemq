@@ -14,14 +14,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<model>
+<project>
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.apache.activemq</groupId>
-    <artifactId>activemq-project</artifactId>
+    <artifactId>activemq</artifactId>
     <version>4.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-systest</artifactId>
@@ -30,7 +29,7 @@
   <description>System Testing Framework for ActiveMQ</description>
   
   <dependencies>
-  
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -40,35 +39,9 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>backport-util-concurrent</groupId>
-      <artifactId>backport-util-concurrent</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>activeio</groupId>
-      <artifactId>activeio</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-jms</artifactId>
-    </dependency>    
-    <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee-connector</artifactId>
-    </dependency>
- 
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
@@ -96,7 +69,7 @@
       <groupId>activemq</groupId>
       <artifactId>jmdns</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
@@ -113,4 +86,4 @@
 
   </dependencies>
 
-</model>
+</project>
