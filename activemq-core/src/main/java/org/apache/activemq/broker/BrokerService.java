@@ -356,9 +356,7 @@ public class BrokerService implements Service {
         }
         log.info("ActiveMQ Message Broker (" + getBrokerName() + ") is shutting down");
         BrokerRegistry.getInstance().unbind(getBrokerName());
-        //remove any VMTransports connected
-        VMTransportFactory.stopped(getBrokerName());
-
+        
         removeShutdownHook();
 
         ServiceStopper stopper = new ServiceStopper();
@@ -366,12 +364,7 @@ public class BrokerService implements Service {
             masterConnector.stop();
         }
 
-        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            
-            TransportConnector connector = (TransportConnector) iter.next();
-            stopper.stop(connector);
-        }
-
+        
         for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
             NetworkConnector connector = (NetworkConnector) iter.next();
             stopper.stop(connector);
@@ -386,6 +379,16 @@ public class BrokerService implements Service {
             JmsConnector connector = (JmsConnector) iter.next();
             stopper.stop(connector);
         }
+        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
+            
+            TransportConnector connector = (TransportConnector) iter.next();
+            stopper.stop(connector);
+        }
+
+        
+        //remove any VMTransports connected
+        VMTransportFactory.stopped(getBrokerName());
+
 
 
         stopper.stop(getPersistenceAdapter());
