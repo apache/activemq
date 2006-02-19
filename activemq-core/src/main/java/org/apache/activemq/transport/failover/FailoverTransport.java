@@ -305,7 +305,7 @@ public class FailoverTransport implements CompositeTransport {
 
             synchronized (reconnectMutex) {
                 // Keep trying until the message is sent.
-                for (int i = 0;; i++) {
+                for (int i = 0;!disposed; i++) {
                     try {
 
                         // Wait for transport to be connected.
