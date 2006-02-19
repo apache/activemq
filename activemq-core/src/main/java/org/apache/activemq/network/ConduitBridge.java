@@ -45,6 +45,14 @@ public class ConduitBridge extends DemandForwardingBridge{
     }
     
     protected DemandSubscription createDemandSubscription(ConsumerInfo info){
+        
+        if (addToAlreadyInterestedConsumers(info)){
+            return null; //don't want this subscription added
+        }
+        return doCreateDemandSubscription(info);
+    }
+    
+    protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info){
         //search through existing subscriptions and see if we have a match
         boolean matched = false;
         DestinationFilter filter=DestinationFilter.parseFilter(info.getDestination());
@@ -57,18 +65,7 @@ public class ConduitBridge extends DemandForwardingBridge{
                 //continue - we want interest to any existing DemandSubscriptions
             }
         }
-        if (matched){
-            return null; //don't want this subscription added
-        }
-        //not matched so create a new one
-        //but first, if it's durable - changed set the
-        //ConsumerId here - so it won't be removed if the
-        //durable subscriber goes away on the other end
-        if (info.isDurable() || (info.getDestination().isQueue() && !info.getDestination().isTemporary())){
-            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),consumerIdGenerator
-                            .getNextSequenceId()));
-        }
-        return super.createDemandSubscription(info);
+        return matched;
     }
     
     protected void removeDemandSubscription(ConsumerId id) throws IOException{

@@ -40,7 +40,6 @@ public class DemandSubscription{
         remoteInfo=info;
         localInfo=info.copy();
         localInfo.setBrokerPath(info.getBrokerPath());
-        localInfo.setNetworkSubscription(true);
         remoteSubsIds.add(info.getConsumerId());
     } 
 

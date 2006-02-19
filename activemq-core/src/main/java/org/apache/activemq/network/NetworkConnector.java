@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.activemq.Service;
@@ -82,6 +83,10 @@ public class NetworkConnector implements Service, DiscoveryListener {
 
     public void stop() throws Exception {
         this.discoveryAgent.stop();
+        for (Iterator i = bridges.values().iterator();i.hasNext();){
+            Bridge bridge = (Bridge)i.next();
+            bridge.stop();
+        }
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
