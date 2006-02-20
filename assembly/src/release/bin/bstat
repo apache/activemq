@@ -139,14 +139,20 @@ BROKER_NAME=$1
 if [ -z "$BROKER_NAME" ] ; then
     BROKER_NAME="*"
 fi
+shift
+
+ACTIVEMQ_CMD_LINE_ARGS=$@
+if [ -z "$ACTIVEMQ_CMD_LINE_ARGS" ] ; then
+    ACTIVEMQ_CMD_LINE_ARGS=""
+fi 
 
 # Select all components that belongs to the specified broker except advisory topics
 # and display the specified attributes
 QUERY_PARAM="--objname Type=*,BrokerName=${BROKER_NAME} -xQTopic=ActiveMQ.Advisory.* --view Type,BrokerName,Destination,ConnectorName,EnqueueCount,DequeueCount,TotalEnqueueCount,TotalDequeueCount,Messages,TotalMessages,ConsumerCount,TotalConsumerCount,DispatchQueueSize"
 
 if [ -n "$CYGHOME" ]; then
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dcygwin.user.home="$CYGHOME" -jar ${ACTIVEMQ_HOME}/bin/run.jar $ACTIVEMQ_TASK $QUERY_PARAM
+    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dcygwin.user.home="$CYGHOME" -jar ${ACTIVEMQ_HOME}/bin/run.jar $ACTIVEMQ_TASK $QUERY_PARAM $ACTIVEMQ_CMD_LINE_ARGS
 else
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -jar ${ACTIVEMQ_HOME}/bin/run.jar $ACTIVEMQ_TASK $QUERY_PARAM
+    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -jar ${ACTIVEMQ_HOME}/bin/run.jar $ACTIVEMQ_TASK $QUERY_PARAM $ACTIVEMQ_CMD_LINE_ARGS
 fi
 

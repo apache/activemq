@@ -28,17 +28,22 @@ set DEFAULT_ACTIVEMQ_HOME=%~dp0..
 if "%ACTIVEMQ_HOME%"=="" set ACTIVEMQ_HOME=%DEFAULT_ACTIVEMQ_HOME%
 set DEFAULT_ACTIVEMQ_HOME=
 
+rem Assume first parameter is broker name
+set BROKER_NAME=%1
+if "%BROKER_NAME%" == "" set BROKER_NAME=*
+shift
+
 rem Slurp the command line arguments. This loop allows for an unlimited number
 rem of arguments (up to the command line limit, anyway).
 
-rem set ACTIVEMQ_CMD_LINE_ARGS=%1
-rem if ""%1""=="""" goto doneStart
-rem shift
-rem :setupArgs
-rem if ""%1""=="""" goto doneStart
-rem set ACTIVEMQ_CMD_LINE_ARGS=%ACTIVEMQ_CMD_LINE_ARGS% %1
-rem shift
-rem goto setupArgs
+set ACTIVEMQ_CMD_LINE_ARGS=%1
+if ""%1""=="""" goto doneStart
+shift
+:setupArgs
+if ""%1""=="""" goto doneStart
+set ACTIVEMQ_CMD_LINE_ARGS=%ACTIVEMQ_CMD_LINE_ARGS% %1
+shift
+goto setupArgs
 
 rem This label provides a place for the argument list loop to break out 
 rem and for NT handling to skip to.
@@ -100,14 +105,11 @@ set LOCALCLASSPATH=%ACTIVEMQ_HOME%\conf;%LOCALCLASSPATH%
 
 set ACTIVEMQ_TASK="query"
 
-set BROKER_NAME=%1
-if "%BROKER_NAME%" == "" set BROKER_NAME=*
-
 rem Select all components that belongs to the specified broker except advisory topics
 rem and display the specified attributes
 set QUERY_PARAM=--objname "Type=*,BrokerName=%BROKER_NAME%" "-xQTopic=ActiveMQ.Advisory.*" --view "Type,BrokerName,Destination,ConnectorName,EnqueueCount,DequeueCount,TotalEnqueueCount,TotalDequeueCount,Messages,TotalMessages,ConsumerCount,TotalConsumerCount,DispatchQueueSize"
 
-"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_TASK% %QUERY_PARAM%
+"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_TASK% %QUERY_PARAM% %ACTIVEMQ_CMD_LINE_ARGS%
 
 
 goto end
