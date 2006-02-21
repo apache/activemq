@@ -97,7 +97,7 @@ for (pkg in jclass.importedPackages) {
 }
 
 def baseClass = "DataFileGeneratorTestSupport"
-if (!jclass.superclass.simpleName.equals("JNDIBaseStorable") && !jclass.superclass.simpleName.equals("Object") ) {
+if (!jclass.superclass.simpleName.equals("JNDIBaseStorable") && !jclass.superclass.simpleName.equals("DataStructureSupport") && !jclass.superclass.simpleName.equals("Object") ) {
    baseClass = jclass.superclass.simpleName + "Test";
    if (isBaseAbstract) 
        baseClass += "Support"
@@ -147,6 +147,7 @@ for (property in properties) {
     def type = property.type.simpleName
     def cached = isCachedProperty(property);
     def propertyName = property.simpleName;
+    if (testSize == "-1") continue
     
     out << "        "
     switch (type) {

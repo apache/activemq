@@ -90,7 +90,7 @@ for (pkg in jclass.importedPackages) {
 }
 
 def baseClass = "DataStreamMarshaller"
-if (!jclass.superclass.simpleName.equals("JNDIBaseStorable") && !jclass.superclass.simpleName.equals("Object") ) {
+if (!jclass.superclass.simpleName.equals("JNDIBaseStorable") && !jclass.superclass.simpleName.equals("DataStructureSupport") && !jclass.superclass.simpleName.equals("Object") ) {
    baseClass = jclass.superclass.simpleName + "Marshaller";
 }
 
