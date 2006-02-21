@@ -18,12 +18,13 @@ package org.apache.activemq.command;
 
 import org.apache.activemq.util.IntrospectionSupport;
 
+
 /**
  * 
  * @openwire:marshaller
  * @version $Revision: 1.11 $
  */
-abstract public class BaseCommand implements Command {
+abstract public class BaseCommand extends DataStructureSupport implements Command {
 
     protected short commandId;
     protected boolean responseRequired;
@@ -32,42 +33,6 @@ abstract public class BaseCommand implements Command {
         copy.commandId = commandId;
         copy.responseRequired = responseRequired;
     }    
-
-    public boolean isWireFormatInfo() {
-        return false;
-    }
-
-    public boolean isBrokerInfo() {
-        return false;
-    }
-
-    public boolean isResponse() {
-        return false;
-    }
-    
-    public boolean isMessageDispatch() {
-        return false;
-    }
-    
-    public boolean isMessage() {
-        return false;
-    }
-    
-    public boolean isMarshallAware() {
-        return false;
-    }
-    
-    public boolean isMessageAck() {
-        return false;
-    }
-    
-    public boolean isMessageDispatchNotification(){
-        return false;
-    }
-    
-    public boolean isShutdownInfo(){
-        return false;
-    }
 
     /**
      * @openwire:property version=1
@@ -94,5 +59,40 @@ abstract public class BaseCommand implements Command {
     public String toString() {
         return IntrospectionSupport.toString(this, BaseCommand.class);
     }
+    
+    public boolean isWireFormatInfo() {
+        return false;
+    }
 
+    public boolean isBrokerInfo() {
+        return false;
+    }
+
+    public boolean isResponse() {
+        return false;
+    }
+
+    public boolean isMessageDispatch() {
+        return false;
+    }
+
+    public boolean isMessage() {
+        return false;
+    }
+
+    public boolean isMarshallAware() {
+        return false;
+    }
+
+    public boolean isMessageAck() {
+        return false;
+    }
+
+    public boolean isMessageDispatchNotification() {
+        return false;
+    }
+
+    public boolean isShutdownInfo() {
+        return false;
+    }
 }

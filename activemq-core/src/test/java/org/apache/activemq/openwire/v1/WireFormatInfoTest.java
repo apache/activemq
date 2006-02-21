@@ -33,7 +33,7 @@ import org.apache.activemq.command.*;
  *        under src/gram/script and then use maven openwire:generate to regenerate 
  *        this file.
  *
- * @version $Revision$
+ * @version $Revision: $
  */
 public class WireFormatInfoTest extends DataFileGeneratorTestSupport {
 
@@ -50,7 +50,6 @@ public class WireFormatInfoTest extends DataFileGeneratorTestSupport {
     protected void populateObject(Object object) throws Exception {
     		super.populateObject(object);
     		WireFormatInfo info = (WireFormatInfo) object;
-        info.setMagic("Magic:1".getBytes());
         info.setVersion(1);
         info.setOptions(2);
 

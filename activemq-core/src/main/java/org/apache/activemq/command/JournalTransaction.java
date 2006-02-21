@@ -20,7 +20,7 @@ package org.apache.activemq.command;
 /**
  * @openwire:marshaller code="54"
  */
-public class JournalTransaction implements DataStructure {
+public class JournalTransaction extends DataStructureSupport implements DataStructure {
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.JOURNAL_TRANSACTION;
 

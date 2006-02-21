@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class JournalQueueAckMarshaller extends org.apache.activemq.openwire.DataStreamMarshaller {
+public class JournalQueueAckMarshaller extends DataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal

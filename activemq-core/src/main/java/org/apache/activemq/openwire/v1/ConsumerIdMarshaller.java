@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class ConsumerIdMarshaller extends org.apache.activemq.openwire.DataStreamMarshaller {
+public class ConsumerIdMarshaller extends DataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal

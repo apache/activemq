@@ -48,7 +48,7 @@ public class WireFormatInfo implements Command {
     }
 
     /**
-     * @openwire:property version=1 size=8
+     * @openwire:property version=1 size=8 testSize=-1
      */
     public byte[] getMagic() {
         return magic;

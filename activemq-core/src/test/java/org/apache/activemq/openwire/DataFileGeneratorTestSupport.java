@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.openwire;
 
+import org.activeio.ByteSequence;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -34,7 +35,11 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.openwire.v1.ActiveMQTextMessageTest;
 import org.apache.activemq.openwire.v1.BrokerInfoTest;
 import org.apache.activemq.openwire.v1.MessageAckTest;
+import org.apache.activemq.test.TestSupport;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -43,17 +48,23 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
+import java.util.*;
 
 import junit.framework.TestCase;
 
-public abstract class DataFileGeneratorTestSupport extends TestCase {
+public abstract class DataFileGeneratorTestSupport extends TestSupport {
+
+    protected static final Object[] EMPTY_ARGUMENTS = {};
+    private static Throwable singletonException = new Exception("shared exception");
 
     static final File moduleBaseDir;
     static final File controlDir;
     static final File classFileDir;
-    private static Throwable singletonException = new Exception("shared exception");
 
     static {
         File basedir = null;
@@ -77,7 +88,7 @@ public abstract class DataFileGeneratorTestSupport extends TestCase {
         generateControlFile();
         assertControlFileIsEqual();
     }
-    
+
     public void testGenerateAndReParsingIsTheSame() throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         DataOutputStream ds = new DataOutputStream(buffer);
@@ -85,17 +96,106 @@ public abstract class DataFileGeneratorTestSupport extends TestCase {
         System.out.println("Created: " + expected);
         openWireformat.marshal(expected, ds);
         ds.close();
-        
+
         // now lets try parse it back again
         ByteArrayInputStream in = new ByteArrayInputStream(buffer.toByteArray());
         DataInputStream dis = new DataInputStream(in);
         Object actual = openWireformat.unmarshal(dis);
-        
+
         System.out.println("Parsed: " + actual);
-        
-        assertEquals("Objects should be equal", expected.toString(), actual.toString());
-        
-        // TODO generate a property based equality method?
+
+        assertBeansEqual("", new HashSet(), expected, actual);
+    }
+
+    protected void assertBeansEqual(String message, Set comparedObjects, Object expected, Object actual) throws Exception {
+        assertNotNull("Actual object should be equal to: " + expected + " but was null", actual);
+        if (comparedObjects.contains(expected)) {
+            return;
+        }
+        comparedObjects.add(expected);
+        Class type = expected.getClass();
+        assertEquals("Should be of same type", type, actual.getClass());
+        BeanInfo beanInfo = Introspector.getBeanInfo(type);
+        PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
+        for (int i = 0; i < descriptors.length; i++) {
+            PropertyDescriptor descriptor = descriptors[i];
+            Method method = descriptor.getReadMethod();
+            if (method != null) {
+                String name = descriptor.getName();
+                Object expectedValue = null;
+                Object actualValue = null;
+                try {
+                    expectedValue = method.invoke(expected, EMPTY_ARGUMENTS);
+                    actualValue = method.invoke(actual, EMPTY_ARGUMENTS);
+                }
+                catch (Exception e) {
+                    System.out.println("Failed to access property: " + name);
+                }
+                assertPropertyValuesEqual(message + name, comparedObjects, expectedValue, actualValue);
+            }
+        }
+    }
+
+    protected void assertPropertyValuesEqual(String name, Set comparedObjects, Object expectedValue, Object actualValue) throws Exception {
+        String message = "Property " + name + " not equal";
+        if (expectedValue == null) {
+            assertNull("Property " + name + " should be null", actualValue);
+        }
+        else if (expectedValue instanceof Object[]) {
+            assertArrayEqual(message, comparedObjects, (Object[]) expectedValue, (Object[]) actualValue);
+        }
+        else if (expectedValue.getClass().isArray()) {
+            assertPrimitiveArrayEqual(message, comparedObjects, expectedValue, actualValue);
+        }
+        else {
+            if (expectedValue instanceof Exception) {
+                assertExceptionsEqual(message, (Exception) expectedValue, actualValue);
+            }
+            else if (expectedValue instanceof ByteSequence) {
+                assertByteSequencesEqual(message, (ByteSequence) expectedValue, actualValue);
+            }
+            else if (expectedValue instanceof DataStructure) {
+                assertBeansEqual(message + name, comparedObjects, expectedValue, actualValue);
+            }
+            else {
+                assertEquals(message, expectedValue, actualValue);
+            }
+                
+        }
+    }
+
+    protected void assertArrayEqual(String message,Set comparedObjects,  Object[] expected, Object[] actual) throws Exception {
+        assertEquals(message + ". Array length", expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertPropertyValuesEqual(message + ". element: " + i, comparedObjects, expected[i], actual[i]);
+        }
+    }
+    
+    protected void assertPrimitiveArrayEqual(String message, Set comparedObjects, Object expected, Object actual) throws ArrayIndexOutOfBoundsException, IllegalArgumentException, Exception {
+        int length = Array.getLength(expected);
+        assertEquals(message + ". Array length", length, Array.getLength(actual));
+        for (int i = 0; i < length; i++) {
+            assertPropertyValuesEqual(message + ". element: " + i, comparedObjects, Array.get(expected, i), Array.get(actual, i));
+        }
+    }
+    protected void assertByteSequencesEqual(String message, ByteSequence expected, Object actualValue) {
+        assertTrue(message + ". Actual value should be a ByteSequence but was: " + actualValue, actualValue instanceof ByteSequence);
+        ByteSequence actual = (ByteSequence) actualValue;
+        int length = expected.getLength();
+        assertEquals(message + ". Length", length, actual.getLength());
+        int offset = expected.getOffset();
+        assertEquals(message + ". Offset", offset, actual.getOffset());
+        byte[] data = expected.getData();
+        byte[] actualData = actual.getData();
+        for (int i = 0; i < length; i++) {
+            assertEquals(message + ". Offset " + i, data[offset + i], actualData[offset + i]);
+        }
+    }
+
+    protected void assertExceptionsEqual(String message, Exception expected, Object actualValue) {
+        assertTrue(message + ". Actual value should be an exception but was: " + actualValue, actualValue instanceof Exception);
+        Exception actual = (Exception) actualValue;
+        assertEquals(message, expected.getMessage(), actual.getMessage());
     }
 
     protected void setUp() throws Exception {
