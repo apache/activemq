@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.activemq.Service;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @org.apache.xbean.XBean
@@ -52,9 +53,9 @@ public class NetworkConnector implements Service, DiscoveryListener {
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
     private Set durableDestinations;
     private boolean failover=true;
-    private ActiveMQDestination[] excludedDestinations;
-    private ActiveMQDestination[] dynamicallyIncludedDestinations;
-    private ActiveMQDestination[] staticallyIncludedDestinations;
+    private List excludedDestinations = new CopyOnWriteArrayList();
+    private List dynamicallyIncludedDestinations = new CopyOnWriteArrayList();
+    private List staticallyIncludedDestinations = new CopyOnWriteArrayList();
     private boolean dynamicOnly = false;
     private boolean conduitSubscriptions = true;
     private boolean decreaseNetworkConsumerPriority;
@@ -239,21 +240,6 @@ public class NetworkConnector implements Service, DiscoveryListener {
     }
 
 
-    /**
-     * @return Returns the dynamicallyIncludedDestinations.
-     */
-    public ActiveMQDestination[] getDynamicallyIncludedDestinations(){
-        return dynamicallyIncludedDestinations;
-    }
-
-
-    /**
-     * @param dynamicallyIncludedDestinations The dynamicallyIncludedDestinations to set.
-     */
-    public void setDynamicallyIncludedDestinations(ActiveMQDestination[] dynamicallyIncludedDestinations){
-        this.dynamicallyIncludedDestinations=dynamicallyIncludedDestinations;
-    }
-
 
     /**
      * @return Returns the dynamicOnly.
@@ -317,35 +303,52 @@ public class NetworkConnector implements Service, DiscoveryListener {
     /**
      * @return Returns the excludedDestinations.
      */
-    public ActiveMQDestination[] getExcludedDestinations(){
+    public List getExcludedDestinations(){
         return excludedDestinations;
     }
-
-
     /**
      * @param excludedDestinations The excludedDestinations to set.
      */
-    public void setExcludedDestinations(ActiveMQDestination[] exludedDestinations){
+    public void setExcludedDestinations(List exludedDestinations){
         this.excludedDestinations=exludedDestinations;
+    }    
+    public void addExcludedDestination(ActiveMQDestination destiantion) {
+        this.excludedDestinations.add(destiantion);
     }
 
 
     /**
      * @return Returns the staticallyIncludedDestinations.
      */
-    public ActiveMQDestination[] getStaticallyIncludedDestinations(){
+    public List getStaticallyIncludedDestinations(){
         return staticallyIncludedDestinations;
     }
-
-
     /**
      * @param staticallyIncludedDestinations The staticallyIncludedDestinations to set.
      */
-    public void setStaticallyIncludedDestinations(ActiveMQDestination[] staticallyIncludedDestinations){
+    public void setStaticallyIncludedDestinations(List staticallyIncludedDestinations){
         this.staticallyIncludedDestinations=staticallyIncludedDestinations;
+    }
+    public void addStaticallyIncludedDestination(ActiveMQDestination destiantion) {
+        this.staticallyIncludedDestinations.add(destiantion);
     }
     
    
+    /**
+     * @return Returns the dynamicallyIncludedDestinations.
+     */
+    public List getDynamicallyIncludedDestinations(){
+        return dynamicallyIncludedDestinations;
+    }
+    /**
+     * @param dynamicallyIncludedDestinations The dynamicallyIncludedDestinations to set.
+     */
+    public void setDynamicallyIncludedDestinations(List dynamicallyIncludedDestinations){
+        this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
+    }
+    public void addDynamicallyIncludedDestination(ActiveMQDestination destiantion) {
+        this.dynamicallyIncludedDestinations.add(destiantion);
+    }
 
     
     // Implementation methods
@@ -391,9 +394,19 @@ public class NetworkConnector implements Service, DiscoveryListener {
         result.setLocalBrokerName(brokerName);
         result.setNetworkTTL(getNetworkTTL());
         result.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
-        result.setDynamicallyIncludedDestinations(getDynamicallyIncludedDestinations());
-        result.setExcludedDestinations(getExcludedDestinations());
-        result.setStaticallyIncludedDestinations(getStaticallyIncludedDestinations());
+        
+        List destsList = getDynamicallyIncludedDestinations();
+        ActiveMQDestination dests[] = (ActiveMQDestination[]) destsList.toArray(new ActiveMQDestination[destsList.size()]);        
+        result.setDynamicallyIncludedDestinations(dests);
+        
+        destsList = getExcludedDestinations();
+        dests = (ActiveMQDestination[]) destsList.toArray(new ActiveMQDestination[destsList.size()]);        
+        result.setExcludedDestinations(dests);
+
+        destsList = getStaticallyIncludedDestinations();
+        dests = (ActiveMQDestination[]) destsList.toArray(new ActiveMQDestination[destsList.size()]);        
+        result.setStaticallyIncludedDestinations(dests);
+        
         if (durableDestinations != null){
             ActiveMQDestination[] dest = new ActiveMQDestination[durableDestinations.size()];
             dest = (ActiveMQDestination[]) durableDestinations.toArray(dest);

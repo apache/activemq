@@ -17,12 +17,16 @@
 package org.apache.activemq.xbean;
 
 import java.net.URI;
+import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.network.NetworkConnector;
 
 /**
  * 
@@ -38,6 +42,17 @@ public class ConnectorXBeanConfigTest extends TestCase {
         
         assertEquals( new URI("tcp://localhost:61636"), connector.getUri() );
         assertTrue( connector.getTaskRunnerFactory() == brokerService.getTaskRunnerFactory() );
+        
+        
+        NetworkConnector netConnector = (NetworkConnector) brokerService.getNetworkConnectors().get(0);
+        List excludedDestinations = netConnector.getExcludedDestinations();
+        assertEquals(new ActiveMQQueue("exclude.test.foo"), excludedDestinations.get(0));
+        assertEquals(new ActiveMQTopic("exclude.test.bar"), excludedDestinations.get(1));
+        
+        List dynamicallyIncludedDestinations = netConnector.getDynamicallyIncludedDestinations();
+        assertEquals(new ActiveMQQueue("include.test.foo"), dynamicallyIncludedDestinations.get(0));
+        assertEquals(new ActiveMQTopic("include.test.bar"), dynamicallyIncludedDestinations.get(1));
+        
     }
 
     protected void setUp() throws Exception {

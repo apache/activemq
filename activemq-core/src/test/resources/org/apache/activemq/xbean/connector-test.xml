@@ -25,6 +25,20 @@
       <transportConnector uri="tcp://localhost:61636" />
     </transportConnectors>
 
+    <networkConnectors>
+      <networkConnector uri="static://(tcp://localhost:61616)">
+      	<excludedDestinations>
+      		<queue physicalName="exclude.test.foo"/>
+      		<topic physicalName="exclude.test.bar"/>
+      	</excludedDestinations>
+      	<dynamicallyIncludedDestinations>
+      		<queue physicalName="include.test.foo"/>
+      		<topic physicalName="include.test.bar"/>
+      	</dynamicallyIncludedDestinations>
+      </networkConnector>
+    </networkConnectors>
+	
+
   </broker>
 
 </beans>
