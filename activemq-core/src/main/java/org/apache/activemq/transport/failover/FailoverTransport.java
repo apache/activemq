@@ -22,7 +22,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
-
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
@@ -40,7 +39,6 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
@@ -374,9 +372,13 @@ public class FailoverTransport implements CompositeTransport {
             // Some one may be trying to stop our thread.
             throw new InterruptedIOException();
         }
-        if( error instanceof IOException )
-            throw (IOException)error;
-        throw IOExceptionSupport.create(error);
+        if(!disposed){
+            if(error!=null){
+                if(error instanceof IOException)
+                    throw (IOException) error;
+                throw IOExceptionSupport.create(error);
+            }
+        }
     }
 
     public FutureResponse asyncRequest(Command command) throws IOException {
