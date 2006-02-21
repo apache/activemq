@@ -16,16 +16,10 @@
  */
 package org.apache.activemq.console.util;
 
-import org.apache.activemq.console.filter.QueryFilter;
-import org.apache.activemq.console.filter.MBeansObjectNameQueryFilter;
-import org.apache.activemq.console.filter.WildcardToRegExTransformFilter;
-import org.apache.activemq.console.filter.MBeansRegExQueryFilter;
-import org.apache.activemq.console.filter.MBeansAttributeQueryFilter;
-import org.apache.activemq.console.filter.PropertiesViewFilter;
-import org.apache.activemq.console.filter.StubQueryFilter;
-import org.apache.activemq.console.filter.MapTransformFilter;
+import org.apache.activemq.console.filter.*;
 
 import javax.management.remote.JMXServiceURL;
+import javax.management.ObjectName;
 import java.util.Set;
 import java.util.List;
 import java.util.Iterator;
@@ -112,5 +106,21 @@ public class JmxMBeansUtil {
                 )
             )
         );
+    }
+
+    public static QueryFilter createMessageQueryFilter(JMXServiceURL jmxUrl, ObjectName destName) {
+        return new WildcardToMsgSelectorTransformFilter(
+            new MessagesQueryFilter(jmxUrl, destName)
+        );
+    }
+
+    public static List filterMessagesView(List messages, Set groupViews, Set attributeViews) throws Exception {
+        return (new PropertiesViewFilter(attributeViews,
+            new GroupPropertiesViewFilter(groupViews,
+                new MapTransformFilter(
+                    new StubQueryFilter(messages)
+                )
+            )
+        )).query("");
     }
 }

@@ -18,11 +18,11 @@ package org.apache.activemq.console.util;
 
 import org.apache.activemq.console.filter.QueryFilter;
 import org.apache.activemq.console.filter.WildcardToMsgSelectorTransformFilter;
-import org.apache.activemq.console.filter.MessagesQueryFilter;
 import org.apache.activemq.console.filter.PropertiesViewFilter;
 import org.apache.activemq.console.filter.StubQueryFilter;
 import org.apache.activemq.console.filter.MapTransformFilter;
 import org.apache.activemq.console.filter.GroupPropertiesViewFilter;
+import org.apache.activemq.console.filter.AmqMessagesQueryFilter;
 
 import javax.jms.Destination;
 import java.net.URI;
@@ -58,7 +58,7 @@ public class AmqMessagesUtil {
 
     public static QueryFilter createMessageQueryFilter(URI brokerUrl, Destination dest) {
         return new WildcardToMsgSelectorTransformFilter(
-            new MessagesQueryFilter(brokerUrl, dest)
+            new AmqMessagesQueryFilter(brokerUrl, dest)
         );
     }
 }

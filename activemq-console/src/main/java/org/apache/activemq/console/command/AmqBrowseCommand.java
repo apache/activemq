@@ -16,19 +16,20 @@
  */
 package org.apache.activemq.console.command;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.AmqMessagesUtil;
-import org.apache.activemq.console.util.JmxMBeansUtil;
+import org.apache.activemq.console.formatter.GlobalWriter;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 
-import javax.management.ObjectInstance;
+import javax.jms.Destination;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.StringTokenizer;
 import java.util.Iterator;
 
-public class BrowseCommand extends AbstractJmxCommand {
+public class AmqBrowseCommand extends AbstractAmqCommand {
     public static final String QUEUE_PREFIX = "queue:";
     public static final String TOPIC_PREFIX = "topic:";
 
@@ -48,21 +49,49 @@ public class BrowseCommand extends AbstractJmxCommand {
      */
     protected void runTask(List tokens) throws Exception {
         try {
-            // If there is no queue name specified, let's select all
+            // If no destination specified
             if (tokens.isEmpty()) {
-                tokens.add("*");
+                GlobalWriter.printException(new IllegalArgumentException("No JMS destination specified."));
+                return;
             }
 
-            // Iterate through the queue names
+            // If no broker url specified
+            if (getBrokerUrl() == null) {
+                GlobalWriter.printException(new IllegalStateException("No broker url specified. Use the --amqurl option to specify a broker url."));
+                return;
+            }
+
+            // Display the messages for each destination
             for (Iterator i=tokens.iterator(); i.hasNext();) {
-                List queueList = JmxMBeansUtil.queryMBeans(useJmxServiceUrl(), "Type=Queue,Destination=" + i.next() + ",*");
+                String destName = (String)i.next();
+                Destination dest;
 
-                // Iterate through the queue result
-                for (Iterator j=queueList.iterator(); j.hasNext();) {
-                    List messages = JmxMBeansUtil.createMessageQueryFilter(useJmxServiceUrl(), ((ObjectInstance)j.next()).getObjectName()).query(queryAddObjects);
-                    GlobalWriter.printMessage(JmxMBeansUtil.filterMessagesView(messages, groupViews, queryViews));
+                // If destination has been explicitly specified as a queue
+                if (destName.startsWith(QUEUE_PREFIX)) {
+                    dest = new ActiveMQQueue(destName.substring(QUEUE_PREFIX.length()));
+
+                // If destination has been explicitly specified as a topic
+                } else if (destName.startsWith(TOPIC_PREFIX)) {
+                    dest = new ActiveMQTopic(destName.substring(TOPIC_PREFIX.length()));
+
+                // By default destination is assumed to be a queue
+                } else {
+                    dest = new ActiveMQQueue(destName);
                 }
+
+                // Query for the messages to view
+                List addMsgs = AmqMessagesUtil.getMessages(getBrokerUrl(), dest, queryAddObjects);
+
+                // Query for the messages to remove from view
+                if (querySubObjects.size() > 0) {
+                    List subMsgs = AmqMessagesUtil.getMessages(getBrokerUrl(), dest, querySubObjects);
+                    addMsgs.removeAll(subMsgs);
+                }
+
+                // Display the messages
+                GlobalWriter.printMessage(AmqMessagesUtil.filterMessagesView(addMsgs, groupViews, queryViews));
             }
+
         } catch (Exception e) {
             GlobalWriter.printException(new RuntimeException("Failed to execute browse task. Reason: " + e));
             throw new Exception(e);
@@ -178,31 +207,31 @@ public class BrowseCommand extends AbstractJmxCommand {
     }
 
     protected String[] helpFile = new String[] {
-        "Task Usage: Main browse [browse-options] <destinations>",
+        "Task Usage: Main browse --amqurl <broker url> [browse-options] <destinations>",
         "Description: Display selected destination's messages.",
         "",
         "Browse Options:",
+        "    --amqurl <url>                Set the broker URL to connect to.",
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
         "    -V<header|custom|body>        Predefined view that allows you to view the message header, custom",
         "                                  message header, or the message body.",
         "    --view <attr1>,<attr2>,...    Select the specific attribute of the message to view.",
-        "    --jmxurl <url>                Set the JMX URL to connect to.",
         "    --version                     Display the version information.",
         "    -h,-?,--help                  Display the browse broker help information.",
         "",
         "Examples:",
-        "    Main browse FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 FOO.BAR",
         "        - Print the message header, custom message header, and message body of all messages in the",
         "          queue FOO.BAR",
         "",
-        "    Main browse -Vheader,body queue:FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 -Vheader,body queue:FOO.BAR",
         "        - Print only the message header and message body of all messages in the queue FOO.BAR",
         "",
-        "    Main browse -Vheader --view custom:MyField queue:FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 -Vheader --view custom:MyField queue:FOO.BAR",
         "        - Print the message header and the custom field 'MyField' of all messages in the queue FOO.BAR",
         "",
-        "    Main browse --msgsel JMSMessageID='*:10',JMSPriority>5 FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 --msgsel JMSMessageID='*:10',JMSPriority>5 FOO.BAR",
         "        - Print all the message fields that has a JMSMessageID in the header field that matches the",
         "          wildcard *:10, and has a JMSPriority field > 5 in the queue FOO.BAR",
         "        * To use wildcard queries, the field must be a string and the query enclosed in ''",
