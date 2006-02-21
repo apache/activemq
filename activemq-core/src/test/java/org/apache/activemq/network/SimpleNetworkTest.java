@@ -17,27 +17,18 @@
 package org.apache.activemq.network;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Iterator;
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 import junit.framework.TestCase;
-
-import org.apache.activemq.*;
-import org.apache.activemq.broker.BrokerRegistry;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerTestSupport;
-import org.apache.activemq.broker.StubConnection;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.QueueRegion;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
