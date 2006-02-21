@@ -23,6 +23,8 @@ import org.codehaus.jam.JClass;
 import org.codehaus.jam.JField;
 import org.codehaus.jam.JMethod;
 import org.codehaus.jam.JProperty;
+import org.codehaus.jam.JamClassIterator;
+import org.codehaus.jam.JamService;
 
 /**
  * @version $Revision$
@@ -70,6 +72,14 @@ public abstract class OpenWireScript extends GramSupport {
             }
         }
         return false; //j.getSuperclass()!=null && isMarshallAware(j.getSuperclass());
+    }
+    
+    public JamService getJam() {
+        return (JamService) getBinding().getVariable("jam");
+    }
+
+    public JamClassIterator getClasses() {
+        return getJam().getClasses();
     }
     
     /**
