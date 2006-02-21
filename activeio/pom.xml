@@ -17,9 +17,9 @@
 
   <modules>
       <module>activeio-core</module>
-      <module>activeio-aio</module>
       <module>activeio-oneport-jetty</module>
 <!--
+      <module>activeio-aio</module>
       <module>activeio-oneport-openorb</module>
 -->
       <module>activeio-jxta</module>

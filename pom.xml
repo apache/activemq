@@ -109,7 +109,9 @@
     <module>activemq-systest</module>
     <module>assembly</module>
 
+<!--
     <module>activeio</module>
+-->
     <module>activecluster</module>
 
   </modules> 
