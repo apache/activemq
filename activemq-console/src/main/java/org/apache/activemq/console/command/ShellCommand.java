@@ -69,7 +69,9 @@ public class ShellCommand extends AbstractCommand {
             } else if (taskToken.equals("query")) {
                 new QueryCommand().execute(tokens);
             } else if (taskToken.equals("browse")) {
-                new BrowseCommand().execute(tokens);
+                new AmqBrowseCommand().execute(tokens);
+            } else if (taskToken.equals("purge")) {
+                new PurgeCommand().execute(tokens);
             } else {
                 // If not valid task, push back to list
                 tokens.add(0, taskToken);

@@ -30,6 +30,7 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.AttributeList;
 import javax.management.Attribute;
+import javax.management.openmbean.CompositeDataSupport;
 import javax.jms.JMSException;
 import javax.jms.DeliveryMode;
 import java.util.Map;
@@ -253,6 +254,61 @@ public class MapTransformFilter extends ResultTransformFilter {
                 props.setProperty(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + name, msg.getObjectProperty(name).toString());
             }
         }
+
+        return props;
+    }
+
+    /**
+     * Transform an openMBean composite data to a Map
+     * @param data - composite data to transform
+     * @return map object
+     */
+    protected Map transformToMap(CompositeDataSupport data) {
+        Properties props = new Properties();
+
+        String typeName = data.getCompositeType().getTypeName();
+
+        // Retrieve text message
+        if (typeName.equals(ActiveMQTextMessage.class.getName())) {
+            props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "Text", data.get("Text").toString());
+
+        // Retrieve byte preview
+        } else if (typeName.equals(ActiveMQBytesMessage.class.getName())) {
+            props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "BodyLength", data.get("BodyLength").toString());
+            props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "BodyPreview", new String((byte[])data.get("BodyPreview")));
+
+        // Expand content map
+        } else if (typeName.equals(ActiveMQMapMessage.class.getName())) {
+            Map contentMap = (Map)data.get("ContentMap");
+            for (Iterator i=contentMap.keySet().iterator(); i.hasNext();) {
+                String key = (String)i.next();
+                props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + key, contentMap.get(key).toString());
+            }
+
+        // Do nothing
+        } else if (typeName.equals(ActiveMQObjectMessage.class.getName()) ||
+                   typeName.equals(ActiveMQStreamMessage.class.getName()) ||
+                   typeName.equals(ActiveMQMessage.class.getName())) {
+
+        // Unrecognized composite data. Throw exception.
+        } else {
+            throw new IllegalArgumentException("Unrecognized composite data to transform. composite type: " + typeName);
+        }
+
+        // Process the JMS message header values
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSCorrelationID", "" + data.get("JMSCorrelationID"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSDestination",   "" + data.get("JMSDestination"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSMessageID",     "" + data.get("JMSMessageID"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSReplyTo",       "" + data.get("JMSReplyTo"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSType",          "" + data.get("JMSType"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSDeliveryMode",  "" + data.get("JMSDeliveryMode"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSExpiration",    "" + data.get("JMSExpiration"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSPriority",      "" + data.get("JMSPriority"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSRedelivered",   "" + data.get("JMSRedelivered"));
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSTimestamp",     "" + data.get("JMSTimestamp"));
+
+        // Process the JMS custom message properties
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + "Properties", "" + data.get("Properties"));
 
         return props;
     }

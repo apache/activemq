@@ -16,34 +16,32 @@
  */
 package org.apache.activemq.console.filter;
 
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.ActiveMQConnectionFactory;
-
-import javax.jms.Destination;
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Session;
-import javax.jms.QueueBrowser;
-import java.net.URI;
-import java.util.Collections;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXServiceURL;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Arrays;
+import java.io.IOException;
 
 public class MessagesQueryFilter extends AbstractQueryFilter {
 
-    private URI brokerUrl;
-    private Destination destination;
+    private JMXServiceURL jmxServiceUrl;
+    private ObjectName    destName;
 
     /**
      * Create a JMS message query filter
-     * @param brokerUrl - broker url to connect to
-     * @param destination - JMS destination to query
+     * @param jmxServiceUrl - JMX service URL to connect to
+     * @param destName - object name query to retrieve the destination
      */
-    public MessagesQueryFilter(URI brokerUrl, Destination destination) {
+    public MessagesQueryFilter(JMXServiceURL jmxServiceUrl, ObjectName destName) {
         super(null);
-        this.brokerUrl   = brokerUrl;
-        this.destination = destination;
+        this.jmxServiceUrl = jmxServiceUrl;
+        this.destName      = destName;
     }
 
     /**
@@ -65,88 +63,54 @@ public class MessagesQueryFilter extends AbstractQueryFilter {
             selector = selector.substring(0, selector.length() - 5);
         }
 
-        if (destination instanceof ActiveMQQueue) {
-            return queryMessages((ActiveMQQueue)destination, selector);
-        } else {
-            return queryMessages((ActiveMQTopic)destination, selector);
-        }
+        return queryMessages(selector);
     }
 
     /**
-     * Query the messages of a queue destination using a queue browser
-     * @param queue - queue destination
+     * Query the messages of a queue destination using JMX
      * @param selector - message selector
      * @return list of messages that matches the selector
      * @throws Exception
      */
-    protected List queryMessages(ActiveMQQueue queue, String selector) throws Exception {
-        Connection conn = createConnection(getBrokerUrl());
+    protected List queryMessages(String selector) throws Exception {
+        JMXConnector connector = createJmxConnector();
+        MBeanServerConnection server = connector.getMBeanServerConnection();
+        CompositeData[] messages = (CompositeData[])server.invoke(destName, "browse", new Object[] {}, new String[] {});
+        connector.close();
 
-        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        QueueBrowser browser = sess.createBrowser(queue, selector);
-
-        List messages = Collections.list(browser.getEnumeration());
-
-        conn.close();
-
-        return messages;
+        return Arrays.asList(messages);
     }
 
     /**
-     * Query the messages of a topic destination using a message consumer
-     * @param topic - topic destination
-     * @param selector - message selector
-     * @return list of messages that matches the selector
-     * @throws Exception
+     * Get the JMX service URL the query is connecting to.
+     * @return JMX service URL
      */
-    protected List queryMessages(ActiveMQTopic topic, String selector) throws Exception {
-        // TODO: should we use a durable subscriber or a retroactive non-durable subscriber?
-        // TODO: if a durable subscriber is used, how do we manage it? subscribe/unsubscribe tasks?
-        return null;
+    public JMXServiceURL getJmxServiceUrl() {
+        return jmxServiceUrl;
     }
 
     /**
-     * Create and start a JMS connection
-     * @param brokerUrl - broker url to connect to.
-     * @return JMS connection
-     * @throws JMSException
+     * Sets the JMX service URL the query is going to connect to.
+     * @param jmxServiceUrl - new JMX service URL
      */
-    protected Connection createConnection(URI brokerUrl) throws JMSException {
-        Connection conn = (new ActiveMQConnectionFactory(brokerUrl)).createConnection();
-        conn.start();
-        return conn;
+    public void setJmxServiceUrl(JMXServiceURL jmxServiceUrl) {
+        this.jmxServiceUrl = jmxServiceUrl;
     }
 
     /**
-     * Get the broker url being used.
-     * @return broker url
+     * Sets the JMX service URL the query is going to connect to.
+     * @param jmxServiceUrl - new JMX service URL
      */
-    public URI getBrokerUrl() {
-        return brokerUrl;
+    public void setJmxServiceUrl(String jmxServiceUrl) throws MalformedURLException {
+        setJmxServiceUrl(new JMXServiceURL(jmxServiceUrl));
     }
 
     /**
-     * Set the broker url to use.
-     * @param brokerUrl - broker url
+     * Creates a JMX connector
+     * @return JMX connector
+     * @throws java.io.IOException
      */
-    public void setBrokerUrl(URI brokerUrl) {
-        this.brokerUrl = brokerUrl;
+    protected JMXConnector createJmxConnector() throws IOException {
+        return JMXConnectorFactory.connect(getJmxServiceUrl());
     }
-
-    /**
-     * Get the destination being used.
-     * @return - JMS destination
-     */
-    public Destination getDestination() {
-        return destination;
-    }
-
-    /**
-     * Set the destination to use.
-     * @param destination - JMS destination
-     */
-    public void setDestination(Destination destination) {
-        this.destination = destination;
-    }
-
 }
