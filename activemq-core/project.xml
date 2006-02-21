@@ -345,10 +345,6 @@
                 <exclude>**/FanoutTransportBrokerTest.*</exclude>
                 <!-- http://jira.activemq.org/jira/browse/AMQ-583 -->
                 <exclude>**/DiscoveryTransportBrokerTest.*</exclude>
-
-                <!--  TODO auto-generated openwire tests not quite working yet -->
-                <exclude>**/openwire/*/*Test.*</exclude>
-
             </excludes>
         </unitTest>
         <resources>

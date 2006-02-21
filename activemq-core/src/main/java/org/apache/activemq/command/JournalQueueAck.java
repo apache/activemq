@@ -21,7 +21,7 @@ package org.apache.activemq.command;
  * @openwire:marshaller code="52"
  * @version $Revision$
  */
-public class JournalQueueAck implements DataStructure {
+public class JournalQueueAck extends DataStructureSupport implements DataStructure {
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.JOURNAL_REMOVE;
 

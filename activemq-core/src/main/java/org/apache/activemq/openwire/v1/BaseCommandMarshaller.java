@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public abstract class BaseCommandMarshaller extends org.apache.activemq.openwire.DataStreamMarshaller {
+public abstract class BaseCommandMarshaller extends DataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream

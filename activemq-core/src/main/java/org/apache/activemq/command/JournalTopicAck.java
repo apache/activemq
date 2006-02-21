@@ -21,7 +21,7 @@ package org.apache.activemq.command;
  * @openwire:marshaller code="50"
  * @version $Revision$
  */
-public class JournalTopicAck implements DataStructure {
+public class JournalTopicAck extends DataStructureSupport implements DataStructure {
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.JOURNAL_ACK;
     

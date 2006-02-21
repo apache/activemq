@@ -16,11 +16,9 @@
  */
 package org.apache.activemq.filter;
 
-import org.apache.activemq.filter.DestinationPath;
+import org.apache.activemq.test.TestSupport;
 
-import junit.framework.TestCase;
-
-public class DestinationPathTest extends TestCase {
+public class DestinationPathTest extends TestSupport {
 
     public void testPathParse() {
         assertParse("FOO", new String[]{"FOO"});
@@ -34,12 +32,5 @@ public class DestinationPathTest extends TestCase {
     protected void assertParse(String subject, String[] expected) {
         String[] path = DestinationPath.getDestinationPaths(subject);
         assertArrayEqual(subject, expected, path);
-    }
-
-    protected void assertArrayEqual(String message, Object[] expected, Object[] actual) {
-        assertEquals(message + ". Array length", expected.length, actual.length);
-        for (int i = 0; i < expected.length; i++) {
-            assertEquals(message + ". element: " + i, expected[i], actual[i]);
-        }
     }
 }

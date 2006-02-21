@@ -22,7 +22,7 @@ import org.apache.activemq.state.CommandVisitor;
  * @openwire:marshaller code="10"
  * @version $Revision$
  */
-public class KeepAliveInfo implements Command {
+public class KeepAliveInfo extends DataStructureSupport implements Command {
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.KEEP_ALIVE_INFO;
     

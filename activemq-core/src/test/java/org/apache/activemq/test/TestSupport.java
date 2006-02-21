@@ -31,6 +31,9 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 
 /**
  * Useful base class for unit test cases
@@ -225,5 +228,20 @@ public class TestSupport extends TestCase {
      */
     protected String getSubject() {
         return getClass().getName() + "." + getName();
+    }
+
+    protected void assertArrayEqual(String message, Object[] expected, Object[] actual) {
+        assertEquals(message + ". Array length", expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(message + ". element: " + i, expected[i], actual[i]);
+        }
+    }
+    
+    protected void assertPrimitiveArrayEqual(String message, Object expected, Object actual) {
+        int length = Array.getLength(expected);
+        assertEquals(message + ". Array length", length, Array.getLength(actual));
+        for (int i = 0; i < length; i++) {
+            assertEquals(message + ". element: " + i, Array.get(expected, i), Array.get(actual, i));
+        }
     }
 }
