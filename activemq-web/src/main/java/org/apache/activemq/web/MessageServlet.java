@@ -341,7 +341,11 @@ public class MessageServlet extends MessageServletSupport {
     protected void writeMessageResponse(PrintWriter writer, Message message) throws JMSException, IOException {
         if (message instanceof TextMessage) {
             TextMessage textMsg = (TextMessage) message;
-            writer.print(textMsg.getText());
+            String txt = textMsg.getText();
+            if (txt.startsWith("<?")) {
+                txt = txt.substring(txt.indexOf("?>") + 2);
+            }
+            writer.print(txt);
         }
         else if (message instanceof ObjectMessage) {
             ObjectMessage objectMsg = (ObjectMessage) message;
