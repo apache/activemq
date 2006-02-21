@@ -20,6 +20,9 @@ import javax.jms.JMSException;
 import javax.jms.Topic;
 
 /**
+ * 
+ * @org.apache.xbean.XBean element="topic" description="An ActiveMQ Topic Destination"
+ *                  
  * @openwire:marshaller code="101"
  * @version $Revision: 1.5 $
  */

@@ -20,6 +20,9 @@ import javax.jms.JMSException;
 import javax.jms.Queue;
 
 /**
+ * 
+ * @org.apache.xbean.XBean element="queue" description="An ActiveMQ Queue Destination"
+ *                  
  * @openwire:marshaller code="100"
  * @version $Revision: 1.5 $
  */
