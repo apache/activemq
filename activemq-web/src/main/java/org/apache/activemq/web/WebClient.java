@@ -238,7 +238,10 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
         
         // TODO check this double synchronization on queue but not on topics
         synchronized (queueConsumers) {
-            list.addAll(queueConsumers.values());
+            for (Iterator it = queueConsumers.values().iterator(); it.hasNext();) {
+                SessionConsumerPair pair = (SessionConsumerPair) it.next();
+                list.add(pair.consumer);
+            }
         }
         list.addAll(topicConsumers.values());
         return list;

@@ -100,15 +100,19 @@ public class MessageListenerServlet extends MessageServletSupport {
         
         synchronized (client) {
             
-            // System.err.println("POST client="+client+" session="+request.getSession().getId()+" info="+request.getPathInfo()+" contentType="+request.getContentType());
+            if (log.isDebugEnabled()) {
+                log.debug("POST client="+client+" session="+request.getSession().getId()+" info="+request.getPathInfo()+" contentType="+request.getContentType());
             // dump(request.getParameterMap());
+            }
             String[] destinations = request.getParameterValues("destination");
             String[] messages = request.getParameterValues("message");
             String[] types = request.getParameterValues("type");
             
             if (destinations.length!=messages.length || messages.length!=types.length)
             {
-                // System.err.println("ERROR destination="+destinations.length+" message="+messages.length+" type="+types.length);
+                if (log.isDebugEnabled()) {
+                    log.debug("ERROR destination="+destinations.length+" message="+messages.length+" type="+types.length);
+                }
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST,"missmatched destination, message or type");
                 return;
             }
@@ -116,10 +120,13 @@ public class MessageListenerServlet extends MessageServletSupport {
             for (int i=0;i<types.length;i++)
             {
                 try {
-                    // System.err.println(i+" destination="+destinations[i]+" message="+messages[i]+" type="+types[i]);
-                    
                     String type=types[i];
                     Destination destination=getDestination(client,request,destinations[i]);
+                    
+                    if (log.isDebugEnabled()) {
+                        log.debug(i+" destination="+destinations[i]+" message="+messages[i]+" type="+types[i]);
+                        log.debug(destination+" is a "+destination.getClass().getName());
+                    }
                     
                     if ("listen".equals(type))
                     {
@@ -129,7 +136,9 @@ public class MessageListenerServlet extends MessageServletSupport {
                         
                         consumer.setAvailableListener(listener);
                         consumerIdMap.put(consumer, messages[i]);
-                        // System.err.println("Subscribed: "+consumer+" to "+destination+" id="+messages[i]);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Subscribed: "+consumer+" to "+destination+" id="+messages[i]);
+                        }
                     }
                     else if ("unlisten".equals(type))
                     {
@@ -139,15 +148,18 @@ public class MessageListenerServlet extends MessageServletSupport {
                         // TODO should we destroy consumer on unsubscribe?
                         consumer.setAvailableListener(null);
                         consumerIdMap.remove(consumer);
-                        // System.err.println("Unsubscribed: "+consumer);
-                        
+                        if (log.isDebugEnabled()) {
+                            log.debug("Unsubscribed: "+consumer);
+                        }
                     }
                     else if ("send".equals(type))
                     {
                         TextMessage message = client.getSession().createTextMessage(messages[i]);
                         // TODO sent message parameters
                         client.send(destination, message);
-                        // System.err.println("Sent "+messages[i]+" to "+destination);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Sent "+messages[i]+" to "+destination);
+                        }
                         // TODO return message ID.
                     }
                     else
@@ -187,7 +199,9 @@ public class MessageListenerServlet extends MessageServletSupport {
 
         try {
             WebClient client = getWebClient(request);
-            // System.err.println("GET client="+client+" session="+request.getSession().getId()+" uri="+request.getRequestURI()+" query="+request.getQueryString());
+            if (log.isDebugEnabled()) {
+                log.debug("GET client="+client+" session="+request.getSession().getId()+" uri="+request.getRequestURI()+" query="+request.getQueryString());
+            }
 
             doMessages(client, request, response);
         }
@@ -213,7 +227,9 @@ public class MessageListenerServlet extends MessageServletSupport {
         // This is a poll for any messages
 
         long timeout = getReadTimeout(request);
-        // System.err.println("doMessage timeout="+timeout);
+        if (log.isDebugEnabled()) {
+            log.debug("doMessage timeout="+timeout);
+        }
         
         Continuation continuation = null;
         Message message = null;
@@ -233,7 +249,9 @@ public class MessageListenerServlet extends MessageServletSupport {
 
                 // Look for any available messages
                 message = consumer.receiveNoWait();
-                // System.err.println("received "+message+" from "+consumer);
+                if (log.isDebugEnabled()) {
+                    log.debug("received "+message+" from "+consumer);
+                }
             }
 
             // Get an existing Continuation or create a new one if there are no
@@ -307,7 +325,11 @@ public class MessageListenerServlet extends MessageServletSupport {
     protected void writeMessageResponse(PrintWriter writer, Message message) throws JMSException, IOException {
         if (message instanceof TextMessage) {
             TextMessage textMsg = (TextMessage) message;
-            writer.print(textMsg.getText());
+            String txt = textMsg.getText();
+            if (txt.startsWith("<?")) {
+                txt = txt.substring(txt.indexOf("?>") + 2);
+            }
+            writer.print(txt);
         } else if (message instanceof ObjectMessage) {
             ObjectMessage objectMsg = (ObjectMessage) message;
             Object object = objectMsg.getObject();
@@ -379,8 +401,9 @@ public class MessageListenerServlet extends MessageServletSupport {
 
         public void onMessageAvailable(MessageConsumer consumer) {
             synchronized (client) {
-                // System.err.println("message for "+consumer+"
-                // continuation="+continuation);
+                if (log.isDebugEnabled()) {
+                    log.debug("message for "+consumer+"continuation="+continuation);
+                }
                 if (continuation != null)
                     continuation.resume();
                 continuation = null;
