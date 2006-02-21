@@ -14,59 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.apache.activemq.openwire.tool.OpenWireScript
+import org.apache.activemq.openwire.tool.OpenWireCSharpClassesScript
 
 /**
  * Generates the C# marshalling code for the Open Wire Format
  *
  * @version $Revision$
  */
-class GenerateCSharpClasses extends OpenWireScript {
+class GenerateCSharpClasses extends OpenWireCSharpClassesScript {
 
-    Object run() {
-        def destDir = new File("../openwire-dotnet/src/OpenWire.Client/Commands")
-        destDir.mkdirs()
-
-        def messageClasses = classes.findAll {
-        		it.getAnnotation("openwire:marshaller")!=null
-        }
-
-			  def manuallyMaintainedClasses = ['ActiveMQDestination', 'ActiveMQTempDestination', 'ActiveMQQueue', 'ActiveMQTopic', 'ActiveMQTempQueue', 'ActiveMQTempTopic', 'BaseCommand',
-			  'ActiveMQMessage', 'ActiveMQTextMessage', 'ActiveMQMapMessage', 'ActiveMQBytesMessage', 'ActiveMQStreamMessage', 'ActiveMQStreamMessage']
-			  
-        println "Generating Java marshalling code to directory ${destDir}"
-
-        def buffer = new StringBuffer()
-
-        int counter = 0
-        Map map = [:]
-
-        for (jclass in messageClasses) {
-
-						if (manuallyMaintainedClasses.contains(jclass.simpleName)) continue
-						
-            println "Processing $jclass.simpleName"
-
-            def properties = jclass.declaredProperties.findAll { isValidProperty(it) }
-            def file = new File(destDir, jclass.simpleName + ".cs")
-
-
-            String baseClass = jclass.superclass.simpleName
-            if (baseClass == "Object") {
-            		baseClass = "AbstractCommand"
-        		 }
-            /*
-            String baseClass = "AbstractCommand"
-            if (jclass.superclass?.simpleName == "ActiveMQMessage") {
-                baseClass = "ActiveMQMessage"
-            }
-            */
-
-            buffer << """
-${jclass.simpleName}.class
-"""
-
-            file.withWriter { out |
+	void generateFile(PrintWriter out) {
                 out << """//
 // Marshalling code for Open Wire Format for ${jclass.simpleName}
 //
@@ -133,7 +90,5 @@ namespace OpenWire.Client.Commands
     }
 }
 """
-            }
-        }
     }
 }
