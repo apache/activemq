@@ -59,6 +59,7 @@ public class FailoverTransport implements CompositeTransport {
     private final CopyOnWriteArrayList uris = new CopyOnWriteArrayList();
 
     private final Object reconnectMutex = new Object();
+    private final Object sleepMutex = new Object();
     private final ConnectionStateTracker stateTracker = new ConnectionStateTracker();
     private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
 
@@ -136,7 +137,9 @@ public class FailoverTransport implements CompositeTransport {
                         if( connectList.isEmpty() ) {
                             failure = new IOException("No uris available to connect to.");
                         } else {
-                            reconnectDelay = initialReconnectDelay;
+                            if (!useExponentialBackOff){
+                                reconnectDelay = initialReconnectDelay;
+                            }
                             Iterator iter = connectList.iterator();
                             for (int i = 0; iter.hasNext() && connectedTransport == null && !disposed; i++) {
                                 URI uri = (URI) iter.next();
@@ -175,12 +178,17 @@ public class FailoverTransport implements CompositeTransport {
                 }
 
                 if(!disposed){
-                    try{
+                    
                         log.debug("Waiting "+reconnectDelay+" ms before attempting connection. ");
-                        Thread.sleep(reconnectDelay);
-                    }catch(InterruptedException e1){
-                        Thread.currentThread().interrupt();
-                    }
+                        synchronized(sleepMutex){
+                            try{
+                                sleepMutex.wait(reconnectDelay);
+                            }catch(InterruptedException e){
+                               Thread.currentThread().interrupt();
+                            }
+                        }
+                        
+                    
                     if(useExponentialBackOff){
                         // Exponential increment of reconnect delay.
                         reconnectDelay*=backOffMultiplier;
@@ -234,6 +242,10 @@ public class FailoverTransport implements CompositeTransport {
             if (connectedTransport != null) {
                 connectedTransport.stop();
             }
+            reconnectMutex.notifyAll();
+        }
+        synchronized(sleepMutex){
+            sleepMutex.notifyAll();
         }
     }
 
