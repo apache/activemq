@@ -329,7 +329,7 @@ public class BrokerService implements Service {
 
         addShutdownHook();
         if (deleteAllMessagesOnStartup) {
-            getPersistenceAdapter().deleteAllMessages();
+            deleteAllMessages();
         }
 
         if (isUseJmx()) {
@@ -687,6 +687,14 @@ public class BrokerService implements Service {
      */
     public void setPlugins(BrokerPlugin[] plugins) {
         this.plugins = plugins;
+    }
+    
+    /**
+     * Delete all messages from the persistent store
+     * @throws IOException
+     */
+    public void deleteAllMessages() throws IOException{
+        getPersistenceAdapter().deleteAllMessages();
     }
 
     // Implementation methods
