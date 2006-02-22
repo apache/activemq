@@ -16,7 +16,7 @@
 -->
 <beans xmlns="http://activemq.org/config/1.0">
 
-  <broker brokerName="remoteBroker" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+  <broker brokerName="remoteBroker" persistent="true" useShutdownHook="false">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61617"/>
     </transportConnectors>

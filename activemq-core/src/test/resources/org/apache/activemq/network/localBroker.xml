@@ -16,13 +16,16 @@
 -->
 <beans xmlns="http://activemq.org/config/1.0">
 
-<broker brokerName="localBroker" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+<broker brokerName="localBroker" persistent="true" useShutdownHook="false">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>
     </transportConnectors>
 
     <networkConnectors>
       <networkConnector uri="static://(tcp://localhost:61617)">
+         dynamicOnly = false
+         conduitSubscriptions = true
+         decreaseNetworkConsumerPriority = false
       	<excludedDestinations>
       		<queue physicalName="exclude.test.foo"/>
       		<topic physicalName="exclude.test.bar"/>
