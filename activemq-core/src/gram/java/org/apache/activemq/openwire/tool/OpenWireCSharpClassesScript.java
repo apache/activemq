@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.openwire.tool;
 
+import org.codehaus.jam.JClass;
+
 import java.io.File;
 
 /**
@@ -26,9 +28,12 @@ public abstract class OpenWireCSharpClassesScript extends OpenWireClassesScript 
 
     public Object run() {
         filePostFix = ".cs";
-        destDir = new File("../openwire-dotnet/src/OpenWire.Client/Commands");
+        if (destDir == null) {
+            destDir = new File("../openwire-dotnet/src/OpenWire.Client/Commands");
+        }
         
         return super.run();
     }
+
 
 }

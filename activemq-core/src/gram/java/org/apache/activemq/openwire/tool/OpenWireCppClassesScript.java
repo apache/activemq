@@ -28,7 +28,9 @@ public abstract class OpenWireCppClassesScript extends OpenWireClassesScript {
 
     public Object run() {
         filePostFix = getFilePostFix();
-        destDir = new File("../openwire-cpp/src/command");
+        if (destDir == null) {
+            destDir = new File("../openwire-cpp/src/command");
+        }
         return super.run();
     }
 

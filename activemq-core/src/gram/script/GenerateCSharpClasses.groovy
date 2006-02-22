@@ -59,7 +59,7 @@ namespace OpenWire.Client.Commands
     //
     public class ${jclass.simpleName} : $baseClass
     {
-		public const byte ID_${jclass.simpleName} = ${getOpenWireOpCode(jclass)};
+        public const byte ID_${jclass.simpleName} = ${getOpenWireOpCode(jclass)};
     			
 """
     for (property in properties) {
@@ -76,7 +76,7 @@ namespace OpenWire.Client.Commands
         // TODO generate ToString method
 
 
-        public override byte GetCommandType() {
+        public override byte GetDataStructureType() {
             return ID_${jclass.simpleName};
         }
 

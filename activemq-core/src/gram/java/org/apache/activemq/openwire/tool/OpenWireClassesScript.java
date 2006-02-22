@@ -31,9 +31,8 @@ import java.util.*;
  */
 public abstract class OpenWireClassesScript extends OpenWireScript {
     protected Set manuallyMaintainedClasses = new HashSet();
-    protected File destDir = new File("target/generated/classes");
+    protected File destDir;
     protected File destFile;
-    protected String filePostFix = "";
 
     protected JClass jclass;
     protected JClass superclass;
@@ -43,16 +42,14 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
     protected StringBuffer buffer;
 
     public OpenWireClassesScript() {
-        String[] names = { "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic",
-                "BaseCommand", "ActiveMQMessage", "ActiveMQTextMessage", "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage",
-                "ActiveMQStreamMessage", "DataStructureSupport" };
-
-        for (int i = 0; i < names.length; i++) {
-            manuallyMaintainedClasses.add(names[i]);
-        }
+        initialiseManuallyMaintainedClasses();
     }
 
     public Object run() {
+        if (destDir == null) {
+            throw new IllegalArgumentException("No destDir defined!");
+        }
+        System.out.println(getClass().getName() + " generating files in: " + destDir);
         destDir.mkdirs();
         buffer = new StringBuffer();
 
@@ -80,7 +77,7 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
         }
         return answer;
     }
-    
+
     protected boolean isValidClass(JClass jclass) {
         if (jclass.getAnnotation("openwire:marshaller") == null) {
             return false;
@@ -130,6 +127,28 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
 
     protected String getClassName(JClass jclass) {
         return jclass.getSimpleName();
+    }
+    
+    public boolean isAbstractClass() {
+        return jclass != null & jclass.isAbstract();
+    }
+
+    public String getAbstractClassText() {
+        return isAbstractClass() ? "abstract " : "";
+    }
+    
+    public boolean isMarshallerAware() {
+        return isMarshallAware(jclass);
+    }
+
+    protected void initialiseManuallyMaintainedClasses() {
+        String[] names = { "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic",
+                "BaseCommand", "ActiveMQMessage", "ActiveMQTextMessage", "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage",
+                "ActiveMQStreamMessage", "DataStructureSupport" };
+
+        for (int i = 0; i < names.length; i++) {
+            manuallyMaintainedClasses.add(names[i]);
+        }
     }
 
 }
