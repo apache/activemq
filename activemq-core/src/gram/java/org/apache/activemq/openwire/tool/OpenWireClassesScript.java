@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.openwire.tool;
 
-import mx4j.tools.adaptor.http.GetAttributeCommandProcessor;
-
 import org.codehaus.jam.JClass;
+import org.codehaus.jam.JProperty;
 import org.codehaus.jam.JamClassIterator;
 
 import java.io.File;
-import java.io.*;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -66,18 +66,33 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
         return null;
     }
 
+    /**
+     * Returns all the valid properties available on the current class
+     */
+    public List getProperties() {
+        List answer = new ArrayList();
+        JProperty[] properties = jclass.getDeclaredProperties();
+        for (int i = 0; i < properties.length; i++) {
+            JProperty property = properties[i];
+            if (isValidProperty(property)) {
+                answer.add(property);
+            }
+        }
+        return answer;
+    }
+    
     protected boolean isValidClass(JClass jclass) {
         if (jclass.getAnnotation("openwire:marshaller") == null) {
             return false;
         }
-        return manuallyMaintainedClasses.contains(jclass.getSimpleName());
+        return !manuallyMaintainedClasses.contains(jclass.getSimpleName());
     }
 
     protected void processClass(JClass jclass) {
         simpleName = jclass.getSimpleName();
         superclass = jclass.getSuperclass();
 
-        System.out.println("Processing class: " + simpleName);
+        System.out.println(getClass().getName() + " processing class: " + simpleName);
 
         className = getClassName(jclass);
 
@@ -88,6 +103,7 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
         PrintWriter out = null;
         try {
             out = new PrintWriter(new FileWriter(destFile));
+            generateFile(out);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -113,7 +129,7 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
     }
 
     protected String getClassName(JClass jclass) {
-        return "AbstractCommand";
+        return jclass.getSimpleName();
     }
 
 }

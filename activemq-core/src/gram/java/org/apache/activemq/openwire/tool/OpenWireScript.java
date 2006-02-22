@@ -17,7 +17,6 @@
 package org.apache.activemq.openwire.tool;
 
 import org.codehaus.gram.GramSupport;
-import org.codehaus.jam.JAnnotation;
 import org.codehaus.jam.JAnnotationValue;
 import org.codehaus.jam.JClass;
 import org.codehaus.jam.JField;
@@ -103,6 +102,8 @@ public abstract class OpenWireScript extends GramSupport {
             return name;
         }
     }
+
+    
     public String getOpenWireOpCode(JClass aClass) {
         return annotationValue(aClass, "openwire:marshaller", "code", "0");
     }
