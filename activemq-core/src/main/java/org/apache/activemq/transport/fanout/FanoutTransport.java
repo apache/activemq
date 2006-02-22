@@ -282,9 +282,7 @@ public class FanoutTransport implements CompositeTransport {
                 return;
             started = false;
             disposed = true;
-            
-            reconnectTask.shutdown();
-            
+
             for (Iterator iter = transports.iterator(); iter.hasNext();) {
                 FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
                 if( th.transport != null ) {
@@ -295,6 +293,8 @@ public class FanoutTransport implements CompositeTransport {
             log.debug("Stopped: "+this);
             ss.throwFirstException();
         }
+
+        reconnectTask.shutdown();
     }
 
     public long getInitialReconnectDelay() {
