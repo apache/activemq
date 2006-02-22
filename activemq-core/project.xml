@@ -343,8 +343,6 @@
                 <exclude>**/ProxyConnectorTest.*</exclude>
                 <!-- http://jira.activemq.org/jira/browse/AMQ-560 -->
                 <exclude>**/FanoutTransportBrokerTest.*</exclude>
-                <!-- http://jira.activemq.org/jira/browse/AMQ-583 -->
-                <exclude>**/DiscoveryTransportBrokerTest.*</exclude>
             </excludes>
         </unitTest>
         <resources>
