@@ -80,6 +80,9 @@ public class VMTransportFactory extends TransportFactory{
             }
             location=new URI("vm://"+host);
         }
+        if (host == null) {
+            host = "localhost";
+        }
         VMTransportServer server=(VMTransportServer) servers.get(host);
         // validate the broker is still active
         if(!validateBroker(host)||server==null){
