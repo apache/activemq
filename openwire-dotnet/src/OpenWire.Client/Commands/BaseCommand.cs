@@ -29,21 +29,21 @@ namespace OpenWire.Client.Commands {
                 public override bool Equals(Object that) {
                         if (that is BaseCommand) {
                                 BaseCommand thatCommand = (BaseCommand) that;
-                                return this.GetCommandType() == thatCommand.GetCommandType()
+                                return this.GetDataStructureType() == thatCommand.GetDataStructureType()
                                         && this.CommandId == thatCommand.CommandId; 
                         }
                         return false; 
                 }
 
                 public override String ToString() {
-                        string answer = GetCommandTypeAsString(GetCommandType());
+                        string answer = GetDataStructureTypeAsString(GetDataStructureType());
                         if (answer.Length == 0) {
                                 answer = base.ToString(); 
                         }
                         return answer + ": id = " + CommandId; 
                 }
 
-                public override byte GetCommandType() {
+                public override byte GetDataStructureType() {
                         return ID_BaseCommand; 
                 }
 

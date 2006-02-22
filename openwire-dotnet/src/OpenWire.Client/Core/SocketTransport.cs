@@ -29,6 +29,7 @@ namespace OpenWire.Client.Core {
 
                 public event CommandHandler Command;
                 public event ExceptionHandler Exception;
+                private OpenWireFormat wireformat = new OpenWireFormat();
 
                 public SocketTransport(string host, int port) {
                         Console.WriteLine("Opening socket to: " + host + " on port: " + port);
@@ -78,7 +79,7 @@ namespace OpenWire.Client.Core {
                         while (!closed) {
                                 BaseCommand command = null;
                                 try {
-                                        command = (BaseCommand) CommandMarshallerRegistry.ReadCommand(socketReader); 
+                                        command = (BaseCommand) wireformat.Unmarshal(socketReader); 
                                 } catch (ObjectDisposedException e) {
                                         // stream closed
                                         break; 
@@ -113,7 +114,7 @@ namespace OpenWire.Client.Core {
 
                 protected void Send(Command command) {
                         lock (transmissionLock) {
-                                CommandMarshallerRegistry.WriteCommand(command, socketWriter);
+                                wireformat.Marshal(command, socketWriter);
                                 socketWriter.Flush(); 
                         } 
                 }

@@ -22,7 +22,7 @@ namespace OpenWire.Client.Commands {
                 // TODO generate ToString method
 
 
-                public override byte GetCommandType() {
+                public override byte GetDataStructureType() {
                         return ID_ActiveMQTextMessage; 
                 }
 
