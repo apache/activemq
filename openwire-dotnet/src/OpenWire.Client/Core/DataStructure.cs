@@ -7,6 +7,7 @@ namespace OpenWire.Client.Core {
         /// </summary>
         public interface DataStructure {
 
-                byte GetCommandType(); 
-        } 
+                byte GetDataStructureType();
+                bool IsMarshallAware();
+        }
 }

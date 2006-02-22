@@ -12,11 +12,15 @@ namespace OpenWire.Client.Core {
                 protected AbstractCommand() {
                 }
 
-                public virtual byte GetCommandType() {
+                public virtual byte GetDataStructureType() {
                         return 0; 
-                }
-
-                public static String GetCommandTypeAsString(int type) {
+                }             
+                
+                public virtual bool IsMarshallAware() {
+                        return false; 
+                }             
+                
+                public static String GetDataStructureTypeAsString(int type) {
                         String packetTypeStr = "";
                         switch (type) {
                                 case ActiveMQMessage.ID_ActiveMQMessage :
