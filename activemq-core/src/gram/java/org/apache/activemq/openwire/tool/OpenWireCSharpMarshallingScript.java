@@ -213,7 +213,7 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
             }
             else if (type.equals("byte[]") || type.equals("ByteSequence")) {
                 if (size != null) {
-                    out.println("dataOut.WriteBytes(" + getter + ", 0, " + size.asInt() + ");");
+                    out.println("dataOut.Write(" + getter + ", 0, " + size.asInt() + ");");
                 }
                 else {
                     out.println("if(bs.ReadBoolean()) {");
