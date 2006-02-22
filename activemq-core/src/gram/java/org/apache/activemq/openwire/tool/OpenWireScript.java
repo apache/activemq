@@ -30,26 +30,27 @@ import org.codehaus.jam.JamService;
  */
 public abstract class OpenWireScript extends GramSupport {
 
+    private String openwireVersion;
+    protected String filePostFix = ".java";
+
     public boolean isValidProperty(JProperty it) {
         JMethod getter = it.getGetter();
-        return getter != null && it.getSetter() != null && getter.isStatic() == false
-                && getter.getAnnotation("openwire:property") != null;
+        return getter != null && it.getSetter() != null && getter.isStatic() == false && getter.getAnnotation("openwire:property") != null;
     }
-    
+
     public boolean isCachedProperty(JProperty it) {
         JMethod getter = it.getGetter();
-        if( !isValidProperty(it) )
+        if (!isValidProperty(it))
             return false;
         JAnnotationValue value = getter.getAnnotation("openwire:property").getValue("cache");
-        return value!=null && value.asBoolean();
+        return value != null && value.asBoolean();
     }
 
     public boolean isAbstract(JClass j) {
         JField[] fields = j.getFields();
         for (int i = 0; i < fields.length; i++) {
             JField field = fields[i];
-            if (field.isStatic() && field.isPublic() && field.isFinal()
-                    && field.getSimpleName().equals("DATA_STRUCTURE_TYPE")) {
+            if (field.isStatic() && field.isPublic() && field.isFinal() && field.getSimpleName().equals("DATA_STRUCTURE_TYPE")) {
                 return false;
             }
         }
@@ -60,19 +61,31 @@ public abstract class OpenWireScript extends GramSupport {
         if (j.getQualifiedName().equals(Throwable.class.getName())) {
             return true;
         }
-        return j.getSuperclass()!=null && isThrowable(j.getSuperclass());
+        return j.getSuperclass() != null && isThrowable(j.getSuperclass());
     }
-    
+
     public boolean isMarshallAware(JClass j) {
-        JClass[] interfaces = j.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if( interfaces[i].getQualifiedName().equals("org.apache.activemq.command.MarshallAware") ) {
-                return true;
+        if (filePostFix.endsWith("java")) {
+            JClass[] interfaces = j.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+                if (interfaces[i].getQualifiedName().equals("org.apache.activemq.command.MarshallAware")) {
+                    return true;
+                }
             }
+            return false;
         }
-        return false; //j.getSuperclass()!=null && isMarshallAware(j.getSuperclass());
+        else {
+            String simpleName = j.getSimpleName();
+            return simpleName.equals("ActiveMQMessage");
+        }
+        /*
+         * else { // is it a message type String simpleName = j.getSimpleName();
+         * JClass superclass = j.getSuperclass(); return
+         * simpleName.equals("ActiveMQMessage") || (superclass != null &&
+         * superclass.getSimpleName().equals("ActiveMQMessage")); }
+         */
     }
-    
+
     public JamService getJam() {
         return (JamService) getBinding().getVariable("jam");
     }
@@ -80,7 +93,18 @@ public abstract class OpenWireScript extends GramSupport {
     public JamClassIterator getClasses() {
         return getJam().getClasses();
     }
-    
+
+    public String getOpenwireVersion() {
+        if (openwireVersion == null) {
+            openwireVersion = System.getProperty("openwire.version");
+        }
+        return openwireVersion;
+    }
+
+    public void setOpenwireVersion(String openwireVersion) {
+        this.openwireVersion = openwireVersion;
+    }
+
     /**
      * Converts the Java type to a C# type name
      */
@@ -103,7 +127,6 @@ public abstract class OpenWireScript extends GramSupport {
         }
     }
 
-    
     public String getOpenWireOpCode(JClass aClass) {
         return annotationValue(aClass, "openwire:marshaller", "code", "0");
     }
