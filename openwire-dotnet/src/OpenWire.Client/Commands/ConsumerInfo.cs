@@ -49,10 +49,25 @@ namespace OpenWire.Client.Commands
         BrokerId[] brokerPath;
         bool networkSubscription;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConsumerId=" + ConsumerId
+                + " Browser=" + Browser
+                + " Destination=" + Destination
+                + " PrefetchSize=" + PrefetchSize
+                + " DispatchAsync=" + DispatchAsync
+                + " Selector=" + Selector
+                + " SubcriptionName=" + SubcriptionName
+                + " NoLocal=" + NoLocal
+                + " Exclusive=" + Exclusive
+                + " Retroactive=" + Retroactive
+                + " Priority=" + Priority
+                + " BrokerPath=" + BrokerPath
+                + " NetworkSubscription=" + NetworkSubscription
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

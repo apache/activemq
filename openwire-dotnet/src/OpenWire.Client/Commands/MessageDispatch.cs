@@ -40,10 +40,16 @@ namespace OpenWire.Client.Commands
         Message message;
         int redeliveryCounter;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConsumerId=" + ConsumerId
+                + " Destination=" + Destination
+                + " Message=" + Message
+                + " RedeliveryCounter=" + RedeliveryCounter
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

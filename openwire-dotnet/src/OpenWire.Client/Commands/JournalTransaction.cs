@@ -39,10 +39,15 @@ namespace OpenWire.Client.Commands
         byte type;
         bool wasPrepared;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " TransactionId=" + TransactionId
+                + " Type=" + Type
+                + " WasPrepared=" + WasPrepared
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

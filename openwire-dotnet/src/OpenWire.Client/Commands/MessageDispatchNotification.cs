@@ -40,10 +40,16 @@ namespace OpenWire.Client.Commands
         long deliverySequenceId;
         MessageId messageId;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConsumerId=" + ConsumerId
+                + " Destination=" + Destination
+                + " DeliverySequenceId=" + DeliverySequenceId
+                + " MessageId=" + MessageId
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

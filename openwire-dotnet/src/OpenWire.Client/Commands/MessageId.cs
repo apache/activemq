@@ -39,10 +39,41 @@ namespace OpenWire.Client.Commands
         long producerSequenceId;
         long brokerSequenceId;
 
+		public override int GetHashCode() {
+            int answer = 0;
+            answer = (answer * 37) + HashCode(ProducerId);
+            answer = (answer * 37) + HashCode(ProducerSequenceId);
+            answer = (answer * 37) + HashCode(BrokerSequenceId);
+            return answer;
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
+
+		public override bool Equals(object that) {
+	    	if (that is MessageId) {
+	    	    return Equals((MessageId) that);
+			}
+			return false;
+    	}
+    
+		public virtual bool Equals(MessageId that) {
+            if (! Equals(this.ProducerId, that.ProducerId)) return false;
+            if (! Equals(this.ProducerSequenceId, that.ProducerSequenceId)) return false;
+            if (! Equals(this.BrokerSequenceId, that.BrokerSequenceId)) return false;
+            return true;
+
+		}
+	
+
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ProducerId=" + ProducerId
+                + " ProducerSequenceId=" + ProducerSequenceId
+                + " BrokerSequenceId=" + BrokerSequenceId
+                + " ]";
+
+		}
+	
 
 
         public override byte GetDataStructureType() {

@@ -109,5 +109,18 @@ namespace OpenWire.Client.Core
             }
             return packetTypeStr;
         }
+        
+        // Helper methods
+        public int HashCode(object value)
+        {
+            if (value != null)
+            {
+                return value.GetHashCode();
+            }
+            else
+            {
+                return -1;
+            }
+        }
     }
 }

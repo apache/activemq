@@ -36,10 +36,32 @@ namespace OpenWire.Client.Commands
         public const byte ID_TransactionId = 0;
     			
 
+		public override int GetHashCode() {
+            int answer = 0;
+            return answer;
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
+
+		public override bool Equals(object that) {
+	    	if (that is TransactionId) {
+	    	    return Equals((TransactionId) that);
+			}
+			return false;
+    	}
+    
+		public virtual bool Equals(TransactionId that) {
+            return true;
+
+		}
+	
+
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ]";
+
+		}
+	
 
 
         public override byte GetDataStructureType() {

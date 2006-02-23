@@ -39,10 +39,15 @@ namespace OpenWire.Client.Commands
         int version;
         int options;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Magic=" + Magic
+                + " Version=" + Version
+                + " Options=" + Options
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

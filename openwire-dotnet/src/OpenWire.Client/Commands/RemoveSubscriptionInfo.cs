@@ -39,10 +39,15 @@ namespace OpenWire.Client.Commands
         string subcriptionName;
         string clientId;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConnectionId=" + ConnectionId
+                + " SubcriptionName=" + SubcriptionName
+                + " ClientId=" + ClientId
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

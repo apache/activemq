@@ -42,10 +42,18 @@ namespace OpenWire.Client.Commands
         string clientId;
         TransactionId transactionId;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Destination=" + Destination
+                + " MessageId=" + MessageId
+                + " MessageSequenceId=" + MessageSequenceId
+                + " SubscritionName=" + SubscritionName
+                + " ClientId=" + ClientId
+                + " TransactionId=" + TransactionId
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

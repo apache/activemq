@@ -38,10 +38,14 @@ namespace OpenWire.Client.Commands
         ActiveMQDestination destination;
         MessageAck messageAck;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Destination=" + Destination
+                + " MessageAck=" + MessageAck
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

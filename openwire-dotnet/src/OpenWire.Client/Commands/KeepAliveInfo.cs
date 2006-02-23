@@ -36,10 +36,12 @@ namespace OpenWire.Client.Commands
         public const byte ID_KeepAliveInfo = 10;
     			
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

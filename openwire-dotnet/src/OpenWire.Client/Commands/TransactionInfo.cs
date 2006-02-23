@@ -39,10 +39,15 @@ namespace OpenWire.Client.Commands
         TransactionId transactionId;
         byte type;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConnectionId=" + ConnectionId
+                + " TransactionId=" + TransactionId
+                + " Type=" + Type
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

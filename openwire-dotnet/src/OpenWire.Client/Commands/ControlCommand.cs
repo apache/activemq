@@ -37,10 +37,13 @@ namespace OpenWire.Client.Commands
     			
         string command;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Command=" + Command
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

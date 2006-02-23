@@ -38,10 +38,14 @@ namespace OpenWire.Client.Commands
         BrokerError exception;
         ConnectionId connectionId;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Exception=" + Exception
+                + " ConnectionId=" + ConnectionId
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

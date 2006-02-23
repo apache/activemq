@@ -39,10 +39,41 @@ namespace OpenWire.Client.Commands
         byte[] globalTransactionId;
         byte[] branchQualifier;
 
+		public override int GetHashCode() {
+            int answer = 0;
+            answer = (answer * 37) + HashCode(FormatId);
+            answer = (answer * 37) + HashCode(GlobalTransactionId);
+            answer = (answer * 37) + HashCode(BranchQualifier);
+            return answer;
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
+
+		public override bool Equals(object that) {
+	    	if (that is XATransactionId) {
+	    	    return Equals((XATransactionId) that);
+			}
+			return false;
+    	}
+    
+		public virtual bool Equals(XATransactionId that) {
+            if (! Equals(this.FormatId, that.FormatId)) return false;
+            if (! Equals(this.GlobalTransactionId, that.GlobalTransactionId)) return false;
+            if (! Equals(this.BranchQualifier, that.BranchQualifier)) return false;
+            return true;
+
+		}
+	
+
+		public override string ToString() {
+            return GetType().Name + "["
+                + " FormatId=" + FormatId
+                + " GlobalTransactionId=" + GlobalTransactionId
+                + " BranchQualifier=" + BranchQualifier
+                + " ]";
+
+		}
+	
 
 
         public override byte GetDataStructureType() {

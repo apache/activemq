@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading;
 using OpenWire.Client.Commands;
 
@@ -13,6 +14,7 @@ namespace OpenWire.Client
         private Session session;
         private ConsumerInfo info;
         private bool closed;
+        private Dispatcher dispatcher = new Dispatcher();
         
         public event MessageHandler Listener;
         
@@ -28,22 +30,25 @@ namespace OpenWire.Client
         /// <param name="message">An ActiveMQMessage</param>
         public void Dispatch(ActiveMQMessage message)
         {
-            Console.WriteLine("Dispatching message to consumer: " + message);
+            dispatcher.Enqueue(message);
         }
         
         public IMessage Receive()
         {
             CheckClosed();
-            Thread.Sleep(60000);
-            // TODO
-            return null;
+            return dispatcher.Dequeue();
+        }
+        
+        public IMessage Receive(long timeout)
+        {
+            CheckClosed();
+            return dispatcher.Dequeue(timeout);
         }
         
         public IMessage ReceiveNoWait()
         {
             CheckClosed();
-            // TODO
-            return null;
+            return dispatcher.DequeueNoWait();
         }
         
         public void Dispose()

@@ -38,10 +38,38 @@ namespace OpenWire.Client.Commands
         string connectionId;
         long value;
 
+		public override int GetHashCode() {
+            int answer = 0;
+            answer = (answer * 37) + HashCode(ConnectionId);
+            answer = (answer * 37) + HashCode(Value);
+            return answer;
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
+
+		public override bool Equals(object that) {
+	    	if (that is SessionId) {
+	    	    return Equals((SessionId) that);
+			}
+			return false;
+    	}
+    
+		public virtual bool Equals(SessionId that) {
+            if (! Equals(this.ConnectionId, that.ConnectionId)) return false;
+            if (! Equals(this.Value, that.Value)) return false;
+            return true;
+
+		}
+	
+
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConnectionId=" + ConnectionId
+                + " Value=" + Value
+                + " ]";
+
+		}
+	
 
 
         public override byte GetDataStructureType() {

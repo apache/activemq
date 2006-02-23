@@ -43,11 +43,11 @@ namespace OpenWire.Client
         {
             if (acknowledgementMode == AcknowledgementMode.ClientAcknowledge)
             {
-                MessageAck ack = new MessageAck();
-                // TODO complete packet
+                MessageAck ack = CreateMessageAck(message);
                 connection.SyncRequest(ack);
             }
         }
+        
         
         public IMessageConsumer CreateConsumer(IDestination destination)
         {
@@ -57,10 +57,22 @@ namespace OpenWire.Client
         public IMessageConsumer CreateConsumer(IDestination destination, string selector)
         {
             ConsumerInfo command = CreateConsumerInfo(destination, selector);
-            connection.SyncRequest(command);
-            MessageConsumer consumer = new MessageConsumer(this, command);
-            connection.AddConsumer(command.ConsumerId, consumer);
-            return consumer;
+            ConsumerId consumerId = command.ConsumerId;
+            
+            try
+            {
+                MessageConsumer consumer = new MessageConsumer(this, command);
+                // lets register the consumer first in case we start dispatching messages immediately
+                connection.AddConsumer(consumerId, consumer);
+                
+                connection.SyncRequest(command);
+                return consumer;
+            }
+            catch (Exception e)
+            {
+                connection.RemoveConsumer(consumerId);
+                throw e;
+            }
         }
         
         public IQueue GetQueue(string name)
@@ -105,26 +117,21 @@ namespace OpenWire.Client
         
         public void DisposeOf(DataStructure objectId)
         {
-            Console.WriteLine("Disposing of session: " + objectId + " with datatype: " + objectId.GetDataStructureType());
-            /*
-             RemoveInfo command = new RemoveInfo();
-             command.ObjectId = objectId;
-             connection.SyncRequest(command);
-             */
+            // TODO dispose of all the session first?
+            RemoveInfo command = new RemoveInfo();
+            command.ObjectId = objectId;
+            connection.SyncRequest(command);
         }
         
         public void DisposeOf(ConsumerId objectId)
         {
-            Console.WriteLine("Disposing of consumer: " + objectId);
             connection.RemoveConsumer(objectId);
-            /*
-             RemoveInfo command = new RemoveInfo();
-             command.ObjectId = objectId;
-             connection.SyncRequest(command);
-             */
+            RemoveInfo command = new RemoveInfo();
+            command.ObjectId = objectId;
+            connection.SyncRequest(command);
         }
         
-        protected ConsumerInfo CreateConsumerInfo(IDestination destination, string selector)
+        protected virtual ConsumerInfo CreateConsumerInfo(IDestination destination, string selector)
         {
             ConsumerInfo answer = new ConsumerInfo();
             ConsumerId id = new ConsumerId();
@@ -143,7 +150,7 @@ namespace OpenWire.Client
             return answer;
         }
         
-        protected ProducerInfo CreateProducerInfo(IDestination destination)
+        protected virtual ProducerInfo CreateProducerInfo(IDestination destination)
         {
             ProducerInfo answer = new ProducerInfo();
             ProducerId id = new ProducerId();
@@ -156,6 +163,13 @@ namespace OpenWire.Client
             answer.ProducerId = id;
             answer.Destination = (ActiveMQDestination) destination;
             return answer;
+        }
+        
+        protected virtual MessageAck CreateMessageAck(Message message)
+        {
+            MessageAck ack = new MessageAck();
+            // TODO complete packet
+            return ack;
         }
         
         /// <summary>

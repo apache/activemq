@@ -37,10 +37,13 @@ namespace OpenWire.Client.Commands
     			
         BrokerError exception;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Exception=" + Exception
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

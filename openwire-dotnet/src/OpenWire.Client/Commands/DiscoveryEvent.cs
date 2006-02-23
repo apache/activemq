@@ -38,10 +38,14 @@ namespace OpenWire.Client.Commands
         string serviceName;
         string brokerName;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ServiceName=" + ServiceName
+                + " BrokerName=" + BrokerName
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {
