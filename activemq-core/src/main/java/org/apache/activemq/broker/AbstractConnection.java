@@ -334,7 +334,10 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
 
     public Response processMessage(Message messageSend) throws Throwable {
-        broker.send(lookupConnectionState(messageSend.getProducerId()).getContext(), messageSend);
+        ProducerId producerId = messageSend.getProducerId();
+        ConnectionState state = lookupConnectionState(producerId);
+        ConnectionContext context = state.getContext();
+        broker.send(context, messageSend);
         return null;
     }
 
