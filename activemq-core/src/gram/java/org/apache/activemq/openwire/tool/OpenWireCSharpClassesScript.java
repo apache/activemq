@@ -17,8 +17,10 @@
 package org.apache.activemq.openwire.tool;
 
 import org.codehaus.jam.JClass;
+import org.codehaus.jam.JProperty;
 
-import java.io.File;
+import java.io.*;
+import java.util.Iterator;
 
 /**
  *
@@ -33,6 +35,53 @@ public abstract class OpenWireCSharpClassesScript extends OpenWireClassesScript 
         }
         
         return super.run();
+    }
+    
+    public String makeHashCodeBody() throws Exception {
+        if (simpleName.endsWith("Id")) {
+            StringWriter buffer = new StringWriter();
+            PrintWriter out = new PrintWriter(buffer);
+            out.println("            int answer = 0;");
+            Iterator iter = getProperties().iterator();
+            while (iter.hasNext()) {
+                JProperty property = (JProperty) iter.next();
+                out.println("            answer = (answer * 37) + HashCode(" + property.getSimpleName() + ");");
+            }
+            out.println("            return answer;");
+            return buffer.toString();
+        }
+        return null;
+    }
+
+    public String makeEqualsBody() throws Exception {
+        if (simpleName.endsWith("Id")) {
+            StringWriter buffer = new StringWriter();
+            PrintWriter out = new PrintWriter(buffer);
+            
+            Iterator iter = getProperties().iterator();
+            while (iter.hasNext()) {
+                JProperty property = (JProperty) iter.next();
+                String name = property.getSimpleName();
+                out.println("            if (! Equals(this." + name + ", that." + name + ")) return false;");
+            }
+            out.println("            return true;");
+            return buffer.toString();
+        }
+        return null;
+    }
+    
+    public String makeToStringBody() throws Exception {
+            StringWriter buffer = new StringWriter();
+            PrintWriter out = new PrintWriter(buffer);
+            out.println("            return GetType().Name + \"[\"");
+            Iterator iter = getProperties().iterator();
+            while (iter.hasNext()) {
+                JProperty property = (JProperty) iter.next();
+                String name = property.getSimpleName();
+                out.println("                + \" " + name + "=\" + " + name);
+            }
+            out.println("                + \" ]\";");
+            return buffer.toString();
     }
 
 

@@ -69,12 +69,40 @@ namespace OpenWire.Client.Commands
 """
     }
 
+	def text = makeHashCodeBody()
+	if (text != null) out << 
+"""
+		public override int GetHashCode() {
+$text
+		}
+	
+"""	
+	   
+	text = makeEqualsBody()
+	if (text != null) out << 
+"""
+		public override bool Equals(object that) {
+	    	if (that is ${className}) {
+	    	    return Equals((${className}) that);
+			}
+			return false;
+    	}
+    
+		public virtual bool Equals(${className} that) {
+$text
+		}
+	
+"""	
+	    
+	text = makeToStringBody()
+	if (text != null) out << """
+		public override string ToString() {
+$text
+		}
+	
+"""	
+	    
     out << """
-
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
-
 
         public override byte GetDataStructureType() {
             return ID_${jclass.simpleName};
