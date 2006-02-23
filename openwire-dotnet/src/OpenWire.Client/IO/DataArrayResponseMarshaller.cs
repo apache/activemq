@@ -58,7 +58,7 @@ namespace OpenWire.Client.IO
         DataArrayResponse info = (DataArrayResponse)o;
 
         if (bs.ReadBoolean()) {
-            short size = dataIn.ReadInt16();
+            short size = DataStreamMarshaller.ReadShort(dataIn);
             DataStructure[] value = new DataStructure[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (DataStructure) UnmarshalNestedObject(wireFormat,dataIn, bs);

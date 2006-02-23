@@ -59,17 +59,17 @@ namespace OpenWire.Client.IO
         info.ConsumerId = (ConsumerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Browser = bs.ReadBoolean();
         info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.PrefetchSize = dataIn.ReadInt32();
+        info.PrefetchSize = DataStreamMarshaller.ReadInt(dataIn);
         info.DispatchAsync = bs.ReadBoolean();
         info.Selector = ReadString(dataIn, bs);
         info.SubcriptionName = ReadString(dataIn, bs);
         info.NoLocal = bs.ReadBoolean();
         info.Exclusive = bs.ReadBoolean();
         info.Retroactive = bs.ReadBoolean();
-        info.Priority = dataIn.ReadByte();
+        info.Priority = DataStreamMarshaller.ReadByte(dataIn);
 
         if (bs.ReadBoolean()) {
-            short size = dataIn.ReadInt16();
+            short size = DataStreamMarshaller.ReadShort(dataIn);
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (BrokerId) UnmarshalNestedObject(wireFormat,dataIn, bs);
@@ -116,14 +116,14 @@ namespace OpenWire.Client.IO
         Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
         bs.ReadBoolean();
         Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        dataOut.Write((int) info.PrefetchSize);
+        DataStreamMarshaller.WriteInt(info.PrefetchSize, dataOut);
         bs.ReadBoolean();
         WriteString(info.Selector, dataOut, bs);
         WriteString(info.SubcriptionName, dataOut, bs);
         bs.ReadBoolean();
         bs.ReadBoolean();
         bs.ReadBoolean();
-        dataOut.Write((byte) info.Priority);
+        DataStreamMarshaller.WriteByte(info.Priority, dataOut);
         MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
         bs.ReadBoolean();
 

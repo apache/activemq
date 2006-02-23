@@ -13,51 +13,38 @@ using System.Collections;
 using OpenWire.Client;
 using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Commands {
-
-        public class BaseCommand : AbstractCommand {
-                public const byte ID_BaseCommand = 0;
-
-                short commandId;
-                bool responseRequired;
-
-
-                public override int GetHashCode() {
-                        return commandId;
-                }
-
-                public override bool Equals(Object that) {
-                        if (that is BaseCommand) {
-                                BaseCommand thatCommand = (BaseCommand) that;
-                                return this.GetDataStructureType() == thatCommand.GetDataStructureType()
-                                        && this.CommandId == thatCommand.CommandId; 
-                        }
-                        return false; 
-                }
-
-                public override String ToString() {
-                        string answer = GetDataStructureTypeAsString(GetDataStructureType());
-                        if (answer.Length == 0) {
-                                answer = base.ToString(); 
-                        }
-                        return answer + ": id = " + CommandId; 
-                }
-
-                public override byte GetDataStructureType() {
-                        return ID_BaseCommand; 
-                }
-
-
-                // Properties
-
-                public short CommandId {
-                        get { return commandId; }
-                        set { this.commandId = value; } 
-                }
-
-                public bool ResponseRequired {
-                        get { return responseRequired; }
-                        set { this.responseRequired = value; } 
-                } 
-        } 
+namespace OpenWire.Client.Commands
+{
+    
+    public abstract class BaseCommand : AbstractCommand
+    {
+        
+        public override int GetHashCode()
+        {
+            return (CommandId * 37) + GetDataStructureType();
+        }
+        
+        public override bool Equals(Object that)
+        {
+            if (that is BaseCommand)
+            {
+                BaseCommand thatCommand = (BaseCommand) that;
+                return this.GetDataStructureType() == thatCommand.GetDataStructureType()
+                    && this.CommandId == thatCommand.CommandId;
+            }
+            return false;
+        }
+        
+        public override String ToString()
+        {
+            string answer = GetDataStructureTypeAsString(GetDataStructureType());
+            if (answer.Length == 0)
+            {
+                answer = base.ToString();
+            }
+            return answer + ": id = " + CommandId;
+        }
+        
+        
+    }
 }
