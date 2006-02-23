@@ -20,6 +20,7 @@ import org.activeio.command.WireFormat;
 import org.activeio.command.WireFormatFactory;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
+import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
@@ -102,7 +103,8 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                         HashMap options = new HashMap();
                         WireFormat format = wireFormatFactory.createWireFormat();
                         TcpTransport transport = new TcpTransport(format, socket);
-                        getAcceptListener().onAccept(transportFactory.configure(transport, format, options));
+                        Transport configuredTransport = transportFactory.configure(transport, format, options);
+                        getAcceptListener().onAccept(configuredTransport);
                     }
                 }
             }
