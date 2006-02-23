@@ -37,10 +37,35 @@ namespace OpenWire.Client.Commands
     			
         string value;
 
+		public override int GetHashCode() {
+            int answer = 0;
+            answer = (answer * 37) + HashCode(Value);
+            return answer;
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
+
+		public override bool Equals(object that) {
+	    	if (that is BrokerId) {
+	    	    return Equals((BrokerId) that);
+			}
+			return false;
+    	}
+    
+		public virtual bool Equals(BrokerId that) {
+            if (! Equals(this.Value, that.Value)) return false;
+            return true;
+
+		}
+	
+
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Value=" + Value
+                + " ]";
+
+		}
+	
 
 
         public override byte GetDataStructureType() {

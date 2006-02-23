@@ -3,6 +3,7 @@ using System.IO;
 
 using OpenWire.Client;
 using OpenWire.Client.Core;
+using OpenWire.Client.Commands;
 
 namespace openwire_dotnet
 {
@@ -32,10 +33,14 @@ namespace openwire_dotnet
                     
                     IMessageProducer producer = session.CreateProducer(destination);
                     string expected = "Hello World!";
+                    
+                    
                     ITextMessage request = session.CreateTextMessage(expected);
+                    
                     producer.Send(request);
                     
-                    ITextMessage message = (ITextMessage) consumer.Receive();
+                    Console.WriteLine("### About to receive message...");
+                    ActiveMQTextMessage message = (ActiveMQTextMessage) consumer.Receive();
                     if (message == null)
                     {
                         Console.WriteLine("### No message!!");

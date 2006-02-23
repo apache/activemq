@@ -41,10 +41,17 @@ namespace OpenWire.Client.Commands
         string userName;
         BrokerId[] brokerPath;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConnectionId=" + ConnectionId
+                + " ClientId=" + ClientId
+                + " Password=" + Password
+                + " UserName=" + UserName
+                + " BrokerPath=" + BrokerPath
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

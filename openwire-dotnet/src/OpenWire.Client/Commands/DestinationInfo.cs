@@ -41,10 +41,17 @@ namespace OpenWire.Client.Commands
         long timeout;
         BrokerId[] brokerPath;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ConnectionId=" + ConnectionId
+                + " Destination=" + Destination
+                + " OperationType=" + OperationType
+                + " Timeout=" + Timeout
+                + " BrokerPath=" + BrokerPath
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

@@ -37,10 +37,13 @@ namespace OpenWire.Client.Commands
     			
         short correlationId;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " CorrelationId=" + CorrelationId
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

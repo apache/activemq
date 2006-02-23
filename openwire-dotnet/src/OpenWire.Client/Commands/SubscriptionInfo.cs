@@ -40,10 +40,16 @@ namespace OpenWire.Client.Commands
         string selector;
         string subcriptionName;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ClientId=" + ClientId
+                + " Destination=" + Destination
+                + " Selector=" + Selector
+                + " SubcriptionName=" + SubcriptionName
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

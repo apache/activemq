@@ -15,13 +15,15 @@ namespace OpenWire.Client
         private ITransport transport;
         private ConnectionInfo info;
         private WireFormatInfo wireFormatInfo = new WireFormatInfo();
-        IList sessions = new ArrayList();
+        private BrokerInfo brokerInfo; // from broker
+        private WireFormatInfo brokerWireFormatInfo; // from broker
+        private IList sessions = new ArrayList();
         private bool transacted;
         private bool connected;
         private bool closed;
         private AcknowledgementMode acknowledgementMode;
         private long sessionCounter;
-        private IDictionary consumers = new Hashtable(); // TODO threadsafe
+        private IDictionary consumers = new Hashtable();// TODO threadsafe
         
         
         public Connection(ITransport transport, ConnectionInfo info)
@@ -29,6 +31,7 @@ namespace OpenWire.Client
             this.transport = transport;
             this.info = info;
             this.transport.Command += new CommandHandler(OnCommand);
+            this.transport.Start();
         }
         
         
@@ -135,18 +138,13 @@ namespace OpenWire.Client
             }
             if (!connected)
             {
-                Console.WriteLine("ConnectionId: " + info.ConnectionId.Value);
-                Console.WriteLine("ClientID: " + info.ClientId);
-                
-                Console.WriteLine("About to send WireFormatInfo: " + wireFormatInfo);
                 // lets configure the wire format
                 wireFormatInfo.Magic = CreateMagicBytes();
                 wireFormatInfo.Version = 1;
                 transport.Oneway(wireFormatInfo);
                 
-                Console.WriteLine("About to send ConnectionInfo: " + info);
+                // now lets send the connection and see if we get an ack/nak
                 SyncRequest(info);
-                Console.WriteLine("Received connection info response");
                 connected = true;
             }
         }
@@ -158,7 +156,6 @@ namespace OpenWire.Client
         /// <param name="consumer">A  MessageConsumer</param>
         public void AddConsumer(ConsumerId consumerId, MessageConsumer consumer)
         {
-            Console.WriteLine("#### Adding consumerId: " + consumerId.Value + " session: " + consumerId.SessionId + " with consumer: " + consumer);
             consumers[consumerId] = consumer;
         }
         
@@ -180,22 +177,30 @@ namespace OpenWire.Client
         /// <param name="command">A  Command</param>
         protected void OnCommand(ITransport transport, Command command)
         {
-            if (command is MessageDispatch) {
+            if (command is MessageDispatch)
+            {
                 MessageDispatch dispatch = (MessageDispatch) command;
                 ConsumerId consumerId = dispatch.ConsumerId;
                 MessageConsumer consumer = (MessageConsumer) consumers[consumerId];
-                if (consumer == null) {
-                    Console.WriteLine("No such consumer active: " + consumerId);
-                    Console.WriteLine("No such consumer active: " + consumerId.Value);
-                    Console.WriteLine("No such consumer active: " + consumerId.SessionId);
+                if (consumer == null)
+                {
+                    Console.WriteLine("ERROR: No such consumer active: " + consumerId);
                 }
-                else {
+                else
+                {
                     ActiveMQMessage message = (ActiveMQMessage) dispatch.Message;
                     consumer.Dispatch(message);
                 }
             }
-            else {
-                Console.WriteLine("Unknown command: " + command);
+            else if (command is WireFormatInfo) {
+                this.brokerWireFormatInfo = (WireFormatInfo) command;
+            }
+            else if (command is BrokerInfo) {
+                this.brokerInfo = (BrokerInfo) command;
+            }
+            else
+            {
+                Console.WriteLine("ERROR:ÊUnknown command: " + command);
             }
         }
         

@@ -39,10 +39,15 @@ namespace OpenWire.Client.Commands
         ActiveMQDestination destination;
         BrokerId[] brokerPath;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ProducerId=" + ProducerId
+                + " Destination=" + Destination
+                + " BrokerPath=" + BrokerPath
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

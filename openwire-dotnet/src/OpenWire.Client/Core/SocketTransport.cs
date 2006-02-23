@@ -21,34 +21,50 @@ namespace OpenWire.Client.Core
     public class SocketTransport : ITransport
     {
         private readonly object transmissionLock = new object();
-        private readonly Socket socket;
+        private Socket socket;
         private OpenWireFormat wireformat = new OpenWireFormat();
-        private readonly BinaryReader socketReader;
-        private readonly BinaryWriter socketWriter;
-        private readonly Thread readThread;
+        private BinaryReader socketReader;
+        private BinaryWriter socketWriter;
+        private Thread readThread;
         private bool closed;
         private IDictionary requestMap = new Hashtable(); // TODO threadsafe
         private short nextCommandId;
+        private bool started;
         
         public event CommandHandler Command;
         public event ExceptionHandler Exception;
         
+        
+        
         public SocketTransport(string host, int port)
         {
-            Console.WriteLine("Opening socket to: " + host + " on port: " + port);
+            //Console.WriteLine("Opening socket to: " + host + " on port: " + port);
             socket = Connect(host, port);
-            NetworkStream networkStream = new NetworkStream(socket);
-            socketWriter = new BinaryWriter(networkStream);
-            socketReader = new BinaryReader(networkStream);
-            /*
-             socketWriter = new BinaryWriter(new NetworkStream(socket));
-             socketReader = new BinaryReader(new NetworkStream(socket));
-             */
-            
-            // now lets create the background read thread
-            readThread = new Thread(new ThreadStart(ReadLoop));
-            readThread.Start();
         }
+        
+        /// <summary>
+        /// Method Start
+        /// </summary>
+        public void Start()
+        {
+            if (!started)
+            {
+                started = true;
+                
+                NetworkStream networkStream = new NetworkStream(socket);
+                socketWriter = new BinaryWriter(networkStream);
+                socketReader = new BinaryReader(networkStream);
+                /*
+                 socketWriter = new BinaryWriter(new NetworkStream(socket));
+                 socketReader = new BinaryReader(new NetworkStream(socket));
+                 */
+                
+                // now lets create the background read thread
+                readThread = new Thread(new ThreadStart(ReadLoop));
+                readThread.Start();
+            }
+        }
+        
         
         public void Oneway(Command command)
         {
@@ -75,7 +91,6 @@ namespace OpenWire.Client.Core
         
         public void Dispose()
         {
-            Console.WriteLine("Closing the socket");
             lock (transmissionLock)
             {
                 socket.Close();
@@ -87,23 +102,12 @@ namespace OpenWire.Client.Core
         
         public void ReadLoop()
         {
-            Console.WriteLine("Starting to read commands from ActiveMQ");
             while (!closed)
             {
                 Command command = null;
                 try
                 {
                     command = (Command) wireformat.Unmarshal(socketReader);
-                    if (command != null)
-                    {
-                        Console.WriteLine("Received command: " + command);
-                        if (command is RemoveInfo)
-                        {
-                            RemoveInfo info = (RemoveInfo) command;
-                            Console.WriteLine("Remove CommandId: " + info.CommandId);
-                            Console.WriteLine("Remove ObjectID: " + info.ObjectId);
-                        }
-                    }
                 }
                 catch (EndOfStreamException e)
                 {
@@ -115,11 +119,15 @@ namespace OpenWire.Client.Core
                     // stream closed
                     break;
                 }
+                catch (IOException e)
+                {
+                    // error, assume closing
+                    break;
+                }
                 if (command is Response)
                 {
-                    Console.WriteLine("Received response!: " + command);
                     Response response = (Response) command;
-                    FutureResponse future = (FutureResponse) requestMap[response.CommandId];
+                    FutureResponse future = (FutureResponse) requestMap[response.CorrelationId];
                     if (future != null)
                     {
                         if (response is ExceptionResponse)
@@ -142,7 +150,7 @@ namespace OpenWire.Client.Core
                     }
                     else
                     {
-                        Console.WriteLine("Unknown response ID: " + response.CommandId);
+                        Console.WriteLine("ERROR: Unknown response ID: " + response.CommandId + " for response: " + response);
                     }
                 }
                 else
@@ -153,7 +161,7 @@ namespace OpenWire.Client.Core
                     }
                     else
                     {
-                        Console.WriteLine("No handler available to process command: " + command);
+                        Console.WriteLine("ERROR: No handler available to process command: " + command);
                     }
                 }
             }
@@ -166,7 +174,7 @@ namespace OpenWire.Client.Core
         {
             lock (transmissionLock)
             {
-                Console.WriteLine("Sending command: " + command  + " with ID: " + command.CommandId + " response: " + command.ResponseRequired);
+                //Console.WriteLine("Sending command: " + command  + " with ID: " + command.CommandId + " response: " + command.ResponseRequired);
                 
                 wireformat.Marshal(command, socketWriter);
                 socketWriter.Flush();
@@ -202,3 +210,4 @@ namespace OpenWire.Client.Core
         }
     }
 }
+

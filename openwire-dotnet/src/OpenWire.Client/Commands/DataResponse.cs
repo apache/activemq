@@ -37,10 +37,13 @@ namespace OpenWire.Client.Commands
     			
         DataStructure data;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Data=" + Data
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

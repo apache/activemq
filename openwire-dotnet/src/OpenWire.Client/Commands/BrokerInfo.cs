@@ -41,10 +41,17 @@ namespace OpenWire.Client.Commands
         string brokerName;
         bool slaveBroker;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " BrokerId=" + BrokerId
+                + " BrokerURL=" + BrokerURL
+                + " PeerBrokerInfos=" + PeerBrokerInfos
+                + " BrokerName=" + BrokerName
+                + " SlaveBroker=" + SlaveBroker
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

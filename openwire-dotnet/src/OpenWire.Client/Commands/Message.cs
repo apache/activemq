@@ -61,10 +61,37 @@ namespace OpenWire.Client.Commands
         string userID;
         bool recievedByDFBridge;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " ProducerId=" + ProducerId
+                + " Destination=" + Destination
+                + " TransactionId=" + TransactionId
+                + " OriginalDestination=" + OriginalDestination
+                + " MessageId=" + MessageId
+                + " OriginalTransactionId=" + OriginalTransactionId
+                + " GroupID=" + GroupID
+                + " GroupSequence=" + GroupSequence
+                + " CorrelationId=" + CorrelationId
+                + " Persistent=" + Persistent
+                + " Expiration=" + Expiration
+                + " Priority=" + Priority
+                + " ReplyTo=" + ReplyTo
+                + " Timestamp=" + Timestamp
+                + " Type=" + Type
+                + " Content=" + Content
+                + " MarshalledProperties=" + MarshalledProperties
+                + " DataStructure=" + DataStructure
+                + " TargetConsumerId=" + TargetConsumerId
+                + " Compressed=" + Compressed
+                + " RedeliveryCounter=" + RedeliveryCounter
+                + " BrokerPath=" + BrokerPath
+                + " Arrival=" + Arrival
+                + " UserID=" + UserID
+                + " RecievedByDFBridge=" + RecievedByDFBridge
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {

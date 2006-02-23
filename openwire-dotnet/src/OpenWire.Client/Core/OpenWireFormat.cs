@@ -65,7 +65,7 @@ namespace OpenWire.Client.Core
                 DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[dataType & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + dataType);
-                Console.WriteLine("Parsing type: " + dataType + " with: " + dsm);
+                //Console.WriteLine("Parsing type: " + dataType + " with: " + dsm);
                 Object data = dsm.CreateObject();
                 BooleanStream bs = new BooleanStream();
                 bs.Unmarshal(dis);
@@ -102,7 +102,7 @@ namespace OpenWire.Client.Core
             DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
             if (dsm == null)
                 throw new IOException("Unknown data type: " + type);
-            Console.WriteLine("Marshalling type: " + type + " with structure: " + o);
+            //Console.WriteLine("Marshalling type: " + type + " with structure: " + o);
             return 1 + dsm.Marshal1(this, o, bs);
         }
         

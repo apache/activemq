@@ -74,7 +74,7 @@ namespace OpenWire.Client
         
         // Implementation methods
         
-        protected ConnectionInfo CreateConnectionInfo(string userName, string password)
+        protected virtual ConnectionInfo CreateConnectionInfo(string userName, string password)
         {
             ConnectionInfo answer = new ConnectionInfo();
             ConnectionId connectionId = new ConnectionId();

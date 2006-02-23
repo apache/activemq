@@ -38,9 +38,6 @@ namespace OpenWire.Client
             activeMessage.ProducerId = info.ProducerId;
             activeMessage.Destination = (ActiveMQDestination) destination;
             
-            Console.WriteLine("About to send message with MessageId: " + activeMessage.MessageId);
-            Console.WriteLine("About to send message with ProducerId: " + activeMessage.ProducerId);
-            Console.WriteLine("About to send message with Destination: " + activeMessage.Destination);
             session.DoSend(destination, message);
         }
         

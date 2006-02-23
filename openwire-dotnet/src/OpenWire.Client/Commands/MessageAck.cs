@@ -43,10 +43,19 @@ namespace OpenWire.Client.Commands
         MessageId lastMessageId;
         int messageCount;
 
+		public override string ToString() {
+            return GetType().Name + "["
+                + " Destination=" + Destination
+                + " TransactionId=" + TransactionId
+                + " ConsumerId=" + ConsumerId
+                + " AckType=" + AckType
+                + " FirstMessageId=" + FirstMessageId
+                + " LastMessageId=" + LastMessageId
+                + " MessageCount=" + MessageCount
+                + " ]";
 
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
+		}
+	
 
 
         public override byte GetDataStructureType() {
