@@ -23,12 +23,16 @@ import org.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 
 
 public class WireFormatNegotiator extends TransportFilter {
 
+    private static final Log log = LogFactory.getLog(WireFormatNegotiator.class);
+    
     private final WireFormat wireFormat;
     private final int minimumVersion;
     
@@ -79,6 +83,10 @@ public class WireFormatNegotiator extends TransportFilter {
     public void onCommand(Command command) {
         if( command.isWireFormatInfo() ) {
             WireFormatInfo info = (WireFormatInfo) command;
+            if (log.isDebugEnabled()) {
+                log.debug("Received WireFormat: " + info + " with version: 0x" + Integer.toString(info.getVersion(), 16));
+            }
+            
             if( !info.isValid() ) {
                 commandListener.onException(new IOException("Remote wire format magic is invalid"));
             } else if( info.getVersion() < minimumVersion ) {
