@@ -60,7 +60,7 @@ namespace OpenWire.Client.IO
         info.BrokerURL = ReadString(dataIn, bs);
 
         if (bs.ReadBoolean()) {
-            short size = dataIn.ReadInt16();
+            short size = DataStreamMarshaller.ReadShort(dataIn);
             BrokerInfo[] value = new BrokerInfo[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (BrokerInfo) UnmarshalNestedObject(wireFormat,dataIn, bs);

@@ -22,13 +22,13 @@ namespace OpenWire.Client.Commands {
 
                 
                 public override bool IsMarshallAware() {
-                        return true; 
-                }     
+                        return true;
+                }
                 
                 // Properties
                 public IDestination FromDestination {
-                        get { return Destination; } 
-                        set { this.Destination = ActiveMQDestination.Transform(value); } 
+                        get { return Destination; }
+                        set { this.Destination = ActiveMQDestination.Transform(value); }
                 }
 
                 public void BeforeMarshall(OpenWireFormat wireFormat) {

@@ -60,7 +60,7 @@ namespace OpenWire.Client.IO
         info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
 
         if (bs.ReadBoolean()) {
-            short size = dataIn.ReadInt16();
+            short size = DataStreamMarshaller.ReadShort(dataIn);
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (BrokerId) UnmarshalNestedObject(wireFormat,dataIn, bs);

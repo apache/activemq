@@ -58,7 +58,7 @@ namespace OpenWire.Client.IO
         TransactionInfo info = (TransactionInfo)o;
         info.ConnectionId = (ConnectionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
         info.TransactionId = (TransactionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.Type = dataIn.ReadByte();
+        info.Type = DataStreamMarshaller.ReadByte(dataIn);
 
     }
 
@@ -85,7 +85,7 @@ namespace OpenWire.Client.IO
         TransactionInfo info = (TransactionInfo)o;
         Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
         Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
-        dataOut.Write((byte) info.Type);
+        DataStreamMarshaller.WriteByte(info.Type, dataOut);
 
     }
   }

@@ -56,7 +56,7 @@ namespace OpenWire.Client.IO
         base.Unmarshal(wireFormat, o, dataIn, bs);
 
         IntegerResponse info = (IntegerResponse)o;
-        info.Result = dataIn.ReadInt32();
+        info.Result = DataStreamMarshaller.ReadInt(dataIn);
 
     }
 
@@ -79,7 +79,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         IntegerResponse info = (IntegerResponse)o;
-        dataOut.Write((int) info.Result);
+        DataStreamMarshaller.WriteInt(info.Result, dataOut);
 
     }
   }

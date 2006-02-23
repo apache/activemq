@@ -59,7 +59,7 @@ namespace OpenWire.Client.IO
         info.ConsumerId = (ConsumerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Message = (Message) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.RedeliveryCounter = dataIn.ReadInt32();
+        info.RedeliveryCounter = DataStreamMarshaller.ReadInt(dataIn);
 
     }
 
@@ -88,7 +88,7 @@ namespace OpenWire.Client.IO
         Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
         Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
         Marshal2NestedObject(wireFormat, info.Message, dataOut, bs);
-        dataOut.Write((int) info.RedeliveryCounter);
+        DataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
 
     }
   }

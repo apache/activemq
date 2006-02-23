@@ -58,11 +58,11 @@ namespace OpenWire.Client.IO
         DestinationInfo info = (DestinationInfo)o;
         info.ConnectionId = (ConnectionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.OperationType = dataIn.ReadByte();
+        info.OperationType = DataStreamMarshaller.ReadByte(dataIn);
         info.Timeout = UnmarshalLong(wireFormat, dataIn, bs);
 
         if (bs.ReadBoolean()) {
-            short size = dataIn.ReadInt16();
+            short size = DataStreamMarshaller.ReadShort(dataIn);
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (BrokerId) UnmarshalNestedObject(wireFormat,dataIn, bs);
@@ -100,7 +100,7 @@ namespace OpenWire.Client.IO
         DestinationInfo info = (DestinationInfo)o;
         Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
         Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        dataOut.Write((byte) info.OperationType);
+        DataStreamMarshaller.WriteByte(info.OperationType, dataOut);
         Marshal2Long(wireFormat, info.Timeout, dataOut, bs);
         MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
 

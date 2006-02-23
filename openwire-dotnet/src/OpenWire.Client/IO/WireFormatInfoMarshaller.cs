@@ -57,8 +57,8 @@ namespace OpenWire.Client.IO
 
         WireFormatInfo info = (WireFormatInfo)o;
         info.Magic = ReadBytes(dataIn, 8);
-        info.Version = dataIn.ReadInt32();
-        info.Options = dataIn.ReadInt32();
+        info.Version = DataStreamMarshaller.ReadInt(dataIn);
+        info.Options = DataStreamMarshaller.ReadInt(dataIn);
 
     }
 
@@ -82,8 +82,8 @@ namespace OpenWire.Client.IO
 
         WireFormatInfo info = (WireFormatInfo)o;
         dataOut.Write(info.Magic, 0, 8);
-        dataOut.Write((int) info.Version);
-        dataOut.Write((int) info.Options);
+        DataStreamMarshaller.WriteInt(info.Version, dataOut);
+        DataStreamMarshaller.WriteInt(info.Options, dataOut);
 
     }
   }

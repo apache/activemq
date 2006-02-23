@@ -57,7 +57,7 @@ namespace OpenWire.Client.IO
 
         JournalTransaction info = (JournalTransaction)o;
         info.TransactionId = (TransactionId) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.Type = dataIn.ReadByte();
+        info.Type = DataStreamMarshaller.ReadByte(dataIn);
         info.WasPrepared = bs.ReadBoolean();
 
     }
@@ -84,7 +84,7 @@ namespace OpenWire.Client.IO
 
         JournalTransaction info = (JournalTransaction)o;
         Marshal2NestedObject(wireFormat, info.TransactionId, dataOut, bs);
-        dataOut.Write((byte) info.Type);
+        DataStreamMarshaller.WriteByte(info.Type, dataOut);
         bs.ReadBoolean();
 
     }
