@@ -49,16 +49,16 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
             out.println("info." + propertyName + " = bs.ReadBoolean();");
         }
         else if (type.equals("byte")) {
-            out.println("info." + propertyName + " = dataIn.ReadByte();");
+            out.println("info." + propertyName + " = DataStreamMarshaller.ReadByte(dataIn);");
         }
         else if (type.equals("char")) {
-            out.println("info." + propertyName + " = dataIn.ReadChar();");
+            out.println("info." + propertyName + " = DataStreamMarshaller.ReadChar(dataIn);");
         }
         else if (type.equals("short")) {
-            out.println("info." + propertyName + " = dataIn.ReadInt16();");
+            out.println("info." + propertyName + " = DataStreamMarshaller.ReadShort(dataIn);");
         }
         else if (type.equals("int")) {
-            out.println("info." + propertyName + " = dataIn.ReadInt32();");
+            out.println("info." + propertyName + " = DataStreamMarshaller.ReadInt(dataIn);");
         }
         else if (type.equals("long")) {
             out.println("info." + propertyName + " = UnmarshalLong(wireFormat, dataIn, bs);");
@@ -101,7 +101,7 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
         }
         else {
             out.println("        if (bs.ReadBoolean()) {");
-            out.println("            short size = dataIn.ReadInt16();");
+            out.println("            short size = DataStreamMarshaller.ReadShort(dataIn);");
             out.println("            " + arrayType + "[] value = new " + arrayType + "[size];");
             out.println("            for( int i=0; i < size; i++ ) {");
             out.println("                value[i] = (" + arrayType + ") UnmarshalNestedObject(wireFormat,dataIn, bs);");
@@ -194,16 +194,16 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
                 out.println("bs.ReadBoolean();");
             }
             else if (type.equals("byte")) {
-                out.println("dataOut.Write((byte) " + getter + ");");
+                out.println("DataStreamMarshaller.WriteByte(" + getter + ", dataOut);");
             }
             else if (type.equals("char")) {
-                out.println("dataOut.Write((char) " + getter + ");");
+                out.println("DataStreamMarshaller.WriteChar(" + getter + ", dataOut);");
             }
             else if (type.equals("short")) {
-                out.println("dataOut.Write((short)" + getter + ");");
+                out.println("DataStreamMarshaller.WriteShort(" + getter + ", dataOut);");
             }
             else if (type.equals("int")) {
-                out.println("dataOut.Write((int) " + getter + ");");
+                out.println("DataStreamMarshaller.WriteInt(" + getter + ", dataOut);");
             }
             else if (type.equals("long")) {
                 out.println("Marshal2Long(wireFormat, " + getter + ", dataOut, bs);");
@@ -217,7 +217,7 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
                 }
                 else {
                     out.println("if(bs.ReadBoolean()) {");
-                    out.println("           dataOut.Write((int)" + getter + ".Length);");
+                    out.println("           DataStreamMarshaller.WriteInt(" + getter + ".Length, dataOut);");
                     out.println("           dataOut.Write(" + getter + ");");
                     out.println("        }");
                 }
