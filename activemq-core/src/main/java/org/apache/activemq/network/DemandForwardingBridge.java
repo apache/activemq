@@ -76,6 +76,7 @@ public class DemandForwardingBridge implements Bridge{
     protected int prefetchSize=1000;
     protected boolean dispatchAsync;
     protected String destinationFilter=">";
+    protected String name = "bridge";
     protected ConsumerInfo demandConsumerInfo;
     protected int demandConsumerDispatched;
     protected AtomicBoolean localBridgeStarted=new AtomicBoolean(false);
@@ -173,7 +174,7 @@ public class DemandForwardingBridge implements Bridge{
         if(localBridgeStarted.compareAndSet(false,true)){
             localConnectionInfo=new ConnectionInfo();
             localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-            localClientId="NC_"+remoteBrokerName+"_inbound";
+            localClientId="NC_"+remoteBrokerName+"_inbound"+name;
             localConnectionInfo.setClientId(localClientId);
             localBroker.oneway(localConnectionInfo);
             localSessionInfo=new SessionInfo(localConnectionInfo,1);
@@ -192,7 +193,7 @@ public class DemandForwardingBridge implements Bridge{
             remoteBroker.oneway(brokerInfo);
             remoteConnectionInfo=new ConnectionInfo();
             remoteConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-            remoteConnectionInfo.setClientId("NC_"+localBrokerName+"_outbound");
+            remoteConnectionInfo.setClientId("NC_"+localBrokerName+"_outbound"+name);
             remoteBroker.oneway(remoteConnectionInfo);
             SessionInfo remoteSessionInfo=new SessionInfo(remoteConnectionInfo,1);
             remoteBroker.oneway(remoteSessionInfo);
@@ -552,17 +553,17 @@ public class DemandForwardingBridge implements Bridge{
 
 
     /**
-     * @return Returns the remoteBrokerName.
+     * @return Returns the name.
      */
-    public String getRemoteBrokerName(){
-        return remoteBrokerName;
+    public String getName(){
+        return name;
     }
 
     /**
-     * @param remoteBrokerName The remoteBrokerName to set.
+     * @param name The name to set.
      */
-    public void setRemoteBrokerName(String remoteBrokerName){
-        this.remoteBrokerName=remoteBrokerName;
+    public void setName(String name){
+        this.name=name;
     }
     
     /**
@@ -776,6 +777,8 @@ public class DemandForwardingBridge implements Bridge{
     protected void clearDownSubscriptions(){
         
     }
+
+   
 
   
     
