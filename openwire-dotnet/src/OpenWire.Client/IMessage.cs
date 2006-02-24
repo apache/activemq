@@ -26,6 +26,12 @@ namespace OpenWire.Client
     {
         
         /// <summary>
+        /// If using client acknowledgement mode on the session then this method will acknowledge that the
+        /// message has been processed correctly.
+        /// </summary>
+        void Acknowledge();
+        
+        /// <summary>
         /// Provides access to the message properties (headers)
         /// </summary>
         IPrimitiveMap Properties {

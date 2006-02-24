@@ -105,14 +105,14 @@ namespace OpenWire.Client
             Assert.AreEqual(custom4, message.Properties["custom4"], "custom4");
             // TODO
             //Assert.AreEqual(custom5, message.Properties["custom5"], "custom5");
-            Assert.AreEqual(custom4, message.Properties["custom6"], "custom6");
+            Assert.AreEqual(custom6, message.Properties["custom6"], "custom6");
             
             Assert.AreEqual(custom1, message.Properties.GetBool("custom1"), "custom1");
             Assert.AreEqual(custom2, message.Properties.GetByte("custom2"), "custom2");
             Assert.AreEqual(custom3, message.Properties.GetShort("custom3"), "custom3");
             Assert.AreEqual(custom4, message.Properties.GetInt("custom4"), "custom4");
             //Assert.AreEqual(custom5, message.Properties.GetLong("custom5"), "custom5");
-            Assert.AreEqual(custom4, message.Properties.GetChar("custom6"), "custom6");
+            Assert.AreEqual(custom6, message.Properties.GetChar("custom6"), "custom6");
             
             // lets now look at some standard JMS headers
             Console.WriteLine("JMSExpiration: " + message.JMSExpiration);

@@ -22,6 +22,8 @@ using OpenWire.Client.Core;
 
 namespace OpenWire.Client.Commands
 {
+    public delegate void AcknowledgeHandler(ActiveMQMessage message);
+    
     public class ActiveMQMessage : Message, IMessage, MarshallAware
     {
         public const byte ID_ActiveMQMessage = 23;
@@ -30,7 +32,7 @@ namespace OpenWire.Client.Commands
         
         private PrimitiveMap properties;
         
-        
+        public event AcknowledgeHandler Acknowledger;
         
         public static ActiveMQMessage Transform(IMessage message)
         {
@@ -44,6 +46,15 @@ namespace OpenWire.Client.Commands
         public override byte GetDataStructureType()
         {
             return ID_ActiveMQMessage;
+        }
+        
+        public void Acknowledge()
+        {
+            if (Acknowledger == null){
+                throw new OpenWireException("No Acknowledger has been associated with this message: " + this);}
+            else {
+                Acknowledger(this);
+            }
         }
         
         
