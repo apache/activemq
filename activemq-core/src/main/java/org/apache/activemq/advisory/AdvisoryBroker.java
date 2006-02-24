@@ -107,7 +107,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 for (Iterator iter = producers.values().iterator(); iter.hasNext();) {
                     ProducerInfo value = (ProducerInfo) iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(value.getDestination());
-                    fireAdvisory(context, topic, value, info.getConsumerId());
+                    fireProducerAdvisory(context, topic, value, info.getConsumerId());
                 }
             }
             
@@ -177,8 +177,8 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if( info.getDestination()!=null && !AdvisorySupport.isAdvisoryTopic(info.getDestination()) ) { 
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(info.getDestination());
-            fireAdvisory(context, topic, info.createRemoveCommand());
             producers.remove(info.getProducerId());
+            fireProducerAdvisory(context, topic, info.createRemoveCommand());
         }
     }
     
@@ -197,6 +197,15 @@ public class AdvisoryBroker extends BrokerFilter {
     protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Throwable {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
         advisoryMessage.setIntProperty("consumerCount", consumers.size());
+        fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
+    }
+    
+    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Throwable {
+        fireProducerAdvisory(context, topic, command, null);
+    }
+    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Throwable {
+        ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+        advisoryMessage.setIntProperty("producerCount", producers.size());
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
