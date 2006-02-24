@@ -53,7 +53,7 @@ public class DurableConduitBridge extends ConduitBridge{
                 if(isPermissableDestination(dest) && !doesConsumerExist(dest)){
                     DemandSubscription sub=createDemandSubscription(dest);
                     if(dest.isTopic()){
-                        sub.getLocalInfo().setSubcriptionName(getLocalBrokerName());
+                        sub.getLocalInfo().setSubcriptionName(getLocalBrokerName()+"_"+name);
                     }
                     try{
                         addSubscription(sub);

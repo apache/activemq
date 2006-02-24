@@ -60,6 +60,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
     private boolean conduitSubscriptions = true;
     private boolean decreaseNetworkConsumerPriority;
     private int networkTTL = 1;
+    private String name = "bridge";
     
     
     public NetworkConnector(){
@@ -221,6 +222,20 @@ public class NetworkConnector implements Service, DiscoveryListener {
      */
     public void setBrokerName(String brokerName){
         this.brokerName=brokerName;
+    }
+    
+    /**
+     * @return Returns the name.
+     */
+    public String getName(){
+        return name;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setName(String name){
+        this.name=name;
     }
 
 
@@ -392,6 +407,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
         };
         }
         result.setLocalBrokerName(brokerName);
+        result.setName(getBrokerName());
         result.setNetworkTTL(getNetworkTTL());
         result.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
         
