@@ -51,8 +51,9 @@ public interface Subscription {
      * @param node 
      * @param context
      * @return
+     * @throws IOException 
      */
-    boolean matches(MessageReference node, MessageEvaluationContext context);
+    boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException;
     
     /**
      * Is the subscription interested in messages in the destination?
