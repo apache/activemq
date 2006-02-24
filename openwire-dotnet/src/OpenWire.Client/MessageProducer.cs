@@ -28,13 +28,13 @@ namespace OpenWire.Client
         private Session session;
         private ProducerInfo info;
         private long messageCounter;
-
+        
 		bool persistent;
 		long timeToLive;
 		int priority;
 		bool disableMessageID;
 		bool disableMessageTimestamp;
-
+        
         public MessageProducer(Session session, ProducerInfo info)
         {
             this.session = session;
@@ -57,7 +57,7 @@ namespace OpenWire.Client
             ActiveMQMessage activeMessage = (ActiveMQMessage) message;
             activeMessage.MessageId = id;
             activeMessage.ProducerId = info.ProducerId;
-            activeMessage.Destination = (ActiveMQDestination) destination;
+            activeMessage.Destination = ActiveMQDestination.Transform(destination);
             
             session.DoSend(destination, message);
         }
@@ -71,14 +71,13 @@ namespace OpenWire.Client
 		{
 			get { return persistent; }
 			set { this.persistent = value; }
-		}
+    }
 
 		public long TimeToLive
 		{
 			get { return timeToLive; }
 			set { this.timeToLive = value; }
-		}
-
+}
 		public int Priority
 		{
 			get { return priority; }

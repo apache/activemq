@@ -17,13 +17,72 @@
 using System;
 using System.IO;
 
+using NUnit.Framework;
+
 using OpenWire.Client;
+using OpenWire.Client.Core;
 
-namespace OpenWire.Client {
 
-        /// <summary>
-        /// useful base class for test cases
-        /// </summary>
-        public abstract class TestSupport {
-        } 
+namespace OpenWire.Client
+{
+    
+    /// <summary>
+    /// useful base class for test cases
+    /// </summary>
+    [ TestFixture ]
+    public abstract class TestSupport
+    {
+        
+        [ Test ]
+        public virtual void SendAndSyncReceive()
+        {
+            IConnectionFactory factory = new ConnectionFactory("localhost", 61616);
+            
+            Assert.IsTrue(factory != null, "no factory created");
+            
+            using (IConnection connection = factory.CreateConnection())
+            {
+                try
+                {
+                    Assert.IsTrue(connection != null, "no connection created");
+                    Console.WriteLine("Connected to ActiveMQ!");
+                    
+                    ISession session = connection.CreateSession();
+                    
+                    IDestination destination = CreateDestination(session);
+                    Assert.IsTrue(destination != null, "No queue available!");
+                    
+                    IMessageConsumer consumer = session.CreateConsumer(destination);
+                    
+                    IMessageProducer producer = session.CreateProducer(destination);
+                    
+                    IMessage request = CreateMessage(session);
+                    
+                    producer.Send(request);
+                    
+                    IMessage message = consumer.Receive();
+                    Assert.IsNotNull(message, "No message returned!");
+                    
+                    AssertValidMessage(message);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Caught: " + e);
+                }
+            }
+        }
+
+        protected virtual IDestination CreateDestination(ISession session)
+        {
+            string name = "Test.DotNet." + GetType().Name;
+            IDestination destination = session.GetQueue(name);
+            
+            Console.WriteLine("Using queue: " + destination);
+            return destination;
+        }
+        
+        protected abstract IMessage CreateMessage(ISession session);
+        
+        protected abstract  void AssertValidMessage(IMessage message);
+    }
 }

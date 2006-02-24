@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Threading;
 using OpenWire.Client.Commands;
+using OpenWire.Client.Core;
 
 namespace OpenWire.Client
 {

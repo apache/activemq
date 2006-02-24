@@ -22,15 +22,16 @@ using OpenWire.Client.Core;
 namespace OpenWire.Client.Commands
 {
     /// <summary>
-    /// Summary description for ActiveMQTempQueue.
+    /// A Temporary Queue
     /// </summary>
-    public class ActiveMQTempQueue : ActiveMQDestination, ITemporaryQueue
+    public class ActiveMQTempQueue : ActiveMQTempDestination, ITemporaryQueue
     {
         public const byte ID_ActiveMQTempQueue = 102;
         
         public ActiveMQTempQueue() : base()
         {
         }
+        
         public ActiveMQTempQueue(String name) : base(name)
         {
         }

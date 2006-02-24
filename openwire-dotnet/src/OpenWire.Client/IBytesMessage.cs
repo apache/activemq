@@ -13,23 +13,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 using System;
-using System.Collections;
+using OpenWire.Client.Commands;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-
-namespace OpenWire.Client.Commands
+namespace OpenWire.Client
 {
-    public class ActiveMQBytesMessage : ActiveMQMessage, IBytesMessage
+    /// <summary>
+    /// Represents a binary based message
+    /// </summary>
+    public interface IBytesMessage : IMessage
     {
-        public const byte ID_ActiveMQBytesMessage = 24;
         
-        
-        public override byte GetDataStructureType()
+        byte[] Content
         {
-            return ID_ActiveMQBytesMessage;
+            get;
+            set;
         }
     }
 }

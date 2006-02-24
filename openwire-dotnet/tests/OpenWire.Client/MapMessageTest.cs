@@ -25,9 +25,15 @@ using OpenWire.Client.Core;
 namespace OpenWire.Client
 {
     [ TestFixture ]
-    public class ClientTest : TestSupport
+    public class MapMessageTest : TestSupport
     {
-        string expected = "Hello World!";
+        bool a = true;
+        byte b = 123;
+        char c = 'c';
+        short d = 0x1234;
+        int e = 0x12345678;
+        long f = 0x1234567812345678;
+        string g = "Hello World!";
         
         [ Test ]
         public override void SendAndSyncReceive()
@@ -37,18 +43,23 @@ namespace OpenWire.Client
         
         protected override IMessage CreateMessage(ISession session)
         {
-            IMessage request = session.CreateTextMessage(expected);
+            IMapMessage request = session.CreateMapMessage();
             return request;
         }
         
         protected override void AssertValidMessage(IMessage message)
         {
-            ITextMessage textMessage = (ITextMessage) message;
-            String text = textMessage.Text;
-            Console.WriteLine("Received message with text: " + text);
+            Assert.IsTrue(message is IMapMessage, "Did not receive a MapMessage!");
+            
+            Console.WriteLine("Received MapMessage: " + message);
+
+            IMapMessage mapMessage = (IMapMessage) message;
+            
+            /*
+            String text = mapMessage.Text;
             Assert.AreEqual(expected, text, "the message text");
+             */
         }
         
     }
 }
-

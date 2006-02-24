@@ -124,6 +124,18 @@ namespace OpenWire.Client
             return new ActiveMQTopic(name);
         }
         
+        public ITemporaryQueue CreateTemporaryQueue()
+        {
+            return new ActiveMQTempQueue(connection.CreateTemporaryDestinationName());
+        }
+        
+        public ITemporaryTopic CreateTemporaryTopic()
+        {
+            return new ActiveMQTempTopic(connection.CreateTemporaryDestinationName());
+        }
+        
+        
+        
         public IMessage CreateMessage()
         {
             ActiveMQMessage answer = new ActiveMQMessage();
@@ -145,6 +157,26 @@ namespace OpenWire.Client
             Configure(answer);
             return answer;
         }
+        
+        public IMapMessage CreateMapMessage()
+        {
+            return new ActiveMQMapMessage();
+        }
+        
+        public IBytesMessage CreateBytesMessage()
+        {
+            return new ActiveMQBytesMessage();
+        }
+        
+        public IBytesMessage CreateBytesMessage(byte[] body)
+        {
+            ActiveMQBytesMessage answer = new ActiveMQBytesMessage();
+            answer.Content = body;
+            return answer;
+        }
+        
+        
+        
         
         // Implementation methods
         public void DoSend(IDestination destination, IMessage message)
@@ -181,7 +213,7 @@ namespace OpenWire.Client
                 id.Value = ++consumerCounter;
             }
             answer.ConsumerId = id;
-            answer.Destination = (ActiveMQDestination) destination;
+            answer.Destination = ActiveMQDestination.Transform(destination);
             answer.Selector = selector;
             answer.PrefetchSize = prefetchSize;
             
@@ -200,7 +232,7 @@ namespace OpenWire.Client
                 id.Value = ++producerCounter;
             }
             answer.ProducerId = id;
-            answer.Destination = (ActiveMQDestination) destination;
+            answer.Destination = ActiveMQDestination.Transform(destination);
             return answer;
         }
         

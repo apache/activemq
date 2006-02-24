@@ -22,15 +22,16 @@ using OpenWire.Client.Core;
 namespace OpenWire.Client.Commands
 {
     /// <summary>
-    /// Summary description for ActiveMQTempTopic.
+    /// A Temporary Topic
     /// </summary>
-    public class ActiveMQTempTopic : ActiveMQDestination, ITemporaryTopic
+    public class ActiveMQTempTopic : ActiveMQTempDestination, ITemporaryTopic
     {
         public const byte ID_ActiveMQTempTopic = 103;
         
         public ActiveMQTempTopic() : base()
         {
         }
+        
         public ActiveMQTempTopic(String name) : base(name)
         {
         }

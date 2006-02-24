@@ -13,11 +13,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
+using System;
+using OpenWire.Client.Commands;
+
 namespace OpenWire.Client
 {
-    public interface IStopable
+    /// <summary>
+    /// Represents a Map message which contains key and value pairs which are
+    /// of primitive types
+    /// </summary>
+    public interface IMapMessage : IMessage
     {
-        void Stop();
+        IPrimitiveMap Body {
+            get;
+        }
     }
 }
+

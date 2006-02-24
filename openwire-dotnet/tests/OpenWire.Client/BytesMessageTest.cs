@@ -13,7 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 using System;
 using System.IO;
 
@@ -25,10 +25,10 @@ using OpenWire.Client.Core;
 namespace OpenWire.Client
 {
     [ TestFixture ]
-    public class ClientTest : TestSupport
+    public class BytesMessageTest : TestSupport
     {
-        string expected = "Hello World!";
-        
+        byte[] expected = {1, 2, 3, 4, 5, 6, 7, 8};
+    
         [ Test ]
         public override void SendAndSyncReceive()
         {
@@ -37,16 +37,20 @@ namespace OpenWire.Client
         
         protected override IMessage CreateMessage(ISession session)
         {
-            IMessage request = session.CreateTextMessage(expected);
+            IBytesMessage request = session.CreateBytesMessage(expected);
             return request;
         }
         
         protected override void AssertValidMessage(IMessage message)
         {
-            ITextMessage textMessage = (ITextMessage) message;
-            String text = textMessage.Text;
-            Console.WriteLine("Received message with text: " + text);
-            Assert.AreEqual(expected, text, "the message text");
+            Assert.IsTrue(message is IBytesMessage, "Did not receive a IBytesMessage: " + message);
+            
+            Console.WriteLine("Received IBytesMessage: " + message);
+            
+            IBytesMessage bytesMessage = (IBytesMessage) message;
+            byte[] actual = bytesMessage.Content;
+            Console.WriteLine("Received message with content: " + actual);
+            Assert.AreEqual(expected, actual, "the message content");
         }
         
     }
