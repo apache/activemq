@@ -38,6 +38,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
     private AtomicBoolean started = new AtomicBoolean(false);
     private AtomicBoolean closing = new AtomicBoolean(false);
     private boolean daemon = true;
+    private boolean joinOnStop = true;
     private Thread runner;
 
     public TransportServerThreadSupport() {
@@ -67,7 +68,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
             catch (Exception e) {
                 stopper.onException(this, e);
             }
-            if (runner != null) {
+            if (runner != null && joinOnStop) {
                 runner.join();
                 runner = null;
             }
@@ -97,8 +98,23 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
         return daemon;
     }
 
+    /**
+     * Sets whether the background read thread is a daemon thread or not
+     */
     public void setDaemon(boolean daemon) {
         this.daemon = daemon;
+    }
+
+    
+    public boolean isJoinOnStop() {
+        return joinOnStop;
+    }
+
+    /**
+     * Sets whether the background read thread is joined with (waited for) on a stop
+     */
+    public void setJoinOnStop(boolean joinOnStop) {
+        this.joinOnStop = joinOnStop;
     }
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
