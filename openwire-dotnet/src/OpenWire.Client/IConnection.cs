@@ -11,7 +11,7 @@ namespace OpenWire.Client {
         /// <summary>
         /// Represents a connection with a message broker
         /// </summary>
-        public interface IConnection : IDisposable {
+        public interface IConnection : IDisposable, IStartable, IStopable {
 
                 /// <summary>
                 /// Creates a new session to work on this connection
@@ -34,6 +34,14 @@ namespace OpenWire.Client {
                 AcknowledgementMode AcknowledgementMode {
                         get;
                         set; 
-                } 
-        }
+                }
+
+				String ClientId
+				{
+					get;
+					set; 
+				}
+ 
+				
+		}
 }

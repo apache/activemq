@@ -109,17 +109,17 @@ namespace OpenWire.Client.Core
                 {
                     command = (Command) wireformat.Unmarshal(socketReader);
                 }
-                catch (EndOfStreamException e)
+                catch (EndOfStreamException)
                 {
                     // stream closed
                     break;
                 }
-                catch (ObjectDisposedException e)
+                catch (ObjectDisposedException)
                 {
                     // stream closed
                     break;
                 }
-                catch (IOException e)
+                catch (IOException)
                 {
                     // error, assume closing
                     break;

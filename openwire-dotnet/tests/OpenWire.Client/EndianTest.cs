@@ -11,7 +11,7 @@ namespace openwire_dotnet
         [Test]
         public void TestLongEndian()
         {
-            long value = 0x0102030405060708l;
+            long value = 0x0102030405060708L;
             
             long newValue = DataStreamMarshaller.SwitchEndian(value);
             

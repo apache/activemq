@@ -10,7 +10,7 @@ namespace OpenWire.Client
     public class Session : ISession
     {
         private Connection connection;
-        private AcknowledgementMode acknowledgementMode;
+        private AcknowledgementMode acknowledgementMode = AcknowledgementMode.AutoAcknowledge;
         private SessionInfo info;
         private long consumerCounter;
         private long producerCounter;
@@ -75,6 +75,29 @@ namespace OpenWire.Client
             }
         }
         
+		public IMessageConsumer CreateDurableConsumer(ITopic destination, string name, string selector, bool noLocal)
+		{
+			ConsumerInfo command = CreateConsumerInfo(destination, selector);
+			ConsumerId consumerId = command.ConsumerId;
+			command.SubcriptionName = name;
+			command.NoLocal = noLocal;
+            
+			try
+			{
+				MessageConsumer consumer = new MessageConsumer(this, command);
+				// lets register the consumer first in case we start dispatching messages immediately
+				connection.AddConsumer(consumerId, consumer);
+                
+				connection.SyncRequest(command);
+				return consumer;
+			}
+			catch (Exception e)
+			{
+				connection.RemoveConsumer(consumerId);
+				throw e;
+			}
+		}
+
         public IQueue GetQueue(string name)
         {
             return new ActiveMQQueue(name);
