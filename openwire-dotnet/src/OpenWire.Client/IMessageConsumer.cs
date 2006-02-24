@@ -11,10 +11,15 @@ namespace OpenWire.Client
     public interface IMessageConsumer : IDisposable
     {
         
-        /// <summary>
-        /// Waits until a message is available and returns it
+		/// <summary>
+		/// Waits until a message is available and returns it
+		/// </summary>
+		IMessage Receive();
+		
+		/// <summary>
+        /// If a message is available within the timeout duration it is returned otherwise this method returns null
         /// </summary>
-        IMessage Receive();
+        IMessage Receive(long timeout);
         
         /// <summary>
         /// If a message is available immediately it is returned otherwise this method returns null

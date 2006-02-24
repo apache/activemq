@@ -12,8 +12,13 @@ namespace OpenWire.Client
         private Session session;
         private ProducerInfo info;
         private long messageCounter;
-        
-        
+
+		bool persistent;
+		long timeToLive;
+		int priority;
+		bool disableMessageID;
+		bool disableMessageTimestamp;
+
         public MessageProducer(Session session, ProducerInfo info)
         {
             this.session = session;
@@ -45,5 +50,36 @@ namespace OpenWire.Client
         {
             session.DisposeOf(info.ProducerId);
         }
+
+		public bool Persistent
+		{
+			get { return persistent; }
+			set { this.persistent = value; }
+		}
+
+		public long TimeToLive
+		{
+			get { return timeToLive; }
+			set { this.timeToLive = value; }
+		}
+
+		public int Priority
+		{
+			get { return priority; }
+			set { this.priority = value; }
+		}
+
+		public bool DisableMessageID
+		{
+			get { return disableMessageID; }
+			set { this.disableMessageID = value; }
+		}
+		
+		public bool DisableMessageTimestamp
+		{
+			get { return disableMessageTimestamp; }
+			set { this.disableMessageTimestamp = value; }
+		}
+
     }
 }

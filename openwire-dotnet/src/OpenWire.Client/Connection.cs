@@ -33,7 +33,20 @@ namespace OpenWire.Client
             this.transport.Command += new CommandHandler(OnCommand);
             this.transport.Start();
         }
+
+		/// <summary>
+		/// Starts message delivery for this connection.
+		/// </summary>
+		public void Start() 
+		{
+		}
         
+		/// <summary>
+		/// Stop message delivery for this connection.
+		/// </summary>
+		public void Stop() 
+		{
+		}
         
         /// <summary>
         /// Creates a new session to work on this connection

@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "activemq", "activemq.csproj", "{E8825D2E-4EC5-43D3-9FAC-F16055294F49}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests.csproj", "{3E5FA6F9-08E6-4F0D-86D9-77562D14F8AD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E8825D2E-4EC5-43D3-9FAC-F16055294F49} = {E8825D2E-4EC5-43D3-9FAC-F16055294F49}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{E8825D2E-4EC5-43D3-9FAC-F16055294F49}.Debug.ActiveCfg = Debug|.NET
+		{E8825D2E-4EC5-43D3-9FAC-F16055294F49}.Debug.Build.0 = Debug|.NET
+		{E8825D2E-4EC5-43D3-9FAC-F16055294F49}.Release.ActiveCfg = Release|.NET
+		{E8825D2E-4EC5-43D3-9FAC-F16055294F49}.Release.Build.0 = Release|.NET
+		{3E5FA6F9-08E6-4F0D-86D9-77562D14F8AD}.Debug.ActiveCfg = Debug|.NET
+		{3E5FA6F9-08E6-4F0D-86D9-77562D14F8AD}.Debug.Build.0 = Debug|.NET
+		{3E5FA6F9-08E6-4F0D-86D9-77562D14F8AD}.Release.ActiveCfg = Release|.NET
+		{3E5FA6F9-08E6-4F0D-86D9-77562D14F8AD}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
