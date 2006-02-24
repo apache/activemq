@@ -22,6 +22,13 @@ using OpenWire.Client.Core;
 
 namespace OpenWire.Client
 {
+    public enum AckType {
+        DeliveredAck = 0, // Message delivered but not consumed
+        ConsumedAck = 1, // Message consumed, discard
+        PoisonAck = 2 // Message could not be processed due to poison pill but discard anyway
+    }
+    
+    
     /// <summary>
     /// An object capable of receiving messages from some destination
     /// </summary>
@@ -30,15 +37,17 @@ namespace OpenWire.Client
         
         private Session session;
         private ConsumerInfo info;
+        private AcknowledgementMode acknowledgementMode;
         private bool closed;
         private Dispatcher dispatcher = new Dispatcher();
         
         public event MessageHandler Listener;
         
-        public MessageConsumer(Session session, ConsumerInfo info)
+        public MessageConsumer(Session session, ConsumerInfo info, AcknowledgementMode acknowledgementMode)
         {
             this.session = session;
             this.info = info;
+            this.acknowledgementMode = acknowledgementMode;
         }
         
         /// <summary>
@@ -53,20 +62,22 @@ namespace OpenWire.Client
         public IMessage Receive()
         {
             CheckClosed();
-            return dispatcher.Dequeue();
+            return AutoAcknowledge(dispatcher.Dequeue());
         }
         
         public IMessage Receive(long timeout)
         {
             CheckClosed();
-            return dispatcher.Dequeue(timeout);
+            return AutoAcknowledge(dispatcher.Dequeue(timeout));
         }
         
         public IMessage ReceiveNoWait()
         {
             CheckClosed();
-            return dispatcher.DequeueNoWait();
+            return AutoAcknowledge(dispatcher.DequeueNoWait());
         }
+        
+        
         
         public void Dispose()
         {
@@ -81,5 +92,53 @@ namespace OpenWire.Client
                 throw new ConnectionClosedException();
             }
         }
+        
+        protected IMessage AutoAcknowledge(IMessage message)
+        {
+            if (message is ActiveMQMessage)
+            {
+                ActiveMQMessage activeMessage = (ActiveMQMessage) message;
+                
+                // lets register the handler for client acknowledgment
+                activeMessage.Acknowledger += new AcknowledgeHandler(DoClientAcknowledge);
+                
+                if (acknowledgementMode != AcknowledgementMode.ClientAcknowledge)
+                {
+                    DoAcknowledge(activeMessage);
+                }
+            }
+            return message;
+        }
+        
+        protected void DoClientAcknowledge(Message message)
+        {
+            if (acknowledgementMode == AcknowledgementMode.ClientAcknowledge)
+            {
+                DoAcknowledge(message);
+            }
+        }
+
+        protected void DoAcknowledge(Message message)
+        {
+            MessageAck ack = CreateMessageAck(message);
+            //Console.WriteLine("Sending Ack: " + ack);
+            session.Connection.SyncRequest(ack);
+        }
+        
+        
+        protected virtual MessageAck CreateMessageAck(Message message)
+        {
+            MessageAck ack = new MessageAck();
+            ack.AckType = (int) AckType.ConsumedAck;
+            ack.ConsumerId = info.ConsumerId;
+            ack.Destination = message.Destination;
+            ack.FirstMessageId = message.MessageId;
+            ack.LastMessageId = message.MessageId;
+            ack.MessageCount = 1;
+            ack.TransactionId = message.TransactionId;
+            return ack;
+        }
+        
+        
     }
 }

@@ -21,7 +21,7 @@ namespace OpenWire.Client
         private bool transacted;
         private bool connected;
         private bool closed;
-        private AcknowledgementMode acknowledgementMode;
+        private AcknowledgementMode acknowledgementMode = AcknowledgementMode.AutoAcknowledge;
         private long sessionCounter;
         private long temporaryDestinationCounter;
         private IDictionary consumers = new Hashtable(); // TODO threadsafe
@@ -35,20 +35,20 @@ namespace OpenWire.Client
             this.transport.Start();
         }
  
-		/// <summary>
-		/// Starts message delivery for this connection.
-		/// </summary>
-		public void Start() 
-		{
-		}
+        /// <summary>
+        /// Starts message delivery for this connection.
+        /// </summary>
+        public void Start()
+        {
+        }
         
         
         /// <summary>
-		/// Stop message delivery for this connection.
-		/// </summary>
-		public void Stop() 
-		{
-		}
+        /// Stop message delivery for this connection.
+        /// </summary>
+        public void Stop()
+        {
+        }
         
         /// <summary>
         /// Creates a new session to work on this connection
@@ -66,7 +66,7 @@ namespace OpenWire.Client
             CheckConnected();
             SessionInfo info = CreateSessionInfo(transacted, acknowledgementMode);
             SyncRequest(info);
-            Session session = new Session(this, info);
+            Session session = new Session(this, info, acknowledgementMode);
             sessions.Add(session);
             return session;
         }

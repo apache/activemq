@@ -26,16 +26,17 @@ namespace OpenWire.Client
     public class Session : ISession
     {
         private Connection connection;
-        private AcknowledgementMode acknowledgementMode = AcknowledgementMode.AutoAcknowledge;
         private SessionInfo info;
+        private AcknowledgementMode acknowledgementMode;
         private long consumerCounter;
         private long producerCounter;
         private int prefetchSize = 1000;
         
-        public Session(Connection connection, SessionInfo info)
+        public Session(Connection connection, SessionInfo info, AcknowledgementMode acknowledgementMode)
         {
             this.connection = connection;
             this.info = info;
+            this.acknowledgementMode = acknowledgementMode;
         }
         
         public void Dispose()
@@ -55,14 +56,6 @@ namespace OpenWire.Client
             return new MessageProducer(this, command);
         }
         
-        public void Acknowledge(Message message)
-        {
-            if (acknowledgementMode == AcknowledgementMode.ClientAcknowledge)
-            {
-                MessageAck ack = CreateMessageAck(message);
-                connection.SyncRequest(ack);
-            }
-        }
         
         
         public IMessageConsumer CreateConsumer(IDestination destination)
@@ -77,7 +70,7 @@ namespace OpenWire.Client
             
             try
             {
-                MessageConsumer consumer = new MessageConsumer(this, command);
+                MessageConsumer consumer = new MessageConsumer(this, command, acknowledgementMode);
                 // lets register the consumer first in case we start dispatching messages immediately
                 connection.AddConsumer(consumerId, consumer);
                 
@@ -91,28 +84,28 @@ namespace OpenWire.Client
             }
         }
         
-		public IMessageConsumer CreateDurableConsumer(ITopic destination, string name, string selector, bool noLocal)
-		{
-			ConsumerInfo command = CreateConsumerInfo(destination, selector);
-			ConsumerId consumerId = command.ConsumerId;
-			command.SubcriptionName = name;
-			command.NoLocal = noLocal;
+        public IMessageConsumer CreateDurableConsumer(ITopic destination, string name, string selector, bool noLocal)
+        {
+            ConsumerInfo command = CreateConsumerInfo(destination, selector);
+            ConsumerId consumerId = command.ConsumerId;
+            command.SubcriptionName = name;
+            command.NoLocal = noLocal;
             
-			try
-			{
-				MessageConsumer consumer = new MessageConsumer(this, command);
-				// lets register the consumer first in case we start dispatching messages immediately
-				connection.AddConsumer(consumerId, consumer);
+            try
+            {
+                MessageConsumer consumer = new MessageConsumer(this, command, acknowledgementMode);
+                // lets register the consumer first in case we start dispatching messages immediately
+                connection.AddConsumer(consumerId, consumer);
                 
-				connection.SyncRequest(command);
-				return consumer;
-			}
-			catch (Exception e)
-			{
-				connection.RemoveConsumer(consumerId);
-				throw e;
-			}
-		}
+                connection.SyncRequest(command);
+                return consumer;
+            }
+            catch (Exception e)
+            {
+                connection.RemoveConsumer(consumerId);
+                throw e;
+            }
+        }
 
         public IQueue GetQueue(string name)
         {
@@ -176,7 +169,12 @@ namespace OpenWire.Client
         }
         
         
-        
+        // Properties
+        public Connection Connection {
+            get {
+                return connection;
+            }
+        }
         
         // Implementation methods
         public void DoSend(IDestination destination, IMessage message)
@@ -234,13 +232,6 @@ namespace OpenWire.Client
             answer.ProducerId = id;
             answer.Destination = ActiveMQDestination.Transform(destination);
             return answer;
-        }
-        
-        protected virtual MessageAck CreateMessageAck(Message message)
-        {
-            MessageAck ack = new MessageAck();
-            // TODO complete packet
-            return ack;
         }
         
         /// <summary>

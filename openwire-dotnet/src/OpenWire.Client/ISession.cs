@@ -26,9 +26,6 @@ namespace OpenWire.Client
     public interface ISession : IDisposable
     {
         
-        
-        
-        
         /// <summary>
         /// Creates a producer of messages
         /// </summary>
@@ -50,9 +47,9 @@ namespace OpenWire.Client
         IMessageConsumer CreateConsumer(IDestination destination, string selector);
         
         /// <summary>
-		/// Creates a named durable consumer of messages on a given destination with a selector
-		/// </summary>
-		IMessageConsumer CreateDurableConsumer(ITopic destination, string name, string selector, bool noLocal);
+        /// Creates a named durable consumer of messages on a given destination with a selector
+        /// </summary>
+        IMessageConsumer CreateDurableConsumer(ITopic destination, string name, string selector, bool noLocal);
             
         /// <summary>
         /// Returns the queue for the given name
