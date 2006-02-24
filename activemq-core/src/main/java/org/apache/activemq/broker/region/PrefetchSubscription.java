@@ -321,8 +321,9 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      * @param node
      * @return false if the message should not be dispatched to the client (another sub may have already dispatched it
      *         for example).
+     * @throws IOException 
      */
-    abstract protected boolean canDispatch(MessageReference node);
+    abstract protected boolean canDispatch(MessageReference node) throws IOException;
 
     /**
      * Used during acknowledgment to remove the message.

@@ -53,6 +53,7 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConsumerState;
 import org.apache.activemq.state.ProducerState;
@@ -77,7 +78,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     private static final Log serviceLog = LogFactory.getLog(AbstractConnection.class.getName() + ".Service");
     
     protected final Broker broker;
-    
+    private MessageAuthorizationPolicy messageAuthorizationPolicy;
     protected final List dispatchQueue = Collections.synchronizedList(new LinkedList());
     protected final TaskRunner taskRunner;
     protected final TransportConnector connector;
@@ -624,4 +625,13 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return statistics;
     }
 
+    public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
+        return messageAuthorizationPolicy;
+    }
+
+    public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
+        this.messageAuthorizationPolicy = messageAuthorizationPolicy;
+    }
+
+    
 }

@@ -67,11 +67,16 @@ public class QueueSubscription extends PrefetchSubscription {
         }
     }
     
-    protected boolean canDispatch(MessageReference n) {
+    protected boolean canDispatch(MessageReference n) throws IOException {
         IndirectMessageReference node = (IndirectMessageReference) n;
         if( node.isAcked() )
             return false;
         
+        // allow user-level security
+        if (!context.isAllowedToConsume(n)) {
+            return false;
+        }
+            
         // Keep message groups together.
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
