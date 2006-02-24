@@ -19,15 +19,34 @@ using System.Collections;
 using OpenWire.Client.Commands;
 using OpenWire.Client.Core;
 
-namespace OpenWire.Client {
-        /// <summary>
-        /// Exception thrown when the broker returns an error
-        /// </summary>
-        public class BrokerException : OpenWireException {
-                public BrokerException(BrokerError cause) : base("The operation failed: Type: "
-                        + cause.ExceptionClass
-                        + " stack: "
-                        + cause.StackTrace) {
-                } 
-        } 
+namespace OpenWire.Client
+{
+    /// <summary>
+    /// Exception thrown when the broker returns an error
+    /// </summary>
+    public class BrokerException : OpenWireException
+    {
+        
+        private BrokerError brokerError;
+        
+        public BrokerException(BrokerError brokerError) : base(
+            brokerError.ExceptionClass + " : " + brokerError.Message)
+        {
+            this.brokerError = brokerError;
+        }
+        
+        public BrokerError BrokerError {
+            get {
+                return brokerError;
+            }
+        }
+        
+        public virtual string StackTrace
+        {
+            get {
+                return brokerError.StackTrace;
+            }
+        }
+        
+    }
 }

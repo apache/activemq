@@ -70,14 +70,13 @@ namespace OpenWire.Client.Core
                 NetworkStream networkStream = new NetworkStream(socket);
                 socketWriter = new BinaryWriter(networkStream);
                 socketReader = new BinaryReader(networkStream);
-                /*
-                 socketWriter = new BinaryWriter(new NetworkStream(socket));
-                 socketReader = new BinaryReader(new NetworkStream(socket));
-                 */
                 
                 // now lets create the background read thread
                 readThread = new Thread(new ThreadStart(ReadLoop));
                 readThread.Start();
+                
+                // lets send the wireformat we're using
+                Oneway(wireformat.WireFormatInfo);
             }
         }
         
@@ -101,8 +100,16 @@ namespace OpenWire.Client.Core
         
         public Response Request(Command command)
         {
-            FutureResponse response = AsyncRequest(command);
-            return response.Response;
+            FutureResponse future = AsyncRequest(command);
+            Response response = future.Response;
+            if (response is ExceptionResponse)
+            {
+                ExceptionResponse er = (ExceptionResponse) response;
+                BrokerError brokerError = er.Exception;
+                throw new BrokerException(brokerError);
+            }
+            
+            return response;
         }
         
         public void Dispose()
@@ -149,20 +156,13 @@ namespace OpenWire.Client.Core
                         if (response is ExceptionResponse)
                         {
                             ExceptionResponse er = (ExceptionResponse) response;
-                            Exception e = new BrokerException(er.Exception);
+                            BrokerError brokerError = er.Exception;
                             if (this.Exception != null)
                             {
-                                this.Exception(this, e);
-                            }
-                            else
-                            {
-                                throw e;
+                                this.Exception(this, new BrokerException(brokerError));
                             }
                         }
-                        else
-                        {
-                            future.Response = response;
-                        }
+                        future.Response = response;
                     }
                     else
                     {
