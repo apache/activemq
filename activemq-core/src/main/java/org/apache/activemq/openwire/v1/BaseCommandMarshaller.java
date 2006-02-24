@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for BaseCommand
+ * Marshalling code for Open Wire Format for BaseCommandMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -63,10 +63,9 @@ public abstract class BaseCommandMarshaller extends DataStreamMarshaller {
         BaseCommand info = (BaseCommand)o;
 
         int rc = super.marshal1(wireFormat, o, bs);
-        
-        bs.writeBoolean(info.isResponseRequired());
+                bs.writeBoolean(info.isResponseRequired());
 
-        return rc+2;
+        return rc + 1;
     }
 
     /**

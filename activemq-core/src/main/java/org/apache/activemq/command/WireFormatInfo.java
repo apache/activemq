@@ -30,14 +30,13 @@ public class WireFormatInfo implements Command {
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
     static final private byte MAGIC[] = new byte[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
 
-    static final public long STACK_TRACE_MASK = 0x00000001;
-    static final public long TCP_NO_DELAY_MASK = 0x00000002;
-    static final public long CACHE_MASK = 0x00000004;
-    static final public long COMPRESSION_MASK = 0x00000008;
-
     protected int version;
     protected byte magic[] = MAGIC;
-    protected int options;
+
+    private boolean stackTraceEnabled;
+    private boolean tcpNoDelayEnabled;
+    private boolean cacheEnabled;
+    private boolean compressionEnabled;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -114,51 +113,45 @@ public class WireFormatInfo implements Command {
     /**
      * @openwire:property version=1
      */
-    public int getOptions() {
-        return options;
-    }
-
-    public void setOptions(int options) {
-        this.options = options;
-    }
-
-    public boolean isStackTraceEnabled() {
-        return (options & STACK_TRACE_MASK) != 0;
-    }
-
-    public void setStackTraceEnabled(boolean enable) {
-        if (enable) {
-            options |= STACK_TRACE_MASK;
-        }
-        else {
-            options &= ~STACK_TRACE_MASK;
-        }
-    }
-
-    public boolean isTcpNoDelayEnabled() {
-        return (options & TCP_NO_DELAY_MASK) != 0;
-    }
-
-    public void setTcpNoDelayEnabled(boolean enable) {
-        if (enable) {
-            options |= TCP_NO_DELAY_MASK;
-        }
-        else {
-            options &= ~TCP_NO_DELAY_MASK;
-        }
-    }
-
     public boolean isCacheEnabled() {
-        return (options & CACHE_MASK) != 0;
+        return cacheEnabled;
     }
 
-    public void setCacheEnabled(boolean enable) {
-        if (enable) {
-            options |= CACHE_MASK;
-        }
-        else {
-            options &= ~CACHE_MASK;
-        }
+    public void setCacheEnabled(boolean cacheEnabled) {
+        this.cacheEnabled = cacheEnabled;
+    }
+
+    /**
+     * @openwire:property version=1
+     */
+    public boolean isCompressionEnabled() {
+        return compressionEnabled;
+    }
+
+    public void setCompressionEnabled(boolean compressionEnabled) {
+        this.compressionEnabled = compressionEnabled;
+    }
+
+    /**
+     * @openwire:property version=1
+     */
+    public boolean isStackTraceEnabled() {
+        return stackTraceEnabled;
+    }
+
+    public void setStackTraceEnabled(boolean stackTraceEnabled) {
+        this.stackTraceEnabled = stackTraceEnabled;
+    }
+
+    /**
+     * @openwire:property version=1
+     */
+    public boolean isTcpNoDelayEnabled() {
+        return tcpNoDelayEnabled;
+    }
+
+    public void setTcpNoDelayEnabled(boolean tcpNoDelayEnabled) {
+        this.tcpNoDelayEnabled = tcpNoDelayEnabled;
     }
 
     public Response visit(CommandVisitor visitor) throws Throwable {

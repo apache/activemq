@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for TransactionInfo
+ * Marshalling code for Open Wire Format for TransactionInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,8 +64,8 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-        info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setTransactionId((org.apache.activemq.command.TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setType(dataIn.readByte());
 
     }
@@ -82,8 +82,7 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         rc += marshal1CachedObject(wireFormat, info.getConnectionId(), bs);
         rc += marshal1CachedObject(wireFormat, info.getTransactionId(), bs);
         
-
-        return rc+1;
+        return rc + 1;
     }
 
     /**

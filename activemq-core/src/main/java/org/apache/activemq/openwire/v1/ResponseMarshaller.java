@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for Response
+ * Marshalling code for Open Wire Format for ResponseMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -78,8 +78,7 @@ public class ResponseMarshaller extends BaseCommandMarshaller {
 
         int rc = super.marshal1(wireFormat, o, bs);
         
-
-        return rc+2;
+        return rc + 1;
     }
 
     /**

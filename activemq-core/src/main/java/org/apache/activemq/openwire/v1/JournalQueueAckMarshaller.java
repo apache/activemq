@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for JournalQueueAck
+ * Marshalling code for Open Wire Format for JournalQueueAckMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,8 +64,8 @@ public class JournalQueueAckMarshaller extends DataStreamMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         JournalQueueAck info = (JournalQueueAck)o;
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageAck((org.apache.activemq.command.MessageAck) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageAck((MessageAck) unmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -81,7 +81,7 @@ public class JournalQueueAckMarshaller extends DataStreamMarshaller {
         rc += marshal1NestedObject(wireFormat, info.getDestination(), bs);
         rc += marshal1NestedObject(wireFormat, info.getMessageAck(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

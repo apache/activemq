@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ConsumerId
+ * Marshalling code for Open Wire Format for ConsumerIdMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -83,7 +83,7 @@ public class ConsumerIdMarshaller extends DataStreamMarshaller {
         rc+=marshal1Long(wireFormat, info.getSessionId(), bs);
         rc+=marshal1Long(wireFormat, info.getValue(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

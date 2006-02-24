@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for SessionId
+ * Marshalling code for Open Wire Format for SessionIdMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -81,7 +81,7 @@ public class SessionIdMarshaller extends DataStreamMarshaller {
         rc += writeString(info.getConnectionId(), bs);
         rc+=marshal1Long(wireFormat, info.getValue(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

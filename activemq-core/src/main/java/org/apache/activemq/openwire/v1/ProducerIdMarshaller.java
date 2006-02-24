@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ProducerId
+ * Marshalling code for Open Wire Format for ProducerIdMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -83,7 +83,7 @@ public class ProducerIdMarshaller extends DataStreamMarshaller {
         rc+=marshal1Long(wireFormat, info.getValue(), bs);
         rc+=marshal1Long(wireFormat, info.getSessionId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ConsumerInfo
+ * Marshalling code for Open Wire Format for ConsumerInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,9 +64,9 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-        info.setConsumerId((org.apache.activemq.command.ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setBrowser(bs.readBoolean());
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setPrefetchSize(dataIn.readInt());
         info.setDispatchAsync(bs.readBoolean());
         info.setSelector(readString(dataIn, bs));
@@ -75,18 +75,18 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         info.setExclusive(bs.readBoolean());
         info.setRetroactive(bs.readBoolean());
         info.setPriority(dataIn.readByte());
-        
-		        if( bs.readBoolean() ) {
-		            short size = dataIn.readShort();
-		            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-		            for( int i=0; i < size; i++ ) {
-		                value[i] = (org.apache.activemq.command.BrokerId)unmarsalNestedObject(wireFormat,dataIn, bs);
-		            }
-		            info.setBrokerPath(value);
-		        } else {
-		            info.setBrokerPath(null);
-		        }
-        			
+
+        if (bs.readBoolean()) {
+            short size = dataIn.readShort();
+            BrokerId value[] = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) unmarsalNestedObject(wireFormat,dataIn, bs);
+            }
+            info.setBrokerPath(value);
+        }
+        else {
+            info.setBrokerPath(null);
+        }
         info.setNetworkSubscription(bs.readBoolean());
 
     }
@@ -103,18 +103,16 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         rc += marshal1CachedObject(wireFormat, info.getConsumerId(), bs);
         bs.writeBoolean(info.isBrowser());
         rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
-        
-        bs.writeBoolean(info.isDispatchAsync());
+                bs.writeBoolean(info.isDispatchAsync());
         rc += writeString(info.getSelector(), bs);
         rc += writeString(info.getSubcriptionName(), bs);
         bs.writeBoolean(info.isNoLocal());
         bs.writeBoolean(info.isExclusive());
         bs.writeBoolean(info.isRetroactive());
-        
-        rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
+                rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
         bs.writeBoolean(info.isNetworkSubscription());
 
-        return rc+5;
+        return rc + 2;
     }
 
     /**

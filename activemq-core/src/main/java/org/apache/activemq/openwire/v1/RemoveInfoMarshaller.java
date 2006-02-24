@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for RemoveInfo
+ * Marshalling code for Open Wire Format for RemoveInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,7 +64,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         RemoveInfo info = (RemoveInfo)o;
-        info.setObjectId((org.apache.activemq.command.DataStructure) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setObjectId((DataStructure) unmarsalCachedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -79,7 +79,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         int rc = super.marshal1(wireFormat, o, bs);
         rc += marshal1CachedObject(wireFormat, info.getObjectId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

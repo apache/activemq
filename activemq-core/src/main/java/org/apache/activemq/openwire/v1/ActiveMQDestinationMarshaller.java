@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ActiveMQDestination
+ * Marshalling code for Open Wire Format for ActiveMQDestinationMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,7 +64,7 @@ public abstract class ActiveMQDestinationMarshaller extends DataStreamMarshaller
         int rc = super.marshal1(wireFormat, o, bs);
         rc += writeString(info.getPhysicalName(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

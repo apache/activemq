@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for SubscriptionInfo
+ * Marshalling code for Open Wire Format for SubscriptionInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -65,7 +65,7 @@ public class SubscriptionInfoMarshaller extends DataStreamMarshaller {
 
         SubscriptionInfo info = (SubscriptionInfo)o;
         info.setClientId(readString(dataIn, bs));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setSelector(readString(dataIn, bs));
         info.setSubcriptionName(readString(dataIn, bs));
 
@@ -85,7 +85,7 @@ public class SubscriptionInfoMarshaller extends DataStreamMarshaller {
         rc += writeString(info.getSelector(), bs);
         rc += writeString(info.getSubcriptionName(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

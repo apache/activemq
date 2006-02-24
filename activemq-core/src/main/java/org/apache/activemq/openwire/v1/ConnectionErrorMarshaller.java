@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ConnectionError
+ * Marshalling code for Open Wire Format for ConnectionErrorMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,8 +64,8 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         ConnectionError info = (ConnectionError)o;
-        info.setException((java.lang.Throwable) unmarsalThrowable(wireFormat, dataIn, bs));
-        info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setException((Throwable) unmarsalThrowable(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) unmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -81,7 +81,7 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
         rc += marshalThrowable(wireFormat, info.getException(), bs);
         rc += marshal1NestedObject(wireFormat, info.getConnectionId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**
