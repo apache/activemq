@@ -22,24 +22,40 @@ using OpenWire.Client.Core;
 
 namespace OpenWire.Client.Commands
 {
-    public class ActiveMQMapMessage : ActiveMQMessage
+    public class ActiveMQMapMessage : ActiveMQMessage, IMapMessage
     {
-    			public const byte ID_ActiveMQMapMessage = 25;
-    			
-
-
-
-        // TODO generate Equals method
-        // TODO generate GetHashCode method
-        // TODO generate ToString method
-
-
-        public override byte GetDataStructureType() {
+        public const byte ID_ActiveMQMapMessage = 25;
+        
+        private PrimitiveMap body;
+        
+        
+        public override byte GetDataStructureType()
+        {
             return ID_ActiveMQMapMessage;
         }
-
-
-        // Properties
-
+        
+        public IPrimitiveMap Body
+        {
+            get {
+                if (body == null)
+                {
+                        body = PrimitiveMap.Unmarshal(Content);
+                   }
+                return body;
+            }
+        }
+        
+        public void BeforeMarshall(OpenWireFormat wireFormat)
+        {
+            base.BeforeMarshall(wireFormat);
+            
+            if (body == null) {
+                Content = null;
+            }
+            else {
+                Content = body.Marshal();
+            }
+        }
+        
     }
 }

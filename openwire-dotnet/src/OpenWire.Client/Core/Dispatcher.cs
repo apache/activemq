@@ -18,7 +18,7 @@ using System.Collections;
 using OpenWire.Client.Commands;
 using System;
 
-namespace OpenWire.Client
+namespace OpenWire.Client.Core
 {
     /// <summary>
     /// Handles the multi-threaded dispatching between the transport and the consumers
@@ -42,8 +42,10 @@ namespace OpenWire.Client
         /// <returns>An IMessage</retutns>
         public IMessage DequeueNoWait()
         {
-            lock (queue) {
-                if (queue.Peek() != null) {
+            lock (queue)
+            {
+                if (queue.Peek() != null)
+                {
                     return (IMessage) queue.Dequeue();
                 }
             }
@@ -69,7 +71,7 @@ namespace OpenWire.Client
         {
             return (IMessage) queue.Dequeue();
         }
-
+        
         
     }
 }

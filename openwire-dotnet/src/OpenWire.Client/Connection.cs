@@ -1,19 +1,3 @@
-/*
- * Copyright 2006 The Apache Software Foundation or its licensors, as
- * applicable.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 using System;
 using System.Collections;
 using OpenWire.Client.Commands;
@@ -39,7 +23,8 @@ namespace OpenWire.Client
         private bool closed;
         private AcknowledgementMode acknowledgementMode;
         private long sessionCounter;
-        private IDictionary consumers = new Hashtable();// TODO threadsafe
+        private long temporaryDestinationCounter;
+        private IDictionary consumers = new Hashtable(); // TODO threadsafe
         
         
         public Connection(ITransport transport, ConnectionInfo info)
@@ -49,7 +34,7 @@ namespace OpenWire.Client
             this.transport.Command += new CommandHandler(OnCommand);
             this.transport.Start();
         }
-
+ 
 		/// <summary>
 		/// Starts message delivery for this connection.
 		/// </summary>
@@ -57,7 +42,8 @@ namespace OpenWire.Client
 		{
 		}
         
-		/// <summary>
+        
+        /// <summary>
 		/// Stop message delivery for this connection.
 		/// </summary>
 		public void Stop() 
@@ -157,6 +143,18 @@ namespace OpenWire.Client
             }
             answer.SessionId = sessionId;
             return answer;
+        }
+        
+        
+        /// <summary>
+        /// Creates a new temporary destination name
+        /// </summary>
+        public String CreateTemporaryDestinationName()
+        {
+            lock (this)
+            {
+                return info.ConnectionId.Value + ":" + (++temporaryDestinationCounter);
+            }
         }
         
         protected void CheckConnected()
