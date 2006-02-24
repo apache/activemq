@@ -19,6 +19,8 @@ package org.apache.activemq.broker.region;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
+import java.io.IOException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -77,14 +79,14 @@ abstract public class AbstractSubscription implements Subscription {
         return rc;
     }
 
-    public boolean matches(MessageReference node, MessageEvaluationContext context) {
+    public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         ConsumerId targetConsumerId = node.getTargetConsumerId();
         if ( targetConsumerId!=null) {
             if( !targetConsumerId.equals(info.getConsumerId()) )
                 return false;
         }
         try {
-            return selector == null || selector.matches(context);
+            return (selector == null || selector.matches(context)) && this.context.isAllowedToConsume(node);
         } catch (JMSException e) {
             log.info("Selector failed to evaluate: " + e.getMessage(), e);
             return false;

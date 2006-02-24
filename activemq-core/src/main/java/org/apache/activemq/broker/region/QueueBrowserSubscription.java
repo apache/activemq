@@ -18,6 +18,8 @@ package org.apache.activemq.broker.region;
 
 import javax.jms.InvalidSelectorException;
 
+import java.io.IOException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConsumerInfo;
@@ -63,7 +65,7 @@ public class QueueBrowserSubscription extends PrefetchSubscription {
             return super.createMessageDispatch(node, message);
         }
     }
-    public boolean matches(MessageReference node, MessageEvaluationContext context) {
+    public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         return !browseDone && super.matches(node, context);
     }
 }

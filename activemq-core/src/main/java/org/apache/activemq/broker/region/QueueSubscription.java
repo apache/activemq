@@ -72,11 +72,6 @@ public class QueueSubscription extends PrefetchSubscription {
         if( node.isAcked() )
             return false;
         
-        // allow user-level security
-        if (!context.isAllowedToConsume(n)) {
-            return false;
-        }
-            
         // Keep message groups together.
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
@@ -85,7 +80,7 @@ public class QueueSubscription extends PrefetchSubscription {
             MessageGroupMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();            
             
             // If we can own the first, then no-one else should own the rest.
-            if( sequence==0 ) {
+            if( sequence == 1 ) {
                 if( node.lock(this) ) {
                     messageGroupOwners.put(groupId, info.getConsumerId());
                     return true;
