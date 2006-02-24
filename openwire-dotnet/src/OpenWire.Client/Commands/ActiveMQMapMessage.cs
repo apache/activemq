@@ -39,22 +39,26 @@ namespace OpenWire.Client.Commands
             get {
                 if (body == null)
                 {
-                        body = PrimitiveMap.Unmarshal(Content);
-                   }
+                    body = PrimitiveMap.Unmarshal(Content);
+                }
                 return body;
             }
         }
         
-        public void BeforeMarshall(OpenWireFormat wireFormat)
+        public override void BeforeMarshall(OpenWireFormat wireFormat)
         {
-            base.BeforeMarshall(wireFormat);
-            
-            if (body == null) {
+            if (body == null)
+            {
                 Content = null;
             }
-            else {
+            else
+            {
                 Content = body.Marshal();
             }
+            
+            Console.WriteLine("BeforeMarshalling, content is: " + Content);
+
+            base.BeforeMarshall(wireFormat);
         }
         
     }

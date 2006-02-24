@@ -331,6 +331,12 @@ namespace OpenWire.Client.Core
             dataOut.Write(SwitchEndian(value));
         }
         
+        public static void WriteLong(long value, BinaryWriter dataOut)
+        {
+            dataOut.Write(SwitchEndian(value));
+        }
+        
+        
         /// <summary>
         /// Switches from one endian to the other
         /// </summary>
@@ -359,11 +365,6 @@ namespace OpenWire.Client.Core
                 answer += lowest;
             }
             return answer;
-        }
-        
-        public static void WriteLong(long value, BinaryWriter dataOut)
-        {
-            dataOut.Write(IPAddress.HostToNetworkOrder(value));
         }
         
         public virtual int Marshal1Long(OpenWireFormat wireFormat, long o, BooleanStream bs)

@@ -277,7 +277,7 @@ namespace OpenWire.Client.Commands
             return true;
         }
         
-        public void BeforeMarshall(OpenWireFormat wireFormat)
+        public virtual void BeforeMarshall(OpenWireFormat wireFormat)
         {
             MarshalledProperties = null;
             if (properties != null)
@@ -286,23 +286,23 @@ namespace OpenWire.Client.Commands
             }
         }
         
-        public void AfterMarshall(OpenWireFormat wireFormat)
+        public virtual void AfterMarshall(OpenWireFormat wireFormat)
         {
         }
         
-        public void BeforeUnmarshall(OpenWireFormat wireFormat)
+        public virtual void BeforeUnmarshall(OpenWireFormat wireFormat)
         {
         }
         
-        public void AfterUnmarshall(OpenWireFormat wireFormat)
+        public virtual void AfterUnmarshall(OpenWireFormat wireFormat)
         {
         }
         
-        public void SetMarshalledForm(OpenWireFormat wireFormat, byte[] data)
+        public virtual void SetMarshalledForm(OpenWireFormat wireFormat, byte[] data)
         {
         }
         
-        public byte[] GetMarshalledForm(OpenWireFormat wireFormat)
+        public virtual byte[] GetMarshalledForm(OpenWireFormat wireFormat)
         {
             return null;
         }

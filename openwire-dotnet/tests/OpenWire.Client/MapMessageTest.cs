@@ -43,23 +43,53 @@ namespace OpenWire.Client
         
         protected override IMessage CreateMessage(ISession session)
         {
-            IMapMessage request = session.CreateMapMessage();
-            return request;
+            IMapMessage message = session.CreateMapMessage();
+            
+            message.Body["a"] = a;
+            message.Body["b"] = b;
+            message.Body["c"] = c;
+            message.Body["d"] = d;
+            message.Body["e"] = e;
+            message.Body["f"] = f;
+            message.Body["g"] = g;
+            
+            return message;
         }
         
         protected override void AssertValidMessage(IMessage message)
         {
             Assert.IsTrue(message is IMapMessage, "Did not receive a MapMessage!");
-            
-            Console.WriteLine("Received MapMessage: " + message);
-
             IMapMessage mapMessage = (IMapMessage) message;
             
-            /*
-            String text = mapMessage.Text;
-            Assert.AreEqual(expected, text, "the message text");
-             */
+            Console.WriteLine("Received MapMessage: " + message);
+            Console.WriteLine("Received Count: " + mapMessage.Body.Count);
+
+            Assert.AreEqual(ToHex(f), ToHex(mapMessage.Body.GetLong("f")), "map entry: f as hex");
+            
+            // use generic API to access entries
+            Assert.AreEqual(a, mapMessage.Body["a"], "generic map entry: a");
+            Assert.AreEqual(b, mapMessage.Body["b"], "generic map entry: b");
+            Assert.AreEqual(c, mapMessage.Body["c"], "generic map entry: c");
+            Assert.AreEqual(d, mapMessage.Body["d"], "generic map entry: d");
+            Assert.AreEqual(e, mapMessage.Body["e"], "generic map entry: e");
+            Assert.AreEqual(f, mapMessage.Body["f"], "generic map entry: f");
+            Assert.AreEqual(g, mapMessage.Body["g"], "generic map entry: g");
+            
+            // use type safe APIs
+            Assert.AreEqual(a, mapMessage.Body.GetBool("a"), "map entry: a");
+            Assert.AreEqual(b, mapMessage.Body.GetByte("b"), "map entry: b");
+            Assert.AreEqual(c, mapMessage.Body.GetChar("c"), "map entry: c");
+            Assert.AreEqual(d, mapMessage.Body.GetShort("d"), "map entry: d");
+            Assert.AreEqual(e, mapMessage.Body.GetInt("e"), "map entry: e");
+            Assert.AreEqual(f, mapMessage.Body.GetLong("f"), "map entry: f");
+            Assert.AreEqual(g, mapMessage.Body.GetString("g"), "map entry: g");
+            
+            
         }
         
+        protected string ToHex(long value)
+        {
+            return String.Format("{0:x}", value);
+        }
     }
 }
