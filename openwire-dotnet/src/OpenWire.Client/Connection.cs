@@ -10,11 +10,8 @@ namespace OpenWire.Client
     /// </summary>
     public class Connection : IConnection
     {
-        static private char[] MAGIC = new char[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
-        
         private ITransport transport;
         private ConnectionInfo info;
-        private WireFormatInfo wireFormatInfo = new WireFormatInfo();
         private BrokerInfo brokerInfo; // from broker
         private WireFormatInfo brokerWireFormatInfo; // from broker
         private IList sessions = new ArrayList();
@@ -165,11 +162,6 @@ namespace OpenWire.Client
             }
             if (!connected)
             {
-                // lets configure the wire format
-                wireFormatInfo.Magic = CreateMagicBytes();
-                wireFormatInfo.Version = 1;
-                transport.Oneway(wireFormatInfo);
-                
                 // now lets send the connection and see if we get an ack/nak
                 SyncRequest(info);
                 connected = true;
@@ -230,19 +222,6 @@ namespace OpenWire.Client
                 Console.WriteLine("ERROR:ÊUnknown command: " + command);
             }
         }
-        
-        /// <summary>
-        /// Method CreateMagicBytes
-        /// </summary>
-        /// <returns>A  byte[]</retutns>
-        private byte[] CreateMagicBytes()
-        {
-            byte[] answer = new byte[MAGIC.Length];
-            for (int i = 0; i < answer.Length; i++)
-            {
-                answer[i] = (byte) MAGIC[i];
-            }
-            return answer;
-        }
+
     }
 }

@@ -33,7 +33,6 @@ namespace OpenWire.Client
     public abstract class TestSupport
     {
         
-        [ Test ]
         public virtual void SendAndSyncReceive()
         {
             IConnectionFactory factory = new ConnectionFactory("localhost", 61616);
@@ -81,8 +80,12 @@ namespace OpenWire.Client
             return destination;
         }
         
-        protected abstract IMessage CreateMessage(ISession session);
+        protected virtual IMessage CreateMessage(ISession session) {
+            return session.CreateMessage();
+        }
         
-        protected abstract  void AssertValidMessage(IMessage message);
+        protected virtual  void AssertValidMessage(IMessage message) {
+            Assert.IsNotNull(message, "Null Message!");
+        }
     }
 }

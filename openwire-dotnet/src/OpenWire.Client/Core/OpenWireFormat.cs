@@ -28,15 +28,35 @@ namespace OpenWire.Client.Core
     /// </summary>
     public class OpenWireFormat
     {
+        static private char[] MAGIC = new char[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
+        
         private DataStreamMarshaller[] dataMarshallers;
         private const byte NULL_TYPE = 0;
-        
+        private WireFormatInfo wireFormatInfo = new WireFormatInfo();
         
         public OpenWireFormat()
         {
+            // lets configure the wire format
+            wireFormatInfo.Magic = CreateMagicBytes();
+            wireFormatInfo.Version = 1;
+            wireFormatInfo.StackTraceEnabled = true;
+            wireFormatInfo.TcpNoDelayEnabled = true;
+            
             dataMarshallers = new DataStreamMarshaller[256];
             MarshallerFactory factory = new MarshallerFactory();
             factory.configure(this);
+        }
+        
+        public WireFormatInfo WireFormatInfo {
+            get {
+                return wireFormatInfo;
+            }
+        }
+        
+        public bool StackTraceEnabled {
+            get {
+                return wireFormatInfo.StackTraceEnabled;
+            }
         }
         
         public void addMarshaller(DataStreamMarshaller marshaller)
@@ -181,6 +201,20 @@ namespace OpenWire.Client.Core
             {
                 return null;
             }
+        }
+        
+        /// <summary>
+        /// Method CreateMagicBytes
+        /// </summary>
+        /// <returns>A  byte[]</retutns>
+        private byte[] CreateMagicBytes()
+        {
+            byte[] answer = new byte[MAGIC.Length];
+            for (int i = 0; i < answer.Length; i++)
+            {
+                answer[i] = (byte) MAGIC[i];
+            }
+            return answer;
         }
     }
 }

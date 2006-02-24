@@ -525,12 +525,26 @@ namespace OpenWire.Client.Core
         {
             if (bs.ReadBoolean())
             {
-                String clazz = ReadString(dataIn, bs);
-                String message = ReadString(dataIn, bs);
-                
                 BrokerError answer = new BrokerError();
-                answer.ExceptionClass = clazz;
-                answer.Message = message;
+                
+                answer.ExceptionClass = ReadString(dataIn, bs);
+                answer.Message = ReadString(dataIn, bs);
+                if (wireFormat.StackTraceEnabled)
+                {
+                    short length = ReadShort(dataIn);
+                    StackTraceElement[] stackTrace = new StackTraceElement[length];
+                    for (int i = 0; i < stackTrace.Length; i++)
+                    {
+                        StackTraceElement element = new StackTraceElement();
+                        element.ClassName = ReadString(dataIn, bs);
+                        element.MethodName = ReadString(dataIn, bs);
+                        element.FileName = ReadString(dataIn, bs);
+                        element.LineNumber = ReadInt(dataIn);
+                        stackTrace[i] = element;
+                    }
+                    answer.StackTraceElements = stackTrace;
+                    answer.Cause = UnmarshalBrokerError(wireFormat, dataIn, bs);
+                }
                 return answer;
             }
             else
@@ -552,6 +566,21 @@ namespace OpenWire.Client.Core
                 bs.WriteBoolean(true);
                 rc += WriteString(o.ExceptionClass, bs);
                 rc += WriteString(o.Message, bs);
+                if (wireFormat.StackTraceEnabled)
+                {
+                    rc += 2;
+                    StackTraceElement[] stackTrace = o.StackTraceElements;
+                    for (int i = 0; i < stackTrace.Length; i++)
+                    {
+                        StackTraceElement element = stackTrace[i];
+                        rc += WriteString(element.ClassName, bs);
+                        rc += WriteString(element.MethodName, bs);
+                        rc += WriteString(element.FileName, bs);
+                        rc += 4;
+                    }
+                    rc += MarshalBrokerError(wireFormat, o.Cause, bs);
+                }
+                
                 return rc;
             }
         }
@@ -566,6 +595,21 @@ namespace OpenWire.Client.Core
             {
                 WriteString(o.ExceptionClass, dataOut, bs);
                 WriteString(o.Message, dataOut, bs);
+                if (wireFormat.StackTraceEnabled)
+                {
+                    StackTraceElement[] stackTrace = o.StackTraceElements;
+                    WriteShort((short) stackTrace.Length, dataOut);
+                    
+                    for (int i = 0; i < stackTrace.Length; i++)
+                    {
+                        StackTraceElement element = stackTrace[i];
+                        WriteString(element.ClassName, dataOut, bs);
+                        WriteString(element.MethodName, bs);
+                        WriteString(element.FileName, bs);
+                        WriteInt(element.LineNumber, dataOut);
+                    }
+                    MarshalBrokerError(wireFormat, o.Cause, dataOut, bs);
+                }
             }
         }
         
