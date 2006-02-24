@@ -18,11 +18,15 @@ package org.apache.activemq.broker;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.transaction.Transaction;
+
+import java.io.IOException;
 
 /**
  * Used to hold context information needed to process requests sent to a broker.
@@ -45,6 +49,7 @@ public class ConnectionContext {
     private WireFormatInfo wireFormatInfo;
     private Object longTermStoreContext;
     private boolean producerFlowControl=true;
+    private MessageAuthorizationPolicy messageAuthorizationPolicy;
     
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     
@@ -110,6 +115,19 @@ public class ConnectionContext {
      */
     public void setConnector(Connector connector) {
         this.connector = connector;
+    }
+
+    
+    public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
+        return messageAuthorizationPolicy;
+    }
+
+    /**
+     * Sets the policy used to decide if the current connection is authorized to consume
+     * a given message
+     */
+    public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
+        this.messageAuthorizationPolicy = messageAuthorizationPolicy;
     }
 
     /**
@@ -193,6 +211,13 @@ public class ConnectionContext {
 
     public void setProducerFlowControl(boolean disableProducerFlowControl) {
         this.producerFlowControl = disableProducerFlowControl;
+    }
+
+    public boolean isAllowedToConsume(MessageReference n) throws IOException {
+        if (messageAuthorizationPolicy != null) {
+            return messageAuthorizationPolicy.isAllowedToConsume(this, n.getMessage());
+        }
+        return true;
     }
 
 }

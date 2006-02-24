@@ -51,6 +51,7 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.activemq.proxy.ProxyConnector;
+import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
@@ -95,6 +96,7 @@ public class BrokerService implements Service {
     private UsageManager memoryManager;
     private PersistenceAdapter persistenceAdapter;
     private DefaultPersistenceAdapterFactory persistenceFactory;
+    private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private List transportConnectors = new CopyOnWriteArrayList();
     private List networkConnectors = new CopyOnWriteArrayList();
     private List proxyConnectors = new CopyOnWriteArrayList();
@@ -154,7 +156,11 @@ public class BrokerService implements Service {
         connector.setBroker(getBroker());
         connector.setBrokerName(getBrokerName());
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
-
+        MessageAuthorizationPolicy policy = getMessageAuthorizationPolicy();
+        if (policy != null) {
+            connector.setMessageAuthorizationPolicy(policy);
+        }
+        
         if (isUseJmx()) {
             connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
             registerConnectorMBean(connector);
@@ -689,6 +695,18 @@ public class BrokerService implements Service {
         this.plugins = plugins;
     }
     
+    public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
+        return messageAuthorizationPolicy;
+    }
+
+    /**
+     * Sets the policy used to decide if the current connection is authorized to consume
+     * a given message
+     */
+    public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
+        this.messageAuthorizationPolicy = messageAuthorizationPolicy;
+    }
+
     /**
      * Delete all messages from the persistent store
      * @throws IOException

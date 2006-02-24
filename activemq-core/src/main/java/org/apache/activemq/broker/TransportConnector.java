@@ -27,6 +27,7 @@ import javax.management.ObjectName;
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -55,12 +56,14 @@ public class TransportConnector implements Connector {
     private URI uri;
     private BrokerInfo brokerInfo = new BrokerInfo();
     private TaskRunnerFactory taskRunnerFactory = null;
+    private MessageAuthorizationPolicy messageAuthorizationPolicy;
+    private DiscoveryAgent discoveryAgent;
     protected CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
     protected TransportStatusDetector statusDector;
-    private DiscoveryAgent discoveryAgent;
     private ConnectorStatistics statistics = new ConnectorStatistics();
     private URI discoveryUri;
     private URI connectUri;
+
 
     /**
      * @return Returns the connections.
@@ -177,6 +180,18 @@ public class TransportConnector implements Connector {
     public ConnectorStatistics getStatistics() {
         return statistics;
     }
+    
+    public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
+        return messageAuthorizationPolicy;
+    }
+
+    /**
+     * Sets the policy used to decide if the current connection is authorized to consume
+     * a given message
+     */
+    public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
+        this.messageAuthorizationPolicy = messageAuthorizationPolicy;
+    }
 
     public void start() throws Exception {
         getServer().start();
@@ -210,7 +225,9 @@ public class TransportConnector implements Connector {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Connection createConnection(Transport transport) throws IOException {
-        return new TransportConnection(this, transport, broker, taskRunnerFactory);
+        TransportConnection answer = new TransportConnection(this, transport, broker, taskRunnerFactory);
+        answer.setMessageAuthorizationPolicy(messageAuthorizationPolicy);
+        return answer;
     }
 
     protected TransportServer createTransportServer() throws IOException, URISyntaxException {
