@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for DestinationInfo
+ * Marshalling code for Open Wire Format for DestinationInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,22 +64,22 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-        info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setOperationType(dataIn.readByte());
         info.setTimeout(unmarshalLong(wireFormat, dataIn, bs));
-        
-		        if( bs.readBoolean() ) {
-		            short size = dataIn.readShort();
-		            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-		            for( int i=0; i < size; i++ ) {
-		                value[i] = (org.apache.activemq.command.BrokerId)unmarsalNestedObject(wireFormat,dataIn, bs);
-		            }
-		            info.setBrokerPath(value);
-		        } else {
-		            info.setBrokerPath(null);
-		        }
-        			
+
+        if (bs.readBoolean()) {
+            short size = dataIn.readShort();
+            BrokerId value[] = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) unmarsalNestedObject(wireFormat,dataIn, bs);
+            }
+            info.setBrokerPath(value);
+        }
+        else {
+            info.setBrokerPath(null);
+        }
 
     }
 
@@ -94,11 +94,10 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
         int rc = super.marshal1(wireFormat, o, bs);
         rc += marshal1CachedObject(wireFormat, info.getConnectionId(), bs);
         rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
-        
-        rc+=marshal1Long(wireFormat, info.getTimeout(), bs);
+                rc+=marshal1Long(wireFormat, info.getTimeout(), bs);
         rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
 
-        return rc+1;
+        return rc + 1;
     }
 
     /**

@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for LocalTransactionId
+ * Marshalling code for Open Wire Format for LocalTransactionIdMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -65,7 +65,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
 
         LocalTransactionId info = (LocalTransactionId)o;
         info.setValue(unmarshalLong(wireFormat, dataIn, bs));
-        info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -81,7 +81,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
         rc+=marshal1Long(wireFormat, info.getValue(), bs);
         rc += marshal1CachedObject(wireFormat, info.getConnectionId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

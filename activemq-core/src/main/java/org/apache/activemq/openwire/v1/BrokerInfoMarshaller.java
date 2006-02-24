@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for BrokerInfo
+ * Marshalling code for Open Wire Format for BrokerInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,20 +64,20 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         BrokerInfo info = (BrokerInfo)o;
-        info.setBrokerId((org.apache.activemq.command.BrokerId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setBrokerId((BrokerId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setBrokerURL(readString(dataIn, bs));
-        
-		        if( bs.readBoolean() ) {
-		            short size = dataIn.readShort();
-		            org.apache.activemq.command.BrokerInfo value[] = new org.apache.activemq.command.BrokerInfo[size];
-		            for( int i=0; i < size; i++ ) {
-		                value[i] = (org.apache.activemq.command.BrokerInfo)unmarsalNestedObject(wireFormat,dataIn, bs);
-		            }
-		            info.setPeerBrokerInfos(value);
-		        } else {
-		            info.setPeerBrokerInfos(null);
-		        }
-        			
+
+        if (bs.readBoolean()) {
+            short size = dataIn.readShort();
+            BrokerInfo value[] = new BrokerInfo[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerInfo) unmarsalNestedObject(wireFormat,dataIn, bs);
+            }
+            info.setPeerBrokerInfos(value);
+        }
+        else {
+            info.setPeerBrokerInfos(null);
+        }
         info.setBrokerName(readString(dataIn, bs));
         info.setSlaveBroker(bs.readBoolean());
 
@@ -98,7 +98,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         rc += writeString(info.getBrokerName(), bs);
         bs.writeBoolean(info.isSlaveBroker());
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

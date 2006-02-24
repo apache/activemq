@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for XATransactionId
+ * Marshalling code for Open Wire Format for XATransactionIdMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -65,28 +65,22 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
 
         XATransactionId info = (XATransactionId)o;
         info.setFormatId(dataIn.readInt());
-        {
-        		if( bs.readBoolean() ) {
-	        		int size = dataIn.readInt();
-	        		byte data[] = new byte[size];
-	        		dataIn.readFully(data);
-	        		info.setGlobalTransactionId(data);
-        		} else {
-	        		info.setGlobalTransactionId(null);
-        		}
+        if( bs.readBoolean() ) {
+            int size = dataIn.readInt();
+            byte data[] = new byte[size];
+            dataIn.readFully(data);
+            info.setGlobalTransactionId(data);
+            } else {
+            info.setGlobalTransactionId(null);
         }
-    		
-        {
-        		if( bs.readBoolean() ) {
-	        		int size = dataIn.readInt();
-	        		byte data[] = new byte[size];
-	        		dataIn.readFully(data);
-	        		info.setBranchQualifier(data);
-        		} else {
-	        		info.setBranchQualifier(null);
-        		}
+        if( bs.readBoolean() ) {
+            int size = dataIn.readInt();
+            byte data[] = new byte[size];
+            dataIn.readFully(data);
+            info.setBranchQualifier(data);
+            } else {
+            info.setBranchQualifier(null);
         }
-    		
 
     }
 
@@ -99,17 +93,12 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
         XATransactionId info = (XATransactionId)o;
 
         int rc = super.marshal1(wireFormat, o, bs);
-        
-        
-		bs.writeBoolean(info.getGlobalTransactionId()!=null);
-		rc += info.getGlobalTransactionId()==null ? 0 : info.getGlobalTransactionId().length+4;
-		
-        
-		bs.writeBoolean(info.getBranchQualifier()!=null);
-		rc += info.getBranchQualifier()==null ? 0 : info.getBranchQualifier().length+4;
-		
+                bs.writeBoolean(info.getGlobalTransactionId()!=null);
+        rc += info.getGlobalTransactionId()==null ? 0 : info.getGlobalTransactionId().length+4;
+        bs.writeBoolean(info.getBranchQualifier()!=null);
+        rc += info.getBranchQualifier()==null ? 0 : info.getBranchQualifier().length+4;
 
-        return rc+4;
+        return rc + 1;
     }
 
     /**
@@ -124,18 +113,14 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
 
         XATransactionId info = (XATransactionId)o;
         dataOut.writeInt(info.getFormatId());
-        
-		if(bs.readBoolean()) { 
-			dataOut.writeInt(info.getGlobalTransactionId().length);
-			dataOut.write(info.getGlobalTransactionId());
-		}
-		
-        
-		if(bs.readBoolean()) { 
-			dataOut.writeInt(info.getBranchQualifier().length);
-			dataOut.write(info.getBranchQualifier());
-		}
-		
+        if(bs.readBoolean()) {
+           dataOut.writeInt(info.getGlobalTransactionId().length);
+           dataOut.write(info.getGlobalTransactionId());
+        }
+        if(bs.readBoolean()) {
+           dataOut.writeInt(info.getBranchQualifier().length);
+           dataOut.write(info.getBranchQualifier());
+        }
 
     }
 }

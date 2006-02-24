@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for MessageDispatchNotification
+ * Marshalling code for Open Wire Format for MessageDispatchNotificationMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,10 +64,10 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         MessageDispatchNotification info = (MessageDispatchNotification)o;
-        info.setConsumerId((org.apache.activemq.command.ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setDeliverySequenceId(unmarshalLong(wireFormat, dataIn, bs));
-        info.setMessageId((org.apache.activemq.command.MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -85,7 +85,7 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         rc+=marshal1Long(wireFormat, info.getDeliverySequenceId(), bs);
         rc += marshal1NestedObject(wireFormat, info.getMessageId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for Message
+ * Marshalling code for Open Wire Format for MessageMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -52,57 +52,53 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
 
         info.beforeUnmarshall(wireFormat);
         
-        info.setProducerId((org.apache.activemq.command.ProducerId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setTransactionId((org.apache.activemq.command.TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setOriginalDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setMessageId((org.apache.activemq.command.MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setOriginalTransactionId((org.apache.activemq.command.TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerId((ProducerId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setOriginalDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setOriginalTransactionId((TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setGroupID(readString(dataIn, bs));
         info.setGroupSequence(dataIn.readInt());
         info.setCorrelationId(readString(dataIn, bs));
         info.setPersistent(bs.readBoolean());
         info.setExpiration(unmarshalLong(wireFormat, dataIn, bs));
         info.setPriority(dataIn.readByte());
-        info.setReplyTo((org.apache.activemq.command.ActiveMQDestination) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setReplyTo((ActiveMQDestination) unmarsalNestedObject(wireFormat, dataIn, bs));
         info.setTimestamp(unmarshalLong(wireFormat, dataIn, bs));
         info.setType(readString(dataIn, bs));
-        
-    		if( bs.readBoolean() ) {
-        		int size = dataIn.readInt();
-        		byte data[] = new byte[size];
-        		dataIn.readFully(data);
-        		info.setContent(new org.activeio.ByteSequence(data,0,size));
-    		} else {
-        		info.setContent(null);
-    		}
-    		
-        
-    		if( bs.readBoolean() ) {
-        		int size = dataIn.readInt();
-        		byte data[] = new byte[size];
-        		dataIn.readFully(data);
-        		info.setMarshalledProperties(new org.activeio.ByteSequence(data,0,size));
-    		} else {
-        		info.setMarshalledProperties(null);
-    		}
-    		
-        info.setDataStructure((org.apache.activemq.command.DataStructure) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setTargetConsumerId((org.apache.activemq.command.ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        if( bs.readBoolean() ) {
+            int size = dataIn.readInt();
+            byte data[] = new byte[size];
+            dataIn.readFully(data);
+            info.setContent(new org.activeio.ByteSequence(data,0,size));
+            } else {
+            info.setContent(null);
+        }
+        if( bs.readBoolean() ) {
+            int size = dataIn.readInt();
+            byte data[] = new byte[size];
+            dataIn.readFully(data);
+            info.setMarshalledProperties(new org.activeio.ByteSequence(data,0,size));
+            } else {
+            info.setMarshalledProperties(null);
+        }
+        info.setDataStructure((DataStructure) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTargetConsumerId((ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setCompressed(bs.readBoolean());
         info.setRedeliveryCounter(dataIn.readInt());
-        
-		        if( bs.readBoolean() ) {
-		            short size = dataIn.readShort();
-		            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-		            for( int i=0; i < size; i++ ) {
-		                value[i] = (org.apache.activemq.command.BrokerId)unmarsalNestedObject(wireFormat,dataIn, bs);
-		            }
-		            info.setBrokerPath(value);
-		        } else {
-		            info.setBrokerPath(null);
-		        }
-        			
+
+        if (bs.readBoolean()) {
+            short size = dataIn.readShort();
+            BrokerId value[] = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) unmarsalNestedObject(wireFormat,dataIn, bs);
+            }
+            info.setBrokerPath(value);
+        }
+        else {
+            info.setBrokerPath(null);
+        }
         info.setArrival(unmarshalLong(wireFormat, dataIn, bs));
         info.setUserID(readString(dataIn, bs));
         info.setRecievedByDFBridge(bs.readBoolean());
@@ -129,32 +125,25 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc += marshal1NestedObject(wireFormat, info.getMessageId(), bs);
         rc += marshal1CachedObject(wireFormat, info.getOriginalTransactionId(), bs);
         rc += writeString(info.getGroupID(), bs);
-        
-        rc += writeString(info.getCorrelationId(), bs);
+                rc += writeString(info.getCorrelationId(), bs);
         bs.writeBoolean(info.isPersistent());
         rc+=marshal1Long(wireFormat, info.getExpiration(), bs);
-        
-        rc += marshal1NestedObject(wireFormat, info.getReplyTo(), bs);
+                rc += marshal1NestedObject(wireFormat, info.getReplyTo(), bs);
         rc+=marshal1Long(wireFormat, info.getTimestamp(), bs);
         rc += writeString(info.getType(), bs);
-        
-		bs.writeBoolean(info.getContent()!=null);
-		rc += info.getContent()==null ? 0 : info.getContent().getLength()+4;
-		
-        
-		bs.writeBoolean(info.getMarshalledProperties()!=null);
-		rc += info.getMarshalledProperties()==null ? 0 : info.getMarshalledProperties().getLength()+4;
-		
+        bs.writeBoolean(info.getContent()!=null);
+        rc += info.getContent()==null ? 0 : info.getContent().getLength()+4;
+        bs.writeBoolean(info.getMarshalledProperties()!=null);
+        rc += info.getMarshalledProperties()==null ? 0 : info.getMarshalledProperties().getLength()+4;
         rc += marshal1NestedObject(wireFormat, info.getDataStructure(), bs);
         rc += marshal1CachedObject(wireFormat, info.getTargetConsumerId(), bs);
         bs.writeBoolean(info.isCompressed());
-        
-        rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
+                rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
         rc+=marshal1Long(wireFormat, info.getArrival(), bs);
         rc += writeString(info.getUserID(), bs);
         bs.writeBoolean(info.isRecievedByDFBridge());
 
-        return rc+9;
+        return rc + 3;
     }
 
     /**
@@ -183,20 +172,16 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         marshal2NestedObject(wireFormat, info.getReplyTo(), dataOut, bs);
         marshal2Long(wireFormat, info.getTimestamp(), dataOut, bs);
         writeString(info.getType(), dataOut, bs);
-        
-		if(bs.readBoolean()) { 
-             org.activeio.ByteSequence data = info.getContent();
-			dataOut.writeInt(data.getLength());
-			dataOut.write(data.getData(), data.getOffset(), data.getLength());
-		}
-		
-        
-		if(bs.readBoolean()) { 
-             org.activeio.ByteSequence data = info.getMarshalledProperties();
-			dataOut.writeInt(data.getLength());
-			dataOut.write(data.getData(), data.getOffset(), data.getLength());
-		}
-		
+        if(bs.readBoolean()) {
+           org.activeio.ByteSequence data = info.getContent();
+           dataOut.writeInt(data.getLength());
+           dataOut.write(data.getData(), data.getOffset(), data.getLength());
+        }
+        if(bs.readBoolean()) {
+           org.activeio.ByteSequence data = info.getMarshalledProperties();
+           dataOut.writeInt(data.getLength());
+           dataOut.write(data.getData(), data.getOffset(), data.getLength());
+        }
         marshal2NestedObject(wireFormat, info.getDataStructure(), dataOut, bs);
         marshal2CachedObject(wireFormat, info.getTargetConsumerId(), dataOut, bs);
         bs.readBoolean();

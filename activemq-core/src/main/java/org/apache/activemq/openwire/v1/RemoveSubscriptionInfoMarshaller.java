@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for RemoveSubscriptionInfo
+ * Marshalling code for Open Wire Format for RemoveSubscriptionInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,7 +64,7 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-        info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setSubcriptionName(readString(dataIn, bs));
         info.setClientId(readString(dataIn, bs));
 
@@ -83,7 +83,7 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         rc += writeString(info.getSubcriptionName(), bs);
         rc += writeString(info.getClientId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

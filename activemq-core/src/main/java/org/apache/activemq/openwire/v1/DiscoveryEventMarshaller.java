@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for DiscoveryEvent
+ * Marshalling code for Open Wire Format for DiscoveryEventMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -81,7 +81,7 @@ public class DiscoveryEventMarshaller extends DataStreamMarshaller {
         rc += writeString(info.getServiceName(), bs);
         rc += writeString(info.getBrokerName(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

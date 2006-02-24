@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for JournalTopicAck
+ * Marshalling code for Open Wire Format for JournalTopicAckMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,12 +64,12 @@ public class JournalTopicAckMarshaller extends DataStreamMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageId((org.apache.activemq.command.MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
         info.setMessageSequenceId(unmarshalLong(wireFormat, dataIn, bs));
         info.setSubscritionName(readString(dataIn, bs));
         info.setClientId(readString(dataIn, bs));
-        info.setTransactionId((org.apache.activemq.command.TransactionId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((TransactionId) unmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -89,7 +89,7 @@ public class JournalTopicAckMarshaller extends DataStreamMarshaller {
         rc += writeString(info.getClientId(), bs);
         rc += marshal1NestedObject(wireFormat, info.getTransactionId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

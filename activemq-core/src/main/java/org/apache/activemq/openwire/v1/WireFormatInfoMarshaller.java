@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for WireFormatInfo
+ * Marshalling code for Open Wire Format for WireFormatInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -65,13 +65,15 @@ public class WireFormatInfoMarshaller extends DataStreamMarshaller {
 
         WireFormatInfo info = (WireFormatInfo)o;
         {
-        		byte data[] = new byte[8];
-        		dataIn.readFully(data);
-        		info.setMagic(data);
-    		}
-    		
+            byte data[] = new byte[8];
+            dataIn.readFully(data);
+            info.setMagic(data);
+        }
         info.setVersion(dataIn.readInt());
-        info.setOptions(dataIn.readInt());
+        info.setCacheEnabled(bs.readBoolean());
+        info.setCompressionEnabled(bs.readBoolean());
+        info.setStackTraceEnabled(bs.readBoolean());
+        info.setTcpNoDelayEnabled(bs.readBoolean());
 
     }
 
@@ -84,11 +86,12 @@ public class WireFormatInfoMarshaller extends DataStreamMarshaller {
         WireFormatInfo info = (WireFormatInfo)o;
 
         int rc = super.marshal1(wireFormat, o, bs);
-        
-        
-        
+                        bs.writeBoolean(info.isCacheEnabled());
+        bs.writeBoolean(info.isCompressionEnabled());
+        bs.writeBoolean(info.isStackTraceEnabled());
+        bs.writeBoolean(info.isTcpNoDelayEnabled());
 
-        return rc+16;
+        return rc + 9;
     }
 
     /**
@@ -104,7 +107,10 @@ public class WireFormatInfoMarshaller extends DataStreamMarshaller {
         WireFormatInfo info = (WireFormatInfo)o;
         dataOut.write(info.getMagic(), 0, 8);
         dataOut.writeInt(info.getVersion());
-        dataOut.writeInt(info.getOptions());
+        bs.readBoolean();
+        bs.readBoolean();
+        bs.readBoolean();
+        bs.readBoolean();
 
     }
 }

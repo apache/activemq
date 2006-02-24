@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for DataArrayResponse
+ * Marshalling code for Open Wire Format for DataArrayResponseMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,18 +64,18 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
-        
-		        if( bs.readBoolean() ) {
-		            short size = dataIn.readShort();
-		            org.apache.activemq.command.DataStructure value[] = new org.apache.activemq.command.DataStructure[size];
-		            for( int i=0; i < size; i++ ) {
-		                value[i] = (org.apache.activemq.command.DataStructure)unmarsalNestedObject(wireFormat,dataIn, bs);
-		            }
-		            info.setData(value);
-		        } else {
-		            info.setData(null);
-		        }
-        			
+
+        if (bs.readBoolean()) {
+            short size = dataIn.readShort();
+            DataStructure value[] = new DataStructure[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (DataStructure) unmarsalNestedObject(wireFormat,dataIn, bs);
+            }
+            info.setData(value);
+        }
+        else {
+            info.setData(null);
+        }
 
     }
 
@@ -90,7 +90,7 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
         int rc = super.marshal1(wireFormat, o, bs);
         rc += marshalObjectArray(wireFormat, info.getData(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

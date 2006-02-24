@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for MessageAck
+ * Marshalling code for Open Wire Format for MessageAckMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,12 +64,12 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         MessageAck info = (MessageAck)o;
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setTransactionId((org.apache.activemq.command.TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setConsumerId((org.apache.activemq.command.ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setAckType(dataIn.readByte());
-        info.setFirstMessageId((org.apache.activemq.command.MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setLastMessageId((org.apache.activemq.command.MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setFirstMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setLastMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
         info.setMessageCount(dataIn.readInt());
 
     }
@@ -86,12 +86,10 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
         rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
         rc += marshal1CachedObject(wireFormat, info.getTransactionId(), bs);
         rc += marshal1CachedObject(wireFormat, info.getConsumerId(), bs);
-        
-        rc += marshal1NestedObject(wireFormat, info.getFirstMessageId(), bs);
+                rc += marshal1NestedObject(wireFormat, info.getFirstMessageId(), bs);
         rc += marshal1NestedObject(wireFormat, info.getLastMessageId(), bs);
         
-
-        return rc+5;
+        return rc + 2;
     }
 
     /**

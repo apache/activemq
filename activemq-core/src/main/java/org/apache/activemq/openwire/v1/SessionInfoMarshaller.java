@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for SessionInfo
+ * Marshalling code for Open Wire Format for SessionInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,7 +64,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         SessionInfo info = (SessionInfo)o;
-        info.setSessionId((org.apache.activemq.command.SessionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setSessionId((SessionId) unmarsalCachedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -79,7 +79,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         int rc = super.marshal1(wireFormat, o, bs);
         rc += marshal1CachedObject(wireFormat, info.getSessionId(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

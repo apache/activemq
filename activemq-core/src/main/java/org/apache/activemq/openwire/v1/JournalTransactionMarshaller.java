@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for JournalTransaction
+ * Marshalling code for Open Wire Format for JournalTransactionMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,7 +64,7 @@ public class JournalTransactionMarshaller extends DataStreamMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         JournalTransaction info = (JournalTransaction)o;
-        info.setTransactionId((org.apache.activemq.command.TransactionId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((TransactionId) unmarsalNestedObject(wireFormat, dataIn, bs));
         info.setType(dataIn.readByte());
         info.setWasPrepared(bs.readBoolean());
 
@@ -80,10 +80,9 @@ public class JournalTransactionMarshaller extends DataStreamMarshaller {
 
         int rc = super.marshal1(wireFormat, o, bs);
         rc += marshal1NestedObject(wireFormat, info.getTransactionId(), bs);
-        
-        bs.writeBoolean(info.getWasPrepared());
+                bs.writeBoolean(info.getWasPrepared());
 
-        return rc+1;
+        return rc + 1;
     }
 
     /**

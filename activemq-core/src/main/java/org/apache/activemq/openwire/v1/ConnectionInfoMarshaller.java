@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ConnectionInfo
+ * Marshalling code for Open Wire Format for ConnectionInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -64,22 +64,22 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         super.unmarshal(wireFormat, o, dataIn, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-        info.setConnectionId((org.apache.activemq.command.ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
         info.setClientId(readString(dataIn, bs));
         info.setPassword(readString(dataIn, bs));
         info.setUserName(readString(dataIn, bs));
-        
-		        if( bs.readBoolean() ) {
-		            short size = dataIn.readShort();
-		            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-		            for( int i=0; i < size; i++ ) {
-		                value[i] = (org.apache.activemq.command.BrokerId)unmarsalNestedObject(wireFormat,dataIn, bs);
-		            }
-		            info.setBrokerPath(value);
-		        } else {
-		            info.setBrokerPath(null);
-		        }
-        			
+
+        if (bs.readBoolean()) {
+            short size = dataIn.readShort();
+            BrokerId value[] = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) unmarsalNestedObject(wireFormat,dataIn, bs);
+            }
+            info.setBrokerPath(value);
+        }
+        else {
+            info.setBrokerPath(null);
+        }
 
     }
 
@@ -98,7 +98,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         rc += writeString(info.getUserName(), bs);
         rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**

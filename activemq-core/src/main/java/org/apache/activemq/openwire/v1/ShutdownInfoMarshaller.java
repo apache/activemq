@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for ShutdownInfo
+ * Marshalling code for Open Wire Format for ShutdownInfoMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -73,7 +73,7 @@ public class ShutdownInfoMarshaller extends BaseCommandMarshaller {
 
         int rc = super.marshal1(wireFormat, o, bs);
 
-        return rc+0;
+        return rc + 0;
     }
 
     /**
