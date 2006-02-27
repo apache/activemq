@@ -31,7 +31,7 @@ namespace openwire_dotnet
             {
                 Console.WriteLine("About to connect to ActiveMQ");
 
-                // START SNIPPET: example
+                // START SNIPPET: demo
                 IConnectionFactory factory = new ConnectionFactory("localhost", 61616);
                 using (IConnection connection = factory.CreateConnection())
                 {
@@ -68,7 +68,7 @@ namespace openwire_dotnet
                         Console.WriteLine("Received message with text: " + message.Text);
                     }
                 }
-                // END SNIPPET: example
+                // END SNIPPET: demo
             }
             catch (Exception e)
             {
