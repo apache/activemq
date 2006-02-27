@@ -136,7 +136,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public void start() throws Exception {
-        this.dispatch(connector.getBrokerInfo());
+        this.processDispatch(connector.getBrokerInfo());
     }
 
     public void stop() throws Exception {
@@ -537,32 +537,11 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return connector;
     }
 
-    public void dispatchSync(Command command) {
-        
-        if( command.isMessageDispatch() ) {
-            
-            MessageDispatch md = (MessageDispatch) command;
-            Runnable sub = (Runnable) md.getConsumer();
-            broker.processDispatch(md);
-            
-            try {
-                dispatch( command );
-            } finally {
-                if( sub != null ) {
-                    sub.run();
-                }
-            }
-            
-        } else {
-            dispatch( command );
-        }
+    public void dispatchSync(Command message) {
+        processDispatch(message);
     }
     
     public void dispatchAsync(Command message) {
-        if (message.isMessageDispatch()){
-            MessageDispatch md = (MessageDispatch) message;
-            broker.processDispatch(md);
-        }
         if( taskRunner==null ) {
             dispatchSync( message );
         } else {
@@ -575,12 +554,29 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         }        
     }
     
+    protected void processDispatch(Command command){
+        if(command.isMessageDispatch()){
+            MessageDispatch md=(MessageDispatch) command;
+            Runnable sub=(Runnable) md.getConsumer();
+            broker.processDispatch(md);
+            try{
+                dispatch(command);
+            }finally{
+                if(sub!=null){
+                    sub.run();
+                }
+            }
+        }else{
+            dispatch(command);
+        }
+    }       
+    
     public boolean iterate() {
         if( dispatchQueue.isEmpty() ) {
             return false;
         } else {
             Command command = (Command) dispatchQueue.remove(0);
-            dispatch( command );
+            processDispatch( command );
             return true;
         }
     }    

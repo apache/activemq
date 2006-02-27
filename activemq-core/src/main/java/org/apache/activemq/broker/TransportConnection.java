@@ -21,6 +21,7 @@ import java.io.IOException;
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -192,20 +193,17 @@ public class TransportConnection extends AbstractConnection {
         this.active=active;
     }
     
-    public Response processBrokerInfo(BrokerInfo info) {
-        if (info.isSlaveBroker()){
+    public Response processBrokerInfo(BrokerInfo info){
+        if(info.isSlaveBroker()){
             //stream messages from this broker (the master) to 
             //the slave
-            MutableBrokerFilter parent = (MutableBrokerFilter)broker.getAdaptor(MutableBrokerFilter.class);
-            masterBroker = new MasterBroker(parent,transport);  
+            MutableBrokerFilter parent=(MutableBrokerFilter) broker.getAdaptor(MutableBrokerFilter.class);
+            masterBroker=new MasterBroker(parent,transport);
             masterBroker.startProcessing();
-            log.info("Slave Broker " + info.getBrokerName() + " is attached");
+            log.info("Slave Broker "+info.getBrokerName()+" is attached");
         }
-        
         return super.processBrokerInfo(info);
     }
-    
-    
 
     protected void dispatch(Command command){
         try{
@@ -217,6 +215,5 @@ public class TransportConnection extends AbstractConnection {
         }finally{
             setMarkedCandidate(false);
         }
-    }        
-
+    }
 }
