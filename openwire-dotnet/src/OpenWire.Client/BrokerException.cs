@@ -41,7 +41,7 @@ namespace OpenWire.Client
             }
         }
         
-        public virtual string StackTrace
+        public virtual string JavaStackTrace
         {
             get {
                 return brokerError.StackTrace;

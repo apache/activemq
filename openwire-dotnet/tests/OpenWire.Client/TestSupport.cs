@@ -70,7 +70,7 @@ namespace OpenWire.Client
                 }
             }
         }
-
+        
         protected virtual IDestination CreateDestination(ISession session)
         {
             string name = "Test.DotNet." + GetType().Name;
@@ -80,11 +80,13 @@ namespace OpenWire.Client
             return destination;
         }
         
-        protected virtual IMessage CreateMessage(ISession session) {
+        protected virtual IMessage CreateMessage(ISession session)
+        {
             return session.CreateMessage();
         }
         
-        protected virtual  void AssertValidMessage(IMessage message) {
+        protected virtual  void AssertValidMessage(IMessage message)
+        {
             Assert.IsNotNull(message, "Null Message!");
         }
     }

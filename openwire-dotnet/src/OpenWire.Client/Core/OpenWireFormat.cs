@@ -94,7 +94,10 @@ namespace OpenWire.Client.Core
         
         public Object Unmarshal(BinaryReader dis)
         {
-            int size = DataStreamMarshaller.ReadInt(dis);
+            // lets ignore the size of the packet
+            DataStreamMarshaller.ReadInt(dis);
+            
+            // first byte is the type of the packet
             byte dataType = DataStreamMarshaller.ReadByte(dis);
             if (dataType != NULL_TYPE)
             {
@@ -206,7 +209,6 @@ namespace OpenWire.Client.Core
         /// <summary>
         /// Method CreateMagicBytes
         /// </summary>
-        /// <returns>A  byte[]</retutns>
         private byte[] CreateMagicBytes()
         {
             byte[] answer = new byte[MAGIC.Length];

@@ -17,13 +17,15 @@ namespace OpenWire.Client
                 try
                 {
                     IMessageConsumer consumer = session.CreateConsumer(null);
+                    Console.WriteLine("Created consumer: " + consumer);
+                    
                     Assert.Fail("Should  have thrown an exception!");
                 }
                 catch (BrokerException e)
                 {
                     Console.WriteLine("Caught expected exception: " + e);
                     Console.WriteLine("Stack: " + e.StackTrace);
-                    Console.WriteLine("BrokerStrack: " + e.BrokerError.StackTrace);
+                    Console.WriteLine("Java Stack: " + e.JavaStackTrace);
                 }
             }
         }

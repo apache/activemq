@@ -17,6 +17,7 @@
 using System.Collections;
 using OpenWire.Client.Commands;
 using System;
+using OpenWire.Client;
 
 namespace OpenWire.Client.Core
 {
@@ -26,11 +27,10 @@ namespace OpenWire.Client.Core
     public class Dispatcher
     {
         Queue queue = Queue.Synchronized( new Queue() );
-        
+
         /// <summary>
         /// Method Enqueue
         /// </summary>
-        /// <param name="message">An ActiveMQMessage</param>
         public void Enqueue(ActiveMQMessage message)
         {
             queue.Enqueue(message);
@@ -39,7 +39,6 @@ namespace OpenWire.Client.Core
         /// <summary>
         /// Method DequeueNoWait
         /// </summary>
-        /// <returns>An IMessage</retutns>
         public IMessage DequeueNoWait()
         {
             lock (queue)
@@ -55,8 +54,6 @@ namespace OpenWire.Client.Core
         /// <summary>
         /// Method Dequeue
         /// </summary>
-        /// <param name="timeout">A  long</param>
-        /// <returns>An IMessage</retutns>
         public IMessage Dequeue(long timeout)
         {
             // TODO
@@ -66,12 +63,10 @@ namespace OpenWire.Client.Core
         /// <summary>
         /// Method Dequeue
         /// </summary>
-        /// <returns>An IMessage</retutns>
         public IMessage Dequeue()
         {
             return (IMessage) queue.Dequeue();
         }
-        
         
     }
 }
