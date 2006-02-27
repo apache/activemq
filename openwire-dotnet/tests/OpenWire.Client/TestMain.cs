@@ -42,15 +42,21 @@ namespace openwire_dotnet
                     IDestination destination = session.GetQueue("FOO.BAR");
                     Console.WriteLine("Using destination: " + destination);
                     
+                    // lets create a consumer and producer
                     IMessageConsumer consumer = session.CreateConsumer(destination);
                     
                     IMessageProducer producer = session.CreateProducer(destination);
-                    string expected = "Hello World!";
+                    producer.Persistent = true;
                     
-                    ITextMessage request = session.CreateTextMessage(expected);
+                    // lets send a message
+                    ITextMessage request = session.CreateTextMessage("Hello World!");
+                    request.JMSCorrelationID = "abc";
+                    request.JMSXGroupID = "cheese";
+                    request.Properties["myHeader"] = "James";
                     
                     producer.Send(request);
                     
+                    // lets consume a message
                     ActiveMQTextMessage message = (ActiveMQTextMessage) consumer.Receive();
                     if (message == null)
                     {
@@ -58,8 +64,8 @@ namespace openwire_dotnet
                     }
                     else
                     {
-                        String actual = message.Text;
-                        Console.WriteLine("Received message with text: " + actual);
+                        Console.WriteLine("Received message with ID:   " + message.JMSMessageId);
+                        Console.WriteLine("Received message with text: " + message.Text);
                     }
                 }
                 // END SNIPPET: example
