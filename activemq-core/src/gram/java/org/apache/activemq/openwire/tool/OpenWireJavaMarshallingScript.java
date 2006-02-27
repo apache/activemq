@@ -32,7 +32,7 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
     protected List concreteClasses = new ArrayList();
     protected File factoryFile;
     protected String factoryFileName = "MarshallerFactory";
-    protected String indent = "        ";
+    protected String indent = "    ";
 
     public Object run() {
         if (destDir == null) {
