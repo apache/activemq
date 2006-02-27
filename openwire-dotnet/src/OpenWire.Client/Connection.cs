@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using OpenWire.Client.Commands;
 using OpenWire.Client.Core;
+using System.Threading;
 
 namespace OpenWire.Client
 {
@@ -108,6 +109,18 @@ namespace OpenWire.Client
                     throw new OpenWireException("You cannot change the ClientId once the Connection is connected");
                 }
                 info.ClientId = value;
+            }
+        }
+        
+        public BrokerInfo BrokerInfo {
+            get {
+                return brokerInfo;
+            }
+        }
+        
+        public WireFormatInfo BrokerWireFormat {
+            get {
+                return brokerWireFormatInfo;
             }
         }
         

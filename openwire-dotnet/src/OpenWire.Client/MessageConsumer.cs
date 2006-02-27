@@ -41,7 +41,7 @@ namespace OpenWire.Client
         private bool closed;
         private Dispatcher dispatcher = new Dispatcher();
         
-        public event MessageHandler Listener;
+        public event MessageListener Listener;
         
         public MessageConsumer(Session session, ConsumerInfo info, AcknowledgementMode acknowledgementMode)
         {
@@ -50,6 +50,13 @@ namespace OpenWire.Client
             this.acknowledgementMode = acknowledgementMode;
         }
         
+        public ConsumerId ConsumerId {
+            get {
+                return info.ConsumerId;
+            }
+        }
+
+        
         /// <summary>
         /// Method Dispatch
         /// </summary>
@@ -57,6 +64,11 @@ namespace OpenWire.Client
         public void Dispatch(ActiveMQMessage message)
         {
             dispatcher.Enqueue(message);
+            
+            if (Listener != null) {
+                // lets dispatch to the thread pool for this connection for messages to be processed
+                ThreadPool.QueueUserWorkItem(new WaitCallback(session.DispatchAsyncMessages));
+            }
         }
         
         public IMessage Receive()
@@ -83,6 +95,22 @@ namespace OpenWire.Client
         {
             session.DisposeOf(info.ConsumerId);
             closed = true;
+        }
+        
+        /// <summary>
+        /// Dispatch any pending messages to the asynchronous listener
+        /// </summary>
+        public void DispatchAsyncMessages()
+        {
+            while (Listener != null) {
+                IMessage message = dispatcher.DequeueNoWait();
+                if (message != null) {
+                    Listener(message);
+                }
+                else {
+                    break;
+                }
+            }
         }
         
         protected void CheckClosed()

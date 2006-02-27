@@ -17,6 +17,7 @@
 using System;
 using OpenWire.Client.Commands;
 using OpenWire.Client.Core;
+using System.Collections;
 
 namespace OpenWire.Client
 {
@@ -31,6 +32,7 @@ namespace OpenWire.Client
         private long consumerCounter;
         private long producerCounter;
         private int prefetchSize = 1000;
+        private IDictionary consumers = new Hashtable();
         
         public Session(Connection connection, SessionInfo info, AcknowledgementMode acknowledgementMode)
         {
@@ -75,6 +77,8 @@ namespace OpenWire.Client
                 connection.AddConsumer(consumerId, consumer);
                 
                 connection.SyncRequest(command);
+                
+                consumers[consumerId] = consumer;
                 return consumer;
             }
             catch (Exception e)
@@ -98,6 +102,8 @@ namespace OpenWire.Client
                 connection.AddConsumer(consumerId, consumer);
                 
                 connection.SyncRequest(command);
+                
+                consumers[consumerId] = consumer;
                 return consumer;
             }
             catch (Exception e)
@@ -194,11 +200,21 @@ namespace OpenWire.Client
         
         public void DisposeOf(ConsumerId objectId)
         {
+            consumers.Remove(objectId);
             connection.RemoveConsumer(objectId);
             RemoveInfo command = new RemoveInfo();
             command.ObjectId = objectId;
             connection.SyncRequest(command);
         }
+        
+        public void DispatchAsyncMessages(object state) {
+            // lets iterate through each consumer created by this session
+            // ensuring that they have all pending messages dispatched
+            foreach (MessageConsumer consumer in consumers.Values) {
+                consumer.DispatchAsyncMessages();
+            }
+        }
+        
         
         protected virtual ConsumerInfo CreateConsumerInfo(IDestination destination, string selector)
         {
@@ -237,11 +253,8 @@ namespace OpenWire.Client
         /// <summary>
         /// Configures the message command
         /// </summary>
-        /// <param name="activeMQMessage">An ActiveMQMessage</param>
-        /// <returns>An IMessage</retutns>
         protected void Configure(ActiveMQMessage message)
         {
         }
-        
     }
 }

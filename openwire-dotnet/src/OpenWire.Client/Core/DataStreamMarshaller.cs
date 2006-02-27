@@ -340,8 +340,6 @@ namespace OpenWire.Client.Core
         /// <summary>
         /// Switches from one endian to the other
         /// </summary>
-        /// <param name="value">An int</param>
-        /// <returns>An int</retutns>
         public static int SwitchEndian(int x)
         {
             return ((x << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | (x >> 24));
@@ -799,8 +797,6 @@ namespace OpenWire.Client.Core
         /// <summary>
         /// Method ReadFloat
         /// </summary>
-        /// <param name="dataIn">A  BinaryReader</param>
-        /// <returns>An Object</retutns>
         private static Object ReadFloat(BinaryReader dataIn)
         {
             // TODO: Implement this method

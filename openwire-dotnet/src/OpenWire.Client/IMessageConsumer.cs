@@ -19,7 +19,7 @@ using OpenWire.Client.Commands;
 
 namespace OpenWire.Client
 {
-    public delegate void MessageHandler(IMessage message);
+    public delegate void MessageListener(IMessage message);
     
     /// <summary>
     /// A consumer of messages
@@ -45,6 +45,6 @@ namespace OpenWire.Client
         /// <summary>
         /// An asynchronous listener which can be used to consume messages asynchronously
         /// </summary>
-        event MessageHandler Listener;
+        event MessageListener Listener;
     }
 }
