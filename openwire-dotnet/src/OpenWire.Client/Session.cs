@@ -112,7 +112,7 @@ namespace OpenWire.Client
                 throw e;
             }
         }
-
+        
         public IQueue GetQueue(string name)
         {
             return new ActiveMQQueue(name);
@@ -176,7 +176,8 @@ namespace OpenWire.Client
         
         
         // Properties
-        public Connection Connection {
+        public Connection Connection
+        {
             get {
                 return connection;
             }
@@ -207,11 +208,18 @@ namespace OpenWire.Client
             connection.SyncRequest(command);
         }
         
-        public void DispatchAsyncMessages(object state) {
+        public void DispatchAsyncMessages(object state)
+        {
             // lets iterate through each consumer created by this session
             // ensuring that they have all pending messages dispatched
-            foreach (MessageConsumer consumer in consumers.Values) {
-                consumer.DispatchAsyncMessages();
+            lock (this)
+            {
+                // lets ensure that only 1 thread dispatches messages in a consumer at once
+                
+                foreach (MessageConsumer consumer in consumers.Values)
+                {
+                    consumer.DispatchAsyncMessages();
+                }
             }
         }
         
