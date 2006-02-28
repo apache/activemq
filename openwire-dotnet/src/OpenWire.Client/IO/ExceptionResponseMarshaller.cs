@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         ExceptionResponse info = (ExceptionResponse)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += MarshalBrokerError(wireFormat, info.Exception, bs);
+    rc += MarshalBrokerError(wireFormat, info.Exception, bs);
 
         return rc + 0;
     }
@@ -80,7 +80,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ExceptionResponse info = (ExceptionResponse)o;
-        MarshalBrokerError(wireFormat, info.Exception, dataOut, bs);
+    MarshalBrokerError(wireFormat, info.Exception, dataOut, bs);
 
     }
   }

@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         IntegerResponse info = (IntegerResponse)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        
+    
         return rc + 1;
     }
 
@@ -79,7 +79,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         IntegerResponse info = (IntegerResponse)o;
-        DataStreamMarshaller.WriteInt(info.Result, dataOut);
+    DataStreamMarshaller.WriteInt(info.Result, dataOut);
 
     }
   }

@@ -92,30 +92,30 @@ namespace OpenWire.Client.IO
         Message info = (Message)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ProducerId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-        rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.OriginalDestination, bs);
-        rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.OriginalTransactionId, bs);
-        rc += WriteString(info.GroupID, bs);
-                rc += WriteString(info.CorrelationId, bs);
-        bs.WriteBoolean(info.Persistent);
-        rc += Marshal1Long(wireFormat, info.Expiration, bs);
-                rc += Marshal1NestedObject(wireFormat, info.ReplyTo, bs);
-        rc += Marshal1Long(wireFormat, info.Timestamp, bs);
-        rc += WriteString(info.Type, bs);
-        bs.WriteBoolean(info.Content!=null);
+    rc += Marshal1CachedObject(wireFormat, info.ProducerId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+    rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.OriginalDestination, bs);
+    rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.OriginalTransactionId, bs);
+    rc += WriteString(info.GroupID, bs);
+        rc += WriteString(info.CorrelationId, bs);
+    bs.WriteBoolean(info.Persistent);
+    rc += Marshal1Long(wireFormat, info.Expiration, bs);
+        rc += Marshal1NestedObject(wireFormat, info.ReplyTo, bs);
+    rc += Marshal1Long(wireFormat, info.Timestamp, bs);
+    rc += WriteString(info.Type, bs);
+    bs.WriteBoolean(info.Content!=null);
         rc += info.Content==null ? 0 : info.Content.Length+4;
-        bs.WriteBoolean(info.MarshalledProperties!=null);
+    bs.WriteBoolean(info.MarshalledProperties!=null);
         rc += info.MarshalledProperties==null ? 0 : info.MarshalledProperties.Length+4;
-        rc += Marshal1NestedObject(wireFormat, info.DataStructure, bs);
-        rc += Marshal1CachedObject(wireFormat, info.TargetConsumerId, bs);
-        bs.WriteBoolean(info.Compressed);
-                rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
-        rc += Marshal1Long(wireFormat, info.Arrival, bs);
-        rc += WriteString(info.UserID, bs);
-        bs.WriteBoolean(info.RecievedByDFBridge);
+    rc += Marshal1NestedObject(wireFormat, info.DataStructure, bs);
+    rc += Marshal1CachedObject(wireFormat, info.TargetConsumerId, bs);
+    bs.WriteBoolean(info.Compressed);
+        rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
+    rc += Marshal1Long(wireFormat, info.Arrival, bs);
+    rc += WriteString(info.UserID, bs);
+    bs.WriteBoolean(info.RecievedByDFBridge);
 
         return rc + 3;
     }
@@ -127,37 +127,37 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         Message info = (Message)o;
-        Marshal2CachedObject(wireFormat, info.ProducerId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.OriginalDestination, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.OriginalTransactionId, dataOut, bs);
-        WriteString(info.GroupID, dataOut, bs);
-        DataStreamMarshaller.WriteInt(info.GroupSequence, dataOut);
-        WriteString(info.CorrelationId, dataOut, bs);
-        bs.ReadBoolean();
-        Marshal2Long(wireFormat, info.Expiration, dataOut, bs);
-        DataStreamMarshaller.WriteByte(info.Priority, dataOut);
-        Marshal2NestedObject(wireFormat, info.ReplyTo, dataOut, bs);
-        Marshal2Long(wireFormat, info.Timestamp, dataOut, bs);
-        WriteString(info.Type, dataOut, bs);
-        if(bs.ReadBoolean()) {
+    Marshal2CachedObject(wireFormat, info.ProducerId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.OriginalDestination, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.OriginalTransactionId, dataOut, bs);
+    WriteString(info.GroupID, dataOut, bs);
+    DataStreamMarshaller.WriteInt(info.GroupSequence, dataOut);
+    WriteString(info.CorrelationId, dataOut, bs);
+    bs.ReadBoolean();
+    Marshal2Long(wireFormat, info.Expiration, dataOut, bs);
+    DataStreamMarshaller.WriteByte(info.Priority, dataOut);
+    Marshal2NestedObject(wireFormat, info.ReplyTo, dataOut, bs);
+    Marshal2Long(wireFormat, info.Timestamp, dataOut, bs);
+    WriteString(info.Type, dataOut, bs);
+    if(bs.ReadBoolean()) {
            DataStreamMarshaller.WriteInt(info.Content.Length, dataOut);
            dataOut.Write(info.Content);
         }
-        if(bs.ReadBoolean()) {
+    if(bs.ReadBoolean()) {
            DataStreamMarshaller.WriteInt(info.MarshalledProperties.Length, dataOut);
            dataOut.Write(info.MarshalledProperties);
         }
-        Marshal2NestedObject(wireFormat, info.DataStructure, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.TargetConsumerId, dataOut, bs);
-        bs.ReadBoolean();
-        DataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
-        MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
-        Marshal2Long(wireFormat, info.Arrival, dataOut, bs);
-        WriteString(info.UserID, dataOut, bs);
-        bs.ReadBoolean();
+    Marshal2NestedObject(wireFormat, info.DataStructure, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.TargetConsumerId, dataOut, bs);
+    bs.ReadBoolean();
+    DataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
+    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
+    Marshal2Long(wireFormat, info.Arrival, dataOut, bs);
+    WriteString(info.UserID, dataOut, bs);
+    bs.ReadBoolean();
 
     }
   }

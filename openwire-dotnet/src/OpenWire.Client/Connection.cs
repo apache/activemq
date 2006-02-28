@@ -13,16 +13,16 @@ namespace OpenWire.Client
     {
         private ITransport transport;
         private ConnectionInfo info;
+        private AcknowledgementMode acknowledgementMode = AcknowledgementMode.AutoAcknowledge;
         private BrokerInfo brokerInfo; // from broker
         private WireFormatInfo brokerWireFormatInfo; // from broker
         private IList sessions = new ArrayList();
-        private bool transacted;
+        private IDictionary consumers = new Hashtable(); // TODO threadsafe
         private bool connected;
         private bool closed;
-        private AcknowledgementMode acknowledgementMode = AcknowledgementMode.AutoAcknowledge;
         private long sessionCounter;
         private long temporaryDestinationCounter;
-        private IDictionary consumers = new Hashtable(); // TODO threadsafe
+        private long localTransactionCounter;
         
         
         public Connection(ITransport transport, ConnectionInfo info)
@@ -32,7 +32,7 @@ namespace OpenWire.Client
             this.transport.Command += new CommandHandler(OnCommand);
             this.transport.Start();
         }
- 
+        
         /// <summary>
         /// Starts message delivery for this connection.
         /// </summary>
@@ -53,16 +53,15 @@ namespace OpenWire.Client
         /// </summary>
         public ISession CreateSession()
         {
-            return CreateSession(transacted, acknowledgementMode);
+            return CreateSession(acknowledgementMode);
         }
         
         /// <summary>
         /// Creates a new session to work on this connection
         /// </summary>
-        public ISession CreateSession(bool transacted, AcknowledgementMode acknowledgementMode)
+        public ISession CreateSession(AcknowledgementMode acknowledgementMode)
         {
-            CheckConnected();
-            SessionInfo info = CreateSessionInfo(transacted, acknowledgementMode);
+            SessionInfo info = CreateSessionInfo(acknowledgementMode);
             SyncRequest(info);
             Session session = new Session(this, info, acknowledgementMode);
             sessions.Add(session);
@@ -71,10 +70,13 @@ namespace OpenWire.Client
         
         public void Dispose()
         {
+            /*
             foreach (Session session in sessions)
             {
                 session.Dispose();
             }
+            */
+            DisposeOf(ConnectionId);
             sessions.Clear();
             transport.Dispose();
             closed = true;
@@ -88,11 +90,6 @@ namespace OpenWire.Client
             set { this.transport = value; }
         }
         
-        public bool Transacted
-        {
-            get { return transacted; }
-            set { this.transacted = value; }
-        }
         
         public AcknowledgementMode AcknowledgementMode
         {
@@ -112,13 +109,22 @@ namespace OpenWire.Client
             }
         }
         
-        public BrokerInfo BrokerInfo {
+        public ConnectionId ConnectionId
+        {
+            get {
+                return info.ConnectionId;
+            }
+        }
+        
+        public BrokerInfo BrokerInfo
+        {
             get {
                 return brokerInfo;
             }
         }
         
-        public WireFormatInfo BrokerWireFormat {
+        public WireFormatInfo BrokerWireFormat
+        {
             get {
                 return brokerWireFormatInfo;
             }
@@ -131,6 +137,7 @@ namespace OpenWire.Client
         /// </summary>
         public Response SyncRequest(Command command)
         {
+            CheckConnected();
             Response response = transport.Request(command);
             if (response is ExceptionResponse)
             {
@@ -141,18 +148,17 @@ namespace OpenWire.Client
             return response;
         }
         
-        
-        protected SessionInfo CreateSessionInfo(bool transacted, AcknowledgementMode acknowledgementMode)
+        public void OneWay(Command command)
         {
-            SessionInfo answer = new SessionInfo();
-            SessionId sessionId = new SessionId();
-            sessionId.ConnectionId = info.ConnectionId.Value;
-            lock (this)
-            {
-                sessionId.Value = ++sessionCounter;
-            }
-            answer.SessionId = sessionId;
-            return answer;
+            CheckConnected();
+            transport.Oneway(command);
+        }
+        
+        public void DisposeOf(DataStructure objectId)
+        {
+            RemoveInfo command = new RemoveInfo();
+            command.ObjectId = objectId;
+            SyncRequest(command);
         }
         
         
@@ -167,6 +173,20 @@ namespace OpenWire.Client
             }
         }
         
+        /// <summary>
+        /// Creates a new local transaction ID
+        /// </summary>
+        public LocalTransactionId CreateLocalTransactionId()
+        {
+            LocalTransactionId id= new LocalTransactionId();
+            id.ConnectionId = ConnectionId;
+            lock (this)
+            {
+                id.Value = (++localTransactionCounter);
+            }
+            return id;
+        }
+        
         protected void CheckConnected()
         {
             if (closed)
@@ -175,9 +195,9 @@ namespace OpenWire.Client
             }
             if (!connected)
             {
+                connected = true;
                 // now lets send the connection and see if we get an ack/nak
                 SyncRequest(info);
-                connected = true;
             }
         }
         
@@ -224,10 +244,12 @@ namespace OpenWire.Client
                     consumer.Dispatch(message);
                 }
             }
-            else if (command is WireFormatInfo) {
+            else if (command is WireFormatInfo)
+            {
                 this.brokerWireFormatInfo = (WireFormatInfo) command;
             }
-            else if (command is BrokerInfo) {
+            else if (command is BrokerInfo)
+            {
                 this.brokerInfo = (BrokerInfo) command;
             }
             else
@@ -235,6 +257,19 @@ namespace OpenWire.Client
                 Console.WriteLine("ERROR:ÊUnknown command: " + command);
             }
         }
-
+        
+        protected SessionInfo CreateSessionInfo(AcknowledgementMode acknowledgementMode)
+        {
+            SessionInfo answer = new SessionInfo();
+            SessionId sessionId = new SessionId();
+            sessionId.ConnectionId = info.ConnectionId.Value;
+            lock (this)
+            {
+                sessionId.Value = ++sessionCounter;
+            }
+            answer.SessionId = sessionId;
+            return answer;
+        }
+        
     }
 }

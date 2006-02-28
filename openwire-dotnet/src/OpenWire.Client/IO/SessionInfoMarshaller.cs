@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         SessionInfo info = (SessionInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.SessionId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.SessionId, bs);
 
         return rc + 0;
     }
@@ -80,7 +80,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         SessionInfo info = (SessionInfo)o;
-        Marshal2CachedObject(wireFormat, info.SessionId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.SessionId, dataOut, bs);
 
     }
   }

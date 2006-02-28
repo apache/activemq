@@ -79,7 +79,7 @@ namespace OpenWire.Client.IO
         DataArrayResponse info = (DataArrayResponse)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += MarshalObjectArray(wireFormat, info.Data, bs);
+    rc += MarshalObjectArray(wireFormat, info.Data, bs);
 
         return rc + 0;
     }
@@ -91,7 +91,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
-        MarshalObjectArray(wireFormat, info.Data, dataOut, bs);
+    MarshalObjectArray(wireFormat, info.Data, dataOut, bs);
 
     }
   }

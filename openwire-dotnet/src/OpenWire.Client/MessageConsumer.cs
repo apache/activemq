@@ -22,10 +22,11 @@ using OpenWire.Client.Core;
 
 namespace OpenWire.Client
 {
-    public enum AckType {
+    public enum AckType
+    {
         DeliveredAck = 0, // Message delivered but not consumed
-        ConsumedAck = 1, // Message consumed, discard
-        PoisonAck = 2 // Message could not be processed due to poison pill but discard anyway
+        PoisonAck = 1,    // Message could not be processed due to poison pill but discard anyway
+        ConsumedAck = 2   // Message consumed, discard
     }
     
     
@@ -40,8 +41,11 @@ namespace OpenWire.Client
         private AcknowledgementMode acknowledgementMode;
         private bool closed;
         private Dispatcher dispatcher = new Dispatcher();
+        private int maximumRedeliveryCount = 10;
+        private int redeliveryTimeout = 500;
         
         public event MessageListener Listener;
+        
         
         public MessageConsumer(Session session, ConsumerInfo info, AcknowledgementMode acknowledgementMode)
         {
@@ -50,12 +54,29 @@ namespace OpenWire.Client
             this.acknowledgementMode = acknowledgementMode;
         }
         
-        public ConsumerId ConsumerId {
+        public ConsumerId ConsumerId
+        {
             get {
                 return info.ConsumerId;
             }
         }
-
+        
+        public int MaximumRedeliveryCount
+        {
+            get { return maximumRedeliveryCount; }
+            set { maximumRedeliveryCount = value; }
+        }
+        
+        public int RedeliveryTimeout
+        {
+            get { return redeliveryTimeout; }
+            set { redeliveryTimeout = value; }
+        }
+        
+        public void RedeliverRolledBackMessages()
+        {
+            dispatcher.RedeliverRolledBackMessages();
+        }
         
         /// <summary>
         /// Method Dispatch
@@ -65,7 +86,8 @@ namespace OpenWire.Client
         {
             dispatcher.Enqueue(message);
             
-            if (Listener != null) {
+            if (Listener != null)
+            {
                 // lets dispatch to the thread pool for this connection for messages to be processed
                 ThreadPool.QueueUserWorkItem(new WaitCallback(session.DispatchAsyncMessages));
             }
@@ -77,7 +99,7 @@ namespace OpenWire.Client
             return AutoAcknowledge(dispatcher.Dequeue());
         }
         
-        public IMessage Receive(long timeout)
+        public IMessage Receive(int timeout)
         {
             CheckClosed();
             return AutoAcknowledge(dispatcher.Dequeue(timeout));
@@ -102,12 +124,15 @@ namespace OpenWire.Client
         /// </summary>
         public void DispatchAsyncMessages()
         {
-            while (Listener != null) {
+            while (Listener != null)
+            {
                 IMessage message = dispatcher.DequeueNoWait();
-                if (message != null) {
+                if (message != null)
+                {
                     Listener(message);
                 }
-                else {
+                else
+                {
                     break;
                 }
             }
@@ -145,7 +170,7 @@ namespace OpenWire.Client
                 DoAcknowledge(message);
             }
         }
-
+        
         protected void DoAcknowledge(Message message)
         {
             MessageAck ack = CreateMessageAck(message);
@@ -163,10 +188,70 @@ namespace OpenWire.Client
             ack.FirstMessageId = message.MessageId;
             ack.LastMessageId = message.MessageId;
             ack.MessageCount = 1;
-            ack.TransactionId = message.TransactionId;
+            
+            if (session.Transacted)
+            {
+                session.DoStartTransaction();
+                ack.TransactionId = session.TransactionContext.TransactionId;
+                session.TransactionContext.AddSynchronization(new MessageConsumerSynchronization(this, message));
+            }
             return ack;
         }
         
+        public void AfterRollback(ActiveMQMessage message)
+        {
+            // lets redeliver the message again
+            message.RedeliveryCounter += 1;
+            if (message.RedeliveryCounter > MaximumRedeliveryCount)
+            {
+                // lets send back a poisoned pill
+                MessageAck ack = new MessageAck();
+                ack.AckType = (int) AckType.PoisonAck;
+                ack.ConsumerId = info.ConsumerId;
+                ack.Destination = message.Destination;
+                ack.FirstMessageId = message.MessageId;
+                ack.LastMessageId = message.MessageId;
+                ack.MessageCount = 1;
+                session.Connection.OneWay(ack);
+            }
+            else
+            {
+                dispatcher.Redeliver(message);
+                
+                if (Listener != null)
+                {
+                    // lets re-dispatch the message at some point in the future
+                    Thread.Sleep(RedeliveryTimeout);
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(session.DispatchAsyncMessages));
+                }
+            }
+        }
+    }
+    
+    // TODO maybe there's a cleaner way of creating stateful delegates to make this code neater
+    class MessageConsumerSynchronization : ISynchronization
+    {
+        private MessageConsumer consumer;
+        private Message message;
+        
+        public MessageConsumerSynchronization(MessageConsumer consumer, Message message)
+        {
+            this.message = message;
+            this.consumer = consumer;
+        }
+        
+        public void BeforeCommit()
+        {
+        }
+        
+        public void AfterCommit()
+        {
+        }
+        
+        public void AfterRollback()
+        {
+            consumer.AfterRollback((ActiveMQMessage) message);
+        }
         
     }
 }

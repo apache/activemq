@@ -69,8 +69,8 @@ namespace OpenWire.Client.IO
         LocalTransactionId info = (LocalTransactionId)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1Long(wireFormat, info.Value, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
+    rc += Marshal1Long(wireFormat, info.Value, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
 
         return rc + 0;
     }
@@ -82,8 +82,8 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         LocalTransactionId info = (LocalTransactionId)o;
-        Marshal2Long(wireFormat, info.Value, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
+    Marshal2Long(wireFormat, info.Value, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
 
     }
   }

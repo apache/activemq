@@ -74,12 +74,12 @@ namespace OpenWire.Client.IO
         MessageAck info = (MessageAck)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-        rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
-                rc += Marshal1NestedObject(wireFormat, info.FirstMessageId, bs);
-        rc += Marshal1NestedObject(wireFormat, info.LastMessageId, bs);
-        
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+    rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
+        rc += Marshal1NestedObject(wireFormat, info.FirstMessageId, bs);
+    rc += Marshal1NestedObject(wireFormat, info.LastMessageId, bs);
+    
         return rc + 2;
     }
 
@@ -90,13 +90,13 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         MessageAck info = (MessageAck)o;
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
-        DataStreamMarshaller.WriteByte(info.AckType, dataOut);
-        Marshal2NestedObject(wireFormat, info.FirstMessageId, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.LastMessageId, dataOut, bs);
-        DataStreamMarshaller.WriteInt(info.MessageCount, dataOut);
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
+    DataStreamMarshaller.WriteByte(info.AckType, dataOut);
+    Marshal2NestedObject(wireFormat, info.FirstMessageId, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.LastMessageId, dataOut, bs);
+    DataStreamMarshaller.WriteInt(info.MessageCount, dataOut);
 
     }
   }

@@ -71,10 +71,10 @@ namespace OpenWire.Client.IO
         MessageDispatchNotification info = (MessageDispatchNotification)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-        rc += Marshal1Long(wireFormat, info.DeliverySequenceId, bs);
-        rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+    rc += Marshal1Long(wireFormat, info.DeliverySequenceId, bs);
+    rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
 
         return rc + 0;
     }
@@ -86,10 +86,10 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         MessageDispatchNotification info = (MessageDispatchNotification)o;
-        Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        Marshal2Long(wireFormat, info.DeliverySequenceId, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    Marshal2Long(wireFormat, info.DeliverySequenceId, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
 
     }
   }

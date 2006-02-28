@@ -70,9 +70,9 @@ namespace OpenWire.Client.IO
         MessageId info = (MessageId)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ProducerId, bs);
-        rc += Marshal1Long(wireFormat, info.ProducerSequenceId, bs);
-        rc += Marshal1Long(wireFormat, info.BrokerSequenceId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ProducerId, bs);
+    rc += Marshal1Long(wireFormat, info.ProducerSequenceId, bs);
+    rc += Marshal1Long(wireFormat, info.BrokerSequenceId, bs);
 
         return rc + 0;
     }
@@ -84,9 +84,9 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         MessageId info = (MessageId)o;
-        Marshal2CachedObject(wireFormat, info.ProducerId, dataOut, bs);
-        Marshal2Long(wireFormat, info.ProducerSequenceId, dataOut, bs);
-        Marshal2Long(wireFormat, info.BrokerSequenceId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ProducerId, dataOut, bs);
+    Marshal2Long(wireFormat, info.ProducerSequenceId, dataOut, bs);
+    Marshal2Long(wireFormat, info.BrokerSequenceId, dataOut, bs);
 
     }
   }

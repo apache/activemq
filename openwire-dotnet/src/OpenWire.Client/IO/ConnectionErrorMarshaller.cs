@@ -69,8 +69,8 @@ namespace OpenWire.Client.IO
         ConnectionError info = (ConnectionError)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += MarshalBrokerError(wireFormat, info.Exception, bs);
-        rc += Marshal1NestedObject(wireFormat, info.ConnectionId, bs);
+    rc += MarshalBrokerError(wireFormat, info.Exception, bs);
+    rc += Marshal1NestedObject(wireFormat, info.ConnectionId, bs);
 
         return rc + 0;
     }
@@ -82,8 +82,8 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ConnectionError info = (ConnectionError)o;
-        MarshalBrokerError(wireFormat, info.Exception, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.ConnectionId, dataOut, bs);
+    MarshalBrokerError(wireFormat, info.Exception, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.ConnectionId, dataOut, bs);
 
     }
   }

@@ -70,9 +70,9 @@ namespace OpenWire.Client.IO
         TransactionInfo info = (TransactionInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
-        
+    rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
+    
         return rc + 1;
     }
 
@@ -83,9 +83,9 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-        Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
-        DataStreamMarshaller.WriteByte(info.Type, dataOut);
+    Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
+    DataStreamMarshaller.WriteByte(info.Type, dataOut);
 
     }
   }

@@ -69,8 +69,8 @@ namespace OpenWire.Client.IO
         SessionId info = (SessionId)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.ConnectionId, bs);
-        rc += Marshal1Long(wireFormat, info.Value, bs);
+    rc += WriteString(info.ConnectionId, bs);
+    rc += Marshal1Long(wireFormat, info.Value, bs);
 
         return rc + 0;
     }
@@ -82,8 +82,8 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         SessionId info = (SessionId)o;
-        WriteString(info.ConnectionId, dataOut, bs);
-        Marshal2Long(wireFormat, info.Value, dataOut, bs);
+    WriteString(info.ConnectionId, dataOut, bs);
+    Marshal2Long(wireFormat, info.Value, dataOut, bs);
 
     }
   }

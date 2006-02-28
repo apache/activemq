@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         Response info = (Response)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        
+    
         return rc + 1;
     }
 
@@ -79,7 +79,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         Response info = (Response)o;
-        DataStreamMarshaller.WriteShort(info.CorrelationId, dataOut);
+    DataStreamMarshaller.WriteShort(info.CorrelationId, dataOut);
 
     }
   }

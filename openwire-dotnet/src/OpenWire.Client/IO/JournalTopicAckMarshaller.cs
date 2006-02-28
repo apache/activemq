@@ -73,12 +73,12 @@ namespace OpenWire.Client.IO
         JournalTopicAck info = (JournalTopicAck)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1NestedObject(wireFormat, info.Destination, bs);
-        rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
-        rc += Marshal1Long(wireFormat, info.MessageSequenceId, bs);
-        rc += WriteString(info.SubscritionName, bs);
-        rc += WriteString(info.ClientId, bs);
-        rc += Marshal1NestedObject(wireFormat, info.TransactionId, bs);
+    rc += Marshal1NestedObject(wireFormat, info.Destination, bs);
+    rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
+    rc += Marshal1Long(wireFormat, info.MessageSequenceId, bs);
+    rc += WriteString(info.SubscritionName, bs);
+    rc += WriteString(info.ClientId, bs);
+    rc += Marshal1NestedObject(wireFormat, info.TransactionId, bs);
 
         return rc + 0;
     }
@@ -90,12 +90,12 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-        Marshal2NestedObject(wireFormat, info.Destination, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
-        Marshal2Long(wireFormat, info.MessageSequenceId, dataOut, bs);
-        WriteString(info.SubscritionName, dataOut, bs);
-        WriteString(info.ClientId, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.TransactionId, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.Destination, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
+    Marshal2Long(wireFormat, info.MessageSequenceId, dataOut, bs);
+    WriteString(info.SubscritionName, dataOut, bs);
+    WriteString(info.ClientId, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.TransactionId, dataOut, bs);
 
     }
   }

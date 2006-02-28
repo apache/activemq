@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         JournalTrace info = (JournalTrace)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.Message, bs);
+    rc += WriteString(info.Message, bs);
 
         return rc + 0;
     }
@@ -80,7 +80,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         JournalTrace info = (JournalTrace)o;
-        WriteString(info.Message, dataOut, bs);
+    WriteString(info.Message, dataOut, bs);
 
     }
   }

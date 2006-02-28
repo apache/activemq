@@ -83,11 +83,11 @@ namespace OpenWire.Client.IO
         BrokerInfo info = (BrokerInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.BrokerId, bs);
-        rc += WriteString(info.BrokerURL, bs);
-        rc += MarshalObjectArray(wireFormat, info.PeerBrokerInfos, bs);
-        rc += WriteString(info.BrokerName, bs);
-        bs.WriteBoolean(info.SlaveBroker);
+    rc += Marshal1CachedObject(wireFormat, info.BrokerId, bs);
+    rc += WriteString(info.BrokerURL, bs);
+    rc += MarshalObjectArray(wireFormat, info.PeerBrokerInfos, bs);
+    rc += WriteString(info.BrokerName, bs);
+    bs.WriteBoolean(info.SlaveBroker);
 
         return rc + 0;
     }
@@ -99,11 +99,11 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         BrokerInfo info = (BrokerInfo)o;
-        Marshal2CachedObject(wireFormat, info.BrokerId, dataOut, bs);
-        WriteString(info.BrokerURL, dataOut, bs);
-        MarshalObjectArray(wireFormat, info.PeerBrokerInfos, dataOut, bs);
-        WriteString(info.BrokerName, dataOut, bs);
-        bs.ReadBoolean();
+    Marshal2CachedObject(wireFormat, info.BrokerId, dataOut, bs);
+    WriteString(info.BrokerURL, dataOut, bs);
+    MarshalObjectArray(wireFormat, info.PeerBrokerInfos, dataOut, bs);
+    WriteString(info.BrokerName, dataOut, bs);
+    bs.ReadBoolean();
 
     }
   }

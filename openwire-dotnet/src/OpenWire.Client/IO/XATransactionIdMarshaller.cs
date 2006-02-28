@@ -70,9 +70,9 @@ namespace OpenWire.Client.IO
         XATransactionId info = (XATransactionId)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-                bs.WriteBoolean(info.GlobalTransactionId!=null);
+        bs.WriteBoolean(info.GlobalTransactionId!=null);
         rc += info.GlobalTransactionId==null ? 0 : info.GlobalTransactionId.Length+4;
-        bs.WriteBoolean(info.BranchQualifier!=null);
+    bs.WriteBoolean(info.BranchQualifier!=null);
         rc += info.BranchQualifier==null ? 0 : info.BranchQualifier.Length+4;
 
         return rc + 1;
@@ -85,12 +85,12 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         XATransactionId info = (XATransactionId)o;
-        DataStreamMarshaller.WriteInt(info.FormatId, dataOut);
-        if(bs.ReadBoolean()) {
+    DataStreamMarshaller.WriteInt(info.FormatId, dataOut);
+    if(bs.ReadBoolean()) {
            DataStreamMarshaller.WriteInt(info.GlobalTransactionId.Length, dataOut);
            dataOut.Write(info.GlobalTransactionId);
         }
-        if(bs.ReadBoolean()) {
+    if(bs.ReadBoolean()) {
            DataStreamMarshaller.WriteInt(info.BranchQualifier.Length, dataOut);
            dataOut.Write(info.BranchQualifier);
         }

@@ -91,17 +91,17 @@ namespace OpenWire.Client.IO
         ConsumerInfo info = (ConsumerInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
-        bs.WriteBoolean(info.Browser);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-                bs.WriteBoolean(info.DispatchAsync);
-        rc += WriteString(info.Selector, bs);
-        rc += WriteString(info.SubcriptionName, bs);
-        bs.WriteBoolean(info.NoLocal);
-        bs.WriteBoolean(info.Exclusive);
-        bs.WriteBoolean(info.Retroactive);
-                rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
-        bs.WriteBoolean(info.NetworkSubscription);
+    rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
+    bs.WriteBoolean(info.Browser);
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+        bs.WriteBoolean(info.DispatchAsync);
+    rc += WriteString(info.Selector, bs);
+    rc += WriteString(info.SubcriptionName, bs);
+    bs.WriteBoolean(info.NoLocal);
+    bs.WriteBoolean(info.Exclusive);
+    bs.WriteBoolean(info.Retroactive);
+        rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
+    bs.WriteBoolean(info.NetworkSubscription);
 
         return rc + 2;
     }
@@ -113,19 +113,19 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-        Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
-        bs.ReadBoolean();
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        DataStreamMarshaller.WriteInt(info.PrefetchSize, dataOut);
-        bs.ReadBoolean();
-        WriteString(info.Selector, dataOut, bs);
-        WriteString(info.SubcriptionName, dataOut, bs);
-        bs.ReadBoolean();
-        bs.ReadBoolean();
-        bs.ReadBoolean();
-        DataStreamMarshaller.WriteByte(info.Priority, dataOut);
-        MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
-        bs.ReadBoolean();
+    Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
+    bs.ReadBoolean();
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    DataStreamMarshaller.WriteInt(info.PrefetchSize, dataOut);
+    bs.ReadBoolean();
+    WriteString(info.Selector, dataOut, bs);
+    WriteString(info.SubcriptionName, dataOut, bs);
+    bs.ReadBoolean();
+    bs.ReadBoolean();
+    bs.ReadBoolean();
+    DataStreamMarshaller.WriteByte(info.Priority, dataOut);
+    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
+    bs.ReadBoolean();
 
     }
   }

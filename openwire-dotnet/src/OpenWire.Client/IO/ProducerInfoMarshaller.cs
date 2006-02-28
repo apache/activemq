@@ -81,9 +81,9 @@ namespace OpenWire.Client.IO
         ProducerInfo info = (ProducerInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ProducerId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-        rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ProducerId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+    rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
 
         return rc + 0;
     }
@@ -95,9 +95,9 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ProducerInfo info = (ProducerInfo)o;
-        Marshal2CachedObject(wireFormat, info.ProducerId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ProducerId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
 
     }
   }

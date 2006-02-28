@@ -71,10 +71,10 @@ namespace OpenWire.Client.IO
         SubscriptionInfo info = (SubscriptionInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.ClientId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-        rc += WriteString(info.Selector, bs);
-        rc += WriteString(info.SubcriptionName, bs);
+    rc += WriteString(info.ClientId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+    rc += WriteString(info.Selector, bs);
+    rc += WriteString(info.SubcriptionName, bs);
 
         return rc + 0;
     }
@@ -86,10 +86,10 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         SubscriptionInfo info = (SubscriptionInfo)o;
-        WriteString(info.ClientId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        WriteString(info.Selector, dataOut, bs);
-        WriteString(info.SubcriptionName, dataOut, bs);
+    WriteString(info.ClientId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    WriteString(info.Selector, dataOut, bs);
+    WriteString(info.SubcriptionName, dataOut, bs);
 
     }
   }
