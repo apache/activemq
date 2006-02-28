@@ -86,6 +86,9 @@ public class ActiveMQSessionExecutor implements Task {
     }
     
     void dispatch(MessageDispatch message){
+
+        // TODO  - we should use a Map for this indexed by consumerId
+        
         for (Iterator i = this.session.consumers.iterator(); i.hasNext();) {
             ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) i.next();
             ConsumerId consumerId = message.getConsumerId();
