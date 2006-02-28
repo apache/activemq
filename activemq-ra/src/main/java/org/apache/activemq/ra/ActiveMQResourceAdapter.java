@@ -128,9 +128,14 @@ public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
      * @throws URISyntaxException
      */
     synchronized private ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo info) throws JMSException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(info.getServerUrl());
-        factory.setRedeliveryPolicy(info.redeliveryPolicy());
-        factory.setPrefetchPolicy(info.prefetchPolicy());
+        ActiveMQConnectionFactory factory = connectionFactory;
+        if (factory != null && info.isConnectionFactoryConfigured()) {
+            factory = factory.copy();
+        }
+        else if (factory == null) {
+            factory = new ActiveMQConnectionFactory();
+        }
+        info.configure(factory);
         return factory;
     }
 
