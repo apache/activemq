@@ -18,6 +18,8 @@ package org.apache.activemq.memory.list;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
 
 import java.util.List;
 
@@ -35,6 +37,14 @@ public interface MessageList {
      * Returns the current list of MessageReference objects for the given subscription
      */
     List getMessages(Subscription sub);
+    
+    /**
+     * @param destination
+     * @return an array of Messages that match the destination
+     */
+    Message[] browse(ActiveMQDestination destination);
 
     void clear();
+    
+    
 }

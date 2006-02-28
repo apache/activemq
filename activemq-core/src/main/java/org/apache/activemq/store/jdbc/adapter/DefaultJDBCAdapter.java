@@ -337,12 +337,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2));
                 }
             }
-
         }
         finally {
             close(rs);
             close(s);
-        }
+            listener.finished();
+        }     
     }
 
     
@@ -402,7 +402,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         finally {
             close(rs);
             close(s);
+            listener.finished();
         }
+        
     }
 
     /**

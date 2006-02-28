@@ -17,7 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-
+import java.util.Set;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
@@ -41,9 +41,11 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.SubscriptionKey;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The Topic is a destination that sends a copy of a message to every active
@@ -52,7 +54,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
  * @version $Revision: 1.21 $
  */
 public class Topic implements Destination {
-
+    private static final Log log = LogFactory.getLog(Topic.class);
     protected final ActiveMQDestination destination;
     protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
     protected final Valve dispatchValve = new Valve(true);
@@ -196,6 +198,9 @@ public class Topic implements Destination {
                 public void recoverMessageReference(String messageReference) throws Throwable {
                     throw new RuntimeException("Should not be called.");
                 }
+                
+                public void finished(){
+                }
             });
             
             if( true && subscription.getConsumerInfo().isRetroactive() ) {
@@ -289,6 +294,30 @@ public class Topic implements Destination {
 
     public void stop() throws Exception {
         this.subscriptionRecoveryPolicy.stop();
+    }
+    
+    public Message[] browse(){
+        final Set result=new CopyOnWriteArraySet();
+        try{
+            store.recover(new MessageRecoveryListener(){
+                public void recoverMessage(Message message) throws Throwable{
+                    result.add(message);
+                }
+
+                public void recoverMessageReference(String messageReference) throws Throwable{}
+
+                public void finished(){}
+            });
+            Message[] msgs=subscriptionRecoveryPolicy.browse(getActiveMQDestination());
+            if(msgs!=null){
+                for(int i=0;i<msgs.length;i++){
+                    result.add(msgs[i]);
+                }
+            }
+        }catch(Throwable e){
+            log.warn("Failed to browse Topic: "+getActiveMQDestination().getPhysicalName(),e);
+        }
+        return (Message[]) result.toArray(new Message[result.size()]);
     }
 
     // Properties

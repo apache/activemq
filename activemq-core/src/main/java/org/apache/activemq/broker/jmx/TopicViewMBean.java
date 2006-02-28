@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.TabularData;
+
 
 public interface TopicViewMBean {
     
@@ -27,5 +31,8 @@ public interface TopicViewMBean {
     public long getConsumerCount();
     public long getMessages();
     public long getMessagesCached();
+    
+    public CompositeData[] browse() throws OpenDataException;
+    public TabularData browseAsTable() throws OpenDataException;
 
 }

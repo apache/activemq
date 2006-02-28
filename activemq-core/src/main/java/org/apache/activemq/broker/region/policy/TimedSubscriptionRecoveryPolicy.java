@@ -16,18 +16,20 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.activemq.thread.Scheduler;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.DestinationFilter;
+import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.thread.Scheduler;
 
 /**
  * This implementation of {@link SubscriptionRecoveryPolicy} will keep a timed
@@ -121,6 +123,21 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
 
     public void setRecoverDuration(long recoverDuration) {
         this.recoverDuration = recoverDuration;
+    }
+    
+    public Message[] browse(ActiveMQDestination destination) throws Throwable{
+        List result = new ArrayList();
+        ArrayList copy = new ArrayList(buffer);
+        DestinationFilter filter=DestinationFilter.parseFilter(destination);
+        for (Iterator iter = copy.iterator(); iter.hasNext();) {
+            TimestampWrapper timestampWrapper = (TimestampWrapper) iter.next();
+            MessageReference ref = timestampWrapper.message;
+            Message message=ref.getMessage();
+            if (filter.matches(message.getDestination())){
+                result.add(message);
+            }
+        }
+        return (Message[]) result.toArray(new Message[result.size()]);
     }
 
 }

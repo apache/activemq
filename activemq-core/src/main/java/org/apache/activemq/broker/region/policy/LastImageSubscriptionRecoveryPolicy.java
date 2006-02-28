@@ -16,10 +16,15 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
@@ -60,6 +65,15 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
     }
 
     public void stop() throws Exception {
+    }
+
+    public Message[] browse(ActiveMQDestination destination) throws Throwable{
+        List result = new ArrayList();
+        DestinationFilter filter=DestinationFilter.parseFilter(destination);
+        if (filter.matches(lastImage.getMessage().getDestination())){
+            result.add(lastImage.getMessage());
+        }
+        return (Message[])result.toArray(new Message[result.size()]);
     }
 
 }
