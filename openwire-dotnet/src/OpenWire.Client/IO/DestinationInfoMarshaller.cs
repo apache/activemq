@@ -83,10 +83,10 @@ namespace OpenWire.Client.IO
         DestinationInfo info = (DestinationInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-                rc += Marshal1Long(wireFormat, info.Timeout, bs);
-        rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+        rc += Marshal1Long(wireFormat, info.Timeout, bs);
+    rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
 
         return rc + 1;
     }
@@ -98,11 +98,11 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-        Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        DataStreamMarshaller.WriteByte(info.OperationType, dataOut);
-        Marshal2Long(wireFormat, info.Timeout, dataOut, bs);
-        MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    DataStreamMarshaller.WriteByte(info.OperationType, dataOut);
+    Marshal2Long(wireFormat, info.Timeout, dataOut, bs);
+    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
 
     }
   }

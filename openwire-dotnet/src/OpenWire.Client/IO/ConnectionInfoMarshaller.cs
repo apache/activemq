@@ -83,11 +83,11 @@ namespace OpenWire.Client.IO
         ConnectionInfo info = (ConnectionInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
-        rc += WriteString(info.ClientId, bs);
-        rc += WriteString(info.Password, bs);
-        rc += WriteString(info.UserName, bs);
-        rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
+    rc += WriteString(info.ClientId, bs);
+    rc += WriteString(info.Password, bs);
+    rc += WriteString(info.UserName, bs);
+    rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
 
         return rc + 0;
     }
@@ -99,11 +99,11 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-        Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
-        WriteString(info.ClientId, dataOut, bs);
-        WriteString(info.Password, dataOut, bs);
-        WriteString(info.UserName, dataOut, bs);
-        MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
+    WriteString(info.ClientId, dataOut, bs);
+    WriteString(info.Password, dataOut, bs);
+    WriteString(info.UserName, dataOut, bs);
+    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
 
     }
   }

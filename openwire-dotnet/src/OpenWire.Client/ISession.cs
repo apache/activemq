@@ -104,6 +104,21 @@ namespace OpenWire.Client
         /// Creates a new binary message with the given body
         /// </summary>
         IBytesMessage CreateBytesMessage(byte[] body);
+
+
+        // Transaction methods
+        
+        /// <summary>
+        /// If this is a transactional session then commit all message
+        /// send and acknowledgements for producers and consumers in this session
+        /// </summary>
+        void Commit();
+        
+        /// <summary>
+        /// If this is a transactional session then rollback all message
+        /// send and acknowledgements for producers and consumers in this session
+        /// </summary>
+        void Rollback();
         
     }
 }

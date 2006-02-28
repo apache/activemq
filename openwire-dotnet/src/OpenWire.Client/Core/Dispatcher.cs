@@ -18,6 +18,7 @@ using System.Collections;
 using OpenWire.Client.Commands;
 using System;
 using OpenWire.Client;
+using System.Threading;
 
 namespace OpenWire.Client.Core
 {
@@ -26,14 +27,52 @@ namespace OpenWire.Client.Core
     /// </summary>
     public class Dispatcher
     {
-        Queue queue = Queue.Synchronized( new Queue() );
+        Queue queue = new Queue();
+        Object semaphore = new Object();
+        ArrayList messagesToRedeliver = new ArrayList();
 
+        /// <summary>
+        /// Whem we start a transaction we must redeliver any rolled back messages
+        /// </summary>
+        public void RedeliverRolledBackMessages() {
+            lock (semaphore)
+            {
+                Queue replacement = new Queue(queue.Count + messagesToRedeliver.Count);
+                foreach (ActiveMQMessage element in messagesToRedeliver) {
+                    replacement.Enqueue(element);
+                }
+                messagesToRedeliver.Clear();
+                
+                while (queue.Count > 0)
+                {
+                    ActiveMQMessage element = (ActiveMQMessage) queue.Dequeue();
+                    replacement.Enqueue(element);
+                }
+                queue = replacement;
+                Monitor.PulseAll(semaphore);
+            }
+        }
+        
+        /// <summary>
+        /// Redeliver the given message, putting it at the head of the queue
+        /// </summary>
+        public void Redeliver(ActiveMQMessage message)
+        {
+            lock (semaphore) {
+            messagesToRedeliver.Add(message);
+            }
+        }
+        
         /// <summary>
         /// Method Enqueue
         /// </summary>
         public void Enqueue(ActiveMQMessage message)
         {
-            queue.Enqueue(message);
+            lock (semaphore)
+            {
+                queue.Enqueue(message);
+                Monitor.PulseAll(semaphore);
+            }
         }
         
         /// <summary>
@@ -41,9 +80,9 @@ namespace OpenWire.Client.Core
         /// </summary>
         public IMessage DequeueNoWait()
         {
-            lock (queue)
+            lock (semaphore)
             {
-                if (queue.Peek() != null)
+                if (queue.Count > 0)
                 {
                     return (IMessage) queue.Dequeue();
                 }
@@ -54,10 +93,20 @@ namespace OpenWire.Client.Core
         /// <summary>
         /// Method Dequeue
         /// </summary>
-        public IMessage Dequeue(long timeout)
+        public IMessage Dequeue(int timeout)
         {
-            // TODO
-            throw new Exception("Not implemented yet");
+            lock (semaphore)
+            {
+                if (queue.Count == 0)
+                {
+                    Monitor.Wait(semaphore, timeout);
+                }
+                if (queue.Count > 0)
+                {
+                    return (IMessage) queue.Dequeue();
+                }
+            }
+            return null;
         }
         
         /// <summary>
@@ -65,7 +114,10 @@ namespace OpenWire.Client.Core
         /// </summary>
         public IMessage Dequeue()
         {
-            return (IMessage) queue.Dequeue();
+            lock (semaphore)
+            {
+                return (IMessage) queue.Dequeue();
+            }
         }
         
     }

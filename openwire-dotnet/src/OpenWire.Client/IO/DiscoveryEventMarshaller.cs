@@ -69,8 +69,8 @@ namespace OpenWire.Client.IO
         DiscoveryEvent info = (DiscoveryEvent)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.ServiceName, bs);
-        rc += WriteString(info.BrokerName, bs);
+    rc += WriteString(info.ServiceName, bs);
+    rc += WriteString(info.BrokerName, bs);
 
         return rc + 0;
     }
@@ -82,8 +82,8 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         DiscoveryEvent info = (DiscoveryEvent)o;
-        WriteString(info.ServiceName, dataOut, bs);
-        WriteString(info.BrokerName, dataOut, bs);
+    WriteString(info.ServiceName, dataOut, bs);
+    WriteString(info.BrokerName, dataOut, bs);
 
     }
   }

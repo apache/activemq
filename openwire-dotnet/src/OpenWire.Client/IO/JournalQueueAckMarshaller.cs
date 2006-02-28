@@ -69,8 +69,8 @@ namespace OpenWire.Client.IO
         JournalQueueAck info = (JournalQueueAck)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1NestedObject(wireFormat, info.Destination, bs);
-        rc += Marshal1NestedObject(wireFormat, info.MessageAck, bs);
+    rc += Marshal1NestedObject(wireFormat, info.Destination, bs);
+    rc += Marshal1NestedObject(wireFormat, info.MessageAck, bs);
 
         return rc + 0;
     }
@@ -82,8 +82,8 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         JournalQueueAck info = (JournalQueueAck)o;
-        Marshal2NestedObject(wireFormat, info.Destination, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.MessageAck, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.Destination, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.MessageAck, dataOut, bs);
 
     }
   }

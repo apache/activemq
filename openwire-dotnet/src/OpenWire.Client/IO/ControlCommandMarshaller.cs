@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         ControlCommand info = (ControlCommand)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.Command, bs);
+    rc += WriteString(info.Command, bs);
 
         return rc + 0;
     }
@@ -80,7 +80,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ControlCommand info = (ControlCommand)o;
-        WriteString(info.Command, dataOut, bs);
+    WriteString(info.Command, dataOut, bs);
 
     }
   }

@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         RemoveInfo info = (RemoveInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ObjectId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.ObjectId, bs);
 
         return rc + 0;
     }
@@ -80,7 +80,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         RemoveInfo info = (RemoveInfo)o;
-        Marshal2CachedObject(wireFormat, info.ObjectId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.ObjectId, dataOut, bs);
 
     }
   }

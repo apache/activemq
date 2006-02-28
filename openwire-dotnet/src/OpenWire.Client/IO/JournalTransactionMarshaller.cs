@@ -70,8 +70,8 @@ namespace OpenWire.Client.IO
         JournalTransaction info = (JournalTransaction)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1NestedObject(wireFormat, info.TransactionId, bs);
-                bs.WriteBoolean(info.WasPrepared);
+    rc += Marshal1NestedObject(wireFormat, info.TransactionId, bs);
+        bs.WriteBoolean(info.WasPrepared);
 
         return rc + 1;
     }
@@ -83,9 +83,9 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         JournalTransaction info = (JournalTransaction)o;
-        Marshal2NestedObject(wireFormat, info.TransactionId, dataOut, bs);
-        DataStreamMarshaller.WriteByte(info.Type, dataOut);
-        bs.ReadBoolean();
+    Marshal2NestedObject(wireFormat, info.TransactionId, dataOut, bs);
+    DataStreamMarshaller.WriteByte(info.Type, dataOut);
+    bs.ReadBoolean();
 
     }
   }

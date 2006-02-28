@@ -70,9 +70,9 @@ namespace OpenWire.Client.IO
         ProducerId info = (ProducerId)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.ConnectionId, bs);
-        rc += Marshal1Long(wireFormat, info.Value, bs);
-        rc += Marshal1Long(wireFormat, info.SessionId, bs);
+    rc += WriteString(info.ConnectionId, bs);
+    rc += Marshal1Long(wireFormat, info.Value, bs);
+    rc += Marshal1Long(wireFormat, info.SessionId, bs);
 
         return rc + 0;
     }
@@ -84,9 +84,9 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ProducerId info = (ProducerId)o;
-        WriteString(info.ConnectionId, dataOut, bs);
-        Marshal2Long(wireFormat, info.Value, dataOut, bs);
-        Marshal2Long(wireFormat, info.SessionId, dataOut, bs);
+    WriteString(info.ConnectionId, dataOut, bs);
+    Marshal2Long(wireFormat, info.Value, dataOut, bs);
+    Marshal2Long(wireFormat, info.SessionId, dataOut, bs);
 
     }
   }

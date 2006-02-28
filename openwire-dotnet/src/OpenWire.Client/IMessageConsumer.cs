@@ -35,7 +35,7 @@ namespace OpenWire.Client
         /// <summary>
         /// If a message is available within the timeout duration it is returned otherwise this method returns null
         /// </summary>
-        IMessage Receive(long timeout);
+        IMessage Receive(int timeout);
         
         /// <summary>
         /// If a message is available immediately it is returned otherwise this method returns null

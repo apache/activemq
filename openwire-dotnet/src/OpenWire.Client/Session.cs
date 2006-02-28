@@ -33,17 +33,20 @@ namespace OpenWire.Client
         private long producerCounter;
         private int prefetchSize = 1000;
         private IDictionary consumers = new Hashtable();
+        private TransactionContext transactionContext;
         
         public Session(Connection connection, SessionInfo info, AcknowledgementMode acknowledgementMode)
         {
             this.connection = connection;
             this.info = info;
             this.acknowledgementMode = acknowledgementMode;
+            transactionContext = new TransactionContext(this);
         }
+        
         
         public void Dispose()
         {
-            DisposeOf(info.SessionId);
+            connection.DisposeOf(info.SessionId);
         }
         
         public IMessageProducer CreateProducer()
@@ -174,13 +177,52 @@ namespace OpenWire.Client
             return answer;
         }
         
+        public void Commit()
+        {
+            if (! Transacted)
+            {
+                throw new InvalidOperationException("You cannot perform a Commit() on a non-transacted session. Acknowlegement mode is: " + acknowledgementMode);
+            }
+            transactionContext.Commit();
+        }
+        
+        public void Rollback()
+        {
+            if (! Transacted)
+            {
+                throw new InvalidOperationException("You cannot perform a Commit() on a non-transacted session. Acknowlegement mode is: " + acknowledgementMode);
+            }
+            transactionContext.Rollback();
+            
+            // lets ensure all the consumers redeliver any rolled back messages
+            foreach (MessageConsumer consumer in consumers.Values)
+            {
+                consumer.RedeliverRolledBackMessages();
+            }
+        }
+        
+        
         
         // Properties
+        
         public Connection Connection
         {
-            get {
-                return connection;
-            }
+            get { return connection; }
+        }
+        
+        public SessionId SessionId
+        {
+            get { return info.SessionId; }
+        }
+        
+        public bool Transacted
+        {
+            get { return acknowledgementMode == AcknowledgementMode.Transactional; }
+        }
+        
+        public TransactionContext TransactionContext
+        {
+            get { return transactionContext; }
         }
         
         // Implementation methods
@@ -191,21 +233,22 @@ namespace OpenWire.Client
             connection.SyncRequest(command);
         }
         
-        public void DisposeOf(DataStructure objectId)
+        /// <summary>
+        /// Ensures that a transaction is started
+        /// </summary>
+        public void DoStartTransaction()
         {
-            // TODO dispose of all the session first?
-            RemoveInfo command = new RemoveInfo();
-            command.ObjectId = objectId;
-            connection.SyncRequest(command);
+            if (Transacted)
+            {
+                transactionContext.Begin();
+            }
         }
         
         public void DisposeOf(ConsumerId objectId)
         {
             consumers.Remove(objectId);
             connection.RemoveConsumer(objectId);
-            RemoveInfo command = new RemoveInfo();
-            command.ObjectId = objectId;
-            connection.SyncRequest(command);
+            connection.DisposeOf(objectId);
         }
         
         public void DispatchAsyncMessages(object state)

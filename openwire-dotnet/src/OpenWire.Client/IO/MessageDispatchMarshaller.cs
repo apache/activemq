@@ -71,10 +71,10 @@ namespace OpenWire.Client.IO
         MessageDispatch info = (MessageDispatch)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
-        rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-        rc += Marshal1NestedObject(wireFormat, info.Message, bs);
-        
+    rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
+    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+    rc += Marshal1NestedObject(wireFormat, info.Message, bs);
+    
         return rc + 1;
     }
 
@@ -85,10 +85,10 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         MessageDispatch info = (MessageDispatch)o;
-        Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
-        Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-        Marshal2NestedObject(wireFormat, info.Message, dataOut, bs);
-        DataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
+    Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
+    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.Message, dataOut, bs);
+    DataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
 
     }
   }

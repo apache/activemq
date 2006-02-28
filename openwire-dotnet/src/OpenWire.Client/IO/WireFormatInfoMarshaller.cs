@@ -73,10 +73,10 @@ namespace OpenWire.Client.IO
         WireFormatInfo info = (WireFormatInfo)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-                        bs.WriteBoolean(info.CacheEnabled);
-        bs.WriteBoolean(info.CompressionEnabled);
-        bs.WriteBoolean(info.StackTraceEnabled);
-        bs.WriteBoolean(info.TcpNoDelayEnabled);
+            bs.WriteBoolean(info.CacheEnabled);
+    bs.WriteBoolean(info.CompressionEnabled);
+    bs.WriteBoolean(info.StackTraceEnabled);
+    bs.WriteBoolean(info.TcpNoDelayEnabled);
 
         return rc + 9;
     }
@@ -88,12 +88,12 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         WireFormatInfo info = (WireFormatInfo)o;
-        dataOut.Write(info.Magic, 0, 8);
-        DataStreamMarshaller.WriteInt(info.Version, dataOut);
-        bs.ReadBoolean();
-        bs.ReadBoolean();
-        bs.ReadBoolean();
-        bs.ReadBoolean();
+    dataOut.Write(info.Magic, 0, 8);
+    DataStreamMarshaller.WriteInt(info.Version, dataOut);
+    bs.ReadBoolean();
+    bs.ReadBoolean();
+    bs.ReadBoolean();
+    bs.ReadBoolean();
 
     }
   }

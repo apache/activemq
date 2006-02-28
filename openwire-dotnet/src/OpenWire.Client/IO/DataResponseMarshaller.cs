@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         DataResponse info = (DataResponse)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += Marshal1NestedObject(wireFormat, info.Data, bs);
+    rc += Marshal1NestedObject(wireFormat, info.Data, bs);
 
         return rc + 0;
     }
@@ -80,7 +80,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         DataResponse info = (DataResponse)o;
-        Marshal2NestedObject(wireFormat, info.Data, dataOut, bs);
+    Marshal2NestedObject(wireFormat, info.Data, dataOut, bs);
 
     }
   }

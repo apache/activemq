@@ -73,11 +73,17 @@ namespace OpenWire.Client
         
         protected virtual IDestination CreateDestination(ISession session)
         {
-            string name = "Test.DotNet." + GetType().Name;
+            string name = CreateDestinationName();
             IDestination destination = session.GetQueue(name);
             
             Console.WriteLine("Using queue: " + destination);
             return destination;
+        }
+
+        protected virtual string CreateDestinationName()
+        {
+            string name = "Test.DotNet." + GetType().Name;
+            return name;
         }
         
         protected virtual IMessage CreateMessage(ISession session)

@@ -57,7 +57,7 @@ namespace OpenWire.Client.IO
         ActiveMQDestination info = (ActiveMQDestination)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.PhysicalName, bs);
+    rc += WriteString(info.PhysicalName, bs);
 
         return rc + 0;
     }
@@ -69,7 +69,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ActiveMQDestination info = (ActiveMQDestination)o;
-        WriteString(info.PhysicalName, dataOut, bs);
+    WriteString(info.PhysicalName, dataOut, bs);
 
     }
   }

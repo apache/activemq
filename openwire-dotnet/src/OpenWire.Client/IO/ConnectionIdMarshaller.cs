@@ -68,7 +68,7 @@ namespace OpenWire.Client.IO
         ConnectionId info = (ConnectionId)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-        rc += WriteString(info.Value, bs);
+    rc += WriteString(info.Value, bs);
 
         return rc + 0;
     }
@@ -80,7 +80,7 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         ConnectionId info = (ConnectionId)o;
-        WriteString(info.Value, dataOut, bs);
+    WriteString(info.Value, dataOut, bs);
 
     }
   }

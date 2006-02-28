@@ -29,11 +29,11 @@ namespace OpenWire.Client
         private ProducerInfo info;
         private long messageCounter;
         
-		bool persistent;
-		long timeToLive;
-		int priority;
-		bool disableMessageID;
-		bool disableMessageTimestamp;
+        bool persistent;
+        long timeToLive;
+        int priority;
+        bool disableMessageID;
+        bool disableMessageTimestamp;
         
         public MessageProducer(Session session, ProducerInfo info)
         {
@@ -59,42 +59,48 @@ namespace OpenWire.Client
             activeMessage.ProducerId = info.ProducerId;
             activeMessage.Destination = ActiveMQDestination.Transform(destination);
             
+            if (session.Transacted)
+            {
+                session.DoStartTransaction();
+                activeMessage.TransactionId = session.TransactionContext.TransactionId;
+            }
+            
             session.DoSend(destination, message);
         }
         
         public void Dispose()
         {
-            session.DisposeOf(info.ProducerId);
+            session.Connection.DisposeOf(info.ProducerId);
         }
-
-		public bool Persistent
-		{
-			get { return persistent; }
-			set { this.persistent = value; }
-    }
-
-		public long TimeToLive
-		{
-			get { return timeToLive; }
-			set { this.timeToLive = value; }
-}
-		public int Priority
-		{
-			get { return priority; }
-			set { this.priority = value; }
-		}
-
-		public bool DisableMessageID
-		{
-			get { return disableMessageID; }
-			set { this.disableMessageID = value; }
-		}
-		
-		public bool DisableMessageTimestamp
-		{
-			get { return disableMessageTimestamp; }
-			set { this.disableMessageTimestamp = value; }
-		}
-
+        
+        public bool Persistent
+        {
+            get { return persistent; }
+            set { this.persistent = value; }
+        }
+        
+        public long TimeToLive
+        {
+            get { return timeToLive; }
+            set { this.timeToLive = value; }
+        }
+        public int Priority
+        {
+            get { return priority; }
+            set { this.priority = value; }
+        }
+        
+        public bool DisableMessageID
+        {
+            get { return disableMessageID; }
+            set { this.disableMessageID = value; }
+        }
+        
+        public bool DisableMessageTimestamp
+        {
+            get { return disableMessageTimestamp; }
+            set { this.disableMessageTimestamp = value; }
+        }
+        
     }
 }

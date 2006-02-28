@@ -58,7 +58,7 @@ namespace OpenWire.Client.IO
         BaseCommand info = (BaseCommand)o;
 
         int rc = base.Marshal1(wireFormat, info, bs);
-                bs.WriteBoolean(info.ResponseRequired);
+        bs.WriteBoolean(info.ResponseRequired);
 
         return rc + 1;
     }
@@ -70,8 +70,8 @@ namespace OpenWire.Client.IO
         base.Marshal2(wireFormat, o, dataOut, bs);
 
         BaseCommand info = (BaseCommand)o;
-        DataStreamMarshaller.WriteShort(info.CommandId, dataOut);
-        bs.ReadBoolean();
+    DataStreamMarshaller.WriteShort(info.CommandId, dataOut);
+    bs.ReadBoolean();
 
     }
   }
