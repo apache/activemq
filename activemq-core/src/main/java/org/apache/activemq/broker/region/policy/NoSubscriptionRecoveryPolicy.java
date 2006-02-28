@@ -20,6 +20,8 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
 
 /**
  * This is the default Topic recovery policy which does not recover any messages.
@@ -41,6 +43,10 @@ public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy 
     }
 
     public void stop() throws Exception {
+    }
+
+    public Message[] browse(ActiveMQDestination dest) throws Throwable{
+        return new Message[0];
     }
 
 }

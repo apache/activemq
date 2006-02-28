@@ -22,11 +22,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.memory.buffer.MessageBuffer;
 import org.apache.activemq.memory.buffer.MessageQueue;
@@ -70,9 +70,13 @@ public class DestinationBasedMessageList implements MessageList {
     }
 
     public List getMessages(Subscription sub) {
+        return getMessages(sub.getConsumerInfo().getDestination());
+    }
+    
+    protected  List getMessages(ActiveMQDestination destination) {
         Set set = null;
         synchronized (lock) {
-            set = subscriptionIndex.get(sub.getConsumerInfo().getDestination());
+            set = subscriptionIndex.get(destination);
         }
         List answer = new ArrayList();
         for (Iterator iter = set.iterator(); iter.hasNext();) {
@@ -81,6 +85,12 @@ public class DestinationBasedMessageList implements MessageList {
         }
         return answer;
     }
+    
+    public Message[] browse(ActiveMQDestination destination) {
+        List result = getMessages(destination);
+        return (Message[])result.toArray(new Message[result.size()]);
+    }
+
 
     public void clear() {
         messageBuffer.clear();

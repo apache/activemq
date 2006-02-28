@@ -98,6 +98,10 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     public void setQuery(MessageQuery query) {
         this.query = query;
     }
+    
+    public org.apache.activemq.command.Message[] browse(ActiveMQDestination dest) throws Throwable{
+        return new org.apache.activemq.command.Message[0];
+    }
 
     protected void dispatchInitialMessage(Message message,  Destination regionDestination, MessageEvaluationContext msgContext, Subscription sub) {
         try {

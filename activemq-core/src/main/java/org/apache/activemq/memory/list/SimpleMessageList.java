@@ -18,8 +18,16 @@ package org.apache.activemq.memory.list;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.DestinationFilter;
+import org.apache.activemq.network.DemandForwardingBridge;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,7 +40,7 @@ import java.util.List;
  * @version $Revision: 1.1 $
  */
 public class SimpleMessageList implements MessageList {
-
+    static final private Log log=LogFactory.getLog(SimpleMessageList.class);
     private LinkedList list = new LinkedList();
     private int maximumSize = 100 * 64 * 1024;
     private int size;
@@ -59,6 +67,27 @@ public class SimpleMessageList implements MessageList {
 
     public List getMessages(Subscription sub) {
         return getList();
+    }
+    
+    public Message[] browse(ActiveMQDestination destination) {
+        List result = new ArrayList();
+        DestinationFilter filter=DestinationFilter.parseFilter(destination);
+        synchronized(lock){
+            for (Iterator i = list.iterator(); i.hasNext();){
+                MessageReference ref = (MessageReference)i.next();
+                Message msg;
+                try{
+                    msg=ref.getMessage();
+                    if (filter.matches(msg.getDestination())){
+                        result.add(msg);
+                    }
+                }catch(IOException e){
+                   log.error("Failed to get Message from MessageReference: " + ref,e);
+                }
+                
+            }
+        }
+        return (Message[])result.toArray(new Message[result.size()]);
     }
 
     /**

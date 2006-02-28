@@ -25,4 +25,5 @@ import java.io.IOException;
 public interface JDBCMessageRecoveryListener {
     void recoverMessage(long sequenceId, byte[] message) throws IOException, Throwable;
     void recoverMessageReference(String reference) throws IOException, Throwable;
+    void finished();
 }

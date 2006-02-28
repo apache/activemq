@@ -107,6 +107,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
                     pastLastAck=entry.getKey().equals(lastAck);
                 }
             }
+            listener.finished();
         }
     }
 

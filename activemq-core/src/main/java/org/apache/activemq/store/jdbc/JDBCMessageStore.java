@@ -158,6 +158,9 @@ public class JDBCMessageStore implements MessageStore {
                 public void recoverMessageReference(String reference) throws IOException, Throwable {
                     listener.recoverMessageReference(reference);
                 }
+                public void finished(){
+                    listener.finished();
+                }
             });
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ",e);

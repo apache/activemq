@@ -20,11 +20,16 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy.TimestampWrapper;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.memory.list.DestinationBasedMessageList;
 import org.apache.activemq.memory.list.MessageList;
 import org.apache.activemq.memory.list.SimpleMessageList;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -103,6 +108,10 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
 
     public void setUseSharedBuffer(boolean useSharedBuffer) {
         this.useSharedBuffer = useSharedBuffer;
+    }
+    
+    public Message[] browse(ActiveMQDestination destination) throws Throwable{
+        return buffer.browse(destination);
     }
 
     // Implementation methods

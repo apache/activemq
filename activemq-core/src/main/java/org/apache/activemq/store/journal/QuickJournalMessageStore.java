@@ -360,6 +360,10 @@ public class QuickJournalMessageStore implements MessageStore {
                 Message message = (Message) peristenceAdapter.readCommand(loc);
                 listener.recoverMessage(message);
             }
+            
+            public void finished(){
+                listener.finished();
+            }
         });
     }
 

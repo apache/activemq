@@ -52,4 +52,6 @@ public interface Destination extends Service {
     DestinationStatistics getDestinationStatistics();
     MessageStore getMessageStore();
     DeadLetterStrategy getDeadLetterStrategy();
+    
+    public Message[] browse();
 }

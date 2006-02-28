@@ -82,6 +82,7 @@ public class MemoryMessageStore implements MessageStore {
                     listener.recoverMessage((Message) msg);
                 }
             }
+            listener.finished();
         }
     }
 

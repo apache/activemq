@@ -98,6 +98,9 @@ public class Queue implements Destination {
                 public void recoverMessageReference(String messageReference) throws Throwable {
                     throw new RuntimeException("Should not be called.");
                 }
+                
+                public void finished(){
+                }
             });
         }
     }

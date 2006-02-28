@@ -24,4 +24,5 @@ import org.apache.activemq.command.Message;
 public interface MessageRecoveryListener {
     void recoverMessage(Message message) throws Throwable;
     void recoverMessageReference(String messageReference) throws Throwable;
+    void finished();
 }

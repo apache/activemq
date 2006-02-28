@@ -16,11 +16,14 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
 
 /**
  * Abstraction to allow different recovery policies to be plugged
@@ -35,8 +38,9 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * A message was sent to the destination.
      * 
      * @param context
+     * @param message 
      * @param node
-     * @return TODO
+     * @return true if successful
      * @throws Throwable
      */
     boolean add(ConnectionContext context, MessageReference message) throws Throwable;
@@ -45,11 +49,19 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * Let a subscription recover message held by the policy.
      * 
      * @param context
-     * @param topic TODO
-     * @param topic 
+     * @param topic
+     * @param sub 
      * @param node
      * @throws Throwable
      */
     void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable;
+    
+    
+    /**
+     * @param dest 
+     * @return messages
+     * @throws Throwable 
+     */
+    Message[] browse(ActiveMQDestination dest) throws Throwable;
 
 }
