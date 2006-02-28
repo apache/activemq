@@ -58,7 +58,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
  * @version $Revision: 1.9 $
  * @see javax.jms.ConnectionFactory
  */
-public class ActiveMQConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable {
+public class ActiveMQConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable, Cloneable {
 
     public static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
     public static final String DEFAULT_USER = null;
@@ -107,6 +107,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this(createURI(brokerURL));
     }
 
+    /**
+     * Returns a copy of the given connection factory
+     */
+    public ActiveMQConnectionFactory copy() {
+        try {
+            return (ActiveMQConnectionFactory) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            throw new RuntimeException("This should never happen: " + e, e);
+        }
+    }
+    
     /**
      * @param brokerURL
      * @return
