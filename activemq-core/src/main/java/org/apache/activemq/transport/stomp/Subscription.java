@@ -34,12 +34,16 @@ import org.apache.activemq.command.RemoveInfo;
 
 public class Subscription {
     
+    public static final int AUTO_ACK = 1;
+    public static final int CLIENT_ACK = 2;
+
+    public static final String NO_ID = "~~ NO SUCH THING ~~%%@#!Q";
+
     private ActiveMQDestination destination;
-    private int ackMode = 1;
+    private int ackMode = AUTO_ACK;
     private StompWireFormat format;
 
     private final String subscriptionId;
-    public static final String NO_ID = "~~ NO SUCH THING ~~%%@#!Q";
     private final ConsumerInfo consumerInfo;
     private final LinkedList dispatchedMessages = new LinkedList();
     
@@ -94,9 +98,6 @@ public class Subscription {
     ActiveMQDestination getDestination() {
         return destination;
     }
-
-    static final int AUTO_ACK = 1;
-    static final int CLIENT_ACK = 2;
 
     public void setAckMode(int clientAck) {
         this.ackMode = clientAck;
