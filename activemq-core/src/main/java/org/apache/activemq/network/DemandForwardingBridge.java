@@ -747,6 +747,7 @@ public class DemandForwardingBridge implements Bridge{
             if (log.isTraceEnabled()){
                 log.trace("Message all ready routed once through this broker - ignoring: " + message);
             }
+            return false;
         }
         int hops = message.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
         if(hops >= networkTTL){
