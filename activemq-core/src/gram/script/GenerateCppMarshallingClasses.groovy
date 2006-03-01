@@ -21,7 +21,7 @@ import org.apache.activemq.openwire.tool.OpenWireCppMarshallingClassesScript
  *
  * @version $Revision$
  */
-class GenerateCSharpMarshalling extends OpenWireCppMarshallingClassesScript {
+class GenerateCppMarshallingClasses extends OpenWireCppMarshallingClassesScript {
 
  	void generateFile(PrintWriter out) {
         out << """/*
@@ -95,7 +95,7 @@ if( marshallerAware ) out << """
         
 """
 
-generateUnmarshalBody(out)
+generateTightUnmarshalBody(out)
 
 if( marshallerAware ) out << """
     info.afterUnmarshall(wireFormat);
