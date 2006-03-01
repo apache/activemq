@@ -140,11 +140,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         properties=null;
     }
 
-    public void setProperties(Map properties) throws IOException {
-        lazyCreateProperties();
-        this.properties.putAll(properties);
-    }
-    
+
     public void setProperty(String name, Object value) throws IOException {
         lazyCreateProperties();
         properties.put(name, value);

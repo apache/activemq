@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.jms.DeliveryMode;
@@ -322,6 +324,16 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
             }
         }
     }
+    
+    public void setProperties(Map properties) throws JMSException {
+        for (Iterator iter = properties.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            
+            // Lets use the object property method as we may contain standard extension headers like JMSXGroupID
+            setObjectProperty((String) entry.getKey(), entry.getValue());
+        }
+    }
+    
 
     private void checkValidObject(Object value) throws MessageFormatException {
         if(!(value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer ||
