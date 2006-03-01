@@ -866,7 +866,7 @@ public class BrokerService implements Service {
 
         if (isUseJmx()) {
             ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
-            BrokerViewMBean view = new BrokerView(broker, managedBroker.getDestinationStatistics(), getMemoryManager());
+            BrokerViewMBean view = new BrokerView(managedBroker, getMemoryManager());
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             ObjectName objectName = getBrokerObjectName();
             mbeanServer.registerMBean(view, objectName);

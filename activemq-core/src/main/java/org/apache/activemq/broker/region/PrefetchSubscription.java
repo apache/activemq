@@ -225,6 +225,18 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     protected boolean isFull(){
         return dispatched.size()-delivered>=info.getPrefetchSize()||preLoadSize>preLoadLimit;
     }
+    
+    public int pending(){
+        return matched.size() - dispatched.size();
+    }
+    
+    public int dispatched(){
+        return dispatched.size();
+    }
+    
+    public int delivered(){
+        return delivered;
+    }
 
     protected void dispatchMatched() throws IOException{
         if(!dispatching){

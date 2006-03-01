@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import javax.management.ObjectName;
 import org.apache.activemq.Service;
 
 public interface BrokerViewMBean extends Service {
@@ -36,5 +37,17 @@ public interface BrokerViewMBean extends Service {
     public void setMemoryLimit(long limit);
 
     public void terminateJVM(int exitCode);
+    
+    public ObjectName[] getTopics();
+    public ObjectName[] getQueues();
+    public ObjectName[] getTemporaryTopics();
+    public ObjectName[] getTemporaryQueues();
+    
+    public ObjectName[] getTopicSubscribers();
+    public ObjectName[] getDurableTopicSubscribers();
+    public ObjectName[] getQueueSubscribers();
+    public ObjectName[] getTemporaryTopicSubscribers();
+    public ObjectName[] getTemporaryQueueSubscribers();
+    
     
 }

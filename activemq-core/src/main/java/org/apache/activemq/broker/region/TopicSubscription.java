@@ -110,6 +110,18 @@ public class TopicSubscription extends AbstractSubscription {
         throw new JMSException("Invalid acknowledgment: "+ack);
     }
     
+    public int pending(){
+        return matched.size() - dispatched;
+    }
+    
+    public int dispatched(){
+        return dispatched;
+    }
+    
+    public int delivered(){
+        return delivered;
+    }
+    
     private boolean isFull() {
         return dispatched-delivered >= info.getPrefetchSize();
     }

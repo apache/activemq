@@ -122,6 +122,16 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         super.add(node);
         node.decrementReferenceCount();
     }
+    
+    public int pending(){
+        if (active){
+            return super.pending();
+        }
+        //TODO: need to get from store
+        
+        return 0;
+    }
+    
 
     protected boolean canDispatch(MessageReference node) {
         return active;
