@@ -484,7 +484,7 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "src\OpenWire.Client\Core\DataStreamMarshaller.cs"
+                    RelPath = "src\OpenWire.Client\Core\BaseDataStreamMarshaller.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
