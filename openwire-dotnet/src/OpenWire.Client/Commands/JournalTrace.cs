@@ -31,7 +31,7 @@ namespace OpenWire.Client.Commands
     //         if you need to make a change, please see the Groovy scripts in the
     //         activemq-core module
     //
-    public class JournalTrace : DataStructureSupport
+    public class JournalTrace : AbstractCommand
     {
         public const byte ID_JournalTrace = 53;
     			

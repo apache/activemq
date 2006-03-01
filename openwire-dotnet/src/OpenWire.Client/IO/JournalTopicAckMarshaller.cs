@@ -34,7 +34,7 @@ namespace OpenWire.Client.IO
   //        if you need to make a change, please see the Groovy scripts in the
   //        activemq-core module
   //
-  public class JournalTopicAckMarshaller : DataStreamMarshaller
+  public class JournalTopicAckMarshaller : BaseDataStreamMarshaller
   {
 
 
@@ -51,17 +51,17 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-        info.Destination = (ActiveMQDestination) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.MessageId = (MessageId) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.MessageSequenceId = UnmarshalLong(wireFormat, dataIn, bs);
-        info.SubscritionName = ReadString(dataIn, bs);
-        info.ClientId = ReadString(dataIn, bs);
-        info.TransactionId = (TransactionId) UnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.Destination = (ActiveMQDestination) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.MessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.MessageSequenceId = TightUnmarshalLong(wireFormat, dataIn, bs);
+        info.SubscritionName = TightUnmarshalString(dataIn, bs);
+        info.ClientId = TightUnmarshalString(dataIn, bs);
+        info.TransactionId = (TransactionId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
 
     }
 
@@ -69,16 +69,16 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         JournalTopicAck info = (JournalTopicAck)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1NestedObject(wireFormat, info.Destination, bs);
-    rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
-    rc += Marshal1Long(wireFormat, info.MessageSequenceId, bs);
-    rc += WriteString(info.SubscritionName, bs);
-    rc += WriteString(info.ClientId, bs);
-    rc += Marshal1NestedObject(wireFormat, info.TransactionId, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.Destination, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.MessageId, bs);
+    rc += TightMarshalLong1(wireFormat, info.MessageSequenceId, bs);
+    rc += TightMarshalString1(info.SubscritionName, bs);
+    rc += TightMarshalString1(info.ClientId, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.TransactionId, bs);
 
         return rc + 0;
     }
@@ -86,16 +86,16 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-    Marshal2NestedObject(wireFormat, info.Destination, dataOut, bs);
-    Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
-    Marshal2Long(wireFormat, info.MessageSequenceId, dataOut, bs);
-    WriteString(info.SubscritionName, dataOut, bs);
-    WriteString(info.ClientId, dataOut, bs);
-    Marshal2NestedObject(wireFormat, info.TransactionId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.Destination, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.MessageId, dataOut, bs);
+    TightMarshalLong2(wireFormat, info.MessageSequenceId, dataOut, bs);
+    TightMarshalString2(info.SubscritionName, dataOut, bs);
+    TightMarshalString2(info.ClientId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.TransactionId, dataOut, bs);
 
     }
   }

@@ -60,20 +60,20 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setOperationType(dataIn.readByte());
-        info.setTimeout(unmarshalLong(wireFormat, dataIn, bs));
+        info.setTimeout(tightUnmarshalLong(wireFormat, dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
             BrokerId value[] = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) unmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }
@@ -87,15 +87,15 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         DestinationInfo info = (DestinationInfo)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshal1CachedObject(wireFormat, info.getConnectionId(), bs);
-        rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
-                rc+=marshal1Long(wireFormat, info.getTimeout(), bs);
-        rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getTimeout(), bs);
+    rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
 
         return rc + 1;
     }
@@ -107,15 +107,62 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-        marshal2CachedObject(wireFormat, info.getConnectionId(), dataOut, bs);
-        marshal2CachedObject(wireFormat, info.getDestination(), dataOut, bs);
-        dataOut.writeByte(info.getOperationType());
-        marshal2Long(wireFormat, info.getTimeout(), dataOut, bs);
-        marshalObjectArray(wireFormat, info.getBrokerPath(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    dataOut.writeByte(info.getOperationType());
+    tightMarshalLong2(wireFormat, info.getTimeout(), dataOut, bs);
+    tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        DestinationInfo info = (DestinationInfo)o;
+        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setOperationType(dataIn.readByte());
+        info.setTimeout(looseUnmarshalLong(wireFormat, dataIn));
+
+        if (dataIn.readBoolean()) {
+            short size = dataIn.readShort();
+            BrokerId value[] = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+            }
+            info.setBrokerPath(value);
+        }
+        else {
+            info.setBrokerPath(null);
+        }
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        DestinationInfo info = (DestinationInfo)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    dataOut.writeByte(info.getOperationType());
+    looseMarshalLong(wireFormat, info.getTimeout(), dataOut);
+    looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
 
     }
 }

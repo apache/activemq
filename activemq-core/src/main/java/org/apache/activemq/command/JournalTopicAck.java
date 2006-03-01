@@ -16,12 +16,14 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.util.IntrospectionSupport;
+
 /**
  * 
  * @openwire:marshaller code="50"
  * @version $Revision$
  */
-public class JournalTopicAck extends DataStructureSupport implements DataStructure {
+public class JournalTopicAck implements DataStructure {
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.JOURNAL_ACK;
     
@@ -105,5 +107,9 @@ public class JournalTopicAck extends DataStructureSupport implements DataStructu
     
     public boolean isMarshallAware() {
         return false;
+    }
+
+    public String toString() {
+        return IntrospectionSupport.toString(this, JournalTopicAck.class);
     }
 }

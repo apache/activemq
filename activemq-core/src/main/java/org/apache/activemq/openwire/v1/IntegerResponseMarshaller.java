@@ -60,8 +60,8 @@ public class IntegerResponseMarshaller extends ResponseMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         IntegerResponse info = (IntegerResponse)o;
         info.setResult(dataIn.readInt());
@@ -72,13 +72,13 @@ public class IntegerResponseMarshaller extends ResponseMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         IntegerResponse info = (IntegerResponse)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        
-        return rc + 1;
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    
+        return rc + 4;
     }
 
     /**
@@ -88,11 +88,39 @@ public class IntegerResponseMarshaller extends ResponseMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         IntegerResponse info = (IntegerResponse)o;
-        dataOut.writeInt(info.getResult());
+    dataOut.writeInt(info.getResult());
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        IntegerResponse info = (IntegerResponse)o;
+        info.setResult(dataIn.readInt());
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        IntegerResponse info = (IntegerResponse)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    dataOut.writeInt(info.getResult());
 
     }
 }

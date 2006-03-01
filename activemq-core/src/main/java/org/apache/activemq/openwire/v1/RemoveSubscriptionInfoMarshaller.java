@@ -60,13 +60,13 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setSubcriptionName(readString(dataIn, bs));
-        info.setClientId(readString(dataIn, bs));
+        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
+        info.setClientId(tightUnmarshalString(dataIn, bs));
 
     }
 
@@ -74,14 +74,14 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshal1CachedObject(wireFormat, info.getConnectionId(), bs);
-        rc += writeString(info.getSubcriptionName(), bs);
-        rc += writeString(info.getClientId(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
+    rc += tightMarshalString1(info.getSubcriptionName(), bs);
+    rc += tightMarshalString1(info.getClientId(), bs);
 
         return rc + 0;
     }
@@ -93,13 +93,45 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-        marshal2CachedObject(wireFormat, info.getConnectionId(), dataOut, bs);
-        writeString(info.getSubcriptionName(), dataOut, bs);
-        writeString(info.getClientId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
+    tightMarshalString2(info.getClientId(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
+        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setSubcriptionName(looseUnmarshalString(dataIn));
+        info.setClientId(looseUnmarshalString(dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
+    looseMarshalString(info.getSubcriptionName(), dataOut);
+    looseMarshalString(info.getClientId(), dataOut);
 
     }
 }

@@ -34,7 +34,7 @@ namespace OpenWire.Client.IO
   //        if you need to make a change, please see the Groovy scripts in the
   //        activemq-core module
   //
-  public class JournalTraceMarshaller : DataStreamMarshaller
+  public class JournalTraceMarshaller : BaseDataStreamMarshaller
   {
 
 
@@ -51,12 +51,12 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         JournalTrace info = (JournalTrace)o;
-        info.Message = ReadString(dataIn, bs);
+        info.Message = TightUnmarshalString(dataIn, bs);
 
     }
 
@@ -64,11 +64,11 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         JournalTrace info = (JournalTrace)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += WriteString(info.Message, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalString1(info.Message, bs);
 
         return rc + 0;
     }
@@ -76,11 +76,11 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTrace info = (JournalTrace)o;
-    WriteString(info.Message, dataOut, bs);
+    TightMarshalString2(info.Message, dataOut, bs);
 
     }
   }

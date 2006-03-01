@@ -17,6 +17,7 @@
 package org.apache.activemq.command;
 
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.util.IntrospectionSupport;
 
 import java.util.Arrays;
 
@@ -33,10 +34,11 @@ public class WireFormatInfo implements Command {
     protected int version;
     protected byte magic[] = MAGIC;
 
-    private boolean stackTraceEnabled;
-    private boolean tcpNoDelayEnabled;
-    private boolean cacheEnabled;
-    private boolean compressionEnabled;
+    protected boolean stackTraceEnabled;
+    protected boolean tcpNoDelayEnabled;
+    protected boolean cacheEnabled;
+    protected boolean tightEncodingEnabled;
+    protected boolean prefixPacketSize;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -106,10 +108,6 @@ public class WireFormatInfo implements Command {
     public void setResponseRequired(boolean responseRequired) {
     }
 
-    public String toString() {
-        return "WireFormatInfo {version=" + version + "}";
-    }
-
     /**
      * @openwire:property version=1
      */
@@ -119,17 +117,6 @@ public class WireFormatInfo implements Command {
 
     public void setCacheEnabled(boolean cacheEnabled) {
         this.cacheEnabled = cacheEnabled;
-    }
-
-    /**
-     * @openwire:property version=1
-     */
-    public boolean isCompressionEnabled() {
-        return compressionEnabled;
-    }
-
-    public void setCompressionEnabled(boolean compressionEnabled) {
-        this.compressionEnabled = compressionEnabled;
     }
 
     /**
@@ -154,6 +141,26 @@ public class WireFormatInfo implements Command {
         this.tcpNoDelayEnabled = tcpNoDelayEnabled;
     }
 
+    /**
+     * @openwire:property version=1
+     */
+    public boolean isPrefixPacketSize() {
+        return prefixPacketSize;
+    }
+    public void setPrefixPacketSize(boolean prefixPacketSize) {
+        this.prefixPacketSize = prefixPacketSize;
+    }
+
+    /**
+     * @openwire:property version=1
+     */
+    public boolean isTightEncodingEnabled() {
+        return tightEncodingEnabled;
+    }
+    public void setTightEncodingEnabled(boolean tightEncodingEnabled) {
+        this.tightEncodingEnabled = tightEncodingEnabled;
+    }
+
     public Response visit(CommandVisitor visitor) throws Throwable {
         return visitor.processWireFormat(this);
     }
@@ -170,4 +177,7 @@ public class WireFormatInfo implements Command {
         return false;
     }
 
+    public String toString() {
+        return IntrospectionSupport.toString(this, WireFormatInfo.class);
+    }
 }

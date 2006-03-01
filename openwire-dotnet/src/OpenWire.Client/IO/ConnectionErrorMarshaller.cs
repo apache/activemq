@@ -51,13 +51,13 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConnectionError info = (ConnectionError)o;
-        info.Exception = UnmarshalBrokerError(wireFormat, dataIn, bs);
-        info.ConnectionId = (ConnectionId) UnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.Exception = TightUnmarshalBrokerError(wireFormat, dataIn, bs);
+        info.ConnectionId = (ConnectionId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
 
     }
 
@@ -65,12 +65,12 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         ConnectionError info = (ConnectionError)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += MarshalBrokerError(wireFormat, info.Exception, bs);
-    rc += Marshal1NestedObject(wireFormat, info.ConnectionId, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalBrokerError1(wireFormat, info.Exception, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.ConnectionId, bs);
 
         return rc + 0;
     }
@@ -78,12 +78,12 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionError info = (ConnectionError)o;
-    MarshalBrokerError(wireFormat, info.Exception, dataOut, bs);
-    Marshal2NestedObject(wireFormat, info.ConnectionId, dataOut, bs);
+    TightMarshalBrokerError2(wireFormat, info.Exception, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.ConnectionId, dataOut, bs);
 
     }
   }

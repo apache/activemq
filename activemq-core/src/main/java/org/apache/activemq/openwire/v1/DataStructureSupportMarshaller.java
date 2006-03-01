@@ -26,7 +26,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Marshalling code for Open Wire Format for LocalTransactionIdMarshaller
+ * Marshalling code for Open Wire Format for DataStructureSupportMarshaller
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -36,22 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
-
-    /**
-     * Return the type of Data Structure we marshal
-     * @return short representation of the type data structure
-     */
-    public byte getDataStructureType() {
-        return LocalTransactionId.DATA_STRUCTURE_TYPE;
-    }
-    
-    /**
-     * @return a new object instance
-     */
-    public DataStructure createObject() {
-        return new LocalTransactionId();
-    }
+public abstract class DataStructureSupportMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
@@ -63,10 +48,6 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
     public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
-        LocalTransactionId info = (LocalTransactionId)o;
-        info.setValue(tightUnmarshalLong(wireFormat, dataIn, bs));
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-
     }
 
 
@@ -75,11 +56,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
      */
     public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
-        LocalTransactionId info = (LocalTransactionId)o;
-
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
 
         return rc + 0;
     }
@@ -94,10 +71,6 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
     public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
-        LocalTransactionId info = (LocalTransactionId)o;
-    tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
-
     }
 
     /**
@@ -110,10 +83,6 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
     public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
-        LocalTransactionId info = (LocalTransactionId)o;
-        info.setValue(looseUnmarshalLong(wireFormat, dataIn));
-        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
-
     }
 
 
@@ -122,11 +91,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
      */
     public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
 
-        LocalTransactionId info = (LocalTransactionId)o;
-
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalLong(wireFormat, info.getValue(), dataOut);
-    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
 
     }
 }

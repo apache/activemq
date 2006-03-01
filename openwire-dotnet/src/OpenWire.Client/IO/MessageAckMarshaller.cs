@@ -51,18 +51,18 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageAck info = (MessageAck)o;
-        info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.TransactionId = (TransactionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.ConsumerId = (ConsumerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.AckType = DataStreamMarshaller.ReadByte(dataIn);
-        info.FirstMessageId = (MessageId) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.LastMessageId = (MessageId) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.MessageCount = DataStreamMarshaller.ReadInt(dataIn);
+        info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.TransactionId = (TransactionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.ConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.AckType = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.FirstMessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.LastMessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.MessageCount = BaseDataStreamMarshaller.ReadInt(dataIn);
 
     }
 
@@ -70,33 +70,33 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         MessageAck info = (MessageAck)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-    rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
-        rc += Marshal1NestedObject(wireFormat, info.FirstMessageId, bs);
-    rc += Marshal1NestedObject(wireFormat, info.LastMessageId, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.TransactionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.ConsumerId, bs);
+        rc += TightMarshalNestedObject1(wireFormat, info.FirstMessageId, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.LastMessageId, bs);
     
-        return rc + 2;
+        return rc + 5;
     }
 
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageAck info = (MessageAck)o;
-    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
-    DataStreamMarshaller.WriteByte(info.AckType, dataOut);
-    Marshal2NestedObject(wireFormat, info.FirstMessageId, dataOut, bs);
-    Marshal2NestedObject(wireFormat, info.LastMessageId, dataOut, bs);
-    DataStreamMarshaller.WriteInt(info.MessageCount, dataOut);
+    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
+    BaseDataStreamMarshaller.WriteByte(info.AckType, dataOut);
+    TightMarshalNestedObject2(wireFormat, info.FirstMessageId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.LastMessageId, dataOut, bs);
+    BaseDataStreamMarshaller.WriteInt(info.MessageCount, dataOut);
 
     }
   }

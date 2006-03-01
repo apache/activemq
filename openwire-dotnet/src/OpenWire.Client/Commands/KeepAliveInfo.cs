@@ -31,7 +31,7 @@ namespace OpenWire.Client.Commands
     //         if you need to make a change, please see the Groovy scripts in the
     //         activemq-core module
     //
-    public class KeepAliveInfo : DataStructureSupport
+    public class KeepAliveInfo : AbstractCommand
     {
         public const byte ID_KeepAliveInfo = 10;
     			

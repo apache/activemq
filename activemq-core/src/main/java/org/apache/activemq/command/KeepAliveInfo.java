@@ -17,12 +17,13 @@
 package org.apache.activemq.command;
 
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * @openwire:marshaller code="10"
  * @version $Revision$
  */
-public class KeepAliveInfo extends DataStructureSupport implements Command {
+public class KeepAliveInfo implements Command {
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.KEEP_ALIVE_INFO;
     
@@ -84,4 +85,7 @@ public class KeepAliveInfo extends DataStructureSupport implements Command {
         return false;
     }
 
+    public String toString() {
+        return IntrospectionSupport.toString(this, KeepAliveInfo.class);
+    }
 }

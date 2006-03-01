@@ -60,13 +60,13 @@ public class MessageDispatchMarshaller extends BaseCommandMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageDispatch info = (MessageDispatch)o;
-        info.setConsumerId((ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setMessage((Message) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setMessage((Message) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setRedeliveryCounter(dataIn.readInt());
 
     }
@@ -75,16 +75,16 @@ public class MessageDispatchMarshaller extends BaseCommandMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         MessageDispatch info = (MessageDispatch)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshal1CachedObject(wireFormat, info.getConsumerId(), bs);
-        rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
-        rc += marshal1NestedObject(wireFormat, info.getMessage(), bs);
-        
-        return rc + 1;
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getConsumerId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, info.getMessage(), bs);
+    
+        return rc + 4;
     }
 
     /**
@@ -94,14 +94,48 @@ public class MessageDispatchMarshaller extends BaseCommandMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageDispatch info = (MessageDispatch)o;
-        marshal2CachedObject(wireFormat, info.getConsumerId(), dataOut, bs);
-        marshal2CachedObject(wireFormat, info.getDestination(), dataOut, bs);
-        marshal2NestedObject(wireFormat, info.getMessage(), dataOut, bs);
-        dataOut.writeInt(info.getRedeliveryCounter());
+    tightMarshalCachedObject2(wireFormat, info.getConsumerId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, info.getMessage(), dataOut, bs);
+    dataOut.writeInt(info.getRedeliveryCounter());
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        MessageDispatch info = (MessageDispatch)o;
+        info.setConsumerId((ConsumerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setMessage((Message) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setRedeliveryCounter(dataIn.readInt());
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        MessageDispatch info = (MessageDispatch)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalCachedObject(wireFormat, info.getConsumerId(), dataOut);
+    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalNestedObject(wireFormat, info.getMessage(), dataOut);
+    dataOut.writeInt(info.getRedeliveryCounter());
 
     }
 }

@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public abstract class BaseCommandMarshaller extends DataStreamMarshaller {
+public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
@@ -45,8 +45,8 @@ public abstract class BaseCommandMarshaller extends DataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         BaseCommand info = (BaseCommand)o;
         info.setCommandId(dataIn.readShort());
@@ -58,14 +58,14 @@ public abstract class BaseCommandMarshaller extends DataStreamMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         BaseCommand info = (BaseCommand)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-                bs.writeBoolean(info.isResponseRequired());
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+        bs.writeBoolean(info.isResponseRequired());
 
-        return rc + 1;
+        return rc + 2;
     }
 
     /**
@@ -75,12 +75,42 @@ public abstract class BaseCommandMarshaller extends DataStreamMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         BaseCommand info = (BaseCommand)o;
-        dataOut.writeShort(info.getCommandId());
-        bs.readBoolean();
+    dataOut.writeShort(info.getCommandId());
+    bs.readBoolean();
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        BaseCommand info = (BaseCommand)o;
+        info.setCommandId(dataIn.readShort());
+        info.setResponseRequired(dataIn.readBoolean());
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        BaseCommand info = (BaseCommand)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    dataOut.writeShort(info.getCommandId());
+    dataOut.writeBoolean(info.isResponseRequired());
 
     }
 }

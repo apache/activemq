@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class SubscriptionInfoMarshaller extends DataStreamMarshaller {
+public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
@@ -60,14 +60,14 @@ public class SubscriptionInfoMarshaller extends DataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         SubscriptionInfo info = (SubscriptionInfo)o;
-        info.setClientId(readString(dataIn, bs));
-        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setSelector(readString(dataIn, bs));
-        info.setSubcriptionName(readString(dataIn, bs));
+        info.setClientId(tightUnmarshalString(dataIn, bs));
+        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setSelector(tightUnmarshalString(dataIn, bs));
+        info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
 
     }
 
@@ -75,15 +75,15 @@ public class SubscriptionInfoMarshaller extends DataStreamMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         SubscriptionInfo info = (SubscriptionInfo)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += writeString(info.getClientId(), bs);
-        rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
-        rc += writeString(info.getSelector(), bs);
-        rc += writeString(info.getSubcriptionName(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalString1(info.getClientId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalString1(info.getSelector(), bs);
+    rc += tightMarshalString1(info.getSubcriptionName(), bs);
 
         return rc + 0;
     }
@@ -95,14 +95,48 @@ public class SubscriptionInfoMarshaller extends DataStreamMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         SubscriptionInfo info = (SubscriptionInfo)o;
-        writeString(info.getClientId(), dataOut, bs);
-        marshal2CachedObject(wireFormat, info.getDestination(), dataOut, bs);
-        writeString(info.getSelector(), dataOut, bs);
-        writeString(info.getSubcriptionName(), dataOut, bs);
+    tightMarshalString2(info.getClientId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalString2(info.getSelector(), dataOut, bs);
+    tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        SubscriptionInfo info = (SubscriptionInfo)o;
+        info.setClientId(looseUnmarshalString(dataIn));
+        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setSelector(looseUnmarshalString(dataIn));
+        info.setSubcriptionName(looseUnmarshalString(dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        SubscriptionInfo info = (SubscriptionInfo)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalString(info.getClientId(), dataOut);
+    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalString(info.getSelector(), dataOut);
+    looseMarshalString(info.getSubcriptionName(), dataOut);
 
     }
 }

@@ -228,9 +228,10 @@ typedef struct ow_WireFormatInfo {
    ow_byte_array *magic;
    ow_int version;
    ow_boolean cacheEnabled;
-   ow_boolean compressionEnabled;
    ow_boolean stackTraceEnabled;
    ow_boolean tcpNoDelayEnabled;
+   ow_boolean prefixPacketSize;
+   ow_boolean tightEncodingEnabled;
 
 } ow_WireFormatInfo;
 ow_WireFormatInfo *ow_WireFormatInfo_create(apr_pool_t *pool);

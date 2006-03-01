@@ -287,9 +287,16 @@ out << """/**
 	            def type = ("ow_"+name).toUpperCase()+"_TYPE"
 	            
 	            def baseName="DataStructure";
-	            if( !jclass.superclass.simpleName.equals("Object") ) {
-                  baseName = jclass.superclass.simpleName;
-               }
+	            
+	            def superclass = jclass.superclass;	            
+	            while( superclass.superclass != null ) {
+  	              if( openwireClasses.contains(superclass) ) {
+                      baseName = superclass.simpleName;
+                      break;
+                   } else {
+                      superclass = superclass.superclass;
+                   }
+	            }
                
 out << """
 ow_boolean ow_is_a_${name}(ow_DataStructure *object) {

@@ -96,8 +96,8 @@ out << """
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 """
 
 if( !properties.isEmpty() )  out << """
@@ -109,7 +109,7 @@ if( marshallerAware ) out << """
         
 """
 
-generateUnmarshalBody(out)
+generateTightUnmarshalBody(out)
 
 if( marshallerAware ) out << """
         info.afterUnmarshall(wireFormat);
@@ -122,7 +122,7 @@ out << """
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 """
 
 
@@ -136,10 +136,10 @@ if( marshallerAware ) out << """
 """
 
 out << """
-        int rc = super.marshal1(wireFormat, o, bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
 """
 
-def baseSize = generateMarshal1Body(out)
+def baseSize = generateTightMarshal1Body(out)
     
 out << """
         return rc + ${baseSize};
@@ -152,20 +152,76 @@ out << """
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 """
 
 if( !properties.isEmpty() ) out << """
         ${jclass.simpleName} info = (${jclass.simpleName})o;
 """
 
-generateMarshal2Body(out)
+generateTightMarshal2Body(out)
 
 if( marshallerAware ) out << """
         info.afterMarshall(wireFormat);
 """
 
+out << """
+    }
+"""
+
+out << """
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+"""
+
+if( !properties.isEmpty() )  out << """
+        ${jclass.simpleName} info = (${jclass.simpleName})o;
+"""
+
+if( marshallerAware ) out << """
+        info.beforeUnmarshall(wireFormat);
+        
+"""
+
+generateLooseUnmarshalBody(out)
+
+if( marshallerAware ) out << """
+        info.afterUnmarshall(wireFormat);
+"""
+
+out << """
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+"""
+
+if( !properties.isEmpty() ) out << """
+        ${jclass.simpleName} info = (${jclass.simpleName})o;
+"""
+
+
+if( marshallerAware ) out << """
+        info.beforeMarshall(wireFormat);
+"""
+
+out << """
+        super.looseMarshal(wireFormat, o, dataOut);
+"""
+
+generateLooseMarshalBody(out)
+    
 out << """
     }
 }

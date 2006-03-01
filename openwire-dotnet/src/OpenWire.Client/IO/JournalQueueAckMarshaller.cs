@@ -34,7 +34,7 @@ namespace OpenWire.Client.IO
   //        if you need to make a change, please see the Groovy scripts in the
   //        activemq-core module
   //
-  public class JournalQueueAckMarshaller : DataStreamMarshaller
+  public class JournalQueueAckMarshaller : BaseDataStreamMarshaller
   {
 
 
@@ -51,13 +51,13 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         JournalQueueAck info = (JournalQueueAck)o;
-        info.Destination = (ActiveMQDestination) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.MessageAck = (MessageAck) UnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.Destination = (ActiveMQDestination) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.MessageAck = (MessageAck) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
 
     }
 
@@ -65,12 +65,12 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         JournalQueueAck info = (JournalQueueAck)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1NestedObject(wireFormat, info.Destination, bs);
-    rc += Marshal1NestedObject(wireFormat, info.MessageAck, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.Destination, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.MessageAck, bs);
 
         return rc + 0;
     }
@@ -78,12 +78,12 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalQueueAck info = (JournalQueueAck)o;
-    Marshal2NestedObject(wireFormat, info.Destination, dataOut, bs);
-    Marshal2NestedObject(wireFormat, info.MessageAck, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.Destination, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.MessageAck, dataOut, bs);
 
     }
   }

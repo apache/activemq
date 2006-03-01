@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class ConsumerIdMarshaller extends DataStreamMarshaller {
+public class ConsumerIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
@@ -60,13 +60,13 @@ public class ConsumerIdMarshaller extends DataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConsumerId info = (ConsumerId)o;
-        info.setConnectionId(readString(dataIn, bs));
-        info.setSessionId(unmarshalLong(wireFormat, dataIn, bs));
-        info.setValue(unmarshalLong(wireFormat, dataIn, bs));
+        info.setConnectionId(tightUnmarshalString(dataIn, bs));
+        info.setSessionId(tightUnmarshalLong(wireFormat, dataIn, bs));
+        info.setValue(tightUnmarshalLong(wireFormat, dataIn, bs));
 
     }
 
@@ -74,14 +74,14 @@ public class ConsumerIdMarshaller extends DataStreamMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         ConsumerId info = (ConsumerId)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += writeString(info.getConnectionId(), bs);
-        rc+=marshal1Long(wireFormat, info.getSessionId(), bs);
-        rc+=marshal1Long(wireFormat, info.getValue(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalString1(info.getConnectionId(), bs);
+    rc+=tightMarshalLong1(wireFormat, info.getSessionId(), bs);
+    rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
 
         return rc + 0;
     }
@@ -93,13 +93,45 @@ public class ConsumerIdMarshaller extends DataStreamMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConsumerId info = (ConsumerId)o;
-        writeString(info.getConnectionId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getSessionId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getValue(), dataOut, bs);
+    tightMarshalString2(info.getConnectionId(), dataOut, bs);
+    tightMarshalLong2(wireFormat, info.getSessionId(), dataOut, bs);
+    tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        ConsumerId info = (ConsumerId)o;
+        info.setConnectionId(looseUnmarshalString(dataIn));
+        info.setSessionId(looseUnmarshalLong(wireFormat, dataIn));
+        info.setValue(looseUnmarshalLong(wireFormat, dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        ConsumerId info = (ConsumerId)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalString(info.getConnectionId(), dataOut);
+    looseMarshalLong(wireFormat, info.getSessionId(), dataOut);
+    looseMarshalLong(wireFormat, info.getValue(), dataOut);
 
     }
 }

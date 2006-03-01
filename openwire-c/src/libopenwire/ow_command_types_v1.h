@@ -44,7 +44,8 @@ extern "C" {
 #define OW_REDELIVERYPOLICY_TYPE           13
 #define OW_CONTROLCOMMAND_TYPE             14
 #define OW_FLUSHCOMMAND_TYPE               15
-
+#define OW_CONNECTIONERROR_TYPE            16   
+   
 #define OW_MESSAGEDISPATCH_TYPE            21
 #define OW_MESSAGEACK_TYPE                 22
 
@@ -60,6 +61,8 @@ extern "C" {
 #define OW_DATARESPONSE_TYPE               32
 #define OW_DATAARRAYRESPONSE_TYPE          33
 #define OW_INTEGERRESPONSE_TYPE            34  
+
+#define OW_DISCOVERYEVENT_TYPE             40
 
 #define OW_JOURNALTOPICACK_TYPE            50
 #define OW_JOURNALADD_TYPE                 51
@@ -79,6 +82,7 @@ extern "C" {
 #define OW_BOOLEAN_TYPE                    78
 #define OW_BYTE_ARRAY_TYPE                 79
    
+#define OW_MESSAGEDISPATCHNOTIFICATION_TYPE 90
       
 #define OW_ACTIVEMQQUEUE_TYPE              100
 #define OW_ACTIVEMQTOPIC_TYPE              101
