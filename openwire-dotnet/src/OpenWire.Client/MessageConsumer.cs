@@ -163,7 +163,7 @@ namespace OpenWire.Client
             return message;
         }
         
-        protected void DoClientAcknowledge(Message message)
+        protected void DoClientAcknowledge(ActiveMQMessage message)
         {
             if (acknowledgementMode == AcknowledgementMode.ClientAcknowledge)
             {
