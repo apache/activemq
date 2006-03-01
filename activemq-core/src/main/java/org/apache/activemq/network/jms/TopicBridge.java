@@ -104,15 +104,15 @@ class TopicBridge extends DestinationBridge{
     }
 
     /**
-     * @return Returns the consumerName.
+     * @return Returns the subscriptionName.
      */
     public String getConsumerName(){
         return consumerName;
     }
 
     /**
-     * @param consumerName
-     *            The consumerName to set.
+     * @param subscriptionName
+     *            The subscriptionName to set.
      */
     public void setConsumerName(String consumerName){
         this.consumerName=consumerName;

@@ -16,19 +16,18 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import javax.management.ObjectName;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.memory.UsageManager;
 
 public class BrokerView implements BrokerViewMBean {
     
-    private final Broker broker;
-    private final DestinationStatistics destinationStatistics;
+    private final ManagedRegionBroker broker;
     private final UsageManager usageManager;
 
-    public BrokerView(Broker broker, DestinationStatistics destinationStatistics, UsageManager usageManager) {
+    public BrokerView(ManagedRegionBroker broker, UsageManager usageManager) {
         this.broker = broker;
-        this.destinationStatistics = destinationStatistics;
         this.usageManager = usageManager;        
     }
     
@@ -49,19 +48,19 @@ public class BrokerView implements BrokerViewMBean {
     }
     
     public long getTotalEnqueueCount() {
-        return destinationStatistics.getEnqueues().getCount();    
+        return broker.getDestinationStatistics().getEnqueues().getCount();    
     }
     public long getTotalDequeueCount() {
-        return destinationStatistics.getDequeues().getCount();
+        return broker.getDestinationStatistics().getDequeues().getCount();
     }
     public long getTotalConsumerCount() {
-        return destinationStatistics.getConsumers().getCount();
+        return broker.getDestinationStatistics().getConsumers().getCount();
     }
     public long getTotalMessages() {
-        return destinationStatistics.getMessages().getCount();
+        return broker.getDestinationStatistics().getMessages().getCount();
     }    
     public long getTotalMessagesCached() {
-        return destinationStatistics.getMessagesCached().getCount();
+        return broker.getDestinationStatistics().getMessagesCached().getCount();
     }
 
     public int getMemoryPercentageUsed() {
@@ -75,11 +74,47 @@ public class BrokerView implements BrokerViewMBean {
     }
     
     public void resetStatistics() {
-        destinationStatistics.reset();
+        broker.getDestinationStatistics().reset();
     }
 
     public void terminateJVM(int exitCode) {
         System.exit(exitCode);
+    }
+
+    public ObjectName[] getTopics(){
+        return broker.getTopics();
+    }
+
+    public ObjectName[] getQueues(){
+        return broker.getQueues();
+    }
+
+    public ObjectName[] getTemporaryTopics(){
+        return broker.getTemporaryTopics();
+    }
+
+    public ObjectName[] getTemporaryQueues(){
+        return broker.getTemporaryQueues();
+    }
+
+    public ObjectName[] getTopicSubscribers(){
+      return broker.getTemporaryTopicSubscribers();
+    }
+
+    public ObjectName[] getDurableTopicSubscribers(){
+        return broker.getDurableTopicSubscribers();
+    }
+
+    public ObjectName[] getQueueSubscribers(){
+       return broker.getQueueSubscribers();
+    }
+
+    public ObjectName[] getTemporaryTopicSubscribers(){
+        return broker.getTemporaryTopicSubscribers();
+    }
+
+    public ObjectName[] getTemporaryQueueSubscribers(){
+        return broker.getTemporaryQueueSubscribers();
     }
     
 }

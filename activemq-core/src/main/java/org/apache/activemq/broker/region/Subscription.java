@@ -100,4 +100,19 @@ public interface Subscription {
      */
     boolean isSlaveBroker();
     
+    /**
+     * @return number of messages pending delivery
+     */
+    int pending();
+    
+    /**
+     * @return number of messages dispatched
+     */
+    int dispatched();
+    
+    /**
+     * @return number of messages delivered
+     */
+    int delivered();
+    
 }
