@@ -40,46 +40,46 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         Message info = (Message)o;
-        info.ProducerId = (ProducerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.TransactionId = (TransactionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.OriginalDestination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.MessageId = (MessageId) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.OriginalTransactionId = (TransactionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.GroupID = ReadString(dataIn, bs);
-        info.GroupSequence = DataStreamMarshaller.ReadInt(dataIn);
-        info.CorrelationId = ReadString(dataIn, bs);
+        info.ProducerId = (ProducerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.TransactionId = (TransactionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.OriginalDestination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.MessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.OriginalTransactionId = (TransactionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.GroupID = TightUnmarshalString(dataIn, bs);
+        info.GroupSequence = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.CorrelationId = TightUnmarshalString(dataIn, bs);
         info.Persistent = bs.ReadBoolean();
-        info.Expiration = UnmarshalLong(wireFormat, dataIn, bs);
-        info.Priority = DataStreamMarshaller.ReadByte(dataIn);
-        info.ReplyTo = (ActiveMQDestination) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.Timestamp = UnmarshalLong(wireFormat, dataIn, bs);
-        info.Type = ReadString(dataIn, bs);
+        info.Expiration = TightUnmarshalLong(wireFormat, dataIn, bs);
+        info.Priority = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.ReplyTo = (ActiveMQDestination) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.Timestamp = TightUnmarshalLong(wireFormat, dataIn, bs);
+        info.Type = TightUnmarshalString(dataIn, bs);
         info.Content = ReadBytes(dataIn, bs.ReadBoolean());
         info.MarshalledProperties = ReadBytes(dataIn, bs.ReadBoolean());
-        info.DataStructure = (DataStructure) UnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.TargetConsumerId = (ConsumerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.DataStructure = (DataStructure) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.TargetConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Compressed = bs.ReadBoolean();
-        info.RedeliveryCounter = DataStreamMarshaller.ReadInt(dataIn);
+        info.RedeliveryCounter = BaseDataStreamMarshaller.ReadInt(dataIn);
 
         if (bs.ReadBoolean()) {
-            short size = DataStreamMarshaller.ReadShort(dataIn);
+            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) UnmarshalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (BrokerId) TightUnmarshalNestedObject(wireFormat,dataIn, bs);
             }
             info.BrokerPath = value;
         }
         else {
             info.BrokerPath = null;
         }
-        info.Arrival = UnmarshalLong(wireFormat, dataIn, bs);
-        info.UserID = ReadString(dataIn, bs);
+        info.Arrival = TightUnmarshalLong(wireFormat, dataIn, bs);
+        info.UserID = TightUnmarshalString(dataIn, bs);
         info.RecievedByDFBridge = bs.ReadBoolean();
 
     }
@@ -88,75 +88,75 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         Message info = (Message)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1CachedObject(wireFormat, info.ProducerId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-    rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.OriginalDestination, bs);
-    rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.OriginalTransactionId, bs);
-    rc += WriteString(info.GroupID, bs);
-        rc += WriteString(info.CorrelationId, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.ProducerId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.TransactionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.OriginalDestination, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.MessageId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.OriginalTransactionId, bs);
+    rc += TightMarshalString1(info.GroupID, bs);
+        rc += TightMarshalString1(info.CorrelationId, bs);
     bs.WriteBoolean(info.Persistent);
-    rc += Marshal1Long(wireFormat, info.Expiration, bs);
-        rc += Marshal1NestedObject(wireFormat, info.ReplyTo, bs);
-    rc += Marshal1Long(wireFormat, info.Timestamp, bs);
-    rc += WriteString(info.Type, bs);
+    rc += TightMarshalLong1(wireFormat, info.Expiration, bs);
+        rc += TightMarshalNestedObject1(wireFormat, info.ReplyTo, bs);
+    rc += TightMarshalLong1(wireFormat, info.Timestamp, bs);
+    rc += TightMarshalString1(info.Type, bs);
     bs.WriteBoolean(info.Content!=null);
         rc += info.Content==null ? 0 : info.Content.Length+4;
     bs.WriteBoolean(info.MarshalledProperties!=null);
         rc += info.MarshalledProperties==null ? 0 : info.MarshalledProperties.Length+4;
-    rc += Marshal1NestedObject(wireFormat, info.DataStructure, bs);
-    rc += Marshal1CachedObject(wireFormat, info.TargetConsumerId, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.DataStructure, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.TargetConsumerId, bs);
     bs.WriteBoolean(info.Compressed);
-        rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
-    rc += Marshal1Long(wireFormat, info.Arrival, bs);
-    rc += WriteString(info.UserID, bs);
+        rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
+    rc += TightMarshalLong1(wireFormat, info.Arrival, bs);
+    rc += TightMarshalString1(info.UserID, bs);
     bs.WriteBoolean(info.RecievedByDFBridge);
 
-        return rc + 3;
+        return rc + 9;
     }
 
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         Message info = (Message)o;
-    Marshal2CachedObject(wireFormat, info.ProducerId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.OriginalDestination, dataOut, bs);
-    Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.OriginalTransactionId, dataOut, bs);
-    WriteString(info.GroupID, dataOut, bs);
-    DataStreamMarshaller.WriteInt(info.GroupSequence, dataOut);
-    WriteString(info.CorrelationId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.ProducerId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.OriginalDestination, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.MessageId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.OriginalTransactionId, dataOut, bs);
+    TightMarshalString2(info.GroupID, dataOut, bs);
+    BaseDataStreamMarshaller.WriteInt(info.GroupSequence, dataOut);
+    TightMarshalString2(info.CorrelationId, dataOut, bs);
     bs.ReadBoolean();
-    Marshal2Long(wireFormat, info.Expiration, dataOut, bs);
-    DataStreamMarshaller.WriteByte(info.Priority, dataOut);
-    Marshal2NestedObject(wireFormat, info.ReplyTo, dataOut, bs);
-    Marshal2Long(wireFormat, info.Timestamp, dataOut, bs);
-    WriteString(info.Type, dataOut, bs);
+    TightMarshalLong2(wireFormat, info.Expiration, dataOut, bs);
+    BaseDataStreamMarshaller.WriteByte(info.Priority, dataOut);
+    TightMarshalNestedObject2(wireFormat, info.ReplyTo, dataOut, bs);
+    TightMarshalLong2(wireFormat, info.Timestamp, dataOut, bs);
+    TightMarshalString2(info.Type, dataOut, bs);
     if(bs.ReadBoolean()) {
-           DataStreamMarshaller.WriteInt(info.Content.Length, dataOut);
+           BaseDataStreamMarshaller.WriteInt(info.Content.Length, dataOut);
            dataOut.Write(info.Content);
         }
     if(bs.ReadBoolean()) {
-           DataStreamMarshaller.WriteInt(info.MarshalledProperties.Length, dataOut);
+           BaseDataStreamMarshaller.WriteInt(info.MarshalledProperties.Length, dataOut);
            dataOut.Write(info.MarshalledProperties);
         }
-    Marshal2NestedObject(wireFormat, info.DataStructure, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.TargetConsumerId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.DataStructure, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.TargetConsumerId, dataOut, bs);
     bs.ReadBoolean();
-    DataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
-    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
-    Marshal2Long(wireFormat, info.Arrival, dataOut, bs);
-    WriteString(info.UserID, dataOut, bs);
+    BaseDataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
+    TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
+    TightMarshalLong2(wireFormat, info.Arrival, dataOut, bs);
+    TightMarshalString2(info.UserID, dataOut, bs);
     bs.ReadBoolean();
 
     }

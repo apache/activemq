@@ -25,6 +25,7 @@ import java.util.HashMap;
 import org.activeio.ByteArrayOutputStream;
 import org.activeio.ByteSequence;
 import org.activeio.Packet;
+import org.activeio.PacketData;
 import org.activeio.adapter.PacketToInputStream;
 import org.activeio.command.ClassLoading;
 import org.activeio.command.WireFormat;
@@ -46,6 +47,8 @@ final public class OpenWireFormat implements WireFormat {
     private boolean stackTraceEnabled=true;
     private boolean tcpNoDelayEnabled=false;
     private boolean cacheEnabled=true;
+    private boolean tightEncodingEnabled=true;
+    private boolean prefixPacketSize=true;
 
     private HashMap marshallCacheMap = new HashMap();
     private short nextMarshallCacheIndex=0;    
@@ -64,8 +67,9 @@ final public class OpenWireFormat implements WireFormat {
     
     public int hashCode() {
         return  version 
-            ^ (cacheEnabled?0x10000000:0x20000000)
-            ^ (stackTraceEnabled?0x30000000:0x40000000);
+            ^ (cacheEnabled         ? 0x10000000:0x20000000)
+            ^ (stackTraceEnabled    ? 0x01000000:0x02000000)
+            ^ (tightEncodingEnabled ? 0x00100000:0x00200000);
     }
     
     public boolean equals(Object object) {
@@ -74,7 +78,8 @@ final public class OpenWireFormat implements WireFormat {
         OpenWireFormat o = (OpenWireFormat) object;
         return o.stackTraceEnabled == stackTraceEnabled &&
             o.cacheEnabled == cacheEnabled &&
-            o.version == version;
+            o.version == version && 
+            o.tightEncodingEnabled == tightEncodingEnabled;
     }
     
     public String toString() {
@@ -108,19 +113,43 @@ final public class OpenWireFormat implements WireFormat {
                 DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
                 if( dsm == null )
                     throw new IOException("Unknown data type: "+type);
-                BooleanStream bs = new BooleanStream();
-                size += dsm.marshal1(this, c, bs);
-                size += bs.marshalledSize();
-
-                ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
-                DataOutputStream ds = new DataOutputStream(baos);
-                ds.writeInt(size);
-                ds.writeByte(type);
-                bs.marshal(ds);
-                dsm.marshal2(this, c, ds, bs);                
-                ds.close();
                 
-                sequence = baos.toByteSequence();
+                if( tightEncodingEnabled ) {
+                    
+                    BooleanStream bs = new BooleanStream();
+                    size += dsm.tightMarshal1(this, c, bs);
+                    size += bs.marshalledSize();
+    
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
+                    DataOutputStream ds = new DataOutputStream(baos);
+                    if( prefixPacketSize ) {
+                        ds.writeInt(size);
+                    }
+                    ds.writeByte(type);
+                    bs.marshal(ds);
+                    dsm.tightMarshal2(this, c, ds, bs);                
+                    ds.close();
+                    sequence = baos.toByteSequence();
+                    
+                } else {
+                    
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
+                    DataOutputStream ds = new DataOutputStream(baos);
+                    if( prefixPacketSize ) {
+                        ds.writeInt(0); // we don't know the final size yet but write this here for now.
+                    }
+                    ds.writeByte(type);
+                    dsm.looseMarshal(this, c, ds);                
+                    ds.close();
+                    sequence = baos.toByteSequence();
+                    
+                    if( prefixPacketSize ) {
+                        size = sequence.getLength()-4;
+                        ByteArrayPacket packet = new ByteArrayPacket(sequence);
+                        PacketData.writeIntBig(packet, size);
+                    }
+                }
+                
                 
             } else {
                 
@@ -142,10 +171,14 @@ final public class OpenWireFormat implements WireFormat {
     public Object unmarshal(Packet packet) throws IOException {
         ByteSequence sequence = packet.asByteSequence();
         DataInputStream dis = new DataInputStream(new PacketToInputStream(packet));
-        int size = dis.readInt();
-        if( sequence.getLength() != size+4 )
-            System.out.println("Packet size does not match marshaled size: "+size+", "+(sequence.getLength()-4));
-//            throw new IOException("Packet size does not match marshaled size");        
+        
+        if( prefixPacketSize ) {
+            int size = dis.readInt();
+            if( sequence.getLength()-4 != size )
+                System.out.println("Packet size does not match marshaled size: "+size+", "+(sequence.getLength()-4));
+    //            throw new IOException("Packet size does not match marshaled size");
+        }
+        
         Object command = doUnmarshal(dis);
         if( !cacheEnabled && ((DataStructure)command).isMarshallAware() ) {
             ((MarshallAware) command).setCachedMarshalledForm(this, sequence);
@@ -163,13 +196,13 @@ final public class OpenWireFormat implements WireFormat {
                 throw new IOException("Unknown data type: "+type);
 
             BooleanStream bs = new BooleanStream();
-            size += dsm.marshal1(this, c, bs);
+            size += dsm.tightMarshal1(this, c, bs);
             size += bs.marshalledSize(); 
 
             ds.writeInt(size);
             ds.writeByte(type);            
             bs.marshal(ds);
-            dsm.marshal2(this, c, ds, bs);
+            dsm.tightMarshal2(this, c, ds, bs);
         } else {
             ds.writeInt(size);
             ds.writeByte(NULL_TYPE);
@@ -209,16 +242,20 @@ final public class OpenWireFormat implements WireFormat {
             if( dsm == null )
                 throw new IOException("Unknown data type: "+dataType);
             Object data = dsm.createObject();
-            BooleanStream bs = new BooleanStream();
-            bs.unmarshal(dis);
-            dsm.unmarshal(this, data, dis, bs);
+            if( this.tightEncodingEnabled ) {
+                BooleanStream bs = new BooleanStream();
+                bs.unmarshal(dis);
+                dsm.tightUnmarshal(this, data, dis, bs);
+            } else {
+                dsm.looseUnmarshal(this, data, dis);
+            }
             return data;
         } else {
             return null;
         }
     }
     
-    public int marshal1NestedObject(DataStructure o, BooleanStream bs) throws IOException {
+    public int tightMarshalNestedObject1(DataStructure o, BooleanStream bs) throws IOException {
         bs.writeBoolean(o != null);
         if( o == null ) 
             return 0;
@@ -236,10 +273,10 @@ final public class OpenWireFormat implements WireFormat {
         DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
         if( dsm == null )
             throw new IOException("Unknown data type: "+type);
-        return 1 + dsm.marshal1(this, o, bs);
+        return 1 + dsm.tightMarshal1(this, o, bs);
     }
     
-    public void marshal2NestedObject(DataStructure o, DataOutputStream ds, BooleanStream bs) throws IOException {
+    public void tightMarshalNestedObject2(DataStructure o, DataOutputStream ds, BooleanStream bs) throws IOException {
         if( !bs.readBoolean() ) 
             return;
             
@@ -257,12 +294,12 @@ final public class OpenWireFormat implements WireFormat {
             DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
             if( dsm == null )
                 throw new IOException("Unknown data type: "+type);
-            dsm.marshal2(this, o, ds, bs);
+            dsm.tightMarshal2(this, o, ds, bs);
             
         }
     }
     
-    public DataStructure unmarshalNestedObject(DataInputStream dis, BooleanStream bs) throws IOException {
+    public DataStructure tightUnmarshalNestedObject(DataInputStream dis, BooleanStream bs) throws IOException {
         if( bs.readBoolean() ) {
             
             byte dataType = dis.readByte();
@@ -278,14 +315,14 @@ final public class OpenWireFormat implements WireFormat {
                 
                 BooleanStream bs2 = new BooleanStream();
                 bs2.unmarshal(dis);
-                dsm.unmarshal(this, data, dis, bs2);
+                dsm.tightUnmarshal(this, data, dis, bs2);
 
                 // TODO: extract the sequence from the dis and associate it.
 //                MarshallAware ma = (MarshallAware)data
 //                ma.setCachedMarshalledForm(this, sequence);
                 
             } else {
-                dsm.unmarshal(this, data, dis, bs);
+                dsm.tightUnmarshal(this, data, dis, bs);
             }
             
             return data;
@@ -293,6 +330,35 @@ final public class OpenWireFormat implements WireFormat {
             return null;
         }
     }
+    
+    public DataStructure looseUnmarshalNestedObject(DataInputStream dis) throws IOException {
+        if( dis.readBoolean() ) {
+            
+            byte dataType = dis.readByte();
+            DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[dataType & 0xFF];
+            if( dsm == null )
+                throw new IOException("Unknown data type: "+dataType);
+            DataStructure data = dsm.createObject();
+            dsm.looseUnmarshal(this, data, dis);
+            return data;
+            
+        } else {
+            return null;
+        }
+    }
+
+    public void looseMarshalNestedObject(DataStructure o, DataOutputStream dataOut) throws IOException {
+        dataOut.writeBoolean(o!=null);
+        if( o!=null ) {
+            byte type = o.getDataStructureType();
+            dataOut.writeByte(type);
+            DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
+            if( dsm == null )
+                throw new IOException("Unknown data type: "+type);
+            dsm.looseMarshal(this, o, dataOut);
+        }
+    }
+
     
     public Short getMarshallCacheIndex(Object o) {
         return (Short) marshallCacheMap.get(o);
@@ -345,4 +411,20 @@ final public class OpenWireFormat implements WireFormat {
         this.cacheEnabled = cacheEnabled;
     }
 
+    public boolean isTightEncodingEnabled() {
+        return tightEncodingEnabled;
+    }
+
+    public void setTightEncodingEnabled(boolean tightEncodingEnabled) {
+        this.tightEncodingEnabled = tightEncodingEnabled;
+    }
+
+    public boolean isPrefixPacketSize() {
+        return prefixPacketSize;
+    }
+
+    public void setPrefixPacketSize(boolean prefixPacketSize) {
+        this.prefixPacketSize = prefixPacketSize;
+    }
+    
 }

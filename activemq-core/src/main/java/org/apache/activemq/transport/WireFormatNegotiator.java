@@ -76,6 +76,8 @@ public class WireFormatNegotiator extends TransportFilter {
             info.setStackTraceEnabled(((OpenWireFormat)wireFormat).isStackTraceEnabled());
             info.setTcpNoDelayEnabled(((OpenWireFormat)wireFormat).isTcpNoDelayEnabled());
             info.setCacheEnabled(((OpenWireFormat)wireFormat).isCacheEnabled());
+            info.setPrefixPacketSize(((OpenWireFormat)wireFormat).isPrefixPacketSize());
+            info.setTightEncodingEnabled(((OpenWireFormat)wireFormat).isTightEncodingEnabled());
         }            
         return info;
     }
@@ -84,7 +86,7 @@ public class WireFormatNegotiator extends TransportFilter {
         if( command.isWireFormatInfo() ) {
             WireFormatInfo info = (WireFormatInfo) command;
             if (log.isDebugEnabled()) {
-                log.debug("Received WireFormat: " + info + " with version: 0x" + Integer.toString(info.getVersion(), 16));
+                log.debug("Received WireFormat: " + info);
             }
             
             if( !info.isValid() ) {
@@ -104,6 +106,12 @@ public class WireFormatNegotiator extends TransportFilter {
                 }
                 if( !info.isCacheEnabled() ) {
                     ((OpenWireFormat)wireFormat).setCacheEnabled(false);
+                }
+                if( !info.isPrefixPacketSize() ) {
+                    ((OpenWireFormat)wireFormat).setPrefixPacketSize(false);
+                }
+                if( !info.isTightEncodingEnabled() ) {
+                    ((OpenWireFormat)wireFormat).setTightEncodingEnabled(false);
                 }
             }
                 

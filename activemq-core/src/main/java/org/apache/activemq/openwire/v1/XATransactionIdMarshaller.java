@@ -60,27 +60,13 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         XATransactionId info = (XATransactionId)o;
         info.setFormatId(dataIn.readInt());
-        if( bs.readBoolean() ) {
-            int size = dataIn.readInt();
-            byte data[] = new byte[size];
-            dataIn.readFully(data);
-            info.setGlobalTransactionId(data);
-            } else {
-            info.setGlobalTransactionId(null);
-        }
-        if( bs.readBoolean() ) {
-            int size = dataIn.readInt();
-            byte data[] = new byte[size];
-            dataIn.readFully(data);
-            info.setBranchQualifier(data);
-            } else {
-            info.setBranchQualifier(null);
-        }
+        info.setGlobalTransactionId(tightUnmarshalByteArray(dataIn, bs));
+        info.setBranchQualifier(tightUnmarshalByteArray(dataIn, bs));
 
     }
 
@@ -88,17 +74,15 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         XATransactionId info = (XATransactionId)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-                bs.writeBoolean(info.getGlobalTransactionId()!=null);
-        rc += info.getGlobalTransactionId()==null ? 0 : info.getGlobalTransactionId().length+4;
-        bs.writeBoolean(info.getBranchQualifier()!=null);
-        rc += info.getBranchQualifier()==null ? 0 : info.getBranchQualifier().length+4;
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+        rc += tightMarshalByteArray1(info.getGlobalTransactionId(), bs);
+    rc += tightMarshalByteArray1(info.getBranchQualifier(), bs);
 
-        return rc + 1;
+        return rc + 4;
     }
 
     /**
@@ -108,19 +92,45 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         XATransactionId info = (XATransactionId)o;
-        dataOut.writeInt(info.getFormatId());
-        if(bs.readBoolean()) {
-           dataOut.writeInt(info.getGlobalTransactionId().length);
-           dataOut.write(info.getGlobalTransactionId());
-        }
-        if(bs.readBoolean()) {
-           dataOut.writeInt(info.getBranchQualifier().length);
-           dataOut.write(info.getBranchQualifier());
-        }
+    dataOut.writeInt(info.getFormatId());
+    tightMarshalByteArray2(info.getGlobalTransactionId(), dataOut, bs);
+    tightMarshalByteArray2(info.getBranchQualifier(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        XATransactionId info = (XATransactionId)o;
+        info.setFormatId(dataIn.readInt());
+        info.setGlobalTransactionId(looseUnmarshalByteArray(dataIn));
+        info.setBranchQualifier(looseUnmarshalByteArray(dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        XATransactionId info = (XATransactionId)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    dataOut.writeInt(info.getFormatId());
+    looseMarshalByteArray(wireFormat, info.getGlobalTransactionId(), dataOut);
+    looseMarshalByteArray(wireFormat, info.getBranchQualifier(), dataOut);
 
     }
 }

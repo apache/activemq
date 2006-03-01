@@ -88,7 +88,7 @@ namespace OpenWire.Client.Core
             else
             {
                 dataOut.Write((byte) 0xE0);
-                DataStreamMarshaller.WriteShort(arrayLimit, dataOut);
+                BaseDataStreamMarshaller.WriteShort(arrayLimit, dataOut);
             }
             
             dataOut.Write(data, 0, arrayLimit);
@@ -97,14 +97,14 @@ namespace OpenWire.Client.Core
         
         public void Unmarshal(BinaryReader dataIn)
         {
-            arrayLimit = DataStreamMarshaller.ReadByte(dataIn);
+            arrayLimit = BaseDataStreamMarshaller.ReadByte(dataIn);
             if ((arrayLimit & 0xE0) != 0)
             {
-                arrayLimit = DataStreamMarshaller.ReadShort(dataIn);
+                arrayLimit = BaseDataStreamMarshaller.ReadShort(dataIn);
             }
             else if ((arrayLimit & 0xC0) != 0)
             {
-                arrayLimit = (short) (DataStreamMarshaller.ReadByte(dataIn) & 0xFF);
+                arrayLimit = (short) (BaseDataStreamMarshaller.ReadByte(dataIn) & 0xFF);
             }
             if (data.Length < arrayLimit)
             {

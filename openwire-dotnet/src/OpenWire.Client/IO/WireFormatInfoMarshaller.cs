@@ -34,7 +34,7 @@ namespace OpenWire.Client.IO
   //        if you need to make a change, please see the Groovy scripts in the
   //        activemq-core module
   //
-  public class WireFormatInfoMarshaller : DataStreamMarshaller
+  public class WireFormatInfoMarshaller : BaseDataStreamMarshaller
   {
 
 
@@ -51,17 +51,18 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         WireFormatInfo info = (WireFormatInfo)o;
         info.Magic = ReadBytes(dataIn, 8);
-        info.Version = DataStreamMarshaller.ReadInt(dataIn);
+        info.Version = BaseDataStreamMarshaller.ReadInt(dataIn);
         info.CacheEnabled = bs.ReadBoolean();
-        info.CompressionEnabled = bs.ReadBoolean();
         info.StackTraceEnabled = bs.ReadBoolean();
         info.TcpNoDelayEnabled = bs.ReadBoolean();
+        info.PrefixPacketSize = bs.ReadBoolean();
+        info.TightEncodingEnabled = bs.ReadBoolean();
 
     }
 
@@ -69,27 +70,29 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         WireFormatInfo info = (WireFormatInfo)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
             bs.WriteBoolean(info.CacheEnabled);
-    bs.WriteBoolean(info.CompressionEnabled);
     bs.WriteBoolean(info.StackTraceEnabled);
     bs.WriteBoolean(info.TcpNoDelayEnabled);
+    bs.WriteBoolean(info.PrefixPacketSize);
+    bs.WriteBoolean(info.TightEncodingEnabled);
 
-        return rc + 9;
+        return rc + 12;
     }
 
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         WireFormatInfo info = (WireFormatInfo)o;
     dataOut.Write(info.Magic, 0, 8);
-    DataStreamMarshaller.WriteInt(info.Version, dataOut);
+    BaseDataStreamMarshaller.WriteInt(info.Version, dataOut);
+    bs.ReadBoolean();
     bs.ReadBoolean();
     bs.ReadBoolean();
     bs.ReadBoolean();

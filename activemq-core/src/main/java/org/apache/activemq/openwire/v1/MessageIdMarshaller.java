@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class MessageIdMarshaller extends DataStreamMarshaller {
+public class MessageIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
@@ -60,13 +60,13 @@ public class MessageIdMarshaller extends DataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageId info = (MessageId)o;
-        info.setProducerId((ProducerId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setProducerSequenceId(unmarshalLong(wireFormat, dataIn, bs));
-        info.setBrokerSequenceId(unmarshalLong(wireFormat, dataIn, bs));
+        info.setProducerId((ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
+        info.setBrokerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
 
     }
 
@@ -74,14 +74,14 @@ public class MessageIdMarshaller extends DataStreamMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         MessageId info = (MessageId)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshal1CachedObject(wireFormat, info.getProducerId(), bs);
-        rc+=marshal1Long(wireFormat, info.getProducerSequenceId(), bs);
-        rc+=marshal1Long(wireFormat, info.getBrokerSequenceId(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getProducerId(), bs);
+    rc+=tightMarshalLong1(wireFormat, info.getProducerSequenceId(), bs);
+    rc+=tightMarshalLong1(wireFormat, info.getBrokerSequenceId(), bs);
 
         return rc + 0;
     }
@@ -93,13 +93,45 @@ public class MessageIdMarshaller extends DataStreamMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageId info = (MessageId)o;
-        marshal2CachedObject(wireFormat, info.getProducerId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getProducerSequenceId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getBrokerSequenceId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getProducerId(), dataOut, bs);
+    tightMarshalLong2(wireFormat, info.getProducerSequenceId(), dataOut, bs);
+    tightMarshalLong2(wireFormat, info.getBrokerSequenceId(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        MessageId info = (MessageId)o;
+        info.setProducerId((ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setProducerSequenceId(looseUnmarshalLong(wireFormat, dataIn));
+        info.setBrokerSequenceId(looseUnmarshalLong(wireFormat, dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        MessageId info = (MessageId)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalCachedObject(wireFormat, info.getProducerId(), dataOut);
+    looseMarshalLong(wireFormat, info.getProducerSequenceId(), dataOut);
+    looseMarshalLong(wireFormat, info.getBrokerSequenceId(), dataOut);
 
     }
 }

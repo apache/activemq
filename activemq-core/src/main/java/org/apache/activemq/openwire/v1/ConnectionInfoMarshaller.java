@@ -60,20 +60,20 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-        info.setConnectionId((ConnectionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setClientId(readString(dataIn, bs));
-        info.setPassword(readString(dataIn, bs));
-        info.setUserName(readString(dataIn, bs));
+        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setClientId(tightUnmarshalString(dataIn, bs));
+        info.setPassword(tightUnmarshalString(dataIn, bs));
+        info.setUserName(tightUnmarshalString(dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
             BrokerId value[] = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) unmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }
@@ -87,16 +87,16 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         ConnectionInfo info = (ConnectionInfo)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshal1CachedObject(wireFormat, info.getConnectionId(), bs);
-        rc += writeString(info.getClientId(), bs);
-        rc += writeString(info.getPassword(), bs);
-        rc += writeString(info.getUserName(), bs);
-        rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
+    rc += tightMarshalString1(info.getClientId(), bs);
+    rc += tightMarshalString1(info.getPassword(), bs);
+    rc += tightMarshalString1(info.getUserName(), bs);
+    rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
 
         return rc + 0;
     }
@@ -108,15 +108,62 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-        marshal2CachedObject(wireFormat, info.getConnectionId(), dataOut, bs);
-        writeString(info.getClientId(), dataOut, bs);
-        writeString(info.getPassword(), dataOut, bs);
-        writeString(info.getUserName(), dataOut, bs);
-        marshalObjectArray(wireFormat, info.getBrokerPath(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalString2(info.getClientId(), dataOut, bs);
+    tightMarshalString2(info.getPassword(), dataOut, bs);
+    tightMarshalString2(info.getUserName(), dataOut, bs);
+    tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        ConnectionInfo info = (ConnectionInfo)o;
+        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setClientId(looseUnmarshalString(dataIn));
+        info.setPassword(looseUnmarshalString(dataIn));
+        info.setUserName(looseUnmarshalString(dataIn));
+
+        if (dataIn.readBoolean()) {
+            short size = dataIn.readShort();
+            BrokerId value[] = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+            }
+            info.setBrokerPath(value);
+        }
+        else {
+            info.setBrokerPath(null);
+        }
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        ConnectionInfo info = (ConnectionInfo)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
+    looseMarshalString(info.getClientId(), dataOut);
+    looseMarshalString(info.getPassword(), dataOut);
+    looseMarshalString(info.getUserName(), dataOut);
+    looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
 
     }
 }

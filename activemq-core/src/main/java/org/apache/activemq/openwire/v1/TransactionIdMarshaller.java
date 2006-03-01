@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public abstract class TransactionIdMarshaller extends DataStreamMarshaller {
+public abstract class TransactionIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
@@ -45,8 +45,8 @@ public abstract class TransactionIdMarshaller extends DataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
     }
 
@@ -54,9 +54,9 @@ public abstract class TransactionIdMarshaller extends DataStreamMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
-        int rc = super.marshal1(wireFormat, o, bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
 
         return rc + 0;
     }
@@ -68,8 +68,30 @@ public abstract class TransactionIdMarshaller extends DataStreamMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        super.looseMarshal(wireFormat, o, dataOut);
 
     }
 }

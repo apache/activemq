@@ -51,28 +51,28 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-        info.ConsumerId = (ConsumerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.ConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Browser = bs.ReadBoolean();
-        info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.PrefetchSize = DataStreamMarshaller.ReadInt(dataIn);
+        info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.PrefetchSize = BaseDataStreamMarshaller.ReadInt(dataIn);
         info.DispatchAsync = bs.ReadBoolean();
-        info.Selector = ReadString(dataIn, bs);
-        info.SubcriptionName = ReadString(dataIn, bs);
+        info.Selector = TightUnmarshalString(dataIn, bs);
+        info.SubcriptionName = TightUnmarshalString(dataIn, bs);
         info.NoLocal = bs.ReadBoolean();
         info.Exclusive = bs.ReadBoolean();
         info.Retroactive = bs.ReadBoolean();
-        info.Priority = DataStreamMarshaller.ReadByte(dataIn);
+        info.Priority = BaseDataStreamMarshaller.ReadByte(dataIn);
 
         if (bs.ReadBoolean()) {
-            short size = DataStreamMarshaller.ReadShort(dataIn);
+            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) UnmarshalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (BrokerId) TightUnmarshalNestedObject(wireFormat,dataIn, bs);
             }
             info.BrokerPath = value;
         }
@@ -87,44 +87,44 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         ConsumerInfo info = (ConsumerInfo)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.ConsumerId, bs);
     bs.WriteBoolean(info.Browser);
-    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
         bs.WriteBoolean(info.DispatchAsync);
-    rc += WriteString(info.Selector, bs);
-    rc += WriteString(info.SubcriptionName, bs);
+    rc += TightMarshalString1(info.Selector, bs);
+    rc += TightMarshalString1(info.SubcriptionName, bs);
     bs.WriteBoolean(info.NoLocal);
     bs.WriteBoolean(info.Exclusive);
     bs.WriteBoolean(info.Retroactive);
-        rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
+        rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
     bs.WriteBoolean(info.NetworkSubscription);
 
-        return rc + 2;
+        return rc + 5;
     }
 
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-    Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
     bs.ReadBoolean();
-    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-    DataStreamMarshaller.WriteInt(info.PrefetchSize, dataOut);
+    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
+    BaseDataStreamMarshaller.WriteInt(info.PrefetchSize, dataOut);
     bs.ReadBoolean();
-    WriteString(info.Selector, dataOut, bs);
-    WriteString(info.SubcriptionName, dataOut, bs);
+    TightMarshalString2(info.Selector, dataOut, bs);
+    TightMarshalString2(info.SubcriptionName, dataOut, bs);
     bs.ReadBoolean();
     bs.ReadBoolean();
     bs.ReadBoolean();
-    DataStreamMarshaller.WriteByte(info.Priority, dataOut);
-    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
+    BaseDataStreamMarshaller.WriteByte(info.Priority, dataOut);
+    TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
     bs.ReadBoolean();
 
     }

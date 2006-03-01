@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public abstract class ActiveMQDestinationMarshaller extends DataStreamMarshaller {
+public abstract class ActiveMQDestinationMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
@@ -45,11 +45,11 @@ public abstract class ActiveMQDestinationMarshaller extends DataStreamMarshaller
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ActiveMQDestination info = (ActiveMQDestination)o;
-        info.setPhysicalName(readString(dataIn, bs));
+        info.setPhysicalName(tightUnmarshalString(dataIn, bs));
 
     }
 
@@ -57,12 +57,12 @@ public abstract class ActiveMQDestinationMarshaller extends DataStreamMarshaller
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         ActiveMQDestination info = (ActiveMQDestination)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += writeString(info.getPhysicalName(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalString1(info.getPhysicalName(), bs);
 
         return rc + 0;
     }
@@ -74,11 +74,39 @@ public abstract class ActiveMQDestinationMarshaller extends DataStreamMarshaller
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ActiveMQDestination info = (ActiveMQDestination)o;
-        writeString(info.getPhysicalName(), dataOut, bs);
+    tightMarshalString2(info.getPhysicalName(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        ActiveMQDestination info = (ActiveMQDestination)o;
+        info.setPhysicalName(looseUnmarshalString(dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        ActiveMQDestination info = (ActiveMQDestination)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalString(info.getPhysicalName(), dataOut);
 
     }
 }

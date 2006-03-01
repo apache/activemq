@@ -60,16 +60,16 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageAck info = (MessageAck)o;
-        info.setDestination((ActiveMQDestination) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setTransactionId((TransactionId) unmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setConsumerId((ConsumerId) unmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setAckType(dataIn.readByte());
-        info.setFirstMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setLastMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setFirstMessageId((MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setLastMessageId((MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setMessageCount(dataIn.readInt());
 
     }
@@ -78,18 +78,18 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         MessageAck info = (MessageAck)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
-        rc += marshal1CachedObject(wireFormat, info.getTransactionId(), bs);
-        rc += marshal1CachedObject(wireFormat, info.getConsumerId(), bs);
-                rc += marshal1NestedObject(wireFormat, info.getFirstMessageId(), bs);
-        rc += marshal1NestedObject(wireFormat, info.getLastMessageId(), bs);
-        
-        return rc + 2;
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getTransactionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, info.getConsumerId(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, info.getFirstMessageId(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, info.getLastMessageId(), bs);
+    
+        return rc + 5;
     }
 
     /**
@@ -99,17 +99,57 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageAck info = (MessageAck)o;
-        marshal2CachedObject(wireFormat, info.getDestination(), dataOut, bs);
-        marshal2CachedObject(wireFormat, info.getTransactionId(), dataOut, bs);
-        marshal2CachedObject(wireFormat, info.getConsumerId(), dataOut, bs);
-        dataOut.writeByte(info.getAckType());
-        marshal2NestedObject(wireFormat, info.getFirstMessageId(), dataOut, bs);
-        marshal2NestedObject(wireFormat, info.getLastMessageId(), dataOut, bs);
-        dataOut.writeInt(info.getMessageCount());
+    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getTransactionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, info.getConsumerId(), dataOut, bs);
+    dataOut.writeByte(info.getAckType());
+    tightMarshalNestedObject2(wireFormat, info.getFirstMessageId(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, info.getLastMessageId(), dataOut, bs);
+    dataOut.writeInt(info.getMessageCount());
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        MessageAck info = (MessageAck)o;
+        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setTransactionId((TransactionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConsumerId((ConsumerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setAckType(dataIn.readByte());
+        info.setFirstMessageId((MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setLastMessageId((MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setMessageCount(dataIn.readInt());
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        MessageAck info = (MessageAck)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalCachedObject(wireFormat, info.getTransactionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, info.getConsumerId(), dataOut);
+    dataOut.writeByte(info.getAckType());
+    looseMarshalNestedObject(wireFormat, info.getFirstMessageId(), dataOut);
+    looseMarshalNestedObject(wireFormat, info.getLastMessageId(), dataOut);
+    dataOut.writeInt(info.getMessageCount());
 
     }
 }

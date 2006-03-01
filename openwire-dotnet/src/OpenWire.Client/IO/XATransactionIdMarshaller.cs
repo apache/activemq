@@ -51,12 +51,12 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         XATransactionId info = (XATransactionId)o;
-        info.FormatId = DataStreamMarshaller.ReadInt(dataIn);
+        info.FormatId = BaseDataStreamMarshaller.ReadInt(dataIn);
         info.GlobalTransactionId = ReadBytes(dataIn, bs.ReadBoolean());
         info.BranchQualifier = ReadBytes(dataIn, bs.ReadBoolean());
 
@@ -66,32 +66,32 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         XATransactionId info = (XATransactionId)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
         bs.WriteBoolean(info.GlobalTransactionId!=null);
         rc += info.GlobalTransactionId==null ? 0 : info.GlobalTransactionId.Length+4;
     bs.WriteBoolean(info.BranchQualifier!=null);
         rc += info.BranchQualifier==null ? 0 : info.BranchQualifier.Length+4;
 
-        return rc + 1;
+        return rc + 4;
     }
 
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         XATransactionId info = (XATransactionId)o;
-    DataStreamMarshaller.WriteInt(info.FormatId, dataOut);
+    BaseDataStreamMarshaller.WriteInt(info.FormatId, dataOut);
     if(bs.ReadBoolean()) {
-           DataStreamMarshaller.WriteInt(info.GlobalTransactionId.Length, dataOut);
+           BaseDataStreamMarshaller.WriteInt(info.GlobalTransactionId.Length, dataOut);
            dataOut.Write(info.GlobalTransactionId);
         }
     if(bs.ReadBoolean()) {
-           DataStreamMarshaller.WriteInt(info.BranchQualifier.Length, dataOut);
+           BaseDataStreamMarshaller.WriteInt(info.BranchQualifier.Length, dataOut);
            dataOut.Write(info.BranchQualifier);
         }
 

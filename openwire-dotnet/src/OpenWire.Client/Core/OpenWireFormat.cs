@@ -30,7 +30,7 @@ namespace OpenWire.Client.Core
     {
         static private char[] MAGIC = new char[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
         
-        private DataStreamMarshaller[] dataMarshallers;
+        private BaseDataStreamMarshaller[] dataMarshallers;
         private const byte NULL_TYPE = 0;
         private WireFormatInfo wireFormatInfo = new WireFormatInfo();
         
@@ -41,8 +41,10 @@ namespace OpenWire.Client.Core
             wireFormatInfo.Version = 1;
             wireFormatInfo.StackTraceEnabled = true;
             wireFormatInfo.TcpNoDelayEnabled = true;
+			wireFormatInfo.PrefixPacketSize = true;
+			wireFormatInfo.TightEncodingEnabled = true;
             
-            dataMarshallers = new DataStreamMarshaller[256];
+            dataMarshallers = new BaseDataStreamMarshaller[256];
             MarshallerFactory factory = new MarshallerFactory();
             factory.configure(this);
         }
@@ -59,7 +61,7 @@ namespace OpenWire.Client.Core
             }
         }
         
-        public void addMarshaller(DataStreamMarshaller marshaller)
+        public void addMarshaller(BaseDataStreamMarshaller marshaller)
         {
             byte type = marshaller.GetDataStructureType();
             dataMarshallers[type & 0xFF] = marshaller;
@@ -72,43 +74,43 @@ namespace OpenWire.Client.Core
             {
                 DataStructure c = (DataStructure) o;
                 byte type = c.GetDataStructureType();
-                DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
+                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[type & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + type);
                 
                 BooleanStream bs = new BooleanStream();
-                size += dsm.Marshal1(this, c, bs);
+                size += dsm.TightMarshal1(this, c, bs);
                 size += bs.MarshalledSize();
                 
-                DataStreamMarshaller.WriteInt(size, ds);
-                DataStreamMarshaller.WriteByte(type, ds);
+                BaseDataStreamMarshaller.WriteInt(size, ds);
+                BaseDataStreamMarshaller.WriteByte(type, ds);
                 bs.Marshal(ds);
-                dsm.Marshal2(this, c, ds, bs);
+                dsm.TightMarshal2(this, c, ds, bs);
             }
             else
             {
-                DataStreamMarshaller.WriteInt(size, ds);
-                DataStreamMarshaller.WriteByte(NULL_TYPE, ds);
+                BaseDataStreamMarshaller.WriteInt(size, ds);
+                BaseDataStreamMarshaller.WriteByte(NULL_TYPE, ds);
             }
         }
         
         public Object Unmarshal(BinaryReader dis)
         {
             // lets ignore the size of the packet
-            DataStreamMarshaller.ReadInt(dis);
+            BaseDataStreamMarshaller.ReadInt(dis);
             
             // first byte is the type of the packet
-            byte dataType = DataStreamMarshaller.ReadByte(dis);
+            byte dataType = BaseDataStreamMarshaller.ReadByte(dis);
             if (dataType != NULL_TYPE)
             {
-                DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[dataType & 0xFF];
+                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[dataType & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + dataType);
                 //Console.WriteLine("Parsing type: " + dataType + " with: " + dsm);
                 Object data = dsm.CreateObject();
                 BooleanStream bs = new BooleanStream();
                 bs.Unmarshal(dis);
-                dsm.Unmarshal(this, data, dis, bs);
+                dsm.TightUnmarshal(this, data, dis, bs);
                 return data;
             }
             else
@@ -117,7 +119,7 @@ namespace OpenWire.Client.Core
             }
         }
         
-        public int Marshal1NestedObject(DataStructure o, BooleanStream bs)
+        public int TightMarshalNestedObject1(DataStructure o, BooleanStream bs)
         {
             bs.WriteBoolean(o != null);
             if (o == null)
@@ -138,20 +140,20 @@ namespace OpenWire.Client.Core
             if (type == 0) {
                 throw new IOException("No valid data structure type for: " + o + " of type: " + o.GetType());
             }
-            DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
+            BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[type & 0xFF];
             if (dsm == null)
                 throw new IOException("Unknown data type: " + type);
             //Console.WriteLine("Marshalling type: " + type + " with structure: " + o);
-            return 1 + dsm.Marshal1(this, o, bs);
+            return 1 + dsm.TightMarshal1(this, o, bs);
         }
         
-        public void Marshal2NestedObject(DataStructure o, BinaryWriter ds, BooleanStream bs)
+        public void TightMarshalNestedObject2(DataStructure o, BinaryWriter ds, BooleanStream bs)
         {
             if (!bs.ReadBoolean())
                 return ;
             
             byte type = o.GetDataStructureType();
-            DataStreamMarshaller.WriteByte(type, ds);
+            BaseDataStreamMarshaller.WriteByte(type, ds);
             
             if (o.IsMarshallAware() && bs.ReadBoolean())
             {
@@ -162,32 +164,32 @@ namespace OpenWire.Client.Core
             else
             {
                 
-                DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
+                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[type & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + type);
-                dsm.Marshal2(this, o, ds, bs);
+                dsm.TightMarshal2(this, o, ds, bs);
             }
         }
         
-        public DataStructure UnmarshalNestedObject(BinaryReader dis, BooleanStream bs)
+        public DataStructure TightUnmarshalNestedObject(BinaryReader dis, BooleanStream bs)
         {
             if (bs.ReadBoolean())
             {
                 
-                byte dataType = DataStreamMarshaller.ReadByte(dis);
-                DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[dataType & 0xFF];
+                byte dataType = BaseDataStreamMarshaller.ReadByte(dis);
+                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[dataType & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + dataType);
                 DataStructure data = dsm.CreateObject();
                 
                 if (data.IsMarshallAware() && bs.ReadBoolean())
                 {
-                    DataStreamMarshaller.ReadInt(dis);
-                    DataStreamMarshaller.ReadByte(dis);
+                    BaseDataStreamMarshaller.ReadInt(dis);
+                    BaseDataStreamMarshaller.ReadByte(dis);
                     
                     BooleanStream bs2 = new BooleanStream();
                     bs2.Unmarshal(dis);
-                    dsm.Unmarshal(this, data, dis, bs2);
+                    dsm.TightUnmarshal(this, data, dis, bs2);
                     
                     // TODO: extract the sequence from the dis and associate it.
                     //                MarshallAware ma = (MarshallAware)data
@@ -195,7 +197,7 @@ namespace OpenWire.Client.Core
                 }
                 else
                 {
-                    dsm.Unmarshal(this, data, dis, bs);
+                    dsm.TightUnmarshal(this, data, dis, bs);
                 }
                 
                 return data;

@@ -51,21 +51,21 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-        info.ConnectionId = (ConnectionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.OperationType = DataStreamMarshaller.ReadByte(dataIn);
-        info.Timeout = UnmarshalLong(wireFormat, dataIn, bs);
+        info.ConnectionId = (ConnectionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.OperationType = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.Timeout = TightUnmarshalLong(wireFormat, dataIn, bs);
 
         if (bs.ReadBoolean()) {
-            short size = DataStreamMarshaller.ReadShort(dataIn);
+            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) UnmarshalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (BrokerId) TightUnmarshalNestedObject(wireFormat,dataIn, bs);
             }
             info.BrokerPath = value;
         }
@@ -79,14 +79,14 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         DestinationInfo info = (DestinationInfo)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-        rc += Marshal1Long(wireFormat, info.Timeout, bs);
-    rc += MarshalObjectArray(wireFormat, info.BrokerPath, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.ConnectionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
+        rc += TightMarshalLong1(wireFormat, info.Timeout, bs);
+    rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
 
         return rc + 1;
     }
@@ -94,15 +94,15 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-    Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-    DataStreamMarshaller.WriteByte(info.OperationType, dataOut);
-    Marshal2Long(wireFormat, info.Timeout, dataOut, bs);
-    MarshalObjectArray(wireFormat, info.BrokerPath, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.ConnectionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
+    BaseDataStreamMarshaller.WriteByte(info.OperationType, dataOut);
+    TightMarshalLong2(wireFormat, info.Timeout, dataOut, bs);
+    TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
 
     }
   }

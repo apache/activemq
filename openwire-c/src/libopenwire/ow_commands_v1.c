@@ -669,7 +669,7 @@ ow_JournalQueueAck *ow_JournalQueueAck_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_JournalQueueAck(ow_bit_buffer *buffer, ow_JournalQueueAck *object)
 {
-   ow_marshal1_DataStructureSupport(buffer, (ow_DataStructureSupport*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->destination));
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->messageAck));
    
@@ -677,7 +677,7 @@ apr_status_t ow_marshal1_JournalQueueAck(ow_bit_buffer *buffer, ow_JournalQueueA
 }
 apr_status_t ow_marshal2_JournalQueueAck(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_JournalQueueAck *object)
 {
-   ow_marshal2_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->destination));
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->messageAck));
    
@@ -686,7 +686,7 @@ apr_status_t ow_marshal2_JournalQueueAck(ow_byte_buffer *buffer, ow_bit_buffer *
 
 apr_status_t ow_unmarshal_JournalQueueAck(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_JournalQueueAck *object, apr_pool_t *pool)
 {
-   ow_unmarshal_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->destination, pool));
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->messageAck, pool));
    
@@ -721,9 +721,10 @@ apr_status_t ow_marshal1_WireFormatInfo(ow_bit_buffer *buffer, ow_WireFormatInfo
    
    
    ow_bit_buffer_append(buffer, object->cacheEnabled);
-   ow_bit_buffer_append(buffer, object->compressionEnabled);
    ow_bit_buffer_append(buffer, object->stackTraceEnabled);
    ow_bit_buffer_append(buffer, object->tcpNoDelayEnabled);
+   ow_bit_buffer_append(buffer, object->prefixPacketSize);
+   ow_bit_buffer_append(buffer, object->tightEncodingEnabled);
    
 	return APR_SUCCESS;
 }
@@ -732,6 +733,7 @@ apr_status_t ow_marshal2_WireFormatInfo(ow_byte_buffer *buffer, ow_bit_buffer *b
    ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_byte_array_const_size(buffer, object->magic, 8));
    SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->version));
+   ow_bit_buffer_read(bitbuffer);
    ow_bit_buffer_read(bitbuffer);
    ow_bit_buffer_read(bitbuffer);
    ow_bit_buffer_read(bitbuffer);
@@ -746,9 +748,10 @@ apr_status_t ow_unmarshal_WireFormatInfo(ow_byte_array *buffer, ow_bit_buffer *b
    SUCCESS_CHECK(ow_unmarshal_byte_array_const_size(buffer, &object->magic, 8, pool));
    SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->version));
    object->cacheEnabled = ow_bit_buffer_read(bitbuffer);
-   object->compressionEnabled = ow_bit_buffer_read(bitbuffer);
    object->stackTraceEnabled = ow_bit_buffer_read(bitbuffer);
    object->tcpNoDelayEnabled = ow_bit_buffer_read(bitbuffer);
+   object->prefixPacketSize = ow_bit_buffer_read(bitbuffer);
+   object->tightEncodingEnabled = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -1222,20 +1225,20 @@ ow_KeepAliveInfo *ow_KeepAliveInfo_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_KeepAliveInfo(ow_bit_buffer *buffer, ow_KeepAliveInfo *object)
 {
-   ow_marshal1_DataStructureSupport(buffer, (ow_DataStructureSupport*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_KeepAliveInfo(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_KeepAliveInfo *object)
 {
-   ow_marshal2_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    
 	return APR_SUCCESS;
 }
 
 apr_status_t ow_unmarshal_KeepAliveInfo(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_KeepAliveInfo *object, apr_pool_t *pool)
 {
-   ow_unmarshal_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    
 	return APR_SUCCESS;
 }
@@ -1396,7 +1399,7 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
 
 apr_status_t ow_marshal1_BaseCommand(ow_bit_buffer *buffer, ow_BaseCommand *object)
 {
-   ow_marshal1_DataStructureSupport(buffer, (ow_DataStructureSupport*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    
    ow_bit_buffer_append(buffer, object->responseRequired);
    
@@ -1404,7 +1407,7 @@ apr_status_t ow_marshal1_BaseCommand(ow_bit_buffer *buffer, ow_BaseCommand *obje
 }
 apr_status_t ow_marshal2_BaseCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_BaseCommand *object)
 {
-   ow_marshal2_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_byte_buffer_append_short(buffer, object->commandId));
    ow_bit_buffer_read(bitbuffer);
    
@@ -1413,7 +1416,7 @@ apr_status_t ow_marshal2_BaseCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitb
 
 apr_status_t ow_unmarshal_BaseCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_BaseCommand *object, apr_pool_t *pool)
 {
-   ow_unmarshal_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_byte_array_read_short(buffer, &object->commandId));
    object->responseRequired = ow_bit_buffer_read(bitbuffer);
    
@@ -1499,14 +1502,14 @@ ow_JournalTrace *ow_JournalTrace_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_JournalTrace(ow_bit_buffer *buffer, ow_JournalTrace *object)
 {
-   ow_marshal1_DataStructureSupport(buffer, (ow_DataStructureSupport*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    ow_marshal1_string(buffer, object->message);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_JournalTrace(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_JournalTrace *object)
 {
-   ow_marshal2_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->message));
    
 	return APR_SUCCESS;
@@ -1514,7 +1517,7 @@ apr_status_t ow_marshal2_JournalTrace(ow_byte_buffer *buffer, ow_bit_buffer *bit
 
 apr_status_t ow_unmarshal_JournalTrace(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_JournalTrace *object, apr_pool_t *pool)
 {
-   ow_unmarshal_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->message, pool));
    
 	return APR_SUCCESS;
@@ -1670,7 +1673,7 @@ ow_JournalTopicAck *ow_JournalTopicAck_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_JournalTopicAck(ow_bit_buffer *buffer, ow_JournalTopicAck *object)
 {
-   ow_marshal1_DataStructureSupport(buffer, (ow_DataStructureSupport*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->destination));
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->messageId));
    ow_marshal1_long(buffer, object->messageSequenceId);
@@ -1682,7 +1685,7 @@ apr_status_t ow_marshal1_JournalTopicAck(ow_bit_buffer *buffer, ow_JournalTopicA
 }
 apr_status_t ow_marshal2_JournalTopicAck(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_JournalTopicAck *object)
 {
-   ow_marshal2_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->destination));
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->messageId));
    SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->messageSequenceId));
@@ -1695,7 +1698,7 @@ apr_status_t ow_marshal2_JournalTopicAck(ow_byte_buffer *buffer, ow_bit_buffer *
 
 apr_status_t ow_unmarshal_JournalTopicAck(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_JournalTopicAck *object, apr_pool_t *pool)
 {
-   ow_unmarshal_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->destination, pool));
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->messageId, pool));
    SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->messageSequenceId, pool));
@@ -2250,14 +2253,14 @@ ow_boolean ow_is_a_ActiveMQDestination(ow_DataStructure *object) {
 
 apr_status_t ow_marshal1_ActiveMQDestination(ow_bit_buffer *buffer, ow_ActiveMQDestination *object)
 {
-   ow_marshal1_JNDIBaseStorable(buffer, (ow_JNDIBaseStorable*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    ow_marshal1_string(buffer, object->physicalName);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_ActiveMQDestination(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_ActiveMQDestination *object)
 {
-   ow_marshal2_JNDIBaseStorable(buffer, bitbuffer, (ow_JNDIBaseStorable*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->physicalName));
    
 	return APR_SUCCESS;
@@ -2265,7 +2268,7 @@ apr_status_t ow_marshal2_ActiveMQDestination(ow_byte_buffer *buffer, ow_bit_buff
 
 apr_status_t ow_unmarshal_ActiveMQDestination(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_ActiveMQDestination *object, apr_pool_t *pool)
 {
-   ow_unmarshal_JNDIBaseStorable(buffer, bitbuffer, (ow_JNDIBaseStorable*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->physicalName, pool));
    
 	return APR_SUCCESS;
@@ -2451,7 +2454,7 @@ ow_JournalTransaction *ow_JournalTransaction_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_JournalTransaction(ow_bit_buffer *buffer, ow_JournalTransaction *object)
 {
-   ow_marshal1_DataStructureSupport(buffer, (ow_DataStructureSupport*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->transactionId));
    
    ow_bit_buffer_append(buffer, object->wasPrepared);
@@ -2460,7 +2463,7 @@ apr_status_t ow_marshal1_JournalTransaction(ow_bit_buffer *buffer, ow_JournalTra
 }
 apr_status_t ow_marshal2_JournalTransaction(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_JournalTransaction *object)
 {
-   ow_marshal2_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->transactionId));
    SUCCESS_CHECK(ow_byte_buffer_append_byte(buffer, object->type));
    ow_bit_buffer_read(bitbuffer);
@@ -2470,7 +2473,7 @@ apr_status_t ow_marshal2_JournalTransaction(ow_byte_buffer *buffer, ow_bit_buffe
 
 apr_status_t ow_unmarshal_JournalTransaction(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_JournalTransaction *object, apr_pool_t *pool)
 {
-   ow_unmarshal_DataStructureSupport(buffer, bitbuffer, (ow_DataStructureSupport*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->transactionId, pool));
    SUCCESS_CHECK(ow_byte_array_read_byte(buffer, &object->type));
    object->wasPrepared = ow_bit_buffer_read(bitbuffer);

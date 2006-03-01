@@ -37,13 +37,13 @@ namespace OpenWire.Client.Core
         public static PrimitiveMap Unmarshal(byte[] data)
         {
             PrimitiveMap answer = new PrimitiveMap();
-            answer.dictionary = DataStreamMarshaller.UnmarshalPrimitiveMap(data);
+            answer.dictionary = BaseDataStreamMarshaller.UnmarshalPrimitiveMap(data);
             return answer;
         }
         
         public byte[] Marshal()
         {
-            return DataStreamMarshaller.MarshalPrimitiveMap(dictionary);
+            return BaseDataStreamMarshaller.MarshalPrimitiveMap(dictionary);
         }
         
         

@@ -124,7 +124,7 @@ namespace OpenWire.Client.Commands
         public string JMSMessageId
         {
             get {
-                return DataStreamMarshaller.ToString(MessageId);
+                return BaseDataStreamMarshaller.ToString(MessageId);
             }
         }
         
@@ -254,7 +254,7 @@ namespace OpenWire.Client.Commands
                 }
                 if (txnId != null)
                 {
-                    return DataStreamMarshaller.ToString(txnId);
+                    return BaseDataStreamMarshaller.ToString(txnId);
                 }
                 return null;
             }

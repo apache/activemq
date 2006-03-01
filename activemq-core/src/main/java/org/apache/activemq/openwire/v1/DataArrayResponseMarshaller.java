@@ -60,8 +60,8 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
 
@@ -69,7 +69,7 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
             short size = dataIn.readShort();
             DataStructure value[] = new DataStructure[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (DataStructure) unmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (DataStructure) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setData(value);
         }
@@ -83,12 +83,12 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         DataArrayResponse info = (DataArrayResponse)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshalObjectArray(wireFormat, info.getData(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalObjectArray1(wireFormat, info.getData(), bs);
 
         return rc + 0;
     }
@@ -100,11 +100,50 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
-        marshalObjectArray(wireFormat, info.getData(), dataOut, bs);
+    tightMarshalObjectArray2(wireFormat, info.getData(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        DataArrayResponse info = (DataArrayResponse)o;
+
+        if (dataIn.readBoolean()) {
+            short size = dataIn.readShort();
+            DataStructure value[] = new DataStructure[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (DataStructure) looseUnmarsalNestedObject(wireFormat,dataIn);
+            }
+            info.setData(value);
+        }
+        else {
+            info.setData(null);
+        }
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        DataArrayResponse info = (DataArrayResponse)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalObjectArray(wireFormat, info.getData(), dataOut);
 
     }
 }

@@ -60,12 +60,12 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConnectionError info = (ConnectionError)o;
-        info.setException((Throwable) unmarsalThrowable(wireFormat, dataIn, bs));
-        info.setConnectionId((ConnectionId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setException((Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
+        info.setConnectionId((ConnectionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -73,13 +73,13 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         ConnectionError info = (ConnectionError)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshalThrowable(wireFormat, info.getException(), bs);
-        rc += marshal1NestedObject(wireFormat, info.getConnectionId(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalThrowable1(wireFormat, info.getException(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, info.getConnectionId(), bs);
 
         return rc + 0;
     }
@@ -91,12 +91,42 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionError info = (ConnectionError)o;
-        marshalThrowable(wireFormat, info.getException(), dataOut, bs);
-        marshal2NestedObject(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalThrowable2(wireFormat, info.getException(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        ConnectionError info = (ConnectionError)o;
+        info.setException((Throwable) looseUnmarsalThrowable(wireFormat, dataIn));
+        info.setConnectionId((ConnectionId) looseUnmarsalNestedObject(wireFormat, dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        ConnectionError info = (ConnectionError)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalThrowable(wireFormat, info.getException(), dataOut);
+    looseMarshalNestedObject(wireFormat, info.getConnectionId(), dataOut);
 
     }
 }

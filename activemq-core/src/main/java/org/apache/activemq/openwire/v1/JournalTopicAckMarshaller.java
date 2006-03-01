@@ -36,7 +36,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class JournalTopicAckMarshaller extends DataStreamMarshaller {
+public class JournalTopicAckMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
@@ -60,16 +60,16 @@ public class JournalTopicAckMarshaller extends DataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void unmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
-        super.unmarshal(wireFormat, o, dataIn, bs);
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+        super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-        info.setDestination((ActiveMQDestination) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageId((MessageId) unmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageSequenceId(unmarshalLong(wireFormat, dataIn, bs));
-        info.setSubscritionName(readString(dataIn, bs));
-        info.setClientId(readString(dataIn, bs));
-        info.setTransactionId((TransactionId) unmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setDestination((ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageId((MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
+        info.setSubscritionName(tightUnmarshalString(dataIn, bs));
+        info.setClientId(tightUnmarshalString(dataIn, bs));
+        info.setTransactionId((TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -77,17 +77,17 @@ public class JournalTopicAckMarshaller extends DataStreamMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public int marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
+    public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
         JournalTopicAck info = (JournalTopicAck)o;
 
-        int rc = super.marshal1(wireFormat, o, bs);
-        rc += marshal1NestedObject(wireFormat, info.getDestination(), bs);
-        rc += marshal1NestedObject(wireFormat, info.getMessageId(), bs);
-        rc+=marshal1Long(wireFormat, info.getMessageSequenceId(), bs);
-        rc += writeString(info.getSubscritionName(), bs);
-        rc += writeString(info.getClientId(), bs);
-        rc += marshal1NestedObject(wireFormat, info.getTransactionId(), bs);
+        int rc = super.tightMarshal1(wireFormat, o, bs);
+    rc += tightMarshalNestedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, info.getMessageId(), bs);
+    rc+=tightMarshalLong1(wireFormat, info.getMessageSequenceId(), bs);
+    rc += tightMarshalString1(info.getSubscritionName(), bs);
+    rc += tightMarshalString1(info.getClientId(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, info.getTransactionId(), bs);
 
         return rc + 0;
     }
@@ -99,16 +99,54 @@ public class JournalTopicAckMarshaller extends DataStreamMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void marshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
-        super.marshal2(wireFormat, o, dataOut, bs);
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+        super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-        marshal2NestedObject(wireFormat, info.getDestination(), dataOut, bs);
-        marshal2NestedObject(wireFormat, info.getMessageId(), dataOut, bs);
-        marshal2Long(wireFormat, info.getMessageSequenceId(), dataOut, bs);
-        writeString(info.getSubscritionName(), dataOut, bs);
-        writeString(info.getClientId(), dataOut, bs);
-        marshal2NestedObject(wireFormat, info.getTransactionId(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, info.getMessageId(), dataOut, bs);
+    tightMarshalLong2(wireFormat, info.getMessageSequenceId(), dataOut, bs);
+    tightMarshalString2(info.getSubscritionName(), dataOut, bs);
+    tightMarshalString2(info.getClientId(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, info.getTransactionId(), dataOut, bs);
+
+    }
+
+    /**
+     * Un-marshal an object instance from the data input stream
+     *
+     * @param o the object to un-marshal
+     * @param dataIn the data input stream to build the object from
+     * @throws IOException
+     */
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+        super.looseUnmarshal(wireFormat, o, dataIn);
+
+        JournalTopicAck info = (JournalTopicAck)o;
+        info.setDestination((ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setMessageId((MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setMessageSequenceId(looseUnmarshalLong(wireFormat, dataIn));
+        info.setSubscritionName(looseUnmarshalString(dataIn));
+        info.setClientId(looseUnmarshalString(dataIn));
+        info.setTransactionId((TransactionId) looseUnmarsalNestedObject(wireFormat, dataIn));
+
+    }
+
+
+    /**
+     * Write the booleans that this object uses to a BooleanStream
+     */
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+
+        JournalTopicAck info = (JournalTopicAck)o;
+
+        super.looseMarshal(wireFormat, o, dataOut);
+    looseMarshalNestedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalNestedObject(wireFormat, info.getMessageId(), dataOut);
+    looseMarshalLong(wireFormat, info.getMessageSequenceId(), dataOut);
+    looseMarshalString(info.getSubscritionName(), dataOut);
+    looseMarshalString(info.getClientId(), dataOut);
+    looseMarshalNestedObject(wireFormat, info.getTransactionId(), dataOut);
 
     }
 }

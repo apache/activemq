@@ -34,7 +34,7 @@ namespace OpenWire.Client.IO
   //        if you need to make a change, please see the Groovy scripts in the
   //        activemq-core module
   //
-  public class SubscriptionInfoMarshaller : DataStreamMarshaller
+  public class SubscriptionInfoMarshaller : BaseDataStreamMarshaller
   {
 
 
@@ -51,15 +51,15 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         SubscriptionInfo info = (SubscriptionInfo)o;
-        info.ClientId = ReadString(dataIn, bs);
-        info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.Selector = ReadString(dataIn, bs);
-        info.SubcriptionName = ReadString(dataIn, bs);
+        info.ClientId = TightUnmarshalString(dataIn, bs);
+        info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.Selector = TightUnmarshalString(dataIn, bs);
+        info.SubcriptionName = TightUnmarshalString(dataIn, bs);
 
     }
 
@@ -67,14 +67,14 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         SubscriptionInfo info = (SubscriptionInfo)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += WriteString(info.ClientId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-    rc += WriteString(info.Selector, bs);
-    rc += WriteString(info.SubcriptionName, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalString1(info.ClientId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
+    rc += TightMarshalString1(info.Selector, bs);
+    rc += TightMarshalString1(info.SubcriptionName, bs);
 
         return rc + 0;
     }
@@ -82,14 +82,14 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         SubscriptionInfo info = (SubscriptionInfo)o;
-    WriteString(info.ClientId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-    WriteString(info.Selector, dataOut, bs);
-    WriteString(info.SubcriptionName, dataOut, bs);
+    TightMarshalString2(info.ClientId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
+    TightMarshalString2(info.Selector, dataOut, bs);
+    TightMarshalString2(info.SubcriptionName, dataOut, bs);
 
     }
   }

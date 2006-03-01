@@ -51,14 +51,14 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-        info.ConnectionId = (ConnectionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.TransactionId = (TransactionId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.Type = DataStreamMarshaller.ReadByte(dataIn);
+        info.ConnectionId = (ConnectionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.TransactionId = (TransactionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.Type = BaseDataStreamMarshaller.ReadByte(dataIn);
 
     }
 
@@ -66,12 +66,12 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         TransactionInfo info = (TransactionInfo)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1CachedObject(wireFormat, info.ConnectionId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.TransactionId, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.ConnectionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.TransactionId, bs);
     
         return rc + 1;
     }
@@ -79,13 +79,13 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-    Marshal2CachedObject(wireFormat, info.ConnectionId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.TransactionId, dataOut, bs);
-    DataStreamMarshaller.WriteByte(info.Type, dataOut);
+    TightMarshalCachedObject2(wireFormat, info.ConnectionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
+    BaseDataStreamMarshaller.WriteByte(info.Type, dataOut);
 
     }
   }

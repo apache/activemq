@@ -94,23 +94,27 @@ ow_ConnectionId *create_ConnectionId(amqcs_connection *connection, apr_pool_t *p
             );
    
    rc = ow_ConnectionId_create(pool);   
-   rc->connectionId = ow_string_create_from_cstring(pool, buff);   
+   rc->value = ow_string_create_from_cstring(pool, buff);   
    return rc;
 }
 
 ow_ProducerId *create_ProducerId(amqcs_connection *connection, apr_pool_t *pool) {   
    ow_ProducerId *rc;
    rc = ow_ProducerId_create(pool);   
-   rc->connectionId = connection->info->connectionId->connectionId;
+   rc->connectionId = connection->info->connectionId->value;
    rc->sessionId = -1;
-   rc->producerId = 1;
+   rc->value = 1;
    return rc;
 }
 
 ow_WireFormatInfo *create_WireFormatInfo(apr_pool_t *pool) {
    ow_WireFormatInfo *info = ow_WireFormatInfo_create(pool);
    info->version = OW_WIREFORMAT_VERSION;
-   info->options = 0;
+   info->cacheEnabled = 0;
+   info->prefixPacketSize = 1;
+   info->tightEncodingEnabled = 1;
+   info->stackTraceEnabled = 0;
+   info->tcpNoDelayEnabled = 0;
    info->magic = ow_byte_array_create_with_data(pool, 8, ACTIVEMQ_MAGIC);
    return info;
 }
@@ -165,6 +169,9 @@ apr_status_t amqcs_connect(amqcs_connection **conn, amqcs_connect_options *optio
       connection->info->connectionId = create_ConnectionId(connection, pool);
       if( strlen(options->clientId)>0 ) {
          connection->info->clientId = ow_string_create_from_cstring(pool, options->clientId);
+      } else {
+         strncpy(options->clientId, connection->info->connectionId->value, sizeof(options->clientId));
+         connection->info->clientId = connection->info->connectionId->value;
       }
       if( strlen(options->userId)>0 ) {
          connection->info->userName = ow_string_create_from_cstring(pool, options->userId);

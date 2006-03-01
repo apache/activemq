@@ -34,7 +34,7 @@ namespace OpenWire.Client.IO
   //        if you need to make a change, please see the Groovy scripts in the
   //        activemq-core module
   //
-  public class ConsumerIdMarshaller : DataStreamMarshaller
+  public class ConsumerIdMarshaller : BaseDataStreamMarshaller
   {
 
 
@@ -51,14 +51,14 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConsumerId info = (ConsumerId)o;
-        info.ConnectionId = ReadString(dataIn, bs);
-        info.SessionId = UnmarshalLong(wireFormat, dataIn, bs);
-        info.Value = UnmarshalLong(wireFormat, dataIn, bs);
+        info.ConnectionId = TightUnmarshalString(dataIn, bs);
+        info.SessionId = TightUnmarshalLong(wireFormat, dataIn, bs);
+        info.Value = TightUnmarshalLong(wireFormat, dataIn, bs);
 
     }
 
@@ -66,13 +66,13 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         ConsumerId info = (ConsumerId)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += WriteString(info.ConnectionId, bs);
-    rc += Marshal1Long(wireFormat, info.SessionId, bs);
-    rc += Marshal1Long(wireFormat, info.Value, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalString1(info.ConnectionId, bs);
+    rc += TightMarshalLong1(wireFormat, info.SessionId, bs);
+    rc += TightMarshalLong1(wireFormat, info.Value, bs);
 
         return rc + 0;
     }
@@ -80,13 +80,13 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ConsumerId info = (ConsumerId)o;
-    WriteString(info.ConnectionId, dataOut, bs);
-    Marshal2Long(wireFormat, info.SessionId, dataOut, bs);
-    Marshal2Long(wireFormat, info.Value, dataOut, bs);
+    TightMarshalString2(info.ConnectionId, dataOut, bs);
+    TightMarshalLong2(wireFormat, info.SessionId, dataOut, bs);
+    TightMarshalLong2(wireFormat, info.Value, dataOut, bs);
 
     }
   }

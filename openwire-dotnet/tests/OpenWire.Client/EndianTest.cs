@@ -29,13 +29,13 @@ namespace openwire_dotnet
         {
             long value = 0x0102030405060708L;
             
-            long newValue = DataStreamMarshaller.SwitchEndian(value);
+            long newValue = BaseDataStreamMarshaller.SwitchEndian(value);
             
             Console.WriteLine("New value: " + newValue);
             
             Assert.AreEqual(0x0807060504030201L, newValue);
             
-            long actual = DataStreamMarshaller.SwitchEndian(newValue);
+            long actual = BaseDataStreamMarshaller.SwitchEndian(newValue);
             
             Assert.AreEqual(value, actual);
         }
@@ -45,13 +45,13 @@ namespace openwire_dotnet
         {
             int value = 0x12345678;
             
-            int newValue = DataStreamMarshaller.SwitchEndian(value);
+            int newValue = BaseDataStreamMarshaller.SwitchEndian(value);
             
             Console.WriteLine("New value: " + newValue);
             
             Assert.AreEqual(0x78563412, newValue);
             
-            int actual = DataStreamMarshaller.SwitchEndian(newValue);
+            int actual = BaseDataStreamMarshaller.SwitchEndian(newValue);
             
             Assert.AreEqual(value, actual);
         }
@@ -60,13 +60,13 @@ namespace openwire_dotnet
         {
             short value = 0x1234;
             
-            short newValue = DataStreamMarshaller.SwitchEndian(value);
+            short newValue = BaseDataStreamMarshaller.SwitchEndian(value);
             
             Console.WriteLine("New value: " + newValue);
             
             Assert.AreEqual(0x3412, newValue);
             
-            short actual = DataStreamMarshaller.SwitchEndian(newValue);
+            short actual = BaseDataStreamMarshaller.SwitchEndian(newValue);
             
             Assert.AreEqual(value, actual);
         }

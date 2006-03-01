@@ -30,7 +30,7 @@ namespace OpenWire.Client.Core
     /// A base class with useful implementation inheritence methods
     /// for creating marshallers of the OpenWire protocol
     /// </summary>
-    public abstract class DataStreamMarshaller
+    public abstract class BaseDataStreamMarshaller
     {
         public const byte NULL                    = 0;
         public const byte BOOLEAN_TYPE            = 1;
@@ -66,11 +66,11 @@ namespace OpenWire.Client.Core
         public abstract DataStructure CreateObject();
         public abstract byte GetDataStructureType();
         
-        public virtual int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs)
+        public virtual int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs)
         {
             return 0;
         }
-        public virtual void Marshal2(
+        public virtual void TightMarshal2(
             OpenWireFormat wireFormat,
             Object o,
             BinaryWriter dataOut,
@@ -78,7 +78,7 @@ namespace OpenWire.Client.Core
         {
         }
         
-        public virtual void Unmarshal(
+        public virtual void TightUnmarshal(
             OpenWireFormat wireFormat,
             Object o,
             BinaryReader dataIn,
@@ -87,32 +87,32 @@ namespace OpenWire.Client.Core
         }
         
         
-        protected virtual DataStructure UnmarshalNestedObject(
+        protected virtual DataStructure TightUnmarshalNestedObject(
             OpenWireFormat wireFormat,
             BinaryReader dataIn,
             BooleanStream bs)
         {
-            return wireFormat.UnmarshalNestedObject(dataIn, bs);
+            return wireFormat.TightUnmarshalNestedObject(dataIn, bs);
         }
         
-        protected virtual int Marshal1NestedObject(
+        protected virtual int TightMarshalNestedObject1(
             OpenWireFormat wireFormat,
             DataStructure o,
             BooleanStream bs)
         {
-            return wireFormat.Marshal1NestedObject(o, bs);
+            return wireFormat.TightMarshalNestedObject1(o, bs);
         }
         
-        protected virtual void Marshal2NestedObject(
+        protected virtual void TightMarshalNestedObject2(
             OpenWireFormat wireFormat,
             DataStructure o,
             BinaryWriter dataOut,
             BooleanStream bs)
         {
-            wireFormat.Marshal2NestedObject(o, dataOut, bs);
+            wireFormat.TightMarshalNestedObject2(o, dataOut, bs);
         }
         
-        protected virtual DataStructure UnmarshalCachedObject(
+        protected virtual DataStructure TightUnmarshalCachedObject(
             OpenWireFormat wireFormat,
             BinaryReader dataIn,
             BooleanStream bs)
@@ -132,10 +132,10 @@ namespace OpenWire.Client.Core
              return wireFormat.UnmarshalNestedObject(dataIn, bs);
              }
              */
-            return wireFormat.UnmarshalNestedObject(dataIn, bs);
+            return wireFormat.TightUnmarshalNestedObject(dataIn, bs);
         }
         
-        protected virtual int Marshal1CachedObject(
+        protected virtual int TightMarshalCachedObject1(
             OpenWireFormat wireFormat,
             DataStructure o,
             BooleanStream bs)
@@ -155,10 +155,10 @@ namespace OpenWire.Client.Core
              return wireFormat.Marshal1NestedObject(o, bs);
              }
              */
-            return wireFormat.Marshal1NestedObject(o, bs);
+            return wireFormat.TightMarshalNestedObject1(o, bs);
         }
         
-        protected virtual void Marshal2CachedObject(
+        protected virtual void TightMarshalCachedObject2(
             OpenWireFormat wireFormat,
             DataStructure o,
             BinaryWriter dataOut,
@@ -177,12 +177,12 @@ namespace OpenWire.Client.Core
              wireFormat.Marshal2NestedObject(o, dataOut, bs);
              }
              */
-            wireFormat.Marshal2NestedObject(o, dataOut, bs);
+            wireFormat.TightMarshalNestedObject2(o, dataOut, bs);
         }
         
         
         
-        protected virtual String ReadString(BinaryReader dataIn, BooleanStream bs)
+        protected virtual String TightUnmarshalString(BinaryReader dataIn, BooleanStream bs)
         {
             if (bs.ReadBoolean())
             {
@@ -214,7 +214,7 @@ namespace OpenWire.Client.Core
             return new String(text);
         }
         
-        protected virtual int WriteString(String value, BooleanStream bs)
+        protected virtual int TightMarshalString1(String value, BooleanStream bs)
         {
             bs.WriteBoolean(value != null);
             if (value != null)
@@ -263,7 +263,7 @@ namespace OpenWire.Client.Core
             }
         }
         
-        public static void WriteString(String value, BinaryWriter dataOut, BooleanStream bs)
+        public static void TightMarshalString2(String value, BinaryWriter dataOut, BooleanStream bs)
         {
             if (bs.ReadBoolean())
             {
@@ -365,7 +365,7 @@ namespace OpenWire.Client.Core
             return answer;
         }
         
-        public virtual int Marshal1Long(OpenWireFormat wireFormat, long o, BooleanStream bs)
+        public virtual int TightMarshalLong1(OpenWireFormat wireFormat, long o, BooleanStream bs)
         {
             if (o == 0L)
             {
@@ -397,7 +397,7 @@ namespace OpenWire.Client.Core
             }
         }
         
-        public virtual void Marshal2Long(
+        public virtual void TightMarshalLong2(
             OpenWireFormat wireFormat,
             long o,
             BinaryWriter dataOut,
@@ -422,7 +422,7 @@ namespace OpenWire.Client.Core
                 }
             }
         }
-        public virtual long UnmarshalLong(OpenWireFormat wireFormat, BinaryReader dataIn, BooleanStream bs)
+        public virtual long TightUnmarshalLong(OpenWireFormat wireFormat, BinaryReader dataIn, BooleanStream bs)
         {
             if (bs.ReadBoolean())
             {
@@ -447,7 +447,7 @@ namespace OpenWire.Client.Core
                 }
             }
         }
-        protected virtual int MarshalObjectArray(
+        protected virtual int TightMarshalObjectArray1(
             OpenWireFormat wireFormat,
             DataStructure[] objects,
             BooleanStream bs)
@@ -459,7 +459,7 @@ namespace OpenWire.Client.Core
                 rc += 2;
                 for (int i = 0; i < objects.Length; i++)
                 {
-                    rc += Marshal1NestedObject(wireFormat, objects[i], bs);
+                    rc += TightMarshalNestedObject1(wireFormat, objects[i], bs);
                 }
                 return rc;
             }
@@ -470,7 +470,7 @@ namespace OpenWire.Client.Core
             }
         }
         
-        protected virtual void MarshalObjectArray(
+        protected virtual void TightMarshalObjectArray2(
             OpenWireFormat wireFormat,
             DataStructure[] objects,
             BinaryWriter dataOut,
@@ -481,7 +481,7 @@ namespace OpenWire.Client.Core
                 WriteShort((short) objects.Length, dataOut);
                 for (int i = 0; i < objects.Length; i++)
                 {
-                    Marshal2NestedObject(wireFormat, objects[i], dataOut, bs);
+                    TightMarshalNestedObject2(wireFormat, objects[i], dataOut, bs);
                 }
             }
         }
@@ -516,7 +516,7 @@ namespace OpenWire.Client.Core
             dataOut.Write(command);
         }
         
-        protected virtual BrokerError UnmarshalBrokerError(
+        protected virtual BrokerError TightUnmarshalBrokerError(
             OpenWireFormat wireFormat,
             BinaryReader dataIn,
             BooleanStream bs)
@@ -525,8 +525,8 @@ namespace OpenWire.Client.Core
             {
                 BrokerError answer = new BrokerError();
                 
-                answer.ExceptionClass = ReadString(dataIn, bs);
-                answer.Message = ReadString(dataIn, bs);
+                answer.ExceptionClass = TightUnmarshalString(dataIn, bs);
+                answer.Message = TightUnmarshalString(dataIn, bs);
                 if (wireFormat.StackTraceEnabled)
                 {
                     short length = ReadShort(dataIn);
@@ -534,14 +534,14 @@ namespace OpenWire.Client.Core
                     for (int i = 0; i < stackTrace.Length; i++)
                     {
                         StackTraceElement element = new StackTraceElement();
-                        element.ClassName = ReadString(dataIn, bs);
-                        element.MethodName = ReadString(dataIn, bs);
-                        element.FileName = ReadString(dataIn, bs);
+                        element.ClassName = TightUnmarshalString(dataIn, bs);
+                        element.MethodName = TightUnmarshalString(dataIn, bs);
+                        element.FileName = TightUnmarshalString(dataIn, bs);
                         element.LineNumber = ReadInt(dataIn);
                         stackTrace[i] = element;
                     }
                     answer.StackTraceElements = stackTrace;
-                    answer.Cause = UnmarshalBrokerError(wireFormat, dataIn, bs);
+                    answer.Cause = TightUnmarshalBrokerError(wireFormat, dataIn, bs);
                 }
                 return answer;
             }
@@ -551,7 +551,7 @@ namespace OpenWire.Client.Core
             }
         }
         
-        protected int MarshalBrokerError(OpenWireFormat wireFormat, BrokerError o, BooleanStream bs)
+        protected int TightMarshalBrokerError1(OpenWireFormat wireFormat, BrokerError o, BooleanStream bs)
         {
             if (o == null)
             {
@@ -562,8 +562,8 @@ namespace OpenWire.Client.Core
             {
                 int rc = 0;
                 bs.WriteBoolean(true);
-                rc += WriteString(o.ExceptionClass, bs);
-                rc += WriteString(o.Message, bs);
+                rc += TightMarshalString1(o.ExceptionClass, bs);
+                rc += TightMarshalString1(o.Message, bs);
                 if (wireFormat.StackTraceEnabled)
                 {
                     rc += 2;
@@ -571,19 +571,19 @@ namespace OpenWire.Client.Core
                     for (int i = 0; i < stackTrace.Length; i++)
                     {
                         StackTraceElement element = stackTrace[i];
-                        rc += WriteString(element.ClassName, bs);
-                        rc += WriteString(element.MethodName, bs);
-                        rc += WriteString(element.FileName, bs);
+                        rc += TightMarshalString1(element.ClassName, bs);
+                        rc += TightMarshalString1(element.MethodName, bs);
+                        rc += TightMarshalString1(element.FileName, bs);
                         rc += 4;
                     }
-                    rc += MarshalBrokerError(wireFormat, o.Cause, bs);
+                    rc += TightMarshalBrokerError1(wireFormat, o.Cause, bs);
                 }
                 
                 return rc;
             }
         }
         
-        protected void MarshalBrokerError(
+        protected void TightMarshalBrokerError2(
             OpenWireFormat wireFormat,
             BrokerError o,
             BinaryWriter dataOut,
@@ -591,8 +591,8 @@ namespace OpenWire.Client.Core
         {
             if (bs.ReadBoolean())
             {
-                WriteString(o.ExceptionClass, dataOut, bs);
-                WriteString(o.Message, dataOut, bs);
+                TightMarshalString2(o.ExceptionClass, dataOut, bs);
+                TightMarshalString2(o.Message, dataOut, bs);
                 if (wireFormat.StackTraceEnabled)
                 {
                     StackTraceElement[] stackTrace = o.StackTraceElements;
@@ -601,12 +601,12 @@ namespace OpenWire.Client.Core
                     for (int i = 0; i < stackTrace.Length; i++)
                     {
                         StackTraceElement element = stackTrace[i];
-                        WriteString(element.ClassName, dataOut, bs);
-                        WriteString(element.MethodName, bs);
-                        WriteString(element.FileName, bs);
+                        TightMarshalString2(element.ClassName, dataOut, bs);
+                        TightMarshalString2(element.MethodName, dataOut, bs);
+                        TightMarshalString2(element.FileName, dataOut, bs);
                         WriteInt(element.LineNumber, dataOut);
                     }
-                    MarshalBrokerError(wireFormat, o.Cause, dataOut, bs);
+                    TightMarshalBrokerError2(wireFormat, o.Cause, dataOut, bs);
                 }
             }
         }

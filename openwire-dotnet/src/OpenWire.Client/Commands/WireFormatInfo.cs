@@ -38,18 +38,20 @@ namespace OpenWire.Client.Commands
         byte[] magic;
         int version;
         bool cacheEnabled;
-        bool compressionEnabled;
         bool stackTraceEnabled;
         bool tcpNoDelayEnabled;
+        bool prefixPacketSize;
+        bool tightEncodingEnabled;
 
 		public override string ToString() {
             return GetType().Name + "["
                 + " Magic=" + Magic
                 + " Version=" + Version
                 + " CacheEnabled=" + CacheEnabled
-                + " CompressionEnabled=" + CompressionEnabled
                 + " StackTraceEnabled=" + StackTraceEnabled
                 + " TcpNoDelayEnabled=" + TcpNoDelayEnabled
+                + " PrefixPacketSize=" + PrefixPacketSize
+                + " TightEncodingEnabled=" + TightEncodingEnabled
                 + " ]";
 
 		}
@@ -81,12 +83,6 @@ namespace OpenWire.Client.Commands
             set { this.cacheEnabled = value; }            
         }
 
-        public bool CompressionEnabled
-        {
-            get { return compressionEnabled; }
-            set { this.compressionEnabled = value; }            
-        }
-
         public bool StackTraceEnabled
         {
             get { return stackTraceEnabled; }
@@ -97,6 +93,18 @@ namespace OpenWire.Client.Commands
         {
             get { return tcpNoDelayEnabled; }
             set { this.tcpNoDelayEnabled = value; }            
+        }
+
+        public bool PrefixPacketSize
+        {
+            get { return prefixPacketSize; }
+            set { this.prefixPacketSize = value; }            
+        }
+
+        public bool TightEncodingEnabled
+        {
+            get { return tightEncodingEnabled; }
+            set { this.tightEncodingEnabled = value; }            
         }
 
     }

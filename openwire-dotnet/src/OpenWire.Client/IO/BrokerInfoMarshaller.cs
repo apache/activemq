@@ -51,26 +51,26 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         BrokerInfo info = (BrokerInfo)o;
-        info.BrokerId = (BrokerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.BrokerURL = ReadString(dataIn, bs);
+        info.BrokerId = (BrokerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.BrokerURL = TightUnmarshalString(dataIn, bs);
 
         if (bs.ReadBoolean()) {
-            short size = DataStreamMarshaller.ReadShort(dataIn);
+            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
             BrokerInfo[] value = new BrokerInfo[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerInfo) UnmarshalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (BrokerInfo) TightUnmarshalNestedObject(wireFormat,dataIn, bs);
             }
             info.PeerBrokerInfos = value;
         }
         else {
             info.PeerBrokerInfos = null;
         }
-        info.BrokerName = ReadString(dataIn, bs);
+        info.BrokerName = TightUnmarshalString(dataIn, bs);
         info.SlaveBroker = bs.ReadBoolean();
 
     }
@@ -79,14 +79,14 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         BrokerInfo info = (BrokerInfo)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1CachedObject(wireFormat, info.BrokerId, bs);
-    rc += WriteString(info.BrokerURL, bs);
-    rc += MarshalObjectArray(wireFormat, info.PeerBrokerInfos, bs);
-    rc += WriteString(info.BrokerName, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.BrokerId, bs);
+    rc += TightMarshalString1(info.BrokerURL, bs);
+    rc += TightMarshalObjectArray1(wireFormat, info.PeerBrokerInfos, bs);
+    rc += TightMarshalString1(info.BrokerName, bs);
     bs.WriteBoolean(info.SlaveBroker);
 
         return rc + 0;
@@ -95,14 +95,14 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         BrokerInfo info = (BrokerInfo)o;
-    Marshal2CachedObject(wireFormat, info.BrokerId, dataOut, bs);
-    WriteString(info.BrokerURL, dataOut, bs);
-    MarshalObjectArray(wireFormat, info.PeerBrokerInfos, dataOut, bs);
-    WriteString(info.BrokerName, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.BrokerId, dataOut, bs);
+    TightMarshalString2(info.BrokerURL, dataOut, bs);
+    TightMarshalObjectArray2(wireFormat, info.PeerBrokerInfos, dataOut, bs);
+    TightMarshalString2(info.BrokerName, dataOut, bs);
     bs.ReadBoolean();
 
     }

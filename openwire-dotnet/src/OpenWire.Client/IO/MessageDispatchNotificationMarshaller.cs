@@ -51,15 +51,15 @@ namespace OpenWire.Client.IO
     // 
     // Un-marshal an object instance from the data input stream
     // 
-    public override void Unmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
     {
-        base.Unmarshal(wireFormat, o, dataIn, bs);
+        base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageDispatchNotification info = (MessageDispatchNotification)o;
-        info.ConsumerId = (ConsumerId) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.Destination = (ActiveMQDestination) UnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.DeliverySequenceId = UnmarshalLong(wireFormat, dataIn, bs);
-        info.MessageId = (MessageId) UnmarshalNestedObject(wireFormat, dataIn, bs);
+        info.ConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
+        info.DeliverySequenceId = TightUnmarshalLong(wireFormat, dataIn, bs);
+        info.MessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
 
     }
 
@@ -67,14 +67,14 @@ namespace OpenWire.Client.IO
     //
     // Write the booleans that this object uses to a BooleanStream
     //
-    public override int Marshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
+    public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         MessageDispatchNotification info = (MessageDispatchNotification)o;
 
-        int rc = base.Marshal1(wireFormat, info, bs);
-    rc += Marshal1CachedObject(wireFormat, info.ConsumerId, bs);
-    rc += Marshal1CachedObject(wireFormat, info.Destination, bs);
-    rc += Marshal1Long(wireFormat, info.DeliverySequenceId, bs);
-    rc += Marshal1NestedObject(wireFormat, info.MessageId, bs);
+        int rc = base.TightMarshal1(wireFormat, info, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.ConsumerId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
+    rc += TightMarshalLong1(wireFormat, info.DeliverySequenceId, bs);
+    rc += TightMarshalNestedObject1(wireFormat, info.MessageId, bs);
 
         return rc + 0;
     }
@@ -82,14 +82,14 @@ namespace OpenWire.Client.IO
     // 
     // Write a object instance to data output stream
     //
-    public override void Marshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
-        base.Marshal2(wireFormat, o, dataOut, bs);
+    public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
+        base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageDispatchNotification info = (MessageDispatchNotification)o;
-    Marshal2CachedObject(wireFormat, info.ConsumerId, dataOut, bs);
-    Marshal2CachedObject(wireFormat, info.Destination, dataOut, bs);
-    Marshal2Long(wireFormat, info.DeliverySequenceId, dataOut, bs);
-    Marshal2NestedObject(wireFormat, info.MessageId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
+    TightMarshalLong2(wireFormat, info.DeliverySequenceId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, info.MessageId, dataOut, bs);
 
     }
   }
