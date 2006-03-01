@@ -1,3 +1,20 @@
+/*
+ * Copyright 2006 The Apache Software Foundation or its licensors, as
+ * applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ 
 #include <activemq/ActiveMQTextMessage.h>
 #include <cms/TopicConnectionFactory.h>
 #include <cms/TopicConnection.h>
@@ -34,6 +51,7 @@ public:
         	
         	printf("Starting activemqcms test (sending %d messages and sleeping %d seconds) ...\n", numMessages, sleepTime );
             
+            // START SNIPPET: demo
             cms::TopicConnectionFactory* connectionFactory = new activemq::ActiveMQConnectionFactory( "127.0.0.1:61626" );
             cms::TopicConnection* connection = connectionFactory->createTopicConnection();
             connection->setExceptionListener( this );
@@ -49,13 +67,9 @@ public:
                         
             for( int ix=0; ix<numMessages; ++ix ){                
                 publisher->publish( msg );
-                
-                
-                timespec sleepTime;
-                sleepTime.tv_sec = 0;
-                sleepTime.tv_nsec = 1000;
-                nanosleep( &sleepTime, &sleepTime );
+                doSleep();
             }
+            // END SNIPPET: demo
             
             sleep( sleepTime );
             
@@ -88,6 +102,13 @@ public:
     
     virtual void onException( const cms::CMSException* error ){
         printf( "StompTester::onException() - %s\n", error->getMessage() );
+    }
+    
+    virtual void doSleep() {
+        timespec sleepTime;
+        sleepTime.tv_sec = 0;
+        sleepTime.tv_nsec = 1000;
+        nanosleep( &sleepTime, &sleepTime );
     }
     
 private:
