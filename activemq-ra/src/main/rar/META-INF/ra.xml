@@ -74,22 +74,17 @@
             <config-property-name>Clientid</config-property-name>
             <config-property-type>java.lang.String</config-property-type>
         </config-property>
-        <!--config-property>
-            <description>Boolean to configure if the connector should create an embedded broker.</description>
-            <config-property-name>UseEmbeddedBroker</config-property-name>
-            <config-property-type>java.lang.Boolean</config-property-type>
-            <config-property-value>false</config-property-value>
-
-        </config-property-->
         <config-property>
             <description>Boolean to configure if outbound connections should reuse the inbound connection's session for sending messages.</description>
             <config-property-name>UseInboundSession</config-property-name>
             <config-property-type>java.lang.Boolean</config-property-type>
             <config-property-value>false</config-property-value>
         </config-property>
+
+			  <!-- NOTE disable the following property if you do not wish to deploy an embedded broker -->
         <config-property>
             <description>
-              Sets the XML configuration file used to configure the ActiveMQ broker via 
+              Sets the XML configuration file used to configure the embedded ActiveMQ broker via 
               Spring if using embedded mode.
               
               BrokerXmlConfig is the filename which is assumed to be on the classpath unless 
@@ -101,6 +96,7 @@
             <config-property-type>java.lang.String</config-property-type>
             <config-property-value>xbean:broker-config.xml</config-property-value>
         </config-property>
+
         <outbound-resourceadapter>
             <connection-definition>
                 <managedconnectionfactory-class>org.apache.activemq.ra.ActiveMQManagedConnectionFactory</managedconnectionfactory-class>
