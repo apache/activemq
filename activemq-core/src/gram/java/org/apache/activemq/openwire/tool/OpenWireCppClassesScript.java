@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2005-2006 The Apache Software Foundation
  *
@@ -46,20 +46,37 @@ public abstract class OpenWireCppClassesScript extends OpenWireClassesScript {
         if (name.equals("String")) {
             return "p<string>";
         }
+        else if (type.isArrayType()) {
+		if( name.equals("byte[]") )
+                name = "char[]" ;
+		else if( name.equals("DataStructure[]") )
+                name = "IDataStructure[]" ;
+
+            return "ap<" + name.substring(0, name.length()-2) + ">";
+        }
         else if (name.equals("Throwable") || name.equals("Exception")) {
-            return "BrokerError";
+            return "p<BrokerError>";
         }
         else if (name.equals("ByteSequence")) {
-            return "void*";
+            return "char*";
         }
         else if (name.equals("boolean")) {
             return "bool";
         }
-        else if (name.endsWith("Id")) {
-            return "p<" + name + ">";
+        else if (name.equals("long")) {
+            return "long long";
+        }
+        else if (name.equals("byte")) {
+            return "char";
+        }
+        else if( name.equals("Command") || name.equals("DataStructure") ) {
+            return "p<I" + name + ">" ;
+        }
+        else if( !type.isPrimitiveType() ) {
+            return "p<" + name + ">" ;
         }
         else {
-            return name;
+            return name ;
         }
     }
 
@@ -67,6 +84,6 @@ public abstract class OpenWireCppClassesScript extends OpenWireClassesScript {
      * Converts the Java type to a C++ default value
      */
     public String toCppDefaultValue(JClass type) {
-        return "NULL";
+        return "0";
     }
 }
