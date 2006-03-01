@@ -18,16 +18,12 @@
 #define ConnectionInfo_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
+    
 #include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/BrokerId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +35,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -58,7 +55,7 @@ private:
     p<string> clientId ;
     p<string> password ;
     p<string> userName ;
-    BrokerId[] brokerPath ;
+    ap<BrokerId> brokerPath ;
 
 public:
     const static int TYPE = 3;
@@ -67,6 +64,7 @@ public:
     ConnectionInfo() ;
     virtual ~ConnectionInfo() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ConnectionId> getConnectionId() ;
     virtual void setConnectionId(p<ConnectionId> connectionId) ;
@@ -80,8 +78,8 @@ public:
     virtual p<string> getUserName() ;
     virtual void setUserName(p<string> userName) ;
 
-    virtual BrokerId[] getBrokerPath() ;
-    virtual void setBrokerPath(BrokerId[] brokerPath) ;
+    virtual ap<BrokerId> getBrokerPath() ;
+    virtual void setBrokerPath(ap<BrokerId> brokerPath) ;
 
 
 } ;

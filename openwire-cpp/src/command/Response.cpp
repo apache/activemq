@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 Response::Response()
 {
-    this->correlationId = NULL ;
+    this->correlationId = 0 ;
 }
 
 Response::~Response()

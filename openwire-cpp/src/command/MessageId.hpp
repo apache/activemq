@@ -18,16 +18,11 @@
 #define MessageId_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/AbstractCommand.hpp"
+    
+#include "command/ProducerId.hpp"
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +34,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,8 +51,8 @@ class MessageId : public AbstractCommand
 {
 private:
     p<ProducerId> producerId ;
-    long producerSequenceId ;
-    long brokerSequenceId ;
+    long long producerSequenceId ;
+    long long brokerSequenceId ;
 
 public:
     const static int TYPE = 110;
@@ -65,15 +61,16 @@ public:
     MessageId() ;
     virtual ~MessageId() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ProducerId> getProducerId() ;
     virtual void setProducerId(p<ProducerId> producerId) ;
 
-    virtual long getProducerSequenceId() ;
-    virtual void setProducerSequenceId(long producerSequenceId) ;
+    virtual long long getProducerSequenceId() ;
+    virtual void setProducerSequenceId(long long producerSequenceId) ;
 
-    virtual long getBrokerSequenceId() ;
-    virtual void setBrokerSequenceId(long brokerSequenceId) ;
+    virtual long long getBrokerSequenceId() ;
+    virtual void setBrokerSequenceId(long long brokerSequenceId) ;
 
 
 } ;

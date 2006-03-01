@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 RemoveInfo::RemoveInfo()
 {
-    this->objectId = NULL ;
+    this->objectId = 0 ;
 }
 
 RemoveInfo::~RemoveInfo()
@@ -38,12 +38,12 @@ RemoveInfo::~RemoveInfo()
 }
 
         
-DataStructure RemoveInfo::getObjectId()
+p<IDataStructure> RemoveInfo::getObjectId()
 {
     return objectId ;
 }
 
-void RemoveInfo::setObjectId(DataStructure objectId)
+void RemoveInfo::setObjectId(p<IDataStructure> objectId)
 {
     this->objectId = objectId ;
 }

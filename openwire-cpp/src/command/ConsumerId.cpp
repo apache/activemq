@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 ConsumerId::ConsumerId()
 {
-    this->connectionId = NULL ;
-    this->sessionId = NULL ;
-    this->value = NULL ;
+    this->connectionId = 0 ;
+    this->sessionId = 0 ;
+    this->value = 0 ;
 }
 
 ConsumerId::~ConsumerId()
@@ -51,23 +51,23 @@ void ConsumerId::setConnectionId(p<string> connectionId)
 }
 
         
-long ConsumerId::getSessionId()
+long long ConsumerId::getSessionId()
 {
     return sessionId ;
 }
 
-void ConsumerId::setSessionId(long sessionId)
+void ConsumerId::setSessionId(long long sessionId)
 {
     this->sessionId = sessionId ;
 }
 
         
-long ConsumerId::getValue()
+long long ConsumerId::getValue()
 {
     return value ;
 }
 
-void ConsumerId::setValue(long value)
+void ConsumerId::setValue(long long value)
 {
     this->value = value ;
 }

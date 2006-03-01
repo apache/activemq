@@ -30,11 +30,11 @@ using namespace apache::activemq::client::command;
  */
 DestinationInfo::DestinationInfo()
 {
-    this->connectionId = NULL ;
-    this->destination = NULL ;
-    this->operationType = NULL ;
-    this->timeout = NULL ;
-    this->brokerPath = NULL ;
+    this->connectionId = 0 ;
+    this->destination = 0 ;
+    this->operationType = 0 ;
+    this->timeout = 0 ;
+    this->brokerPath = 0 ;
 }
 
 DestinationInfo::~DestinationInfo()
@@ -53,45 +53,45 @@ void DestinationInfo::setConnectionId(p<ConnectionId> connectionId)
 }
 
         
-ActiveMQDestination DestinationInfo::getDestination()
+p<ActiveMQDestination> DestinationInfo::getDestination()
 {
     return destination ;
 }
 
-void DestinationInfo::setDestination(ActiveMQDestination destination)
+void DestinationInfo::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
 
         
-byte DestinationInfo::getOperationType()
+char DestinationInfo::getOperationType()
 {
     return operationType ;
 }
 
-void DestinationInfo::setOperationType(byte operationType)
+void DestinationInfo::setOperationType(char operationType)
 {
     this->operationType = operationType ;
 }
 
         
-long DestinationInfo::getTimeout()
+long long DestinationInfo::getTimeout()
 {
     return timeout ;
 }
 
-void DestinationInfo::setTimeout(long timeout)
+void DestinationInfo::setTimeout(long long timeout)
 {
     this->timeout = timeout ;
 }
 
         
-BrokerId[] DestinationInfo::getBrokerPath()
+ap<BrokerId> DestinationInfo::getBrokerPath()
 {
     return brokerPath ;
 }
 
-void DestinationInfo::setBrokerPath(BrokerId[] brokerPath)
+void DestinationInfo::setBrokerPath(ap<BrokerId> brokerPath)
 {
     this->brokerPath = brokerPath ;
 }

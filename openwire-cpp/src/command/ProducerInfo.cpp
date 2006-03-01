@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 ProducerInfo::ProducerInfo()
 {
-    this->producerId = NULL ;
-    this->destination = NULL ;
-    this->brokerPath = NULL ;
+    this->producerId = 0 ;
+    this->destination = 0 ;
+    this->brokerPath = 0 ;
 }
 
 ProducerInfo::~ProducerInfo()
@@ -51,23 +51,23 @@ void ProducerInfo::setProducerId(p<ProducerId> producerId)
 }
 
         
-ActiveMQDestination ProducerInfo::getDestination()
+p<ActiveMQDestination> ProducerInfo::getDestination()
 {
     return destination ;
 }
 
-void ProducerInfo::setDestination(ActiveMQDestination destination)
+void ProducerInfo::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
 
         
-BrokerId[] ProducerInfo::getBrokerPath()
+ap<BrokerId> ProducerInfo::getBrokerPath()
 {
     return brokerPath ;
 }
 
-void ProducerInfo::setBrokerPath(BrokerId[] brokerPath)
+void ProducerInfo::setBrokerPath(ap<BrokerId> brokerPath)
 {
     this->brokerPath = brokerPath ;
 }

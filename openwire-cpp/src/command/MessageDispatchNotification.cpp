@@ -30,10 +30,10 @@ using namespace apache::activemq::client::command;
  */
 MessageDispatchNotification::MessageDispatchNotification()
 {
-    this->consumerId = NULL ;
-    this->destination = NULL ;
-    this->deliverySequenceId = NULL ;
-    this->messageId = NULL ;
+    this->consumerId = 0 ;
+    this->destination = 0 ;
+    this->deliverySequenceId = 0 ;
+    this->messageId = 0 ;
 }
 
 MessageDispatchNotification::~MessageDispatchNotification()
@@ -52,23 +52,23 @@ void MessageDispatchNotification::setConsumerId(p<ConsumerId> consumerId)
 }
 
         
-ActiveMQDestination MessageDispatchNotification::getDestination()
+p<ActiveMQDestination> MessageDispatchNotification::getDestination()
 {
     return destination ;
 }
 
-void MessageDispatchNotification::setDestination(ActiveMQDestination destination)
+void MessageDispatchNotification::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
 
         
-long MessageDispatchNotification::getDeliverySequenceId()
+long long MessageDispatchNotification::getDeliverySequenceId()
 {
     return deliverySequenceId ;
 }
 
-void MessageDispatchNotification::setDeliverySequenceId(long deliverySequenceId)
+void MessageDispatchNotification::setDeliverySequenceId(long long deliverySequenceId)
 {
     this->deliverySequenceId = deliverySequenceId ;
 }

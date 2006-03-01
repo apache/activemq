@@ -18,16 +18,12 @@
 #define JournalQueueAck_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/AbstractCommand.hpp"
+    
+#include "command/ActiveMQDestination.hpp"
+#include "command/MessageAck.hpp"
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +35,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -54,8 +51,8 @@ namespace apache
 class JournalQueueAck : public AbstractCommand
 {
 private:
-    ActiveMQDestination destination ;
-    MessageAck messageAck ;
+    p<ActiveMQDestination> destination ;
+    p<MessageAck> messageAck ;
 
 public:
     const static int TYPE = 52;
@@ -64,12 +61,13 @@ public:
     JournalQueueAck() ;
     virtual ~JournalQueueAck() ;
 
+    virtual int getCommandType() ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
-    virtual MessageAck getMessageAck() ;
-    virtual void setMessageAck(MessageAck messageAck) ;
+    virtual p<MessageAck> getMessageAck() ;
+    virtual void setMessageAck(p<MessageAck> messageAck) ;
 
 
 } ;

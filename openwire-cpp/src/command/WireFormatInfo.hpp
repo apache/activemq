@@ -18,16 +18,10 @@
 #define WireFormatInfo_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/AbstractCommand.hpp"
+    
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +33,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -54,7 +49,7 @@ namespace apache
 class WireFormatInfo : public AbstractCommand
 {
 private:
-    byte[] magic ;
+    ap<char> magic ;
     int version ;
     bool cacheEnabled ;
     bool stackTraceEnabled ;
@@ -69,9 +64,10 @@ public:
     WireFormatInfo() ;
     virtual ~WireFormatInfo() ;
 
+    virtual int getCommandType() ;
 
-    virtual byte[] getMagic() ;
-    virtual void setMagic(byte[] magic) ;
+    virtual ap<char> getMagic() ;
+    virtual void setMagic(ap<char> magic) ;
 
     virtual int getVersion() ;
     virtual void setVersion(int version) ;

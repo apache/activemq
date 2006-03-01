@@ -30,8 +30,8 @@ using namespace apache::activemq::client::command;
  */
 ConnectionError::ConnectionError()
 {
-    this->exception = NULL ;
-    this->connectionId = NULL ;
+    this->exception = 0 ;
+    this->connectionId = 0 ;
 }
 
 ConnectionError::~ConnectionError()
@@ -39,12 +39,12 @@ ConnectionError::~ConnectionError()
 }
 
         
-BrokerError ConnectionError::getException()
+p<BrokerError> ConnectionError::getException()
 {
     return exception ;
 }
 
-void ConnectionError::setException(BrokerError exception)
+void ConnectionError::setException(p<BrokerError> exception)
 {
     this->exception = exception ;
 }

@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 ControlCommand::ControlCommand()
 {
-    this->command = NULL ;
+    this->command = 0 ;
 }
 
 ControlCommand::~ControlCommand()

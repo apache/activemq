@@ -18,16 +18,13 @@
 #define MessageDispatch_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
+    
 #include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/Message.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +36,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,8 +53,8 @@ class MessageDispatch : public BaseCommand
 {
 private:
     p<ConsumerId> consumerId ;
-    ActiveMQDestination destination ;
-    Message message ;
+    p<ActiveMQDestination> destination ;
+    p<Message> message ;
     int redeliveryCounter ;
 
 public:
@@ -66,15 +64,16 @@ public:
     MessageDispatch() ;
     virtual ~MessageDispatch() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ConsumerId> getConsumerId() ;
     virtual void setConsumerId(p<ConsumerId> consumerId) ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
-    virtual Message getMessage() ;
-    virtual void setMessage(Message message) ;
+    virtual p<Message> getMessage() ;
+    virtual void setMessage(p<Message> message) ;
 
     virtual int getRedeliveryCounter() ;
     virtual void setRedeliveryCounter(int redeliveryCounter) ;

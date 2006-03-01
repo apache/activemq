@@ -30,11 +30,11 @@ using namespace apache::activemq::client::command;
  */
 ConnectionInfo::ConnectionInfo()
 {
-    this->connectionId = NULL ;
-    this->clientId = NULL ;
-    this->password = NULL ;
-    this->userName = NULL ;
-    this->brokerPath = NULL ;
+    this->connectionId = 0 ;
+    this->clientId = 0 ;
+    this->password = 0 ;
+    this->userName = 0 ;
+    this->brokerPath = 0 ;
 }
 
 ConnectionInfo::~ConnectionInfo()
@@ -86,12 +86,12 @@ void ConnectionInfo::setUserName(p<string> userName)
 }
 
         
-BrokerId[] ConnectionInfo::getBrokerPath()
+ap<BrokerId> ConnectionInfo::getBrokerPath()
 {
     return brokerPath ;
 }
 
-void ConnectionInfo::setBrokerPath(BrokerId[] brokerPath)
+void ConnectionInfo::setBrokerPath(ap<BrokerId> brokerPath)
 {
     this->brokerPath = brokerPath ;
 }

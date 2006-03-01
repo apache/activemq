@@ -30,13 +30,13 @@ using namespace apache::activemq::client::command;
  */
 MessageAck::MessageAck()
 {
-    this->destination = NULL ;
-    this->transactionId = NULL ;
-    this->consumerId = NULL ;
-    this->ackType = NULL ;
-    this->firstMessageId = NULL ;
-    this->lastMessageId = NULL ;
-    this->messageCount = NULL ;
+    this->destination = 0 ;
+    this->transactionId = 0 ;
+    this->consumerId = 0 ;
+    this->ackType = 0 ;
+    this->firstMessageId = 0 ;
+    this->lastMessageId = 0 ;
+    this->messageCount = 0 ;
 }
 
 MessageAck::~MessageAck()
@@ -44,12 +44,12 @@ MessageAck::~MessageAck()
 }
 
         
-ActiveMQDestination MessageAck::getDestination()
+p<ActiveMQDestination> MessageAck::getDestination()
 {
     return destination ;
 }
 
-void MessageAck::setDestination(ActiveMQDestination destination)
+void MessageAck::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
@@ -77,12 +77,12 @@ void MessageAck::setConsumerId(p<ConsumerId> consumerId)
 }
 
         
-byte MessageAck::getAckType()
+char MessageAck::getAckType()
 {
     return ackType ;
 }
 
-void MessageAck::setAckType(byte ackType)
+void MessageAck::setAckType(char ackType)
 {
     this->ackType = ackType ;
 }

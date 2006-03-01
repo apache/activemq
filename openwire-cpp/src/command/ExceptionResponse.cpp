@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 ExceptionResponse::ExceptionResponse()
 {
-    this->exception = NULL ;
+    this->exception = 0 ;
 }
 
 ExceptionResponse::~ExceptionResponse()
@@ -38,12 +38,12 @@ ExceptionResponse::~ExceptionResponse()
 }
 
         
-BrokerError ExceptionResponse::getException()
+p<BrokerError> ExceptionResponse::getException()
 {
     return exception ;
 }
 
-void ExceptionResponse::setException(BrokerError exception)
+void ExceptionResponse::setException(p<BrokerError> exception)
 {
     this->exception = exception ;
 }

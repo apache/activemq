@@ -30,8 +30,8 @@ using namespace apache::activemq::client::command;
  */
 SessionId::SessionId()
 {
-    this->connectionId = NULL ;
-    this->value = NULL ;
+    this->connectionId = 0 ;
+    this->value = 0 ;
 }
 
 SessionId::~SessionId()
@@ -50,12 +50,12 @@ void SessionId::setConnectionId(p<string> connectionId)
 }
 
         
-long SessionId::getValue()
+long long SessionId::getValue()
 {
     return value ;
 }
 
-void SessionId::setValue(long value)
+void SessionId::setValue(long long value)
 {
     this->value = value ;
 }

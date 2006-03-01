@@ -30,11 +30,11 @@ using namespace apache::activemq::client::command;
  */
 BrokerInfo::BrokerInfo()
 {
-    this->brokerId = NULL ;
-    this->brokerURL = NULL ;
-    this->peerBrokerInfos = NULL ;
-    this->brokerName = NULL ;
-    this->slaveBroker = NULL ;
+    this->brokerId = 0 ;
+    this->brokerURL = 0 ;
+    this->peerBrokerInfos = 0 ;
+    this->brokerName = 0 ;
+    this->slaveBroker = 0 ;
 }
 
 BrokerInfo::~BrokerInfo()
@@ -64,12 +64,12 @@ void BrokerInfo::setBrokerURL(p<string> brokerURL)
 }
 
         
-BrokerInfo[] BrokerInfo::getPeerBrokerInfos()
+ap<BrokerInfo> BrokerInfo::getPeerBrokerInfos()
 {
     return peerBrokerInfos ;
 }
 
-void BrokerInfo::setPeerBrokerInfos(BrokerInfo[] peerBrokerInfos)
+void BrokerInfo::setPeerBrokerInfos(ap<BrokerInfo> peerBrokerInfos)
 {
     this->peerBrokerInfos = peerBrokerInfos ;
 }

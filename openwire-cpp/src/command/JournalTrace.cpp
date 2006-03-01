@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 JournalTrace::JournalTrace()
 {
-    this->message = NULL ;
+    this->message = 0 ;
 }
 
 JournalTrace::~JournalTrace()

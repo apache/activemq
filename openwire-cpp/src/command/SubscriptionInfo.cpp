@@ -30,10 +30,10 @@ using namespace apache::activemq::client::command;
  */
 SubscriptionInfo::SubscriptionInfo()
 {
-    this->clientId = NULL ;
-    this->destination = NULL ;
-    this->selector = NULL ;
-    this->subcriptionName = NULL ;
+    this->clientId = 0 ;
+    this->destination = 0 ;
+    this->selector = 0 ;
+    this->subcriptionName = 0 ;
 }
 
 SubscriptionInfo::~SubscriptionInfo()
@@ -52,12 +52,12 @@ void SubscriptionInfo::setClientId(p<string> clientId)
 }
 
         
-ActiveMQDestination SubscriptionInfo::getDestination()
+p<ActiveMQDestination> SubscriptionInfo::getDestination()
 {
     return destination ;
 }
 
-void SubscriptionInfo::setDestination(ActiveMQDestination destination)
+void SubscriptionInfo::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }

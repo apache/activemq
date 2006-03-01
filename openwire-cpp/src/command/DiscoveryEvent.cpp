@@ -30,8 +30,8 @@ using namespace apache::activemq::client::command;
  */
 DiscoveryEvent::DiscoveryEvent()
 {
-    this->serviceName = NULL ;
-    this->brokerName = NULL ;
+    this->serviceName = 0 ;
+    this->brokerName = 0 ;
 }
 
 DiscoveryEvent::~DiscoveryEvent()

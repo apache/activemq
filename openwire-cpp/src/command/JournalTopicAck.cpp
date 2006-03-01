@@ -30,12 +30,12 @@ using namespace apache::activemq::client::command;
  */
 JournalTopicAck::JournalTopicAck()
 {
-    this->destination = NULL ;
-    this->messageId = NULL ;
-    this->messageSequenceId = NULL ;
-    this->subscritionName = NULL ;
-    this->clientId = NULL ;
-    this->transactionId = NULL ;
+    this->destination = 0 ;
+    this->messageId = 0 ;
+    this->messageSequenceId = 0 ;
+    this->subscritionName = 0 ;
+    this->clientId = 0 ;
+    this->transactionId = 0 ;
 }
 
 JournalTopicAck::~JournalTopicAck()
@@ -43,12 +43,12 @@ JournalTopicAck::~JournalTopicAck()
 }
 
         
-ActiveMQDestination JournalTopicAck::getDestination()
+p<ActiveMQDestination> JournalTopicAck::getDestination()
 {
     return destination ;
 }
 
-void JournalTopicAck::setDestination(ActiveMQDestination destination)
+void JournalTopicAck::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
@@ -65,12 +65,12 @@ void JournalTopicAck::setMessageId(p<MessageId> messageId)
 }
 
         
-long JournalTopicAck::getMessageSequenceId()
+long long JournalTopicAck::getMessageSequenceId()
 {
     return messageSequenceId ;
 }
 
-void JournalTopicAck::setMessageSequenceId(long messageSequenceId)
+void JournalTopicAck::setMessageSequenceId(long long messageSequenceId)
 {
     this->messageSequenceId = messageSequenceId ;
 }

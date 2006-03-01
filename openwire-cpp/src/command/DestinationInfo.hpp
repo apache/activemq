@@ -18,16 +18,13 @@
 #define DestinationInfo_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
+    
 #include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/BrokerId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +36,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,10 +53,10 @@ class DestinationInfo : public BaseCommand
 {
 private:
     p<ConnectionId> connectionId ;
-    ActiveMQDestination destination ;
-    byte operationType ;
-    long timeout ;
-    BrokerId[] brokerPath ;
+    p<ActiveMQDestination> destination ;
+    char operationType ;
+    long long timeout ;
+    ap<BrokerId> brokerPath ;
 
 public:
     const static int TYPE = 8;
@@ -67,21 +65,22 @@ public:
     DestinationInfo() ;
     virtual ~DestinationInfo() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ConnectionId> getConnectionId() ;
     virtual void setConnectionId(p<ConnectionId> connectionId) ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
-    virtual byte getOperationType() ;
-    virtual void setOperationType(byte operationType) ;
+    virtual char getOperationType() ;
+    virtual void setOperationType(char operationType) ;
 
-    virtual long getTimeout() ;
-    virtual void setTimeout(long timeout) ;
+    virtual long long getTimeout() ;
+    virtual void setTimeout(long long timeout) ;
 
-    virtual BrokerId[] getBrokerPath() ;
-    virtual void setBrokerPath(BrokerId[] brokerPath) ;
+    virtual ap<BrokerId> getBrokerPath() ;
+    virtual void setBrokerPath(ap<BrokerId> brokerPath) ;
 
 
 } ;

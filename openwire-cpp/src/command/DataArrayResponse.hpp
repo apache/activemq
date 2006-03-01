@@ -18,16 +18,11 @@
 #define DataArrayResponse_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/Response.hpp"
+    
+#include "command/IDataStructure.hpp"
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +34,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -54,7 +50,7 @@ namespace apache
 class DataArrayResponse : public Response
 {
 private:
-    DataStructure[] data ;
+    ap<IDataStructure> data ;
 
 public:
     const static int TYPE = 33;
@@ -63,9 +59,10 @@ public:
     DataArrayResponse() ;
     virtual ~DataArrayResponse() ;
 
+    virtual int getCommandType() ;
 
-    virtual DataStructure[] getData() ;
-    virtual void setData(DataStructure[] data) ;
+    virtual ap<IDataStructure> getData() ;
+    virtual void setData(ap<IDataStructure> data) ;
 
 
 } ;

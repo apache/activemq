@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 IntegerResponse::IntegerResponse()
 {
-    this->result = NULL ;
+    this->result = 0 ;
 }
 
 IntegerResponse::~IntegerResponse()

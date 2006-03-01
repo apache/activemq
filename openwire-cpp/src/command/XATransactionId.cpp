@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 XATransactionId::XATransactionId()
 {
-    this->formatId = NULL ;
-    this->globalTransactionId = NULL ;
-    this->branchQualifier = NULL ;
+    this->formatId = 0 ;
+    this->globalTransactionId = 0 ;
+    this->branchQualifier = 0 ;
 }
 
 XATransactionId::~XATransactionId()
@@ -51,23 +51,23 @@ void XATransactionId::setFormatId(int formatId)
 }
 
         
-byte[] XATransactionId::getGlobalTransactionId()
+ap<char> XATransactionId::getGlobalTransactionId()
 {
     return globalTransactionId ;
 }
 
-void XATransactionId::setGlobalTransactionId(byte[] globalTransactionId)
+void XATransactionId::setGlobalTransactionId(ap<char> globalTransactionId)
 {
     this->globalTransactionId = globalTransactionId ;
 }
 
         
-byte[] XATransactionId::getBranchQualifier()
+ap<char> XATransactionId::getBranchQualifier()
 {
     return branchQualifier ;
 }
 
-void XATransactionId::setBranchQualifier(byte[] branchQualifier)
+void XATransactionId::setBranchQualifier(ap<char> branchQualifier)
 {
     this->branchQualifier = branchQualifier ;
 }

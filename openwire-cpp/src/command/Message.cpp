@@ -30,31 +30,31 @@ using namespace apache::activemq::client::command;
  */
 Message::Message()
 {
-    this->producerId = NULL ;
-    this->destination = NULL ;
-    this->transactionId = NULL ;
-    this->originalDestination = NULL ;
-    this->messageId = NULL ;
-    this->originalTransactionId = NULL ;
-    this->groupID = NULL ;
-    this->groupSequence = NULL ;
-    this->correlationId = NULL ;
-    this->persistent = NULL ;
-    this->expiration = NULL ;
-    this->priority = NULL ;
-    this->replyTo = NULL ;
-    this->timestamp = NULL ;
-    this->type = NULL ;
-    this->content = NULL ;
-    this->marshalledProperties = NULL ;
-    this->dataStructure = NULL ;
-    this->targetConsumerId = NULL ;
-    this->compressed = NULL ;
-    this->redeliveryCounter = NULL ;
-    this->brokerPath = NULL ;
-    this->arrival = NULL ;
-    this->userID = NULL ;
-    this->recievedByDFBridge = NULL ;
+    this->producerId = 0 ;
+    this->destination = 0 ;
+    this->transactionId = 0 ;
+    this->originalDestination = 0 ;
+    this->messageId = 0 ;
+    this->originalTransactionId = 0 ;
+    this->groupID = 0 ;
+    this->groupSequence = 0 ;
+    this->correlationId = 0 ;
+    this->persistent = 0 ;
+    this->expiration = 0 ;
+    this->priority = 0 ;
+    this->replyTo = 0 ;
+    this->timestamp = 0 ;
+    this->type = 0 ;
+    this->content = 0 ;
+    this->marshalledProperties = 0 ;
+    this->dataStructure = 0 ;
+    this->targetConsumerId = 0 ;
+    this->compressed = 0 ;
+    this->redeliveryCounter = 0 ;
+    this->brokerPath = 0 ;
+    this->arrival = 0 ;
+    this->userID = 0 ;
+    this->recievedByDFBridge = 0 ;
 }
 
 Message::~Message()
@@ -73,12 +73,12 @@ void Message::setProducerId(p<ProducerId> producerId)
 }
 
         
-ActiveMQDestination Message::getDestination()
+p<ActiveMQDestination> Message::getDestination()
 {
     return destination ;
 }
 
-void Message::setDestination(ActiveMQDestination destination)
+void Message::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
@@ -95,12 +95,12 @@ void Message::setTransactionId(p<TransactionId> transactionId)
 }
 
         
-ActiveMQDestination Message::getOriginalDestination()
+p<ActiveMQDestination> Message::getOriginalDestination()
 {
     return originalDestination ;
 }
 
-void Message::setOriginalDestination(ActiveMQDestination originalDestination)
+void Message::setOriginalDestination(p<ActiveMQDestination> originalDestination)
 {
     this->originalDestination = originalDestination ;
 }
@@ -172,45 +172,45 @@ void Message::setPersistent(bool persistent)
 }
 
         
-long Message::getExpiration()
+long long Message::getExpiration()
 {
     return expiration ;
 }
 
-void Message::setExpiration(long expiration)
+void Message::setExpiration(long long expiration)
 {
     this->expiration = expiration ;
 }
 
         
-byte Message::getPriority()
+char Message::getPriority()
 {
     return priority ;
 }
 
-void Message::setPriority(byte priority)
+void Message::setPriority(char priority)
 {
     this->priority = priority ;
 }
 
         
-ActiveMQDestination Message::getReplyTo()
+p<ActiveMQDestination> Message::getReplyTo()
 {
     return replyTo ;
 }
 
-void Message::setReplyTo(ActiveMQDestination replyTo)
+void Message::setReplyTo(p<ActiveMQDestination> replyTo)
 {
     this->replyTo = replyTo ;
 }
 
         
-long Message::getTimestamp()
+long long Message::getTimestamp()
 {
     return timestamp ;
 }
 
-void Message::setTimestamp(long timestamp)
+void Message::setTimestamp(long long timestamp)
 {
     this->timestamp = timestamp ;
 }
@@ -227,34 +227,34 @@ void Message::setType(p<string> type)
 }
 
         
-void* Message::getContent()
+char* Message::getContent()
 {
     return content ;
 }
 
-void Message::setContent(void* content)
+void Message::setContent(char* content)
 {
     this->content = content ;
 }
 
         
-void* Message::getMarshalledProperties()
+char* Message::getMarshalledProperties()
 {
     return marshalledProperties ;
 }
 
-void Message::setMarshalledProperties(void* marshalledProperties)
+void Message::setMarshalledProperties(char* marshalledProperties)
 {
     this->marshalledProperties = marshalledProperties ;
 }
 
         
-DataStructure Message::getDataStructure()
+p<IDataStructure> Message::getDataStructure()
 {
     return dataStructure ;
 }
 
-void Message::setDataStructure(DataStructure dataStructure)
+void Message::setDataStructure(p<IDataStructure> dataStructure)
 {
     this->dataStructure = dataStructure ;
 }
@@ -293,23 +293,23 @@ void Message::setRedeliveryCounter(int redeliveryCounter)
 }
 
         
-BrokerId[] Message::getBrokerPath()
+ap<BrokerId> Message::getBrokerPath()
 {
     return brokerPath ;
 }
 
-void Message::setBrokerPath(BrokerId[] brokerPath)
+void Message::setBrokerPath(ap<BrokerId> brokerPath)
 {
     this->brokerPath = brokerPath ;
 }
 
         
-long Message::getArrival()
+long long Message::getArrival()
 {
     return arrival ;
 }
 
-void Message::setArrival(long arrival)
+void Message::setArrival(long long arrival)
 {
     this->arrival = arrival ;
 }

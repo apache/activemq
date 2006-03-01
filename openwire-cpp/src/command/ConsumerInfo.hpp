@@ -18,16 +18,13 @@
 #define ConsumerInfo_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
+    
 #include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/BrokerId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +36,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -56,7 +54,7 @@ class ConsumerInfo : public BaseCommand
 private:
     p<ConsumerId> consumerId ;
     bool browser ;
-    ActiveMQDestination destination ;
+    p<ActiveMQDestination> destination ;
     int prefetchSize ;
     bool dispatchAsync ;
     p<string> selector ;
@@ -64,8 +62,8 @@ private:
     bool noLocal ;
     bool exclusive ;
     bool retroactive ;
-    byte priority ;
-    BrokerId[] brokerPath ;
+    char priority ;
+    ap<BrokerId> brokerPath ;
     bool networkSubscription ;
 
 public:
@@ -75,6 +73,7 @@ public:
     ConsumerInfo() ;
     virtual ~ConsumerInfo() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ConsumerId> getConsumerId() ;
     virtual void setConsumerId(p<ConsumerId> consumerId) ;
@@ -82,8 +81,8 @@ public:
     virtual bool getBrowser() ;
     virtual void setBrowser(bool browser) ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
     virtual int getPrefetchSize() ;
     virtual void setPrefetchSize(int prefetchSize) ;
@@ -106,11 +105,11 @@ public:
     virtual bool getRetroactive() ;
     virtual void setRetroactive(bool retroactive) ;
 
-    virtual byte getPriority() ;
-    virtual void setPriority(byte priority) ;
+    virtual char getPriority() ;
+    virtual void setPriority(char priority) ;
 
-    virtual BrokerId[] getBrokerPath() ;
-    virtual void setBrokerPath(BrokerId[] brokerPath) ;
+    virtual ap<BrokerId> getBrokerPath() ;
+    virtual void setBrokerPath(ap<BrokerId> brokerPath) ;
 
     virtual bool getNetworkSubscription() ;
     virtual void setNetworkSubscription(bool networkSubscription) ;

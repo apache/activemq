@@ -18,16 +18,10 @@
 #define XATransactionId_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/TransactionId.hpp"
+    
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +33,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,8 +50,8 @@ class XATransactionId : public TransactionId
 {
 private:
     int formatId ;
-    byte[] globalTransactionId ;
-    byte[] branchQualifier ;
+    ap<char> globalTransactionId ;
+    ap<char> branchQualifier ;
 
 public:
     const static int TYPE = 112;
@@ -65,15 +60,16 @@ public:
     XATransactionId() ;
     virtual ~XATransactionId() ;
 
+    virtual int getCommandType() ;
 
     virtual int getFormatId() ;
     virtual void setFormatId(int formatId) ;
 
-    virtual byte[] getGlobalTransactionId() ;
-    virtual void setGlobalTransactionId(byte[] globalTransactionId) ;
+    virtual ap<char> getGlobalTransactionId() ;
+    virtual void setGlobalTransactionId(ap<char> globalTransactionId) ;
 
-    virtual byte[] getBranchQualifier() ;
-    virtual void setBranchQualifier(byte[] branchQualifier) ;
+    virtual ap<char> getBranchQualifier() ;
+    virtual void setBranchQualifier(ap<char> branchQualifier) ;
 
 
 } ;
