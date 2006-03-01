@@ -204,6 +204,8 @@ public class StompTest extends CombinationTestSupport {
         frame =
             "SEND\n" +
             "correlation-id:c123\n" +
+            "priority:3\n" +
+            "type:t345\n" +
             "JMSXGroupID:abc\n" +
             "foo:abc\n" +
             "bar:123\n" +
@@ -217,6 +219,8 @@ public class StompTest extends CombinationTestSupport {
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
         assertEquals("JMSCorrelationID", "c123", message.getJMSCorrelationID());
+        assertEquals("getJMSType", "t345", message.getJMSType());
+        assertEquals("getJMSPriority", 3, message.getJMSPriority());
         assertEquals("foo", "abc", message.getStringProperty("foo"));
         assertEquals("bar", "123", message.getStringProperty("bar"));
         

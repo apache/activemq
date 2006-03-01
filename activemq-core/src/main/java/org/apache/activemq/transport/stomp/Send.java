@@ -100,6 +100,10 @@ class Send implements StompCommand {
         if (priority != null) {
             msg.setJMSPriority(asInt(priority));
         }
+        Object type = headers.remove(Stomp.Headers.Send.TYPE);
+        if (type != null) {
+            msg.setJMSType((String) type);
+        }
 
         msg.setJMSReplyTo(DestinationNamer.convert((String) headers.remove(Stomp.Headers.Send.REPLY_TO)));
 
