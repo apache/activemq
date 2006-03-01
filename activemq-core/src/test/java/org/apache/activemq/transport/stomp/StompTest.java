@@ -104,7 +104,8 @@ public class StompTest extends CombinationTestSupport {
         } 
     }
 
-    
+
+
     public void sendMessage(String msg) throws Exception {
         sendMessage(msg, "foo", "xyz");
     }
@@ -213,7 +214,59 @@ public class StompTest extends CombinationTestSupport {
             Stomp.NULL;
         sendFrame(frame);
     }
-    
+
+
+    public void testMessagesAreInOrder() throws Exception {
+        int ctr = 10;
+        String[] data = new String[ctr];
+
+        String frame =
+                "CONNECT\n" +
+                "login: brianm\n" +
+                "passcode: wombats\n\n" +
+                Stomp.NULL;
+        sendFrame(frame);
+
+        frame = receiveFrame(100000);
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame =
+                "SUBSCRIBE\n" +
+                "destination:/queue/" + getQueueName() + "\n" +
+                "ack:auto\n\n" +
+                Stomp.NULL;
+        sendFrame(frame);
+
+        for (int i = 0; i < ctr; ++i) {
+            data[i] = getName() + i;
+            sendMessage(data[i]);
+        }
+
+        for (int i = 0; i < ctr; ++i) {
+            frame = receiveFrame(1000);
+            assertTrue("Message not in order", frame.indexOf(data[i]) >=0 );
+        }
+
+        // sleep a while before publishing another set of messages
+        waitForFrameToTakeEffect();
+
+        for (int i = 0; i < ctr; ++i) {
+            data[i] = getName() + ":second:" + i;
+            sendMessage(data[i]);
+        }
+
+        for (int i = 0; i < ctr; ++i) {
+            frame = receiveFrame(1000);
+            assertTrue("Message not in order", frame.indexOf(data[i]) >=0 );
+        }
+
+        frame =
+                "DISCONNECT\n" +
+                "\n\n" +
+                Stomp.NULL;
+        sendFrame(frame);
+    }
+
 
     public void testSubscribeWithAutoAckAndSelector() throws Exception {
 
