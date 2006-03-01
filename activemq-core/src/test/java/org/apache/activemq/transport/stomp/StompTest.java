@@ -21,6 +21,7 @@ import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -155,7 +156,7 @@ public class StompTest extends CombinationTestSupport {
     }
     
     
-    public void testSendMessageWithHeaders() throws Exception {
+    public void testSendMessageWithCustomHeadersAndSelector() throws Exception {
         
         MessageConsumer consumer = session.createConsumer(queue, "foo = 'abc'");
         
@@ -182,6 +183,46 @@ public class StompTest extends CombinationTestSupport {
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
+        assertEquals("foo", "abc", message.getStringProperty("foo"));
+        assertEquals("bar", "123", message.getStringProperty("bar"));
+    }
+    
+    public void testSendMessageWithStandardHeaders() throws Exception {
+        
+        MessageConsumer consumer = session.createConsumer(queue);
+        
+        String frame = 
+            "CONNECT\n" + 
+            "login: brianm\n" + 
+            "passcode: wombats\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
+     
+        frame = receiveFrame(10000);
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame =
+            "SEND\n" +
+            "correlation-id:c123\n" +
+            "JMSXGroupID:abc\n" +
+            "foo:abc\n" +
+            "bar:123\n" +
+            "destination:/queue/" + getQueueName() + "\n\n" +
+            "Hello World" +
+            Stomp.NULL;
+
+        sendFrame(frame);
+
+        TextMessage message = (TextMessage) consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals("Hello World", message.getText());
+        assertEquals("JMSCorrelationID", "c123", message.getJMSCorrelationID());
+        assertEquals("foo", "abc", message.getStringProperty("foo"));
+        assertEquals("bar", "123", message.getStringProperty("bar"));
+        
+        assertEquals("JMSXGroupID", "abc", message.getStringProperty("JMSXGroupID"));
+        ActiveMQTextMessage amqMessage = (ActiveMQTextMessage) message;
+        assertEquals("GroupID", "abc", amqMessage.getGroupID());
     }
     
     public void testSubscribeWithAutoAck() throws Exception {
