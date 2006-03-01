@@ -44,16 +44,42 @@ class GenerateCppHeaders extends OpenWireCppHeadersScript {
 #define ${className}_hpp_
 
 #include <string>
+"""
+if( baseClass.equals("BrokerError") )
+    out << """#include "${baseClass}.hpp"
+"""
+else
+    out << """#include "command/${baseClass}.hpp"
+    
+"""
+for (property in properties)
+{
+    if( !property.type.isPrimitiveType() &&
+         property.type.simpleName != "String" &&
+         property.type.simpleName != "ByteSequence" )
+    {
+        def includeName = toCppType(property.type)
+        if( property.type.isArrayType() )
+        {
+            def arrayType = property.type.arrayComponentType ;
+            if( arrayType.isPrimitiveType() )
+                continue ;
+        }
+        if( includeName.startsWith("ap<") )
+            includeName = includeName.substring(3, includeName.length()-1) ;
+        else if( includeName.startsWith("p<") )
+            includeName = includeName.substring(2, includeName.length()-1)
 
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
-#include "command/${baseClass}.hpp"
+        if( includeName.equals("BrokerError") )
+            out << """#include "${includeName}.hpp"
+"""
+        else
+            out << """#include "command/${includeName}.hpp"
+"""
+    }
+}
+out << """
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -65,6 +91,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -95,6 +122,7 @@ public:
     ${className}() ;
     virtual ~${className}() ;
 
+    virtual int getCommandType() ;
 """
     for (property in properties) {
         def type = toCppType(property.type)
