@@ -1,0 +1,187 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProductVersion>8.0.30703</ProductVersion>
+        <SchemaVersion>2.0</SchemaVersion>
+        <ProjectGuid>{F7BA9EF7-ADF7-40EF-9A9E-206649DBB10C}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <RootNamespace>src</RootNamespace>
+        <AssemblyName>src</AssemblyName>
+        <WarningLevel>4</WarningLevel>
+        <StartupObject/>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugSymbols>false</DebugSymbols>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="System"/>
+        <Reference Include="System.Data"/>
+        <Reference Include="System.Xml"/>
+    </ItemGroup>
+    <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets"/>
+    <ItemGroup>
+        <Compile Include="CommonAssemblyInfo.cs"/>
+        <Compile Include="OpenWire.Client\BrokerException.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQBytesMessage.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQDestination.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQMapMessage.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQMessage.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQObjectMessage.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQQueue.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQStreamMessage.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQTempDestination.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQTempQueue.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQTempTopic.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQTextMessage.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ActiveMQTopic.cs"/>
+        <Compile Include="OpenWire.Client\Commands\BaseCommand.cs"/>
+        <Compile Include="OpenWire.Client\Commands\BrokerId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\BrokerInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ConnectionError.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ConnectionId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ConnectionInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ConsumerId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ConsumerInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ControlCommand.cs"/>
+        <Compile Include="OpenWire.Client\Commands\DataArrayResponse.cs"/>
+        <Compile Include="OpenWire.Client\Commands\DataResponse.cs"/>
+        <Compile Include="OpenWire.Client\Commands\DestinationInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\DiscoveryEvent.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ExceptionResponse.cs"/>
+        <Compile Include="OpenWire.Client\Commands\FlushCommand.cs"/>
+        <Compile Include="OpenWire.Client\Commands\IntegerResponse.cs"/>
+        <Compile Include="OpenWire.Client\Commands\JournalQueueAck.cs"/>
+        <Compile Include="OpenWire.Client\Commands\JournalTopicAck.cs"/>
+        <Compile Include="OpenWire.Client\Commands\JournalTrace.cs"/>
+        <Compile Include="OpenWire.Client\Commands\JournalTransaction.cs"/>
+        <Compile Include="OpenWire.Client\Commands\KeepAliveInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\LocalTransactionId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\Message.cs"/>
+        <Compile Include="OpenWire.Client\Commands\MessageAck.cs"/>
+        <Compile Include="OpenWire.Client\Commands\MessageDispatch.cs"/>
+        <Compile Include="OpenWire.Client\Commands\MessageDispatchNotification.cs"/>
+        <Compile Include="OpenWire.Client\Commands\MessageId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ProducerId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ProducerInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\RemoveInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\RemoveSubscriptionInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\Response.cs"/>
+        <Compile Include="OpenWire.Client\Commands\SessionId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\SessionInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\ShutdownInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\SubscriptionInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\TransactionId.cs"/>
+        <Compile Include="OpenWire.Client\Commands\TransactionInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\WireFormatInfo.cs"/>
+        <Compile Include="OpenWire.Client\Commands\XATransactionId.cs"/>
+        <Compile Include="OpenWire.Client\Connection.cs"/>
+        <Compile Include="OpenWire.Client\ConnectionClosedException.cs"/>
+        <Compile Include="OpenWire.Client\ConnectionFactory.cs"/>
+        <Compile Include="OpenWire.Client\ConsumerClosedException.cs"/>
+        <Compile Include="OpenWire.Client\Core\AbstractCommand.cs"/>
+        <Compile Include="OpenWire.Client\Core\BaseDataStreamMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\Core\BooleanStream.cs"/>
+        <Compile Include="OpenWire.Client\Core\BrokerError.cs"/>
+        <Compile Include="OpenWire.Client\Core\Command.cs"/>
+        <Compile Include="OpenWire.Client\Core\DataStructure.cs"/>
+        <Compile Include="OpenWire.Client\Core\DataStructureSupport.cs"/>
+        <Compile Include="OpenWire.Client\Core\Dispatcher.cs"/>
+        <Compile Include="OpenWire.Client\Core\FutureResponse.cs"/>
+        <Compile Include="OpenWire.Client\Core\ISynchronization.cs"/>
+        <Compile Include="OpenWire.Client\Core\ITransport.cs"/>
+        <Compile Include="OpenWire.Client\Core\MarshallAware.cs"/>
+        <Compile Include="OpenWire.Client\Core\MessagePropertyHelper.cs"/>
+        <Compile Include="OpenWire.Client\Core\OpenWireFormat.cs"/>
+        <Compile Include="OpenWire.Client\Core\PrimitiveMap.cs"/>
+        <Compile Include="OpenWire.Client\Core\SocketTransport.cs"/>
+        <Compile Include="OpenWire.Client\Core\TransactionContext.cs"/>
+        <Compile Include="OpenWire.Client\DestinationFilter.cs"/>
+        <Compile Include="OpenWire.Client\IBytesMessage.cs"/>
+        <Compile Include="OpenWire.Client\IConnection.cs"/>
+        <Compile Include="OpenWire.Client\IConnectionFactory.cs"/>
+        <Compile Include="OpenWire.Client\IDestination.cs"/>
+        <Compile Include="OpenWire.Client\IMapMessage.cs"/>
+        <Compile Include="OpenWire.Client\IMessage.cs"/>
+        <Compile Include="OpenWire.Client\IMessageConsumer.cs"/>
+        <Compile Include="OpenWire.Client\IMessageProducer.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQBytesMessageMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQDestinationMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQMapMessageMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQMessageMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQObjectMessageMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQQueueMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQStreamMessageMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQTempDestinationMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQTempQueueMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQTempTopicMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQTextMessageMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ActiveMQTopicMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\BaseCommandMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\BrokerIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\BrokerInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ConnectionErrorMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ConnectionIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ConnectionInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ConsumerIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ConsumerInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ControlCommandMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\DataArrayResponseMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\DataResponseMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\DataStructureSupportMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\DestinationInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\DiscoveryEventMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ExceptionResponseMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\FlushCommandMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\IntegerResponseMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\JournalQueueAckMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\JournalTopicAckMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\JournalTraceMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\JournalTransactionMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\KeepAliveInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\LocalTransactionIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\MarshallerFactory.cs"/>
+        <Compile Include="OpenWire.Client\IO\MessageAckMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\MessageDispatchMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\MessageDispatchNotificationMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\MessageIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\MessageMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ProducerIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ProducerInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\RemoveInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\RemoveSubscriptionInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ResponseMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\SessionIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\SessionInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\ShutdownInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\SubscriptionInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\TransactionIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\TransactionInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\WireFormatInfoMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IO\XATransactionIdMarshaller.cs"/>
+        <Compile Include="OpenWire.Client\IPrimitiveMap.cs"/>
+        <Compile Include="OpenWire.Client\IQueue.cs"/>
+        <Compile Include="OpenWire.Client\ISession.cs"/>
+        <Compile Include="OpenWire.Client\IStartable.cs"/>
+        <Compile Include="OpenWire.Client\ITemporaryQueue.cs"/>
+        <Compile Include="OpenWire.Client\ITemporaryTopic.cs"/>
+        <Compile Include="OpenWire.Client\ITextMessage.cs"/>
+        <Compile Include="OpenWire.Client\ITopic.cs"/>
+        <Compile Include="OpenWire.Client\MessageConsumer.cs"/>
+        <Compile Include="OpenWire.Client\MessageProducer.cs"/>
+        <Compile Include="OpenWire.Client\OpenWireException.cs"/>
+        <Compile Include="OpenWire.Client\Session.cs"/>
+    </ItemGroup>
+</Project>

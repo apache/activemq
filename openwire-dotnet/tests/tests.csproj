@@ -1,0 +1,57 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProductVersion>8.0.30703</ProductVersion>
+        <SchemaVersion>2.0</SchemaVersion>
+        <ProjectGuid>{B409B247-A311-42A9-B68D-76054D63DD7D}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <RootNamespace>tests</RootNamespace>
+        <AssemblyName>tests</AssemblyName>
+        <WarningLevel>4</WarningLevel>
+        <StartupObject/>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugSymbols>false</DebugSymbols>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="nunit.core"/>
+        <Reference Include="nunit.framework"/>
+        <Reference Include="System"/>
+        <Reference Include="System.Data"/>
+        <Reference Include="System.Xml"/>
+    </ItemGroup>
+    <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets"/>
+    <ItemGroup>
+        <Compile Include="OpenWire.Client\AsyncConsumeTest.cs"/>
+        <Compile Include="OpenWire.Client\BadConsumeTest.cs"/>
+        <Compile Include="OpenWire.Client\BytesMessageTest.cs"/>
+        <Compile Include="OpenWire.Client\ClientTest.cs"/>
+        <Compile Include="OpenWire.Client\CommandTest.cs"/>
+        <Compile Include="OpenWire.Client\ConsumerTest.cs"/>
+        <Compile Include="OpenWire.Client\EndianTest.cs"/>
+        <Compile Include="OpenWire.Client\JMSPropertyTest.cs"/>
+        <Compile Include="OpenWire.Client\MapMessageTest.cs"/>
+        <Compile Include="OpenWire.Client\TestMain.cs"/>
+        <Compile Include="OpenWire.Client\TestSupport.cs"/>
+        <Compile Include="OpenWire.Client\TransactionTest.cs"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="../src/src.csproj">
+            <Name>src</Name>
+            <Project>{F7BA9EF7-ADF7-40EF-9A9E-206649DBB10C}</Project>
+        </ProjectReference>
+    </ItemGroup>
+</Project>
