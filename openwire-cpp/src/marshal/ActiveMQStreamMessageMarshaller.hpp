@@ -14,8 +14,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef BrokerInfoMarshaller_hpp_
-#define BrokerInfoMarshaller_hpp_
+#ifndef ActiveMQStreamMessageMarshaller_hpp_
+#define ActiveMQStreamMessageMarshaller_hpp_
 
 #include <string>
 
@@ -31,7 +31,7 @@
 #include "io/BinaryReader.hpp"
 #include "io/BinaryWriter.hpp"
 
-#include "command/BaseCommandMarshaller.hpp"
+#include "command/ActiveMQMessageMarshaller.hpp"
 #include "util/ifr/p"
 
 namespace apache
@@ -49,11 +49,11 @@ namespace apache
 /*
  *
  */
-class BrokerInfoMarshaller : public BaseCommandMarshaller
+class ActiveMQStreamMessageMarshaller : public ActiveMQMessageMarshaller
 {
 public:
-    BrokerInfoMarshaller() ;
-    virtual ~BrokerInfoMarshaller() ;
+    ActiveMQStreamMessageMarshaller() ;
+    virtual ~ActiveMQStreamMessageMarshaller() ;
 
     virtual DataStructure* createCommand() ;
     virtual byte getDataStructureType() ;
@@ -68,4 +68,4 @@ public:
     }
   }
 }
-#endif /*BrokerInfoMarshaller_hpp_*/
+#endif /*ActiveMQStreamMessageMarshaller_hpp_*/

@@ -14,8 +14,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef BrokerInfoMarshaller_hpp_
-#define BrokerInfoMarshaller_hpp_
+#ifndef ControlCommandMarshaller_hpp_
+#define ControlCommandMarshaller_hpp_
 
 #include <string>
 
@@ -49,11 +49,11 @@ namespace apache
 /*
  *
  */
-class BrokerInfoMarshaller : public BaseCommandMarshaller
+class ControlCommandMarshaller : public BaseCommandMarshaller
 {
 public:
-    BrokerInfoMarshaller() ;
-    virtual ~BrokerInfoMarshaller() ;
+    ControlCommandMarshaller() ;
+    virtual ~ControlCommandMarshaller() ;
 
     virtual DataStructure* createCommand() ;
     virtual byte getDataStructureType() ;
@@ -68,4 +68,4 @@ public:
     }
   }
 }
-#endif /*BrokerInfoMarshaller_hpp_*/
+#endif /*ControlCommandMarshaller_hpp_*/

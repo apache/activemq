@@ -14,8 +14,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef BrokerInfoMarshaller_hpp_
-#define BrokerInfoMarshaller_hpp_
+#ifndef MessageDispatchNotificationMarshaller_hpp_
+#define MessageDispatchNotificationMarshaller_hpp_
 
 #include <string>
 
@@ -49,11 +49,11 @@ namespace apache
 /*
  *
  */
-class BrokerInfoMarshaller : public BaseCommandMarshaller
+class MessageDispatchNotificationMarshaller : public BaseCommandMarshaller
 {
 public:
-    BrokerInfoMarshaller() ;
-    virtual ~BrokerInfoMarshaller() ;
+    MessageDispatchNotificationMarshaller() ;
+    virtual ~MessageDispatchNotificationMarshaller() ;
 
     virtual DataStructure* createCommand() ;
     virtual byte getDataStructureType() ;
@@ -68,4 +68,4 @@ public:
     }
   }
 }
-#endif /*BrokerInfoMarshaller_hpp_*/
+#endif /*MessageDispatchNotificationMarshaller_hpp_*/
