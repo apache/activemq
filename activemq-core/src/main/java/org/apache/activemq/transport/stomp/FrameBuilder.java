@@ -79,7 +79,10 @@ class FrameBuilder {
             String key = (String) iterator.next();
             String property = headers.getProperty(key);
             if (property != null) {
-                buffer.append(key).append(Stomp.Headers.SEPERATOR).append(property).append(Stomp.NEWLINE);
+                buffer.append(key);
+                buffer.append(Stomp.Headers.SEPERATOR);
+                buffer.append(property);
+                buffer.append(Stomp.NEWLINE);
             }
         }
         buffer.append(Stomp.NEWLINE);

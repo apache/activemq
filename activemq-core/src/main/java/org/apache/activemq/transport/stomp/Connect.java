@@ -83,9 +83,13 @@ class Connect implements StompCommand {
                         format.onFullyConnected();
                         
                         StringBuffer buffer = new StringBuffer();
-                        buffer.append(Stomp.Responses.CONNECTED).append(Stomp.NEWLINE);
-                        buffer.append(Stomp.Headers.Connected.SESSION).append(Stomp.Headers.SEPERATOR).append(connectionInfo.getClientId()).append(Stomp.NEWLINE).append(
-                                Stomp.NEWLINE);
+                        buffer.append(Stomp.Responses.CONNECTED);
+                        buffer.append(Stomp.NEWLINE);
+                        buffer.append(Stomp.Headers.Connected.SESSION);
+                        buffer.append(Stomp.Headers.SEPERATOR);
+                        buffer.append(connectionInfo.getClientId());
+                        buffer.append(Stomp.NEWLINE);
+                        buffer.append(Stomp.NEWLINE);
                         buffer.append(Stomp.NULL);
                         out.writeBytes(buffer.toString());
                         return true;
