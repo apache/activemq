@@ -162,6 +162,9 @@
         <nant target="build" if="${platform::is-win32()}">
             <buildfiles refid="tas.win32" />
         </nant>
+    </target>
+
+    <target name="test" depends="build">
         <!-- build OpenWire.Client.Tests assembly -->
         <nant buildfile="tests/OpenWire.Client/OpenWire.Client.build" target="test" />
         <!-- build tests for task assemblies -->
@@ -175,10 +178,6 @@
         <nant target="build" if="${platform::is-win32()}">
             <buildfiles refid="tas.win32.tests" />
         </nant>
-    </target>
-
-    <target name="test" depends="build">
-      <!--  TODO NUnit stuff -->
     </target>
     
     <target name="package-doc">
