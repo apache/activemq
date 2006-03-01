@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 JournalTransaction::JournalTransaction()
 {
-    this->transactionId = NULL ;
-    this->type = NULL ;
-    this->wasPrepared = NULL ;
+    this->transactionId = 0 ;
+    this->type = 0 ;
+    this->wasPrepared = 0 ;
 }
 
 JournalTransaction::~JournalTransaction()
@@ -51,12 +51,12 @@ void JournalTransaction::setTransactionId(p<TransactionId> transactionId)
 }
 
         
-byte JournalTransaction::getType()
+char JournalTransaction::getType()
 {
     return type ;
 }
 
-void JournalTransaction::setType(byte type)
+void JournalTransaction::setType(char type)
 {
     this->type = type ;
 }

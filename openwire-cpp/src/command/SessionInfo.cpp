@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 SessionInfo::SessionInfo()
 {
-    this->sessionId = NULL ;
+    this->sessionId = 0 ;
 }
 
 SessionInfo::~SessionInfo()

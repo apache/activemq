@@ -18,16 +18,12 @@
 #define ConnectionError_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
+    
+#include "BrokerError.hpp"
 #include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +35,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -54,7 +51,7 @@ namespace apache
 class ConnectionError : public BaseCommand
 {
 private:
-    BrokerError exception ;
+    p<BrokerError> exception ;
     p<ConnectionId> connectionId ;
 
 public:
@@ -64,9 +61,10 @@ public:
     ConnectionError() ;
     virtual ~ConnectionError() ;
 
+    virtual int getCommandType() ;
 
-    virtual BrokerError getException() ;
-    virtual void setException(BrokerError exception) ;
+    virtual p<BrokerError> getException() ;
+    virtual void setException(p<BrokerError> exception) ;
 
     virtual p<ConnectionId> getConnectionId() ;
     virtual void setConnectionId(p<ConnectionId> connectionId) ;

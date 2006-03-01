@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 ProducerId::ProducerId()
 {
-    this->connectionId = NULL ;
-    this->value = NULL ;
-    this->sessionId = NULL ;
+    this->connectionId = 0 ;
+    this->value = 0 ;
+    this->sessionId = 0 ;
 }
 
 ProducerId::~ProducerId()
@@ -51,23 +51,23 @@ void ProducerId::setConnectionId(p<string> connectionId)
 }
 
         
-long ProducerId::getValue()
+long long ProducerId::getValue()
 {
     return value ;
 }
 
-void ProducerId::setValue(long value)
+void ProducerId::setValue(long long value)
 {
     this->value = value ;
 }
 
         
-long ProducerId::getSessionId()
+long long ProducerId::getSessionId()
 {
     return sessionId ;
 }
 
-void ProducerId::setSessionId(long sessionId)
+void ProducerId::setSessionId(long long sessionId)
 {
     this->sessionId = sessionId ;
 }

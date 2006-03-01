@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 DataResponse::DataResponse()
 {
-    this->data = NULL ;
+    this->data = 0 ;
 }
 
 DataResponse::~DataResponse()
@@ -38,12 +38,12 @@ DataResponse::~DataResponse()
 }
 
         
-DataStructure DataResponse::getData()
+p<IDataStructure> DataResponse::getData()
 {
     return data ;
 }
 
-void DataResponse::setData(DataStructure data)
+void DataResponse::setData(p<IDataStructure> data)
 {
     this->data = data ;
 }

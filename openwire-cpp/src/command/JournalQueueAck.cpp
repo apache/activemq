@@ -30,8 +30,8 @@ using namespace apache::activemq::client::command;
  */
 JournalQueueAck::JournalQueueAck()
 {
-    this->destination = NULL ;
-    this->messageAck = NULL ;
+    this->destination = 0 ;
+    this->messageAck = 0 ;
 }
 
 JournalQueueAck::~JournalQueueAck()
@@ -39,23 +39,23 @@ JournalQueueAck::~JournalQueueAck()
 }
 
         
-ActiveMQDestination JournalQueueAck::getDestination()
+p<ActiveMQDestination> JournalQueueAck::getDestination()
 {
     return destination ;
 }
 
-void JournalQueueAck::setDestination(ActiveMQDestination destination)
+void JournalQueueAck::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
 
         
-MessageAck JournalQueueAck::getMessageAck()
+p<MessageAck> JournalQueueAck::getMessageAck()
 {
     return messageAck ;
 }
 
-void JournalQueueAck::setMessageAck(MessageAck messageAck)
+void JournalQueueAck::setMessageAck(p<MessageAck> messageAck)
 {
     this->messageAck = messageAck ;
 }

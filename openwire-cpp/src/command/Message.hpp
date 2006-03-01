@@ -18,16 +18,20 @@
 #define Message_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
+    
 #include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/TransactionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/MessageId.hpp"
+#include "command/TransactionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/IDataStructure.hpp"
+#include "command/ConsumerId.hpp"
+#include "command/BrokerId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +43,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,28 +60,28 @@ class Message : public BaseCommand
 {
 private:
     p<ProducerId> producerId ;
-    ActiveMQDestination destination ;
+    p<ActiveMQDestination> destination ;
     p<TransactionId> transactionId ;
-    ActiveMQDestination originalDestination ;
+    p<ActiveMQDestination> originalDestination ;
     p<MessageId> messageId ;
     p<TransactionId> originalTransactionId ;
     p<string> groupID ;
     int groupSequence ;
     p<string> correlationId ;
     bool persistent ;
-    long expiration ;
-    byte priority ;
-    ActiveMQDestination replyTo ;
-    long timestamp ;
+    long long expiration ;
+    char priority ;
+    p<ActiveMQDestination> replyTo ;
+    long long timestamp ;
     p<string> type ;
-    void* content ;
-    void* marshalledProperties ;
-    DataStructure dataStructure ;
+    char* content ;
+    char* marshalledProperties ;
+    p<IDataStructure> dataStructure ;
     p<ConsumerId> targetConsumerId ;
     bool compressed ;
     int redeliveryCounter ;
-    BrokerId[] brokerPath ;
-    long arrival ;
+    ap<BrokerId> brokerPath ;
+    long long arrival ;
     p<string> userID ;
     bool recievedByDFBridge ;
 
@@ -87,18 +92,19 @@ public:
     Message() ;
     virtual ~Message() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ProducerId> getProducerId() ;
     virtual void setProducerId(p<ProducerId> producerId) ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
     virtual p<TransactionId> getTransactionId() ;
     virtual void setTransactionId(p<TransactionId> transactionId) ;
 
-    virtual ActiveMQDestination getOriginalDestination() ;
-    virtual void setOriginalDestination(ActiveMQDestination originalDestination) ;
+    virtual p<ActiveMQDestination> getOriginalDestination() ;
+    virtual void setOriginalDestination(p<ActiveMQDestination> originalDestination) ;
 
     virtual p<MessageId> getMessageId() ;
     virtual void setMessageId(p<MessageId> messageId) ;
@@ -118,29 +124,29 @@ public:
     virtual bool getPersistent() ;
     virtual void setPersistent(bool persistent) ;
 
-    virtual long getExpiration() ;
-    virtual void setExpiration(long expiration) ;
+    virtual long long getExpiration() ;
+    virtual void setExpiration(long long expiration) ;
 
-    virtual byte getPriority() ;
-    virtual void setPriority(byte priority) ;
+    virtual char getPriority() ;
+    virtual void setPriority(char priority) ;
 
-    virtual ActiveMQDestination getReplyTo() ;
-    virtual void setReplyTo(ActiveMQDestination replyTo) ;
+    virtual p<ActiveMQDestination> getReplyTo() ;
+    virtual void setReplyTo(p<ActiveMQDestination> replyTo) ;
 
-    virtual long getTimestamp() ;
-    virtual void setTimestamp(long timestamp) ;
+    virtual long long getTimestamp() ;
+    virtual void setTimestamp(long long timestamp) ;
 
     virtual p<string> getType() ;
     virtual void setType(p<string> type) ;
 
-    virtual void* getContent() ;
-    virtual void setContent(void* content) ;
+    virtual char* getContent() ;
+    virtual void setContent(char* content) ;
 
-    virtual void* getMarshalledProperties() ;
-    virtual void setMarshalledProperties(void* marshalledProperties) ;
+    virtual char* getMarshalledProperties() ;
+    virtual void setMarshalledProperties(char* marshalledProperties) ;
 
-    virtual DataStructure getDataStructure() ;
-    virtual void setDataStructure(DataStructure dataStructure) ;
+    virtual p<IDataStructure> getDataStructure() ;
+    virtual void setDataStructure(p<IDataStructure> dataStructure) ;
 
     virtual p<ConsumerId> getTargetConsumerId() ;
     virtual void setTargetConsumerId(p<ConsumerId> targetConsumerId) ;
@@ -151,11 +157,11 @@ public:
     virtual int getRedeliveryCounter() ;
     virtual void setRedeliveryCounter(int redeliveryCounter) ;
 
-    virtual BrokerId[] getBrokerPath() ;
-    virtual void setBrokerPath(BrokerId[] brokerPath) ;
+    virtual ap<BrokerId> getBrokerPath() ;
+    virtual void setBrokerPath(ap<BrokerId> brokerPath) ;
 
-    virtual long getArrival() ;
-    virtual void setArrival(long arrival) ;
+    virtual long long getArrival() ;
+    virtual void setArrival(long long arrival) ;
 
     virtual p<string> getUserID() ;
     virtual void setUserID(p<string> userID) ;

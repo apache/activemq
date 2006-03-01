@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 MessageId::MessageId()
 {
-    this->producerId = NULL ;
-    this->producerSequenceId = NULL ;
-    this->brokerSequenceId = NULL ;
+    this->producerId = 0 ;
+    this->producerSequenceId = 0 ;
+    this->brokerSequenceId = 0 ;
 }
 
 MessageId::~MessageId()
@@ -51,23 +51,23 @@ void MessageId::setProducerId(p<ProducerId> producerId)
 }
 
         
-long MessageId::getProducerSequenceId()
+long long MessageId::getProducerSequenceId()
 {
     return producerSequenceId ;
 }
 
-void MessageId::setProducerSequenceId(long producerSequenceId)
+void MessageId::setProducerSequenceId(long long producerSequenceId)
 {
     this->producerSequenceId = producerSequenceId ;
 }
 
         
-long MessageId::getBrokerSequenceId()
+long long MessageId::getBrokerSequenceId()
 {
     return brokerSequenceId ;
 }
 
-void MessageId::setBrokerSequenceId(long brokerSequenceId)
+void MessageId::setBrokerSequenceId(long long brokerSequenceId)
 {
     this->brokerSequenceId = brokerSequenceId ;
 }

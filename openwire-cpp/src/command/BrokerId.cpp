@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 BrokerId::BrokerId()
 {
-    this->value = NULL ;
+    this->value = 0 ;
 }
 
 BrokerId::~BrokerId()

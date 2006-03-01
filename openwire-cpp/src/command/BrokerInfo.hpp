@@ -18,16 +18,12 @@
 #define BrokerInfo_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
+    
 #include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/BrokerInfo.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +35,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -56,7 +53,7 @@ class BrokerInfo : public BaseCommand
 private:
     p<BrokerId> brokerId ;
     p<string> brokerURL ;
-    BrokerInfo[] peerBrokerInfos ;
+    ap<BrokerInfo> peerBrokerInfos ;
     p<string> brokerName ;
     bool slaveBroker ;
 
@@ -67,6 +64,7 @@ public:
     BrokerInfo() ;
     virtual ~BrokerInfo() ;
 
+    virtual int getCommandType() ;
 
     virtual p<BrokerId> getBrokerId() ;
     virtual void setBrokerId(p<BrokerId> brokerId) ;
@@ -74,8 +72,8 @@ public:
     virtual p<string> getBrokerURL() ;
     virtual void setBrokerURL(p<string> brokerURL) ;
 
-    virtual BrokerInfo[] getPeerBrokerInfos() ;
-    virtual void setPeerBrokerInfos(BrokerInfo[] peerBrokerInfos) ;
+    virtual ap<BrokerInfo> getPeerBrokerInfos() ;
+    virtual void setPeerBrokerInfos(ap<BrokerInfo> peerBrokerInfos) ;
 
     virtual p<string> getBrokerName() ;
     virtual void setBrokerName(p<string> brokerName) ;

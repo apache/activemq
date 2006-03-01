@@ -18,16 +18,13 @@
 #define ProducerInfo_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
+    
 #include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/BrokerId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +36,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,8 +53,8 @@ class ProducerInfo : public BaseCommand
 {
 private:
     p<ProducerId> producerId ;
-    ActiveMQDestination destination ;
-    BrokerId[] brokerPath ;
+    p<ActiveMQDestination> destination ;
+    ap<BrokerId> brokerPath ;
 
 public:
     const static int TYPE = 6;
@@ -65,15 +63,16 @@ public:
     ProducerInfo() ;
     virtual ~ProducerInfo() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ProducerId> getProducerId() ;
     virtual void setProducerId(p<ProducerId> producerId) ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
-    virtual BrokerId[] getBrokerPath() ;
-    virtual void setBrokerPath(BrokerId[] brokerPath) ;
+    virtual ap<BrokerId> getBrokerPath() ;
+    virtual void setBrokerPath(ap<BrokerId> brokerPath) ;
 
 
 } ;

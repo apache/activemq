@@ -18,16 +18,13 @@
 #define MessageDispatchNotification_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
+    
 #include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/ActiveMQDestination.hpp"
+#include "command/MessageId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +36,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,8 +53,8 @@ class MessageDispatchNotification : public BaseCommand
 {
 private:
     p<ConsumerId> consumerId ;
-    ActiveMQDestination destination ;
-    long deliverySequenceId ;
+    p<ActiveMQDestination> destination ;
+    long long deliverySequenceId ;
     p<MessageId> messageId ;
 
 public:
@@ -66,15 +64,16 @@ public:
     MessageDispatchNotification() ;
     virtual ~MessageDispatchNotification() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ConsumerId> getConsumerId() ;
     virtual void setConsumerId(p<ConsumerId> consumerId) ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
-    virtual long getDeliverySequenceId() ;
-    virtual void setDeliverySequenceId(long deliverySequenceId) ;
+    virtual long long getDeliverySequenceId() ;
+    virtual void setDeliverySequenceId(long long deliverySequenceId) ;
 
     virtual p<MessageId> getMessageId() ;
     virtual void setMessageId(p<MessageId> messageId) ;

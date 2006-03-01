@@ -18,16 +18,13 @@
 #define JournalTopicAck_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/AbstractCommand.hpp"
+    
+#include "command/ActiveMQDestination.hpp"
+#include "command/MessageId.hpp"
+#include "command/TransactionId.hpp"
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +36,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -54,9 +52,9 @@ namespace apache
 class JournalTopicAck : public AbstractCommand
 {
 private:
-    ActiveMQDestination destination ;
+    p<ActiveMQDestination> destination ;
     p<MessageId> messageId ;
-    long messageSequenceId ;
+    long long messageSequenceId ;
     p<string> subscritionName ;
     p<string> clientId ;
     p<TransactionId> transactionId ;
@@ -68,15 +66,16 @@ public:
     JournalTopicAck() ;
     virtual ~JournalTopicAck() ;
 
+    virtual int getCommandType() ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
     virtual p<MessageId> getMessageId() ;
     virtual void setMessageId(p<MessageId> messageId) ;
 
-    virtual long getMessageSequenceId() ;
-    virtual void setMessageSequenceId(long messageSequenceId) ;
+    virtual long long getMessageSequenceId() ;
+    virtual void setMessageSequenceId(long long messageSequenceId) ;
 
     virtual p<string> getSubscritionName() ;
     virtual void setSubscritionName(p<string> subscritionName) ;

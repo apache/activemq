@@ -30,13 +30,13 @@ using namespace apache::activemq::client::command;
  */
 WireFormatInfo::WireFormatInfo()
 {
-    this->magic = NULL ;
-    this->version = NULL ;
-    this->cacheEnabled = NULL ;
-    this->stackTraceEnabled = NULL ;
-    this->tcpNoDelayEnabled = NULL ;
-    this->prefixPacketSize = NULL ;
-    this->tightEncodingEnabled = NULL ;
+    this->magic = 0 ;
+    this->version = 0 ;
+    this->cacheEnabled = 0 ;
+    this->stackTraceEnabled = 0 ;
+    this->tcpNoDelayEnabled = 0 ;
+    this->prefixPacketSize = 0 ;
+    this->tightEncodingEnabled = 0 ;
 }
 
 WireFormatInfo::~WireFormatInfo()
@@ -44,12 +44,12 @@ WireFormatInfo::~WireFormatInfo()
 }
 
         
-byte[] WireFormatInfo::getMagic()
+ap<char> WireFormatInfo::getMagic()
 {
     return magic ;
 }
 
-void WireFormatInfo::setMagic(byte[] magic)
+void WireFormatInfo::setMagic(ap<char> magic)
 {
     this->magic = magic ;
 }

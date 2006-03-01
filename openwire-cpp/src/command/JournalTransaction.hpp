@@ -18,16 +18,11 @@
 #define JournalTransaction_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/AbstractCommand.hpp"
+    
+#include "command/TransactionId.hpp"
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +34,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,7 +51,7 @@ class JournalTransaction : public AbstractCommand
 {
 private:
     p<TransactionId> transactionId ;
-    byte type ;
+    char type ;
     bool wasPrepared ;
 
 public:
@@ -65,12 +61,13 @@ public:
     JournalTransaction() ;
     virtual ~JournalTransaction() ;
 
+    virtual int getCommandType() ;
 
     virtual p<TransactionId> getTransactionId() ;
     virtual void setTransactionId(p<TransactionId> transactionId) ;
 
-    virtual byte getType() ;
-    virtual void setType(byte type) ;
+    virtual char getType() ;
+    virtual void setType(char type) ;
 
     virtual bool getWasPrepared() ;
     virtual void setWasPrepared(bool wasPrepared) ;

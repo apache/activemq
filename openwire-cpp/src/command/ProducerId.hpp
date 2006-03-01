@@ -18,16 +18,10 @@
 #define ProducerId_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
-#include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
-
 #include "command/AbstractCommand.hpp"
+    
+
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +33,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -55,8 +50,8 @@ class ProducerId : public AbstractCommand
 {
 private:
     p<string> connectionId ;
-    long value ;
-    long sessionId ;
+    long long value ;
+    long long sessionId ;
 
 public:
     const static int TYPE = 123;
@@ -65,15 +60,16 @@ public:
     ProducerId() ;
     virtual ~ProducerId() ;
 
+    virtual int getCommandType() ;
 
     virtual p<string> getConnectionId() ;
     virtual void setConnectionId(p<string> connectionId) ;
 
-    virtual long getValue() ;
-    virtual void setValue(long value) ;
+    virtual long long getValue() ;
+    virtual void setValue(long long value) ;
 
-    virtual long getSessionId() ;
-    virtual void setSessionId(long sessionId) ;
+    virtual long long getSessionId() ;
+    virtual void setSessionId(long long sessionId) ;
 
 
 } ;

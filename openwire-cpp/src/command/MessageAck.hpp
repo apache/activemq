@@ -18,16 +18,15 @@
 #define MessageAck_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
-#include "command/ConnectionId.hpp"
+    
+#include "command/ActiveMQDestination.hpp"
+#include "command/TransactionId.hpp"
 #include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/MessageId.hpp"
+#include "command/MessageId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +38,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -54,10 +54,10 @@ namespace apache
 class MessageAck : public BaseCommand
 {
 private:
-    ActiveMQDestination destination ;
+    p<ActiveMQDestination> destination ;
     p<TransactionId> transactionId ;
     p<ConsumerId> consumerId ;
-    byte ackType ;
+    char ackType ;
     p<MessageId> firstMessageId ;
     p<MessageId> lastMessageId ;
     int messageCount ;
@@ -69,9 +69,10 @@ public:
     MessageAck() ;
     virtual ~MessageAck() ;
 
+    virtual int getCommandType() ;
 
-    virtual ActiveMQDestination getDestination() ;
-    virtual void setDestination(ActiveMQDestination destination) ;
+    virtual p<ActiveMQDestination> getDestination() ;
+    virtual void setDestination(p<ActiveMQDestination> destination) ;
 
     virtual p<TransactionId> getTransactionId() ;
     virtual void setTransactionId(p<TransactionId> transactionId) ;
@@ -79,8 +80,8 @@ public:
     virtual p<ConsumerId> getConsumerId() ;
     virtual void setConsumerId(p<ConsumerId> consumerId) ;
 
-    virtual byte getAckType() ;
-    virtual void setAckType(byte ackType) ;
+    virtual char getAckType() ;
+    virtual void setAckType(char ackType) ;
 
     virtual p<MessageId> getFirstMessageId() ;
     virtual void setFirstMessageId(p<MessageId> firstMessageId) ;

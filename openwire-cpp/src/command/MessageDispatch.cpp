@@ -30,10 +30,10 @@ using namespace apache::activemq::client::command;
  */
 MessageDispatch::MessageDispatch()
 {
-    this->consumerId = NULL ;
-    this->destination = NULL ;
-    this->message = NULL ;
-    this->redeliveryCounter = NULL ;
+    this->consumerId = 0 ;
+    this->destination = 0 ;
+    this->message = 0 ;
+    this->redeliveryCounter = 0 ;
 }
 
 MessageDispatch::~MessageDispatch()
@@ -52,23 +52,23 @@ void MessageDispatch::setConsumerId(p<ConsumerId> consumerId)
 }
 
         
-ActiveMQDestination MessageDispatch::getDestination()
+p<ActiveMQDestination> MessageDispatch::getDestination()
 {
     return destination ;
 }
 
-void MessageDispatch::setDestination(ActiveMQDestination destination)
+void MessageDispatch::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
 
         
-Message MessageDispatch::getMessage()
+p<Message> MessageDispatch::getMessage()
 {
     return message ;
 }
 
-void MessageDispatch::setMessage(Message message)
+void MessageDispatch::setMessage(p<Message> message)
 {
     this->message = message ;
 }

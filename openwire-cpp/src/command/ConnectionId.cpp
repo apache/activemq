@@ -30,7 +30,7 @@ using namespace apache::activemq::client::command;
  */
 ConnectionId::ConnectionId()
 {
-    this->value = NULL ;
+    this->value = 0 ;
 }
 
 ConnectionId::~ConnectionId()

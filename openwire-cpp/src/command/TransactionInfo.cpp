@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 TransactionInfo::TransactionInfo()
 {
-    this->connectionId = NULL ;
-    this->transactionId = NULL ;
-    this->type = NULL ;
+    this->connectionId = 0 ;
+    this->transactionId = 0 ;
+    this->type = 0 ;
 }
 
 TransactionInfo::~TransactionInfo()
@@ -62,12 +62,12 @@ void TransactionInfo::setTransactionId(p<TransactionId> transactionId)
 }
 
         
-byte TransactionInfo::getType()
+char TransactionInfo::getType()
 {
     return type ;
 }
 
-void TransactionInfo::setType(byte type)
+void TransactionInfo::setType(char type)
 {
     this->type = type ;
 }

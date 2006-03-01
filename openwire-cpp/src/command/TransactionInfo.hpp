@@ -18,16 +18,12 @@
 #define TransactionInfo_hpp_
 
 #include <string>
-
-/* we could cut this down  - for now include all possible headers */
 #include "command/BaseCommand.hpp"
-#include "command/BrokerId.hpp"
+    
 #include "command/ConnectionId.hpp"
-#include "command/ConsumerId.hpp"
-#include "command/ProducerId.hpp"
-#include "command/SessionId.hpp"
+#include "command/TransactionId.hpp"
 
-#include "command/BaseCommand.hpp"
+#include "util/ifr/ap"
 #include "util/ifr/p"
 
 namespace apache
@@ -39,6 +35,7 @@ namespace apache
       namespace command
       {
         using namespace ifr;
+        using namespace std;
         using namespace apache::activemq::client;
 
 /*
@@ -56,7 +53,7 @@ class TransactionInfo : public BaseCommand
 private:
     p<ConnectionId> connectionId ;
     p<TransactionId> transactionId ;
-    byte type ;
+    char type ;
 
 public:
     const static int TYPE = 7;
@@ -65,6 +62,7 @@ public:
     TransactionInfo() ;
     virtual ~TransactionInfo() ;
 
+    virtual int getCommandType() ;
 
     virtual p<ConnectionId> getConnectionId() ;
     virtual void setConnectionId(p<ConnectionId> connectionId) ;
@@ -72,8 +70,8 @@ public:
     virtual p<TransactionId> getTransactionId() ;
     virtual void setTransactionId(p<TransactionId> transactionId) ;
 
-    virtual byte getType() ;
-    virtual void setType(byte type) ;
+    virtual char getType() ;
+    virtual void setType(char type) ;
 
 
 } ;

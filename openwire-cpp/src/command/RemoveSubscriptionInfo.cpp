@@ -30,9 +30,9 @@ using namespace apache::activemq::client::command;
  */
 RemoveSubscriptionInfo::RemoveSubscriptionInfo()
 {
-    this->connectionId = NULL ;
-    this->subcriptionName = NULL ;
-    this->clientId = NULL ;
+    this->connectionId = 0 ;
+    this->subcriptionName = 0 ;
+    this->clientId = 0 ;
 }
 
 RemoveSubscriptionInfo::~RemoveSubscriptionInfo()

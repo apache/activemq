@@ -30,19 +30,19 @@ using namespace apache::activemq::client::command;
  */
 ConsumerInfo::ConsumerInfo()
 {
-    this->consumerId = NULL ;
-    this->browser = NULL ;
-    this->destination = NULL ;
-    this->prefetchSize = NULL ;
-    this->dispatchAsync = NULL ;
-    this->selector = NULL ;
-    this->subcriptionName = NULL ;
-    this->noLocal = NULL ;
-    this->exclusive = NULL ;
-    this->retroactive = NULL ;
-    this->priority = NULL ;
-    this->brokerPath = NULL ;
-    this->networkSubscription = NULL ;
+    this->consumerId = 0 ;
+    this->browser = 0 ;
+    this->destination = 0 ;
+    this->prefetchSize = 0 ;
+    this->dispatchAsync = 0 ;
+    this->selector = 0 ;
+    this->subcriptionName = 0 ;
+    this->noLocal = 0 ;
+    this->exclusive = 0 ;
+    this->retroactive = 0 ;
+    this->priority = 0 ;
+    this->brokerPath = 0 ;
+    this->networkSubscription = 0 ;
 }
 
 ConsumerInfo::~ConsumerInfo()
@@ -72,12 +72,12 @@ void ConsumerInfo::setBrowser(bool browser)
 }
 
         
-ActiveMQDestination ConsumerInfo::getDestination()
+p<ActiveMQDestination> ConsumerInfo::getDestination()
 {
     return destination ;
 }
 
-void ConsumerInfo::setDestination(ActiveMQDestination destination)
+void ConsumerInfo::setDestination(p<ActiveMQDestination> destination)
 {
     this->destination = destination ;
 }
@@ -160,23 +160,23 @@ void ConsumerInfo::setRetroactive(bool retroactive)
 }
 
         
-byte ConsumerInfo::getPriority()
+char ConsumerInfo::getPriority()
 {
     return priority ;
 }
 
-void ConsumerInfo::setPriority(byte priority)
+void ConsumerInfo::setPriority(char priority)
 {
     this->priority = priority ;
 }
 
         
-BrokerId[] ConsumerInfo::getBrokerPath()
+ap<BrokerId> ConsumerInfo::getBrokerPath()
 {
     return brokerPath ;
 }
 
-void ConsumerInfo::setBrokerPath(BrokerId[] brokerPath)
+void ConsumerInfo::setBrokerPath(ap<BrokerId> brokerPath)
 {
     this->brokerPath = brokerPath ;
 }

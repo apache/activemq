@@ -30,8 +30,8 @@ using namespace apache::activemq::client::command;
  */
 LocalTransactionId::LocalTransactionId()
 {
-    this->value = NULL ;
-    this->connectionId = NULL ;
+    this->value = 0 ;
+    this->connectionId = 0 ;
 }
 
 LocalTransactionId::~LocalTransactionId()
@@ -39,12 +39,12 @@ LocalTransactionId::~LocalTransactionId()
 }
 
         
-long LocalTransactionId::getValue()
+long long LocalTransactionId::getValue()
 {
     return value ;
 }
 
-void LocalTransactionId::setValue(long value)
+void LocalTransactionId::setValue(long long value)
 {
     this->value = value ;
 }
