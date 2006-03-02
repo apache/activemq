@@ -23,7 +23,7 @@
     <shortDescription>ActiveMQ Assembly</shortDescription>
     <description>ActiveMQ Jmeter creates an ActiveMQ sampler for Jmeter</description>
 
-    <package>org.activemq</package>
+    <package>org.apache.activemq</package>
 
     <build>
         <sourceDirectory>src/java</sourceDirectory>
@@ -217,7 +217,7 @@
 
         <dependency>
             <groupId>oro</groupId>
-            <artifactId>jakarta-oro</artifactId>
+            <artifactId>oro</artifactId>
             <version>${jakarta_oro_version}</version>
         </dependency>
 
