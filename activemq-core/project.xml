@@ -344,6 +344,9 @@
 
                 <!-- http://jira.activemq.org/jira/browse/AMQ-594 -->
                 <exclude>**/SimpleNetworkTest.*</exclude>
+                
+                <!-- http://jira.activemq.org/jira/browse/AMQ-583 -->
+                <exclude>**/DiscoveryTransportBrokerTest.*</exclude>
             </excludes>
         </unitTest>
         <resources>
