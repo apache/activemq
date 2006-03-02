@@ -90,15 +90,27 @@ abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
             if( bs.readBoolean() ) {
                 return dataIn.readLong();
             } else {
-                return dataIn.readInt();
+                return toLong(dataIn.readInt());
             }
         } else {
             if( bs.readBoolean() ) {
-                return dataIn.readShort();
+                return toLong(dataIn.readShort());
             } else {
                 return 0;
             }
         }
+    }
+    
+    protected long toLong(short value) {
+        // lets handle negative values
+        long answer = value;
+        return answer & 0xffffL;
+    }
+    
+    protected long toLong(int value) {
+        // lets handle negative values
+        long answer = value;
+        return answer & 0xffffffffL;
     }
     
     protected DataStructure tightUnmarsalNestedObject(OpenWireFormat wireFormat, DataInputStream dataIn, BooleanStream bs) throws IOException {
