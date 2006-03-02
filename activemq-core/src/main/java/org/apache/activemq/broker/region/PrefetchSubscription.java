@@ -107,24 +107,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         context.getTransaction().addSynchronization(new Synchronization(){
                             public void afterCommit() throws Throwable{
                                 synchronized(PrefetchSubscription.this){
-                                    // Now that we are committed, we can remove the nodes.
-                                    boolean inAckRange=false;
-                                    int index=0;
-                                    for(Iterator iter=dispatched.iterator();iter.hasNext();){
-                                        final MessageReference node=(MessageReference) iter.next();
-                                        MessageId messageId=node.getMessageId();
-                                        if(ack.getFirstMessageId()==null||ack.getFirstMessageId().equals(messageId)){
-                                            inAckRange=true;
-                                        }
-                                        if(inAckRange){
-                                            index++;
-                                            iter.remove();
-                                            if(ack.getLastMessageId().equals(messageId)){
-                                                delivered=Math.max(0,delivered-(index+1));
-                                                return;
-                                            }
-                                        }
-                                    }
+                                    dispatched.remove(node);
+                                    delivered--;
                                 }
                             }
                         });
