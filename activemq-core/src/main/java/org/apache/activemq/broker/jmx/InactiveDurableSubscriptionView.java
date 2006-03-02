@@ -21,10 +21,19 @@ import org.apache.activemq.command.SubscriptionInfo;
  * @version $Revision: 1.5 $
  */
 public class InactiveDurableSubscriptionView extends SubscriptionView implements  DurableSubscriptionViewMBean {
-    
+    protected ManagedRegionBroker broker;
     protected SubscriptionInfo info;
-    public InactiveDurableSubscriptionView(String clientId,SubscriptionInfo sub){
+    
+    
+    /**
+     * Constructor
+     * @param broker
+     * @param clientId
+     * @param sub
+     */
+    public InactiveDurableSubscriptionView(ManagedRegionBroker broker,String clientId,SubscriptionInfo sub){
         super(clientId,null);
+        this.broker = broker;
         this.info = sub;
     }
     
@@ -87,7 +96,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @throws OpenDataException
      */
     public CompositeData[] browse() throws OpenDataException{
-        return null;
+        return broker.browse(this);
     }
 
     /**
@@ -97,6 +106,10 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @throws OpenDataException
      */
     public TabularData browseAsTable() throws OpenDataException{
-        return null;
+        return broker.browseAsTable(this);
+    }
+    
+    public String toString(){
+        return "InactiveDurableSubscriptionView: " + getClientId()  + ":" +  getSubscriptionName();
     }
 }
