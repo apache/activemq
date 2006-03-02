@@ -97,8 +97,10 @@ final public class BooleanStream {
     public int marshalledSize() {
         if( arrayLimit < 64 ) {
             return 1+arrayLimit;
-        } else {
+        } else if (arrayLimit < 256) {
             return 2+arrayLimit;
+        } else {
+            return 3+arrayLimit;
         }
     }
 
