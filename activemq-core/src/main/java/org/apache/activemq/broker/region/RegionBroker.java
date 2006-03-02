@@ -90,7 +90,7 @@ public class RegionBroker implements Broker {
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, PolicyMap policyMap) throws IOException {
         this.brokerService = brokerService;
         this.sequenceGenerator.setLastSequenceId( adapter.getLastMessageBrokerSequenceId() );
-        this.adaptor = adaptor;
+        this.adaptor = adapter;//weird - both are valid spellings ...
         queueRegion = createQueueRegion(memoryManager, taskRunnerFactory, adapter, policyMap);
         topicRegion = createTopicRegion(memoryManager, taskRunnerFactory, adapter, policyMap);
         

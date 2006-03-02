@@ -129,7 +129,6 @@ public class ManagedRegionBroker extends RegionBroker{
     }
 
     public void registerSubscription(ConnectionContext context,Subscription sub){
-       // NEED CONTEXT TO GET CLIENT ID AND USE Subscription KEY!!!
         SubscriptionKey key = new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
         Hashtable map=new Hashtable(brokerObjectName.getKeyPropertyList());
         map.put("Type",JMXSupport.encodeObjectNamePart("Subscription"));
