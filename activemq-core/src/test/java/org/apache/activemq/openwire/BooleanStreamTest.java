@@ -22,6 +22,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 /**
@@ -32,13 +33,13 @@ public class BooleanStreamTest extends TestCase {
 
     protected OpenWireFormat openWireformat;
     protected int endOfStreamMarker = 0x12345678;
-    int numberOfBytes = 8 * 50;
+    int numberOfBytes = 8 * 200;
 
     interface BooleanValueSet {
         public boolean getBooleanValueFor(int index, int count);
     }
 
-    public void testBooleanMarshallingUsingAllTrue() throws Exception {
+    public void testBooleanMarshallingUsingAllTrue() throws Throwable {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
                 return true;
@@ -46,7 +47,7 @@ public class BooleanStreamTest extends TestCase {
         });
     }
 
-    public void testBooleanMarshallingUsingAllFalse() throws Exception {
+    public void testBooleanMarshallingUsingAllFalse() throws Throwable {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
                 return false;
@@ -54,17 +55,29 @@ public class BooleanStreamTest extends TestCase {
         });
     }
 
-    public void testBooleanMarshallingUsingAlternateTrueFalse() throws Exception {
+    public void testBooleanMarshallingUsingOddAlternateTrueFalse() throws Throwable {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
                 return (index & 1) == 0;
             }
         });
     }
+    
+    public void testBooleanMarshallingUsingEvenAlternateTrueFalse() throws Throwable {
+        testBooleanStream(numberOfBytes, new BooleanValueSet() {
+            public boolean getBooleanValueFor(int index, int count) {
+                return (index & 1) != 0;
+            }
+        });
+    }
 
     protected void testBooleanStream(int numberOfBytes, BooleanValueSet valueSet) throws Exception {
         for (int i = 0; i < numberOfBytes; i++) {
-            assertMarshalBooleans(i, valueSet);
+            try {
+                assertMarshalBooleans(i, valueSet);
+            } catch (Throwable e) {
+                throw (AssertionFailedError) new AssertionFailedError("Iteration failed at: "+i).initCause(e);
+            }
         }
     }
 

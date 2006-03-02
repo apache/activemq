@@ -76,11 +76,11 @@ final public class BooleanStream {
     
     public void unmarshal(DataInputStream dataIn) throws IOException {
         
-        arrayLimit = dataIn.readByte();
-        if( (arrayLimit & 0x80)!=0 ) {
-            arrayLimit = dataIn.readShort();
-        } else if ( (arrayLimit & 0xC0)!=0 ) {
+        arrayLimit = (short) (dataIn.readByte() & 0xFF);
+        if ( arrayLimit == 0xC0 ) {
             arrayLimit = (short)(dataIn.readByte() & 0xFF);
+        } else if( arrayLimit == 0x80 ) {
+            arrayLimit = dataIn.readShort();
         } 
         if( data.length < arrayLimit ) {
             data = new byte[arrayLimit];
