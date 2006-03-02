@@ -18,9 +18,11 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
+import org.apache.activemq.command.Command;
 import org.apache.activemq.command.KeepAliveInfo;
-import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.thread.Scheduler;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,25 +33,26 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  */
 public class InactivityMonitor extends TransportFilter implements Runnable {
 
+    private final Log log = LogFactory.getLog(InactivityMonitor.class);
+    
     private final long maxInactivityDuration;
     private final AtomicBoolean cancled = new AtomicBoolean(false);
-    private byte runIteration=0;
+    private byte readCheckIteration=0;
 
-    private long lastReadCount;
-    private long lastWriteCount;
-    private final CountStatisticImpl readCounter;
-    private final CountStatisticImpl writeCounter;
+    private final AtomicBoolean commandSent=new AtomicBoolean(true);
+    private final AtomicBoolean inSend=new AtomicBoolean(false);
+
+    private final AtomicBoolean commandReceived=new AtomicBoolean(true);
+    private final AtomicBoolean inReceive=new AtomicBoolean(false);
     
-    public InactivityMonitor(Transport next, long maxInactivityDuration, CountStatisticImpl readCounter, CountStatisticImpl writeCounter ) {
+    public InactivityMonitor(Transport next, long maxInactivityDuration) {
         super(next);
         this.maxInactivityDuration = maxInactivityDuration;
-        this.readCounter = readCounter;
-        this.writeCounter = writeCounter;
     }
-    
+        
     public void start() throws Exception {
         next.start();
-        Scheduler.executePeriodically(this, maxInactivityDuration/5);
+        Scheduler.executePeriodically(this, maxInactivityDuration/2);
     }
     
     public void stop() throws Exception {
@@ -60,33 +63,74 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     }
     
     public void run() {
-        
-        switch(runIteration) {
+        switch(readCheckIteration) {
+        case 0:
+            writeCheck();
+            readCheckIteration++;
         case 1:
-        case 2:
-            long wc = writeCounter.getCount();
-            if( wc==lastWriteCount ) {
-                try {
-                    oneway(new KeepAliveInfo());
-                } catch (IOException e) {
-                    onException(e);
-                }
-            } else {
-                lastWriteCount = wc;
-            }
+            readCheck();
+            writeCheck();
+            readCheckIteration=0;
             break;
-        case 4:
-            long rc = readCounter.getCount();
-            if( rc == lastReadCount ) {
-                onException(new InactivityIOException("Channel was inactive for too long."));
-            } else {
-                lastReadCount = rc;
-            }
+        }        
+    }
+    
+    private void writeCheck() {
+        if( inSend.get() ) {
+            log.debug("A send is in progress");
+            return;
         }
         
-        runIteration++;
-        if(runIteration>=5)
-            runIteration=0;
+        if( !commandSent.get() ) {
+            log.debug("No message sent since last write check, sending a KeepAliveInfo");
+            try {
+                next.oneway(new KeepAliveInfo());
+            } catch (IOException e) {
+                onException(e);
+            }
+        } else {
+            log.debug("Message sent since last write check, resetting flag");
+        }
+        
+        commandSent.set(false);
+        
+    }
+
+    private void readCheck() {
+        if( inReceive.get() ) {
+            log.debug("A receive is in progress");
+            return;
+        }
+        
+        if( !commandReceived.get() ) {
+            log.debug("No message received since last read check!");
+            onException(new InactivityIOException("Channel was inactive for too long."));           
+        } else {
+            log.debug("Message received since last read check, resetting flag");
+        }
+        
+        commandReceived.set(false);
+    }
+
+    public void onCommand(Command command) {
+        inReceive.set(true);
+        try {
+            commandListener.onCommand(command);
+        } finally {
+            inReceive.set(false);
+            commandReceived.set(true);
+        }
+    }
+    
+    public void oneway(Command command) throws IOException {
+        // Disable inactivity monitoring while processing a command.
+        inSend.set(true);
+        commandSent.set(true);
+        try {
+            next.oneway(command);
+        } finally {
+            inSend.set(false);
+        }
     }
     
     public void onException(IOException error) {

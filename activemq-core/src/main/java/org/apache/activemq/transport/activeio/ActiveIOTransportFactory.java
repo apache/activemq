@@ -229,8 +229,8 @@ public class ActiveIOTransportFactory extends TransportFactory {
         if( activeIOTransport.isTrace() ) {
             transport = new TransportLogger(transport);
         }
-        transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration(), activityMonitor.getReadCounter(), activityMonitor.getWriteCounter());
         transport = new WireFormatNegotiator(transport,format, activeIOTransport.getMinmumWireFormatVersion());
+        transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration());
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
         return transport;
@@ -275,8 +275,8 @@ public class ActiveIOTransportFactory extends TransportFactory {
         if( activeIOTransport.isTrace() ) {
             transport = new TransportLogger(transport);
         }
-        transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration(), activityMonitor.getReadCounter(), activityMonitor.getWriteCounter());
         transport = new WireFormatNegotiator(transport,format, activeIOTransport.getMinmumWireFormatVersion());
+        transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration());
         return transport;        
     }
     
