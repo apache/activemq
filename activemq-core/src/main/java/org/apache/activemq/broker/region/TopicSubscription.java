@@ -42,7 +42,7 @@ public class TopicSubscription extends AbstractSubscription {
     final protected UsageManager usageManager;
     protected int dispatched=0;
     protected int delivered=0;
-    private int maximumPendingMessages = 0;
+    private int maximumPendingMessages = -1;
     
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, UsageManager usageManager) throws InvalidSelectorException {
         super(broker,context, info);
@@ -56,15 +56,17 @@ public class TopicSubscription extends AbstractSubscription {
             // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
             dispatch(node);
         } else {
-            synchronized (matched) {
-                matched.addLast(node);
-                
-                // NOTE - be careful about the slaveBroker!
-                if (maximumPendingMessages > 0) {
-                    // lets discard old messages as we are a slow consumer
-                    while (matched.size() > maximumPendingMessages) {
-                        MessageReference oldMessage = (MessageReference) matched.removeFirst();
-                        oldMessage.decrementReferenceCount();
+            if (maximumPendingMessages != 0) {
+                synchronized (matched) {
+                    matched.addLast(node);
+
+                    // NOTE - be careful about the slaveBroker!
+                    if (maximumPendingMessages > 0) {
+                        // lets discard old messages as we are a slow consumer
+                        while (matched.size() > maximumPendingMessages) {
+                            MessageReference oldMessage = (MessageReference) matched.removeFirst();
+                            oldMessage.decrementReferenceCount();
+                        }
                     }
                 }
             }
