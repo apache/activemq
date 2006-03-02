@@ -154,7 +154,36 @@ public class StompTest extends CombinationTestSupport {
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
     }
+
     
+    public void testJMSXGroupIdCanBeSet() throws Exception {
+        
+        MessageConsumer consumer = session.createConsumer(queue);
+        
+        String frame = 
+            "CONNECT\n" + 
+            "login: brianm\n" + 
+            "passcode: wombats\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
+        
+        frame = receiveFrame(10000);
+        assertTrue(frame.startsWith("CONNECTED"));
+        
+        frame =
+            "SEND\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
+            "JMSXGroupID: TEST\n\n" +
+            "Hello World" +
+            Stomp.NULL;
+        
+        sendFrame(frame);
+        
+        TextMessage message = (TextMessage) consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals("TEST", ((ActiveMQTextMessage)message).getGroupID());
+    }
+
     
     public void testSendMessageWithCustomHeadersAndSelector() throws Exception {
         
