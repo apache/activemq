@@ -19,6 +19,7 @@
 package org.apache.activecluster;
 
 import javax.jms.Destination;
+import javax.jms.JMSException;
 
 /**
  * A simple marshaller for Destinations
@@ -33,7 +34,7 @@ public interface DestinationMarshaller {
      *
      * @return the destination to send messages to all members of the cluster
      */
-    public Destination getDestination(String destinationName);
+    public Destination getDestination(String destinationName) throws JMSException;
 
     /**
      * Gets a destination's physical name

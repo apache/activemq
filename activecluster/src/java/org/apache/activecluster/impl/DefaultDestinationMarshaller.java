@@ -18,14 +18,19 @@
 
 package org.apache.activecluster.impl;
 
+
+
+import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
+import javax.jms.Session;
 import javax.jms.Topic;
-import org.apache.activemq.command.ActiveMQTopic;
+
 import org.apache.activecluster.DestinationMarshaller;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A simple marshaller for Destinations
@@ -34,14 +39,35 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultDestinationMarshaller implements DestinationMarshaller {
     private final static Log log = LogFactory.getLog(DefaultDestinationMarshaller.class);
+
+    /**
+     * Keep a cache of name to destination mappings for fast lookup.
+     */
+    private final Map destinations = new ConcurrentHashMap();
+    /**
+     * The active session used to create a new Destination from a name.
+     */
+    private final Session session;
+    
+    /**
+     * Create a marshaller for this specific session.
+     * @param session the session to use when mapping destinations.
+     */
+    public DefaultDestinationMarshaller(Session session) {
+        this.session = session;
+    }
+    
     /**
      * Builds a destination from a destinationName
      * @param destinationName 
      *
      * @return the destination to send messages to all members of the cluster
      */
-    public Destination getDestination(String destinationName){
-        return new ActiveMQTopic(destinationName);
+    public Destination getDestination(String destinationName) throws JMSException {
+        if (!destinations.containsKey(destinationName)) {
+            destinations.put(destinationName, session.createTopic(destinationName));
+        }
+        return (Destination) destinations.get(destinationName);
     }
 
     /**

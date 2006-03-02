@@ -23,6 +23,7 @@ import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 
 import org.apache.activecluster.DestinationMarshaller;
 import org.apache.activecluster.Node;
@@ -45,8 +46,9 @@ public class NodeImpl implements Node{
      * Construct an Node from a NodeState
      * @param nodeState
      * @param marshaller
+     * @throws JMSException 
      */
-    public NodeImpl(NodeState nodeState,DestinationMarshaller marshaller){
+    public NodeImpl(NodeState nodeState,DestinationMarshaller marshaller) throws JMSException{
         this(nodeState.getName(),marshaller.getDestination(nodeState.getDestinationName()),nodeState.getState());
     }
     /**
