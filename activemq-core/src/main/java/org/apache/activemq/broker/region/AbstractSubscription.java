@@ -115,4 +115,16 @@ abstract public class AbstractSubscription implements Subscription {
     public boolean isSlaveBroker(){
         return broker.isSlaveBroker();
     }
+
+    public ConnectionContext getContext() {
+        return context;
+    }
+
+    public ConsumerInfo getInfo() {
+        return info;
+    }
+
+    public BooleanExpression getSelector() {
+        return selector;
+    }
 }

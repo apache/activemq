@@ -204,7 +204,17 @@ public class TopicRegion extends AbstractRegion {
             return sub;
         }
         else {
-            return new TopicSubscription(broker,context, info, memoryManager);
+            TopicSubscription answer = new TopicSubscription(broker,context, info, memoryManager);
+            
+            // lets configure the subscription depending on the destination
+            ActiveMQDestination destination = info.getDestination();
+            if (destination != null && policyMap != null) {
+                PolicyEntry entry = policyMap.getEntryFor(destination);
+                if (entry != null) {
+                    entry.configure(answer);
+                }
+            }
+            return answer;
         }
     }
 

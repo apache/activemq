@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
@@ -35,6 +36,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy;
     private int messageGroupHashBucketCount = 1024;
+    private PendingMessageLimitStrategy pendingMessageLimitStrategy;
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -57,6 +59,15 @@ public class PolicyEntry extends DestinationMapEntry {
             topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy);
         }
         topic.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
+    }
+
+    public void configure(TopicSubscription subscription) {
+        if (pendingMessageLimitStrategy != null) {
+            int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
+            if (value >= 0) {
+                subscription.setMaximumPendingMessages(value);
+            }
+        }
     }
 
     // Properties
@@ -94,7 +105,8 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     /**
-     * Sets the policy used to determine which dead letter queue destination should be used
+     * Sets the policy used to determine which dead letter queue destination
+     * should be used
      */
     public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
         this.deadLetterStrategy = deadLetterStrategy;
@@ -105,14 +117,30 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     /**
-     * Sets the number of hash buckets to use for the message group functionality. 
-     * This is only applicable to using message groups to parallelize processing of a queue
-     * while preserving order across an individual JMSXGroupID header value.
-     * This value sets the number of hash buckets that will be used (i.e. the maximum possible concurrency).
+     * Sets the number of hash buckets to use for the message group
+     * functionality. This is only applicable to using message groups to
+     * parallelize processing of a queue while preserving order across an
+     * individual JMSXGroupID header value. This value sets the number of hash
+     * buckets that will be used (i.e. the maximum possible concurrency).
      */
     public void setMessageGroupHashBucketCount(int messageGroupHashBucketCount) {
         this.messageGroupHashBucketCount = messageGroupHashBucketCount;
     }
-    
-    
+
+    public PendingMessageLimitStrategy getPendingMessageLimitStrategy() {
+        return pendingMessageLimitStrategy;
+    }
+
+    /**
+     * Sets the strategy to calculate the maximum number of messages that are
+     * allowed to be pending on consumers (in addition to their prefetch sizes).
+     * 
+     * Once the limit is reached, non-durable topics can then start discarding
+     * old messages. This allows us to keep dispatching messages to slow
+     * consumers while not blocking fast consumers and discarding the messages
+     * oldest first.
+     */
+    public void setPendingMessageLimitStrategy(PendingMessageLimitStrategy pendingMessageLimitStrategy) {
+        this.pendingMessageLimitStrategy = pendingMessageLimitStrategy;
+    }
 }
