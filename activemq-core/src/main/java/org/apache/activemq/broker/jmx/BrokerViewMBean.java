@@ -50,5 +50,9 @@ public interface BrokerViewMBean extends Service {
     public ObjectName[] getTemporaryTopicSubscribers();
     public ObjectName[] getTemporaryQueueSubscribers();
     
+    public void addTopic(String name) throws Throwable;
+    public void addQueue(String name) throws Throwable;
+    public void removeTopic(String name) throws Throwable;
+    public void removeQueue(String name) throws Throwable;
     
 }

@@ -24,6 +24,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import javax.jms.InvalidSelectorException;
@@ -168,23 +169,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                             // The original destination and transaction id do not get filled when the message is first
                             // sent,
                             // it is only populated if the message is routed to another destination like the DLQ
-                            if(message.getOriginalDestination()!=null)
-                                message.setOriginalDestination(message.getDestination());
-                            if(message.getOriginalTransactionId()!=null)
-                                message.setOriginalTransactionId(message.getTransactionId());
                             DeadLetterStrategy deadLetterStrategy=node.getRegionDestination().getDeadLetterStrategy();
-                            ActiveMQDestination deadLetterDestination=deadLetterStrategy.getDeadLetterQueueFor(message
-                                            .getDestination());
-                            message.setDestination(deadLetterDestination);
-                            message.setTransactionId(null);
-                            message.evictMarshlledForm();
-                            boolean originalFlowControl=context.isProducerFlowControl();
-                            try{
-                                context.setProducerFlowControl(false);
-                                context.getBroker().send(context,message);
-                            }finally{
-                                context.setProducerFlowControl(originalFlowControl);
-                            }
+                            ActiveMQDestination deadLetterDestination=deadLetterStrategy.getDeadLetterQueueFor(message.getDestination());
+                            BrokerSupport.resend(context, message, deadLetterDestination);
+
                         }
                     }finally{
                         node.decrementReferenceCount();

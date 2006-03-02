@@ -16,13 +16,13 @@ package org.apache.activemq.broker.jmx;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
@@ -32,11 +32,12 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -58,8 +59,8 @@ import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
 public class ManagedRegionBroker extends RegionBroker{
     private static final Log log=LogFactory.getLog(ManagedRegionBroker.class);
     private final MBeanServer mbeanServer;
@@ -76,6 +77,9 @@ public class ManagedRegionBroker extends RegionBroker{
     private final Map temporaryTopicSubscribers=new ConcurrentHashMap();
     private final Map subscriptionKeys = new ConcurrentHashMap();
     private final Map subscriptionMap = new ConcurrentHashMap();
+    
+    /* This is the first broker in the broker interceptor chain. */
+    private Broker contextBroker;
 
     public ManagedRegionBroker(BrokerService brokerService,MBeanServer mbeanServer,ObjectName brokerObjectName,
                     TaskRunnerFactory taskRunnerFactory,UsageManager memoryManager,PersistenceAdapter adapter,
@@ -119,9 +123,9 @@ public class ManagedRegionBroker extends RegionBroker{
             ObjectName destObjectName=new ObjectName(brokerObjectName.getDomain(),map);
             DestinationView view;
             if(destination instanceof Queue){
-                view=new QueueView((Queue) destination);
+                view=new QueueView(this, (Queue) destination);
             }else{
-                view=new TopicView((Topic) destination);
+                view=new TopicView(this, (Topic) destination);
             }
             registerDestination(destObjectName,destName,view);
         }catch(Exception e){
@@ -386,5 +390,13 @@ public class ManagedRegionBroker extends RegionBroker{
     protected ObjectName[] getInactiveDurableTopicSubscribers(){
         Set set = inactiveDurableTopicSubscribers.keySet();
         return (ObjectName[])set.toArray(new ObjectName[set.size()]);
+    }
+
+    public Broker getContextBroker() {
+        return contextBroker;
+    }
+
+    public void setContextBroker(Broker contextBroker) {
+        this.contextBroker = contextBroker;
     }
 }

@@ -42,6 +42,7 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -498,6 +499,28 @@ public class Queue implements Destination {
                 }
             }
         }
+    }
+
+    public boolean copyMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Throwable {
+        synchronized (messages) {
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                try {
+                    MessageReference r = (MessageReference) iter.next();
+                    if (messageId.equals(r.getMessageId().toString())) {
+                        r.incrementReferenceCount();
+                        try {
+                            Message m = r.getMessage();
+                            BrokerSupport.resend(context, m, dest);                            
+                        } finally {
+                            r.decrementReferenceCount();
+                        }
+                        break;
+                    }
+                } catch (IOException e) {
+                }
+            }
+        }
+        return false;
     }
 
 

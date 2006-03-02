@@ -20,6 +20,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -27,8 +28,10 @@ import org.apache.activemq.command.Message;
 
 public class DestinationView {
     protected final Destination destination;
+    protected final ManagedRegionBroker broker;
 
-    public DestinationView(Destination destination){
+    public DestinationView(ManagedRegionBroker broker, Destination destination){
+        this.broker = broker;
         this.destination=destination;
     }
 

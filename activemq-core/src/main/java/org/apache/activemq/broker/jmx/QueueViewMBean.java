@@ -39,4 +39,5 @@ public interface QueueViewMBean {
     public void removeMessage(String messageId);
     public void purge();
 
+    public boolean copyMessageTo(String messageId, String destinationName) throws Throwable;
 }
