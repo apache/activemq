@@ -171,5 +171,12 @@ public class SubscriptionView implements SubscriptionViewMBean {
     protected ConsumerInfo getConsumerInfo(){
         return subscription != null ? subscription.getConsumerInfo() : null;
     }
+    
+    /**
+     *@return pretty print
+     */
+    public String toString(){
+        return "SubscriptionView: " + getClientId()  + ":" +  getConnectionId();
+    }
 
 }
