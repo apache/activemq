@@ -16,7 +16,7 @@ package org.apache.activemq.broker.jmx;
 import org.apache.activemq.broker.region.Topic;
 public class TopicView extends DestinationView implements TopicViewMBean{
     
-    public TopicView(Topic destination){
-        super(destination);
+    public TopicView(ManagedRegionBroker broker, Topic destination){
+        super(broker, destination);
     }
 }

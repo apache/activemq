@@ -16,10 +16,11 @@ package org.apache.activemq.broker.jmx;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 public class QueueView extends DestinationView implements QueueViewMBean{
-    public QueueView(Queue destination){
-        super(destination);
+    public QueueView(ManagedRegionBroker broker, Queue destination){
+        super(broker, destination);
     }
 
     public CompositeData getMessage(String messageId) throws OpenDataException{
@@ -35,5 +36,9 @@ public class QueueView extends DestinationView implements QueueViewMBean{
 
     public void purge(){
         ((Queue) destination).purge();
+    }
+
+    public boolean copyMessageTo(String messageId, String destinationName) throws Throwable {
+        return ((Queue) destination).copyMessageTo(BrokerView.getConnectionContext(broker.getContextBroker()), messageId, ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE));
     }
 }

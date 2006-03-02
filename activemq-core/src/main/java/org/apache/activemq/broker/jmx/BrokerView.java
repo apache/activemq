@@ -17,8 +17,11 @@
 package org.apache.activemq.broker.jmx;
 
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.memory.UsageManager;
 
 public class BrokerView implements BrokerViewMBean {
@@ -120,5 +123,27 @@ public class BrokerView implements BrokerViewMBean {
     public ObjectName[] getInactiveDurableTopicSubscribers(){
         return broker.getInactiveDurableTopicSubscribers();
     }
+
+    public void addTopic(String name) throws Throwable {
+        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name));
+    }
+
+    public void addQueue(String name) throws Throwable {
+        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name));
+    }
+
+    public void removeTopic(String name) throws Throwable {
+        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name), 1000);
+    }
+
+    public void removeQueue(String name) throws Throwable {
+        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name), 1000);
+    }
     
+    static public ConnectionContext getConnectionContext(Broker broker) {
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(broker);
+        return context;
+    }
+
 }
