@@ -70,7 +70,7 @@ public class DefaultClusterFactory implements ClusterFactory {
     public Cluster createCluster(String name,Destination groupDestination) throws  JMSException {
         Connection connection = getConnectionFactory().createConnection();
         Session session = createSession(connection);
-        return createCluster(connection, session, name,groupDestination,new DefaultDestinationMarshaller());
+        return createCluster(connection, session, name,groupDestination,new DefaultDestinationMarshaller(session));
     }
     
     public Cluster createCluster(String name,Destination groupDestination,DestinationMarshaller marshaller) throws  JMSException {
@@ -83,7 +83,7 @@ public class DefaultClusterFactory implements ClusterFactory {
     public Cluster createCluster(String name,String groupDestinationName) throws JMSException{
         Connection connection = getConnectionFactory().createConnection();
         Session session = createSession(connection);
-        return createCluster(connection, session, name,session.createTopic(groupDestinationName),new DefaultDestinationMarshaller());
+        return createCluster(connection, session, name,session.createTopic(groupDestinationName),new DefaultDestinationMarshaller(session));
     }
     
     public Cluster createCluster(String name,String groupDestinationName,DestinationMarshaller marshaller) throws JMSException{
@@ -160,9 +160,7 @@ public class DefaultClusterFactory implements ClusterFactory {
         this.deliveryMode = deliveryMode;
     }
 
-    // Implementation methods
-    //-------------------------------------------------------------------------
-    protected Cluster createCluster(Connection connection,Session session,String name,Destination groupDestination,
+    public Cluster createCluster(Connection connection,Session session,String name,Destination groupDestination,
                     DestinationMarshaller marshaller) throws JMSException{
         String dataDestination = dataTopicPrefix + marshaller.getDestinationName(groupDestination);
         log.info("Creating cluster group producer on topic: "+groupDestination);

@@ -19,18 +19,15 @@ package org.apache.activecluster.group;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.jms.JMSException;
 import junit.framework.TestCase;
-
 import org.apache.activecluster.Cluster;
 import org.apache.activecluster.ClusterEvent;
 import org.apache.activecluster.ClusterListener;
 import org.apache.activecluster.DestinationMarshaller;
 import org.apache.activecluster.Node;
-import org.apache.activecluster.group.Group;
-import org.apache.activecluster.group.GroupClusterListener;
-import org.apache.activecluster.group.GroupModel;
-import org.apache.activecluster.impl.DefaultDestinationMarshaller;
 import org.apache.activecluster.impl.NodeImpl;
+import org.apache.activecluster.impl.SimpleDestinationMarshaller;
 
 /**
  * A base class for Group model testing
@@ -43,16 +40,16 @@ public abstract class GroupTestSupport extends TestCase {
     private ClusterListener listener;
     private Cluster cluster;
     private Map nodes = new HashMap();
-    private DestinationMarshaller marshaller = new DefaultDestinationMarshaller();
+    private DestinationMarshaller marshaller = new SimpleDestinationMarshaller();
 
-    protected void addNodes(String[] nodeNames) {
+    protected void addNodes(String[] nodeNames) throws JMSException {
         for (int i = 0; i < nodeNames.length; i++) {
             String nodeName = nodeNames[i];
             addNode(nodeName);
         }
     }
 
-    protected void addNode(String nodeName) {
+    protected void addNode(String nodeName) throws JMSException {
         
         Node node = new NodeImpl(nodeName,marshaller.getDestination(nodeName));
         nodes.put(nodeName, node);

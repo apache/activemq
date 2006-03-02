@@ -17,6 +17,7 @@
 package org.apache.activecluster.group;
 
 import java.util.List;
+import javax.jms.JMSException;
 
 import org.apache.activecluster.group.BuddyGroupModel;
 import org.apache.activecluster.group.Group;
@@ -60,7 +61,7 @@ public class BuddyGroupModelTest extends GroupTestSupport {
 
     }
 
-    public void testRemoveGroups() {
+    public void testRemoveGroups() throws JMSException {
         String[] nodeNames = {"a", "b", "c"};
         addNodes(nodeNames);
 

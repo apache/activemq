@@ -17,6 +17,7 @@
 package org.apache.activecluster.group;
 
 import java.util.List;
+import javax.jms.JMSException;
 
 import org.apache.activecluster.group.Group;
 
@@ -50,7 +51,7 @@ public class GroupModelTest extends GroupTestSupport {
         assertIncomplete(group);
     }
 
-    public void testRemoveGroups() {
+    public void testRemoveGroups() throws JMSException {
         String[] nodeNames = {"a", "b", "c"};
         addNodes(nodeNames);
 
