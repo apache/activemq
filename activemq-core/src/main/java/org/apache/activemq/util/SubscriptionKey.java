@@ -31,8 +31,8 @@ public class SubscriptionKey {
 
     public SubscriptionKey(String clientId, String subscriptionName) {
         this.clientId = clientId;
-        this.subscriptionName = subscriptionName;
-        hashValue = clientId.hashCode()^subscriptionName.hashCode();
+        this.subscriptionName = subscriptionName != null? subscriptionName : "NOT_SET";
+        hashValue = clientId.hashCode()^this.subscriptionName.hashCode();
     }
 
 
