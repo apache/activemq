@@ -33,7 +33,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     
     
     /**
-     * Constructior
+     * Constructor
      * @param subs
      */
     public SubscriptionView(String clientId,Subscription subs){
