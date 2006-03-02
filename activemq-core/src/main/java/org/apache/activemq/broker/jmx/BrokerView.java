@@ -117,4 +117,8 @@ public class BrokerView implements BrokerViewMBean {
         return broker.getTemporaryQueueSubscribers();
     }
     
+    public ObjectName[] getInactiveDurableTopicSubscribers(){
+        return broker.getInactiveDurableTopicSubscribers();
+    }
+    
 }

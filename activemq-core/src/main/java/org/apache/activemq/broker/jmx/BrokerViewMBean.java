@@ -45,6 +45,7 @@ public interface BrokerViewMBean extends Service {
     
     public ObjectName[] getTopicSubscribers();
     public ObjectName[] getDurableTopicSubscribers();
+    public ObjectName[] getInactiveDurableTopicSubscribers();
     public ObjectName[] getQueueSubscribers();
     public ObjectName[] getTemporaryTopicSubscribers();
     public ObjectName[] getTemporaryQueueSubscribers();

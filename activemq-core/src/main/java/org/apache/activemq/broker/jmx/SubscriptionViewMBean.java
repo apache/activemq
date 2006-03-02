@@ -17,6 +17,11 @@ package org.apache.activemq.broker.jmx;
  * @version $Revision: 1.5 $
  */
 public interface SubscriptionViewMBean{
+    
+    /**
+     * @return the clientId
+     */
+    public String getClientId();
     /**
      * @return the id of the Connection the Subscription is on
      */
@@ -51,6 +56,11 @@ public interface SubscriptionViewMBean{
      * @return true if the destination is temporary
      */
     public boolean isDestinationTemporary();
+    
+    /**
+     * @return true if the subscriber is active
+     */
+    public boolean isActive();
 
     /**
      * The subscription should release as may references as it can to help the garbage collector reclaim memory.

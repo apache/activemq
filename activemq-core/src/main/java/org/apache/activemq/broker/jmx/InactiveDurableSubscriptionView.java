@@ -16,28 +16,68 @@ package org.apache.activemq.broker.jmx;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
-import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.SubscriptionInfo;
 /**
  * @version $Revision: 1.5 $
  */
-public class DurableSubscriptionView extends SubscriptionView implements  DurableSubscriptionViewMBean {
+public class InactiveDurableSubscriptionView extends SubscriptionView implements  DurableSubscriptionViewMBean {
     
-    protected String subscriptionName;
-    /**
-     * Constructor
-     * @param clientId
-     * @param sub
-     */
-    public DurableSubscriptionView(String clientId,Subscription sub){
-        super(clientId,sub);
-        this.subscriptionName = sub.getConsumerInfo().getSubcriptionName();
+    protected SubscriptionInfo info;
+    public InactiveDurableSubscriptionView(String clientId,SubscriptionInfo sub){
+        super(clientId,null);
+        this.info = sub;
     }
     
+    
+
+    
+    /**
+     * @return the id of the Subscription
+     */
+    public long getSubcriptionId(){
+        return -1;
+    }
+
+    /**
+     * @return the destination name
+     */
+    public String getDestinationName(){
+        return info.getDestination().getPhysicalName();
+       
+    }
+
+    /**
+     * @return true if the destination is a Queue
+     */
+    public boolean isDestinationQueue(){
+        return false;
+    }
+
+    /**
+     * @return true of the destination is a Topic
+     */
+    public boolean isDestinationTopic(){
+        return true;
+    }
+
+    /**
+     * @return true if the destination is temporary
+     */
+    public boolean isDestinationTemporary(){
+        return false;
+    }
     /**
      * @return name of the durable consumer
      */
     public String getSubscriptionName(){
-        return subscriptionName;
+        return info.getSubcriptionName();
+    }
+    
+    /**
+     * @return true if the subscriber is active
+     */
+    public boolean isActive(){
+        return false;
     }
 
     /**
