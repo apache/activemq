@@ -66,7 +66,7 @@ final public class BooleanStream {
             dataOut.writeByte(0xC0);
             dataOut.writeByte(arrayLimit);            
         } else {
-            dataOut.writeByte(0xE0);
+            dataOut.writeByte(0x80);
             dataOut.writeShort(arrayLimit);            
         }
         
@@ -77,7 +77,7 @@ final public class BooleanStream {
     public void unmarshal(DataInputStream dataIn) throws IOException {
         
         arrayLimit = dataIn.readByte();
-        if( (arrayLimit & 0xE0)!=0 ) {
+        if( (arrayLimit & 0x80)!=0 ) {
             arrayLimit = dataIn.readShort();
         } else if ( (arrayLimit & 0xC0)!=0 ) {
             arrayLimit = (short)(dataIn.readByte() & 0xFF);
