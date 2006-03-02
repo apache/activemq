@@ -41,7 +41,7 @@ public class ManagedQueueRegion extends QueueRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         Subscription sub = super.createSubscription(context, info);
-        regionBroker.registerSubscription(sub);
+        regionBroker.registerSubscription(context,sub);
         return sub;
     }
     

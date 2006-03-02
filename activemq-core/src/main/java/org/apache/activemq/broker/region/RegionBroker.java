@@ -81,7 +81,7 @@ public class RegionBroker implements Broker {
     private BrokerId brokerId;
     private String brokerName;
     private Map clientIdSet = new HashMap(); // we will synchronize access
-    private PersistenceAdapter adaptor;
+    protected  PersistenceAdapter adaptor;
 
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter) throws IOException {
         this(brokerService,taskRunnerFactory, memoryManager, createDefaultPersistenceAdapter(memoryManager), null);

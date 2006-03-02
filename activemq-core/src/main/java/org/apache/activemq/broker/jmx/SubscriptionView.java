@@ -29,22 +29,30 @@ public class SubscriptionView implements SubscriptionViewMBean {
     
     
     protected final Subscription subscription;
-    
+    protected final String clientId;
     
     
     /**
      * Constructior
      * @param subs
      */
-    public SubscriptionView(Subscription subs){
+    public SubscriptionView(String clientId,Subscription subs){
+        this.clientId = clientId;
         this.subscription = subs;
+    }
+    
+    /**
+     * @return the clientId
+     */
+    public String getClientId(){
+        return clientId;
     }
     
     /**
      * @return the id of the Connection the Subscription is on
      */
     public String getConnectionId(){
-        ConsumerInfo info = subscription.getConsumerInfo();
+        ConsumerInfo info = getConsumerInfo();
         if (info != null){
             return info.getConsumerId().getConnectionId();
         }
@@ -55,7 +63,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return the id of the Session the subscription is on
      */
     public long getSessionId(){
-        ConsumerInfo info = subscription.getConsumerInfo();
+        ConsumerInfo info = getConsumerInfo();
         if (info != null){
             return info.getConsumerId().getSessionId();
         }
@@ -66,7 +74,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return the id of the Subscription
      */
     public long getSubcriptionId(){
-        ConsumerInfo info = subscription.getConsumerInfo();
+        ConsumerInfo info = getConsumerInfo();
         if (info != null){
             return info.getConsumerId().getValue();
         }
@@ -77,7 +85,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return the destination name
      */
     public String getDestinationName(){
-        ConsumerInfo info = subscription.getConsumerInfo();
+        ConsumerInfo info = getConsumerInfo();
         if (info != null){
             ActiveMQDestination dest = info.getDestination();
             return dest.getPhysicalName();
@@ -90,7 +98,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return true if the destination is a Queue
      */
     public boolean isDestinationQueue(){
-        ConsumerInfo info = subscription.getConsumerInfo();
+        ConsumerInfo info = getConsumerInfo();
         if (info != null){
             ActiveMQDestination dest = info.getDestination();
             return dest.isQueue();
@@ -102,7 +110,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return true of the destination is a Topic
      */
     public boolean isDestinationTopic(){
-        ConsumerInfo info = subscription.getConsumerInfo();
+        ConsumerInfo info = getConsumerInfo();
         if (info != null){
             ActiveMQDestination dest = info.getDestination();
             return dest.isTopic();
@@ -114,12 +122,19 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return true if the destination is temporary
      */
     public boolean isDestinationTemporary(){
-        ConsumerInfo info = subscription.getConsumerInfo();
+        ConsumerInfo info = getConsumerInfo();
         if (info != null){
             ActiveMQDestination dest = info.getDestination();
             return dest.isTemporary();
         }
         return false;
+    }
+    
+    /**
+     * @return true if the subscriber is active
+     */
+    public boolean isActive(){
+        return true;
     }
 
     /**
@@ -127,28 +142,34 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * reclaim memory.
      */
     public void gc(){
+        if (subscription != null){
         subscription.gc();
+        }
     }
     
     /**
      * @return number of messages pending delivery
      */
     public int getPending(){
-        return subscription.pending();
+        return subscription != null ? subscription.pending() : 0;
     }
     
     /**
      * @return number of messages dispatched
      */
     public int getDispatched(){
-        return subscription.dispatched();
+        return subscription != null ? subscription.dispatched() : 0;
     }
     
     /**
      * @return number of messages delivered
      */
     public int getDelivered(){
-        return subscription.delivered();
+        return subscription != null ? subscription.delivered() : 0;
+    }
+    
+    protected ConsumerInfo getConsumerInfo(){
+        return subscription != null ? subscription.getConsumerInfo() : null;
     }
 
 }

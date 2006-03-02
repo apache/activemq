@@ -39,7 +39,7 @@ public class ManagedTempTopicRegion extends TempTopicRegion {
     
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         Subscription sub = super.createSubscription(context, info);
-        regionBroker.registerSubscription(sub);
+        regionBroker.registerSubscription(context,sub);
         return sub;
     }
     
