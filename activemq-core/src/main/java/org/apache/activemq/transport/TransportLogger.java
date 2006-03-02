@@ -32,7 +32,7 @@ public class TransportLogger extends TransportFilter {
     private final Log log;
     
     public TransportLogger(Transport next) {
-        this( next, LogFactory.getLog(TransportLogger.class.getName()+"."+getNextId()));
+        this( next, LogFactory.getLog(TransportLogger.class.getName()+":"+getNextId()));
     }
     
     synchronized private static int getNextId() {
@@ -49,6 +49,20 @@ public class TransportLogger extends TransportFilter {
             log.debug("SENDING: "+command);
         }
         next.oneway(command);
+    }
+    
+    public void onCommand(Command command) {
+        if( log.isDebugEnabled() ) {
+            log.debug("RECEIVED: "+command);
+        }
+        commandListener.onCommand(command);
+    }
+    
+    public void onException(IOException error) {
+        if( log.isDebugEnabled() ) {
+            log.debug("RECEIVED Exception: "+error, error);
+        }
+        commandListener.onException(error);
     }
     
     public String toString() {

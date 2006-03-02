@@ -55,7 +55,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private boolean trace;
     private boolean useLocalHost = true;
     private int minmumWireFormatVersion;
-
+    private long maxInactivityDuration = 30000;
+    
     /**
      * Construct basic helpers
      * 
@@ -273,6 +274,14 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (dataIn != null) {
             dataIn.close();
         }
+    }
+
+    public long getMaxInactivityDuration() {
+        return maxInactivityDuration;
+    }
+
+    public void setMaxInactivityDuration(long maxInactivityDuration) {
+        this.maxInactivityDuration = maxInactivityDuration;
     }
 
 }

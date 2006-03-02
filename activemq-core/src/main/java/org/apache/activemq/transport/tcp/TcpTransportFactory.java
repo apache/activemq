@@ -26,6 +26,7 @@ import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import org.activeio.command.WireFormat;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
@@ -67,8 +68,11 @@ public class TcpTransportFactory extends TransportFactory {
         // transport = new InactivityMonitor(transport,
         // temp.getMaxInactivityDuration(), activityMonitor.getReadCounter(),
         // activityMonitor.getWriteCounter());
+
         if( format instanceof OpenWireFormat )
             transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
+        
+        transport = new InactivityMonitor(transport, tcpTransport.getMaxInactivityDuration());
         
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
@@ -87,6 +91,7 @@ public class TcpTransportFactory extends TransportFactory {
         // temp.getMaxInactivityDuration(), activityMonitor.getReadCounter(),
         // activityMonitor.getWriteCounter());
         transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
+        transport = new InactivityMonitor(transport, tcpTransport.getMaxInactivityDuration());
         return transport;
     }
 

@@ -48,6 +48,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     private int backlog = 5000;
     private WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
     private TcpTransportFactory transportFactory = new TcpTransportFactory();
+    private long maxInactivityDuration = 30000;
+    private int minmumWireFormatVersion;
+    private boolean trace;
     
     /**
      * Constructor
@@ -101,6 +104,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                     }
                     else {
                         HashMap options = new HashMap();
+                        options.put("maxInactivityDuration", new Long(maxInactivityDuration));
+                        options.put("minmumWireFormatVersion", new Integer(minmumWireFormatVersion));
+                        options.put("trace", new Boolean(trace));
                         WireFormat format = wireFormatFactory.createWireFormat();
                         TcpTransport transport = new TcpTransport(format, socket);
                         Transport configuredTransport = transportFactory.configure(transport, format, options);
@@ -180,5 +186,29 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         if (serverSocket != null) {
             serverSocket.close();
         }
+    }
+
+    public long getMaxInactivityDuration() {
+        return maxInactivityDuration;
+    }
+
+    public void setMaxInactivityDuration(long maxInactivityDuration) {
+        this.maxInactivityDuration = maxInactivityDuration;
+    }
+
+    public int getMinmumWireFormatVersion() {
+        return minmumWireFormatVersion;
+    }
+
+    public void setMinmumWireFormatVersion(int minmumWireFormatVersion) {
+        this.minmumWireFormatVersion = minmumWireFormatVersion;
+    }
+
+    public boolean isTrace() {
+        return trace;
+    }
+
+    public void setTrace(boolean trace) {
+        this.trace = trace;
     }
 }
