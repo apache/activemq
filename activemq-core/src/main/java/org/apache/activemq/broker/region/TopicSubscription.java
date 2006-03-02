@@ -52,12 +52,14 @@ public class TopicSubscription extends AbstractSubscription {
     public void add(MessageReference node) throws InterruptedException, IOException {
         node.incrementReferenceCount();
         if( !isFull() && !isSlaveBroker()) {
-            // TODO - if we have already dispatched too many messages to this slow consumer
-            // should we avoid dispatching and just discard old messages as shown below
+            // if maximumPendingMessages is set we will only discard messages which
+            // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
             dispatch(node);
         } else {
             synchronized (matched) {
                 matched.addLast(node);
+                
+                // NOTE - be careful about the slaveBroker!
                 if (maximumPendingMessages > 0) {
                     // lets discard old messages as we are a slow consumer
                     while (matched.size() > maximumPendingMessages) {
