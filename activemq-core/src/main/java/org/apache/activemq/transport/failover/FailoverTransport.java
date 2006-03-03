@@ -145,6 +145,7 @@ public class FailoverTransport implements CompositeTransport {
                                     log.debug("Attempting connect to: " + uri);
                                     Transport t = TransportFactory.compositeConnect(uri);
                                     t.setTransportListener(myTransportListener);
+                                    t.start();
                                     if (started) {
                                         restoreTransport(t);
                                     }
@@ -223,7 +224,6 @@ public class FailoverTransport implements CompositeTransport {
                 return;
             started = true;
             if (connectedTransport != null) {
-                connectedTransport.start();
                 stateTracker.restore(connectedTransport);
             }
         }
