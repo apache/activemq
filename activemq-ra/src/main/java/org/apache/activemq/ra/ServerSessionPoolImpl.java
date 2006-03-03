@@ -76,6 +76,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         } catch (UnavailableException e) {
             // The container could be limiting us on the number of endpoints
             // that are being created.
+            log.debug("Could not create an endpoint.", e);
             session.close();
             return null;
         }
@@ -104,15 +105,19 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         } else {
             // Are we at the upper limit?
             if (activeSessions.size() >= maxSessions) {
-                // then reuse the allready created sessions..
+                // then reuse the already created sessions..
                 // This is going to queue up messages into a session for
                 // processing.
                 return getExistingServerSession();
             }
             ServerSessionImpl ss = createServerSessionImpl();
-            // We may not be able to create a session due to the conatiner
+            // We may not be able to create a session due to the container
             // restricting us.
             if (ss == null) {
+                if (idleSessions.size() == 0) {
+                    throw new JMSException("Endpoint factory did not allows to any endpoints.");
+                }
+
                 return getExistingServerSession();
             }
             activeSessions.addLast(ss);
