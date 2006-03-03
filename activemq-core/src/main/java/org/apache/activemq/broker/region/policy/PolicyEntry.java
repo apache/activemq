@@ -20,6 +20,8 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Represents an entry in a {@link PolicyMap} for assigning policies to a
@@ -31,6 +33,8 @@ import org.apache.activemq.filter.DestinationMapEntry;
  */
 public class PolicyEntry extends DestinationMapEntry {
 
+    private static final Log log = LogFactory.getLog(PolicyEntry.class);
+    
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
@@ -64,7 +68,16 @@ public class PolicyEntry extends DestinationMapEntry {
     public void configure(TopicSubscription subscription) {
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
+            int consumerLimit = subscription.getInfo().getMaximumPendingMessageLimit();
+            if (consumerLimit > 0) {
+                if (value < 0 || consumerLimit < value) {
+                    value = consumerLimit;
+                }
+            }
             if (value >= 0) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Setting the maximumPendingMessages size to: " + value + " for consumer: " + subscription.getInfo().getConsumerId());
+                }
                 subscription.setMaximumPendingMessages(value);
             }
         }

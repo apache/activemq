@@ -802,14 +802,16 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         checkClosed();
         int prefetch = 0;
 
+        ActiveMQPrefetchPolicy prefetchPolicy = connection.getPrefetchPolicy();
         if (destination instanceof Topic) {
-            prefetch = connection.getPrefetchPolicy().getTopicPrefetch();
+            prefetch = prefetchPolicy.getTopicPrefetch();
         } else {
-            prefetch = connection.getPrefetchPolicy().getQueuePrefetch();
+            prefetch = prefetchPolicy.getQueuePrefetch();
         }
 
-        return new ActiveMQMessageConsumer(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(destination), null, messageSelector, prefetch, false, false, asyncDispatch);
+        return new ActiveMQMessageConsumer(this, getNextConsumerId(), 
+                ActiveMQMessageTransformation.transformDestination(destination), null, messageSelector, prefetch, 
+                prefetchPolicy.getMaximumPendingMessageLimit(), false, false, asyncDispatch);
     }
 
     /**
@@ -870,9 +872,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal)
             throws JMSException {
         checkClosed();
-        return new ActiveMQMessageConsumer(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(destination), null, messageSelector, connection.getPrefetchPolicy()
-                .getTopicPrefetch(), NoLocal, false, asyncDispatch);
+        ActiveMQPrefetchPolicy prefetchPolicy = connection.getPrefetchPolicy();
+        return new ActiveMQMessageConsumer(this, getNextConsumerId(), 
+                ActiveMQMessageTransformation.transformDestination(destination), null, messageSelector, 
+                prefetchPolicy.getTopicPrefetch(), prefetchPolicy.getMaximumPendingMessageLimit(), NoLocal, false, asyncDispatch);
     }
 
     /**
@@ -1033,9 +1036,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             throws JMSException {
         checkClosed();
         connection.checkClientIDWasManuallySpecified();
+        ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
         return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(topic), name, messageSelector, this.connection.getPrefetchPolicy()
-                .getDurableTopicPrefetch(), noLocal, false, asyncDispatch);
+                .transformDestination(topic), name, messageSelector, prefetchPolicy.getDurableTopicPrefetch(), 
+                prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
     }
 
     /**
@@ -1155,8 +1159,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
         checkClosed();
+        ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
         return new ActiveMQQueueReceiver(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(queue), messageSelector, this.connection.getPrefetchPolicy().getQueuePrefetch(), asyncDispatch);
+                .transformDestination(queue), messageSelector, prefetchPolicy.getQueuePrefetch(), 
+                prefetchPolicy.getMaximumPendingMessageLimit(), asyncDispatch);
     }
 
     /**
@@ -1247,9 +1253,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
+        ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
         return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(topic), null, messageSelector, this.connection.getPrefetchPolicy()
-                .getTopicPrefetch(), noLocal, false, asyncDispatch);
+                .transformDestination(topic), null, messageSelector, prefetchPolicy.getTopicPrefetch(), 
+                prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
     }
 
     /**

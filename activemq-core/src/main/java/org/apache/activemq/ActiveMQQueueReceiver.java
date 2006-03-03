@@ -67,9 +67,9 @@ public class ActiveMQQueueReceiver extends ActiveMQMessageConsumer implements
      * @throws JMSException
      */
     protected ActiveMQQueueReceiver(ActiveMQSession theSession,
-                                    ConsumerId consumerId, ActiveMQDestination destination, String selector, int prefetch, boolean asyncDispatch)
+                                    ConsumerId consumerId, ActiveMQDestination destination, String selector, int prefetch, int maximumPendingMessageCount, boolean asyncDispatch)
             throws JMSException {
-        super(theSession, consumerId, destination, null, selector, prefetch, false, false, asyncDispatch);
+        super(theSession, consumerId, destination, null, selector, prefetch, maximumPendingMessageCount, false, false, asyncDispatch);
     }
 
     /**
