@@ -34,5 +34,9 @@ public interface TopicViewMBean {
     
     public CompositeData[] browse() throws OpenDataException;
     public TabularData browseAsTable() throws OpenDataException;
+    
+    public void createDurableSubscriber(String clientId,String subscriberName) throws Exception;
+    
+    public void destroyDurableSubscriber(String clientId,String subscriberName) throws Exception;
 
 }
