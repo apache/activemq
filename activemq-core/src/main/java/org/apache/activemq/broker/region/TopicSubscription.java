@@ -20,6 +20,8 @@ import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
+import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
@@ -42,6 +44,8 @@ public class TopicSubscription extends AbstractSubscription{
     protected AtomicInteger dispatched=new AtomicInteger();
     protected AtomicInteger delivered=new AtomicInteger();
     private int maximumPendingMessages=-1;
+    private MessageEvictionStrategy messageEvictionStrategy = new OldestMessageEvictionStrategy();
+    private int discarded = 0;
     private final Object matchedListMutex=new Object();
 
     public TopicSubscription(Broker broker,ConnectionContext context,ConsumerInfo info,UsageManager usageManager)
@@ -64,8 +68,9 @@ public class TopicSubscription extends AbstractSubscription{
                     if(maximumPendingMessages>0){
                         // lets discard old messages as we are a slow consumer
                         while(!matched.isEmpty()&&matched.size()>maximumPendingMessages){
-                            MessageReference oldMessage=(MessageReference) matched.removeFirst();
+                            MessageReference oldMessage=messageEvictionStrategy.evictMessage(matched);
                             oldMessage.decrementReferenceCount();
+                            discarded++;
                             if (log.isDebugEnabled()){
                                 log.debug("Discarding message " + oldMessage);
                             }
@@ -122,7 +127,7 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     public int pending(){
-        return matched.size()-dispatched.get();
+        return matched()-dispatched();
     }
 
     public int dispatched(){
@@ -138,12 +143,48 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     /**
+     * @return the number of messages discarded due to being a slow consumer
+     */
+    public int discarded() {
+        synchronized(matchedListMutex) {
+            return discarded;
+        }
+    }
+
+    /**
+     * @return the number of matched messages (messages targeted for the subscription but not
+     * yet able to be dispatched due to the prefetch buffer being full).
+     */
+    public int matched() {
+        synchronized(matchedListMutex) {
+            return matched.size();
+        }
+    }
+
+
+    /**
      * Sets the maximum number of pending messages that can be matched against this consumer before old messages are
      * discarded.
      */
     public void setMaximumPendingMessages(int maximumPendingMessages){
         this.maximumPendingMessages=maximumPendingMessages;
     }
+
+    public MessageEvictionStrategy getMessageEvictionStrategy() {
+        return messageEvictionStrategy;
+    }
+
+    /**
+     * Sets the eviction strategy used to decide which message to evict when the slow consumer
+     * needs to discard messages
+     */
+    public void setMessageEvictionStrategy(MessageEvictionStrategy messageEvictionStrategy) {
+        this.messageEvictionStrategy = messageEvictionStrategy;
+    }
+
+    
+    // Implementation methods
+    // -------------------------------------------------------------------------
 
     private boolean isFull(){
         return dispatched.get()-delivered.get()>=info.getPrefetchSize();
@@ -182,6 +223,6 @@ public class TopicSubscription extends AbstractSubscription{
 
     public String toString(){
         return "TopicSubscription:"+" consumer="+info.getConsumerId()+", destinations="+destinations.size()
-                        +", dispatched="+dispatched+", delivered="+this.delivered+", matched="+this.matched.size();
+                        +", dispatched="+dispatched()+", delivered="+delivered()+", matched="+matched()+", discarded="+discarded();
     }
 }

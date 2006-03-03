@@ -41,6 +41,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private DeadLetterStrategy deadLetterStrategy;
     private int messageGroupHashBucketCount = 1024;
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
+    private MessageEvictionStrategy messageEvictionStrategy;
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -80,6 +81,9 @@ public class PolicyEntry extends DestinationMapEntry {
                 }
                 subscription.setMaximumPendingMessages(value);
             }
+        }
+        if (messageEvictionStrategy != null) {
+            subscription.setMessageEvictionStrategy(messageEvictionStrategy);
         }
     }
 
@@ -156,4 +160,17 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setPendingMessageLimitStrategy(PendingMessageLimitStrategy pendingMessageLimitStrategy) {
         this.pendingMessageLimitStrategy = pendingMessageLimitStrategy;
     }
+
+    public MessageEvictionStrategy getMessageEvictionStrategy() {
+        return messageEvictionStrategy;
+    }
+
+    /**
+     * Sets the eviction strategy used to decide which message to evict when the
+     * slow consumer needs to discard messages
+     */
+    public void setMessageEvictionStrategy(MessageEvictionStrategy messageEvictionStrategy) {
+        this.messageEvictionStrategy = messageEvictionStrategy;
+    }
+
 }
