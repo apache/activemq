@@ -49,7 +49,7 @@ public class QueueBrowserSubscription extends PrefetchSubscription {
             ", matched="+this.matched.size();
     }
 
-    public void browseDone() throws Throwable {
+    public void browseDone() throws Exception {
         browseDone = true;
         add(IndirectMessageReference.END_OF_BROWSE_MARKER);
     }

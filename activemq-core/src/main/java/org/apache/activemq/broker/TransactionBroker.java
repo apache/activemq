@@ -111,7 +111,7 @@ public class TransactionBroker extends BrokerFilter {
     // BrokerFilter overrides
     //
     //////////////////////////////////////////////////////////////////////////////
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Throwable {
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
         ArrayList txs = new ArrayList();
         for (Iterator iter = xaTransactions.values().iterator(); iter.hasNext();) {
             Transaction tx = (Transaction) iter.next();
@@ -123,7 +123,7 @@ public class TransactionBroker extends BrokerFilter {
         return rc;
     }
 
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         
         // the transaction may have already been started.
         if( xid.isXATransaction() ) {
@@ -143,27 +143,27 @@ public class TransactionBroker extends BrokerFilter {
         }
     }
 
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         Transaction transaction = getTransaction(context, xid, false);
         return transaction.prepare();
     }
     
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Throwable {
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         Transaction transaction = getTransaction(context, xid, true);
         transaction.commit(onePhase);
     }
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         Transaction transaction = getTransaction(context, xid, true);
         transaction.rollback();
     }
     
-    public void forgetTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void forgetTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         Transaction transaction = getTransaction(context, xid, true);
         transaction.rollback();
     }
     
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         // This method may be invoked recursively.  
         // Track original tx so that it can be restored.
         Transaction originalTx = context.getTransaction();
@@ -179,7 +179,7 @@ public class TransactionBroker extends BrokerFilter {
         }
     }
     
-    public void send(ConnectionContext context, Message message) throws Throwable {
+    public void send(ConnectionContext context, Message message) throws Exception {
         // This method may be invoked recursively.  
         // Track original tx so that it can be restored.
         Transaction originalTx = context.getTransaction();
@@ -195,7 +195,7 @@ public class TransactionBroker extends BrokerFilter {
         }
     }
     
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         for (Iterator iter = context.getTransactions().values().iterator(); iter.hasNext();) {
             try {
                 Transaction transaction = (Transaction) iter.next();

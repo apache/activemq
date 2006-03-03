@@ -35,14 +35,14 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
     private int maximumSize=100;
     private int tail=0;
 
-    synchronized public boolean add(ConnectionContext context,MessageReference node) throws Throwable{
+    synchronized public boolean add(ConnectionContext context,MessageReference node) throws Exception{
         messages[tail++]=node;
         if(tail>=messages.length)
             tail=0;
         return true;
     }
 
-    synchronized public void recover(ConnectionContext context,Topic topic,Subscription sub) throws Throwable{
+    synchronized public void recover(ConnectionContext context,Topic topic,Subscription sub) throws Exception{
         // Re-dispatch the last message seen.
         int t=tail;
         // The buffer may not have rolled over yet..., start from the front
@@ -89,7 +89,7 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
         this.maximumSize=maximumSize;
     }
 
-    public Message[] browse(ActiveMQDestination destination) throws Throwable{
+    public Message[] browse(ActiveMQDestination destination) throws Exception{
         List result=new ArrayList();
         DestinationFilter filter=DestinationFilter.parseFilter(destination);
         int t=tail;

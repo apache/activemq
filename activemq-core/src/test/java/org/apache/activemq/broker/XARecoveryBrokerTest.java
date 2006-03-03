@@ -40,7 +40,7 @@ import org.apache.activemq.command.XATransactionId;
 public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         
     
-    public void testPreparedTransactionRecoveredOnRestart() throws Throwable {
+    public void testPreparedTransactionRecoveredOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -107,7 +107,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNoMessagesLeft(connection);
     }
 
-    public void testQueuePersistentCommitedMessagesNotLostOnRestart() throws Throwable {
+    public void testQueuePersistentCommitedMessagesNotLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -154,7 +154,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNoMessagesLeft(connection);
     }
     
-    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Throwable {
+    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -207,7 +207,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNull(m);        
     }
     
-    public void testQueuePersistentUncommittedAcksLostOnRestart() throws Throwable {
+    public void testQueuePersistentUncommittedAcksLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         

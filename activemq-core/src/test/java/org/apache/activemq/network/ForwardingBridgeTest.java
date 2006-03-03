@@ -46,7 +46,7 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE), 
                 } );
     }    
-    public void testAddConsumerThenSend() throws Throwable {
+    public void testAddConsumerThenSend() throws Exception {
         
         // Start a producer on local broker 
         StubConnection connection1 = createConnection();

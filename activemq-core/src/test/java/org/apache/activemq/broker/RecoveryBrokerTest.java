@@ -38,7 +38,7 @@ import org.apache.activemq.command.SessionInfo;
  */
 public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         
-    public void testConsumedQueuePersistentMessagesLostOnRestart() throws Throwable {
+    public void testConsumedQueuePersistentMessagesLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -80,7 +80,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNull(m);        
     }
 
-    public void testQueuePersistentUncommitedMessagesLostOnRestart() throws Throwable {
+    public void testQueuePersistentUncommitedMessagesLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -123,7 +123,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNull(m);        
     }
 
-    public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Throwable {
+    public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQTopic("TEST");
         
@@ -177,7 +177,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNoMessagesLeft(connection2);
     }
 
-    public void testQueuePersistentMessagesNotLostOnRestart() throws Throwable {
+    public void testQueuePersistentMessagesNotLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -211,7 +211,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         assertEquals( m.getMessageId(), message.getMessageId() );
     }
     
-    public void testQueueNonPersistentMessagesLostOnRestart() throws Throwable {
+    public void testQueueNonPersistentMessagesLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -243,7 +243,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNoMessagesLeft(connection);
     }
     
-    public void testQueuePersistentCommitedMessagesNotLostOnRestart() throws Throwable {
+    public void testQueuePersistentCommitedMessagesNotLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -290,7 +290,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNoMessagesLeft(connection);
     }
     
-    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Throwable {
+    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -343,7 +343,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNull(m);        
     }
     
-    public void testQueuePersistentUncommitedAcksLostOnRestart() throws Throwable {
+    public void testQueuePersistentUncommitedAcksLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         

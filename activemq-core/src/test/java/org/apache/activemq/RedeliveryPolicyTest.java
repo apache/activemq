@@ -41,9 +41,9 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
     }
 
     /**
-     * @throws Throwable
+     * @throws Exception
      */
-    public void testExponentialRedeliveryPolicyDelaysDeliveryOnRollback() throws Throwable {
+    public void testExponentialRedeliveryPolicyDelaysDeliveryOnRollback() throws Exception {
 
         // Receive a message with the JMS API
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
@@ -90,9 +90,9 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
 
     /**
-     * @throws Throwable
+     * @throws Exception
      */
-    public void testNornalRedeliveryPolicyDelaysDeliveryOnRollback() throws Throwable {
+    public void testNornalRedeliveryPolicyDelaysDeliveryOnRollback() throws Exception {
 
         // Receive a message with the JMS API
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
@@ -135,9 +135,9 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
     }
 
     /**
-     * @throws Throwable
+     * @throws Exception
      */
-    public void testDLQHandling() throws Throwable {
+    public void testDLQHandling() throws Exception {
 
         // Receive a message with the JMS API
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();

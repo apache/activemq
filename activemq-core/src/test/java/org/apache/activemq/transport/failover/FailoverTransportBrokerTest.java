@@ -54,7 +54,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
                 new ActiveMQTopic("TEST"), 
                 } );
     }    
-    public void testPublisherFailsOver() throws Throwable {
+    public void testPublisherFailsOver() throws Exception {
         
         // Start a normal consumer on the local broker 
         StubConnection connection1 = createConnection();

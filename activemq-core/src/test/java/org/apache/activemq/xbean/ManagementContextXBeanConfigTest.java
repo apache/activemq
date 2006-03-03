@@ -36,7 +36,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
 
     protected BrokerService brokerService;
 
-    public void testManagmentContextConfiguredCorrectly() throws Throwable {
+    public void testManagmentContextConfiguredCorrectly() throws Exception {
 
         assertEquals(2011, brokerService.getManagementContext().getConnectorPort());
         assertEquals("test.domain", brokerService.getManagementContext().getJmxDomainName());

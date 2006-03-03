@@ -26,6 +26,7 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.axiondb.engine.commands.ShutdownCommand;
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
@@ -91,7 +92,7 @@ public class StubConnection implements Service {
         return dispatchQueue;
     }
 
-    public void send(Command command) throws Throwable {
+    public void send(Command command) throws Exception {
         if( command instanceof Message ) {
             Message message = (Message) command;
             message.setProducerId(message.getMessageId().getProducerId());
@@ -101,7 +102,7 @@ public class StubConnection implements Service {
             Response response = connection.service(command);
             if (response != null && response.isException()) {
                 ExceptionResponse er = (ExceptionResponse) response;
-                throw er.getException();
+                throw JMSExceptionSupport.create(er.getException());
             }
         }
         else if (transport != null) {
@@ -109,7 +110,7 @@ public class StubConnection implements Service {
         }
     }
 
-    public Response request(Command command) throws Throwable {
+    public Response request(Command command) throws Exception {
         if( command instanceof Message ) {
             Message message = (Message) command;
             message.setProducerId(message.getMessageId().getProducerId());
@@ -119,7 +120,7 @@ public class StubConnection implements Service {
             Response response = connection.service(command);
             if (response != null && response.isException()) {
                 ExceptionResponse er = (ExceptionResponse) response;
-                throw er.getException();
+                throw JMSExceptionSupport.create(er.getException());
             }
             return response;
         }
@@ -127,7 +128,7 @@ public class StubConnection implements Service {
             Response response = transport.request(command);
             if (response != null && response.isException()) {
                 ExceptionResponse er = (ExceptionResponse) response;
-                throw er.getException();
+                throw JMSExceptionSupport.create(er.getException());
             }
             return response;
         }

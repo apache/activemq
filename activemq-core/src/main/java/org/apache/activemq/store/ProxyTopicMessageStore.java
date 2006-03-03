@@ -46,7 +46,7 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public Message getMessage(MessageId identity) throws IOException {
         return delegate.getMessage(identity);
     }
-    public void recover(MessageRecoveryListener listener) throws Throwable {
+    public void recover(MessageRecoveryListener listener) throws Exception {
         delegate.recover(listener);
     }
     public void removeAllMessages(ConnectionContext context) throws IOException {
@@ -76,7 +76,7 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         delegate.deleteSubscription(clientId, subscriptionName);
     }
 
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Throwable {
+    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
         delegate.recoverSubscription(clientId, subscriptionName, listener);
     }
     

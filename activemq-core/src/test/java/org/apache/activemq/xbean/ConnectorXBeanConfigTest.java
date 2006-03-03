@@ -36,7 +36,7 @@ public class ConnectorXBeanConfigTest extends TestCase {
 
     protected BrokerService brokerService;
 
-    public void testConnectorConfiguredCorrectly() throws Throwable {
+    public void testConnectorConfiguredCorrectly() throws Exception {
         
         TransportConnector connector = (TransportConnector) brokerService.getTransportConnectors().get(0);
         

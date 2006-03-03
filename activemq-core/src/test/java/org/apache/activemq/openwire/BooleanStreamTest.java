@@ -39,7 +39,7 @@ public class BooleanStreamTest extends TestCase {
         public boolean getBooleanValueFor(int index, int count);
     }
 
-    public void testBooleanMarshallingUsingAllTrue() throws Throwable {
+    public void testBooleanMarshallingUsingAllTrue() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
                 return true;
@@ -47,7 +47,7 @@ public class BooleanStreamTest extends TestCase {
         });
     }
 
-    public void testBooleanMarshallingUsingAllFalse() throws Throwable {
+    public void testBooleanMarshallingUsingAllFalse() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
                 return false;
@@ -55,7 +55,7 @@ public class BooleanStreamTest extends TestCase {
         });
     }
 
-    public void testBooleanMarshallingUsingOddAlternateTrueFalse() throws Throwable {
+    public void testBooleanMarshallingUsingOddAlternateTrueFalse() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
                 return (index & 1) == 0;
@@ -63,7 +63,7 @@ public class BooleanStreamTest extends TestCase {
         });
     }
     
-    public void testBooleanMarshallingUsingEvenAlternateTrueFalse() throws Throwable {
+    public void testBooleanMarshallingUsingEvenAlternateTrueFalse() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
                 return (index & 1) != 0;

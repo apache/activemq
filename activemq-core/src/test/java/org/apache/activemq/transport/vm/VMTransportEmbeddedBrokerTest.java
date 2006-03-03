@@ -45,7 +45,7 @@ public class VMTransportEmbeddedBrokerTest extends BrokerTestSupport {
         junit.textui.TestRunner.run(VMTransportEmbeddedBrokerTest.class);
     }
 
-    public void testConsumerPrefetchAtOne() throws Throwable {
+    public void testConsumerPrefetchAtOne() throws Exception {
         
         // Make sure the broker is created due to the connection being started.
         assertNull(BrokerRegistry.getInstance().lookup("localhost"));        

@@ -45,5 +45,5 @@ public interface Command extends DataStructure {
     boolean isMessageDispatchNotification();
     boolean isShutdownInfo();
     
-    Response visit( CommandVisitor visitor) throws Throwable;
+    Response visit( CommandVisitor visitor) throws Exception;
 }

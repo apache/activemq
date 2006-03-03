@@ -32,7 +32,7 @@ import org.apache.activemq.command.SessionInfo;
 
 public class AdvisoryBrokerTest extends BrokerTestSupport {
      
-    public void testConnectionAdvisories() throws Throwable {
+    public void testConnectionAdvisories() throws Exception {
         
         ActiveMQDestination destination = AdvisorySupport.getConnectionAdvisoryTopic();
         
@@ -78,7 +78,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection1);
     }
 
-    public void testConsumerAdvisories() throws Throwable {
+    public void testConsumerAdvisories() throws Exception {
 
         ActiveMQDestination queue = new ActiveMQQueue("test");
         ActiveMQDestination destination = AdvisorySupport.getConsumerAdvisoryTopic(queue);
@@ -128,7 +128,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection2);
     }
 
-    public void testConsumerAdvisoriesReplayed() throws Throwable {
+    public void testConsumerAdvisoriesReplayed() throws Exception {
 
         ActiveMQDestination queue = new ActiveMQQueue("test");
         ActiveMQDestination destination = AdvisorySupport.getConsumerAdvisoryTopic(queue);
@@ -176,7 +176,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
     }
 
 
-    public void testProducerAdvisories() throws Throwable {
+    public void testProducerAdvisories() throws Exception {
 
         ActiveMQDestination queue = new ActiveMQQueue("test");
         ActiveMQDestination destination = AdvisorySupport.getProducerAdvisoryTopic(queue);
@@ -225,7 +225,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection2);
     }
     
-    public void testProducerAdvisoriesReplayed() throws Throwable {
+    public void testProducerAdvisoriesReplayed() throws Exception {
 
         ActiveMQDestination queue = new ActiveMQQueue("test");
         ActiveMQDestination destination = AdvisorySupport.getProducerAdvisoryTopic(queue);
@@ -273,7 +273,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection2);
     }
 
-    public void testProducerAdvisoriesReplayedOnlyTargetNewConsumer() throws Throwable {
+    public void testProducerAdvisoriesReplayedOnlyTargetNewConsumer() throws Exception {
 
         ActiveMQDestination queue = new ActiveMQQueue("test");
         ActiveMQDestination destination = AdvisorySupport.getProducerAdvisoryTopic(queue);

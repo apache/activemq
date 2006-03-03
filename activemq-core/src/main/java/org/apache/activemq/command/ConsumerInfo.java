@@ -287,7 +287,7 @@ public class ConsumerInfo extends BaseCommand {
         this.additionalPredicate = additionalPredicate;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processAddConsumer( this );
     }
 

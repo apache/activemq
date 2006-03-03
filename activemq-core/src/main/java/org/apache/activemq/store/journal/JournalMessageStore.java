@@ -95,7 +95,7 @@ public class JournalMessageStore implements MessageStore {
             }
             transactionStore.addMessage(this, message, location);
             context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() {                    
+                public void afterCommit() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message add commit for: "+id+", at: "+location);
                     synchronized( JournalMessageStore.this ) {
@@ -103,7 +103,7 @@ public class JournalMessageStore implements MessageStore {
                         addMessage(message, location);
                     }
                 }
-                public void afterRollback() {                    
+                public void afterRollback() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message add rollback for: "+id+", at: "+location);
                     synchronized( JournalMessageStore.this ) {
@@ -157,7 +157,7 @@ public class JournalMessageStore implements MessageStore {
             }
             transactionStore.removeMessage(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() {                    
+                public void afterCommit() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message remove commit for: "+ack.getLastMessageId()+", at: "+location);
                     synchronized( JournalMessageStore.this ) {
@@ -165,7 +165,7 @@ public class JournalMessageStore implements MessageStore {
                         removeMessage(ack, location);
                     }
                 }
-                public void afterRollback() {                    
+                public void afterRollback() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message remove rollback for: "+ack.getLastMessageId()+", at: "+location);
                     synchronized( JournalMessageStore.this ) {
@@ -235,7 +235,7 @@ public class JournalMessageStore implements MessageStore {
         }
 
         transactionTemplate.run(new Callback() {
-            public void execute() throws Throwable {
+            public void execute() throws Exception {
 
                 int size = 0;
                 
@@ -326,9 +326,9 @@ public class JournalMessageStore implements MessageStore {
      * updated.
      * 
      * @param listener
-     * @throws Throwable 
+     * @throws Exception 
      */
-    public void recover(final MessageRecoveryListener listener) throws Throwable {
+    public void recover(final MessageRecoveryListener listener) throws Exception {
         peristenceAdapter.checkpoint(true, true);
         longTermStore.recover(listener);
     }

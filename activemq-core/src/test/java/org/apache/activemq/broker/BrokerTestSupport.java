@@ -91,7 +91,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         super.tearDown();
     }
     
-    protected ConsumerInfo createConsumerInfo(SessionInfo sessionInfo, ActiveMQDestination destination) throws Throwable {
+    protected ConsumerInfo createConsumerInfo(SessionInfo sessionInfo, ActiveMQDestination destination) throws Exception {
         ConsumerInfo info = new ConsumerInfo(sessionInfo, ++idGenerator);
         info.setBrowser(false);
         info.setDestination(destination);
@@ -104,17 +104,17 @@ public class BrokerTestSupport extends CombinationTestSupport {
         return consumerInfo.createRemoveCommand();
     }
 
-    protected ProducerInfo createProducerInfo(SessionInfo sessionInfo) throws Throwable {
+    protected ProducerInfo createProducerInfo(SessionInfo sessionInfo) throws Exception {
         ProducerInfo info = new ProducerInfo(sessionInfo, ++idGenerator);
         return info;
     }
 
-    protected SessionInfo createSessionInfo(ConnectionInfo connectionInfo) throws Throwable {
+    protected SessionInfo createSessionInfo(ConnectionInfo connectionInfo) throws Exception {
         SessionInfo info = new SessionInfo(connectionInfo, ++idGenerator);
         return info;
     }
 
-    protected ConnectionInfo createConnectionInfo() throws Throwable {
+    protected ConnectionInfo createConnectionInfo() throws Exception {
         ConnectionInfo info = new ConnectionInfo();
         info.setConnectionId(new ConnectionId("connection:"+(++idGenerator)));
         info.setClientId( info.getConnectionId().getValue() );
@@ -220,7 +220,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         return info;
     }
 
-    protected int countMessagesInQueue(StubConnection connection, ConnectionInfo connectionInfo, ActiveMQDestination destination) throws Throwable {
+    protected int countMessagesInQueue(StubConnection connection, ConnectionInfo connectionInfo, ActiveMQDestination destination) throws Exception {
         
         SessionInfo sessionInfo = createSessionInfo(connectionInfo);
         connection.send(sessionInfo);
@@ -266,7 +266,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         return info;
     }
     
-    protected ActiveMQDestination createDestinationInfo(StubConnection connection, ConnectionInfo connectionInfo1, byte destinationType) throws Throwable {
+    protected ActiveMQDestination createDestinationInfo(StubConnection connection, ConnectionInfo connectionInfo1, byte destinationType) throws Exception {
         if( (destinationType & ActiveMQDestination.TEMP_MASK)!=0 ) {
             DestinationInfo info = createTempDestinationInfo(connectionInfo1, destinationType);
             connection.send(info);

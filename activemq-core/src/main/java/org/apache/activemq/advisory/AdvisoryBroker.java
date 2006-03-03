@@ -62,7 +62,7 @@ public class AdvisoryBroker extends BrokerFilter {
         advisoryProducerId.setConnectionId(idGenerator.generateId());
     }
 
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         next.addConnection(context, info);
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
@@ -70,7 +70,7 @@ public class AdvisoryBroker extends BrokerFilter {
         connections.put(info.getConnectionId(), info);
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         next.addConsumer(context, info);
 
         // Don't advise advisory topics.
@@ -122,7 +122,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         next.addProducer(context, info);
 
         // Don't advise advisory topics.        
@@ -133,7 +133,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         Destination answer = next.addDestination(context, destination);        
         ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
         DestinationInfo info = new DestinationInfo(context.getConnectionId(), DestinationInfo.ADD_OPERATION_TYPE, destination);
@@ -142,7 +142,7 @@ public class AdvisoryBroker extends BrokerFilter {
         return answer;
     }
     
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Throwable {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         next.removeDestination(context, destination, timeout);
         ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
         DestinationInfo info = (DestinationInfo) destinations.remove(destination);
@@ -152,7 +152,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         next.removeConnection(context, info, error);
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
@@ -160,7 +160,7 @@ public class AdvisoryBroker extends BrokerFilter {
         connections.remove(info.getConnectionId());
     }
 
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         next.removeConsumer(context, info);
 
         // Don't advise advisory topics.
@@ -171,7 +171,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         next.removeProducer(context, info);
 
         // Don't advise advisory topics.
@@ -182,34 +182,34 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
-    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Throwable {
+    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
         fireAdvisory(context, topic, command, null);
     }
     
-    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Throwable {
+    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
     
-    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Throwable {
+    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
         fireConsumerAdvisory(context, topic, command, null);
     }
-    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Throwable {
+    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
         advisoryMessage.setIntProperty("consumerCount", consumers.size());
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
     
-    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Throwable {
+    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
         fireProducerAdvisory(context, topic, command, null);
     }
-    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Throwable {
+    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
         advisoryMessage.setIntProperty("producerCount", producers.size());
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Throwable {
+    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
         advisoryMessage.setDataStructure(command);
         advisoryMessage.setPersistent(false);
         advisoryMessage.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);

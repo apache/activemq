@@ -54,7 +54,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     synchronized public void gc() {
     }
 
-    synchronized public void add(ConnectionContext context, Destination destination) throws Throwable {
+    synchronized public void add(ConnectionContext context, Destination destination) throws Exception {
         super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
         if( active ) {
@@ -63,7 +63,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         }
     }
    
-    synchronized public void activate(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    synchronized public void activate(ConnectionContext context, ConsumerInfo info) throws Exception {
         if( !active ) {
             this.active = true;
             this.context = context;
@@ -78,7 +78,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         }
     }
 
-    synchronized public void deactivate() throws Throwable {        
+    synchronized public void deactivate() throws Exception {        
         active=false;
         for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
             Topic topic = (Topic) iter.next();
@@ -114,7 +114,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         return md;
     }
 
-    synchronized public void add(MessageReference node) throws Throwable {
+    synchronized public void add(MessageReference node) throws Exception {
         if( !active ) {
             return;
         }
@@ -137,7 +137,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         return active;
     }
     
-    public synchronized void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
+    public synchronized void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         super.acknowledge(context, ack);
     }
 

@@ -97,11 +97,11 @@ abstract public class AbstractSubscription implements Subscription {
         return destinationFilter.matches(destination);
     }
 
-    public void add(ConnectionContext context, Destination destination) throws Throwable {
+    public void add(ConnectionContext context, Destination destination) throws Exception {
         destinations.add(destination);
     }
 
-    public void remove(ConnectionContext context, Destination destination) throws Throwable {
+    public void remove(ConnectionContext context, Destination destination) throws Exception {
         destinations.remove(destination);
     }
     

@@ -34,7 +34,7 @@ public class QueueSubscription extends PrefetchSubscription {
         super(broker,context, info);
     }
     
-    public void add(MessageReference node) throws Throwable {
+    public void add(MessageReference node) throws Exception {
         super.add(node);
     }
     
@@ -56,11 +56,11 @@ public class QueueSubscription extends PrefetchSubscription {
         } else {
             node.setAcked(true);
             context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() throws Throwable {                    
+                public void afterCommit() throws Exception {                    
                     node.drop();            
                     queue.dropEvent();
                 }
-                public void afterRollback() throws Throwable {
+                public void afterRollback() throws Exception {
                     node.setAcked(false);
                 }
             });

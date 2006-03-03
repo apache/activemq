@@ -48,7 +48,7 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
         super.setUp();
     }
 
-	public void testPublisherFailsOver() throws Throwable {
+	public void testPublisherFailsOver() throws Exception {
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         int deliveryMode = DeliveryMode.NON_PERSISTENT;
         

@@ -32,11 +32,11 @@ import org.apache.activemq.command.Message;
  */
 public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
-    public boolean add(ConnectionContext context, MessageReference node) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference node) throws Exception {
         return true;
     }
 
-    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception {
     }
 
     public void start() throws Exception {
@@ -45,7 +45,7 @@ public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy 
     public void stop() throws Exception {
     }
 
-    public Message[] browse(ActiveMQDestination dest) throws Throwable{
+    public Message[] browse(ActiveMQDestination dest) throws Exception{
         return new Message[0];
     }
 

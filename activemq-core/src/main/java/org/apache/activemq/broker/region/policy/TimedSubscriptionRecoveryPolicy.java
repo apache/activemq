@@ -67,12 +67,12 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
         }
     };
 
-    public boolean add(ConnectionContext context, MessageReference message) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference message) throws Exception {
         buffer.add(new TimestampWrapper(message, lastGCRun));
         return true;
     }
 
-    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception {
         
         // Re-dispatch the messages from the buffer.
         ArrayList copy = new ArrayList(buffer);
@@ -125,7 +125,7 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
         this.recoverDuration = recoverDuration;
     }
     
-    public Message[] browse(ActiveMQDestination destination) throws Throwable{
+    public Message[] browse(ActiveMQDestination destination) throws Exception{
         List result = new ArrayList();
         ArrayList copy = new ArrayList(buffer);
         DestinationFilter filter=DestinationFilter.parseFilter(destination);

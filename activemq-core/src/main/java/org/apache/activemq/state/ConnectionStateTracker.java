@@ -144,7 +144,7 @@ public class ConnectionStateTracker implements CommandVisitor {
         }
     }
 
-    public Response processAddDestination(DestinationInfo info) throws Throwable {
+    public Response processAddDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         if( info.getDestination().isTemporary() ) {
             cs.addTempDestination(info.getDestination());
@@ -152,7 +152,7 @@ public class ConnectionStateTracker implements CommandVisitor {
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveDestination(DestinationInfo info) throws Throwable {
+    public Response processRemoveDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         if( info.getDestination().isTemporary() ) {
             cs.removeTempDestination(info.getDestination());
@@ -161,7 +161,7 @@ public class ConnectionStateTracker implements CommandVisitor {
     }
 
 
-    public Response processAddProducer(ProducerInfo info) throws Throwable {
+    public Response processAddProducer(ProducerInfo info) throws Exception {
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
@@ -170,7 +170,7 @@ public class ConnectionStateTracker implements CommandVisitor {
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processRemoveProducer(ProducerId id) throws Throwable {
+    public Response processRemoveProducer(ProducerId id) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();        
         ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
@@ -179,7 +179,7 @@ public class ConnectionStateTracker implements CommandVisitor {
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processAddConsumer(ConsumerInfo info) throws Throwable {
+    public Response processAddConsumer(ConsumerInfo info) throws Exception {
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
@@ -188,7 +188,7 @@ public class ConnectionStateTracker implements CommandVisitor {
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processRemoveConsumer(ConsumerId id) throws Throwable {
+    public Response processRemoveConsumer(ConsumerId id) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
@@ -197,64 +197,64 @@ public class ConnectionStateTracker implements CommandVisitor {
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processAddSession(SessionInfo info) throws Throwable {
+    public Response processAddSession(SessionInfo info) throws Exception {
         ConnectionId connectionId = info.getSessionId().getParentId();
         ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
         cs.addSession(info);
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processRemoveSession(SessionId id) throws Throwable {        
+    public Response processRemoveSession(SessionId id) throws Exception {        
         ConnectionId connectionId = id.getParentId();
         ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
         cs.removeSession(id);
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processAddConnection(ConnectionInfo info) throws Throwable {
+    public Response processAddConnection(ConnectionInfo info) throws Exception {
         connectionStates.put(info.getConnectionId(), new ConnectionState(info));        
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processRemoveConnection(ConnectionId id) throws Throwable {
+    public Response processRemoveConnection(ConnectionId id) throws Exception {
         connectionStates.remove(id);
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Throwable {
+    public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception {
         return null;
     }
-    public Response processMessage(Message send) throws Throwable {
+    public Response processMessage(Message send) throws Exception {
         return null;
     }
-    public Response processMessageAck(MessageAck ack) throws Throwable {
+    public Response processMessageAck(MessageAck ack) throws Exception {
         return null;
     }
-    public Response processBeginTransaction(TransactionInfo info) throws Throwable {
+    public Response processBeginTransaction(TransactionInfo info) throws Exception {
         return null;
     }
-    public Response processPrepareTransaction(TransactionInfo info) throws Throwable {
+    public Response processPrepareTransaction(TransactionInfo info) throws Exception {
         return null;
     }
-    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Throwable {
+    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
         return null;
     }
-    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Throwable {
+    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
         return null;
     }
-    public Response processRollbackTransaction(TransactionInfo info) throws Throwable {
+    public Response processRollbackTransaction(TransactionInfo info) throws Exception {
         return null;
     }
-    public Response processWireFormat(WireFormatInfo info) throws Throwable {
+    public Response processWireFormat(WireFormatInfo info) throws Exception {
         return null;
     }
-    public Response processKeepAlive(KeepAliveInfo info) throws Throwable {
+    public Response processKeepAlive(KeepAliveInfo info) throws Exception {
         return null;
     }
-    public Response processShutdown(ShutdownInfo info) throws Throwable {
+    public Response processShutdown(ShutdownInfo info) throws Exception {
         return null;
     }
-    public Response processBrokerInfo(BrokerInfo info) throws Throwable {
+    public Response processBrokerInfo(BrokerInfo info) throws Exception {
         return null;
     }
 
@@ -262,19 +262,19 @@ public class ConnectionStateTracker implements CommandVisitor {
         return null;
     }
 
-    public Response processForgetTransaction(TransactionInfo info) throws Throwable {
+    public Response processForgetTransaction(TransactionInfo info) throws Exception {
         return null;
     }
 
-    public Response processEndTransaction(TransactionInfo info) throws Throwable {
+    public Response processEndTransaction(TransactionInfo info) throws Exception {
         return null;
     }
 
-    public Response processFlush(FlushCommand command) throws Throwable {
+    public Response processFlush(FlushCommand command) throws Exception {
         return null;
     }
     
-    public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Throwable{
+    public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception{
         return null;
     }
 

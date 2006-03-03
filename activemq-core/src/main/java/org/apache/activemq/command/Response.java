@@ -50,7 +50,7 @@ public class Response extends BaseCommand {
         return false;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return null;
     }
 }

@@ -57,22 +57,22 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     /**
-     * @throws Throwable
+     * @throws Exception
      * 
      */
     public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener)
-            throws Throwable {
+            throws Exception {
 
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             adapter.doRecoverSubscription(c, destination, clientId, subscriptionName,
                     new JDBCMessageRecoveryListener() {
-                        public void recoverMessage(long sequenceId, byte[] data) throws Throwable {
+                        public void recoverMessage(long sequenceId, byte[] data) throws Exception {
                             Message msg = (Message) wireFormat.unmarshal(new ByteArrayPacket(data));
                             msg.getMessageId().setBrokerSequenceId(sequenceId);
                             listener.recoverMessage(msg);
                         }
-                        public void recoverMessageReference(String reference) throws IOException, Throwable {
+                        public void recoverMessageReference(String reference) throws Exception {
                             listener.recoverMessageReference(reference);
                         }
                         

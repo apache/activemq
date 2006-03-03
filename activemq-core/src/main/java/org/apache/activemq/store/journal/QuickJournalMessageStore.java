@@ -97,7 +97,7 @@ public class QuickJournalMessageStore implements MessageStore {
             }
             transactionStore.addMessage(this, message, location);
             context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() {                    
+                public void afterCommit() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message add commit for: "+id+", at: "+location);
                     message.decrementReferenceCount();
@@ -106,7 +106,7 @@ public class QuickJournalMessageStore implements MessageStore {
                         addMessage(md, location);
                     }
                 }
-                public void afterRollback() {                    
+                public void afterRollback() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message add rollback for: "+id+", at: "+location);
                     message.decrementReferenceCount();
@@ -173,7 +173,7 @@ public class QuickJournalMessageStore implements MessageStore {
             }
             transactionStore.removeMessage(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() {                    
+                public void afterCommit() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message remove commit for: "+ack.getLastMessageId()+", at: "+location);
                     synchronized( QuickJournalMessageStore.this ) {
@@ -181,7 +181,7 @@ public class QuickJournalMessageStore implements MessageStore {
                         removeMessage(ack, location);
                     }
                 }
-                public void afterRollback() {                    
+                public void afterRollback() throws Exception {                    
                     if( debug )
                         log.debug("Transacted message remove rollback for: "+ack.getLastMessageId()+", at: "+location);
                     synchronized( QuickJournalMessageStore.this ) {
@@ -248,7 +248,7 @@ public class QuickJournalMessageStore implements MessageStore {
         }
 
         transactionTemplate.run(new Callback() {
-            public void execute() throws Throwable {
+            public void execute() throws Exception {
 
                 int size = 0;
                 
@@ -347,15 +347,15 @@ public class QuickJournalMessageStore implements MessageStore {
      * updated.
      * 
      * @param listener
-     * @throws Throwable 
+     * @throws Exception 
      */
-    public void recover(final MessageRecoveryListener listener) throws Throwable {
+    public void recover(final MessageRecoveryListener listener) throws Exception {
         peristenceAdapter.checkpoint(true, true);
         longTermStore.recover(new MessageRecoveryListener() {
-            public void recoverMessage(Message message) throws Throwable {
+            public void recoverMessage(Message message) throws Exception {
                 throw new IOException("Should not get called.");
             }
-            public void recoverMessageReference(String messageReference) throws Throwable {
+            public void recoverMessageReference(String messageReference) throws Exception {
                 RecordLocation loc = toRecordLocation(messageReference);
                 Message message = (Message) peristenceAdapter.readCommand(loc);
                 listener.recoverMessage(message);

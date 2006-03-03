@@ -41,8 +41,9 @@ public interface Region extends Service {
      * @param context
      * @param destination the destination to create.
      * @return TODO
+     * @throws Exception TODO
      */
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable;
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
     
     /**
      * Used to destroy a destination.  
@@ -52,48 +53,54 @@ public interface Region extends Service {
      * @param context the environment the operation is being executed under.
      * @param destination what is being removed from the broker.
      * @param timeout the max amount of time to wait for the destination to quiesce
+     * @throws Exception TODO
      */
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Throwable;
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception;
 
     /**
      * Adds a consumer.
      * @param context the environment the operation is being executed under.
+     * @throws Exception TODO
      */
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable;
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
 
     /**
      * Removes a consumer.
      * @param context the environment the operation is being executed under.
+     * @throws Exception TODO
      */
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable;
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
 
     /**
      * Deletes a durable subscription.
      * @param context the environment the operation is being executed under.
      * @param info TODO
+     * @throws Exception TODO
      */
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable;
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception;
     
     /**
      * Send a message to the broker to using the specified destination.  The destination specified
      * in the message does not need to match the destination the message is sent to.  This is 
      * handy in case the message is being sent to a dead letter destination.
      * @param context the environment the operation is being executed under.
+     * @throws Exception TODO
      */
-    public void send(ConnectionContext context, Message message) throws Throwable;
+    public void send(ConnectionContext context, Message message) throws Exception;
     
     /**
      * Used to acknowledge the receipt of a message by a client.
      * @param context the environment the operation is being executed under.
+     * @throws Exception TODO
      */
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable;
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception;
     
     /**
      * Process a notification of a dispatch - used by a Slave Broker
      * @param messageDispatchNotification
-     * @throws Throwable
+     * @throws Exception TODO
      */
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable;
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
 
     public void gc();
     

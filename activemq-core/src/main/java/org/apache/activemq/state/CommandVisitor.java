@@ -39,39 +39,39 @@ import org.apache.activemq.command.WireFormatInfo;
 
 public interface CommandVisitor {
 
-    Response processAddConnection(ConnectionInfo info) throws Throwable;
-    Response processAddSession(SessionInfo info) throws Throwable;
-    Response processAddProducer(ProducerInfo info) throws Throwable;
-    Response processAddConsumer(ConsumerInfo info) throws Throwable;
+    Response processAddConnection(ConnectionInfo info) throws Exception;
+    Response processAddSession(SessionInfo info) throws Exception;
+    Response processAddProducer(ProducerInfo info) throws Exception;
+    Response processAddConsumer(ConsumerInfo info) throws Exception;
     
-    Response processRemoveConnection(ConnectionId id) throws Throwable;
-    Response processRemoveSession(SessionId id) throws Throwable;
-    Response processRemoveProducer(ProducerId id) throws Throwable;
-    Response processRemoveConsumer(ConsumerId id) throws Throwable;
+    Response processRemoveConnection(ConnectionId id) throws Exception;
+    Response processRemoveSession(SessionId id) throws Exception;
+    Response processRemoveProducer(ProducerId id) throws Exception;
+    Response processRemoveConsumer(ConsumerId id) throws Exception;
     
-    Response processAddDestination(DestinationInfo info) throws Throwable;
-    Response processRemoveDestination(DestinationInfo info) throws Throwable;
-    Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Throwable;
+    Response processAddDestination(DestinationInfo info) throws Exception;
+    Response processRemoveDestination(DestinationInfo info) throws Exception;
+    Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception;
     
-    Response processMessage(Message send) throws Throwable;
-    Response processMessageAck(MessageAck ack) throws Throwable;
+    Response processMessage(Message send) throws Exception;
+    Response processMessageAck(MessageAck ack) throws Exception;
 
-    Response processBeginTransaction(TransactionInfo info) throws Throwable;
-    Response processPrepareTransaction(TransactionInfo info) throws Throwable;
-    Response processCommitTransactionOnePhase(TransactionInfo info) throws Throwable;
-    Response processCommitTransactionTwoPhase(TransactionInfo info) throws Throwable;
-    Response processRollbackTransaction(TransactionInfo info) throws Throwable;
+    Response processBeginTransaction(TransactionInfo info) throws Exception;
+    Response processPrepareTransaction(TransactionInfo info) throws Exception;
+    Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception;
+    Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception;
+    Response processRollbackTransaction(TransactionInfo info) throws Exception;
 
-    Response processWireFormat(WireFormatInfo info) throws Throwable;
-    Response processKeepAlive(KeepAliveInfo info) throws Throwable;
-    Response processShutdown(ShutdownInfo info) throws Throwable;
-    Response processFlush(FlushCommand command) throws Throwable;
+    Response processWireFormat(WireFormatInfo info) throws Exception;
+    Response processKeepAlive(KeepAliveInfo info) throws Exception;
+    Response processShutdown(ShutdownInfo info) throws Exception;
+    Response processFlush(FlushCommand command) throws Exception;
 
-    Response processBrokerInfo(BrokerInfo info) throws Throwable;
-    Response processRecoverTransactions(TransactionInfo info) throws Throwable;
-    Response processForgetTransaction(TransactionInfo info) throws Throwable;
-    Response processEndTransaction(TransactionInfo info) throws Throwable;
-    Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Throwable;
+    Response processBrokerInfo(BrokerInfo info) throws Exception;
+    Response processRecoverTransactions(TransactionInfo info) throws Exception;
+    Response processForgetTransaction(TransactionInfo info) throws Exception;
+    Response processEndTransaction(TransactionInfo info) throws Exception;
+    Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception;
     
 }
 

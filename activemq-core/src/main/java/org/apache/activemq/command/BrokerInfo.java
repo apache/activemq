@@ -86,7 +86,7 @@ public class BrokerInfo extends BaseCommand {
         this.brokerName = brokerName;
     }
 	
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processBrokerInfo( this );
     }
 

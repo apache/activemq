@@ -56,7 +56,7 @@ public class JMSUsecaseTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }       
-    public void testQueueBrowser() throws Throwable {
+    public void testQueueBrowser() throws Exception {
         
         // Send a message to the broker.
         connection.start();
@@ -87,7 +87,7 @@ public class JMSUsecaseTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }       
-    public void testSendReceive() throws Throwable {
+    public void testSendReceive() throws Exception {
         // Send a message to the broker.
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -112,7 +112,7 @@ public class JMSUsecaseTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }       
-    public void testSendReceiveTransacted() throws Throwable {
+    public void testSendReceiveTransacted() throws Exception {
         // Send a message to the broker.
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);

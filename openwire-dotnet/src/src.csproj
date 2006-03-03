@@ -33,7 +33,6 @@
     </ItemGroup>
     <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets"/>
     <ItemGroup>
-        <Compile Include="CommonAssemblyInfo.cs"/>
         <Compile Include="OpenWire.Client\BrokerException.cs"/>
         <Compile Include="OpenWire.Client\Commands\ActiveMQBytesMessage.cs"/>
         <Compile Include="OpenWire.Client\Commands\ActiveMQDestination.cs"/>

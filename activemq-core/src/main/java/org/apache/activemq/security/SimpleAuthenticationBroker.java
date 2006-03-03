@@ -45,7 +45,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
         this.userGroups = userGroups;
     }
     
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
         if( context.getSecurityContext()==null ) {
             // Check the username and password.
@@ -66,7 +66,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
         super.addConnection(context, info);
     }
     
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
         if( securityContexts.remove(context.getSecurityContext()) ) {
             context.setSecurityContext(null);

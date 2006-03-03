@@ -161,7 +161,7 @@ public class WireFormatInfo implements Command {
         this.tightEncodingEnabled = tightEncodingEnabled;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);
     }
 

@@ -71,7 +71,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
-    public void testMessageListenerWithConsumerCanBeStopped() throws Throwable {
+    public void testMessageListenerWithConsumerCanBeStopped() throws Exception {
 
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch done1 = new CountDownLatch(1);
@@ -127,7 +127,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 });
     }
 
-    public void testMutiReceiveWithPrefetch1() throws Throwable {
+    public void testMutiReceiveWithPrefetch1() throws Exception {
 
         // Set prefetch to 1
         connection.getPrefetchPolicy().setAll(1);
@@ -158,7 +158,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         addCombinationValues("destinationType", new Object[] { 
                 new Byte(ActiveMQDestination.TOPIC_TYPE)});
     }
-    public void testDurableConsumerSelectorChange() throws Throwable {
+    public void testDurableConsumerSelectorChange() throws Exception {
 
         // Receive a message with the JMS API
         connection.setClientID("test");
@@ -205,7 +205,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
 
-    public void testSendReceiveBytesMessage() throws Throwable {
+    public void testSendReceiveBytesMessage() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -239,7 +239,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
-    public void testSetMessageListenerAfterStart() throws Throwable {
+    public void testSetMessageListenerAfterStart() throws Exception {
 
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch done = new CountDownLatch(1);
@@ -282,7 +282,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE), });
     }
 
-    public void testMessageListenerUnackedWithPrefetch1StayInQueue() throws Throwable {
+    public void testMessageListenerUnackedWithPrefetch1StayInQueue() throws Exception {
 
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch done = new CountDownLatch(1);
@@ -368,7 +368,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
-    public void testMessageListenerWithConsumerWithPrefetch1() throws Throwable {
+    public void testMessageListenerWithConsumerWithPrefetch1() throws Exception {
 
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch done = new CountDownLatch(1);
@@ -408,7 +408,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
-    public void testMessageListenerWithConsumer() throws Throwable {
+    public void testMessageListenerWithConsumer() throws Exception {
 
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch done = new CountDownLatch(1);
@@ -444,7 +444,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE), });
     }
 
-    public void testUnackedWithPrefetch1StayInQueue() throws Throwable {
+    public void testUnackedWithPrefetch1StayInQueue() throws Exception {
 
         // Set prefetch to 1
         connection.getPrefetchPolicy().setAll(1);
@@ -492,7 +492,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE), });
     }
 
-    public void testDontStart() throws Throwable {
+    public void testDontStart() throws Exception {
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationType);
@@ -511,7 +511,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE), });
     }
 
-    public void testStartAfterSend() throws Throwable {
+    public void testStartAfterSend() throws Exception {
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationType);
@@ -536,7 +536,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
 
-    public void testReceiveMessageWithConsumer() throws Throwable {
+    public void testReceiveMessageWithConsumer() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();

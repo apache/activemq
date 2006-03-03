@@ -10,9 +10,9 @@ public class BrokerSupport {
      * @param context
      * @param message
      * @param deadLetterDestination
-     * @throws Throwable
+     * @throws Exception
      */
-    static public void resend(final ConnectionContext context, Message message, ActiveMQDestination deadLetterDestination) throws Throwable {
+    static public void resend(final ConnectionContext context, Message message, ActiveMQDestination deadLetterDestination) throws Exception {
         if(message.getOriginalDestination()!=null)
             message.setOriginalDestination(message.getDestination());
         if(message.getOriginalTransactionId()!=null)

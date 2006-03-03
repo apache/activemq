@@ -79,8 +79,9 @@ public interface Broker extends Region, Service {
      * @param context
      * @param info 
      * @param client
+     * @throws Exception TODO
      */
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable;
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception;
     
     /**
      * A client is disconnecting from the broker.
@@ -88,94 +89,102 @@ public interface Broker extends Region, Service {
      * @param info 
      * @param client
      * @param error null if the client requested the disconnect or the error that caused the client to disconnect.
+     * @throws Exception TODO
      */
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable;
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception;
 
     /**
      * Adds a session.
      * @param context
      * @param info
-     * @throws Throwable
+     * @throws Exception TODO
      */
-    public void addSession(ConnectionContext context, SessionInfo info) throws Throwable;
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception;
 
     /**
      * Removes a session.
      * @param context
      * @param info
-     * @throws Throwable
+     * @throws Exception TODO
      */
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Throwable;
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception;
 
     /**
      * Adds a producer.
      * @param context the enviorment the operation is being executed under.
+     * @throws Exception TODO
      */
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable;
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
     /**
      * Removes a producer.
      * @param context the enviorment the operation is being executed under.
+     * @throws Exception TODO
      */
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Throwable;
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception;
       
     /**
      * @return all clients added to the Broker.
-     * @throws Throwable
+     * @throws Exception TODO
      */
-    public Connection[] getClients() throws Throwable;
+    public Connection[] getClients() throws Exception;
 
     /**
      * @return all destinations added to the Broker.
-     * @throws Throwable
+     * @throws Exception TODO
      */
-    public ActiveMQDestination[] getDestinations() throws Throwable;
+    public ActiveMQDestination[] getDestinations() throws Exception;
     
     /**
      * Gets a list of all the prepared xa transactions.
      * @param client
+     * @throws Exception TODO
      */
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Throwable;
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception;
 
     /**
      * Starts a transaction.
      * @param client
      * @param xid
+     * @throws Exception TODO
      */
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Throwable;
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
      * Prepares a transaction. Only valid for xa transactions.
      * @param client
      * @param xid
      * @return
+     * @throws Exception TODO
      */
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Throwable;
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
      * Rollsback a transaction.
      * @param client
      * @param xid
+     * @throws Exception TODO
      */
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Throwable;
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
      * Commits a transaction.
      * @param client
      * @param xid
      * @param onePhase
+     * @throws Exception TODO
      */
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Throwable;
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception;
 
     /**
      * Forgets a transaction.
      * @param client
      * @param xid
      * @param onePhase
-     * @throws Throwable 
+     * @throws Exception TODO
      */
-    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Throwable;
+    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception;
     
     /**
      * Get the BrokerInfo's of any connected Brokers
@@ -189,13 +198,6 @@ public interface Broker extends Region, Service {
      * @param messageDispatch
      */
     public void processDispatch(MessageDispatch messageDispatch);
-    
-    /**
-     * Notify the Broker of a MessageDispatchNotification
-     * @param messageDispatchNotification
-     * @throws Throwable 
-     */
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable;
     
     /**
      * @return true if the broker is running as a slave

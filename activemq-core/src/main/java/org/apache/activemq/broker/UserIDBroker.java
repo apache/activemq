@@ -32,7 +32,7 @@ public class UserIDBroker extends BrokerFilter {
         super(next);
     }
 
-    public void send(ConnectionContext context, Message messageSend) throws Throwable {
+    public void send(ConnectionContext context, Message messageSend) throws Exception {
         String userID = context.getUserName();
         messageSend.setUserID(userID);
         super.send(context, messageSend);

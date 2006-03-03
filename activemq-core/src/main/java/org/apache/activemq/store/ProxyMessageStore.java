@@ -45,7 +45,7 @@ public class ProxyMessageStore implements MessageStore {
     public Message getMessage(MessageId identity) throws IOException {
         return delegate.getMessage(identity);
     }
-    public void recover(MessageRecoveryListener listener) throws Throwable {
+    public void recover(MessageRecoveryListener listener) throws Exception {
         delegate.recover(listener);
     }
     public void removeAllMessages(ConnectionContext context) throws IOException {

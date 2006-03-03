@@ -38,7 +38,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         super(next);
     }
 
-    public void acknowledge(ConnectionContext context,MessageAck ack) throws Throwable{
+    public void acknowledge(ConnectionContext context,MessageAck ack) throws Exception{
         next.acknowledge(context,ack);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -46,7 +46,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void addConnection(ConnectionContext context,ConnectionInfo info) throws Throwable{
+    public void addConnection(ConnectionContext context,ConnectionInfo info) throws Exception{
         next.addConnection(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -54,7 +54,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void addConsumer(ConnectionContext context,ConsumerInfo info) throws Throwable{
+    public void addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
         next.addConsumer(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -62,7 +62,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void addProducer(ConnectionContext context,ProducerInfo info) throws Throwable{
+    public void addProducer(ConnectionContext context,ProducerInfo info) throws Exception{
         next.addProducer(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -70,7 +70,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void commitTransaction(ConnectionContext context,TransactionId xid,boolean onePhase) throws Throwable{
+    public void commitTransaction(ConnectionContext context,TransactionId xid,boolean onePhase) throws Exception{
         next.commitTransaction(context,xid,onePhase);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -78,7 +78,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void removeSubscription(ConnectionContext context,RemoveSubscriptionInfo info) throws Throwable{
+    public void removeSubscription(ConnectionContext context,RemoveSubscriptionInfo info) throws Exception{
         next.removeSubscription(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -86,7 +86,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public int prepareTransaction(ConnectionContext context,TransactionId xid) throws Throwable{
+    public int prepareTransaction(ConnectionContext context,TransactionId xid) throws Exception{
         int result=next.prepareTransaction(context,xid);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -96,7 +96,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         return result;
     }
 
-    public void removeConnection(ConnectionContext context,ConnectionInfo info,Throwable error) throws Throwable{
+    public void removeConnection(ConnectionContext context,ConnectionInfo info,Throwable error) throws Exception{
         next.removeConnection(context,info,error);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -104,7 +104,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void removeConsumer(ConnectionContext context,ConsumerInfo info) throws Throwable{
+    public void removeConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
         next.removeConsumer(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -112,7 +112,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void removeProducer(ConnectionContext context,ProducerInfo info) throws Throwable{
+    public void removeProducer(ConnectionContext context,ProducerInfo info) throws Exception{
         next.removeProducer(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -120,7 +120,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void rollbackTransaction(ConnectionContext context,TransactionId xid) throws Throwable{
+    public void rollbackTransaction(ConnectionContext context,TransactionId xid) throws Exception{
         next.rollbackTransaction(context,xid);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -128,7 +128,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void send(ConnectionContext context,Message messageSend) throws Throwable{
+    public void send(ConnectionContext context,Message messageSend) throws Exception{
         next.send(context,messageSend);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -136,7 +136,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void beginTransaction(ConnectionContext context,TransactionId xid) throws Throwable{
+    public void beginTransaction(ConnectionContext context,TransactionId xid) throws Exception{
         next.beginTransaction(context,xid);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -144,7 +144,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void forgetTransaction(ConnectionContext context,TransactionId transactionId) throws Throwable{
+    public void forgetTransaction(ConnectionContext context,TransactionId transactionId) throws Exception{
         next.forgetTransaction(context,transactionId);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -152,7 +152,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public Destination addDestination(ConnectionContext context,ActiveMQDestination destination) throws Throwable{
+    public Destination addDestination(ConnectionContext context,ActiveMQDestination destination) throws Exception{
         Destination result=next.addDestination(context,destination);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -162,7 +162,7 @@ public class BrokerBroadcaster extends BrokerFilter{
     }
 
     public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout)
-                    throws Throwable{
+                    throws Exception{
         next.removeDestination(context,destination,timeout);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -186,7 +186,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void addSession(ConnectionContext context,SessionInfo info) throws Throwable{
+    public void addSession(ConnectionContext context,SessionInfo info) throws Exception{
         next.addSession(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
@@ -194,7 +194,7 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void removeSession(ConnectionContext context,SessionInfo info) throws Throwable{
+    public void removeSession(ConnectionContext context,SessionInfo info) throws Exception{
         next.removeSession(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){

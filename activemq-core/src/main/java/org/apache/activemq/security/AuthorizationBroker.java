@@ -50,7 +50,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         this.authorizationMap = authorizationMap;
     }
     
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         final SecurityContext securityContext = (SecurityContext) context.getSecurityContext();
         if( securityContext == null )
             throw new SecurityException("User is not authenticated.");
@@ -67,7 +67,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         return super.addDestination(context, destination);
     }
     
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Throwable {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         
         final SecurityContext securityContext = (SecurityContext) context.getSecurityContext();
         if( securityContext == null )
@@ -85,7 +85,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super.removeDestination(context, destination, timeout);
     }
     
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         
         final SecurityContext subject = (SecurityContext) context.getSecurityContext();
         if( subject == null )
@@ -120,7 +120,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super.addConsumer(context, info);
     }
     
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         
         SecurityContext subject = (SecurityContext) context.getSecurityContext();
         if( subject == null )
@@ -136,7 +136,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super.addProducer(context, info);
     }
         
-    public void send(ConnectionContext context, Message messageSend) throws Throwable {
+    public void send(ConnectionContext context, Message messageSend) throws Exception {
         SecurityContext subject = (SecurityContext) context.getSecurityContext();
         if( subject == null )
             throw new SecurityException("User is not authenticated.");

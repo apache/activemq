@@ -71,7 +71,7 @@ public class MemoryMessageStore implements MessageStore {
         messageTable.remove(msgId);
     }
 
-    public void recover(MessageRecoveryListener listener) throws Throwable {
+    public void recover(MessageRecoveryListener listener) throws Exception {
         // the message table is a synchronizedMap - so just have to synchronize here
         synchronized(messageTable){
             for(Iterator iter=messageTable.values().iterator();iter.hasNext();){

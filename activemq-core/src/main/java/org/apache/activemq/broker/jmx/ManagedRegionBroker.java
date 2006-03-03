@@ -341,11 +341,11 @@ public class ManagedRegionBroker extends RegionBroker{
        
        
             store.recover(new MessageRecoveryListener(){
-                public void recoverMessage(Message message) throws Throwable{
+                public void recoverMessage(Message message) throws Exception{
                     result.add(message);
                 }
 
-                public void recoverMessageReference(String messageReference) throws Throwable{}
+                public void recoverMessageReference(String messageReference) throws Exception{}
 
                 public void finished(){}
             });

@@ -99,7 +99,7 @@ public class MessageDispatch extends BaseCommand {
         this.consumer = consumer;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return null;
     }
     

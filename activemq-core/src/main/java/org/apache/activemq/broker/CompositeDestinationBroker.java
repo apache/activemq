@@ -44,7 +44,7 @@ public class CompositeDestinationBroker extends BrokerFilter {
     /**
      * A producer may register to send to multiple destinations via a composite destination.
      */
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         // The destination may be null.
         ActiveMQDestination destination = info.getDestination();
         if( destination!=null && destination.isComposite() ) {
@@ -62,7 +62,7 @@ public class CompositeDestinationBroker extends BrokerFilter {
     /**
      * A producer may de-register from sending to multiple destinations via a composite destination.
      */
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         // The destination may be null.
         ActiveMQDestination destination = info.getDestination();
         if( destination!=null && destination.isComposite() ) {
@@ -80,7 +80,7 @@ public class CompositeDestinationBroker extends BrokerFilter {
     /**
      * 
      */
-    public void send(ConnectionContext context, Message message) throws Throwable {
+    public void send(ConnectionContext context, Message message) throws Exception {
         ActiveMQDestination destination = message.getDestination();
         if( destination.isComposite() ) {
             ActiveMQDestination[] destinations = destination.getCompositeDestinations();

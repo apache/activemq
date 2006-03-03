@@ -44,6 +44,6 @@ public interface DispatchPolicy {
      * 
      * @return true if at least one consumer was dispatched or false if there are no active subscriptions that could be dispatched
      */
-    boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Throwable;
+    boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception;
 
 }

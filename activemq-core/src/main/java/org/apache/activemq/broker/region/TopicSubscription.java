@@ -95,14 +95,14 @@ public class TopicSubscription extends AbstractSubscription{
         }
     }
 
-    public void acknowledge(final ConnectionContext context,final MessageAck ack) throws Throwable{
+    synchronized public void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception{
         // Handle the standard acknowledgment case.
         boolean wasFull=isFull();
         if(ack.isStandardAck()||ack.isPoisonAck()){
             if(context.isInTransaction()){
                 delivered.addAndGet(ack.getMessageCount());
                 context.getTransaction().addSynchronization(new Synchronization(){
-                    public void afterCommit() throws Throwable{
+                    public void afterCommit() throws Exception{
                         dispatched.addAndGet(-ack.getMessageCount());
                         delivered.set(Math.max(0,delivered.get()-ack.getMessageCount()));
                     }

@@ -43,14 +43,14 @@ public class MarshallingBrokerTest extends BrokerTest {
     
     protected StubConnection createConnection() throws Exception {
         return new StubConnection(broker) {
-            public Response request(Command command) throws Throwable {
+            public Response request(Command command) throws Exception {
                 Response r = super.request((Command) wireFormat.unmarshal(wireFormat.marshal(command)));
                 if( r != null ) {
                     r = (Response) wireFormat.unmarshal(wireFormat.marshal(r));
                 }
                 return r;
             }
-            public void send(Command command) throws Throwable {
+            public void send(Command command) throws Exception {
                 super.send((Command) wireFormat.unmarshal(wireFormat.marshal(command)));
             }
             protected void dispatch(Command command) throws InterruptedException, IOException {

@@ -68,7 +68,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
         this.clientId = clientId;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processRemoveSubscription( this );
     }
 

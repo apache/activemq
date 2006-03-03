@@ -76,7 +76,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
                 } );
     }
     
-    public void testPerformance() throws Throwable {
+    public void testPerformance() throws Exception {
         
         System.out.println("Running Benchmark for destination="+destination+", producers="+PRODUCER_COUNT+", consumers="+CONSUMER_COUNT+", deliveryMode="+deliveryMode);
         final int CONSUME_COUNT = destination.isTopic() ? CONSUMER_COUNT*PRODUCE_COUNT : PRODUCE_COUNT;

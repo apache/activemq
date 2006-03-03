@@ -81,7 +81,7 @@ public class Topic implements Destination {
         return true;
     }
 
-    public void addSubscription(ConnectionContext context, final Subscription sub) throws Throwable {
+    public void addSubscription(ConnectionContext context, final Subscription sub) throws Exception {
         
         sub.add(context, this);
 
@@ -117,7 +117,7 @@ public class Topic implements Destination {
         }
     }
     
-    public void removeSubscription(ConnectionContext context, Subscription sub) throws Throwable {
+    public void removeSubscription(ConnectionContext context, Subscription sub) throws Exception {
         if ( !sub.getConsumerInfo().isDurable() ) {
             destinationStatistics.getConsumers().decrement();
             synchronized(consumers) {
@@ -127,7 +127,7 @@ public class Topic implements Destination {
         sub.remove(context, this);
     }
     
-    public void addInactiveSubscription(ConnectionContext context, DurableTopicSubscription sub) throws Throwable {
+    public void addInactiveSubscription(ConnectionContext context, DurableTopicSubscription sub) throws Exception {
         sub.add(context, this);        
         destinationStatistics.getConsumers().increment();
         durableSubcribers.put(sub.getSubscriptionKey(), sub);
@@ -141,7 +141,7 @@ public class Topic implements Destination {
         }
     }
     
-    public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Throwable {
+    public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Exception {
         
         // synchronize with dispatch method so that no new messages are sent
         // while
@@ -178,7 +178,7 @@ public class Topic implements Destination {
             final MessageEvaluationContext msgContext = new MessageEvaluationContext();
             msgContext.setDestination(destination);
             store.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
-                public void recoverMessage(Message message) throws Throwable {
+                public void recoverMessage(Message message) throws Exception {
                     message.setRegionDestination(Topic.this);
                     try {
                         msgContext.setMessageReference(message);
@@ -195,7 +195,7 @@ public class Topic implements Destination {
                     }
                 }
     
-                public void recoverMessageReference(String messageReference) throws Throwable {
+                public void recoverMessageReference(String messageReference) throws Exception {
                     throw new RuntimeException("Should not be called.");
                 }
                 
@@ -219,7 +219,7 @@ public class Topic implements Destination {
         }
     }
 
-    public void deactivate(ConnectionContext context, DurableTopicSubscription sub) throws Throwable {        
+    public void deactivate(ConnectionContext context, DurableTopicSubscription sub) throws Exception {        
         synchronized(consumers) {           
             consumers.remove(sub);
         }
@@ -227,7 +227,7 @@ public class Topic implements Destination {
     }    
 
 
-    public void send(final ConnectionContext context, final Message message) throws Throwable {
+    public void send(final ConnectionContext context, final Message message) throws Exception {
 
         if (context.isProducerFlowControl())
             usageManager.waitForSpace();
@@ -242,7 +242,7 @@ public class Topic implements Destination {
 
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
-                    public void afterCommit() throws Throwable {
+                    public void afterCommit() throws Exception {
                         dispatch(context, message);
                     }
                 });
@@ -300,11 +300,11 @@ public class Topic implements Destination {
         final Set result=new CopyOnWriteArraySet();
         try{
             store.recover(new MessageRecoveryListener(){
-                public void recoverMessage(Message message) throws Throwable{
+                public void recoverMessage(Message message) throws Exception{
                     result.add(message);
                 }
 
-                public void recoverMessageReference(String messageReference) throws Throwable{}
+                public void recoverMessageReference(String messageReference) throws Exception{}
 
                 public void finished(){}
             });
@@ -373,7 +373,7 @@ public class Topic implements Destination {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void dispatch(ConnectionContext context, Message message) throws Throwable {
+    protected void dispatch(ConnectionContext context, Message message) throws Exception {
         destinationStatistics.getEnqueues().increment();
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
@@ -405,7 +405,7 @@ public class Topic implements Destination {
      * Provides a hook to allow messages with no consumer to be processed in
      * some way - such as to send to a dead letter queue or something..
      */
-    protected void onMessageWithNoConsumers(ConnectionContext context, Message message) throws Throwable {
+    protected void onMessageWithNoConsumers(ConnectionContext context, Message message) throws Exception {
         if (!message.isPersistent()) {
             if (sendAdvisoryIfNoConsumers) {
                 // allow messages with no consumers to be dispatched to a dead

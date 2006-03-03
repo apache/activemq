@@ -174,7 +174,7 @@ public class MessageAck extends BaseCommand {
         this.messageCount = messageCount;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processMessageAck( this );
     }
 

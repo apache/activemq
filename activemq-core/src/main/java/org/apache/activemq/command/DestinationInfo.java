@@ -115,7 +115,7 @@ public class DestinationInfo extends BaseCommand {
         this.brokerPath = brokerPath;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         if( isAddOperation() ) {
             return visitor.processAddDestination( this );
         } else if( isRemoveOperation() ) {

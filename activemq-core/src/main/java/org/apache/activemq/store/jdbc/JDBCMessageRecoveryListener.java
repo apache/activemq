@@ -16,14 +16,13 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import java.io.IOException;
 
 
 /**
  * @version $Revision: 1.3 $
  */
 public interface JDBCMessageRecoveryListener {
-    void recoverMessage(long sequenceId, byte[] message) throws IOException, Throwable;
-    void recoverMessageReference(String reference) throws IOException, Throwable;
+    void recoverMessage(long sequenceId, byte[] message) throws Exception;
+    void recoverMessageReference(String reference) throws Exception;
     void finished();
 }

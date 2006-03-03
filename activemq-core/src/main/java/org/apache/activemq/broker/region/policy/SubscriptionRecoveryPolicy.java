@@ -41,9 +41,9 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * @param message 
      * @param node
      * @return true if successful
-     * @throws Throwable
+     * @throws Exception
      */
-    boolean add(ConnectionContext context, MessageReference message) throws Throwable;
+    boolean add(ConnectionContext context, MessageReference message) throws Exception;
     
     /**
      * Let a subscription recover message held by the policy.
@@ -52,16 +52,16 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * @param topic
      * @param sub 
      * @param node
-     * @throws Throwable
+     * @throws Exception
      */
-    void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable;
+    void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception;
     
     
     /**
      * @param dest 
      * @return messages
-     * @throws Throwable 
+     * @throws Exception 
      */
-    Message[] browse(ActiveMQDestination dest) throws Throwable;
+    Message[] browse(ActiveMQDestination dest) throws Exception;
 
 }

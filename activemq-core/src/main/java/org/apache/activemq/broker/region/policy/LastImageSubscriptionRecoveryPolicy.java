@@ -39,12 +39,12 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
 
     volatile private MessageReference lastImage;
 
-    public boolean add(ConnectionContext context, MessageReference node) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference node) throws Exception {
         lastImage = node;
         return true;
     }
 
-    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception {
         // Re-dispatch the last message seen.
         MessageReference node = lastImage;
         if( node != null ){
@@ -67,7 +67,7 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
     public void stop() throws Exception {
     }
 
-    public Message[] browse(ActiveMQDestination destination) throws Throwable{
+    public Message[] browse(ActiveMQDestination destination) throws Exception{
         List result = new ArrayList();
         DestinationFilter filter=DestinationFilter.parseFilter(destination);
         if (filter.matches(lastImage.getMessage().getDestination())){

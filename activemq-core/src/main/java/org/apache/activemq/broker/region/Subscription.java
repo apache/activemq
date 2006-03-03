@@ -36,15 +36,15 @@ public interface Subscription {
      * @throws InterruptedException 
      * @throws IOException 
      */
-    void add(MessageReference node) throws Throwable;
+    void add(MessageReference node) throws Exception;
     
     /**
      * Used when client acknowledge receipt of dispatched message. 
      * @param node
      * @throws IOException 
-     * @throws Throwable 
+     * @throws Exception 
      */
-    void acknowledge(ConnectionContext context, final MessageAck ack) throws Throwable;
+    void acknowledge(ConnectionContext context, final MessageAck ack) throws Exception;
     
     /**
      * Is the subscription interested in the message?
@@ -66,16 +66,16 @@ public interface Subscription {
      * The subscription will be receiving messages from the destination.
      * @param context 
      * @param destination
-     * @throws Throwable 
+     * @throws Exception 
      */
-    void add(ConnectionContext context, Destination destination) throws Throwable;
+    void add(ConnectionContext context, Destination destination) throws Exception;
     
     /**
      * The subscription will be no longer be receiving messages from the destination.
      * @param context 
      * @param destination
      */
-    void remove(ConnectionContext context, Destination destination) throws Throwable;
+    void remove(ConnectionContext context, Destination destination) throws Exception;
     
     /**
      * The ConsumerInfo object that created the subscription.

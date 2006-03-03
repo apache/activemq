@@ -420,7 +420,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         ActiveMQMessage m = (ActiveMQMessage) md.getMessage().copy();
         if (session.isClientAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
-                public void execute() throws Throwable {
+                public void execute() throws Exception {
                     session.checkClosed();
                     session.acknowledge();
                 }
@@ -576,17 +576,17 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (!synchronizationRegistered) {
                 synchronizationRegistered = true;
                 session.getTransactionContext().addSynchronization(new Synchronization() {
-                    public void beforeEnd() throws Throwable {
+                    public void beforeEnd() throws Exception {
                         acknowledge();
                         synchronizationRegistered = false;
                     }
 
-                    public void afterCommit() throws Throwable {
+                    public void afterCommit() throws Exception {
                         commit();
                         synchronizationRegistered = false;
                     }
 
-                    public void afterRollback() throws Throwable {
+                    public void afterRollback() throws Exception {
                         rollback();
                         synchronizationRegistered = false;
                     }

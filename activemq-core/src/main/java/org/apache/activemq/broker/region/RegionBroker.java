@@ -143,7 +143,7 @@ public class RegionBroker implements Broker {
         ss.throwFirstException();
     }
 
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         String clientId = info.getClientId();
         if (clientId == null) {
             throw new InvalidClientIDException("No clientID specified for connection request");
@@ -160,7 +160,7 @@ public class RegionBroker implements Broker {
         connections.add(context.getConnection());
     }
 
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         String clientId = info.getClientId();
         if (clientId == null) {
             throw new InvalidClientIDException("No clientID specified for connection disconnect request");
@@ -176,14 +176,14 @@ public class RegionBroker implements Broker {
         connections.remove(context.getConnection());
     }
 
-    public Connection[] getClients() throws Throwable {
+    public Connection[] getClients() throws Exception {
         ArrayList l = new ArrayList(connections);
         Connection rc[] = new Connection[l.size()];
         l.toArray(rc);
         return rc;
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         if( destinations.contains(destination) )
             throw new JMSException("Destination already exists: "+destination);
         
@@ -209,7 +209,7 @@ public class RegionBroker implements Broker {
         return answer;
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Throwable {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         if( !destinations.contains(destination) )
             throw new JMSException("Destination does not exist: "+destination);
         
@@ -233,7 +233,7 @@ public class RegionBroker implements Broker {
         destinations.remove(destination);
     }
 
-    public ActiveMQDestination[] getDestinations() throws Throwable {
+    public ActiveMQDestination[] getDestinations() throws Exception {
         ArrayList l = new ArrayList(destinations);
         ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
         l.toArray(rc);
@@ -241,19 +241,19 @@ public class RegionBroker implements Broker {
     }
 
 
-    public void addSession(ConnectionContext context, SessionInfo info) throws Throwable {
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
     }
 
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Throwable {
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
     }
 
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
     }
 
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         switch(destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
@@ -273,7 +273,7 @@ public class RegionBroker implements Broker {
         }
     }
 
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         switch(destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
@@ -293,11 +293,11 @@ public class RegionBroker implements Broker {
         }
     }
 
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         topicRegion.removeSubscription(context, info);
     }
 
-    public void send(ConnectionContext context,  Message message) throws Throwable {
+    public void send(ConnectionContext context,  Message message) throws Exception {
         message.getMessageId().setBrokerSequenceId(sequenceGenerator.getNextSequenceId());
         if (message.getTimestamp() > 0 && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) { 
             //timestamp not been disabled and has not passed through a network
@@ -322,7 +322,7 @@ public class RegionBroker implements Broker {
         }
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         ActiveMQDestination destination = ack.getDestination();
         switch(destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
@@ -342,27 +342,27 @@ public class RegionBroker implements Broker {
         }
     }
 
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Throwable {
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Throwable {
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
     
-    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Throwable {
+    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
@@ -428,7 +428,7 @@ public class RegionBroker implements Broker {
         
     }
     
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable {
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         ActiveMQDestination destination = messageDispatchNotification.getDestination();
         switch(destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
