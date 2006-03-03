@@ -29,14 +29,14 @@ import javax.resource.spi.endpoint.MessageEndpoint;
 public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
     
     private static final MessageEndpointState ALIVE = new MessageEndpointAlive();
-    private static final MessageEndpointState GOING_TO_DIE = new MessageEndpointInTheElectricChair();
     private static final MessageEndpointState DEAD = new MessageEndpointDead();
     
     
     private static int proxyCount = 0;    
     private final int proxyID;
     
-    private MessageEndpoint endpoint;    
+    private final MessageEndpoint endpoint;
+    private final MessageListener messageListener;
     private MessageEndpointState state = ALIVE;
 
     private static int getID() {
@@ -47,6 +47,7 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
         if (!(endpoint instanceof MessageListener)) {
             throw new IllegalArgumentException("MessageEndpoint is not a MessageListener");            
         }        
+        messageListener = (MessageListener) endpoint;
         proxyID = getID();
         this.endpoint = endpoint;
     }
@@ -56,7 +57,6 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
     }
 
     public void onMessage(Message message) {
-//        log.warn("Delivery Count: " + getNextDeliveryCount() );
         state.onMessage(this, message);
     }
 
@@ -117,12 +117,7 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
         }
 
         public void onMessage(MessageEndpointProxy proxy, Message message) {
-            try {
-                ((MessageListener) proxy.endpoint).onMessage(message);
-            } catch (RuntimeException e) {
-                transition(proxy, GOING_TO_DIE);
-                throw e;
-            }            
+            proxy.messageListener.onMessage(message);
         }
 
         public void afterDelivery(MessageEndpointProxy proxy) throws ResourceException {
@@ -139,28 +134,10 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
         }
     }
 
-    private static class MessageEndpointInTheElectricChair extends MessageEndpointState {
-
-        public void afterDelivery(MessageEndpointProxy proxy) throws ResourceException {
-            try {
-                proxy.endpoint.afterDelivery();
-            } catch (ResourceException e) {
-                throw e;
-            } finally {
-                transition(proxy, DEAD);                
-            }
-        }
-
-        public void release(MessageEndpointProxy proxy) {
-            transition(proxy, DEAD);
-        }
-    }
-
     private static class MessageEndpointDead extends MessageEndpointState {
 
         protected void enter(MessageEndpointProxy proxy) {
             proxy.endpoint.release();
-            proxy.endpoint = null;
         }
 
         public void beforeDelivery(MessageEndpointProxy proxy, Method method) throws NoSuchMethodException, ResourceException {
