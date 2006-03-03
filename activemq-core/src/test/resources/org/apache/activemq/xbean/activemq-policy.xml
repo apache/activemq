@@ -49,6 +49,11 @@
             <subscriptionRecoveryPolicy>
               <timedSubscriptionRecoveryPolicy recoverDuration="10000" />
             </subscriptionRecoveryPolicy>
+            
+            <!-- lets force old messages to be discarded for slow consumers -->
+            <pendingMessageLimitStrategy>
+              <constantPendingMessageLimitStrategy limit="10"/>
+            </pendingMessageLimitStrategy>
           </policyEntry>
         </policyEntries>
       </policyMap>
