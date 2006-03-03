@@ -77,7 +77,7 @@ public class Queue implements Destination {
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
 
     public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store,
-            DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Throwable {
+            DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
         this.destination = destination;
         this.usageManager = memoryManager;
         this.store = store;
@@ -96,7 +96,7 @@ public class Queue implements Destination {
                     destinationStatistics.getMessages().increment();
                 }
 
-                public void recoverMessageReference(String messageReference) throws Throwable {
+                public void recoverMessageReference(String messageReference) throws Exception {
                     throw new RuntimeException("Should not be called.");
                 }
                 
@@ -119,7 +119,7 @@ public class Queue implements Destination {
         return true;
     }
 
-    public void addSubscription(ConnectionContext context, Subscription sub) throws Throwable {
+    public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
         sub.add(context, this);
         destinationStatistics.getConsumers().increment();
 
@@ -165,7 +165,7 @@ public class Queue implements Destination {
         }
     }
 
-    public void removeSubscription(ConnectionContext context, Subscription sub) throws Throwable {
+    public void removeSubscription(ConnectionContext context, Subscription sub) throws Exception {
 
         destinationStatistics.getConsumers().decrement();
 
@@ -233,7 +233,7 @@ public class Queue implements Destination {
 
     }
 
-    public void send(final ConnectionContext context, final Message message) throws Throwable {
+    public void send(final ConnectionContext context, final Message message) throws Exception {
 
         if (context.isProducerFlowControl())
             usageManager.waitForSpace();
@@ -248,7 +248,7 @@ public class Queue implements Destination {
 
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
-                    public void afterCommit() throws Throwable {
+                    public void afterCommit() throws Exception {
                         dispatch(context, node, message);
                     }
                 });
@@ -370,7 +370,7 @@ public class Queue implements Destination {
         return new IndirectMessageReference(this, message);
     }
 
-    private void dispatch(ConnectionContext context, MessageReference node, Message message) throws Throwable {
+    private void dispatch(ConnectionContext context, MessageReference node, Message message) throws Exception {
 
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
@@ -501,7 +501,7 @@ public class Queue implements Destination {
         }
     }
 
-    public boolean copyMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Throwable {
+    public boolean copyMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Exception {
         synchronized (messages) {
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
                 try {

@@ -54,7 +54,7 @@ public class QueueRegion extends AbstractRegion {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         MessageStore store = persistenceAdapter.createQueueMessageStore((ActiveMQQueue) destination);
         Queue queue = new Queue(destination, memoryManager, store, destinationStatistics, taskRunnerFactory);
         configureQueue(queue, destination);

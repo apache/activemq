@@ -78,7 +78,7 @@ public class ManagedTransportConnection extends TransportConnection {
         registerMBean();
     }
 
-    public Response processAddConnection(ConnectionInfo info) throws Throwable {
+    public Response processAddConnection(ConnectionInfo info) throws Exception {
         Response answer = super.processAddConnection(info);
         String clientId = info.getClientId();
         if (clientId != null) {

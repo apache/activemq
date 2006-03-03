@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class SimpleDispatchPolicy implements DispatchPolicy {
 
-    public boolean dispatch(ConnectionContext context, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Throwable {
+    public boolean dispatch(ConnectionContext context, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
         int count = 0;
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
             Subscription sub = (Subscription) iter.next();

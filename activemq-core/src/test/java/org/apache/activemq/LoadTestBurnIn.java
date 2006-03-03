@@ -115,7 +115,7 @@ public class LoadTestBurnIn extends JmsTestSupport {
         });
     }
 
-    public void testSendReceive() throws Throwable {
+    public void testSendReceive() throws Exception {
 
         // Durable consumer combination is only valid with topics 
         if( durableConsumer && destinationType!=ActiveMQDestination.TOPIC_TYPE)

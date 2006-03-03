@@ -60,87 +60,87 @@ public class ErrorBroker implements Broker {
         throw new IllegalStateException(this.message);
     }
 	
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void addSession(ConnectionContext context, SessionInfo info) throws Throwable {
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Throwable {
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public Connection[] getClients() throws Throwable {
+    public Connection[] getClients() throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public ActiveMQDestination[] getDestinations() throws Throwable {
+    public ActiveMQDestination[] getDestinations() throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Throwable {
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Throwable {
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Throwable {
+    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Throwable {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void send(ConnectionContext context, Message message) throws Throwable {
+    public void send(ConnectionContext context, Message message) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         throw new IllegalStateException(this.message);
     }
 
@@ -173,7 +173,7 @@ public class ErrorBroker implements Broker {
         throw new IllegalStateException(this.message);
     }
     
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification){
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
         throw new IllegalStateException(this.message);
     }
     

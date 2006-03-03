@@ -55,7 +55,7 @@ public class BrokerTest extends BrokerTestSupport {
                 } );
     }
     
-    public void testConsumerPrefetchAndStandardAck() throws Throwable {
+    public void testConsumerPrefetchAndStandardAck() throws Exception {
         
         // Start a producer and consumer
         StubConnection connection = createConnection();
@@ -109,7 +109,7 @@ public class BrokerTest extends BrokerTestSupport {
                 } );
     }
 
-    public void testTransactedAckWithPrefetchOfOne() throws Throwable {
+    public void testTransactedAckWithPrefetchOfOne() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -161,7 +161,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }    
-    public void testTransactedSend() throws Throwable {
+    public void testTransactedSend() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -215,7 +215,7 @@ public class BrokerTest extends BrokerTestSupport {
         } );
     }
     
-    public void testQueueTransactedAck() throws Throwable {
+    public void testQueueTransactedAck() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -266,7 +266,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new ActiveMQQueue("TEST")} );
     }   
     
-    public void testConsumerCloseCausesRedelivery() throws Throwable {
+    public void testConsumerCloseCausesRedelivery() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -312,7 +312,7 @@ public class BrokerTest extends BrokerTestSupport {
         
     }
 
-    public void testTopicDurableSubscriptionCanBeRestored() throws Throwable {
+    public void testTopicDurableSubscriptionCanBeRestored() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQTopic("TEST");
         
@@ -376,7 +376,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Integer(DeliveryMode.NON_PERSISTENT), 
                 new Integer(DeliveryMode.PERSISTENT)} );
     }
-    public void testGroupedMessagesDeliveredToOnlyOneConsumer() throws Throwable {
+    public void testGroupedMessagesDeliveredToOnlyOneConsumer() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -441,7 +441,7 @@ public class BrokerTest extends BrokerTestSupport {
                 Boolean.FALSE});
     }
     
-    public void testTopicConsumerOnlySeeMessagesAfterCreation() throws Throwable {
+    public void testTopicConsumerOnlySeeMessagesAfterCreation() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQTopic("TEST");
         
@@ -489,7 +489,7 @@ public class BrokerTest extends BrokerTestSupport {
                 Boolean.FALSE});
     }
     
-    public void testTopicRetroactiveConsumerSeeMessagesBeforeCreation() throws Throwable {
+    public void testTopicRetroactiveConsumerSeeMessagesBeforeCreation() throws Exception {
                 
         ActiveMQDestination destination = new ActiveMQTopic("TEST");
         
@@ -543,7 +543,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
-    public void testTempDestinationsRemovedOnConnectionClose() throws Throwable {
+    public void testTempDestinationsRemovedOnConnectionClose() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -588,7 +588,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
-    public void testTempDestinationsAreNotAutoCreated() throws Throwable {
+    public void testTempDestinationsAreNotAutoCreated() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -619,7 +619,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
-    public void testTempDestinationsOnlyAllowsLocalConsumers() throws Throwable {
+    public void testTempDestinationsOnlyAllowsLocalConsumers() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -657,7 +657,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Integer(DeliveryMode.NON_PERSISTENT), 
                 new Integer(DeliveryMode.PERSISTENT)} );
     }
-    public void testExclusiveQueueDeliversToOnlyOneConsumer() throws Throwable {
+    public void testExclusiveQueueDeliversToOnlyOneConsumer() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -725,7 +725,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE)} );
     }   
     
-    public void testWildcardConsume() throws Throwable {
+    public void testWildcardConsume() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -772,7 +772,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE)} );
     }   
     
-    public void testCompositeConsume() throws Throwable {
+    public void testCompositeConsume() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -816,7 +816,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE)} );
     }   
     
-    public void testCompositeSend() throws Throwable {
+    public void testCompositeSend() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -883,7 +883,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new ActiveMQQueue("TEST")} );
     }   
     
-    public void testConnectionCloseCascades() throws Throwable {
+    public void testConnectionCloseCascades() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -937,7 +937,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new ActiveMQQueue("TEST")} );
     }   
     
-    public void testSessionCloseCascades() throws Throwable {
+    public void testSessionCloseCascades() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -991,7 +991,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new ActiveMQQueue("TEST")} );
     }   
     
-    public void testConsumerClose() throws Throwable {
+    public void testConsumerClose() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -1041,7 +1041,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Integer(DeliveryMode.PERSISTENT)} );
     }   
     
-    public void testTopicNoLocal() throws Throwable {
+    public void testTopicNoLocal() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQTopic("TEST");
         
@@ -1106,7 +1106,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Integer(DeliveryMode.PERSISTENT)} );
     }   
     
-    public void testTopicDispatchIsBroadcast() throws Throwable {
+    public void testTopicDispatchIsBroadcast() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQTopic("TEST");
         
@@ -1158,7 +1158,7 @@ public class BrokerTest extends BrokerTestSupport {
                 } );
     }   
     
-    public void testQueueDispatchedAreRedeliveredOnConsumerClose() throws Throwable {
+    public void testQueueDispatchedAreRedeliveredOnConsumerClose() throws Exception {
         
         // Setup a first connection
         StubConnection connection1 = createConnection();
@@ -1216,7 +1216,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }   
-    public void testQueueBrowseMessages() throws Throwable {
+    public void testQueueBrowseMessages() throws Exception {
                 
         // Start a producer and consumer
         StubConnection connection = createConnection();
@@ -1254,7 +1254,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Integer(DeliveryMode.PERSISTENT)} );
     }   
     
-    public void testQueueBrowserWith2Consumers() throws Throwable {
+    public void testQueueBrowserWith2Consumers() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -1307,7 +1307,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Integer(DeliveryMode.NON_PERSISTENT), 
                 new Integer(DeliveryMode.PERSISTENT)} );
     }   
-    public void testQueueOnlyOnceDeliveryWith2Consumers() throws Throwable {
+    public void testQueueOnlyOnceDeliveryWith2Consumers() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         
@@ -1365,7 +1365,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }   
-    public void testQueueSendThenAddConsumer() throws Throwable {
+    public void testQueueSendThenAddConsumer() throws Exception {
         
         // Start a producer
         StubConnection connection = createConnection();
@@ -1401,7 +1401,7 @@ public class BrokerTest extends BrokerTestSupport {
                 } );
     }
     
-    public void testQueueAckRemovesMessage() throws Throwable {
+    public void testQueueAckRemovesMessage() throws Exception {
         
         // Start a producer and consumer
         StubConnection connection = createConnection();
@@ -1444,7 +1444,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
-    public void testSelectorSkipsMessages() throws Throwable {
+    public void testSelectorSkipsMessages() throws Exception {
         
         // Start a producer and consumer
         StubConnection connection = createConnection();
@@ -1488,7 +1488,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
-    public void testAddConsumerThenSend() throws Throwable {
+    public void testAddConsumerThenSend() throws Exception {
         
         // Start a producer and consumer
         StubConnection connection = createConnection();
@@ -1522,7 +1522,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }    
     
-    public void testConsumerPrefetchAtOne() throws Throwable {
+    public void testConsumerPrefetchAtOne() throws Exception {
         
         // Start a producer and consumer
         StubConnection connection = createConnection();
@@ -1561,7 +1561,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }    
 
-    public void testConsumerPrefetchAtTwo() throws Throwable {
+    public void testConsumerPrefetchAtTwo() throws Exception {
         
         // Start a producer and consumer
         StubConnection connection = createConnection();
@@ -1603,7 +1603,7 @@ public class BrokerTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
-    public void testConsumerPrefetchAndDeliveredAck() throws Throwable {
+    public void testConsumerPrefetchAndDeliveredAck() throws Exception {
         
         // Start a producer and consumer
         StubConnection connection = createConnection();

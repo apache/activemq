@@ -54,7 +54,7 @@ public class LoadTester extends JmsTestSupport {
         return factory;
     }
     
-    public void testQueueSendThenAddConsumer() throws Throwable {
+    public void testQueueSendThenAddConsumer() throws Exception {
         int MESSAGE_SIZE=1024*64;
         int PRODUCE_COUNT=10000;
         ProgressPrinter printer = new ProgressPrinter(PRODUCE_COUNT, 20);

@@ -34,10 +34,10 @@ import org.apache.activemq.store.MessageStore;
  */
 public interface Destination extends Service {
 
-    void addSubscription(ConnectionContext context, Subscription sub) throws Throwable;
-    void removeSubscription(ConnectionContext context, Subscription sub) throws Throwable;
+    void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
+    void removeSubscription(ConnectionContext context, Subscription sub) throws Exception;
     
-    void send(ConnectionContext context, Message messageSend) throws Throwable;
+    void send(ConnectionContext context, Message messageSend) throws Exception;
     boolean lock(MessageReference node, Subscription subscription);
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
     

@@ -67,79 +67,79 @@ public class MutableBrokerFilter implements Broker {
         }
     }
     
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         getNext().acknowledge(context, ack);
     }
 
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         getNext().addConnection(context, info);
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         getNext().addConsumer(context, info);
     }
 
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         getNext().addProducer(context, info);
     }
 
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Throwable {
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         getNext().commitTransaction(context, xid, onePhase);
     }
 
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         getNext().removeSubscription(context, info);
     }
 
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Throwable {
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
         return getNext().getPreparedTransactions(context);
     }
 
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         return getNext().prepareTransaction(context, xid);
     }
 
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         getNext().removeConnection(context, info, error);
     }
 
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         getNext().removeConsumer(context, info);
     }
 
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Throwable {
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         getNext().removeProducer(context, info);
     }
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         getNext().rollbackTransaction(context, xid);
     }
 
-    public void send(ConnectionContext context, Message messageSend) throws Throwable {
+    public void send(ConnectionContext context, Message messageSend) throws Exception {
         getNext().send(context, messageSend);
     }
 
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Throwable {
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         getNext().beginTransaction(context, xid);
     }
 
-    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Throwable {
+    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
         getNext().forgetTransaction(context, transactionId);
     }
 
-    public Connection[] getClients() throws Throwable {
+    public Connection[] getClients() throws Exception {
         return getNext().getClients();
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         return getNext().addDestination(context, destination);
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Throwable {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         getNext().removeDestination(context, destination, timeout);
     }
 
-    public ActiveMQDestination[] getDestinations() throws Throwable {
+    public ActiveMQDestination[] getDestinations() throws Exception {
         return getNext().getDestinations();
     }
 
@@ -151,11 +151,11 @@ public class MutableBrokerFilter implements Broker {
         getNext().stop();
     }
 
-    public void addSession(ConnectionContext context, SessionInfo info) throws Throwable {
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
         getNext().addSession(context, info);
     }
 
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Throwable {
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
         getNext().removeSession(context, info);
     }
 
@@ -187,7 +187,7 @@ public class MutableBrokerFilter implements Broker {
         getNext().processDispatch(messageDispatch);
     }
     
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable{
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
         getNext().processDispatchNotification(messageDispatchNotification);
     }
     

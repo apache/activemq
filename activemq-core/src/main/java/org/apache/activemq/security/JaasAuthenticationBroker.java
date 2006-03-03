@@ -60,7 +60,7 @@ public class JaasAuthenticationBroker extends BrokerFilter {
         
     }
     
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable {
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
         if( context.getSecurityContext()==null ) {
             // Set the TCCL since it seems JAAS needs it to find the login module classes.
@@ -87,7 +87,7 @@ public class JaasAuthenticationBroker extends BrokerFilter {
         super.addConnection(context, info);
     }
     
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
         if( securityContexts.remove(context.getSecurityContext()) ) {
             context.setSecurityContext(null);

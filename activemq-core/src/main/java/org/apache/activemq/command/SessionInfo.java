@@ -61,7 +61,7 @@ public class SessionInfo extends BaseCommand {
         return command;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processAddSession( this);
     }
 

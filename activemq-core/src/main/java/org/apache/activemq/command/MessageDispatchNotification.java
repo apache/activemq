@@ -71,7 +71,7 @@ public class MessageDispatchNotification extends BaseCommand{
         this.deliverySequenceId=deliverySequenceId;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processMessageDispatchNotification( this );
     }
     

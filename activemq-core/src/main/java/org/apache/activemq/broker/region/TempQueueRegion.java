@@ -38,11 +38,11 @@ public class TempQueueRegion extends AbstractRegion {
         setAutoCreateDestinations(false);
     }
 
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         final ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destination;
         return new Queue(destination, memoryManager, null, destinationStatistics, taskRunnerFactory) {
             
-            public void addSubscription(ConnectionContext context,Subscription sub) throws Throwable {
+            public void addSubscription(ConnectionContext context,Subscription sub) throws Exception {
                 // Only consumers on the same connection can consume from 
                 // the temporary destination
                 if( !tempDest.getConnectionId().equals( sub.getConsumerInfo().getConsumerId().getConnectionId() ) ) {

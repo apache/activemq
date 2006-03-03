@@ -232,30 +232,30 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return cs;
     }
 
-    public Response processKeepAlive(KeepAliveInfo info) throws Throwable {
+    public Response processKeepAlive(KeepAliveInfo info) throws Exception {
         return null;
     }
 
-    public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Throwable {
+    public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception {
         broker.removeSubscription(lookupConnectionState(info.getConnectionId()).getContext(), info);
         return null;
     }
     
-    public Response processWireFormat(WireFormatInfo info) throws Throwable {
+    public Response processWireFormat(WireFormatInfo info) throws Exception {
         wireFormatInfo = info;
         return null;
     }
     
-    public Response processShutdown(ShutdownInfo info) throws Throwable {
+    public Response processShutdown(ShutdownInfo info) throws Exception {
         stop();
         return null;
     }
      
-    public Response processFlush(FlushCommand command) throws Throwable {
+    public Response processFlush(FlushCommand command) throws Exception {
         return null;
     }
 
-    public Response processBeginTransaction(TransactionInfo info) throws Throwable {
+    public Response processBeginTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -265,14 +265,14 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processEndTransaction(TransactionInfo info) throws Throwable {
+    public Response processEndTransaction(TransactionInfo info) throws Exception {
         // No need to do anything.  This packet is just sent by the client
         // make sure he is synced with the server as commit command could
         // come from a different connection.
         return null;
     }
     
-    public Response processPrepareTransaction(TransactionInfo info) throws Throwable {
+    public Response processPrepareTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -283,7 +283,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return response;
     }
 
-    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Throwable {
+    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -293,7 +293,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
 
-    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Throwable {
+    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -303,7 +303,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
 
-    public Response processRollbackTransaction(TransactionInfo info) throws Throwable {
+    public Response processRollbackTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -313,7 +313,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processForgetTransaction(TransactionInfo info) throws Throwable {
+    public Response processForgetTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -323,7 +323,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processRecoverTransactions(TransactionInfo info) throws Throwable {
+    public Response processRecoverTransactions(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -334,7 +334,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
 
-    public Response processMessage(Message messageSend) throws Throwable {
+    public Response processMessage(Message messageSend) throws Exception {
         ProducerId producerId = messageSend.getProducerId();
         ConnectionState state = lookupConnectionState(producerId);
         ConnectionContext context = state.getContext();
@@ -342,12 +342,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
 
-    public Response processMessageAck(MessageAck ack) throws Throwable {
+    public Response processMessageAck(MessageAck ack) throws Exception {
         broker.acknowledge(lookupConnectionState(ack.getConsumerId()).getContext(), ack);
         return null;
     }
     
-    public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Throwable{
+    public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception{
         broker.processDispatchNotification(notification);
         return null;
     }
@@ -357,7 +357,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
 
-    public Response processAddDestination(DestinationInfo info) throws Throwable {
+    public Response processAddDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.addDestination(cs.getContext(), info.getDestination());
         if( info.getDestination().isTemporary() ) {
@@ -366,7 +366,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
 
-    public Response processRemoveDestination(DestinationInfo info) throws Throwable {
+    public Response processRemoveDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.removeDestination(cs.getContext(), info.getDestination(), info.getTimeout());
         if( info.getDestination().isTemporary() ) {
@@ -376,7 +376,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
 
-    public Response processAddProducer(ProducerInfo info) throws Throwable {
+    public Response processAddProducer(ProducerInfo info) throws Exception {
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         
@@ -389,7 +389,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processRemoveProducer(ProducerId id) throws Throwable {
+    public Response processRemoveProducer(ProducerId id) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         
@@ -405,7 +405,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
 
-    public Response processAddConsumer(ConsumerInfo info) throws Throwable {
+    public Response processAddConsumer(ConsumerInfo info) throws Exception {
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         
@@ -419,7 +419,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processRemoveConsumer(ConsumerId id) throws Throwable {
+    public Response processRemoveConsumer(ConsumerId id) throws Exception {
         
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
@@ -436,7 +436,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processAddSession(SessionInfo info) throws Throwable {
+    public Response processAddSession(SessionInfo info) throws Exception {
         ConnectionId connectionId = info.getSessionId().getParentId();
         
         ConnectionState cs = lookupConnectionState(connectionId);
@@ -445,7 +445,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processRemoveSession(SessionId id) throws Throwable {
+    public Response processRemoveSession(SessionId id) throws Exception {
         
         ConnectionId connectionId = id.getParentId();
         
@@ -478,7 +478,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
-    public Response processAddConnection(ConnectionInfo info) throws Throwable {
+    public Response processAddConnection(ConnectionInfo info) throws Exception {
         // Setup the context.
         String clientId = info.getClientId();
         ConnectionContext context = new ConnectionContext();

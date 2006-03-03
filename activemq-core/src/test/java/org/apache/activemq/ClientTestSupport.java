@@ -101,19 +101,19 @@ public class ClientTestSupport extends TestCase {
     }
 
     //Helper Classes
-     protected ConnectionInfo createConnectionInfo() throws Throwable {
+     protected ConnectionInfo createConnectionInfo() throws Exception {
         ConnectionInfo info = new ConnectionInfo();
         info.setConnectionId(new ConnectionId("connection:"+(++idGenerator)));
         info.setClientId( info.getConnectionId().getValue() );
         return info;
     }
 
-    protected SessionInfo createSessionInfo(ConnectionInfo connectionInfo) throws Throwable {
+    protected SessionInfo createSessionInfo(ConnectionInfo connectionInfo) throws Exception {
         SessionInfo info = new SessionInfo(connectionInfo, ++idGenerator);
         return info;
     }
 
-    protected ConsumerInfo createConsumerInfo(SessionInfo sessionInfo, ActiveMQDestination destination) throws Throwable {
+    protected ConsumerInfo createConsumerInfo(SessionInfo sessionInfo, ActiveMQDestination destination) throws Exception {
         ConsumerInfo info = new ConsumerInfo(sessionInfo, ++idGenerator);
         info.setBrowser(false);
         info.setDestination(destination);

@@ -35,7 +35,7 @@ public class ConnectionError extends BaseCommand {
         return DATA_STRUCTURE_TYPE;
     }
        
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return null;
     }
 

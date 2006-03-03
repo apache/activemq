@@ -143,19 +143,19 @@ public class JDBCMessageStore implements MessageStore {
         }
     }
 
-    public void recover(final MessageRecoveryListener listener) throws Throwable {
+    public void recover(final MessageRecoveryListener listener) throws Exception {
 
         // Get all the Message ids out of the database.
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
-                public void recoverMessage(long sequenceId, byte[] data) throws Throwable {
+                public void recoverMessage(long sequenceId, byte[] data) throws Exception {
                     Message msg = (Message) wireFormat.unmarshal(new ByteArrayPacket(data));
                     msg.getMessageId().setBrokerSequenceId(sequenceId);
                     listener.recoverMessage(msg);
                 }
-                public void recoverMessageReference(String reference) throws IOException, Throwable {
+                public void recoverMessageReference(String reference) throws Exception {
                     listener.recoverMessageReference(reference);
                 }
                 public void finished(){

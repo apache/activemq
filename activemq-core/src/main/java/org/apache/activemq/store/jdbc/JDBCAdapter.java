@@ -45,13 +45,13 @@ public interface JDBCAdapter {
     public abstract void doRemoveMessage(TransactionContext c, long seq) throws SQLException, IOException;
 
     public abstract void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener)
-            throws Throwable;
+            throws Exception;
 
     public abstract void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq) throws SQLException,
             IOException;
 
     public abstract void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
-            String subscriptionName, JDBCMessageRecoveryListener listener) throws Throwable;
+            String subscriptionName, JDBCMessageRecoveryListener listener) throws Exception;
 
     public abstract void doSetSubscriberEntry(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, String selector, boolean retroactive) throws SQLException, IOException;

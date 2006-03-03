@@ -48,12 +48,12 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
     private int maximumSize = 100 * 64 * 1024;
     private boolean useSharedBuffer = true;
 
-    public boolean add(ConnectionContext context, MessageReference message) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference message) throws Exception {
         buffer.add(message);
         return true;
     }
 
-    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception {
         // Re-dispatch the messages from the buffer.
         List copy = buffer.getMessages(sub);
         if( !copy.isEmpty() ) {
@@ -110,7 +110,7 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
         this.useSharedBuffer = useSharedBuffer;
     }
     
-    public Message[] browse(ActiveMQDestination destination) throws Throwable{
+    public Message[] browse(ActiveMQDestination destination) throws Exception{
         return buffer.browse(destination);
     }
 

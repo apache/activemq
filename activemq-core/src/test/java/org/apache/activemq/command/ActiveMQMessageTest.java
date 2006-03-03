@@ -401,7 +401,7 @@ public class ActiveMQMessageTest extends TestCase {
             public byte getDataStructureType() {
                 return 0;
             }
-            public Response visit(CommandVisitor visitor) throws Throwable {
+            public Response visit(CommandVisitor visitor) throws Exception {
                 return null;
             }
         };

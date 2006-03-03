@@ -22,7 +22,7 @@ import org.apache.activemq.command.Message;
  * @version $Revision: 1.4 $
  */
 public interface MessageRecoveryListener {
-    void recoverMessage(Message message) throws Throwable;
-    void recoverMessageReference(String messageReference) throws Throwable;
+    void recoverMessage(Message message) throws Exception;
+    void recoverMessageReference(String messageReference) throws Exception;
     void finished();
 }

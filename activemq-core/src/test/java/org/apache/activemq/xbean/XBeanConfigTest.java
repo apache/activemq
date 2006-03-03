@@ -46,7 +46,7 @@ public class XBeanConfigTest extends TestCase {
     protected ConnectionContext context;
     protected ConnectionInfo info;
 
-    public void testBrokerConfiguredCorrectly() throws Throwable {
+    public void testBrokerConfiguredCorrectly() throws Exception {
 
 
         Topic topic = (Topic) broker.addDestination(context, new ActiveMQTopic("FOO.BAR"));

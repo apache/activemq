@@ -70,7 +70,7 @@ public class JMSMessageTest extends JmsTestSupport {
                 new Byte(ActiveMQDestination.QUEUE_TYPE)});
     }
     
-    public void testTextMessage() throws Throwable {
+    public void testTextMessage() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -109,7 +109,7 @@ public class JMSMessageTest extends JmsTestSupport {
         return factory;
     }
     
-    public void testBytesMessageLength() throws Throwable {
+    public void testBytesMessageLength() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -138,7 +138,7 @@ public class JMSMessageTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
     
-    public void testObjectMessage() throws Throwable {
+    public void testObjectMessage() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -163,7 +163,7 @@ public class JMSMessageTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
     
-    public void testBytesMessage() throws Throwable {
+    public void testBytesMessage() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -195,7 +195,7 @@ public class JMSMessageTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
 
-    public void testStreamMessage() throws Throwable {
+    public void testStreamMessage() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -235,7 +235,7 @@ public class JMSMessageTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
 
-    public void testMapMessage() throws Throwable {
+    public void testMapMessage() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -428,7 +428,7 @@ public class JMSMessageTest extends JmsTestSupport {
         }
     }
 
-    public void testForeignMessage() throws Throwable {
+    public void testForeignMessage() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();

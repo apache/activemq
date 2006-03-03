@@ -69,7 +69,7 @@ public class KeepAliveInfo implements Command {
         return false;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processKeepAlive( this );
     }
 

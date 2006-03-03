@@ -89,7 +89,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
     
     public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
-                    throws Throwable{
+                    throws Exception{
         MessageId lastAck=(MessageId) ackDatabase.get(new SubscriptionKey(clientId,subscriptionName));
         boolean pastLastAck=lastAck==null;
         // the message table is a synchronizedMap - so just have to synchronize here

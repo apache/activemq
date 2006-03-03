@@ -52,13 +52,13 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
         this.longTermStore = checkpointStore;
     }
     
-    public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener) throws Throwable {
+    public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener) throws Exception {
         this.peristenceAdapter.checkpoint(true, true);
         longTermStore.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
-            public void recoverMessage(Message message) throws Throwable {
+            public void recoverMessage(Message message) throws Exception {
                 throw new IOException("Should not get called.");
             }
-            public void recoverMessageReference(String messageReference) throws Throwable {
+            public void recoverMessageReference(String messageReference) throws Exception {
                 RecordLocation loc = toRecordLocation(messageReference);
                 Message message = (Message) peristenceAdapter.readCommand(loc);
                 listener.recoverMessage(message);
@@ -112,7 +112,7 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
             }
             transactionStore.acknowledge(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() {                    
+                public void afterCommit() throws Exception {                    
                     if( debug )
                         log.debug("Transacted acknowledge commit for: "+messageId+", at: "+location);
                     synchronized (QuickJournalTopicMessageStore.this) {
@@ -120,7 +120,7 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
                         acknowledge(messageId, location, key);
                     }
                 }
-                public void afterRollback() {                    
+                public void afterRollback() throws Exception {                    
                     if( debug )
                         log.debug("Transacted acknowledge rollback for: "+messageId+", at: "+location);
                     synchronized (QuickJournalTopicMessageStore.this) {
@@ -168,7 +168,7 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
         }
 
         return super.checkpoint( new Callback() {
-            public void execute() throws Throwable {
+            public void execute() throws Exception {
 
                 // Checkpoint the acknowledged messages.
                 Iterator iterator = cpAckedLastAckLocations.keySet().iterator();

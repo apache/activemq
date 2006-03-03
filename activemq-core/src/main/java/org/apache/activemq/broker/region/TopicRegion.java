@@ -57,7 +57,7 @@ public class TopicRegion extends AbstractRegion {
         this.policyMap = policyMap;
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
 
             ActiveMQDestination destination = info.getDestination();
@@ -107,7 +107,7 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
 
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
@@ -122,7 +122,7 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubcriptionName());
         DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
         if (sub == null) {
@@ -147,7 +147,7 @@ public class TopicRegion extends AbstractRegion {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         TopicMessageStore store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
         Topic topic = new Topic(destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
         configureTopic(topic, destination);

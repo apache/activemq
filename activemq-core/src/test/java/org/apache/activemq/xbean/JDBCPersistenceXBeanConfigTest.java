@@ -33,7 +33,7 @@ public class JDBCPersistenceXBeanConfigTest extends TestCase {
 
     protected BrokerService brokerService;
 
-    public void testManagmentContextConfiguredCorrectly() throws Throwable {
+    public void testManagmentContextConfiguredCorrectly() throws Exception {
 
         PersistenceAdapter persistenceAdapter = brokerService.getPersistenceAdapter();
         assertNotNull(persistenceAdapter);

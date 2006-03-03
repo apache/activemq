@@ -66,7 +66,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
         addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
     }
 
-    public void xtestPublisherFansout() throws Throwable {
+    public void xtestPublisherFansout() throws Exception {
 
         // Start a normal consumer on the local broker
         StubConnection connection1 = createConnection();
@@ -113,7 +113,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
                 new Integer(DeliveryMode.PERSISTENT) });
         addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
     }
-    public void testPublisherWaitsForServerToBeUp() throws Throwable {
+    public void testPublisherWaitsForServerToBeUp() throws Exception {
 
         // Start a normal consumer on the local broker
         StubConnection connection1 = createConnection();

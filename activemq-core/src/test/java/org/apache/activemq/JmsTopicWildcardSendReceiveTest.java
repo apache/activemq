@@ -54,7 +54,7 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
         return "FOO.BAR.HUMBUG";
     }
 
-    public void testReceiveWildcardTopicEndAsterisk() throws Throwable {
+    public void testReceiveWildcardTopicEndAsterisk() throws Exception {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -84,7 +84,7 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
         assertNull(consumer.receiveNoWait());
     }
 
-    public void testReceiveWildcardTopicEndGreaterThan() throws Throwable {
+    public void testReceiveWildcardTopicEndGreaterThan() throws Exception {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -120,7 +120,7 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
         assertNull(consumer.receiveNoWait());
     }
 
-    public void testReceiveWildcardTopicMidAsterisk() throws Throwable {
+    public void testReceiveWildcardTopicMidAsterisk() throws Exception {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 

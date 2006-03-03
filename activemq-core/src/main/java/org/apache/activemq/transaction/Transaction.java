@@ -55,7 +55,7 @@ public abstract class Transaction {
         }
     }
 
-    public void prePrepare() throws Throwable {
+    public void prePrepare() throws Exception {
 
         // Is it ok to call prepare now given the state of the
         // transaction?
@@ -76,14 +76,14 @@ public abstract class Transaction {
 //        }
     }
 
-    protected void fireAfterCommit() throws Throwable {
+    protected void fireAfterCommit() throws Exception {
         for (Iterator iter = synchronizations.iterator(); iter.hasNext();) {
             Synchronization s = (Synchronization) iter.next();
             s.afterCommit();
         }
     }
 
-    public void fireAfterRollback() throws Throwable {
+    public void fireAfterRollback() throws Exception {
         for (Iterator iter = synchronizations.iterator(); iter.hasNext();) {
             Synchronization s = (Synchronization) iter.next();
             s.afterRollback();

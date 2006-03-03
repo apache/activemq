@@ -83,9 +83,9 @@ public interface MessageStore extends Service {
      * Recover any messages to be delivered.
      *
      * @param container
-     * @throws Throwable 
+     * @throws Exception 
      */
-    public void recover(MessageRecoveryListener container) throws Throwable;
+    public void recover(MessageRecoveryListener container) throws Exception;
 
     /**
      * The destination that the message store is holding messages for.

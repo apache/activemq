@@ -54,92 +54,92 @@ public class EmptyBroker implements Broker{
         return null;
     }
 
-    public void addConnection(ConnectionContext context,ConnectionInfo info) throws Throwable{
+    public void addConnection(ConnectionContext context,ConnectionInfo info) throws Exception{
 
     }
 
-    public void removeConnection(ConnectionContext context,ConnectionInfo info,Throwable error) throws Throwable{
+    public void removeConnection(ConnectionContext context,ConnectionInfo info,Throwable error) throws Exception{
 
     }
 
-    public void addSession(ConnectionContext context,SessionInfo info) throws Throwable{
+    public void addSession(ConnectionContext context,SessionInfo info) throws Exception{
 
     }
 
-    public void removeSession(ConnectionContext context,SessionInfo info) throws Throwable{
+    public void removeSession(ConnectionContext context,SessionInfo info) throws Exception{
 
     }
 
-    public void addProducer(ConnectionContext context,ProducerInfo info) throws Throwable{
+    public void addProducer(ConnectionContext context,ProducerInfo info) throws Exception{
 
     }
 
-    public void removeProducer(ConnectionContext context,ProducerInfo info) throws Throwable{
+    public void removeProducer(ConnectionContext context,ProducerInfo info) throws Exception{
 
     }
 
-    public Connection[] getClients() throws Throwable{
+    public Connection[] getClients() throws Exception{
 
         return null;
     }
 
-    public ActiveMQDestination[] getDestinations() throws Throwable{
+    public ActiveMQDestination[] getDestinations() throws Exception{
 
         return null;
     }
 
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Throwable{
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception{
 
         return null;
     }
 
-    public void beginTransaction(ConnectionContext context,TransactionId xid) throws Throwable{
+    public void beginTransaction(ConnectionContext context,TransactionId xid) throws Exception{
 
     }
 
-    public int prepareTransaction(ConnectionContext context,TransactionId xid) throws Throwable{
+    public int prepareTransaction(ConnectionContext context,TransactionId xid) throws Exception{
 
         return 0;
     }
 
-    public void rollbackTransaction(ConnectionContext context,TransactionId xid) throws Throwable{
+    public void rollbackTransaction(ConnectionContext context,TransactionId xid) throws Exception{
 
     }
 
-    public void commitTransaction(ConnectionContext context,TransactionId xid,boolean onePhase) throws Throwable{
+    public void commitTransaction(ConnectionContext context,TransactionId xid,boolean onePhase) throws Exception{
 
     }
 
-    public void forgetTransaction(ConnectionContext context,TransactionId transactionId) throws Throwable{
+    public void forgetTransaction(ConnectionContext context,TransactionId transactionId) throws Exception{
 
     }
 
-    public Destination addDestination(ConnectionContext context,ActiveMQDestination destination) throws Throwable{
+    public Destination addDestination(ConnectionContext context,ActiveMQDestination destination) throws Exception{
 
         return null;
     }
 
-    public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout) throws Throwable{
+    public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout) throws Exception{
 
     }
 
-    public void addConsumer(ConnectionContext context,ConsumerInfo info) throws Throwable{
+    public void addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
 
     }
 
-    public void removeConsumer(ConnectionContext context,ConsumerInfo info) throws Throwable{
+    public void removeConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
 
     }
 
-    public void removeSubscription(ConnectionContext context,RemoveSubscriptionInfo info) throws Throwable{
+    public void removeSubscription(ConnectionContext context,RemoveSubscriptionInfo info) throws Exception{
 
     }
 
-    public void send(ConnectionContext context,Message message) throws Throwable{
+    public void send(ConnectionContext context,Message message) throws Exception{
 
     }
 
-    public void acknowledge(ConnectionContext context,MessageAck ack) throws Throwable{
+    public void acknowledge(ConnectionContext context,MessageAck ack) throws Exception{
 
     }
 
@@ -175,7 +175,7 @@ public class EmptyBroker implements Broker{
         
     }
     
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification){
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
         
     }
     

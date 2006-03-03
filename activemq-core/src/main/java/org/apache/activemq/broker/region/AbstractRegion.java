@@ -71,7 +71,7 @@ abstract public class AbstractRegion implements Region {
     public void stop() throws Exception {
     }
     
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         log.debug("Adding destination: "+destination);
         Destination dest = createDestination(context, destination);
         dest.start();
@@ -91,7 +91,7 @@ abstract public class AbstractRegion implements Region {
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
-            throws Throwable {
+            throws Exception {
         
         // The destination cannot be removed if there are any active subscriptions 
         for (Iterator iter = subscriptions.values().iterator(); iter.hasNext();) {
@@ -113,7 +113,7 @@ abstract public class AbstractRegion implements Region {
         }
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
 
         Subscription sub = createSubscription(context, info);
 
@@ -167,7 +167,7 @@ abstract public class AbstractRegion implements Region {
         return inactiveDests;
     }
     
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         
         Subscription sub = (Subscription) subscriptions.remove(info.getConsumerId());
         if( sub==null )
@@ -185,17 +185,17 @@ abstract public class AbstractRegion implements Region {
     protected void destroySubscription(Subscription sub) {        
     }
 
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         throw new JMSException("Invalid operation.");
     }
 
     public void send(ConnectionContext context, Message messageSend)
-            throws Throwable {
+            throws Exception {
         Destination dest = lookup(context, messageSend.getDestination());
         dest.send(context, messageSend);
     }
     
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable {
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         
         Subscription sub = (Subscription) subscriptions.get(ack.getConsumerId());
         if( sub==null )
@@ -204,7 +204,7 @@ abstract public class AbstractRegion implements Region {
         
     }
 
-    protected Destination lookup(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    protected Destination lookup(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         synchronized(destinationsMutex){
             Destination dest=(Destination) destinations.get(destination);
             if(dest==null){
@@ -223,7 +223,7 @@ abstract public class AbstractRegion implements Region {
         }
     }
     
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Throwable{
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
         Subscription sub = (Subscription) subscriptions.get(messageDispatchNotification.getConsumerId());
         if (sub != null){
             sub.processMessageDispatchNotification(messageDispatchNotification);
@@ -240,8 +240,8 @@ abstract public class AbstractRegion implements Region {
         }        
     }
 
-    protected abstract Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws Throwable;
-    abstract protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable;
+    protected abstract Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws Exception;
+    abstract protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
 
     public boolean isAutoCreateDestinations() {
         return autoCreateDestinations;

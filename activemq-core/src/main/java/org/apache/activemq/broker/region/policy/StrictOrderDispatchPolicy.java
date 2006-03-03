@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class StrictOrderDispatchPolicy implements DispatchPolicy {
     
-    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Throwable {
+    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
         // Big synch here so that only 1 message gets dispatched at a time.  Ensures 
         // Everyone sees the same order.
         synchronized(consumers) {

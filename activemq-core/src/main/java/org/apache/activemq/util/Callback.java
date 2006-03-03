@@ -30,8 +30,7 @@ public interface Callback {
      * Executes some piece of code within a transaction
      * performing a commit if there is no exception thrown
      * else a rollback is performed
-     *
-     * @throws Throwable
+     * @throws Exception TODO
      */
-    public void execute() throws Throwable;
+    public void execute() throws Exception;
 }

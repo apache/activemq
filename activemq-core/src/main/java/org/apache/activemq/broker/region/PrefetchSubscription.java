@@ -55,7 +55,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         super(broker,context,info);
     }
 
-    synchronized public void add(MessageReference node) throws Throwable{
+    synchronized public void add(MessageReference node) throws Exception{
         enqueueCounter++;
         if(!isFull()&&!isSlaveBroker()){
             dispatch(node);
@@ -86,7 +86,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         }
     }
 
-    synchronized public void acknowledge(final ConnectionContext context,final MessageAck ack) throws Throwable{
+    synchronized public void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception{
         // Handle the standard acknowledgment case.
         boolean wasFull=isFull();
         if(ack.isStandardAck()){
@@ -106,7 +106,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     }else{
                         // setup a Synchronization to remove nodes from the dispatched list.
                         context.getTransaction().addSynchronization(new Synchronization(){
-                            public void afterCommit() throws Throwable{
+                            public void afterCommit() throws Exception{
                                 synchronized(PrefetchSubscription.this){
                                     dispatched.remove(node);
                                     delivered--;

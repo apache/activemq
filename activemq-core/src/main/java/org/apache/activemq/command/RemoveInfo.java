@@ -53,7 +53,7 @@ public class RemoveInfo extends BaseCommand {
         this.objectId = objectId;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         switch (objectId.getDataStructureType()) {
         case ConnectionId.DATA_STRUCTURE_TYPE:
             return visitor.processRemoveConnection((ConnectionId) objectId);

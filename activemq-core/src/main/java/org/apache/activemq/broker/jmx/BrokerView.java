@@ -124,19 +124,19 @@ public class BrokerView implements BrokerViewMBean {
         return broker.getInactiveDurableTopicSubscribers();
     }
 
-    public void addTopic(String name) throws Throwable {
+    public void addTopic(String name) throws Exception {
         broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name));
     }
 
-    public void addQueue(String name) throws Throwable {
+    public void addQueue(String name) throws Exception {
         broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name));
     }
 
-    public void removeTopic(String name) throws Throwable {
+    public void removeTopic(String name) throws Exception {
         broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name), 1000);
     }
 
-    public void removeQueue(String name) throws Throwable {
+    public void removeQueue(String name) throws Exception {
         broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name), 1000);
     }
     

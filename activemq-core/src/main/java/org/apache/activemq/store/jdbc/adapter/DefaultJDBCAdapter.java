@@ -317,7 +317,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }        
     }
     
-    public void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener) throws Throwable {
+    public void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener) throws Exception {
 //        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out);
 
         PreparedStatement s = null;
@@ -375,7 +375,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     }
 
-    public void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, JDBCMessageRecoveryListener listener) throws Throwable {
+    public void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, JDBCMessageRecoveryListener listener) throws Exception {
 //        dumpTables(c, destination.getQualifiedName(),clientId,subscriptionName);
 
         PreparedStatement s = null;

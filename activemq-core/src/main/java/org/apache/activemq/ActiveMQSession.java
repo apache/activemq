@@ -649,7 +649,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             
             if( isClientAcknowledge() ) {
                 message.setAcknowledgeCallback(new Callback() {
-                    public void execute() throws Throwable {
+                    public void execute() throws Exception {
                     }
                 });
             }
@@ -675,7 +675,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 ack.setTransactionId(getTransactionContext().getTransactionId());
                 if( ack.getTransactionId()!=null ) {
                     getTransactionContext().addSynchronization(new Synchronization(){
-                        public void afterRollback() throws Throwable {
+                        public void afterRollback() throws Exception {
 
                             md.getMessage().incrementRedeliveryCounter();
                             

@@ -107,7 +107,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
         });
     }
 
-    public void testSendReceive() throws Throwable {
+    public void testSendReceive() throws Exception {
         createMulticastBrokerNetwork();
         doSendReceiveTest();
     }
@@ -121,61 +121,61 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
         });
     }
 
-    public void testMultipleConsumersConnect() throws Throwable {
+    public void testMultipleConsumersConnect() throws Exception {
         createMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
-    public void testSendReceiveUsingFailover() throws Throwable {
+    public void testSendReceiveUsingFailover() throws Exception {
         sendUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
         recvUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
         createMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
-    public void testMultipleConsumersConnectUsingFailover() throws Throwable {
+    public void testMultipleConsumersConnectUsingFailover() throws Exception {
         sendUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
         recvUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
         createMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
-    public void testSendReceiveUsingDiscovery() throws Throwable {
+    public void testSendReceiveUsingDiscovery() throws Exception {
         sendUri = "discovery:multicast://default";
         recvUri = "discovery:multicast://default";
         createMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
-    public void testMultipleConsumersConnectUsingDiscovery() throws Throwable {
+    public void testMultipleConsumersConnectUsingDiscovery() throws Exception {
         sendUri = "discovery:multicast://default";
         recvUri = "discovery:multicast://default";
         createMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
-    public void testSendReceiveUsingAutoAssignFailover() throws Throwable {
+    public void testSendReceiveUsingAutoAssignFailover() throws Exception {
         sendUri = "failover:multicast://default";
         recvUri = "failover:multicast://default";
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
-    public void testMultipleConsumersConnectUsingAutoAssignFailover() throws Throwable {
+    public void testMultipleConsumersConnectUsingAutoAssignFailover() throws Exception {
         sendUri = "failover:multicast://default";
         recvUri = "failover:multicast://default";
         createAutoAssignMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
-    public void testSendReceiveUsingAutoAssignDiscovery() throws Throwable {
+    public void testSendReceiveUsingAutoAssignDiscovery() throws Exception {
         sendUri = "discovery:multicast://default";
         recvUri = "discovery:multicast://default";
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
-    public void testMultipleConsumersConnectUsingAutoAssignDiscovery() throws Throwable {
+    public void testMultipleConsumersConnectUsingAutoAssignDiscovery() throws Exception {
         sendUri = "discovery:multicast://default";
         recvUri = "discovery:multicast://default";
         createAutoAssignMulticastBrokerNetwork();

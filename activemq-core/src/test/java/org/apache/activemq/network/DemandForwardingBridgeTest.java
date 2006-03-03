@@ -45,7 +45,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
                 new Byte(ActiveMQDestination.QUEUE_TYPE), 
                 } );
     }
-    public void testSendThenAddConsumer() throws Throwable {
+    public void testSendThenAddConsumer() throws Exception {
         
         // Start a producer on local broker 
         StubConnection connection1 = createConnection();
@@ -94,7 +94,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE), 
                 } );
     }    
-    public void testAddConsumerThenSend() throws Throwable {
+    public void testAddConsumerThenSend() throws Exception {
         
         // Start a producer on local broker 
         StubConnection connection1 = createConnection();

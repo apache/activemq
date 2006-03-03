@@ -50,13 +50,13 @@ public class ManagedQueueRegion extends QueueRegion {
         super.destroySubscription(sub);
     }
 
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Throwable {
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         Destination rc = super.createDestination(context, destination);
         regionBroker.register(destination, rc);
         return rc;
     }
     
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Throwable {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         super.removeDestination(context, destination, timeout);
         regionBroker.unregister(destination);
     }

@@ -58,11 +58,11 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     public QueryBasedSubscriptionRecoveryPolicy() {
     }
 
-    public boolean add(ConnectionContext context, MessageReference message) throws Throwable {
+    public boolean add(ConnectionContext context, MessageReference message) throws Exception {
         return query.validateUpdate(message.getMessage());
     }
 
-    public void recover(ConnectionContext context, final Topic topic, final Subscription sub) throws Throwable {
+    public void recover(ConnectionContext context, final Topic topic, final Subscription sub) throws Exception {
         if (query != null) {
             final MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
             try {
@@ -99,7 +99,7 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
         this.query = query;
     }
     
-    public org.apache.activemq.command.Message[] browse(ActiveMQDestination dest) throws Throwable{
+    public org.apache.activemq.command.Message[] browse(ActiveMQDestination dest) throws Exception{
         return new org.apache.activemq.command.Message[0];
     }
 

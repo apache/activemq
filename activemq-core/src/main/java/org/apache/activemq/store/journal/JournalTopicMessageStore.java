@@ -52,7 +52,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         this.longTermStore = checkpointStore;
     }
     
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Throwable {
+    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
         this.peristenceAdapter.checkpoint(true, true);
         longTermStore.recoverSubscription(clientId, subscriptionName, listener);
     }
@@ -98,7 +98,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
             }
             transactionStore.acknowledge(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() {                    
+                public void afterCommit() throws Exception {                    
                     if( debug )
                         log.debug("Transacted acknowledge commit for: "+messageId+", at: "+location);
                     synchronized (JournalTopicMessageStore.this) {
@@ -106,7 +106,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
                         acknowledge(messageId, location, key);
                     }
                 }
-                public void afterRollback() {                    
+                public void afterRollback() throws Exception {                    
                     if( debug )
                         log.debug("Transacted acknowledge rollback for: "+messageId+", at: "+location);
                     synchronized (JournalTopicMessageStore.this) {
@@ -154,7 +154,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         }
 
         return super.checkpoint( new Callback() {
-            public void execute() throws Throwable {
+            public void execute() throws Exception {
 
                 // Checkpoint the acknowledged messages.
                 Iterator iterator = cpAckedLastAckLocations.keySet().iterator();

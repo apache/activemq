@@ -38,7 +38,7 @@ public class QueueView extends DestinationView implements QueueViewMBean{
         ((Queue) destination).purge();
     }
 
-    public boolean copyMessageTo(String messageId, String destinationName) throws Throwable {
+    public boolean copyMessageTo(String messageId, String destinationName) throws Exception {
         return ((Queue) destination).copyMessageTo(BrokerView.getConnectionContext(broker.getContextBroker()), messageId, ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE));
     }
 }

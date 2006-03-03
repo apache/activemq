@@ -86,7 +86,7 @@ public class TransactionInfo extends BaseCommand {
         this.type = type;
     }
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         switch( type ) {
         case TransactionInfo.BEGIN:
             return visitor.processBeginTransaction(this);

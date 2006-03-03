@@ -57,7 +57,7 @@ public class ProxyConnectorTest extends ProxyTestSupport {
                 new Byte(ActiveMQDestination.TOPIC_TYPE), 
                 } );
     }
-    public void testSendAndConsume() throws Throwable {
+    public void testSendAndConsume() throws Exception {
         
         // Start a producer on local broker using the proxy
         StubConnection connection1 = createProxyConnection();

@@ -516,7 +516,7 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
     }
 
 
-    public Response visit(CommandVisitor visitor) throws Throwable {
+    public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processMessage( this );
     }
 }

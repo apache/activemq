@@ -89,7 +89,7 @@ public class JmsBenchmark extends JmsTestSupport {
     }
 
     /**
-     * @throws Throwable
+     * @throws Throwable 
      */
     public void testConcurrentSendReceive() throws Throwable {
 

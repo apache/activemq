@@ -56,9 +56,9 @@ public interface TopicMessageStore extends MessageStore {
      * acknowledging any messages, we need to know the correct point from which to recover from.
      * @param subscription
      *
-     * @throws Throwable 
+     * @throws Exception 
      */
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Throwable;
+    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception;
 
     /**
      * Finds the subscriber entry for the given consumer info

@@ -77,7 +77,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param info 
      * @param client
      */
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Throwable{
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception{
         super.addConnection(context,info);
         sendAsyncToSlave(info);
     }
@@ -89,7 +89,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param client
      * @param error null if the client requested the disconnect or the error that caused the client to disconnect.
      */
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Throwable{
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception{
         super.removeConnection(context,info,error);
         sendAsyncToSlave(new RemoveInfo(info.getConnectionId()));
     }
@@ -98,9 +98,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * Adds a session.
      * @param context
      * @param info
-     * @throws Throwable
      */
-    public void addSession(ConnectionContext context, SessionInfo info) throws Throwable{
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception{
         super.addSession(context, info);
         sendAsyncToSlave(info);
     }
@@ -109,9 +108,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * Removes a session.
      * @param context
      * @param info
-     * @throws Throwable
      */
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Throwable{
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception{
         super.removeSession(context, info);
         sendAsyncToSlave(new RemoveInfo(info.getSessionId()));
     }
@@ -120,7 +118,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * Adds a producer.
      * @param context the enviorment the operation is being executed under.
      */
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Throwable{
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception{
         super.addProducer(context,info);
         sendAsyncToSlave(info);
     }
@@ -129,25 +127,25 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * Removes a producer.
      * @param context the enviorment the operation is being executed under.
      */
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Throwable{
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception{
         super.removeProducer(context, info);
         sendAsyncToSlave(new RemoveInfo(info.getProducerId()));
     }
     
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Throwable {
+    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         super.addConsumer(context, info);
         sendAsyncToSlave(info);
     }
 
     
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Throwable {
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         super.removeSubscription(context, info);
         sendAsyncToSlave(info);
     }
       
     
 
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Throwable{
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception{
         super.beginTransaction(context, xid);
         TransactionInfo info = new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.BEGIN);
         sendAsyncToSlave(info);
@@ -159,7 +157,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param xid
      * @return
      */
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Throwable{
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception{
         int result = super.prepareTransaction(context, xid);
         TransactionInfo info = new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.PREPARE);
         sendAsyncToSlave(info);
@@ -172,7 +170,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param xid
      */
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Throwable{
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception{
         super.rollbackTransaction(context, xid);
         TransactionInfo info = new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.ROLLBACK);
         sendAsyncToSlave(info);
@@ -185,7 +183,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param xid
      * @param onePhase
      */
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Throwable{
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception{
         super.commitTransaction(context, xid,onePhase);
         TransactionInfo info = new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.COMMIT_ONE_PHASE);
         sendSyncToSlave(info);
@@ -196,9 +194,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param client
      * @param xid
      * @param onePhase
-     * @throws Throwable 
      */
-    public void forgetTransaction(ConnectionContext context, TransactionId xid) throws Throwable{
+    public void forgetTransaction(ConnectionContext context, TransactionId xid) throws Exception{
         super.forgetTransaction(context, xid);
         TransactionInfo info = new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.FORGET);
         sendAsyncToSlave(info);
@@ -218,7 +215,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
         sendAsyncToSlave(mdn);
     }
     
-    public void send(ConnectionContext context, Message message) throws Throwable{
+    public void send(ConnectionContext context, Message message) throws Exception{
         /**
          * A message can be dispatched before the super.send() method returns
          * so - here the order is switched to avoid problems on the slave
@@ -229,7 +226,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
     }
     
    
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Throwable{
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception{
         super.acknowledge(context, ack);
         sendToSlave(ack);
     }

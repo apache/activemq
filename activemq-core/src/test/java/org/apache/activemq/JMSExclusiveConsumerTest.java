@@ -51,9 +51,9 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
     /**
      * Shows that by default messages are round robined across a set of consumers.
      * 
-     * @throws Throwable
+     * @throws Exception
      */
-    public void testRoundRobinDispatchOnNonExclusive() throws Throwable {
+    public void testRoundRobinDispatchOnNonExclusive() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
@@ -89,9 +89,9 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
      * Shows that if the "?consumer.exclusive=true" option is added to destination,
      * then all messages are routed to 1 consumer.
      * 
-     * @throws Throwable
+     * @throws Exception
      */
-    public void testDispatchExclusive() throws Throwable {
+    public void testDispatchExclusive() throws Exception {
 
         // Receive a message with the JMS API
         connection.start();
