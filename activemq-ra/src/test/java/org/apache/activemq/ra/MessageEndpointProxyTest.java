@@ -91,7 +91,6 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
         mockEndpoint.expects(once()).method("onMessage").with(same(stubMessage.proxy()))
                 .will(throwException(new RuntimeException()));
         setupAfterDeliverySuccessful();
-        setupExpectRelease();
 
         doBeforeDeliveryExpectSuccess();
         try {
@@ -102,7 +101,6 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
         }
         doAfterDeliveryExpectSuccess();
 
-        doFullyDeadCheck();
     }
 
     public void testAfterDeliveryFailure() {
