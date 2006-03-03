@@ -23,8 +23,8 @@
 #include "BrokerError.hpp"
 #include "command/ConnectionId.hpp"
 
-#include "util/ifr/ap"
-#include "util/ifr/p"
+#include "util/ifr/ap.hpp"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {

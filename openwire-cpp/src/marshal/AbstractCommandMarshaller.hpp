@@ -26,7 +26,7 @@
 #include "io/BinaryReader.hpp"
 #include "io/BinaryWriter.hpp"
 #include "marshal/CommandMarshallerRegistry.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 #include "util/ifr/ap"
 
 namespace apache

@@ -26,6 +26,8 @@ namespace apache
     namespace client
     {
 
+       using namespace std ;
+
 /*
  * 
  */
@@ -33,7 +35,7 @@ class OpenWireException : public exception
 {
 public:
     OpenWireException(const char* message) ;
-    ~OpenWireException() ;
+    virtual ~OpenWireException() throw();
 } ;
 
 /* namespace */

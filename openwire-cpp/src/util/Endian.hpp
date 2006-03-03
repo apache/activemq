@@ -28,16 +28,36 @@
 
 // Macros and helpers for endian conversion
 #if APR_IS_BIGENDIAN
-#define htons(x) x
-#define htoni(x) x
-#define htonl(x) x
-#define htonf(x) x
-#define htond(x) x
-#define ntohs(x) x
-#define ntohi(x) x
-#define ntohl(x) x
-#define ntohf(x) x
-#define ntohd(x) x
+#if !defined(htons) 
+  #define htons(x) x
+#endif
+#if !defined(htoni) 
+  #define htoni(x) x
+#endif
+#if !defined(htonl) 
+  #define htonl(x) x
+#endif
+#if !defined(htonf) 
+  #define htonf(x) x
+#endif
+#if !defined(htond) 
+  #define htond(x) x
+#endif
+#if !defined(ntohs) 
+  #define ntohs(x) x
+#endif
+#if !defined(ntohi) 
+  #define ntohi(x) x
+#endif
+#if !defined(ntohl) 
+  #define ntohl(x) x
+#endif
+#if !defined(ntohf) 
+  #define ntohf(x) x
+#endif
+#if !defined(ntohd) 
+  #define ntohd(x) x
+#endif
 #else
 #define htons(x) \
 	( x << 8  ) & 0xFF00 | \

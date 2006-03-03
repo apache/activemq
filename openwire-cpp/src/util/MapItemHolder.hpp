@@ -20,8 +20,8 @@
 #include <string>
 #include "command/ActiveMQDestination.hpp"
 #include "util/ConversionException.hpp"
-#include "util/ifr/ap"
-#include "util/ifr/p"
+#include "util/ifr/ap.hpp"
+#include "util/ifr/p/hpp"
 
 // Turn off warning message for ignored exception specification
 #ifdef _MSC_VER

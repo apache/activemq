@@ -31,7 +31,7 @@
 #include <new>
 #include <cstdlib>
 #include <cassert>
-#include <util/ifr/p>
+#include "util/ifr/p.hpp"
 
 namespace ifr {
     namespace v1 {
@@ -72,8 +72,7 @@ public:
     return a->array_[pos];
   }
   const p<T>& operator [] (size_t pos) const {
-    return array_[pos];
-  }
+  }
   size_t size() const {
     return a->size_;
   }

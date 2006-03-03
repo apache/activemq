@@ -19,7 +19,7 @@
 
 #include <string>
 #include "command/ICommand.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
