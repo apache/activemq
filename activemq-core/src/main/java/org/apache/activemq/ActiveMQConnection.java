@@ -1580,12 +1580,13 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
     
     protected void transportFailed(Throwable error){
         transportFailed.set(true);
-        try{
-            cleanup();
-        }catch(JMSException e){
-           log.warn("Cleanup failed",e);
+        if (!closed.get() && !closing.get()) {
+            try{
+                cleanup();
+            }catch(JMSException e){
+               log.warn("Cleanup failed",e);
+            }
         }
-        
     }
 
     public void setCopyMessageOnSend(boolean copyMessageOnSend) {
