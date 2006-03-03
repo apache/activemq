@@ -77,7 +77,7 @@ public class Topic implements Destination {
         this.destinationStatistics.setParent(parentStats);
     }
 
-    public boolean lock(MessageReference node, Subscription sub) {
+    public boolean lock(MessageReference node, LockOwner sub) {
         return true;
     }
 

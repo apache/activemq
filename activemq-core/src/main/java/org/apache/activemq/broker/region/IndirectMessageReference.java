@@ -48,7 +48,7 @@ public class IndirectMessageReference implements MessageReference {
     /** The number of times the message has been delivered.*/
     private short redeliveryCounter = 0;
     /** The subscription that has locked the message */
-    private Subscription lockOwner;
+    private LockOwner lockOwner;
     /** Has the message been dropped? */
     private boolean dropped;
     /** Has the message been acked? */
@@ -148,7 +148,7 @@ public class IndirectMessageReference implements MessageReference {
         }
     }
 
-    public boolean lock(Subscription subscription) {
+    public boolean lock(LockOwner subscription) {
         if( !regionDestination.lock(this, subscription) )
             return false;        
         synchronized (this) {
@@ -163,7 +163,7 @@ public class IndirectMessageReference implements MessageReference {
         lockOwner = null;
     }
     
-    synchronized public Subscription getLockOwner() {
+    synchronized public LockOwner getLockOwner() {
         return lockOwner;
     }
 

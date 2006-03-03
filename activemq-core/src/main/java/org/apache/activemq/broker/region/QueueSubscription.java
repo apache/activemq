@@ -28,7 +28,7 @@ import javax.jms.InvalidSelectorException;
 
 import java.io.IOException;
 
-public class QueueSubscription extends PrefetchSubscription {
+public class QueueSubscription extends PrefetchSubscription implements LockOwner {
     
     public QueueSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         super(broker,context, info);
@@ -128,6 +128,14 @@ public class QueueSubscription extends PrefetchSubscription {
             ", dispatched="+dispatched.size()+
             ", delivered="+this.delivered+
             ", matched="+this.matched.size();
+    }
+
+    public int getLockPriority() {
+        return info.getPriority();
+    }
+
+    public boolean isLockExclusive() {
+        return info.isExclusive();
     }
 
 }
