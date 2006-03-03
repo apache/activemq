@@ -1184,9 +1184,11 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
             c.dispose();
         }
 
-        if( isConnectionInfoSentToBroker ) {
-            asyncSendPacket(info.createRemoveCommand());
-            isConnectionInfoSentToBroker = false;
+        if(isConnectionInfoSentToBroker){
+            if(!transportFailed.get()){
+                asyncSendPacket(info.createRemoveCommand());
+            }
+            isConnectionInfoSentToBroker=false;
         }        
         if( userSpecifiedClientID ) {
             info.setClientId(null);
