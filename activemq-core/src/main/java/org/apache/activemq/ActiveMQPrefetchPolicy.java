@@ -33,7 +33,7 @@ public class ActiveMQPrefetchPolicy implements Serializable {
     private int topicPrefetch;
     private int durableTopicPrefetch;
     private int inputStreamPrefetch;
-
+    private int maximumPendingMessageLimit;
 
     /**
      * Initialize default prefetch policies
@@ -101,6 +101,19 @@ public class ActiveMQPrefetchPolicy implements Serializable {
     public void setTopicPrefetch(int topicPrefetch) {
         this.topicPrefetch = getMaxPrefetchLimit(topicPrefetch);
     }
+    
+    public int getMaximumPendingMessageLimit() {
+        return maximumPendingMessageLimit;
+    }
+
+    /**
+     * Sets how many messages a broker will keep around, above the prefetch limit, for non-durable
+     * topics before starting to discard older messages.
+     */
+    public void setMaximumPendingMessageLimit(int maximumPendingMessageLimit) {
+        this.maximumPendingMessageLimit = maximumPendingMessageLimit;
+    }
+
     
     private int getMaxPrefetchLimit(int value) {
         int result = Math.min(value, MAX_PREFETCH_SIZE);

@@ -97,7 +97,9 @@ public class ActiveMQQueueBrowser implements
      */
     private ActiveMQMessageConsumer createConsumer() throws JMSException {
         browseDone.set(false);
-        return new ActiveMQMessageConsumer(session, consumerId, destination, null, selector, session.connection.getPrefetchPolicy().getQueueBrowserPrefetch(), false, true, dispatchAsync) {
+        ActiveMQPrefetchPolicy prefetchPolicy = session.connection.getPrefetchPolicy();
+        return new ActiveMQMessageConsumer(session, consumerId, destination, null, selector, prefetchPolicy.getQueueBrowserPrefetch(), 
+                prefetchPolicy.getMaximumPendingMessageLimit(), false, true, dispatchAsync) {
             public void dispatch(MessageDispatch md) {
                 if( md.getMessage()==null ) {
                     browseDone.set(true);

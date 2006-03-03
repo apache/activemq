@@ -116,18 +116,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * Create a MessageConsumer
      * 
      * @param session
-     * @param value
      * @param dest
      * @param name
      * @param selector
      * @param prefetch
+     * @param maximumPendingMessageCount TODO
      * @param noLocal
      * @param browser
      * @param dispatchAsync
+     * @param value
      * @throws JMSException
      */
     public ActiveMQMessageConsumer(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination dest,
-            String name, String selector, int prefetch, boolean noLocal, boolean browser, boolean dispatchAsync)
+            String name, String selector, int prefetch, int maximumPendingMessageCount, boolean noLocal, boolean browser, boolean dispatchAsync)
             throws JMSException {
         if (dest == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
@@ -158,6 +159,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info = new ConsumerInfo(consumerId);
         this.info.setSubcriptionName(name);
         this.info.setPrefetchSize(prefetch);
+        this.info.setMaximumPendingMessageLimit(maximumPendingMessageCount);
         this.info.setNoLocal(noLocal);
         this.info.setDispatchAsync(dispatchAsync);
         this.info.setRetroactive(this.session.connection.isUseRetroactiveConsumer());

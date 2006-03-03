@@ -38,6 +38,7 @@ public class ConsumerInfo extends BaseCommand {
     protected ConsumerId consumerId;
     protected ActiveMQDestination destination;
     protected int prefetchSize;
+    protected int maximumPendingMessageLimit;
     protected boolean browser;
     protected boolean dispatchAsync;
     protected String selector;
@@ -73,6 +74,7 @@ public class ConsumerInfo extends BaseCommand {
         info.consumerId = consumerId;
         info.destination = destination;
         info.prefetchSize = prefetchSize;
+        info.maximumPendingMessageLimit = maximumPendingMessageLimit;
         info.browser = browser;
         info.dispatchAsync = dispatchAsync;
         info.selector = selector;
@@ -141,6 +143,20 @@ public class ConsumerInfo extends BaseCommand {
 
     public void setPrefetchSize(int prefetchSize) {
         this.prefetchSize = prefetchSize;
+    }
+
+    /**
+     * How many messages a broker will keep around, above the prefetch limit, for non-durable
+     * topics before starting to discard older messages.
+     * 
+     * @openwire:property version=1
+     */
+    public int getMaximumPendingMessageLimit() {
+        return maximumPendingMessageLimit;
+    }
+
+    public void setMaximumPendingMessageLimit(int maximumPendingMessageLimit) {
+        this.maximumPendingMessageLimit = maximumPendingMessageLimit;
     }
 
     /**
