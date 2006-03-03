@@ -43,6 +43,7 @@ import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -159,7 +160,12 @@ public class ManagedRegionBroker extends RegionBroker{
             if(sub.getConsumerInfo().isDurable()){
                 view=new DurableSubscriptionView(this,context.getClientId(),sub);
             }else{
-                view=new SubscriptionView(context.getClientId(),sub);
+                if (sub instanceof TopicSubscription) {
+                    view = new TopicSubscriptionView(context.getClientId(),(TopicSubscription) sub);
+                }
+                else {
+                    view=new SubscriptionView(context.getClientId(),sub);
+                }
             }
             subscriptionMap.put(sub,objectName);
             registerSubscription(objectName,sub.getConsumerInfo(),key,view);
