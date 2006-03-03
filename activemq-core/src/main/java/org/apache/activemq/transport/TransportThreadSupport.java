@@ -18,6 +18,8 @@ package org.apache.activemq.transport;
 
 import org.apache.activemq.util.ServiceStopper;
 
+import java.io.IOException;
+
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -35,9 +37,7 @@ public abstract class TransportThreadSupport extends TransportSupport implements
 
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
-            runner = new Thread(this, toString());
-            runner.setDaemon(daemon);
-            runner.start();
+            doStart();
         }
     }
 
@@ -70,6 +70,13 @@ public abstract class TransportThreadSupport extends TransportSupport implements
 
     public void setDaemon(boolean daemon) {
         this.daemon = daemon;
+    }
+
+
+    protected void doStart() throws Exception {
+        runner = new Thread(this, toString());
+        runner.setDaemon(daemon);
+        runner.start();
     }
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
