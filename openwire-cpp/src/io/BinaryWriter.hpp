@@ -19,7 +19,7 @@
 
 #include "util/Endian.hpp"
 #include "io/IWriter.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {

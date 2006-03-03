@@ -38,7 +38,7 @@
 #include "marshal/CommandMarshallerRegistry.hpp"
 #include "transport/ITransport.hpp"
 #include "util/SimpleMutex.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {

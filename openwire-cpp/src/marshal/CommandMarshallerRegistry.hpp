@@ -20,7 +20,7 @@
 #include "command/ICommand.hpp"
 #include "io/BinaryReader.hpp"
 #include "io/BinaryWriter.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {

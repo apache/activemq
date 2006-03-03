@@ -20,7 +20,7 @@
 #include <string>
 #include "BrokerError.hpp"
 #include "OpenWireException.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {

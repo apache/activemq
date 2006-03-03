@@ -32,7 +32,7 @@
 #include "io/BinaryWriter.hpp"
 
 #include "command/TransactionIdMarshaller.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {

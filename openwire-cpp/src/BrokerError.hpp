@@ -17,8 +17,9 @@
 #ifndef BrokerError_hpp_
 #define BrokerError_hpp_
 
+#include "util/ifr/p.hpp"
+
 #include <string>
-#include "util/ifr/p"
 
 namespace apache
 {

@@ -28,7 +28,7 @@
 #include "IllegalArgumentException.hpp"
 #include "MessageFormatException.hpp"
 #include "util/ifr/ap"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 #include "util/MapItemHolder.hpp"
 
 namespace apache

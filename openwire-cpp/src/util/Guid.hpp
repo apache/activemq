@@ -18,7 +18,7 @@
 #define Guid_hpp_
 
 #include <string>
-#include <util/ifr/p>
+#include "util/ifr/p.hpp"
 
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>

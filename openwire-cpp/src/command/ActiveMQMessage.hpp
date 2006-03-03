@@ -21,7 +21,7 @@
 #include "IDestination.hpp"
 #include "IMessage.hpp"
 #include "command/Message.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {

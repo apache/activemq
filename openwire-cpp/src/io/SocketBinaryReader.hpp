@@ -19,7 +19,7 @@
 
 #include <apr_network_io.h>
 #include "io/BinaryReader.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
