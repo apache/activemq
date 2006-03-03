@@ -58,7 +58,7 @@ class GenerateCppMarshallingHeaders extends OpenWireCppMarshallingHeadersScript 
 #include "io/BinaryWriter.hpp"
 
 #include "command/${baseClass}.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
