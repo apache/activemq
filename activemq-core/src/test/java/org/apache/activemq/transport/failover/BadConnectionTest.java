@@ -17,8 +17,10 @@
 package org.apache.activemq.transport.failover;
 
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportListener;
 
 import java.io.IOException;
 import java.net.URI;
@@ -49,6 +51,21 @@ public class BadConnectionTest extends TestCase {
 
     protected void setUp() throws Exception {
         transport = createTransport();
+        transport.setTransportListener(new TransportListener() {
+
+            public void onCommand(Command command) {
+            }
+
+            public void onException(IOException error) {
+            }
+
+            public void transportInterupted() {
+            }
+
+            public void transportResumed() {
+            }
+        });
+        transport.start();
     }
 
     protected void tearDown() throws Exception {
@@ -56,7 +73,5 @@ public class BadConnectionTest extends TestCase {
             transport.stop();
         }
     }
-    
-    
-    
+        
 }
