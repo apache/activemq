@@ -64,11 +64,6 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new TransportLogger(transport);
         }
 
-        // TODO: missing inactivity monitor
-        // transport = new InactivityMonitor(transport,
-        // temp.getMaxInactivityDuration(), activityMonitor.getReadCounter(),
-        // activityMonitor.getWriteCounter());
-
         if( format instanceof OpenWireFormat )
             transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
         
@@ -88,10 +83,6 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new TransportLogger(transport);
         }
 
-        // TODO: missing inactivity monitor
-        // transport = new InactivityMonitor(transport,
-        // temp.getMaxInactivityDuration(), activityMonitor.getReadCounter(),
-        // activityMonitor.getWriteCounter());
         transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
         if( tcpTransport.getMaxInactivityDuration() > 0 ) {
             transport = new InactivityMonitor(transport, tcpTransport.getMaxInactivityDuration());
