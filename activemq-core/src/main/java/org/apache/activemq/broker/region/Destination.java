@@ -38,7 +38,7 @@ public interface Destination extends Service {
     void removeSubscription(ConnectionContext context, Subscription sub) throws Exception;
     
     void send(ConnectionContext context, Message messageSend) throws Exception;
-    boolean lock(MessageReference node, Subscription subscription);
+    boolean lock(MessageReference node, LockOwner lockOwner);
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
     
     void gc();

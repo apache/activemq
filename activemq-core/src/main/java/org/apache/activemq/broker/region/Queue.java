@@ -65,7 +65,7 @@ public class Queue implements Destination {
     protected final UsageManager usageManager;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
-    private Subscription exclusiveOwner;
+    private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
     private int messageGroupHashBucketCount = 1024;
 
@@ -106,15 +106,15 @@ public class Queue implements Destination {
         }
     }
 
-    public synchronized boolean lock(MessageReference node, Subscription sub) {
-        if (exclusiveOwner == sub)
+    public synchronized boolean lock(MessageReference node, LockOwner lockOwner) {
+        if (exclusiveOwner == lockOwner)
             return true;
         if (exclusiveOwner != null)
             return false;
-        if (sub.getConsumerInfo().getPriority() != highestSubscriptionPriority)
+        if (lockOwner.getLockPriority() < highestSubscriptionPriority)
             return false;
-        if (sub.getConsumerInfo().isExclusive()) {
-            exclusiveOwner = sub;
+        if (lockOwner.isLockExclusive()) {
+            exclusiveOwner = lockOwner;
         }
         return true;
     }
@@ -444,13 +444,18 @@ public class Queue implements Destination {
                 try {
                     IndirectMessageReference r = (IndirectMessageReference) iter.next();
                     if (messageId.equals(r.getMessageId().toString())) {
-                        MessageAck ack = new MessageAck();
-                        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-                        ack.setDestination(destination);
-                        ack.setMessageID(r.getMessageId());
-                        acknowledge(c, null, ack, r);
-                        r.drop();
-                        dropEvent();
+                        
+                        // We should only delete messages that can be locked.
+                        if( r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER) )  {
+                            MessageAck ack = new MessageAck();
+                            ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+                            ack.setDestination(destination);
+                            ack.setMessageID(r.getMessageId());
+                            acknowledge(c, null, ack, r);
+                            r.drop();
+                            dropEvent();
+                            iter.remove();
+                        }
                     }
                 } catch (IOException e) {
                 }
@@ -488,13 +493,18 @@ public class Queue implements Destination {
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
                 try {
                     IndirectMessageReference r = (IndirectMessageReference) iter.next();
-                    MessageAck ack = new MessageAck();
-                    ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-                    ack.setDestination(destination);
-                    ack.setMessageID(r.getMessageId());
-                    acknowledge(c, null, ack, r);
-                    r.drop();
-                    dropEvent();
+                    
+                    // We should only delete messages that can be locked.
+                    if( r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER) )  {
+                        MessageAck ack = new MessageAck();
+                        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+                        ack.setDestination(destination);
+                        ack.setMessageID(r.getMessageId());
+                        acknowledge(c, null, ack, r);
+                        r.drop();
+                        dropEvent();
+                        iter.remove();
+                    }
                 } catch (IOException e) {
                 }
             }
