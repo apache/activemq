@@ -16,10 +16,13 @@
  */
 package org.apache.activemq.ra;
 
-import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.ServiceSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -34,11 +37,10 @@ import javax.resource.spi.ResourceAdapterInternalException;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
 import javax.transaction.xa.XAResource;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.ServiceSupport;
+import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
 
 /**
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
@@ -52,6 +54,9 @@ import org.apache.activemq.util.ServiceSupport;
  */
 public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
 
+    private static final long serialVersionUID = -5417363537865649130L;
+    private static final Log log = LogFactory.getLog(ActiveMQResourceAdapter.class);
+    
     private final HashMap endpointWorkers = new HashMap();
     private final ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
 
@@ -114,10 +119,16 @@ public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
         ActiveMQConnectionFactory connectionFactory = createConnectionFactory(info);
         String userName = defaultValue(activationSpec.getUserName(), info.getUserName());
         String password = defaultValue(activationSpec.getPassword(), info.getPassword());
-        ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
-        if (activationSpec.isDurableSubscription()) {
-            physicalConnection.setClientID(activationSpec.getClientId());
+        String clientId = activationSpec.getClientId();
+        if (clientId != null) {
+            connectionFactory.setClientID(clientId);
         }
+        else {
+            if (activationSpec.isDurableSubscription()) {
+                log.warn("No clientID specified for durable subscription: " + activationSpec);
+            }
+        }
+        ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
         return physicalConnection;
     }
 
