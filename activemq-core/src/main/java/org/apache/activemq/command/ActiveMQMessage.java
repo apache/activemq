@@ -50,6 +50,7 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
     }
 
     transient protected Callback acknowledgeCallback;
+    transient int hashCode;
 
     public Message copy() {
         ActiveMQMessage copy = new ActiveMQMessage();
@@ -64,7 +65,13 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
     }
 
     public int hashCode() {
-        return this.getMessageId().hashCode();
+        MessageId id = getMessageId();
+        if (id != null) {
+            return  id.hashCode();
+        }
+        else {
+            return super.hashCode();
+        }
     }
 
     public boolean equals(Object o) {
