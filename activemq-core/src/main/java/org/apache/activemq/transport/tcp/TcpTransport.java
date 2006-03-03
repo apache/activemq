@@ -55,7 +55,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private boolean trace;
     private boolean useLocalHost = true;
     private int minmumWireFormatVersion;
-    private long maxInactivityDuration = 30000;
+    private long maxInactivityDuration = 0; //30000;
     private InetSocketAddress socketAddress;
     
     /**

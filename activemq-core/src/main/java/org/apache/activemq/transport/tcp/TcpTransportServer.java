@@ -48,7 +48,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     private int backlog = 5000;
     private WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
     private TcpTransportFactory transportFactory = new TcpTransportFactory();
-    private long maxInactivityDuration = 30000;
+    private long maxInactivityDuration = 0; //30000;
     private int minmumWireFormatVersion;
     private boolean trace;
     
