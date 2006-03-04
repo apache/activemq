@@ -55,10 +55,7 @@ namespace OpenWire.Client.Core
                 {
                     // re-grow the array.
                     byte[] d = new byte[data.Length * 2];
-                    for (int i = 0; i < data.Length; i++)
-                    {
-                        d[i] = data[i];
-                    }
+					Array.Copy(data, d, data.Length);
                     data = d;
                 }
             }
@@ -76,40 +73,31 @@ namespace OpenWire.Client.Core
         
         public void Marshal(BinaryWriter dataOut)
         {
-            if (arrayLimit < 64)
-            {
-                dataOut.Write((byte) arrayLimit);
-            }
-            else if (arrayLimit < 256)
-            { // max value of unsigned byte
-                dataOut.Write((byte) 0xC0);
-                dataOut.Write((byte) arrayLimit);
-            }
-            else
-            {
-                dataOut.Write((byte) 0xE0);
-                BaseDataStreamMarshaller.WriteShort(arrayLimit, dataOut);
-            }
-            
+			if( arrayLimit < 64 ) {
+				dataOut.Write((byte)arrayLimit);
+			} else if( arrayLimit < 256 ) { // max value of unsigned byte
+				dataOut.Write((byte)0xC0);
+				dataOut.Write((byte)arrayLimit);
+			} else {
+				dataOut.Write((byte)0x80);
+				BaseDataStreamMarshaller.WriteShort(arrayLimit, dataOut);
+			}
             dataOut.Write(data, 0, arrayLimit);
             Clear();
         }
         
         public void Unmarshal(BinaryReader dataIn)
         {
-            arrayLimit = BaseDataStreamMarshaller.ReadByte(dataIn);
-            if ((arrayLimit & 0xE0) != 0)
-            {
-                arrayLimit = BaseDataStreamMarshaller.ReadShort(dataIn);
-            }
-            else if ((arrayLimit & 0xC0) != 0)
-            {
-                arrayLimit = (short) (BaseDataStreamMarshaller.ReadByte(dataIn) & 0xFF);
-            }
-            if (data.Length < arrayLimit)
-            {
-                data = new byte[arrayLimit];
-            }
+            arrayLimit = (short)(BaseDataStreamMarshaller.ReadByte(dataIn) & 0xFF);
+			if ( arrayLimit == 0xC0 ) {
+				arrayLimit = (short)(BaseDataStreamMarshaller.ReadByte(dataIn) & 0xFF);
+			} else if( arrayLimit == 0x80 ) {
+				arrayLimit = BaseDataStreamMarshaller.ReadShort(dataIn);
+			}
+			if( data.Length < arrayLimit ) {
+				data = new byte[arrayLimit];
+			}
+			
             dataIn.Read(data, 0, arrayLimit);
             Clear();
         }
@@ -122,14 +110,14 @@ namespace OpenWire.Client.Core
         
         public int MarshalledSize()
         {
-            if (arrayLimit < 64)
-            {
-                return 1 + arrayLimit;
-            }
-            else
-            {
-                return 2 + arrayLimit;
-            }
+			if( arrayLimit < 64 ) {
+				return 1+arrayLimit;
+			} else if (arrayLimit < 256) {
+				return 2+arrayLimit;
+			} else {
+				return 3+arrayLimit;
+			}
+			
         }
     }
 }
