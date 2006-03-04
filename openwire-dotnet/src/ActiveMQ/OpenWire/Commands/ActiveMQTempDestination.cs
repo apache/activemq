@@ -18,10 +18,7 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-
-namespace OpenWire.Client.Commands
+namespace ActiveMQ.OpenWire.Commands
 {
     //
     //  Marshalling code for Open Wire Format for ActiveMQTempDestination

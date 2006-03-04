@@ -15,10 +15,8 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Commands
+namespace ActiveMQ.OpenWire.Commands
 {
     
     /// <summary>
@@ -427,7 +425,7 @@ namespace OpenWire.Client.Commands
             return physicalName.IndexOf(COMPOSITE_SEPARATOR) > 0;
         }
         
-        /**
+        /*
          * Returns a list of child destinations if this destination represents a composite
          * destination.
          *
@@ -470,7 +468,6 @@ namespace OpenWire.Client.Commands
         /**
          * @return hashCode for this instance
          */
-        
         public override int GetHashCode()
         {
             int answer = 37;
@@ -492,7 +489,6 @@ namespace OpenWire.Client.Commands
          * @param obj the object to compare
          * @return true if this instance and obj are equivalent
          */
-        
         public override bool Equals(Object obj)
         {
             bool result = this == obj;
