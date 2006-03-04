@@ -15,10 +15,12 @@
  * limitations under the License.
  */
 using NUnit.Framework;
-using OpenWire.Client.Commands;
 using System.Collections;
 
-namespace OpenWire.Client
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ
 {
     [TestFixture]
     public class CommandTest

@@ -19,10 +19,7 @@ using System.IO;
 
 using NUnit.Framework;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-
-namespace OpenWire.Client
+namespace ActiveMQ
 {
     [ TestFixture ]
     public class ClientTest : TestSupport
