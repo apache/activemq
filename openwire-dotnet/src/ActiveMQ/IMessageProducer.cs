@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client {
+namespace ActiveMQ
+{
     /// <summary>
     /// An object capable of sending messages to some destination
     /// </summary>
@@ -31,37 +31,37 @@ namespace OpenWire.Client {
         /// <summary>
         /// Sends the message to the given destination
         /// </summary>
-        void Send(IDestination destination, IMessage message); 
+        void Send(IDestination destination, IMessage message);
 
 		bool Persistent
 		{
 			get;
-			set; 
+			set;
 		}
 
 		long TimeToLive
 		{
 			get;
-			set; 
+			set;
 		}
 
 		int Priority
 		{
 			get;
-			set; 
+			set;
 		}
 
 		bool DisableMessageID
 		{
 			get;
-			set; 
+			set;
 		}
 		
 		bool DisableMessageTimestamp
 		{
 			get;
-			set; 
+			set;
 		}
 
-    } 
+    }
 }

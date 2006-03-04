@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client
+namespace ActiveMQ
 {
     /// <summary>
     /// Represents a text based message

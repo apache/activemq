@@ -16,10 +16,11 @@
  */
 using System;
 using System.Collections;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
 
-namespace OpenWire.Client
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ
 {
     /// <summary>
     /// Exception thrown when the broker returns an error

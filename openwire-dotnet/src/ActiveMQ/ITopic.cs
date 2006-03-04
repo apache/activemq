@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client {
-        /// <summary>
+namespace ActiveMQ
+{
+	/// <summary>
         /// Summary description for ITopic.
         /// </summary>
         public interface ITopic : IDestination {
 
                 String TopicName {
-                        get; 
-                } 
-        } 
+                        get;
+                }
+        }
 }

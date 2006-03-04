@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client
+namespace ActiveMQ
 {
     public delegate void MessageListener(IMessage message);
     

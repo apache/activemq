@@ -17,9 +17,7 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client.Commands;
-
-namespace OpenWire.Client
+namespace ActiveMQ
 {
     /// <summary>
     /// Represents a Map of primitive types where the keys are all string instances

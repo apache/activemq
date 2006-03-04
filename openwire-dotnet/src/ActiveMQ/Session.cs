@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
 using System.Collections;
 
-namespace OpenWire.Client
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ
 {
     /// <summary>
     /// Default provider of ISession

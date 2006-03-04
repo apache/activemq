@@ -15,11 +15,13 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
 
-namespace OpenWire.Client {
-        /// <summary>
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ
+{
+	/// <summary>
         /// Summary description for DestinationFilter.
         /// </summary>
         public abstract class DestinationFilter {
@@ -27,9 +29,9 @@ namespace OpenWire.Client {
                 public const String ANY_CHILD = "*";
 
                 public bool matches(ActiveMQMessage message) {
-                        return matches(message.Destination); 
+                        return matches(message.Destination);
                 }
 
-                public abstract bool matches(ActiveMQDestination destination); 
-        } 
+                public abstract bool matches(ActiveMQDestination destination);
+        }
 }

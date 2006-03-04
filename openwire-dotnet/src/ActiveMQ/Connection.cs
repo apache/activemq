@@ -1,10 +1,11 @@
 using System;
 using System.Collections;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
 using System.Threading;
 
-namespace OpenWire.Client
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ
 {
     /// <summary>
     /// Represents a connection with a message broker

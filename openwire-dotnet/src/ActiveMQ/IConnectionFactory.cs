@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client {
-
+namespace ActiveMQ
+{
+	
         /// <summary>
         /// A Factory of IConnection objects
         /// </summary>
@@ -33,5 +33,5 @@ namespace OpenWire.Client {
                 /// Creates a new connection with the given user name and password
                 /// </summary>
                 IConnection CreateConnection(string userName, string password);
-        } 
+        }
 }
