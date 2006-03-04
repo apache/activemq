@@ -17,11 +17,10 @@
 using System;
 using System.IO;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-using OpenWire.Client.Commands;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
 
-namespace openwire_dotnet
+namespace ActiveMQ
 {
     public class TestMain
     {

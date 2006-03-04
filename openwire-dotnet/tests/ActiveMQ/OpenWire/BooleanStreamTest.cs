@@ -19,10 +19,7 @@ using System.IO;
 
 using NUnit.Framework;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     [TestFixture]
     public class BooleanStreamTest : TestSupport

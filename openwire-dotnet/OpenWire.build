@@ -148,8 +148,8 @@
                 <exclude name="scvs.exe" />
             </fileset>
         </copy>
-        <!-- build OpenWire.Client assembly -->
-        <nant buildfile="src/OpenWire.Client/OpenWire.Client.build" target="build" />
+        <!-- build ActiveMQ assembly -->
+        <nant buildfile="src/ActiveMQ/OpenWire.Client.build" target="build" />
         <!-- build task assemblies -->
         <nant target="build">
             <buildfiles refid="tas.core"/>
@@ -165,8 +165,8 @@
     </target>
 
     <target name="test" depends="build">
-        <!-- build OpenWire.Client.Tests assembly -->
-        <nant buildfile="tests/OpenWire.Client/OpenWire.Client.build" target="test" />
+        <!-- build ActiveMQ Tests assembly -->
+        <nant buildfile="tests/ActiveMQ/OpenWire.Client.build" target="test" />
         <!-- build tests for task assemblies -->
         <nant target="build">
             <buildfiles refid="tas.core.tests"/>

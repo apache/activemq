@@ -18,12 +18,9 @@ using System;
 using System.IO;
 
 using NUnit.Framework;
-
-using OpenWire.Client;
-using OpenWire.Client.Core;
 using System.Collections;
 
-namespace OpenWire.Client
+namespace ActiveMQ
 {
     [TestFixture]
     public class TransactionTest : TestSupport

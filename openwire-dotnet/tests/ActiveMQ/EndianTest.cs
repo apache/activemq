@@ -15,10 +15,12 @@
  * limitations under the License.
  */
 using NUnit.Framework;
-using OpenWire.Client.Core;
 using System;
 
-namespace openwire_dotnet
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ
 {
     [TestFixture]
     public class EndianTest
