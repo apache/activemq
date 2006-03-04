@@ -41,6 +41,7 @@
         <Compile Include="OpenWire.Client\ClientTest.cs"/>
         <Compile Include="OpenWire.Client\CommandTest.cs"/>
         <Compile Include="OpenWire.Client\ConsumerTest.cs"/>
+        <Compile Include="OpenWire.Client\Core\BooleanStreamTest.cs"/>
         <Compile Include="OpenWire.Client\EndianTest.cs"/>
         <Compile Include="OpenWire.Client\JMSPropertyTest.cs"/>
         <Compile Include="OpenWire.Client\MapMessageTest.cs"/>
