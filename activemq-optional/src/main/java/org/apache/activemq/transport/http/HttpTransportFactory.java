@@ -17,8 +17,6 @@
 package org.apache.activemq.transport.http;
 
 import org.activeio.command.WireFormat;
-import org.apache.activemq.transport.MutexTransport;
-import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
@@ -45,7 +43,7 @@ public class HttpTransportFactory extends TransportFactory {
         if (wireFormat instanceof TextWireFormat) {
             return (TextWireFormat) wireFormat;
         }
-        log.trace("Not created with a TextWireFromat: " + wireFormat);
+        log.trace("Not created with a TextWireFormat: " + wireFormat);
         return new XStreamWireFormat();
     }
 
@@ -57,8 +55,8 @@ public class HttpTransportFactory extends TransportFactory {
         TextWireFormat textWireFormat = asTextWireFormat(wf);
         Transport transport = new HttpClientTransport(textWireFormat, location);
         //Transport transport = new HttpTransport(textWireFormat, location);
-        transport = new MutexTransport(transport);
-        transport = new ResponseCorrelator(transport);
+        //transport = new MutexTransport(transport);
+        //transport = new ResponseCorrelator(transport);
         return transport;
     }
 

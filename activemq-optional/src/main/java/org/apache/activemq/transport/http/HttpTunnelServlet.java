@@ -101,14 +101,21 @@ public class HttpTunnelServlet extends HttpServlet {
 
         // String body = readRequestBody(request);
         // Command command = wireFormat.readCommand(body);
-        
-        Command command = wireFormat.readCommand(request.getReader());
 
-        if (command instanceof ConnectionInfo) {
-            ConnectionInfo info = (ConnectionInfo) command;
-            request.getSession(true).setAttribute("clientID", info.getClientId());
+        // Read the command directly from the reader
+        //Command command = wireFormat.readCommand(request.getReader());
+
+        // Build the command xml before passing it to the reader
+        BufferedReader buffRead = request.getReader();
+        String commandXml = "";
+        String line;
+        while ((line = buffRead.readLine()) != null) {
+            commandXml += line;
         }
-        else if (command instanceof WireFormatInfo) {
+
+        Command command = wireFormat.readCommand(commandXml);
+
+        if (command instanceof WireFormatInfo) {
             WireFormatInfo info = (WireFormatInfo) command;
             if (!canProcessWireFormatVersion(info.getVersion())) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot process wire format of version: " + info.getVersion());
@@ -116,6 +123,11 @@ public class HttpTunnelServlet extends HttpServlet {
 
         }
         else {
+            if (command instanceof ConnectionInfo) {
+                ConnectionInfo info = (ConnectionInfo) command;
+                request.getSession(true).setAttribute("clientID", info.getClientId());
+            }
+
             BlockingQueueTransport transport = getTransportChannel(request);
             if (transport == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
