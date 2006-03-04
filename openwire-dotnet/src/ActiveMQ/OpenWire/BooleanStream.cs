@@ -17,11 +17,11 @@
 using System;
 using System.IO;
 
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
+
 {
     /// <summary>
     /// Represents a stream of boolean flags

@@ -16,11 +16,9 @@
  */
 using System;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
+using ActiveMQ.OpenWire.Commands;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     
     public delegate void CommandHandler(ITransport sender, Command command);

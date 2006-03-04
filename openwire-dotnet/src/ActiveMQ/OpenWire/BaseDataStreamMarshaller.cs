@@ -18,13 +18,13 @@ using System;
 using System.IO;
 using System.Net;
 using System.Text;
-
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
 using System.Collections;
 
-namespace OpenWire.Client.Core
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ.OpenWire
+
 {
     /// <summary>
     /// A base class with useful implementation inheritence methods

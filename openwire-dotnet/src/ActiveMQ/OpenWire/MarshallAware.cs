@@ -17,12 +17,9 @@
 using System;
 using System.IO;
 
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
-
-namespace OpenWire.Client.Core {
-        /// <summary>
+namespace ActiveMQ.OpenWire
+{
+/// <summary>
         /// Represents a marshallable entity
         /// </summary>
         public interface MarshallAware {

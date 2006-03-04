@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     /// <summary>
     /// Summary description for AbstractCommand.

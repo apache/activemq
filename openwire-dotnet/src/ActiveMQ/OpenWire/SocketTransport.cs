@@ -22,13 +22,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
+using ActiveMQ.OpenWire.Commands;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
-
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     
     /// <summary>

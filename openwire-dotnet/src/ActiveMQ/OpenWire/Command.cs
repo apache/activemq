@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
+
 {
     /// <summary>
     /// An OpenWire command
