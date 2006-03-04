@@ -19,12 +19,11 @@ using System;
 using System.Collections;
 using System.IO;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+using ActiveMQ.OpenWire.V1;
 
-namespace OpenWire.Client.IO
+namespace ActiveMQ.OpenWire.V1
 {
   //
   //  Marshalling code for Open Wire Format for ConsumerInfo
@@ -60,6 +59,7 @@ namespace OpenWire.Client.IO
         info.Browser = bs.ReadBoolean();
         info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.PrefetchSize = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.MaximumPendingMessageLimit = BaseDataStreamMarshaller.ReadInt(dataIn);
         info.DispatchAsync = bs.ReadBoolean();
         info.Selector = TightUnmarshalString(dataIn, bs);
         info.SubcriptionName = TightUnmarshalString(dataIn, bs);
@@ -94,7 +94,7 @@ namespace OpenWire.Client.IO
     rc += TightMarshalCachedObject1(wireFormat, info.ConsumerId, bs);
     bs.WriteBoolean(info.Browser);
     rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
-        bs.WriteBoolean(info.DispatchAsync);
+            bs.WriteBoolean(info.DispatchAsync);
     rc += TightMarshalString1(info.Selector, bs);
     rc += TightMarshalString1(info.SubcriptionName, bs);
     bs.WriteBoolean(info.NoLocal);
@@ -103,7 +103,7 @@ namespace OpenWire.Client.IO
         rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
     bs.WriteBoolean(info.NetworkSubscription);
 
-        return rc + 5;
+        return rc + 9;
     }
 
     // 
@@ -117,6 +117,7 @@ namespace OpenWire.Client.IO
     bs.ReadBoolean();
     TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
     BaseDataStreamMarshaller.WriteInt(info.PrefetchSize, dataOut);
+    BaseDataStreamMarshaller.WriteInt(info.MaximumPendingMessageLimit, dataOut);
     bs.ReadBoolean();
     TightMarshalString2(info.Selector, dataOut, bs);
     TightMarshalString2(info.SubcriptionName, dataOut, bs);
