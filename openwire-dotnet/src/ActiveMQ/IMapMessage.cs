@@ -15,9 +15,8 @@
  * limitations under the License.
 */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client
+namespace ActiveMQ
 {
     /// <summary>
     /// Represents a Map message which contains key and value pairs which are

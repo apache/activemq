@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client {
-        /// <summary>
+namespace ActiveMQ
+{
+	/// <summary>
         /// Summary description for TemporaryTopic.
         /// </summary>
         public interface ITemporaryTopic : IDestination {
-        } 
+        }
 }

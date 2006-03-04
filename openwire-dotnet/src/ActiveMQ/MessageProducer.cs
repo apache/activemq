@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client.Commands;
 
-namespace OpenWire.Client
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ
 {
     /// <summary>
     /// An object capable of sending messages to some destination
