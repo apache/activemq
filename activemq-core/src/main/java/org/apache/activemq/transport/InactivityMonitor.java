@@ -36,10 +36,9 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     private final Log log = LogFactory.getLog(InactivityMonitor.class);
     
     private final long maxInactivityDuration;
-    private final AtomicBoolean cancled = new AtomicBoolean(false);
     private byte readCheckIteration=0;
 
-    private final AtomicBoolean commandSent=new AtomicBoolean(true);
+    private final AtomicBoolean commandSent=new AtomicBoolean(false);
     private final AtomicBoolean inSend=new AtomicBoolean(false);
 
     private final AtomicBoolean commandReceived=new AtomicBoolean(true);
@@ -56,13 +55,11 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     }
     
     public void stop() throws Exception {
-        if( cancled.compareAndSet(false, true) ) {
-            Scheduler.cancel(this);
-        }
+        Scheduler.cancel(this);
         next.stop();
     }
     
-    public void run() {
+    synchronized public void run() {
         switch(readCheckIteration) {
         case 0:
             writeCheck();
@@ -134,9 +131,7 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     }
     
     public void onException(IOException error) {
-        if( cancled.compareAndSet(false, true) ) {
-            Scheduler.cancel(this);
-        }
+        Scheduler.cancel(this);
         commandListener.onException(error);
     }
 }
