@@ -17,10 +17,7 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-
-namespace OpenWire.Client.Commands
+namespace ActiveMQ.OpenWire.Commands
 {
     public delegate void AcknowledgeHandler(ActiveMQMessage message);
     

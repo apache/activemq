@@ -17,10 +17,10 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
+using ActiveMQ;
+using ActiveMQ.OpenWire;
 
-namespace OpenWire.Client.Commands
+namespace ActiveMQ.OpenWire.Commands
 {
     public class ActiveMQMapMessage : ActiveMQMessage, IMapMessage
     {

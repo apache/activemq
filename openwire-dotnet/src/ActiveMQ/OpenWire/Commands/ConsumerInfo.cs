@@ -18,10 +18,10 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
 
-namespace OpenWire.Client.Commands
+namespace ActiveMQ.OpenWire.Commands
 {
     //
     //  Marshalling code for Open Wire Format for ConsumerInfo
@@ -39,6 +39,7 @@ namespace OpenWire.Client.Commands
         bool browser;
         ActiveMQDestination destination;
         int prefetchSize;
+        int maximumPendingMessageLimit;
         bool dispatchAsync;
         string selector;
         string subcriptionName;
@@ -55,6 +56,7 @@ namespace OpenWire.Client.Commands
                 + " Browser=" + Browser
                 + " Destination=" + Destination
                 + " PrefetchSize=" + PrefetchSize
+                + " MaximumPendingMessageLimit=" + MaximumPendingMessageLimit
                 + " DispatchAsync=" + DispatchAsync
                 + " Selector=" + Selector
                 + " SubcriptionName=" + SubcriptionName
@@ -99,6 +101,12 @@ namespace OpenWire.Client.Commands
         {
             get { return prefetchSize; }
             set { this.prefetchSize = value; }            
+        }
+
+        public int MaximumPendingMessageLimit
+        {
+            get { return maximumPendingMessageLimit; }
+            set { this.maximumPendingMessageLimit = value; }            
         }
 
         public bool DispatchAsync

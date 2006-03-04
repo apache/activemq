@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Commands
+namespace ActiveMQ.OpenWire.Commands
 {
     /// <summary>
     /// Summary description for ActiveMQTopic.

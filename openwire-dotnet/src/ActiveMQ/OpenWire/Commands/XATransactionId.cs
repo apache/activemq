@@ -18,10 +18,10 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
 
-namespace OpenWire.Client.Commands
+namespace ActiveMQ.OpenWire.Commands
 {
     //
     //  Marshalling code for Open Wire Format for XATransactionId
