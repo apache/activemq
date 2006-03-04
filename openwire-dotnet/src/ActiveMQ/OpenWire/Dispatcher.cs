@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 using System.Collections;
-using OpenWire.Client.Commands;
 using System;
-using OpenWire.Client;
 using System.Threading;
 
-namespace OpenWire.Client.Core
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ.OpenWire
 {
     /// <summary>
     /// Handles the multi-threaded dispatching between the transport and the consumers

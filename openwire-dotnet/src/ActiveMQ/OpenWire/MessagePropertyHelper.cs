@@ -17,11 +17,9 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-using OpenWire.Client.Commands;
+using ActiveMQ.OpenWire.Commands;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     public delegate object PropertyGetter(ActiveMQMessage message);
     public delegate void PropertySetter(ActiveMQMessage message, object value);

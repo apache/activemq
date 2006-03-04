@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 using System.Collections;
-using OpenWire.Client.Commands;
 using System;
-using OpenWire.Client;
 
-namespace OpenWire.Client.Core
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ.OpenWire
 {
     public enum TransactionType
     {

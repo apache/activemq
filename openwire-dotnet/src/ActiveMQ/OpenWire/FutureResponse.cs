@@ -17,10 +17,9 @@
 using System;
 using System.Threading;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
+using ActiveMQ.OpenWire.Commands;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     /// <summary>
     /// Handles asynchronous responses

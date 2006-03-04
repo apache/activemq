@@ -17,11 +17,10 @@
 using System;
 using System.IO;
 
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
+using ActiveMQ.OpenWire.Commands;
+using ActiveMQ.OpenWire.V1;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     /// <summary>
     /// Represents the wire format

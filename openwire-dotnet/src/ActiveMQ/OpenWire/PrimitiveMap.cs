@@ -17,10 +17,7 @@
 using System;
 using System.Collections;
 
-using OpenWire.Client;
-using OpenWire.Client.Core;
-
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
 {
     /// <summary>
     /// A default implementation of IPrimitiveMap

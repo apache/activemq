@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 using System;
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
 
-namespace OpenWire.Client.Core {
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+
+namespace ActiveMQ.OpenWire
+{
         /// <summary>
         /// Summary description for DataStructureSupport.
         /// </summary>
@@ -29,11 +30,11 @@ namespace OpenWire.Client.Core {
                 }
 
                 public virtual byte GetDataStructureType() {
-                        return 0; 
-                }             
+                        return 0;
+                }
                 
                 public virtual bool IsMarshallAware() {
-                        return false; 
-                }     
+                        return false;
+                }
         }
 }

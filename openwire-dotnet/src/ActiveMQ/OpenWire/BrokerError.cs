@@ -16,10 +16,10 @@
  */
 using System;
 using System.Text;
-using OpenWire.Client.Core;
 using System.IO;
 
-namespace OpenWire.Client.Core
+namespace ActiveMQ.OpenWire
+
 {
     public struct StackTraceElement
     {
