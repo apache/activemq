@@ -16,17 +16,8 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.ActiveMQMessageProducer;
-import org.apache.activemq.ActiveMQQueueSender;
-import org.apache.activemq.ActiveMQSession;
-import org.apache.activemq.ActiveMQTopicPublisher;
-import org.apache.activemq.AlreadyClosedException;
-import org.apache.activemq.util.JMSExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.pool.ObjectPool;
-
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.io.Serializable;
+import java.util.Iterator;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -51,8 +42,15 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
-import java.io.Serializable;
-import java.util.Iterator;
+import org.apache.activemq.ActiveMQMessageProducer;
+import org.apache.activemq.ActiveMQQueueSender;
+import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.ActiveMQTopicPublisher;
+import org.apache.activemq.AlreadyClosedException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @version $Revision: 1.1 $
