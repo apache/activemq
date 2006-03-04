@@ -102,6 +102,7 @@
     </ant:javac>
 
     <path id="openwire.classpath">
+      <pathelement path="${java.home}/lib/tools.jar" />
       <pathelement path="target/gram-classes" />
       <path refid="maven.dependency.classpath" />
     </path>
