@@ -27,12 +27,11 @@ using System;
 using System.Collections;
 using System.IO;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+using ActiveMQ.OpenWire.V1;
 
-namespace OpenWire.Client.IO
+namespace ActiveMQ.OpenWire.V1
 {
     public class MarshallerFactory
     {

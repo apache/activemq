@@ -19,12 +19,11 @@ using System;
 using System.Collections;
 using System.IO;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.Commands;
+using ActiveMQ.OpenWire.V1;
 
-namespace OpenWire.Client.IO
+namespace ActiveMQ.OpenWire.V1
 {
   //
   //  Marshalling code for Open Wire Format for DataStructureSupport
@@ -37,10 +36,10 @@ namespace OpenWire.Client.IO
   public abstract class DataStructureSupportMarshaller : BaseDataStreamMarshaller
   {
 
-    // 
+    //
     // Un-marshal an object instance from the data input stream
-    // 
-    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    //
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs)
     {
         base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
@@ -58,7 +57,7 @@ namespace OpenWire.Client.IO
         return rc + 0;
     }
 
-    // 
+    //
     // Write a object instance to data output stream
     //
     public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
