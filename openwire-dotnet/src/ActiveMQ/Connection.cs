@@ -79,6 +79,7 @@ namespace ActiveMQ
             */
             DisposeOf(ConnectionId);
             sessions.Clear();
+			transport.Oneway(new ShutdownInfo());
             transport.Dispose();
             closed = true;
         }
