@@ -14,14 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using ActiveMQ.Commands;
 using System;
-using System.IO;
-using System.Net;
-using System.Text;
 using System.Collections;
-
-using ActiveMQ.OpenWire;
-using ActiveMQ.OpenWire.Commands;
+using System.IO;
+using System.Text;
 
 namespace ActiveMQ.OpenWire
 

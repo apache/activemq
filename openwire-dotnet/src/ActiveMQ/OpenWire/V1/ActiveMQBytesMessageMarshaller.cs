@@ -19,8 +19,8 @@ using System;
 using System.Collections;
 using System.IO;
 
+using ActiveMQ.Commands;
 using ActiveMQ.OpenWire;
-using ActiveMQ.OpenWire.Commands;
 using ActiveMQ.OpenWire.V1;
 
 namespace ActiveMQ.OpenWire.V1

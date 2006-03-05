@@ -18,7 +18,6 @@ using System;
 using System.IO;
 
 using ActiveMQ.OpenWire;
-using ActiveMQ.OpenWire.Commands;
 
 namespace ActiveMQ.OpenWire
 
