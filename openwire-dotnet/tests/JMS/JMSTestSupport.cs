@@ -65,10 +65,10 @@ namespace JMS
         {
             if (connection != null)
             {
-				Console.WriteLine("Disconnectting...");
+				Console.WriteLine("Disconnecting...");
                 connection.Dispose();
                 connection = null;
-				Console.WriteLine("Disconnectted.");
+				Console.WriteLine("Disconnected.");
             }
         }
         

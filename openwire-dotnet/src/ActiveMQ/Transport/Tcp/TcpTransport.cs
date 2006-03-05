@@ -114,9 +114,19 @@ namespace ActiveMQ.Transport.Tcp
                 {
                     break;
                 }
+				catch ( IOException e) {
+					if( e.GetBaseException() is ObjectDisposedException ) {
+						break;
+					}
+					if( !closed ) {
+						this.exceptionHandler(this,e);
+					}
+				}
                 catch (Exception e)
                 {
-                    this.exceptionHandler(this,e);
+					if( !closed ) {
+						this.exceptionHandler(this,e);
+					}
                 }
             }
         }
