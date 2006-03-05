@@ -164,7 +164,13 @@
         <Compile Include="ActiveMQ\TransactionContext.cs"/>
         <Compile Include="ActiveMQ\Transport\FutureResponse.cs"/>
         <Compile Include="ActiveMQ\Transport\ITransport.cs"/>
-        <Compile Include="ActiveMQ\Transport\SocketTransport.cs"/>
+        <Compile Include="ActiveMQ\Transport\ITransportFactory.cs"/>
+        <Compile Include="ActiveMQ\Transport\LoggingTransport.cs"/>
+        <Compile Include="ActiveMQ\Transport\MutexTransport.cs"/>
+        <Compile Include="ActiveMQ\Transport\ResponseCorrelator.cs"/>
+        <Compile Include="ActiveMQ\Transport\Tcp\TcpTransport.cs"/>
+        <Compile Include="ActiveMQ\Transport\Tcp\TcpTransportFactory.cs"/>
+        <Compile Include="ActiveMQ\Transport\TransportFilter.cs"/>
         <Compile Include="JMS\IBytesMessage.cs"/>
         <Compile Include="JMS\IConnection.cs"/>
         <Compile Include="JMS\IConnectionFactory.cs"/>

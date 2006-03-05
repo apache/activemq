@@ -16,6 +16,7 @@
  */
 using ActiveMQ.Commands;
 using ActiveMQ.Transport;
+using ActiveMQ.Transport.Tcp;
 using JMS;
 using System;
 
@@ -26,8 +27,7 @@ namespace ActiveMQ
     /// </summary>
     public class ConnectionFactory : IConnectionFactory
     {
-        private string host = "localhost";
-        private int port = 61616;
+        private Uri brokerUri = new Uri("tcp://localhost:61616");
         private string userName;
         private string password;
         private string clientId;
@@ -36,10 +36,9 @@ namespace ActiveMQ
         {
         }
         
-        public ConnectionFactory(string host, int port)
+        public ConnectionFactory(Uri brokerUri)
         {
-            this.host = host;
-            this.port = port;
+			this.brokerUri=brokerUri;
         }
         
         public IConnection CreateConnection()
@@ -50,7 +49,7 @@ namespace ActiveMQ
         public IConnection CreateConnection(string userName, string password)
         {
             ConnectionInfo info = CreateConnectionInfo(userName, password);
-            ITransport transport = CreateTransport();
+            ITransport transport = new TcpTransportFactory().CreateTransport(brokerUri);
             Connection connection = new Connection(transport, info);
             connection.ClientId = info.ClientId;
             return connection;
@@ -58,18 +57,12 @@ namespace ActiveMQ
         
         // Properties
         
-        public string Host
+        public Uri BrokerUri
         {
-            get { return host; }
-            set { host = value; }
+            get { return brokerUri; }
+            set { brokerUri = value; }
         }
-        
-        public int Port
-        {
-            get { return port; }
-            set { port = value; }
-        }
-        
+                
         public string UserName
         {
             get { return userName; }
@@ -112,9 +105,5 @@ namespace ActiveMQ
             return Guid.NewGuid().ToString();
         }
         
-        protected ITransport CreateTransport()
-        {
-            return new SocketTransport(host, port);
-        }
     }
 }

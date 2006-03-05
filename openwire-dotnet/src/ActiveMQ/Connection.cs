@@ -29,7 +29,8 @@ namespace ActiveMQ
         {
             this.transport = transport;
             this.info = info;
-            this.transport.Command += new CommandHandler(OnCommand);
+            this.transport.Command = new CommandHandler(OnCommand);
+			this.transport.Exception = new ExceptionHandler(OnException);
             this.transport.Start();
         }
         
@@ -255,9 +256,14 @@ namespace ActiveMQ
             }
             else
             {
-                Console.WriteLine("ERROR:ÊUnknown command: " + command);
+                Console.WriteLine("ERROR: Unknown command: " + command);
             }
         }
+		
+		protected void OnException(ITransport sender, Exception exception) {
+			Console.WriteLine("ERROR: Transport Exception: " + exception);
+		}
+		
         
         protected SessionInfo CreateSessionInfo(AcknowledgementMode acknowledgementMode)
         {
