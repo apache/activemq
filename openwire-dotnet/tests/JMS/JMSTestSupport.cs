@@ -113,7 +113,7 @@ namespace JMS
         }
 
 		protected virtual IConnectionFactory CreateConnectionFactory() {
-			return new ActiveMQ.ConnectionFactory("localhost", 61616);
+			return new ActiveMQ.ConnectionFactory(new Uri("tcp://localhost:61616"));
 		}
 		
 		protected virtual IConnection CreateConnection()

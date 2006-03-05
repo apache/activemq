@@ -29,7 +29,7 @@ namespace ActiveMQ
                 Console.WriteLine("About to connect to ActiveMQ");
 
                 // START SNIPPET: demo
-                IConnectionFactory factory = new ConnectionFactory("localhost", 61616);
+                IConnectionFactory factory = new ConnectionFactory(new Uri("tcp://localhost:61616"));
                 using (IConnection connection = factory.CreateConnection())
                 {
                     Console.WriteLine("Created a connection!");
