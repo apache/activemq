@@ -14,23 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace ActiveMQ.OpenWire
+using ActiveMQ.Commands;
+
+
+/// <summary>
+/// Summary description for DataStructureSupport.
+/// </summary>
+namespace ActiveMQ.Commands
 {
-    public interface ISynchronization
-    {
-        /// <summary>
-        /// Called before a commit
-        /// </summary>
-        void BeforeCommit();
-        
-        /// <summary>
-        /// Called after a commit
-        /// </summary>
-        void AfterCommit();
-        
-        /// <summary>
-        /// Called after a transaction rollback
-        /// </summary>
-        void AfterRollback();
-    }
+	public abstract class DataStructureSupport : DataStructure
+	{
+		
+		protected DataStructureSupport()
+		{
+		}
+		
+		public virtual byte GetDataStructureType()
+		{
+			return 0;
+		}
+		
+		public virtual bool IsMarshallAware()
+		{
+			return false;
+		}
+	}
 }
+

@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using ActiveMQ;
-using ActiveMQ.OpenWire;
+using ActiveMQ.Commands;
+using JMS;
 
 
 /// <summary>
@@ -24,7 +24,7 @@ using ActiveMQ.OpenWire;
 
 namespace ActiveMQ
 {
-	public class BrokerException : OpenWireException
+	public class BrokerException : JMSException
     {
         
         private BrokerError brokerError;

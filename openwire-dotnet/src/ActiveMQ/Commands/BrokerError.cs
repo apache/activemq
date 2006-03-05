@@ -14,26 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using ActiveMQ.Commands;
 using System;
-using System.Text;
 using System.IO;
 
-namespace ActiveMQ.OpenWire
 
+namespace ActiveMQ.Commands
 {
-    public struct StackTraceElement
+	public struct StackTraceElement
     {
         public string ClassName;
         public string FileName;
         public string MethodName;
         public int LineNumber;
     }
-    
-    
-    /// <summary>
-    /// Represents an exception on the broker
-    /// </summary>
-    public class BrokerError : AbstractCommand
+}
+
+
+/// <summary>
+/// Represents an exception on the broker
+/// </summary>
+namespace ActiveMQ.Commands
+{
+	public class BrokerError : AbstractCommand
     {
         private string message;
         private string exceptionClass;
@@ -64,7 +67,8 @@ namespace ActiveMQ.OpenWire
             set { cause = value; }
         }
         
-        public String StackTrace {
+        public String StackTrace
+		{
             get {
                 StringWriter writer = new StringWriter();
                 PrintStackTrace(writer);
@@ -88,3 +92,4 @@ namespace ActiveMQ.OpenWire
         }
     }
 }
+

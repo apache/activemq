@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using ActiveMQ;
-using ActiveMQ.Commands;
 using ActiveMQ.OpenWire;
 using JMS;
 
@@ -55,7 +53,7 @@ namespace ActiveMQ.Commands
         {
             if (Acknowledger == null)
 			{
-                throw new OpenWireException("No Acknowledger has been associated with this message: " + this);
+                throw new JMSException("No Acknowledger has been associated with this message: " + this);
 			}
             else
 			{

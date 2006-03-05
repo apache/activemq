@@ -17,12 +17,13 @@
 using ActiveMQ.Commands;
 using System;
 
-namespace ActiveMQ.OpenWire
+
+/// <summary>
+/// Summary description for AbstractCommand.
+/// </summary>
+namespace ActiveMQ.Commands
 {
-    /// <summary>
-    /// Summary description for AbstractCommand.
-    /// </summary>
-    public abstract class AbstractCommand : Command
+	public abstract class AbstractCommand : Command
     {
         private short commandId;
         private bool responseRequired;
@@ -138,3 +139,4 @@ namespace ActiveMQ.OpenWire
         }
     }
 }
+

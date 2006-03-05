@@ -14,17 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections;
-
-using ActiveMQ.OpenWire;
+using JMS;
 
 namespace ActiveMQ
 {
 	/// <summary>
         /// Exception thrown when a connection is used that it already closed
         /// </summary>
-        public class ConnectionClosedException : OpenWireException {
+        public class ConnectionClosedException : JMSException {
                 public ConnectionClosedException() : base("The connection is already closed!") {
                 }
         }

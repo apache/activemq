@@ -16,6 +16,7 @@
  */
 using ActiveMQ.Commands;
 using ActiveMQ.OpenWire;
+using ActiveMQ.Transport;
 using System;
 using System.Collections;
 using System.IO;

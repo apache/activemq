@@ -14,23 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.IO;
+using ActiveMQ.OpenWire;
 
-namespace ActiveMQ.OpenWire
-{
+
 /// <summary>
-        /// Represents a marshallable entity
-        /// </summary>
-        public interface MarshallAware {
-
-                void BeforeMarshall(OpenWireFormat wireFormat);
-                void AfterMarshall(OpenWireFormat wireFormat);
-
-                void BeforeUnmarshall(OpenWireFormat wireFormat);
-                void AfterUnmarshall(OpenWireFormat wireFormat);
-
-                void SetMarshalledForm(OpenWireFormat wireFormat, byte[] data);
-                byte[] GetMarshalledForm(OpenWireFormat wireFormat);
-        }
+/// Represents a marshallable entity
+/// </summary>
+namespace ActiveMQ.Commands
+{
+	public interface MarshallAware
+	{
+		
+		void BeforeMarshall(OpenWireFormat wireFormat);
+		void AfterMarshall(OpenWireFormat wireFormat);
+		
+		void BeforeUnmarshall(OpenWireFormat wireFormat);
+		void AfterUnmarshall(OpenWireFormat wireFormat);
+		
+		void SetMarshalledForm(OpenWireFormat wireFormat, byte[] data);
+		byte[] GetMarshalledForm(OpenWireFormat wireFormat);
+	}
 }
+
