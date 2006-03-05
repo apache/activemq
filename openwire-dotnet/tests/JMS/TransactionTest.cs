@@ -30,7 +30,7 @@ namespace JMS
         IMessageConsumer consumer;
         
         [SetUp]
-        public override void SetUp()
+		override public void SetUp()
         {
 			acknowledgementMode = AcknowledgementMode.Transactional;
             base.SetUp();
@@ -38,7 +38,7 @@ namespace JMS
         }
 		
         [TearDown]
-        virtual public void TearDown()
+        override public void TearDown()
         {
 			base.TearDown();
         }

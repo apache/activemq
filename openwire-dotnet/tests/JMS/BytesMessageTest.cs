@@ -27,13 +27,13 @@ namespace JMS
         byte[] expected = {1, 2, 3, 4, 5, 6, 7, 8};
 		
 		[SetUp]
-        virtual public void SetUp()
+        override public void SetUp()
         {
 			base.SetUp();
         }
 		
         [TearDown]
-        virtual public void TearDown()
+        override public void TearDown()
         {
 			base.TearDown();
         }
