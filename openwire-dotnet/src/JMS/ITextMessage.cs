@@ -16,12 +16,12 @@
  */
 using JMS;
 
-
-/// <summary>
-/// Represents a text based message
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Represents a text based message
+	/// </summary>
 	public interface ITextMessage : IMessage
     {
         

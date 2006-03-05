@@ -28,14 +28,10 @@ namespace ActiveMQ.Commands
         public string MethodName;
         public int LineNumber;
     }
-}
 
-
-/// <summary>
-/// Represents an exception on the broker
-/// </summary>
-namespace ActiveMQ.Commands
-{
+	/// <summary>
+	/// Represents an exception on the broker
+	/// </summary>
 	public class BrokerError : AbstractCommand
     {
         private string message;

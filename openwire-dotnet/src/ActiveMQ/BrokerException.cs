@@ -17,13 +17,12 @@
 using ActiveMQ.Commands;
 using JMS;
 
-
-/// <summary>
-/// Exception thrown when the broker returns an error
-/// </summary>
-
 namespace ActiveMQ
 {
+	
+	/// <summary>
+	/// Exception thrown when the broker returns an error
+	/// </summary>
 	public class BrokerException : JMSException
     {
         

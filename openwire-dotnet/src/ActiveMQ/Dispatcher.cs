@@ -20,12 +20,12 @@ using System;
 using System.Collections;
 using System.Threading;
 
-
-/// <summary>
-/// Handles the multi-threaded dispatching between the transport and the consumers
-/// </summary>
 namespace ActiveMQ
 {
+	
+	/// <summary>
+	/// Handles the multi-threaded dispatching between the transport and the consumers
+	/// </summary>
 	public class Dispatcher
     {
         Queue queue = new Queue();

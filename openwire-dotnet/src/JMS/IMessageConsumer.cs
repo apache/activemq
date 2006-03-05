@@ -17,17 +17,13 @@
 using JMS;
 using System;
 
-
 namespace JMS
 {
 	public delegate void MessageListener(IMessage message);
-}
 
-/// <summary>
-/// A consumer of messages
-/// </summary>
-namespace JMS
-{
+	/// <summary>
+	/// A consumer of messages
+	/// </summary>
 	public interface IMessageConsumer : IDisposable
     {
         

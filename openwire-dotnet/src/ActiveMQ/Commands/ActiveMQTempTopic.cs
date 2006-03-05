@@ -18,12 +18,12 @@ using ActiveMQ.Commands;
 using JMS;
 using System;
 
-
-/// <summary>
-/// A Temporary Topic
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// A Temporary Topic
+	/// </summary>
 	public class ActiveMQTempTopic : ActiveMQTempDestination, ITemporaryTopic
     {
         public const byte ID_ActiveMQTempTopic = 103;

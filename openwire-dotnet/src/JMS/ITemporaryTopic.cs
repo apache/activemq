@@ -16,12 +16,12 @@
  */
 using JMS;
 
-
-/// <summary>
-/// Summary description for TemporaryTopic.
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Summary description for TemporaryTopic.
+	/// </summary>
 	public interface ITemporaryTopic : IDestination
 	{
 	}

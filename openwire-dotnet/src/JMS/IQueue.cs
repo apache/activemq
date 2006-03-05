@@ -17,12 +17,12 @@
 using JMS;
 using System;
 
-
-/// <summary>
-/// Summary description for IQueue.
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Summary description for IQueue.
+	/// </summary>
 	public interface IQueue : IDestination
 	{
 		

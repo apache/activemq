@@ -16,12 +16,12 @@
  */
 using JMS;
 
-
-/// <summary>
-/// Represents a binary based message
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Represents a binary based message
+	/// </summary>
 	public interface IBytesMessage : IMessage
     {
         

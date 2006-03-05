@@ -16,13 +16,12 @@
  */
 using JMS;
 
-
-
-/// <summary>
-/// A Factory of IConnection objects
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// A Factory of IConnection objects
+	/// </summary>
 	public interface IConnectionFactory
 	{
 		

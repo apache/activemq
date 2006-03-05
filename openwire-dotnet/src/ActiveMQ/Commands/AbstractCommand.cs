@@ -17,12 +17,12 @@
 using ActiveMQ.Commands;
 using System;
 
-
-/// <summary>
-/// Summary description for AbstractCommand.
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// Summary description for AbstractCommand.
+	/// </summary>
 	public abstract class AbstractCommand : Command
     {
         private short commandId;

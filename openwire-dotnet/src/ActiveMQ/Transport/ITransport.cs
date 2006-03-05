@@ -19,14 +19,14 @@ using ActiveMQ.Transport;
 using JMS;
 using System;
 
-/// <summary>
-/// Represents the logical networking transport layer.
-/// </summary>
 namespace ActiveMQ.Transport
 {
 	public delegate void CommandHandler(ITransport sender, Command command);
 	public delegate void ExceptionHandler(ITransport sender, Exception command);
 
+	/// <summary>
+	/// Represents the logical networking transport layer.
+	/// </summary>
 	public interface ITransport : IStartable, IDisposable
     {
         void Oneway(Command command);
@@ -35,12 +35,12 @@ namespace ActiveMQ.Transport
         
         Response Request(Command command);
         
-        CommandHandler Command{
+        CommandHandler Command {
             get;
             set;
         }
 		
-        ExceptionHandler Exception{
+        ExceptionHandler Exception {
             get;
             set;
         }

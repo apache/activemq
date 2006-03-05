@@ -16,15 +16,15 @@
  */
 using System;
 
-
-/// <summary>
-/// Represents a connection failure.
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Represents a connection failure.
+	/// </summary>
 	public class ConnectionException : JMSException
 	{
-		public JMSException(string message) : base(message)
+		public ConnectionException(string message) : base(message)
 		{
 		}
 	}
