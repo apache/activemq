@@ -16,14 +16,19 @@
  */
 package org.apache.activemq.openwire.tool;
 
-import org.codehaus.jam.JClass;
-import org.codehaus.jam.JProperty;
-import org.codehaus.jam.JamClassIterator;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.FixCRLF;
+import org.codehaus.jam.JClass;
+import org.codehaus.jam.JProperty;
+import org.codehaus.jam.JamClassIterator;
 
 /**
  * 
@@ -110,6 +115,16 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
                 out.close();
             }
         }
+        
+        // Use the FixCRLF Ant Task to make sure the file has consistent newlines
+        // so that SVN does not complain on checkin.
+        Project project = new Project();
+        project.init();
+        FixCRLF fixCRLF = new FixCRLF();
+        fixCRLF.setProject(project);
+        fixCRLF.setSrcdir(destFile.getParentFile());
+        fixCRLF.setIncludes(destFile.getName());
+        fixCRLF.execute();
     }
 
     protected abstract void generateFile(PrintWriter out);

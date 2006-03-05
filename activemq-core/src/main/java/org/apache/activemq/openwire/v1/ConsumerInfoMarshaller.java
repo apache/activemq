@@ -68,6 +68,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         info.setBrowser(bs.readBoolean());
         info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setPrefetchSize(dataIn.readInt());
+        info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(bs.readBoolean());
         info.setSelector(tightUnmarshalString(dataIn, bs));
         info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
@@ -103,7 +104,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
     rc += tightMarshalCachedObject1(wireFormat, info.getConsumerId(), bs);
     bs.writeBoolean(info.isBrowser());
     rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
-        bs.writeBoolean(info.isDispatchAsync());
+            bs.writeBoolean(info.isDispatchAsync());
     rc += tightMarshalString1(info.getSelector(), bs);
     rc += tightMarshalString1(info.getSubcriptionName(), bs);
     bs.writeBoolean(info.isNoLocal());
@@ -112,7 +113,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
     bs.writeBoolean(info.isNetworkSubscription());
 
-        return rc + 5;
+        return rc + 9;
     }
 
     /**
@@ -130,6 +131,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
     bs.readBoolean();
     tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
     dataOut.writeInt(info.getPrefetchSize());
+    dataOut.writeInt(info.getMaximumPendingMessageLimit());
     bs.readBoolean();
     tightMarshalString2(info.getSelector(), dataOut, bs);
     tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
@@ -157,6 +159,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         info.setBrowser(dataIn.readBoolean());
         info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setPrefetchSize(dataIn.readInt());
+        info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(dataIn.readBoolean());
         info.setSelector(looseUnmarshalString(dataIn));
         info.setSubcriptionName(looseUnmarshalString(dataIn));
@@ -193,6 +196,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
     dataOut.writeBoolean(info.isBrowser());
     looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
     dataOut.writeInt(info.getPrefetchSize());
+    dataOut.writeInt(info.getMaximumPendingMessageLimit());
     dataOut.writeBoolean(info.isDispatchAsync());
     looseMarshalString(info.getSelector(), dataOut);
     looseMarshalString(info.getSubcriptionName(), dataOut);

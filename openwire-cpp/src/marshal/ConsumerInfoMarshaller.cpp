@@ -60,6 +60,7 @@ void ConsumerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
         info.setBrowser(bs.readBoolean());
         info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setPrefetchSize(dataIn.readInt());
+        info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(bs.readBoolean());
         info.setSelector(tightUnmarshalString(dataIn, bs));
         info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
@@ -94,7 +95,7 @@ int ConsumerInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bool
     rc += marshal1CachedObject(wireFormat, info.getConsumerId(), bs);
     bs.writeBoolean(info.isBrowser());
     rc += marshal1CachedObject(wireFormat, info.getDestination(), bs);
-        bs.writeBoolean(info.isDispatchAsync());
+            bs.writeBoolean(info.isDispatchAsync());
     rc += writeString(info.getSelector(), bs);
     rc += writeString(info.getSubcriptionName(), bs);
     bs.writeBoolean(info.isNoLocal());
@@ -103,7 +104,7 @@ int ConsumerInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bool
         rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
     bs.writeBoolean(info.isNetworkSubscription());
 
-    return rc + 2;
+    return rc + 3;
 }
 
 /* 
@@ -117,6 +118,7 @@ void ConsumerInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, Bin
     bs.readBoolean();
     marshal2CachedObject(wireFormat, info.getDestination(), dataOut, bs);
     DataStreamMarshaller.writeInt(info.getPrefetchSize(), dataOut);
+    DataStreamMarshaller.writeInt(info.getMaximumPendingMessageLimit(), dataOut);
     bs.readBoolean();
     writeString(info.getSelector(), dataOut, bs);
     writeString(info.getSubcriptionName(), dataOut, bs);

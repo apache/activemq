@@ -31,7 +31,7 @@ public abstract class OpenWireCSharpClassesScript extends OpenWireClassesScript 
     public Object run() {
         filePostFix = ".cs";
         if (destDir == null) {
-            destDir = new File("../openwire-dotnet/src/OpenWire.Client/Commands");
+            destDir = new File("../openwire-dotnet/src/ActiveMQ/Commands");
         }
         
         return super.run();

@@ -54,6 +54,7 @@ public class ConsumerInfoTest extends BaseCommandTestSupport {
         info.setBrowser(true);
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setPrefetchSize(1);
+        info.setMaximumPendingMessageLimit(2);
         info.setDispatchAsync(false);
         info.setSelector("Selector:3");
         info.setSubcriptionName("SubcriptionName:4");

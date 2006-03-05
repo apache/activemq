@@ -261,6 +261,11 @@
             <artifactId>annogen</artifactId>
             <version>0.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>${ant_version}</version>
+        </dependency>
         
         <!-- Axion SQL DB used for testing JDBC message store -->
         <dependency>
