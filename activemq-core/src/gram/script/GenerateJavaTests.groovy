@@ -16,6 +16,8 @@
  */
 import org.apache.activemq.openwire.tool.OpenWireScript
 import org.apache.activemq.openwire.tool.TestDataGenerator
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.FixCRLF;
 
 /**
  * Generates the Java test code for the Open Wire Format
@@ -205,6 +207,16 @@ for (property in properties) {
         }
 """
 }
+        // Use the FixCRLF Ant Task to make sure the file has consistent newlines
+        // so that SVN does not complain on checkin.
+        Project project = new Project();
+        project.init();
+        FixCRLF fixCRLF = new FixCRLF();
+        fixCRLF.setProject(project);
+        fixCRLF.setSrcdir(file.getParentFile());
+        fixCRLF.setIncludes(file.getName());
+        fixCRLF.execute();
+
 		}
     }
 }

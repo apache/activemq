@@ -34,6 +34,7 @@ ConsumerInfo::ConsumerInfo()
     this->browser = 0 ;
     this->destination = 0 ;
     this->prefetchSize = 0 ;
+    this->maximumPendingMessageLimit = 0 ;
     this->dispatchAsync = 0 ;
     this->selector = 0 ;
     this->subcriptionName = 0 ;
@@ -91,6 +92,17 @@ int ConsumerInfo::getPrefetchSize()
 void ConsumerInfo::setPrefetchSize(int prefetchSize)
 {
     this->prefetchSize = prefetchSize ;
+}
+
+        
+int ConsumerInfo::getMaximumPendingMessageLimit()
+{
+    return maximumPendingMessageLimit ;
+}
+
+void ConsumerInfo::setMaximumPendingMessageLimit(int maximumPendingMessageLimit)
+{
+    this->maximumPendingMessageLimit = maximumPendingMessageLimit ;
 }
 
         

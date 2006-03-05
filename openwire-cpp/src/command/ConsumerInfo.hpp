@@ -56,6 +56,7 @@ private:
     bool browser ;
     p<ActiveMQDestination> destination ;
     int prefetchSize ;
+    int maximumPendingMessageLimit ;
     bool dispatchAsync ;
     p<string> selector ;
     p<string> subcriptionName ;
@@ -86,6 +87,9 @@ public:
 
     virtual int getPrefetchSize() ;
     virtual void setPrefetchSize(int prefetchSize) ;
+
+    virtual int getMaximumPendingMessageLimit() ;
+    virtual void setMaximumPendingMessageLimit(int maximumPendingMessageLimit) ;
 
     virtual bool getDispatchAsync() ;
     virtual void setDispatchAsync(bool dispatchAsync) ;

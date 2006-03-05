@@ -312,6 +312,7 @@ typedef struct ow_ConsumerInfo {
    ow_boolean browser;
    struct ow_ActiveMQDestination *destination;
    ow_int prefetchSize;
+   ow_int maximumPendingMessageLimit;
    ow_boolean dispatchAsync;
    ow_string *selector;
    ow_string *subcriptionName;

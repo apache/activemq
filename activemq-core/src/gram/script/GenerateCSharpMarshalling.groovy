@@ -45,12 +45,11 @@ using System;
 using System.Collections;
 using System.IO;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
+using ActiveMQ.Commands;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.V${openwireVersion};
 
-namespace OpenWire.Client.IO
+namespace ActiveMQ.OpenWire.V${openwireVersion}
 {
   //
   //  Marshalling code for Open Wire Format for ${jclass.simpleName}
@@ -182,12 +181,11 @@ using System;
 using System.Collections;
 using System.IO;
 
-using OpenWire.Client;
-using OpenWire.Client.Commands;
-using OpenWire.Client.Core;
-using OpenWire.Client.IO;
+using ActiveMQ.Commands;
+using ActiveMQ.OpenWire;
+using ActiveMQ.OpenWire.V${openwireVersion};
 
-namespace OpenWire.Client.IO
+namespace ActiveMQ.OpenWire.V${openwireVersion}
 {
     public class MarshallerFactory
     {

@@ -33,7 +33,7 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
     public Object run() {
         filePostFix = ".cs";
         if (destDir == null) {
-            destDir = new File("../openwire-dotnet/src/OpenWire.Client/IO");
+            destDir = new File("../openwire-dotnet/src/ActiveMQ/OpenWire/V"+getOpenwireVersion());
         }
         
         return super.run();

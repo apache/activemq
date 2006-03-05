@@ -957,6 +957,7 @@ apr_status_t ow_marshal1_ConsumerInfo(ow_bit_buffer *buffer, ow_ConsumerInfo *ob
    ow_bit_buffer_append(buffer, object->browser);
    SUCCESS_CHECK(ow_marshal1_cached_object(buffer, (ow_DataStructure*)object->destination));
    
+   
    ow_bit_buffer_append(buffer, object->dispatchAsync);
    ow_marshal1_string(buffer, object->selector);
    ow_marshal1_string(buffer, object->subcriptionName);
@@ -976,6 +977,7 @@ apr_status_t ow_marshal2_ConsumerInfo(ow_byte_buffer *buffer, ow_bit_buffer *bit
    ow_bit_buffer_read(bitbuffer);
    SUCCESS_CHECK(ow_marshal2_cached_object(buffer, bitbuffer, (ow_DataStructure*)object->destination));
    SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->prefetchSize));
+   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->maximumPendingMessageLimit));
    ow_bit_buffer_read(bitbuffer);
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->selector));
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->subcriptionName));
@@ -996,6 +998,7 @@ apr_status_t ow_unmarshal_ConsumerInfo(ow_byte_array *buffer, ow_bit_buffer *bit
    object->browser = ow_bit_buffer_read(bitbuffer);
    SUCCESS_CHECK(ow_unmarshal_cached_object(buffer, bitbuffer, (ow_DataStructure**)&object->destination, pool));
    SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->prefetchSize));
+   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->maximumPendingMessageLimit));
    object->dispatchAsync = ow_bit_buffer_read(bitbuffer);
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->selector, pool));
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->subcriptionName, pool));
