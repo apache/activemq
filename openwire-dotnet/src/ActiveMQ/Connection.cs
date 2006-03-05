@@ -1,9 +1,9 @@
+using ActiveMQ.Commands;
+using ActiveMQ.OpenWire;
+using ActiveMQ.Transport;
+using JMS;
 using System;
 using System.Collections;
-using System.Threading;
-
-using ActiveMQ.OpenWire;
-using ActiveMQ.OpenWire.Commands;
 
 namespace ActiveMQ
 {

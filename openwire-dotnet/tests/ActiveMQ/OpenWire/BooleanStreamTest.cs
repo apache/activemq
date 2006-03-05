@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using JMS;
+using NUnit.Framework;
 using System;
 using System.IO;
-
-using NUnit.Framework;
 
 namespace ActiveMQ.OpenWire
 {
     [TestFixture]
-    public class BooleanStreamTest : TestSupport
+    public class BooleanStreamTest
     {
 		protected OpenWireFormat openWireformat;
 		protected int endOfStreamMarker = 0x12345678;

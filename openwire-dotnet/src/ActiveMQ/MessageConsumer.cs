@@ -14,12 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections;
-using System.Threading;
-
+using ActiveMQ.Commands;
 using ActiveMQ.OpenWire;
-using ActiveMQ.OpenWire.Commands;
+using JMS;
+using System.Threading;
 
 namespace ActiveMQ
 {

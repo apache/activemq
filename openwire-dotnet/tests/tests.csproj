@@ -41,18 +41,18 @@
         </ProjectReference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="ActiveMQ\AsyncConsumeTest.cs"/>
-        <Compile Include="ActiveMQ\BadConsumeTest.cs"/>
-        <Compile Include="ActiveMQ\BytesMessageTest.cs"/>
-        <Compile Include="ActiveMQ\ClientTest.cs"/>
-        <Compile Include="ActiveMQ\CommandTest.cs"/>
-        <Compile Include="ActiveMQ\ConsumerTest.cs"/>
-        <Compile Include="ActiveMQ\EndianTest.cs"/>
-        <Compile Include="ActiveMQ\JMSPropertyTest.cs"/>
-        <Compile Include="ActiveMQ\MapMessageTest.cs"/>
+        <Compile Include="ActiveMQ\Commands\CommandTest.cs"/>
         <Compile Include="ActiveMQ\OpenWire\BooleanStreamTest.cs"/>
+        <Compile Include="ActiveMQ\OpenWire\EndianTest.cs"/>
         <Compile Include="ActiveMQ\TestMain.cs"/>
-        <Compile Include="ActiveMQ\TestSupport.cs"/>
-        <Compile Include="ActiveMQ\TransactionTest.cs"/>
+        <Compile Include="JMS\AsyncConsumeTest.cs"/>
+        <Compile Include="JMS\BadConsumeTest.cs"/>
+        <Compile Include="JMS\BytesMessageTest.cs"/>
+        <Compile Include="JMS\ConsumerTest.cs"/>
+        <Compile Include="JMS\JMSPropertyTest.cs"/>
+        <Compile Include="JMS\JMSTestSupport.cs"/>
+        <Compile Include="JMS\MapMessageTest.cs"/>
+        <Compile Include="JMS\TextMessage.cs"/>
+        <Compile Include="JMS\TransactionTest.cs"/>
     </ItemGroup>
 </Project>
