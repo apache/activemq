@@ -33,13 +33,13 @@ namespace JMS
         string g = "Hello World!";
         
 		[SetUp]
-        virtual public void SetUp()
+        override public void SetUp()
         {
 			base.SetUp();
         }
 		
         [TearDown]
-        virtual public void TearDown()
+        override public void TearDown()
         {
 			base.TearDown();
         }
