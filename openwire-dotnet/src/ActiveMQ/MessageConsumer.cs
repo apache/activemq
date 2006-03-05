@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using ActiveMQ;
 using ActiveMQ.Commands;
-using ActiveMQ.OpenWire;
 using JMS;
 using System.Threading;
 

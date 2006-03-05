@@ -1,5 +1,4 @@
 using ActiveMQ.Commands;
-using ActiveMQ.OpenWire;
 using ActiveMQ.Transport;
 using JMS;
 using System;
@@ -105,7 +104,7 @@ namespace ActiveMQ
             set {
                 if (connected)
                 {
-                    throw new OpenWireException("You cannot change the ClientId once the Connection is connected");
+                    throw new JMSException("You cannot change the ClientId once the Connection is connected");
                 }
                 info.ClientId = value;
             }
@@ -145,7 +144,7 @@ namespace ActiveMQ
             {
                 ExceptionResponse exceptionResponse = (ExceptionResponse) response;
                 // TODO include stack trace
-                throw new OpenWireException("Request failed: " + exceptionResponse);
+                throw new JMSException("Request failed: " + exceptionResponse);
             }
             return response;
         }

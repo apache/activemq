@@ -14,17 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections;
-
-using ActiveMQ.OpenWire;
+using JMS;
 
 namespace ActiveMQ
 {
 	/// <summary>
         /// Exception thrown when a consumer is used that it already closed
         /// </summary>
-        public class ConsumerClosedException : OpenWireException {
+        public class ConsumerClosedException : JMSException {
                 public ConsumerClosedException() : base("The consumer is already closed!") {
                 }
         }

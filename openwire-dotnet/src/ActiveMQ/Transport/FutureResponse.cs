@@ -18,12 +18,13 @@ using ActiveMQ.Commands;
 using System;
 using System.Threading;
 
-namespace ActiveMQ.OpenWire
+
+/// <summary>
+/// Handles asynchronous responses
+/// </summary>
+namespace ActiveMQ.Transport
 {
-    /// <summary>
-    /// Handles asynchronous responses
-    /// </summary>
-    public class FutureResponse : IAsyncResult
+	public class FutureResponse : IAsyncResult
     {
         
         private Response response;
@@ -59,13 +60,15 @@ namespace ActiveMQ.OpenWire
             get {
                 while (response == null)
                 {
-                    try {
-                    lock (semaphore)
-                    {
-                        Monitor.Wait(semaphore, maxWait);
+                    try
+					{
+						lock (semaphore)
+						{
+							Monitor.Wait(semaphore, maxWait);
+						}
                     }
-                    }
-                    catch (Exception e) {
+                    catch (Exception e)
+					{
                         Console.WriteLine("Caught while waiting on monitor: " + e);
                     }
                 }
@@ -82,3 +85,4 @@ namespace ActiveMQ.OpenWire
         }
     }
 }
+

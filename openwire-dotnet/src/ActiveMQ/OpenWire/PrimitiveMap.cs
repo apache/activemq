@@ -219,7 +219,7 @@ namespace ActiveMQ.OpenWire
         {
             if (! type.IsInstanceOfType(value))
             {
-                throw new OpenWireException("Expected type: " + type.Name + " but was: " + value);
+                throw new JMSException("Expected type: " + type.Name + " but was: " + value);
             }
         }
         
@@ -230,7 +230,7 @@ namespace ActiveMQ.OpenWire
                 Type type = value.GetType();
                 if (! type.IsPrimitive && !type.IsValueType && !type.IsAssignableFrom(typeof(string)))
                 {
-                    throw new OpenWireException("Invalid type: " + type.Name + " for value: " + value);
+                    throw new JMSException("Invalid type: " + type.Name + " for value: " + value);
                 }
             }
         }

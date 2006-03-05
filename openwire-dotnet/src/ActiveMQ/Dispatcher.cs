@@ -20,25 +20,28 @@ using System;
 using System.Collections;
 using System.Threading;
 
-namespace ActiveMQ.OpenWire
+
+/// <summary>
+/// Handles the multi-threaded dispatching between the transport and the consumers
+/// </summary>
+namespace ActiveMQ
 {
-    /// <summary>
-    /// Handles the multi-threaded dispatching between the transport and the consumers
-    /// </summary>
-    public class Dispatcher
+	public class Dispatcher
     {
         Queue queue = new Queue();
         Object semaphore = new Object();
         ArrayList messagesToRedeliver = new ArrayList();
-
+		
         /// <summary>
         /// Whem we start a transaction we must redeliver any rolled back messages
         /// </summary>
-        public void RedeliverRolledBackMessages() {
+        public void RedeliverRolledBackMessages()
+		{
             lock (semaphore)
             {
                 Queue replacement = new Queue(queue.Count + messagesToRedeliver.Count);
-                foreach (ActiveMQMessage element in messagesToRedeliver) {
+                foreach (ActiveMQMessage element in messagesToRedeliver)
+				{
                     replacement.Enqueue(element);
                 }
                 messagesToRedeliver.Clear();
@@ -58,8 +61,9 @@ namespace ActiveMQ.OpenWire
         /// </summary>
         public void Redeliver(ActiveMQMessage message)
         {
-            lock (semaphore) {
-            messagesToRedeliver.Add(message);
+            lock (semaphore)
+			{
+				messagesToRedeliver.Add(message);
             }
         }
         
@@ -122,3 +126,4 @@ namespace ActiveMQ.OpenWire
         
     }
 }
+

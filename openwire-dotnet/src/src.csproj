@@ -34,6 +34,7 @@
     <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets"/>
     <ItemGroup>
         <Compile Include="ActiveMQ\BrokerException.cs"/>
+        <Compile Include="ActiveMQ\Commands\AbstractCommand.cs"/>
         <Compile Include="ActiveMQ\Commands\ActiveMQBytesMessage.cs"/>
         <Compile Include="ActiveMQ\Commands\ActiveMQDestination.cs"/>
         <Compile Include="ActiveMQ\Commands\ActiveMQMapMessage.cs"/>
@@ -47,8 +48,10 @@
         <Compile Include="ActiveMQ\Commands\ActiveMQTextMessage.cs"/>
         <Compile Include="ActiveMQ\Commands\ActiveMQTopic.cs"/>
         <Compile Include="ActiveMQ\Commands\BaseCommand.cs"/>
+        <Compile Include="ActiveMQ\Commands\BrokerError.cs"/>
         <Compile Include="ActiveMQ\Commands\BrokerId.cs"/>
         <Compile Include="ActiveMQ\Commands\BrokerInfo.cs"/>
+        <Compile Include="ActiveMQ\Commands\Command.cs"/>
         <Compile Include="ActiveMQ\Commands\ConnectionError.cs"/>
         <Compile Include="ActiveMQ\Commands\ConnectionId.cs"/>
         <Compile Include="ActiveMQ\Commands\ConnectionInfo.cs"/>
@@ -57,6 +60,8 @@
         <Compile Include="ActiveMQ\Commands\ControlCommand.cs"/>
         <Compile Include="ActiveMQ\Commands\DataArrayResponse.cs"/>
         <Compile Include="ActiveMQ\Commands\DataResponse.cs"/>
+        <Compile Include="ActiveMQ\Commands\DataStructure.cs"/>
+        <Compile Include="ActiveMQ\Commands\DataStructureSupport.cs"/>
         <Compile Include="ActiveMQ\Commands\DestinationInfo.cs"/>
         <Compile Include="ActiveMQ\Commands\DiscoveryEvent.cs"/>
         <Compile Include="ActiveMQ\Commands\ExceptionResponse.cs"/>
@@ -68,6 +73,7 @@
         <Compile Include="ActiveMQ\Commands\JournalTransaction.cs"/>
         <Compile Include="ActiveMQ\Commands\KeepAliveInfo.cs"/>
         <Compile Include="ActiveMQ\Commands\LocalTransactionId.cs"/>
+        <Compile Include="ActiveMQ\Commands\MarshallAware.cs"/>
         <Compile Include="ActiveMQ\Commands\Message.cs"/>
         <Compile Include="ActiveMQ\Commands\MessageAck.cs"/>
         <Compile Include="ActiveMQ\Commands\MessageDispatch.cs"/>
@@ -91,19 +97,12 @@
         <Compile Include="ActiveMQ\ConnectionFactory.cs"/>
         <Compile Include="ActiveMQ\ConsumerClosedException.cs"/>
         <Compile Include="ActiveMQ\DestinationFilter.cs"/>
+        <Compile Include="ActiveMQ\Dispatcher.cs"/>
+        <Compile Include="ActiveMQ\ISynchronization.cs"/>
         <Compile Include="ActiveMQ\MessageConsumer.cs"/>
         <Compile Include="ActiveMQ\MessageProducer.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\AbstractCommand.cs"/>
         <Compile Include="ActiveMQ\OpenWire\BaseDataStreamMarshaller.cs"/>
         <Compile Include="ActiveMQ\OpenWire\BooleanStream.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\BrokerError.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\Command.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\DataStructure.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\DataStructureSupport.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\Dispatcher.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\FutureResponse.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\ISynchronization.cs"/>
-        <Compile Include="ActiveMQ\OpenWire\MarshallAware.cs"/>
         <Compile Include="ActiveMQ\OpenWire\MessagePropertyHelper.cs"/>
         <Compile Include="ActiveMQ\OpenWire\OpenWireFormat.cs"/>
         <Compile Include="ActiveMQ\OpenWire\PrimitiveMap.cs"/>
@@ -161,9 +160,9 @@
         <Compile Include="ActiveMQ\OpenWire\V1\TransactionInfoMarshaller.cs"/>
         <Compile Include="ActiveMQ\OpenWire\V1\WireFormatInfoMarshaller.cs"/>
         <Compile Include="ActiveMQ\OpenWire\V1\XATransactionIdMarshaller.cs"/>
-        <Compile Include="ActiveMQ\OpenWireException.cs"/>
         <Compile Include="ActiveMQ\Session.cs"/>
         <Compile Include="ActiveMQ\TransactionContext.cs"/>
+        <Compile Include="ActiveMQ\Transport\FutureResponse.cs"/>
         <Compile Include="ActiveMQ\Transport\ITransport.cs"/>
         <Compile Include="ActiveMQ\Transport\SocketTransport.cs"/>
         <Compile Include="JMS\IBytesMessage.cs"/>
@@ -183,5 +182,7 @@
         <Compile Include="JMS\ITemporaryTopic.cs"/>
         <Compile Include="JMS\ITextMessage.cs"/>
         <Compile Include="JMS\ITopic.cs"/>
+        <None Include="JMS\JMSConnectionException.cs"/>
+        <Compile Include="JMS\JMSException.cs"/>
     </ItemGroup>
 </Project>

@@ -14,16 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+using ActiveMQ.Commands;
 
-namespace ActiveMQ.OpenWire
+
+/// <summary>
+/// An OpenWire command
+/// </summary>
+namespace ActiveMQ.Commands
 {
-        /// <summary>
-        /// An OpenWire command
-        /// </summary>
-        public interface DataStructure {
-
-                byte GetDataStructureType();
-                bool IsMarshallAware();
+	public interface Command : DataStructure
+    {
+        short CommandId
+        {
+            get;
+            set;
         }
+        
+        bool ResponseRequired
+        {
+            get;
+            set;
+        }
+    }
 }
+

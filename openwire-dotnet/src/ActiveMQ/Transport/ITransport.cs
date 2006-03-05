@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 using ActiveMQ.Commands;
-using ActiveMQ.OpenWire;
+using ActiveMQ.Transport;
 using JMS;
 using System;
 

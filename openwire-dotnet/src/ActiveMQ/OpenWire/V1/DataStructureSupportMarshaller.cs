@@ -15,12 +15,9 @@
 // limitations under the License.
 //
 
+using ActiveMQ.Commands;
 using System;
-using System.Collections;
 using System.IO;
-
-using ActiveMQ.OpenWire;
-using ActiveMQ.OpenWire.V1;
 
 namespace ActiveMQ.OpenWire.V1
 {
