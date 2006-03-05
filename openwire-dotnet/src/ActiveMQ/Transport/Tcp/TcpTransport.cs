@@ -25,14 +25,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-
-
-/// <summary>
-/// An implementation of ITransport that uses sockets to communicate with the broker
-/// </summary>
-
 namespace ActiveMQ.Transport.Tcp
 {
+	
+	/// <summary>
+	/// An implementation of ITransport that uses sockets to communicate with the broker
+	/// </summary>
 	public class TcpTransport : ITransport
     {
         private Socket socket;
@@ -43,8 +41,8 @@ namespace ActiveMQ.Transport.Tcp
         private bool started;
         volatile private bool closed;
         
-        public CommandHandler command;
-        public ExceptionHandler exception;
+        private CommandHandler commandHandlerHandlerHandlerHandlerHandler;
+        private ExceptionHandler exceptionHandler;
         
         public TcpTransport(Socket socket)
         {
@@ -58,9 +56,9 @@ namespace ActiveMQ.Transport.Tcp
         {
             if (!started)
             {
-				if( command == null )
+				if( commandHandlerHandlerHandlerHandlerHandler == null )
 					throw new InvalidOperationException ("command cannot be null when Start is called.");
-				if( exception == null )
+				if( exceptionHandler == null )
 					throw new InvalidOperationException ("exception cannot be null when Start is called.");
 				
                 started = true;
@@ -110,7 +108,7 @@ namespace ActiveMQ.Transport.Tcp
                 try
                 {
                     Command command = (Command) wireformat.Unmarshal(socketReader);
-					this.command(this, command);
+					this.commandHandlerHandlerHandlerHandlerHandler(this, command);
                 }
 				catch (ObjectDisposedException)
                 {
@@ -118,7 +116,7 @@ namespace ActiveMQ.Transport.Tcp
                 }
                 catch (Exception e)
                 {
-                    this.exception(this,e);
+                    this.exceptionHandler(this,e);
                 }
             }
         }
@@ -129,13 +127,13 @@ namespace ActiveMQ.Transport.Tcp
         // Implementation methods
                 
 		public CommandHandler Command {
-            get { return command; }
-            set { this.command = value; }
+            get { return commandHandlerHandlerHandlerHandlerHandler; }
+            set { this.commandHandlerHandlerHandlerHandlerHandler = value; }
         }
 		
         public  ExceptionHandler Exception {
-            get { return exception; }
-            set { this.exception = value; }
+            get { return exceptionHandler; }
+            set { this.exceptionHandler = value; }
         }
 		
     }

@@ -16,12 +16,12 @@
  */
 using System;
 
-
-/// <summary>
-/// Represents a JMS exception
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Represents a JMS exception
+	/// </summary>
 	public class JMSException : Exception
 	{
 		public JMSException(string message) : base(message)

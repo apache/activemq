@@ -16,12 +16,12 @@
  */
 using ActiveMQ.Commands;
 
-
-/// <summary>
-/// An OpenWire command
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// An OpenWire command
+	/// </summary>
 	public interface Command : DataStructure
     {
         short CommandId

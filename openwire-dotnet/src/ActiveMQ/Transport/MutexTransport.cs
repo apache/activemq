@@ -19,11 +19,12 @@ using ActiveMQ.Transport;
 using JMS;
 using System;
 
-/// <summary>
-/// A Transport which gaurds access to the next transport using a mutex.
-/// </summary>
 namespace ActiveMQ.Transport
 {
+	
+	/// <summary>
+	/// A Transport which gaurds access to the next transport using a mutex.
+	/// </summary>
 	public class MutexTransport : TransportFilter
     {
 		

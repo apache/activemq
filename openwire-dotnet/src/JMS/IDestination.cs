@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
-/// <summary>
-/// Summary description for Destination.
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Summary description for Destination.
+	/// </summary>
 	public interface IDestination
 	{
 	}

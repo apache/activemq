@@ -16,13 +16,13 @@
  */
 using JMS;
 
-
-/// <summary>
-/// Represents a Map message which contains key and value pairs which are
-/// of primitive types
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Represents a Map message which contains key and value pairs which are
+	/// of primitive types
+	/// </summary>
 	public interface IMapMessage : IMessage
     {
         IPrimitiveMap Body

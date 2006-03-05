@@ -17,12 +17,12 @@
 using JMS;
 using System;
 
-
-/// <summary>
-/// An object capable of sending messages to some destination
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// An object capable of sending messages to some destination
+	/// </summary>
 	public interface IMessageProducer : IDisposable
 	{
 		

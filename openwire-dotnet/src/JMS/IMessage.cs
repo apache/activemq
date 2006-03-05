@@ -16,12 +16,12 @@
  */
 using JMS;
 
-
-/// <summary>
-/// Represents a message either to be sent to a message broker or received from a message broker
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Represents a message either to be sent to a message broker or received from a message broker
+	/// </summary>
 	public interface IMessage
     {
         

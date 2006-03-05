@@ -17,14 +17,12 @@
 using ActiveMQ.Commands;
 using JMS;
 using System;
-
-
-
-/// <summary>
-/// Summary description for ActiveMQDestination.
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// Summary description for ActiveMQDestination.
+	/// </summary>
 	public abstract class ActiveMQDestination : AbstractCommand, IDestination
     {
         

@@ -19,16 +19,17 @@ using ActiveMQ.Transport;
 using JMS;
 using System;
 
-/// <summary>
-/// Used to implement a filter on the transport layer.
-/// </summary>
 namespace ActiveMQ.Transport
 {
+	
+	/// <summary>
+	/// Used to implement a filter on the transport layer.
+	/// </summary>
 	public class TransportFilter : ITransport
     {
 		protected readonly ITransport next;
-		protected CommandHandler command;
-		protected ExceptionHandler exception;
+		protected CommandHandler commandHandler;
+		protected ExceptionHandler exceptionHandler;
 		
 		public TransportFilter(ITransport next) {
 			this.next = next;
@@ -37,11 +38,11 @@ namespace ActiveMQ.Transport
 		}
 		
 		protected virtual void OnCommand(ITransport sender, Command command) {
-			this.command(sender, command);
+			this.commandHandler(sender, command);
 		}
 		
 		protected virtual void OnException(ITransport sender, Exception command) {
-			this.exception(sender, command);
+			this.exceptionHandler(sender, command);
 		}
 		
 		
@@ -79,9 +80,9 @@ namespace ActiveMQ.Transport
 		/// </summary>
 		public virtual void Start()
 		{
-			if( command == null )
+			if( commandHandler == null )
 				throw new InvalidOperationException ("command cannot be null when Start is called.");
-			if( exception == null )
+			if( exceptionHandler == null )
 				throw new InvalidOperationException ("exception cannot be null when Start is called.");
 			this.next.Start();
 		}
@@ -95,13 +96,13 @@ namespace ActiveMQ.Transport
 		}
 		
 		public CommandHandler Command {
-            get { return command; }
-            set { this.command = value; }
+            get { return commandHandler; }
+            set { this.commandHandler = value; }
         }
 		
         public  ExceptionHandler Exception {
-            get { return exception; }
-            set { this.exception = value; }
+            get { return exceptionHandler; }
+            set { this.exceptionHandler = value; }
         }
 		
     }

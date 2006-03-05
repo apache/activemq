@@ -18,12 +18,12 @@ using ActiveMQ.Commands;
 using System;
 using System.Threading;
 
-
-/// <summary>
-/// Handles asynchronous responses
-/// </summary>
 namespace ActiveMQ.Transport
 {
+	
+	/// <summary>
+	/// Handles asynchronous responses
+	/// </summary>
 	public class FutureResponse : IAsyncResult
     {
         

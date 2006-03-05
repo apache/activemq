@@ -19,11 +19,12 @@ using ActiveMQ.Transport;
 using JMS;
 using System;
 
-/// <summary>
-/// A Transport filter that is used to log the commands sent and received.
-/// </summary>
 namespace ActiveMQ.Transport
 {
+	
+	/// <summary>
+	/// A Transport filter that is used to log the commands sent and received.
+	/// </summary>
 	public class LoggingTransport : TransportFilter
     {
 		public LoggingTransport(ITransport next) : base(next) {
@@ -31,12 +32,12 @@ namespace ActiveMQ.Transport
 		
 		protected override void OnCommand(ITransport sender, Command command) {
 			Console.WriteLine("RECEIVED: " + command);
-			this.command(sender, command);
+			this.commandHandler(sender, command);
 		}
 		
 		protected override void OnException(ITransport sender, Exception error) {
 			Console.WriteLine("RECEIVED Exception: " + error);
-			this.exception(sender, error);
+			this.exceptionHandler(sender, error);
 		}
 		
 		public override void Oneway(Command command)

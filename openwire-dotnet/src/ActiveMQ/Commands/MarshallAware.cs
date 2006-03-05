@@ -16,12 +16,12 @@
  */
 using ActiveMQ.OpenWire;
 
-
-/// <summary>
-/// Represents a marshallable entity
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// Represents a marshallable entity
+	/// </summary>
 	public interface MarshallAware
 	{
 		

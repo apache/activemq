@@ -16,12 +16,12 @@
  */
 using ActiveMQ.Commands;
 
-
-/// <summary>
-/// Summary description for DataStructureSupport.
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// Summary description for DataStructureSupport.
+	/// </summary>
 	public abstract class DataStructureSupport : DataStructure
 	{
 		

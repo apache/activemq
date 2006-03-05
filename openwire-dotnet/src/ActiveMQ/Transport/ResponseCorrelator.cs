@@ -22,11 +22,12 @@ using ActiveMQ.Commands;
 using ActiveMQ.Transport;
 using JMS;
 
-/// <summary>
-/// A Transport which gaurds access to the next transport using a mutex.
-/// </summary>
 namespace ActiveMQ.Transport
 {
+	
+	/// <summary>
+	/// A Transport which gaurds access to the next transport using a mutex.
+	/// </summary>
 	public class ResponseCorrelator : TransportFilter
     {
 
@@ -86,7 +87,7 @@ namespace ActiveMQ.Transport
 					{
 						ExceptionResponse er = (ExceptionResponse) response;
 						BrokerError brokerError = er.Exception;
-						this.exception(this, new BrokerException(brokerError));
+						this.exceptionHandler(this, new BrokerException(brokerError));
 					}
 					future.Response = response;
 				}
@@ -95,7 +96,7 @@ namespace ActiveMQ.Transport
 					Console.WriteLine("ERROR: Unknown response ID: " + response.CommandId + " for response: " + response);
 				}
 			} else {
-				this.command(sender, command);
+				this.commandHandler(sender, command);
 			}
 		}
 		

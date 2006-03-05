@@ -18,12 +18,12 @@ using ActiveMQ.Commands;
 using JMS;
 using System;
 
-
-/// <summary>
-/// Summary description for ActiveMQTopic.
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// Summary description for ActiveMQTopic.
+	/// </summary>
 	public class ActiveMQTopic : ActiveMQDestination, ITopic
     {
         public const byte ID_ActiveMQTopic = 101;

@@ -18,12 +18,12 @@ using ActiveMQ.Commands;
 using JMS;
 using System;
 
-
-/// <summary>
-/// Summary description for ActiveMQQueue.
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// Summary description for ActiveMQQueue.
+	/// </summary>
 	public class ActiveMQQueue : ActiveMQDestination, IQueue
     {
         public const byte ID_ActiveMQQueue = 100;

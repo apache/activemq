@@ -18,12 +18,12 @@ using ActiveMQ.Commands;
 using JMS;
 using System;
 
-
-/// <summary>
-/// A Temporary Queue
-/// </summary>
 namespace ActiveMQ.Commands
 {
+	
+	/// <summary>
+	/// A Temporary Queue
+	/// </summary>
 	public class ActiveMQTempQueue : ActiveMQTempDestination, ITemporaryQueue
     {
         public const byte ID_ActiveMQTempQueue = 102;

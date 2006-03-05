@@ -17,12 +17,12 @@
 using JMS;
 using System;
 
-
-/// <summary>
-/// Summary description for ITopic.
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Summary description for ITopic.
+	/// </summary>
 	public interface ITopic : IDestination
 	{
 		

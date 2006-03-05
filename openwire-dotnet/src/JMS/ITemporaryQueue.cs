@@ -16,12 +16,12 @@
  */
 using JMS;
 
-
-/// <summary>
-/// Summary description for ITemporaryQueue.
-/// </summary>
 namespace JMS
 {
+	
+	/// <summary>
+	/// Summary description for ITemporaryQueue.
+	/// </summary>
 	public interface ITemporaryQueue : IDestination
 	{
 	}
