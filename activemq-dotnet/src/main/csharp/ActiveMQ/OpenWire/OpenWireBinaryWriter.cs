@@ -126,7 +126,7 @@ namespace ActiveMQ.OpenWire
 		/// <summary>
 		/// Method Write
 		/// </summary>
-		/// <param name="value">A  string</param>
+		/// <param name="text">A  string</param>
 		public override void Write(String text)
 		{
             if (text != null)
