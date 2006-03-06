@@ -72,7 +72,9 @@ final public class OpenWireFormat implements WireFormat {
         return  version 
             ^ (cacheEnabled         ? 0x10000000:0x20000000)
             ^ (stackTraceEnabled    ? 0x01000000:0x02000000)
-            ^ (tightEncodingEnabled ? 0x00100000:0x00200000);
+            ^ (tightEncodingEnabled ? 0x00100000:0x00200000)
+            ^ (prefixPacketSize     ? 0x00010000:0x00020000)
+            ;
     }
     
     public boolean equals(Object object) {
@@ -82,11 +84,13 @@ final public class OpenWireFormat implements WireFormat {
         return o.stackTraceEnabled == stackTraceEnabled &&
             o.cacheEnabled == cacheEnabled &&
             o.version == version && 
-            o.tightEncodingEnabled == tightEncodingEnabled;
+            o.tightEncodingEnabled == tightEncodingEnabled && 
+            o.prefixPacketSize == prefixPacketSize 
+            ;
     }
     
     public String toString() {
-        return "OpenWireFormat{version="+version+", cacheEnabled="+cacheEnabled+", stackTraceEnabled="+stackTraceEnabled+"}";
+        return "OpenWireFormat{version="+version+", cacheEnabled="+cacheEnabled+", stackTraceEnabled="+stackTraceEnabled+", tightEncodingEnabled="+tightEncodingEnabled+", prefixPacketSize="+prefixPacketSize+"}";
     }
     
     public int getVersion() {
