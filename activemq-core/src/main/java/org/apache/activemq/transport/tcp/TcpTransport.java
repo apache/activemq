@@ -112,6 +112,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * A one way asynchronous send
      */
     public void oneway(Command command) throws IOException {
+        checkStarted(command);
         wireFormat.marshal(command, dataOut);
         dataOut.flush();
     }
