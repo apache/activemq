@@ -1,0 +1,212 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProductVersion>8.0.30703</ProductVersion>
+        <SchemaVersion>2.0</SchemaVersion>
+        <ProjectGuid>{08321F42-4B3D-4815-B592-95962BAC3B9F}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <RootNamespace>activemq-dotnet</RootNamespace>
+        <AssemblyName>activemq-dotnet</AssemblyName>
+        <WarningLevel>4</WarningLevel>
+        <StartupObject/>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugSymbols>false</DebugSymbols>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="nunit.framework"/>
+        <Reference Include="System"/>
+        <Reference Include="System.Data"/>
+        <Reference Include="System.Xml"/>
+    </ItemGroup>
+    <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets"/>
+    <ItemGroup>
+        <Compile Include="src\main\csharp\ActiveMQ\BrokerException.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\AbstractCommand.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQBytesMessage.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQDestination.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQMapMessage.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQMessage.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQObjectMessage.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQQueue.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQStreamMessage.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQTempDestination.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQTempQueue.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQTempTopic.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQTextMessage.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQTopic.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\BaseCommand.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\BrokerError.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\BrokerId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\BrokerInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\Command.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ConnectionError.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ConnectionId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ConnectionInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ConsumerId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ConsumerInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ControlCommand.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\DataArrayResponse.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\DataResponse.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\DataStructure.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\DataStructureSupport.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\DestinationInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\DiscoveryEvent.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ExceptionResponse.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\FlushCommand.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\IntegerResponse.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\JournalQueueAck.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\JournalTopicAck.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\JournalTrace.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\JournalTransaction.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\KeepAliveInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\LocalTransactionId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\MarshallAware.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\Message.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\MessageAck.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\MessageDispatch.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\MessageDispatchNotification.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\MessageId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ProducerId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ProducerInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\RemoveInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\RemoveSubscriptionInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\Response.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\SessionId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\SessionInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ShutdownInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\SubscriptionInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\TransactionId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\TransactionInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\WireFormatInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\XATransactionId.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Connection.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\ConnectionClosedException.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\ConnectionFactory.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\ConsumerClosedException.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\DestinationFilter.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Dispatcher.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\ISynchronization.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\MessageConsumer.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\MessageProducer.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\BaseDataStreamMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\BooleanStream.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\EndianSupport.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\MessagePropertyHelper.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\OpenWireBinaryReader.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\OpenWireBinaryWriter.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\OpenWireFormat.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\PrimitiveMap.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQBytesMessageMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQDestinationMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQMapMessageMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQMessageMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQObjectMessageMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQQueueMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQStreamMessageMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQTempDestinationMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQTempQueueMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQTempTopicMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQTextMessageMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ActiveMQTopicMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\BaseCommandMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\BrokerIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\BrokerInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConnectionErrorMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConnectionIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConnectionInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConsumerIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConsumerInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ControlCommandMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\DataArrayResponseMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\DataResponseMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\DataStructureSupportMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\DestinationInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\DiscoveryEventMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ExceptionResponseMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\FlushCommandMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\IntegerResponseMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\JournalQueueAckMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\JournalTopicAckMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\JournalTraceMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\JournalTransactionMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\KeepAliveInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\LocalTransactionIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MarshallerFactory.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageAckMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageDispatchMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageDispatchNotificationMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ProducerIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ProducerInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\RemoveInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\RemoveSubscriptionInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ResponseMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\SessionIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\SessionInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ShutdownInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\SubscriptionInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\TransactionIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\TransactionInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\WireFormatInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\XATransactionIdMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Session.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\TransactionContext.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\FutureResponse.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\ITransport.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\ITransportFactory.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\LoggingTransport.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\MutexTransport.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\ResponseCorrelator.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\Tcp\TcpTransport.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\Tcp\TcpTransportFactory.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Transport\TransportFilter.cs"/>
+        <Compile Include="src\main\csharp\JMS\IBytesMessage.cs"/>
+        <Compile Include="src\main\csharp\JMS\IConnection.cs"/>
+        <Compile Include="src\main\csharp\JMS\IConnectionFactory.cs"/>
+        <Compile Include="src\main\csharp\JMS\IDestination.cs"/>
+        <Compile Include="src\main\csharp\JMS\IMapMessage.cs"/>
+        <Compile Include="src\main\csharp\JMS\IMessage.cs"/>
+        <Compile Include="src\main\csharp\JMS\IMessageConsumer.cs"/>
+        <Compile Include="src\main\csharp\JMS\IMessageProducer.cs"/>
+        <Compile Include="src\main\csharp\JMS\IPrimitiveMap.cs"/>
+        <Compile Include="src\main\csharp\JMS\IQueue.cs"/>
+        <Compile Include="src\main\csharp\JMS\ISession.cs"/>
+        <Compile Include="src\main\csharp\JMS\IStartable.cs"/>
+        <Compile Include="src\main\csharp\JMS\IStoppable.cs"/>
+        <Compile Include="src\main\csharp\JMS\ITemporaryQueue.cs"/>
+        <Compile Include="src\main\csharp\JMS\ITemporaryTopic.cs"/>
+        <Compile Include="src\main\csharp\JMS\ITextMessage.cs"/>
+        <Compile Include="src\main\csharp\JMS\ITopic.cs"/>
+        <Compile Include="src\main\csharp\JMS\JMSConnectionException.cs"/>
+        <Compile Include="src\main\csharp\JMS\JMSException.cs"/>
+        <Compile Include="src\test\csharp\ActiveMQ\Commands\CommandTest.cs"/>
+        <Compile Include="src\test\csharp\ActiveMQ\OpenWire\BooleanStreamTest.cs"/>
+        <Compile Include="src\test\csharp\ActiveMQ\OpenWire\EndianTest.cs"/>
+        <Compile Include="src\test\csharp\ActiveMQ\TestMain.cs"/>
+        <Compile Include="src\test\csharp\JMS\AsyncConsumeTest.cs"/>
+        <Compile Include="src\test\csharp\JMS\BadConsumeTest.cs"/>
+        <Compile Include="src\test\csharp\JMS\BytesMessageTest.cs"/>
+        <Compile Include="src\test\csharp\JMS\ConsumerTest.cs"/>
+        <Compile Include="src\test\csharp\JMS\JMSPropertyTest.cs"/>
+        <Compile Include="src\test\csharp\JMS\JMSTestSupport.cs"/>
+        <Compile Include="src\test\csharp\JMS\MapMessageTest.cs"/>
+        <Compile Include="src\test\csharp\JMS\MessageTest.cs"/>
+        <Compile Include="src\test\csharp\JMS\TextMessage.cs"/>
+        <Compile Include="src\test\csharp\JMS\TransactionTest.cs"/>
+    </ItemGroup>
+</Project>
