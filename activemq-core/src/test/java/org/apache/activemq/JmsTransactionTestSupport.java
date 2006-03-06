@@ -30,10 +30,12 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.MessageListener;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -432,9 +434,55 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
 
+    public void testChangeMutableObjectInObjectMessageThenRollback() throws Exception {
+        ArrayList list = new ArrayList();
+        list.add("First");
+        Message outbound = session.createObjectMessage(list);
+        outbound.setStringProperty("foo", "abc");
+
+        producer.send(outbound);
+        session.commit();
+
+        log.info("About to consume message 1");
+        Message message = consumer.receive(1000);
+
+        List body = assertReceivedObjectMessageWithListBody(message);
+
+        // now lets try mutate it
+        try {
+            message.setStringProperty("foo", "def");
+            fail("Cannot change properties of the object!");
+        }
+        catch (JMSException e) {
+            log.info("Caught expected exception: " + e, e);
+        }
+        body.clear();
+        body.add("This should never be seen!");
+        session.rollback();
+
+        message = consumer.receive(1000);
+        List secondBody = assertReceivedObjectMessageWithListBody(message);
+        assertNotSame("Second call should return a different body", secondBody, body);
+        session.commit();
+    }
+
+    protected List assertReceivedObjectMessageWithListBody(Message message) throws JMSException {
+        assertNotNull("Should have received a message!", message);
+        assertEquals("foo header", "abc", message.getStringProperty("foo"));
+
+        assertTrue("Should be an object message but was: " + message, message instanceof ObjectMessage);
+        ObjectMessage objectMessage = (ObjectMessage) message;
+        List body = (List) objectMessage.getObject();
+        log.info("Received body: " + body);
+
+        assertEquals("Size of list should be 1", 1, body.size());
+        assertEquals("element 0 of list", "First", body.get(0));
+        return body;
+    }
+
     /**
      * Recreates the connection.
-     *
+     * 
      * @throws JMSException
      */
     protected void reconnect() throws JMSException {

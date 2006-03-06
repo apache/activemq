@@ -29,18 +29,19 @@ import org.apache.activemq.util.JMSExceptionSupport;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.io.ObjectStreamClass;
+import java.lang.reflect.Proxy;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
-import java.lang.reflect.Proxy;
 
 /**
  * An <CODE>ObjectMessage</CODE> object is used to send a message that contains a serializable object in the Java
@@ -172,6 +173,13 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
             }
         }
         return this.object;
+    }
+
+    public void onMessageRolledBack() {
+        super.onMessageRolledBack();
+        
+        // lets force the object to be deserialized again - as we could have changed the object
+        object = null;
     }
 
     public String toString() {

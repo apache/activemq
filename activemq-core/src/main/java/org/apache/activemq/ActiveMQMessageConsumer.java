@@ -692,7 +692,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 
                 for (Iterator iter = deliveredMessages.iterator(); iter.hasNext();) {
                     MessageDispatch md = (MessageDispatch) iter.next();
-                    md.getMessage().incrementRedeliveryCounter();
+                    md.getMessage().onMessageRolledBack();
                     unconsumedMessages.enqueueFirst(md);
                 }
             }

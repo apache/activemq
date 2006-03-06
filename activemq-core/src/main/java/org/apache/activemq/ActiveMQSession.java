@@ -677,7 +677,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     getTransactionContext().addSynchronization(new Synchronization(){
                         public void afterRollback() throws Exception {
 
-                            md.getMessage().incrementRedeliveryCounter();
+                            md.getMessage().onMessageRolledBack();
                             
                             RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
                             int redeliveryCounter = md.getMessage().getRedeliveryCounter();
