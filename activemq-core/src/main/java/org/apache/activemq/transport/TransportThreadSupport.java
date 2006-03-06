@@ -80,4 +80,10 @@ public abstract class TransportThreadSupport extends TransportSupport implements
     }
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
+
+    protected void checkStarted() {
+        if (!isStarted()) {
+            throw new IllegalStateException("The transport " + this + " of type: " + getClass().getName() + " has not been started yet!");
+        }
+    }
 }
