@@ -42,6 +42,8 @@ final public class OpenWireFormat implements WireFormat {
     
     static final byte NULL_TYPE = CommandTypes.NULL;
     private static final int MARSHAL_CACHE_SIZE = Short.MAX_VALUE/2;
+    private static final int MARSHAL_CACHE_PREFERED_SIZE = MARSHAL_CACHE_SIZE-100;
+    
     private DataStreamMarshaller dataMarshallers[];
     private int version;
     private boolean stackTraceEnabled=true;
@@ -52,7 +54,8 @@ final public class OpenWireFormat implements WireFormat {
 
     private HashMap marshallCacheMap = new HashMap();
     private short nextMarshallCacheIndex=0;    
-    private short lasMarshallCacheEvictionIndex=100;    
+    private short nextMarshallCacheEvictionIndex=0;
+    
     private DataStructure marshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
     private DataStructure unmarshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
     
@@ -91,6 +94,10 @@ final public class OpenWireFormat implements WireFormat {
     }
     
     public Packet marshal(Object command) throws IOException {
+        
+        if( cacheEnabled ) {
+            runMarshallCacheEvictionSweep();
+        }
         
         MarshallAware ma=null;
         // If not using value caching, then the marshaled form is always the same
@@ -187,6 +194,11 @@ final public class OpenWireFormat implements WireFormat {
     }
     
     public void marshal(Object o, DataOutputStream ds) throws IOException {
+        
+        if( cacheEnabled ) {
+            runMarshallCacheEvictionSweep();
+        }
+        
         int size=1;
         if( o != null) {
             DataStructure c = (DataStructure) o;
@@ -202,7 +214,7 @@ final public class OpenWireFormat implements WireFormat {
             ds.writeInt(size);
             ds.writeByte(type);            
             bs.marshal(ds);
-            dsm.tightMarshal2(this, c, ds, bs);
+            dsm.tightMarshal2(this, c, ds, bs);            
         } else {
             ds.writeInt(size);
             ds.writeByte(NULL_TYPE);
@@ -359,26 +371,33 @@ final public class OpenWireFormat implements WireFormat {
         }
     }
 
+    public void runMarshallCacheEvictionSweep() {
+        // Do we need to start evicting??
+        while( marshallCacheMap.size() > MARSHAL_CACHE_PREFERED_SIZE ) {
+            
+            marshallCacheMap.remove(marshallCache[nextMarshallCacheEvictionIndex]);
+            marshallCache[nextMarshallCacheEvictionIndex]=null;
+
+            nextMarshallCacheEvictionIndex++;
+            if( nextMarshallCacheEvictionIndex >= MARSHAL_CACHE_SIZE ) {
+                nextMarshallCacheEvictionIndex=0;
+            }
+            
+        }
+    }
     
-    public Short getMarshallCacheIndex(Object o) {
+    public Short getMarshallCacheIndex(DataStructure o) {
         return (Short) marshallCacheMap.get(o);
     }
     
-    public Short addToMarshallCache(Object o) {
-        nextMarshallCacheIndex++;
+    public Short addToMarshallCache(DataStructure o) {
+        short i = nextMarshallCacheIndex++;
         if( nextMarshallCacheIndex >= MARSHAL_CACHE_SIZE ) {
             nextMarshallCacheIndex=0;
         }
-        lasMarshallCacheEvictionIndex++;
-        if( lasMarshallCacheEvictionIndex >= MARSHAL_CACHE_SIZE ) {
-            lasMarshallCacheEvictionIndex=0;
-        }
-        if( marshallCache[lasMarshallCacheEvictionIndex]!=null ) {
-            marshallCacheMap.remove(marshallCache[lasMarshallCacheEvictionIndex]);
-            marshallCache[lasMarshallCacheEvictionIndex]=null;
-        }
-        marshallCache[nextMarshallCacheIndex] = (DataStructure) o;
-        Short index = new Short(nextMarshallCacheIndex);
+        
+        marshallCache[i] = o;
+        Short index = new Short(i);
         marshallCacheMap.put(o, index);
         return index;
     }
