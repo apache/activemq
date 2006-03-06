@@ -611,5 +611,8 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     public void setRecievedByDFBridge(boolean recievedByDFBridge){
         this.recievedByDFBridge=recievedByDFBridge;
     }
-    
+
+    public void onMessageRolledBack() {
+        incrementRedeliveryCounter();
+    }
 }
