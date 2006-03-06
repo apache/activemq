@@ -31,6 +31,11 @@ namespace JMS
         int e = 0x12345678;
         long f = 0x1234567812345678;
         string g = "Hello World!";
+		bool h = false;
+        byte i = 0xFF;
+        short j = -0x1234;
+        int k = -0x12345678;
+        long l = -0x1234567812345678;
         
 		[SetUp]
         override public void SetUp()
@@ -61,6 +66,11 @@ namespace JMS
             message.Body["e"] = e;
             message.Body["f"] = f;
             message.Body["g"] = g;
+            message.Body["h"] = h;
+            message.Body["i"] = i;
+            message.Body["j"] = j;
+            message.Body["k"] = k;
+            message.Body["l"] = l;
             
             return message;
         }
@@ -83,6 +93,11 @@ namespace JMS
             Assert.AreEqual(e, mapMessage.Body["e"], "generic map entry: e");
             Assert.AreEqual(f, mapMessage.Body["f"], "generic map entry: f");
             Assert.AreEqual(g, mapMessage.Body["g"], "generic map entry: g");
+            Assert.AreEqual(h, mapMessage.Body["h"], "generic map entry: h");
+            Assert.AreEqual(i, mapMessage.Body["i"], "generic map entry: i");
+            Assert.AreEqual(j, mapMessage.Body["j"], "generic map entry: j");
+            Assert.AreEqual(k, mapMessage.Body["k"], "generic map entry: k");
+            Assert.AreEqual(l, mapMessage.Body["l"], "generic map entry: l");
             
             // use type safe APIs
             Assert.AreEqual(a, mapMessage.Body.GetBool("a"), "map entry: a");
@@ -92,8 +107,12 @@ namespace JMS
             Assert.AreEqual(e, mapMessage.Body.GetInt("e"), "map entry: e");
             Assert.AreEqual(f, mapMessage.Body.GetLong("f"), "map entry: f");
             Assert.AreEqual(g, mapMessage.Body.GetString("g"), "map entry: g");
-            
-            
+            Assert.AreEqual(h, mapMessage.Body.GetBool("h"), "map entry: h");
+            Assert.AreEqual(i, mapMessage.Body.GetByte("i"), "map entry: i");
+            Assert.AreEqual(j, mapMessage.Body.GetShort("j"), "map entry: j");
+            Assert.AreEqual(k, mapMessage.Body.GetInt("k"), "map entry: k");
+            Assert.AreEqual(l, mapMessage.Body.GetLong("l"), "map entry: l");
+            			
         }
         
         protected string ToHex(long value)

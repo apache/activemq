@@ -57,7 +57,7 @@ namespace ActiveMQ.OpenWire.V1
         TransactionInfo info = (TransactionInfo)o;
         info.ConnectionId = (ConnectionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.TransactionId = (TransactionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.Type = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.Type = dataIn.ReadByte();
 
     }
 
@@ -84,7 +84,7 @@ namespace ActiveMQ.OpenWire.V1
         TransactionInfo info = (TransactionInfo)o;
     TightMarshalCachedObject2(wireFormat, info.ConnectionId, dataOut, bs);
     TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
-    BaseDataStreamMarshaller.WriteByte(info.Type, dataOut);
+    dataOut.Write(info.Type);
 
     }
   }

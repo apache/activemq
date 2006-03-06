@@ -44,7 +44,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         BaseCommand info = (BaseCommand)o;
-        info.CommandId = BaseDataStreamMarshaller.ReadShort(dataIn);
+        info.CommandId = dataIn.ReadInt16();
         info.ResponseRequired = bs.ReadBoolean();
 
     }
@@ -69,7 +69,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         BaseCommand info = (BaseCommand)o;
-    BaseDataStreamMarshaller.WriteShort(info.CommandId, dataOut);
+    dataOut.Write(info.CommandId);
     bs.ReadBoolean();
 
     }

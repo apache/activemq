@@ -56,7 +56,7 @@ namespace ActiveMQ.OpenWire.V1
 
         JournalTransaction info = (JournalTransaction)o;
         info.TransactionId = (TransactionId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.Type = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.Type = dataIn.ReadByte();
         info.WasPrepared = bs.ReadBoolean();
 
     }
@@ -83,7 +83,7 @@ namespace ActiveMQ.OpenWire.V1
 
         JournalTransaction info = (JournalTransaction)o;
     TightMarshalNestedObject2(wireFormat, info.TransactionId, dataOut, bs);
-    BaseDataStreamMarshaller.WriteByte(info.Type, dataOut);
+    dataOut.Write(info.Type);
     bs.ReadBoolean();
 
     }

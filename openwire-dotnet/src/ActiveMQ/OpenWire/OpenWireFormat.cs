@@ -72,7 +72,7 @@ namespace ActiveMQ.OpenWire
             {
                 DataStructure c = (DataStructure) o;
                 byte type = c.GetDataStructureType();
-                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[type & 0xFF];
+                BaseDataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + type);
                 
@@ -80,28 +80,28 @@ namespace ActiveMQ.OpenWire
                 size += dsm.TightMarshal1(this, c, bs);
                 size += bs.MarshalledSize();
                 
-                BaseDataStreamMarshaller.WriteInt(size, ds);
-                BaseDataStreamMarshaller.WriteByte(type, ds);
+                ds.Write(size);
+                ds.Write(type);
                 bs.Marshal(ds);
                 dsm.TightMarshal2(this, c, ds, bs);
             }
             else
             {
-                BaseDataStreamMarshaller.WriteInt(size, ds);
-                BaseDataStreamMarshaller.WriteByte(NULL_TYPE, ds);
+                ds.Write(size);
+                ds.Write(NULL_TYPE);
             }
         }
         
         public Object Unmarshal(BinaryReader dis)
         {
             // lets ignore the size of the packet
-            BaseDataStreamMarshaller.ReadInt(dis);
+            dis.ReadInt32();
             
             // first byte is the type of the packet
-            byte dataType = BaseDataStreamMarshaller.ReadByte(dis);
+            byte dataType = dis.ReadByte();
             if (dataType != NULL_TYPE)
             {
-                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[dataType & 0xFF];
+                BaseDataStreamMarshaller dsm = dataMarshallers[dataType & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + dataType);
                 //Console.WriteLine("Parsing type: " + dataType + " with: " + dsm);
@@ -151,7 +151,7 @@ namespace ActiveMQ.OpenWire
                 return ;
             
             byte type = o.GetDataStructureType();
-            BaseDataStreamMarshaller.WriteByte(type, ds);
+            ds.Write(type);
             
             if (o.IsMarshallAware() && bs.ReadBoolean())
             {
@@ -174,7 +174,7 @@ namespace ActiveMQ.OpenWire
             if (bs.ReadBoolean())
             {
                 
-                byte dataType = BaseDataStreamMarshaller.ReadByte(dis);
+                byte dataType = dis.ReadByte();
                 BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[dataType & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + dataType);
@@ -182,8 +182,8 @@ namespace ActiveMQ.OpenWire
                 
                 if (data.IsMarshallAware() && bs.ReadBoolean())
                 {
-                    BaseDataStreamMarshaller.ReadInt(dis);
-                    BaseDataStreamMarshaller.ReadByte(dis);
+                    dis.ReadInt32();
+                    dis.ReadByte();
                     
                     BooleanStream bs2 = new BooleanStream();
                     bs2.Unmarshal(dis);

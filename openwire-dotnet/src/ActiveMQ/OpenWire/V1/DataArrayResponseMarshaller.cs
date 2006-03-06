@@ -57,7 +57,7 @@ namespace ActiveMQ.OpenWire.V1
         DataArrayResponse info = (DataArrayResponse)o;
 
         if (bs.ReadBoolean()) {
-            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
+            short size = dataIn.ReadInt16();
             DataStructure[] value = new DataStructure[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (DataStructure) TightUnmarshalNestedObject(wireFormat,dataIn, bs);

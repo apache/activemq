@@ -48,8 +48,8 @@ namespace JMS
 		}
 		
 		
+        //[Ignore("Not fully implemented yet.")]
         [Test]
-        [Ignore("Not fully implemented yet.")]
         public void testDurableConsumerSelectorChange()
         {
             
@@ -59,10 +59,10 @@ namespace JMS
 			
             // Send the messages
             ITextMessage message = session.CreateTextMessage("1st");
-            //message.SetStringProperty("color", "red");
+            message.Properties["color"] =  "red";
             producer.Send(message);
             
-            IMessage m = consumer.Receive(1000);
+            IMessage m = consumer.Receive(receiveTimeout );
             Assert.IsNotNull(m);
             Assert.AreEqual("1st", ((ITextMessage)m).Text);
 			
@@ -71,10 +71,10 @@ namespace JMS
             consumer = session.CreateDurableConsumer((ITopic)Destination, "test", "color='blue'", false);
             
             message = session.CreateTextMessage("2nd");
-            // message.setStringProperty("color", "red");
+            message.Properties["color"] =  "red";
             producer.Send(message);
             message = session.CreateTextMessage("3rd");
-			// message.setStringProperty("color", "blue");
+            message.Properties["color"] =  "blue";
             producer.Send(message);
 			
             // Selector should skip the 2nd message.

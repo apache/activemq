@@ -117,12 +117,12 @@ namespace ActiveMQ.OpenWire
             /*
              if (wireFormat.isCacheEnabled()) {
              if (bs.ReadBoolean()) {
-             short index = dataInReadShort(dataIn)Int16();
+             short index = dataIndataIn.ReadInt16()Int16();
              DataStructure value = wireFormat.UnmarshalNestedObject(dataIn, bs);
              wireFormat.setInUnmarshallCache(index, value);
              return value;
              } else {
-             short index = ReadShort(dataIn);
+             short index = dataIn.ReadInt16();
              return wireFormat.getFromUnmarshallCache(index);
              }
              } else {
@@ -165,10 +165,10 @@ namespace ActiveMQ.OpenWire
              if (wireFormat.isCacheEnabled()) {
              Short index = wireFormat.getMarshallCacheIndex(o);
              if (bs.ReadBoolean()) {
-             WriteShort(index.shortValue(), dataOut);
+             dataOut.Write(index.shortValue(), dataOut);
              wireFormat.Marshal2NestedObject(o, dataOut, bs);
              } else {
-             WriteShort(index.shortValue(), dataOut);
+             dataOut.Write(index.shortValue(), dataOut);
              }
              } else {
              wireFormat.Marshal2NestedObject(o, dataOut, bs);
@@ -189,7 +189,7 @@ namespace ActiveMQ.OpenWire
                 }
                 else
                 {
-                    return ReadUTF8(dataIn);
+                    return dataIn.ReadString();
                 }
             }
             else
@@ -200,7 +200,7 @@ namespace ActiveMQ.OpenWire
         
         protected virtual String ReadAsciiString(BinaryReader dataIn)
         {
-            int size = ReadShort(dataIn);
+            int size = dataIn.ReadInt16();
             byte[] data = new byte[size];
             dataIn.Read(data, 0, size);
             char[] text = new char[size];
@@ -218,41 +218,34 @@ namespace ActiveMQ.OpenWire
             {
                 int strlen = value.Length;
                 
-                // TODO until we get UTF8 working, lets just force ASCII
-                bs.WriteBoolean(true);
-                return strlen + 2;
-                
-                
-                /*
-                 int utflen = 0;
-                 int c = 0;
-                 bool isOnlyAscii = true;
-                 char[] charr = value.ToCharArray();
-                 for (int i = 0; i < strlen; i++)
-                 {
-                 c = charr[i];
-                 if ((c >= 0x0001) && (c <= 0x007F))
-                 {
-                 utflen++;
-                 }
-                 else if (c > 0x07FF)
-                 {
-                 utflen += 3;
-                 isOnlyAscii = false;
-                 }
-                 else
-                 {
-                 isOnlyAscii = false;
-                 utflen += 2;
-                 }
-                 }
-                 
-                 if (utflen >= Int16.MaxValue)
-                 throw new IOException("Encountered a String value that is too long to encode.");
-                 
-                 bs.WriteBoolean(isOnlyAscii);
-                 return utflen + 2;
-                 */
+				int utflen = 0;
+				int c = 0;
+				bool isOnlyAscii = true;
+				char[] charr = value.ToCharArray();
+				for (int i = 0; i < strlen; i++)
+				{
+					c = charr[i];
+					if ((c >= 0x0001) && (c <= 0x007F))
+					{
+						utflen++;
+					}
+					else if (c > 0x07FF)
+					{
+						utflen += 3;
+						isOnlyAscii = false;
+					}
+					else
+					{
+						isOnlyAscii = false;
+						utflen += 2;
+					}
+				}
+				
+				if (utflen >= Int16.MaxValue)
+					throw new IOException("Encountered a String value that is too long to encode.");
+				
+				bs.WriteBoolean(isOnlyAscii);
+				return utflen + 2;
             }
             else
             {
@@ -267,101 +260,21 @@ namespace ActiveMQ.OpenWire
                 // If we verified it only holds ascii values
                 if (bs.ReadBoolean())
                 {
-                    WriteShort((short) value.Length, dataOut);
+                    dataOut.Write((short) value.Length);
                     // now lets write the bytes
                     char[] chars = value.ToCharArray();
                     for (int i = 0; i < chars.Length; i++)
                     {
-                        WriteByte((byte) chars[i], dataOut);
+                        dataOut.Write((byte)(chars[i]&0xFF00>>8));
                     }
                 }
                 else
                 {
-                    // TODO how should we properly write a String so that Java will grok it???
                     dataOut.Write(value);
                 }
             }
         }
-        
-        public static byte ReadByte(BinaryReader dataIn)
-        {
-            return dataIn.ReadByte();
-        }
-        
-        public static char ReadChar(BinaryReader dataIn)
-        {
-            return (char) ReadShort(dataIn);
-        }
-        
-        public static short ReadShort(BinaryReader dataIn)
-        {
-            return SwitchEndian(dataIn.ReadInt16());
-        }
-        
-        public static int ReadInt(BinaryReader dataIn)
-        {
-            return SwitchEndian(dataIn.ReadInt32());
-        }
-        
-        public static long ReadLong(BinaryReader dataIn)
-        {
-            return SwitchEndian(dataIn.ReadInt64());
-        }
-        
-        public static void WriteByte(byte value, BinaryWriter dataOut)
-        {
-            dataOut.Write(value);
-        }
-        
-        public static void WriteChar(char value, BinaryWriter dataOut)
-        {
-            dataOut.Write(SwitchEndian((short) value));
-        }
-        
-        public static void WriteShort(short value, BinaryWriter dataOut)
-        {
-            dataOut.Write(SwitchEndian(value));
-        }
-        
-        public static void WriteInt(int value, BinaryWriter dataOut)
-        {
-            dataOut.Write(SwitchEndian(value));
-        }
-        
-        public static void WriteLong(long value, BinaryWriter dataOut)
-        {
-            dataOut.Write(SwitchEndian(value));
-        }
-        
-        
-        /// <summary>
-        /// Switches from one endian to the other
-        /// </summary>
-        public static int SwitchEndian(int x)
-        {
-            return ((x << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | (x >> 24));
-        }
-        
-        public static short SwitchEndian(short x)
-        {
-            int low = x & 0xff;
-            int high = x & 0xff00;
-            return(short)(high >> 8 | low << 8);
-        }
-        
-        public static long SwitchEndian(long x)
-        {
-            long answer = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                long lowest = x & 0xff;
-                x >>= 8;
-                answer <<= 8;
-                answer += lowest;
-            }
-            return answer;
-        }
-        
+                
         public virtual int TightMarshalLong1(OpenWireFormat wireFormat, long o, BooleanStream bs)
         {
             if (o == 0L)
@@ -404,18 +317,18 @@ namespace ActiveMQ.OpenWire
             {
                 if (bs.ReadBoolean())
                 {
-                    WriteLong(o, dataOut);
+                    dataOut.Write(o);
                 }
                 else
                 {
-                    WriteInt((int) o, dataOut);
+                    dataOut.Write((int)o);
                 }
             }
             else
             {
                 if (bs.ReadBoolean())
                 {
-                    WriteShort((short) o, dataOut);
+                    dataOut.Write((short)o);
                 }
             }
         }
@@ -425,18 +338,18 @@ namespace ActiveMQ.OpenWire
             {
                 if (bs.ReadBoolean())
                 {
-                    return ReadLong(dataIn);
+                    return dataIn.ReadInt64(); // dataIn.ReadInt64();
                 }
                 else
                 {
-                    return ReadInt(dataIn);
+                    return dataIn.ReadInt32();
                 }
             }
             else
             {
                 if (bs.ReadBoolean())
                 {
-                    return ReadShort(dataIn);
+                    return dataIn.ReadInt16();
                 }
                 else
                 {
@@ -475,7 +388,7 @@ namespace ActiveMQ.OpenWire
         {
             if (bs.ReadBoolean())
             {
-                WriteShort((short) objects.Length, dataOut);
+                dataOut.Write((short) objects.Length);
                 for (int i = 0; i < objects.Length; i++)
                 {
                     TightMarshalNestedObject2(wireFormat, objects[i], dataOut, bs);
@@ -487,7 +400,7 @@ namespace ActiveMQ.OpenWire
         {
             if (flag)
             {
-                int size = ReadInt(dataIn);
+                int size = dataIn.ReadInt32();
                 return dataIn.ReadBytes(size);
             }
             else
@@ -498,7 +411,7 @@ namespace ActiveMQ.OpenWire
         
         protected virtual byte[] ReadBytes(BinaryReader dataIn)
         {
-            int size = ReadInt(dataIn);
+            int size = dataIn.ReadInt32();
             return dataIn.ReadBytes(size);
         }
         
@@ -509,7 +422,7 @@ namespace ActiveMQ.OpenWire
         
         protected virtual void WriteBytes(byte[] command, BinaryWriter dataOut)
         {
-            WriteInt(command.Length, dataOut);
+            dataOut.Write(command.Length);
             dataOut.Write(command);
         }
         
@@ -526,7 +439,7 @@ namespace ActiveMQ.OpenWire
                 answer.Message = TightUnmarshalString(dataIn, bs);
                 if (wireFormat.StackTraceEnabled)
                 {
-                    short length = ReadShort(dataIn);
+                    short length = dataIn.ReadInt16();
                     StackTraceElement[] stackTrace = new StackTraceElement[length];
                     for (int i = 0; i < stackTrace.Length; i++)
                     {
@@ -534,7 +447,7 @@ namespace ActiveMQ.OpenWire
                         element.ClassName = TightUnmarshalString(dataIn, bs);
                         element.MethodName = TightUnmarshalString(dataIn, bs);
                         element.FileName = TightUnmarshalString(dataIn, bs);
-                        element.LineNumber = ReadInt(dataIn);
+                        element.LineNumber = dataIn.ReadInt32();
                         stackTrace[i] = element;
                     }
                     answer.StackTraceElements = stackTrace;
@@ -593,7 +506,7 @@ namespace ActiveMQ.OpenWire
                 if (wireFormat.StackTraceEnabled)
                 {
                     StackTraceElement[] stackTrace = o.StackTraceElements;
-                    WriteShort((short) stackTrace.Length, dataOut);
+                    dataOut.Write((short) stackTrace.Length);
                     
                     for (int i = 0; i < stackTrace.Length; i++)
                     {
@@ -601,7 +514,7 @@ namespace ActiveMQ.OpenWire
                         TightMarshalString2(element.ClassName, dataOut, bs);
                         TightMarshalString2(element.MethodName, dataOut, bs);
                         TightMarshalString2(element.FileName, dataOut, bs);
-                        WriteInt(element.LineNumber, dataOut);
+                        dataOut.Write(element.LineNumber);
                     }
                     TightMarshalBrokerError2(wireFormat, o.Cause, dataOut, bs);
                 }
@@ -620,7 +533,7 @@ namespace ActiveMQ.OpenWire
             else
             {
                 MemoryStream memoryStream = new MemoryStream();
-                MarshalPrimitiveMap(map, new BinaryWriter(memoryStream));
+                MarshalPrimitiveMap(map, new OpenWireBinaryWriter(memoryStream));
                 return memoryStream.GetBuffer();
             }
         }
@@ -628,15 +541,15 @@ namespace ActiveMQ.OpenWire
         {
             if (map == null)
             {
-                WriteInt(-1, dataOut);
+                dataOut.Write((int)-1);
             }
             else
             {
-                WriteInt(map.Count, dataOut);
+                dataOut.Write(map.Count);
                 foreach (DictionaryEntry entry in map)
                 {
                     String name = (String) entry.Key;
-                    WriteUTF8(name, dataOut);
+                    dataOut.Write(name);
                     Object value = entry.Value;
                     MarshalPrimitive(dataOut, value);
                 }
@@ -655,13 +568,13 @@ namespace ActiveMQ.OpenWire
             }
             else
             {
-                return UnmarshalPrimitiveMap(new BinaryReader(new MemoryStream(data)));
+                return UnmarshalPrimitiveMap(new OpenWireBinaryReader(new MemoryStream(data)));
             }
         }
         
         public static  IDictionary UnmarshalPrimitiveMap(BinaryReader dataIn)
         {
-            int size = ReadInt(dataIn);
+            int size = dataIn.ReadInt32();
             if (size < 0)
             {
                 return null;
@@ -671,7 +584,7 @@ namespace ActiveMQ.OpenWire
                 IDictionary answer = new Hashtable(size);
                 for (int i=0; i < size; i++)
                 {
-                    String name = ReadUTF8(dataIn);
+                    String name = dataIn.ReadString();
                     answer[name] = UnmarshalPrimitive(dataIn);
                 }
                 return answer;
@@ -683,59 +596,59 @@ namespace ActiveMQ.OpenWire
         {
             if (value == null)
             {
-                WriteByte(NULL, dataOut);
+                dataOut.Write(NULL);
             }
             else if (value is bool)
             {
-                WriteByte(BOOLEAN_TYPE, dataOut);
-                WriteBoolean((bool) value, dataOut);
+                dataOut.Write(BOOLEAN_TYPE);
+                dataOut.Write((bool) value);
             }
             else if (value is byte)
             {
-                WriteByte(BYTE_TYPE, dataOut);
-                WriteByte(((Byte)value), dataOut);
+                dataOut.Write(BYTE_TYPE);
+                dataOut.Write(((Byte)value));
             }
             else if (value is char)
             {
-                WriteByte(CHAR_TYPE, dataOut);
-                WriteChar((char) value, dataOut);
+                dataOut.Write(CHAR_TYPE);
+                dataOut.Write((char) value);
             }
             else if (value is short)
             {
-                WriteByte(SHORT_TYPE, dataOut);
-                WriteShort((short) value, dataOut);
+                dataOut.Write(SHORT_TYPE);
+                dataOut.Write((short) value);
             }
             else if (value is int)
             {
-                WriteByte(INTEGER_TYPE, dataOut);
-                WriteInt((int) value, dataOut);
+                dataOut.Write(INTEGER_TYPE);
+                dataOut.Write((int) value);
             }
             else if (value is long)
             {
-                WriteByte(LONG_TYPE, dataOut);
-                WriteLong((long) value, dataOut);
+                dataOut.Write(LONG_TYPE);
+                dataOut.Write((long) value);
             }
             else if (value is float)
             {
-                WriteByte(FLOAT_TYPE, dataOut);
-                WriteFloat((float) value, dataOut);
+                dataOut.Write(FLOAT_TYPE);
+                dataOut.Write((float) value);
             }
             else if (value is double)
             {
-                WriteByte(DOUBLE_TYPE, dataOut);
-                WriteDouble((double) value, dataOut);
+                dataOut.Write(DOUBLE_TYPE);
+                dataOut.Write((double) value);
             }
             else if (value is byte[])
             {
                 byte[] data = (byte[]) value;
-                WriteByte(BYTE_ARRAY_TYPE, dataOut);
-                WriteInt(data.Length, dataOut);
+                dataOut.Write(BYTE_ARRAY_TYPE);
+                dataOut.Write(data.Length);
                 dataOut.Write(data);
             }
             else if (value is string)
             {
-                WriteByte(STRING_TYPE, dataOut);
-                WriteUTF8((string) value, dataOut);
+                dataOut.Write(STRING_TYPE);
+                dataOut.Write((string) value);
             }
             else
             {
@@ -746,25 +659,25 @@ namespace ActiveMQ.OpenWire
         public static Object UnmarshalPrimitive(BinaryReader dataIn)
         {
             Object value=null;
-            switch (ReadByte(dataIn))
+            switch (dataIn.ReadByte())
             {
                 case BYTE_TYPE:
-                    value = ReadByte(dataIn);
+                    value = dataIn.ReadByte();
                     break;
                 case BOOLEAN_TYPE:
-                    value = ReadBoolean(dataIn);
+                    value = dataIn.ReadBoolean();
                     break;
                 case CHAR_TYPE:
-                    value = ReadChar(dataIn);
+                    value = dataIn.ReadChar();
                     break;
                 case SHORT_TYPE:
-                    value = ReadShort(dataIn);
+                    value = dataIn.ReadInt16();
                     break;
                 case INTEGER_TYPE:
-                    value = ReadInt(dataIn);
+                    value = dataIn.ReadInt32();
                     break;
                 case LONG_TYPE:
-                    value = ReadLong(dataIn);
+                    value = dataIn.ReadInt64();
                     break;
                 case FLOAT_TYPE:
                     value = ReadFloat(dataIn);
@@ -773,13 +686,13 @@ namespace ActiveMQ.OpenWire
                     value = ReadDouble(dataIn);
                     break;
                 case BYTE_ARRAY_TYPE:
-                    int size = ReadInt(dataIn);
+                    int size = dataIn.ReadInt32();
                     byte[] data = new byte[size];
                     dataIn.Read(data, 0, size);
                     value = data;
                     break;
                 case STRING_TYPE:
-                    value = ReadUTF8(dataIn);
+                    value = dataIn.ReadString();
                     break;
             }
             return value;
@@ -823,152 +736,6 @@ namespace ActiveMQ.OpenWire
             // TODO: Implement this method
             dataOut.Write(value);
         }
-        
-        
-        public static void WriteUTF8(String text, BinaryWriter dataOut)
-        {
-            if (text != null)
-            {
-                int strlen = text.Length;
-                int utflen = 0;
-                int c, count = 0;
-                
-                char[] charr = text.ToCharArray();
-                
-                for (int i = 0; i < strlen; i++)
-                {
-                    c = charr[i];
-                    if ((c >= 0x0001) && (c <= 0x007F))
-                    {
-                        utflen++;
-                    }
-                    else if (c > 0x07FF)
-                    {
-                        utflen += 3;
-                    }
-                    else
-                    {
-                        utflen += 2;
-                    }
-                }
-                
-                WriteInt(utflen, dataOut);
-                byte[] bytearr = new byte[utflen];
-                /*
-                 byte[] bytearr = new byte[utflen + 4];
-                 bytearr[count++] = (byte) ((utflen >>> 24) & 0xFF);
-                 bytearr[count++] = (byte) ((utflen >>> 16) & 0xFF);
-                 bytearr[count++] = (byte) ((utflen >>> 8) & 0xFF);
-                 bytearr[count++] = (byte) ((utflen >>> 0) & 0xFF);
-                 */
-                for (int i = 0; i < strlen; i++)
-                {
-                    c = charr[i];
-                    if ((c >= 0x0001) && (c <= 0x007F))
-                    {
-                        bytearr[count++] = (byte) c;
-                    }
-                    else if (c > 0x07FF)
-                    {
-                        bytearr[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
-                        bytearr[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
-                        bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
-                    }
-                    else
-                    {
-                        bytearr[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
-                        bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
-                    }
-                }
-                dataOut.Write(bytearr);
-                
-            }
-            else
-            {
-                WriteInt(-1, dataOut);
-            }
-        }
-        
-        public static String ReadUTF8(BinaryReader dataIn)
-        {
-            int utflen = ReadInt(dataIn);
-            if (utflen > -1)
-            {
-                StringBuilder str = new StringBuilder(utflen);
-                
-                byte[] bytearr = new byte[utflen];
-                int c, char2, char3;
-                int count = 0;
-                
-                dataIn.Read(bytearr, 0, utflen);
-                
-                while (count < utflen)
-                {
-                    c = bytearr[count] & 0xff;
-                    switch (c >> 4)
-                    {
-                        case 0:
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
-                        case 5:
-                        case 6:
-                        case 7:
-                            /* 0xxxxxxx */
-                            count++;
-                            str.Append((char) c);
-                            break;
-                        case 12:
-                        case 13:
-                            /* 110x xxxx 10xx xxxx */
-                            count += 2;
-                            if (count > utflen)
-                            {
-                                throw CreateDataFormatException();
-                            }
-                            char2 = bytearr[count - 1];
-                            if ((char2 & 0xC0) != 0x80)
-                            {
-                                throw CreateDataFormatException();
-                            }
-                            str.Append((char) (((c & 0x1F) << 6) | (char2 & 0x3F)));
-                            break;
-                        case 14:
-                            /* 1110 xxxx 10xx xxxx 10xx xxxx */
-                            count += 3;
-                            if (count > utflen)
-                            {
-                                throw CreateDataFormatException();
-                            }
-                            char2 = bytearr[count - 2];
-                            char3 = bytearr[count - 1];
-                            if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
-                            {
-                                throw CreateDataFormatException();
-                            }
-                            str.Append((char) (((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0)));
-                            break;
-                        default :
-                            /* 10xx xxxx, 1111 xxxx */
-                            throw CreateDataFormatException();
-                    }
-                }
-// The number of chars produced may be less than utflen
-                return str.ToString();
-            }
-            else
-            {
-                return null;
-            }
-        }
-        
-        private static Exception CreateDataFormatException()
-        {
-            // TODO: implement a better exception
-            return new Exception("Data format error!");
-        }
-        
         
         /// <summary>
         /// Converts the object to a String

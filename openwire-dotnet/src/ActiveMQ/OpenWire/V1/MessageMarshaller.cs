@@ -51,11 +51,11 @@ namespace ActiveMQ.OpenWire.V1
         info.MessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
         info.OriginalTransactionId = (TransactionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.GroupID = TightUnmarshalString(dataIn, bs);
-        info.GroupSequence = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.GroupSequence = dataIn.ReadInt32();
         info.CorrelationId = TightUnmarshalString(dataIn, bs);
         info.Persistent = bs.ReadBoolean();
         info.Expiration = TightUnmarshalLong(wireFormat, dataIn, bs);
-        info.Priority = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.Priority = dataIn.ReadByte();
         info.ReplyTo = (ActiveMQDestination) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
         info.Timestamp = TightUnmarshalLong(wireFormat, dataIn, bs);
         info.Type = TightUnmarshalString(dataIn, bs);
@@ -64,10 +64,10 @@ namespace ActiveMQ.OpenWire.V1
         info.DataStructure = (DataStructure) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
         info.TargetConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Compressed = bs.ReadBoolean();
-        info.RedeliveryCounter = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.RedeliveryCounter = dataIn.ReadInt32();
 
         if (bs.ReadBoolean()) {
-            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
+            short size = dataIn.ReadInt16();
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (BrokerId) TightUnmarshalNestedObject(wireFormat,dataIn, bs);
@@ -133,26 +133,26 @@ namespace ActiveMQ.OpenWire.V1
     TightMarshalNestedObject2(wireFormat, info.MessageId, dataOut, bs);
     TightMarshalCachedObject2(wireFormat, info.OriginalTransactionId, dataOut, bs);
     TightMarshalString2(info.GroupID, dataOut, bs);
-    BaseDataStreamMarshaller.WriteInt(info.GroupSequence, dataOut);
+    dataOut.Write(info.GroupSequence);
     TightMarshalString2(info.CorrelationId, dataOut, bs);
     bs.ReadBoolean();
     TightMarshalLong2(wireFormat, info.Expiration, dataOut, bs);
-    BaseDataStreamMarshaller.WriteByte(info.Priority, dataOut);
+    dataOut.Write(info.Priority);
     TightMarshalNestedObject2(wireFormat, info.ReplyTo, dataOut, bs);
     TightMarshalLong2(wireFormat, info.Timestamp, dataOut, bs);
     TightMarshalString2(info.Type, dataOut, bs);
     if(bs.ReadBoolean()) {
-           BaseDataStreamMarshaller.WriteInt(info.Content.Length, dataOut);
+           dataOut.Write(info.Content.Length);
            dataOut.Write(info.Content);
         }
     if(bs.ReadBoolean()) {
-           BaseDataStreamMarshaller.WriteInt(info.MarshalledProperties.Length, dataOut);
+           dataOut.Write(info.MarshalledProperties.Length);
            dataOut.Write(info.MarshalledProperties);
         }
     TightMarshalNestedObject2(wireFormat, info.DataStructure, dataOut, bs);
     TightMarshalCachedObject2(wireFormat, info.TargetConsumerId, dataOut, bs);
     bs.ReadBoolean();
-    BaseDataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
+    dataOut.Write(info.RedeliveryCounter);
     TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
     TightMarshalLong2(wireFormat, info.Arrival, dataOut, bs);
     TightMarshalString2(info.UserID, dataOut, bs);

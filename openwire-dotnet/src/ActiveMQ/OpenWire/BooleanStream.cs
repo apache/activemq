@@ -79,7 +79,7 @@ namespace ActiveMQ.OpenWire
 				dataOut.Write((byte)arrayLimit);
 			} else {
 				dataOut.Write((byte)0x80);
-				BaseDataStreamMarshaller.WriteShort(arrayLimit, dataOut);
+				dataOut.Write(arrayLimit);
 			}
             dataOut.Write(data, 0, arrayLimit);
             Clear();
@@ -87,11 +87,11 @@ namespace ActiveMQ.OpenWire
         
         public void Unmarshal(BinaryReader dataIn)
         {
-            arrayLimit = (short)(BaseDataStreamMarshaller.ReadByte(dataIn) & 0xFF);
+            arrayLimit = (short)(dataIn.ReadByte() & 0xFF);
 			if ( arrayLimit == 0xC0 ) {
-				arrayLimit = (short)(BaseDataStreamMarshaller.ReadByte(dataIn) & 0xFF);
+				arrayLimit = (short)(dataIn.ReadByte() & 0xFF);
 			} else if( arrayLimit == 0x80 ) {
-				arrayLimit = BaseDataStreamMarshaller.ReadShort(dataIn);
+				arrayLimit = dataIn.ReadInt16();
 			}
 			if( data.Length < arrayLimit ) {
 				data = new byte[arrayLimit];

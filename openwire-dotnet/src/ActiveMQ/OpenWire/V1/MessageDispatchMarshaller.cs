@@ -58,7 +58,7 @@ namespace ActiveMQ.OpenWire.V1
         info.ConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Message = (Message) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.RedeliveryCounter = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.RedeliveryCounter = dataIn.ReadInt32();
 
     }
 
@@ -87,7 +87,7 @@ namespace ActiveMQ.OpenWire.V1
     TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
     TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
     TightMarshalNestedObject2(wireFormat, info.Message, dataOut, bs);
-    BaseDataStreamMarshaller.WriteInt(info.RedeliveryCounter, dataOut);
+    dataOut.Write(info.RedeliveryCounter);
 
     }
   }

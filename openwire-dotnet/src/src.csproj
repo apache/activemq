@@ -103,7 +103,10 @@
         <Compile Include="ActiveMQ\MessageProducer.cs"/>
         <Compile Include="ActiveMQ\OpenWire\BaseDataStreamMarshaller.cs"/>
         <Compile Include="ActiveMQ\OpenWire\BooleanStream.cs"/>
+        <Compile Include="ActiveMQ\OpenWire\EndianSupport.cs"/>
         <Compile Include="ActiveMQ\OpenWire\MessagePropertyHelper.cs"/>
+        <Compile Include="ActiveMQ\OpenWire\OpenWireBinaryReader.cs"/>
+        <Compile Include="ActiveMQ\OpenWire\OpenWireBinaryWriter.cs"/>
         <Compile Include="ActiveMQ\OpenWire\OpenWireFormat.cs"/>
         <Compile Include="ActiveMQ\OpenWire\PrimitiveMap.cs"/>
         <Compile Include="ActiveMQ\OpenWire\V1\ActiveMQBytesMessageMarshaller.cs"/>
