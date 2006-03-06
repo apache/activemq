@@ -400,13 +400,25 @@ final public class OpenWireFormat implements WireFormat {
             nextMarshallCacheIndex=0;
         }
         
-        marshallCache[i] = o;
-        Short index = new Short(i);
-        marshallCacheMap.put(o, index);
-        return index;
+        // We can only cache that item if there is space left.
+        if( marshallCacheMap.size() < MARSHAL_CACHE_SIZE ) {
+            marshallCache[i] = o;
+            Short index = new Short(i);
+            marshallCacheMap.put(o, index);
+            return index;
+        } else {
+            // Use -1 to indicate that the value was not cached due to cache being full.
+            return new Short((short)-1);
+        }
     }
     
     public void setInUnmarshallCache(short index, DataStructure o) {
+        
+        // There was no space left in the cache, so we can't
+        // put this in the cache.
+        if( index == -1 )
+            return;
+        
         unmarshallCache[index]=o;
     }
     
