@@ -44,6 +44,8 @@ public class SimpleTopicTest extends TestCase{
     protected int PAYLOAD_SIZE=1024;
     protected int MESSAGE_COUNT=1000000;
     protected byte[] array=null;
+    protected ConnectionFactory factory;
+    protected Destination destination;
 
     /**
      * Sets up a test where the producer and consumer have their own connection.
@@ -58,21 +60,21 @@ public class SimpleTopicTest extends TestCase{
         for(int i=0;i<array.length;i++){
             array[i]=(byte) i;
         }
-        ConnectionFactory fac=createConnectionFactory();
-        Connection con=fac.createConnection();
+        factory=createConnectionFactory();
+        Connection con=factory.createConnection();
         Session session=con.createSession(false,Session.AUTO_ACKNOWLEDGE);
         payload=session.createBytesMessage();
         payload.writeBytes(array);
-        Destination dest=createDestination(session,DESTINATION_NAME);
+        destination=createDestination(session,DESTINATION_NAME);
         con.close();
         producers=new PerfProducer[NUMBER_OF_PRODUCERS];
         consumers=new PerfConsumer[NUMBER_OF_CONSUMERS];
         for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
-            consumers[i]=createConsumer(fac,dest,i);
+            consumers[i]=createConsumer(factory,destination,i);
             consumers[i].start();
         }
         for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
-            producers[i]=createProducer(fac,dest,i);
+            producers[i]=createProducer(factory,destination,i);
             producers[i].start();
         }
         super.setUp();
@@ -125,7 +127,7 @@ public class SimpleTopicTest extends TestCase{
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(bindAddress);
 //        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?marshal=true");
 //        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?marshal=true&wireFormat.cacheEnabled=false");
-        cf.setAsyncDispatch(false);
+       // cf.setAsyncDispatch(false);
         return cf;
     }
 
