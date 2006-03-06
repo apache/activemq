@@ -59,7 +59,7 @@ namespace ActiveMQ.OpenWire.V1
         info.BrokerURL = TightUnmarshalString(dataIn, bs);
 
         if (bs.ReadBoolean()) {
-            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
+            short size = dataIn.ReadInt16();
             BrokerInfo[] value = new BrokerInfo[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (BrokerInfo) TightUnmarshalNestedObject(wireFormat,dataIn, bs);

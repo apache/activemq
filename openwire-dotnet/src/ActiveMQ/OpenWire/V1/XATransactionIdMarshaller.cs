@@ -55,7 +55,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         XATransactionId info = (XATransactionId)o;
-        info.FormatId = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.FormatId = dataIn.ReadInt32();
         info.GlobalTransactionId = ReadBytes(dataIn, bs.ReadBoolean());
         info.BranchQualifier = ReadBytes(dataIn, bs.ReadBoolean());
 
@@ -84,13 +84,13 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         XATransactionId info = (XATransactionId)o;
-    BaseDataStreamMarshaller.WriteInt(info.FormatId, dataOut);
+    dataOut.Write(info.FormatId);
     if(bs.ReadBoolean()) {
-           BaseDataStreamMarshaller.WriteInt(info.GlobalTransactionId.Length, dataOut);
+           dataOut.Write(info.GlobalTransactionId.Length);
            dataOut.Write(info.GlobalTransactionId);
         }
     if(bs.ReadBoolean()) {
-           BaseDataStreamMarshaller.WriteInt(info.BranchQualifier.Length, dataOut);
+           dataOut.Write(info.BranchQualifier.Length);
            dataOut.Write(info.BranchQualifier);
         }
 

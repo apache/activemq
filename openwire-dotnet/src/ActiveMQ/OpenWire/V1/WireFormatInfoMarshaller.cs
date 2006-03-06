@@ -56,7 +56,7 @@ namespace ActiveMQ.OpenWire.V1
 
         WireFormatInfo info = (WireFormatInfo)o;
         info.Magic = ReadBytes(dataIn, 8);
-        info.Version = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.Version = dataIn.ReadInt32();
         info.CacheEnabled = bs.ReadBoolean();
         info.StackTraceEnabled = bs.ReadBoolean();
         info.TcpNoDelayEnabled = bs.ReadBoolean();
@@ -90,7 +90,7 @@ namespace ActiveMQ.OpenWire.V1
 
         WireFormatInfo info = (WireFormatInfo)o;
     dataOut.Write(info.Magic, 0, 8);
-    BaseDataStreamMarshaller.WriteInt(info.Version, dataOut);
+    dataOut.Write(info.Version);
     bs.ReadBoolean();
     bs.ReadBoolean();
     bs.ReadBoolean();

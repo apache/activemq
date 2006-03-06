@@ -58,10 +58,10 @@ namespace ActiveMQ.OpenWire.V1
         info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.TransactionId = (TransactionId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.ConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.AckType = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.AckType = dataIn.ReadByte();
         info.FirstMessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
         info.LastMessageId = (MessageId) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
-        info.MessageCount = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.MessageCount = dataIn.ReadInt32();
 
     }
 
@@ -92,10 +92,10 @@ namespace ActiveMQ.OpenWire.V1
     TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
     TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
     TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
-    BaseDataStreamMarshaller.WriteByte(info.AckType, dataOut);
+    dataOut.Write(info.AckType);
     TightMarshalNestedObject2(wireFormat, info.FirstMessageId, dataOut, bs);
     TightMarshalNestedObject2(wireFormat, info.LastMessageId, dataOut, bs);
-    BaseDataStreamMarshaller.WriteInt(info.MessageCount, dataOut);
+    dataOut.Write(info.MessageCount);
 
     }
   }

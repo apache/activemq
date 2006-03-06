@@ -55,7 +55,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         Response info = (Response)o;
-        info.CorrelationId = BaseDataStreamMarshaller.ReadShort(dataIn);
+        info.CorrelationId = dataIn.ReadInt16();
 
     }
 
@@ -78,7 +78,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         Response info = (Response)o;
-    BaseDataStreamMarshaller.WriteShort(info.CorrelationId, dataOut);
+    dataOut.Write(info.CorrelationId);
 
     }
   }

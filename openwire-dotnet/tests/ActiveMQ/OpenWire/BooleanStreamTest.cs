@@ -24,7 +24,6 @@ namespace ActiveMQ.OpenWire
     [TestFixture]
     public class BooleanStreamTest
     {
-		protected OpenWireFormat openWireformat;
 		protected int endOfStreamMarker = 0x12345678;
 		int numberOfBytes = 8 * 200;
 		
@@ -72,7 +71,7 @@ namespace ActiveMQ.OpenWire
 		
 		protected void TestBooleanStream(int numberOfBytes, GetBooleanValueDelegate valueDelegate)
 		{
-			for (int i = 0; i < numberOfBytes; i++)
+			for (int i = 1017; i < numberOfBytes; i++)
 			{
 				AssertMarshalBooleans(i, valueDelegate);
 			}
@@ -86,14 +85,14 @@ namespace ActiveMQ.OpenWire
 				bs.WriteBoolean(valueDelegate(i, count));
 			}
 			MemoryStream buffer = new MemoryStream();
-			BinaryWriter ds = new BinaryWriter(buffer);
+			BinaryWriter ds = new OpenWireBinaryWriter(buffer);
 			bs.Marshal(ds);
-			BaseDataStreamMarshaller.WriteInt(endOfStreamMarker, ds);
+			ds.Write(endOfStreamMarker);
 			
 			// now lets read from the stream
 			
 			MemoryStream ins = new MemoryStream(buffer.ToArray());
-			BinaryReader dis = new BinaryReader(ins);
+			BinaryReader dis = new OpenWireBinaryReader(ins);
 			bs = new BooleanStream();
 			bs.Unmarshal(dis);
 			
@@ -111,7 +110,7 @@ namespace ActiveMQ.OpenWire
 					Assert.Fail("Failed to parse bool: " + i + " out of: " + count + " due to: " + e);
 				}
 			}
-			int marker = BaseDataStreamMarshaller.ReadInt(dis);
+			int marker = dis.ReadInt32();
 			Assert.AreEqual(endOfStreamMarker, marker, "did not match: "+endOfStreamMarker+" and "+marker);
 			
 			// lets try read and we should get an exception
@@ -125,20 +124,6 @@ namespace ActiveMQ.OpenWire
 			}
 		}
 		
-        [SetUp]
-        protected void SetUp()
-		{
-			openWireformat = createOpenWireFormat();
-		}
-		
-		protected OpenWireFormat createOpenWireFormat()
-		{
-			OpenWireFormat wf = new OpenWireFormat();
-//			wf.setCacheEnabled(true);
-//			wf.setStackTraceEnabled(false);
-//			wf.setVersion(1);
-			return wf;
-		}
 	}
 }
 

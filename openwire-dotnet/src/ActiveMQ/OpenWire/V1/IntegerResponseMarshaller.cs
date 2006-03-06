@@ -55,7 +55,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         IntegerResponse info = (IntegerResponse)o;
-        info.Result = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.Result = dataIn.ReadInt32();
 
     }
 
@@ -78,7 +78,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         IntegerResponse info = (IntegerResponse)o;
-    BaseDataStreamMarshaller.WriteInt(info.Result, dataOut);
+    dataOut.Write(info.Result);
 
     }
   }

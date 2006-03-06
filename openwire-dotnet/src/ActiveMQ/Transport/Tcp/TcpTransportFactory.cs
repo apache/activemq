@@ -30,7 +30,7 @@ namespace ActiveMQ.Transport.Tcp
 			Socket socket = Connect(location.Host, location.Port);
 			ITransport rc = new TcpTransport(socket);
 			// TODO: use URI query string to enable the LoggingTransport
-			// rc = new LoggingTransport(rc);
+			 rc = new LoggingTransport(rc);
 			rc = new ResponseCorrelator(rc);
 			rc = new MutexTransport(rc);
 			return rc;

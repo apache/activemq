@@ -58,18 +58,18 @@ namespace ActiveMQ.OpenWire.V1
         info.ConsumerId = (ConsumerId) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
         info.Browser = bs.ReadBoolean();
         info.Destination = (ActiveMQDestination) TightUnmarshalCachedObject(wireFormat, dataIn, bs);
-        info.PrefetchSize = BaseDataStreamMarshaller.ReadInt(dataIn);
-        info.MaximumPendingMessageLimit = BaseDataStreamMarshaller.ReadInt(dataIn);
+        info.PrefetchSize = dataIn.ReadInt32();
+        info.MaximumPendingMessageLimit = dataIn.ReadInt32();
         info.DispatchAsync = bs.ReadBoolean();
         info.Selector = TightUnmarshalString(dataIn, bs);
         info.SubcriptionName = TightUnmarshalString(dataIn, bs);
         info.NoLocal = bs.ReadBoolean();
         info.Exclusive = bs.ReadBoolean();
         info.Retroactive = bs.ReadBoolean();
-        info.Priority = BaseDataStreamMarshaller.ReadByte(dataIn);
+        info.Priority = dataIn.ReadByte();
 
         if (bs.ReadBoolean()) {
-            short size = BaseDataStreamMarshaller.ReadShort(dataIn);
+            short size = dataIn.ReadInt16();
             BrokerId[] value = new BrokerId[size];
             for( int i=0; i < size; i++ ) {
                 value[i] = (BrokerId) TightUnmarshalNestedObject(wireFormat,dataIn, bs);
@@ -116,15 +116,15 @@ namespace ActiveMQ.OpenWire.V1
     TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
     bs.ReadBoolean();
     TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
-    BaseDataStreamMarshaller.WriteInt(info.PrefetchSize, dataOut);
-    BaseDataStreamMarshaller.WriteInt(info.MaximumPendingMessageLimit, dataOut);
+    dataOut.Write(info.PrefetchSize);
+    dataOut.Write(info.MaximumPendingMessageLimit);
     bs.ReadBoolean();
     TightMarshalString2(info.Selector, dataOut, bs);
     TightMarshalString2(info.SubcriptionName, dataOut, bs);
     bs.ReadBoolean();
     bs.ReadBoolean();
     bs.ReadBoolean();
-    BaseDataStreamMarshaller.WriteByte(info.Priority, dataOut);
+    dataOut.Write(info.Priority);
     TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
     bs.ReadBoolean();
 

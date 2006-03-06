@@ -41,7 +41,7 @@ namespace ActiveMQ.Transport.Tcp
         private bool started;
         volatile private bool closed;
         
-        private CommandHandler commandHandlerHandlerHandlerHandlerHandler;
+        private CommandHandler commandHandler;
         private ExceptionHandler exceptionHandler;
         
         public TcpTransport(Socket socket)
@@ -56,7 +56,7 @@ namespace ActiveMQ.Transport.Tcp
         {
             if (!started)
             {
-				if( commandHandlerHandlerHandlerHandlerHandler == null )
+				if( commandHandler == null )
 					throw new InvalidOperationException ("command cannot be null when Start is called.");
 				if( exceptionHandler == null )
 					throw new InvalidOperationException ("exception cannot be null when Start is called.");
@@ -64,8 +64,8 @@ namespace ActiveMQ.Transport.Tcp
                 started = true;
                 
                 NetworkStream networkStream = new NetworkStream(socket);
-                socketWriter = new BinaryWriter(networkStream);
-                socketReader = new BinaryReader(networkStream);
+                socketWriter = new OpenWireBinaryWriter(networkStream);
+                socketReader = new OpenWireBinaryReader(networkStream);
                 
                 // now lets create the background read thread
                 readThread = new Thread(new ThreadStart(ReadLoop));
@@ -108,37 +108,29 @@ namespace ActiveMQ.Transport.Tcp
                 try
                 {
                     Command command = (Command) wireformat.Unmarshal(socketReader);
-					this.commandHandlerHandlerHandlerHandlerHandler(this, command);
+					this.commandHandler(this, command);
                 }
 				catch (ObjectDisposedException)
                 {
                     break;
                 }
-				catch ( IOException e) {
+				catch ( Exception e) {
 					if( e.GetBaseException() is ObjectDisposedException ) {
 						break;
 					}
 					if( !closed ) {
 						this.exceptionHandler(this,e);
 					}
+					break;
 				}
-                catch (Exception e)
-                {
-					if( !closed ) {
-						this.exceptionHandler(this,e);
-					}
-                }
             }
         }
-        
-		
-		
-        
+                
         // Implementation methods
                 
 		public CommandHandler Command {
-            get { return commandHandlerHandlerHandlerHandlerHandler; }
-            set { this.commandHandlerHandlerHandlerHandlerHandler = value; }
+            get { return commandHandler; }
+            set { this.commandHandler = value; }
         }
 		
         public  ExceptionHandler Exception {

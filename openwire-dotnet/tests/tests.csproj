@@ -52,6 +52,7 @@
         <Compile Include="JMS\JMSPropertyTest.cs"/>
         <Compile Include="JMS\JMSTestSupport.cs"/>
         <Compile Include="JMS\MapMessageTest.cs"/>
+        <Compile Include="JMS\MessageTest.cs"/>
         <Compile Include="JMS\TextMessage.cs"/>
         <Compile Include="JMS\TransactionTest.cs"/>
     </ItemGroup>
