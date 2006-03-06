@@ -444,7 +444,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         session.commit();
 
         log.info("About to consume message 1");
-        Message message = consumer.receive(1000);
+        Message message = consumer.receive(5000);
 
         List body = assertReceivedObjectMessageWithListBody(message);
 
@@ -460,7 +460,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         body.add("This should never be seen!");
         session.rollback();
 
-        message = consumer.receive(1000);
+        message = consumer.receive(5000);
         List secondBody = assertReceivedObjectMessageWithListBody(message);
         assertNotSame("Second call should return a different body", secondBody, body);
         session.commit();
