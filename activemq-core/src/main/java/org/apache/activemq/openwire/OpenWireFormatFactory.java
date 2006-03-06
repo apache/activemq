@@ -28,6 +28,8 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     private boolean stackTraceEnabled=true;
     private boolean tcpNoDelayEnabled=false;
     private boolean cacheEnabled=true;
+    private boolean tightEncodingEnabled=true;
+    private boolean prefixPacketSize=true;
 
     public WireFormat createWireFormat() {
         OpenWireFormat format = new OpenWireFormat();
@@ -35,6 +37,8 @@ public class OpenWireFormatFactory implements WireFormatFactory {
         format.setStackTraceEnabled(stackTraceEnabled);
         format.setCacheEnabled(cacheEnabled);
         format.setTcpNoDelayEnabled(tcpNoDelayEnabled);
+        format.setTightEncodingEnabled(tightEncodingEnabled);
+        format.setPrefixPacketSize(prefixPacketSize);
         return format;
     }
 
@@ -68,5 +72,21 @@ public class OpenWireFormatFactory implements WireFormatFactory {
 
     public void setCacheEnabled(boolean cacheEnabled) {
         this.cacheEnabled = cacheEnabled;
+    }
+
+    public boolean isTightEncodingEnabled() {
+        return tightEncodingEnabled;
+    }
+
+    public void setTightEncodingEnabled(boolean tightEncodingEnabled) {
+        this.tightEncodingEnabled = tightEncodingEnabled;
+    }
+
+    public boolean isPrefixPacketSize() {
+        return prefixPacketSize;
+    }
+
+    public void setPrefixPacketSize(boolean prefixPacketSize) {
+        this.prefixPacketSize = prefixPacketSize;
     }
 }
