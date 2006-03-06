@@ -34,8 +34,8 @@ public class ManagedTopicRegion extends TopicRegion {
 
     private final ManagedRegionBroker regionBroker;
 
-    public ManagedTopicRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter, PolicyMap policyMap) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter, policyMap);
+    public ManagedTopicRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
         regionBroker = broker;
     }
 

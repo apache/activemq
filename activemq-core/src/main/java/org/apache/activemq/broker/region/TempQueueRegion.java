@@ -33,7 +33,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  */
 public class TempQueueRegion extends AbstractRegion {
 
-    public TempQueueRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
+    public TempQueueRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
         super(broker,destinationStatistics, memoryManager, taskRunnerFactory, null);
         setAutoCreateDestinations(false);
     }

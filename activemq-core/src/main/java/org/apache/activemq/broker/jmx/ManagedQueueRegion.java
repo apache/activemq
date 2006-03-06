@@ -34,8 +34,8 @@ public class ManagedQueueRegion extends QueueRegion {
 
     private final ManagedRegionBroker regionBroker;
 
-    public ManagedQueueRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter, PolicyMap policyMap) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter, policyMap);
+    public ManagedQueueRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
         regionBroker = broker;
     }
 

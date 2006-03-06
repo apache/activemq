@@ -893,11 +893,10 @@ public class BrokerService implements Service {
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             regionBroker = new ManagedRegionBroker(this,mbeanServer, getBrokerObjectName(),
-                    getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter(), getDestinationPolicy());
+                    getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter());
         }
         else {
-			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter(),
-                    getDestinationPolicy());
+			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter());
         }
 		regionBroker.setBrokerName(getBrokerName());
 		return regionBroker;
