@@ -365,7 +365,7 @@ final public class OpenWireFormat implements WireFormat {
     }
     
     public Short addToMarshallCache(Object o) {
-        Short index = new Short(nextMarshallCacheIndex++);
+        nextMarshallCacheIndex++;
         if( nextMarshallCacheIndex >= MARSHAL_CACHE_SIZE ) {
             nextMarshallCacheIndex=0;
         }
@@ -377,6 +377,8 @@ final public class OpenWireFormat implements WireFormat {
             marshallCacheMap.remove(marshallCache[lasMarshallCacheEvictionIndex]);
             marshallCache[lasMarshallCacheEvictionIndex]=null;
         }
+        marshallCache[nextMarshallCacheIndex] = (DataStructure) o;
+        Short index = new Short(nextMarshallCacheIndex);
         marshallCacheMap.put(o, index);
         return index;
     }
