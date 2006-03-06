@@ -106,7 +106,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
         ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
 
         String clientId = info.getClientid();
-        if (clientId != null) {
+        if (clientId != null && clientId.length() > 0) {
             physicalConnection.setClientID(clientId);
         }
         return physicalConnection;
