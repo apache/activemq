@@ -469,12 +469,8 @@
  
     </dependencies>
   </dependencyManagement>
-
+<!--
   <dependencies>
-
-    <!-- =============================== -->
-    <!-- Testing dependencies -->
-    <!-- =============================== -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -495,8 +491,8 @@
       <artifactId>cglib-full</artifactId>
       <scope>test</scope>
     </dependency>
- 
   </dependencies>
+-->
 
   <distributionManagement>
     <!--
