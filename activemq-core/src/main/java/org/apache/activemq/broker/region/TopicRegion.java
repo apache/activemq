@@ -66,12 +66,14 @@ public class TopicRegion extends AbstractRegion {
                 lookup(context, destination);
             }
 
-            SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
+            String clientId = context.getClientId();
+            String subcriptionName = info.getSubcriptionName();
+            SubscriptionKey key = new SubscriptionKey(clientId, subcriptionName);
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if (sub != null) {
 
                 if (sub.isActive()) {
-                    throw new JMSException("Durable consumer is in use");
+                    throw new JMSException("Durable consumer is in use for client: " + clientId + " and subscriptionName: " + subcriptionName);
                 }
 
                 // Has the selector changed??
