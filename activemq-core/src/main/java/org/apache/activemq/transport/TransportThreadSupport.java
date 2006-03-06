@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport;
 
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.util.ServiceStopper;
 
 import java.io.IOException;
@@ -81,9 +83,12 @@ public abstract class TransportThreadSupport extends TransportSupport implements
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
 
-    protected void checkStarted() {
+    protected void checkStarted(Command command) {
         if (!isStarted()) {
-            throw new IllegalStateException("The transport " + this + " of type: " + getClass().getName() + " has not been started yet!");
+            // we might try to shut down the transport before it was ever started in some test cases
+            if (!(command instanceof ShutdownInfo)) {
+                throw new IllegalStateException("The transport " + this + " of type: " + getClass().getName() + " has not been started yet!");
+            }
         }
     }
 }
