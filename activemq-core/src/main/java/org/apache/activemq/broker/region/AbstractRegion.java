@@ -52,12 +52,12 @@ abstract public class AbstractRegion implements Region {
     protected final UsageManager memoryManager;
     protected final PersistenceAdapter persistenceAdapter;
     protected final DestinationStatistics destinationStatistics;
-    protected final Broker broker;
+    protected final RegionBroker broker;
     protected boolean autoCreateDestinations=true;
     protected final TaskRunnerFactory taskRunnerFactory;
     protected final Object destinationsMutex = new Object();
     
-    public AbstractRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+    public AbstractRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
         this.broker = broker;
         this.destinationStatistics = destinationStatistics;
         this.memoryManager = memoryManager;

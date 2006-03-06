@@ -49,12 +49,12 @@ public class TopicRegion extends AbstractRegion {
     private static final Log log = LogFactory.getLog(TopicRegion.class);
     
     protected final ConcurrentHashMap durableSubscriptions = new ConcurrentHashMap();
-    private final PolicyMap policyMap;
+   
 
-    public TopicRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
-            PersistenceAdapter persistenceAdapter, PolicyMap policyMap) {
+    public TopicRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+            PersistenceAdapter persistenceAdapter) {
         super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
-        this.policyMap = policyMap;
+        
     }
 
     public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
@@ -182,8 +182,8 @@ public class TopicRegion extends AbstractRegion {
     }
 
     protected void configureTopic(Topic topic, ActiveMQDestination destination) {
-        if (policyMap != null) {
-            PolicyEntry entry = policyMap.getEntryFor(destination);
+        if (broker.getDestinationPolicy() != null) {
+            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
                 entry.configure(topic);
             }
@@ -208,8 +208,8 @@ public class TopicRegion extends AbstractRegion {
             
             // lets configure the subscription depending on the destination
             ActiveMQDestination destination = info.getDestination();
-            if (destination != null && policyMap != null) {
-                PolicyEntry entry = policyMap.getEntryFor(destination);
+            if (destination != null && broker.getDestinationPolicy() != null) {
+                PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                 if (entry != null) {
                     entry.configure(answer);
                 }

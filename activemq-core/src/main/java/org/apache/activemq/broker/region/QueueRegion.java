@@ -39,12 +39,11 @@ import java.util.Set;
  */
 public class QueueRegion extends AbstractRegion {
 
-    private final PolicyMap policyMap;
+    
 
-    public QueueRegion(Broker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
-            PersistenceAdapter persistenceAdapter, PolicyMap policyMap) {
+    public QueueRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+            PersistenceAdapter persistenceAdapter) {
         super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
-        this.policyMap = policyMap;
     }
 
     public String toString() {
@@ -62,8 +61,8 @@ public class QueueRegion extends AbstractRegion {
     }
 
     protected void configureQueue(Queue queue, ActiveMQDestination destination) {
-        if (policyMap != null) {
-            PolicyEntry entry = policyMap.getEntryFor(destination);
+        if (broker.getDestinationPolicy() != null) {
+            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
                 entry.configure(queue);
             }

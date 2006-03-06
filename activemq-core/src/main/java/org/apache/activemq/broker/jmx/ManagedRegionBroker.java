@@ -83,9 +83,8 @@ public class ManagedRegionBroker extends RegionBroker{
     private Broker contextBroker;
 
     public ManagedRegionBroker(BrokerService brokerService,MBeanServer mbeanServer,ObjectName brokerObjectName,
-                    TaskRunnerFactory taskRunnerFactory,UsageManager memoryManager,PersistenceAdapter adapter,
-                    PolicyMap policyMap) throws IOException{
-        super(brokerService,taskRunnerFactory,memoryManager,adapter,policyMap);
+                    TaskRunnerFactory taskRunnerFactory,UsageManager memoryManager,PersistenceAdapter adapter) throws IOException{
+        super(brokerService,taskRunnerFactory,memoryManager,adapter);
         this.mbeanServer=mbeanServer;
         this.brokerObjectName=brokerObjectName;
     }
@@ -98,8 +97,8 @@ public class ManagedRegionBroker extends RegionBroker{
     }
 
     protected Region createQueueRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory,
-                    PersistenceAdapter adapter,PolicyMap policyMap){
-        return new ManagedQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,adapter,policyMap);
+                    PersistenceAdapter adapter){
+        return new ManagedQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,adapter);
     }
 
     protected Region createTempQueueRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory){
@@ -111,8 +110,8 @@ public class ManagedRegionBroker extends RegionBroker{
     }
 
     protected Region createTopicRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory,
-                    PersistenceAdapter adapter,PolicyMap policyMap){
-        return new ManagedTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,adapter,policyMap);
+                    PersistenceAdapter adapter){
+        return new ManagedTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,adapter);
     }
 
     public void register(ActiveMQDestination destName,Destination destination){
