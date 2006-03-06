@@ -353,6 +353,9 @@
           <exclude>**/MultiBrokersMultiClientsTest.*</exclude>
           <!-- https://jira.logicblaze.com/jira/browse/AMQ-474 -->
           <exclude>**/MultiBrokersMultiClientsUsingTcpTest.*</exclude>
+	  
+	  <!-- http://jira.activemq.org/jira/browse/AMQ-575 -->                                                                                          
+          <exclude>**/QueueClusterTest.*</exclude>  
 
       </excludes>
     </unitTest>
