@@ -523,8 +523,8 @@ public class Queue implements Destination {
                             BrokerSupport.resend(context, m, dest);                            
                         } finally {
                             r.decrementReferenceCount();
-                        }
-                        break;
+                        }                        
+                        return true;
                     }
                 } catch (IOException e) {
                 }
