@@ -81,6 +81,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
             throw new IllegalStateException("You must configure the 'localURI' property");
         }
         this.discoveryAgent.start();
+        log.info("Network Connector "+getName()+" Started");
     }
 
     public void stop() throws Exception {
@@ -89,6 +90,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
             Bridge bridge = (Bridge)i.next();
             bridge.stop();
         }
+        log.info("Network Connector "+getName()+" Stopped");
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
@@ -228,6 +230,9 @@ public class NetworkConnector implements Service, DiscoveryListener {
      * @return Returns the name.
      */
     public String getName(){
+        if( name == null ) {
+            name = discoveryAgent.toString();
+        }
         return name;
     }
 
@@ -373,7 +378,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
         if (conduitSubscriptions){
             if (dynamicOnly){
                 result = new ConduitBridge(localTransport, remoteTransport) {
-                    protected void serviceRemoteException(IOException error) {
+                    protected void serviceRemoteException(Exception error) {
                         super.serviceRemoteException(error);
                         try {
                             // Notify the discovery agent that the remote broker failed.
@@ -384,7 +389,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
                 };
             }else {
                 result = new DurableConduitBridge(localTransport, remoteTransport) {
-                    protected void serviceRemoteException(IOException error) {
+                    protected void serviceRemoteException(Exception error) {
                         super.serviceRemoteException(error);
                         try {
                             // Notify the discovery agent that the remote broker failed.
@@ -396,7 +401,7 @@ public class NetworkConnector implements Service, DiscoveryListener {
             }
         }else {
          result = new DemandForwardingBridge(localTransport, remoteTransport) {
-            protected void serviceRemoteException(IOException error) {
+            protected void serviceRemoteException(Exception error) {
                 super.serviceRemoteException(error);
                 try {
                     // Notify the discovery agent that the remote broker failed.

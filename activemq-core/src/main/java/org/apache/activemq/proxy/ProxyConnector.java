@@ -46,6 +46,7 @@ public class ProxyConnector implements Service {
     private URI bind;
     private URI remote;
     private URI localUri;
+    private String name;
     
     CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
        
@@ -69,6 +70,7 @@ public class ProxyConnector implements Service {
             }
         });
         getServer().start();
+        log.info("Proxy Connector "+getName()+" Started");
 
     }
 
@@ -82,6 +84,7 @@ public class ProxyConnector implements Service {
 		   ss.stop((Service) iter.next());
 		}
         ss.throwFirstException();
+        log.info("Proxy Connector "+getName()+" Stopped");
     }
     
     // Properties
@@ -145,6 +148,17 @@ public class ProxyConnector implements Service {
         	}
         };
         return transport;
+    }
+
+    public String getName() {
+        if( name == null ) {
+            name = server.getConnectURI().toString();
+        }
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
 }

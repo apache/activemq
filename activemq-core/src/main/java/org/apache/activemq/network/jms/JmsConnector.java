@@ -19,10 +19,9 @@ package org.apache.activemq.network.jms;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
@@ -31,6 +30,7 @@ import org.apache.activemq.util.LRUCache;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jndi.JndiTemplate;
+
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
@@ -41,6 +41,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  * @version $Revision: 1.1.1.1 $
  */
 public abstract class JmsConnector implements Service{
+    
     private static final Log log=LogFactory.getLog(JmsConnector.class);
     protected JndiTemplate jndiLocalTemplate;
     protected JndiTemplate jndiOutboundTemplate;
@@ -52,11 +53,18 @@ public abstract class JmsConnector implements Service{
     protected AtomicBoolean started = new AtomicBoolean(false);
     protected ActiveMQConnectionFactory  embeddedConnectionFactory;
     protected int replyToDestinationCacheSize=10000;
-    protected  String outboundUsername;
+    protected String outboundUsername;
     protected String outboundPassword;
     protected String localUsername;
-    protected  String localPassword;
+    protected String localPassword;
+    private String name;
+    
     protected LRUCache replyToBridges=new LRUCache(){
+        /**
+         * 
+         */
+        private static final long serialVersionUID = -7446792754185879286L;
+
         protected boolean removeEldestEntry(Map.Entry enty){
             if(size()>maxCacheSize){
                 Iterator iter=entrySet().iterator();
@@ -97,14 +105,15 @@ public abstract class JmsConnector implements Service{
     public void start() throws Exception{
         init();
         if (started.compareAndSet(false, true)){
-        for(int i=0;i<inboundBridges.size();i++){
-            DestinationBridge bridge=(DestinationBridge) inboundBridges.get(i);
-            bridge.start();
-        }
-        for(int i=0;i<outboundBridges.size();i++){
-            DestinationBridge bridge=(DestinationBridge) outboundBridges.get(i);
-            bridge.start();
-        }
+            for(int i=0;i<inboundBridges.size();i++){
+                DestinationBridge bridge=(DestinationBridge) inboundBridges.get(i);
+                bridge.start();
+            }
+            for(int i=0;i<outboundBridges.size();i++){
+                DestinationBridge bridge=(DestinationBridge) outboundBridges.get(i);
+                bridge.start();
+            }
+            log.info("JMS Connector "+getName()+" Started");
         }
     }
 
@@ -118,6 +127,7 @@ public abstract class JmsConnector implements Service{
                 DestinationBridge bridge=(DestinationBridge) outboundBridges.get(i);
                 bridge.stop();
             }
+            log.info("JMS Connector "+getName()+" Stopped");
         }
     }
     
@@ -275,5 +285,21 @@ public abstract class JmsConnector implements Service{
     
     protected void removeOutboundBridge(DestinationBridge bridge){
         outboundBridges.add(bridge);
+    }
+
+    public String getName() {
+        if( name == null ) {
+            name = "Connector:"+getNextId();
+        }
+        return name;
+    }
+    
+    static int nextId;
+    static private synchronized int getNextId() {
+        return nextId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
