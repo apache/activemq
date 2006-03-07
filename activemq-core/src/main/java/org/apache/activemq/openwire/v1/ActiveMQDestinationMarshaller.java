@@ -63,7 +63,7 @@ public abstract class ActiveMQDestinationMarshaller extends BaseDataStreamMarsha
         ActiveMQDestination info = (ActiveMQDestination)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getPhysicalName(), bs);
+        rc += tightMarshalString1(info.getPhysicalName(), bs);
 
         return rc + 0;
     }
@@ -79,7 +79,7 @@ public abstract class ActiveMQDestinationMarshaller extends BaseDataStreamMarsha
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ActiveMQDestination info = (ActiveMQDestination)o;
-    tightMarshalString2(info.getPhysicalName(), dataOut, bs);
+        tightMarshalString2(info.getPhysicalName(), dataOut, bs);
 
     }
 
@@ -107,7 +107,7 @@ public abstract class ActiveMQDestinationMarshaller extends BaseDataStreamMarsha
         ActiveMQDestination info = (ActiveMQDestination)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getPhysicalName(), dataOut);
+        looseMarshalString(info.getPhysicalName(), dataOut);
 
     }
 }

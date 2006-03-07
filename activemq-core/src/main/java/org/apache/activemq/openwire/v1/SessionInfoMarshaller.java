@@ -78,7 +78,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         SessionInfo info = (SessionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getSessionId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getSessionId(), bs);
 
         return rc + 0;
     }
@@ -94,7 +94,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         SessionInfo info = (SessionInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getSessionId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getSessionId(), dataOut, bs);
 
     }
 
@@ -122,7 +122,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         SessionInfo info = (SessionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getSessionId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getSessionId(), dataOut);
 
     }
 }

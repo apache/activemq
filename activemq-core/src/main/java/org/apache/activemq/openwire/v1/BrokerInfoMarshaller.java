@@ -93,11 +93,11 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         BrokerInfo info = (BrokerInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getBrokerId(), bs);
-    rc += tightMarshalString1(info.getBrokerURL(), bs);
-    rc += tightMarshalObjectArray1(wireFormat, info.getPeerBrokerInfos(), bs);
-    rc += tightMarshalString1(info.getBrokerName(), bs);
-    bs.writeBoolean(info.isSlaveBroker());
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getBrokerId(), bs);
+        rc += tightMarshalString1(info.getBrokerURL(), bs);
+        rc += tightMarshalObjectArray1(wireFormat, info.getPeerBrokerInfos(), bs);
+        rc += tightMarshalString1(info.getBrokerName(), bs);
+        bs.writeBoolean(info.isSlaveBroker());
 
         return rc + 0;
     }
@@ -113,11 +113,11 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         BrokerInfo info = (BrokerInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getBrokerId(), dataOut, bs);
-    tightMarshalString2(info.getBrokerURL(), dataOut, bs);
-    tightMarshalObjectArray2(wireFormat, info.getPeerBrokerInfos(), dataOut, bs);
-    tightMarshalString2(info.getBrokerName(), dataOut, bs);
-    bs.readBoolean();
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getBrokerId(), dataOut, bs);
+        tightMarshalString2(info.getBrokerURL(), dataOut, bs);
+        tightMarshalObjectArray2(wireFormat, info.getPeerBrokerInfos(), dataOut, bs);
+        tightMarshalString2(info.getBrokerName(), dataOut, bs);
+        bs.readBoolean();
 
     }
 
@@ -160,11 +160,11 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         BrokerInfo info = (BrokerInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getBrokerId(), dataOut);
-    looseMarshalString(info.getBrokerURL(), dataOut);
-    looseMarshalObjectArray(wireFormat, info.getPeerBrokerInfos(), dataOut);
-    looseMarshalString(info.getBrokerName(), dataOut);
-    dataOut.writeBoolean(info.isSlaveBroker());
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getBrokerId(), dataOut);
+        looseMarshalString(info.getBrokerURL(), dataOut);
+        looseMarshalObjectArray(wireFormat, info.getPeerBrokerInfos(), dataOut);
+        looseMarshalString(info.getBrokerName(), dataOut);
+        dataOut.writeBoolean(info.isSlaveBroker());
 
     }
 }

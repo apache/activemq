@@ -78,7 +78,7 @@ public class ExceptionResponseMarshaller extends ResponseMarshaller {
         ExceptionResponse info = (ExceptionResponse)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalThrowable1(wireFormat, info.getException(), bs);
+        rc += tightMarshalThrowable1(wireFormat, info.getException(), bs);
 
         return rc + 0;
     }
@@ -94,7 +94,7 @@ public class ExceptionResponseMarshaller extends ResponseMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ExceptionResponse info = (ExceptionResponse)o;
-    tightMarshalThrowable2(wireFormat, info.getException(), dataOut, bs);
+        tightMarshalThrowable2(wireFormat, info.getException(), dataOut, bs);
 
     }
 
@@ -122,7 +122,7 @@ public class ExceptionResponseMarshaller extends ResponseMarshaller {
         ExceptionResponse info = (ExceptionResponse)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalThrowable(wireFormat, info.getException(), dataOut);
+        looseMarshalThrowable(wireFormat, info.getException(), dataOut);
 
     }
 }

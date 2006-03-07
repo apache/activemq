@@ -103,18 +103,18 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         ConsumerInfo info = (ConsumerInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
-    bs.writeBoolean(info.isBrowser());
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-            bs.writeBoolean(info.isDispatchAsync());
-    rc += tightMarshalString1(info.getSelector(), bs);
-    rc += tightMarshalString1(info.getSubcriptionName(), bs);
-    bs.writeBoolean(info.isNoLocal());
-    bs.writeBoolean(info.isExclusive());
-    bs.writeBoolean(info.isRetroactive());
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
+        bs.writeBoolean(info.isBrowser());
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+        bs.writeBoolean(info.isDispatchAsync());
+        rc += tightMarshalString1(info.getSelector(), bs);
+        rc += tightMarshalString1(info.getSubcriptionName(), bs);
+        bs.writeBoolean(info.isNoLocal());
+        bs.writeBoolean(info.isExclusive());
+        bs.writeBoolean(info.isRetroactive());
         rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getAdditionalPredicate(), bs);
-    bs.writeBoolean(info.isNetworkSubscription());
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getAdditionalPredicate(), bs);
+        bs.writeBoolean(info.isNetworkSubscription());
 
         return rc + 9;
     }
@@ -130,21 +130,21 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
-    bs.readBoolean();
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
-    dataOut.writeInt(info.getPrefetchSize());
-    dataOut.writeInt(info.getMaximumPendingMessageLimit());
-    bs.readBoolean();
-    tightMarshalString2(info.getSelector(), dataOut, bs);
-    tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
-    bs.readBoolean();
-    bs.readBoolean();
-    bs.readBoolean();
-    dataOut.writeByte(info.getPriority());
-    tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut, bs);
-    bs.readBoolean();
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
+        bs.readBoolean();
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+        dataOut.writeInt(info.getPrefetchSize());
+        dataOut.writeInt(info.getMaximumPendingMessageLimit());
+        bs.readBoolean();
+        tightMarshalString2(info.getSelector(), dataOut, bs);
+        tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
+        bs.readBoolean();
+        bs.readBoolean();
+        bs.readBoolean();
+        dataOut.writeByte(info.getPriority());
+        tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut, bs);
+        bs.readBoolean();
 
     }
 
@@ -197,21 +197,21 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         ConsumerInfo info = (ConsumerInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
-    dataOut.writeBoolean(info.isBrowser());
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
-    dataOut.writeInt(info.getPrefetchSize());
-    dataOut.writeInt(info.getMaximumPendingMessageLimit());
-    dataOut.writeBoolean(info.isDispatchAsync());
-    looseMarshalString(info.getSelector(), dataOut);
-    looseMarshalString(info.getSubcriptionName(), dataOut);
-    dataOut.writeBoolean(info.isNoLocal());
-    dataOut.writeBoolean(info.isExclusive());
-    dataOut.writeBoolean(info.isRetroactive());
-    dataOut.writeByte(info.getPriority());
-    looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut);
-    dataOut.writeBoolean(info.isNetworkSubscription());
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
+        dataOut.writeBoolean(info.isBrowser());
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+        dataOut.writeInt(info.getPrefetchSize());
+        dataOut.writeInt(info.getMaximumPendingMessageLimit());
+        dataOut.writeBoolean(info.isDispatchAsync());
+        looseMarshalString(info.getSelector(), dataOut);
+        looseMarshalString(info.getSubcriptionName(), dataOut);
+        dataOut.writeBoolean(info.isNoLocal());
+        dataOut.writeBoolean(info.isExclusive());
+        dataOut.writeBoolean(info.isRetroactive());
+        dataOut.writeByte(info.getPriority());
+        looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut);
+        dataOut.writeBoolean(info.isNetworkSubscription());
 
     }
 }

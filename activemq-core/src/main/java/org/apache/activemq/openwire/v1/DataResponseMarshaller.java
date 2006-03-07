@@ -78,7 +78,7 @@ public class DataResponseMarshaller extends ResponseMarshaller {
         DataResponse info = (DataResponse)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getData(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getData(), bs);
 
         return rc + 0;
     }
@@ -94,7 +94,7 @@ public class DataResponseMarshaller extends ResponseMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         DataResponse info = (DataResponse)o;
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getData(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getData(), dataOut, bs);
 
     }
 
@@ -122,7 +122,7 @@ public class DataResponseMarshaller extends ResponseMarshaller {
         DataResponse info = (DataResponse)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getData(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getData(), dataOut);
 
     }
 }

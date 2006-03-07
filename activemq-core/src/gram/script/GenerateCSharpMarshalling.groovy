@@ -111,7 +111,6 @@ out << """
         ${jclass.simpleName} info = (${jclass.simpleName})o;
 """
 
-
 if( marshallerAware ) out << """
         info.BeforeMarshall(wireFormat);
 """

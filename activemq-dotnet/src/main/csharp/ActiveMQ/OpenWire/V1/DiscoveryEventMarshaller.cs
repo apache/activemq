@@ -68,8 +68,8 @@ namespace ActiveMQ.OpenWire.V1
         DiscoveryEvent info = (DiscoveryEvent)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalString1(info.ServiceName, bs);
-    rc += TightMarshalString1(info.BrokerName, bs);
+        rc += TightMarshalString1(info.ServiceName, bs);
+        rc += TightMarshalString1(info.BrokerName, bs);
 
         return rc + 0;
     }
@@ -81,8 +81,8 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         DiscoveryEvent info = (DiscoveryEvent)o;
-    TightMarshalString2(info.ServiceName, dataOut, bs);
-    TightMarshalString2(info.BrokerName, dataOut, bs);
+        TightMarshalString2(info.ServiceName, dataOut, bs);
+        TightMarshalString2(info.BrokerName, dataOut, bs);
 
     }
   }

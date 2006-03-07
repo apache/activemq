@@ -67,7 +67,7 @@ namespace ActiveMQ.OpenWire.V1
         JournalTrace info = (JournalTrace)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalString1(info.Message, bs);
+        rc += TightMarshalString1(info.Message, bs);
 
         return rc + 0;
     }
@@ -79,7 +79,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTrace info = (JournalTrace)o;
-    TightMarshalString2(info.Message, dataOut, bs);
+        TightMarshalString2(info.Message, dataOut, bs);
 
     }
   }

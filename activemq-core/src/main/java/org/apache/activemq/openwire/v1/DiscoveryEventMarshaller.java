@@ -79,8 +79,8 @@ public class DiscoveryEventMarshaller extends BaseDataStreamMarshaller {
         DiscoveryEvent info = (DiscoveryEvent)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getServiceName(), bs);
-    rc += tightMarshalString1(info.getBrokerName(), bs);
+        rc += tightMarshalString1(info.getServiceName(), bs);
+        rc += tightMarshalString1(info.getBrokerName(), bs);
 
         return rc + 0;
     }
@@ -96,8 +96,8 @@ public class DiscoveryEventMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         DiscoveryEvent info = (DiscoveryEvent)o;
-    tightMarshalString2(info.getServiceName(), dataOut, bs);
-    tightMarshalString2(info.getBrokerName(), dataOut, bs);
+        tightMarshalString2(info.getServiceName(), dataOut, bs);
+        tightMarshalString2(info.getBrokerName(), dataOut, bs);
 
     }
 
@@ -126,8 +126,8 @@ public class DiscoveryEventMarshaller extends BaseDataStreamMarshaller {
         DiscoveryEvent info = (DiscoveryEvent)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getServiceName(), dataOut);
-    looseMarshalString(info.getBrokerName(), dataOut);
+        looseMarshalString(info.getServiceName(), dataOut);
+        looseMarshalString(info.getBrokerName(), dataOut);
 
     }
 }

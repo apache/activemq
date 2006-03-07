@@ -78,7 +78,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         RemoveInfo info = (RemoveInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getObjectId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getObjectId(), bs);
 
         return rc + 0;
     }
@@ -94,7 +94,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         RemoveInfo info = (RemoveInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getObjectId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getObjectId(), dataOut, bs);
 
     }
 
@@ -122,7 +122,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         RemoveInfo info = (RemoveInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getObjectId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getObjectId(), dataOut);
 
     }
 }

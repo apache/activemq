@@ -203,6 +203,7 @@
         <Compile Include="src\test\csharp\ActiveMQ\OpenWire\BooleanStreamTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\OpenWire\EndianTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\TestMain.cs"/>
+        <Compile Include="src\test\csharp\CommonAssemblyInfo.cs"/>
         <Compile Include="src\test\csharp\JMS\AsyncConsumeTest.cs"/>
         <Compile Include="src\test\csharp\JMS\BadConsumeTest.cs"/>
         <Compile Include="src\test\csharp\JMS\BytesMessageTest.cs"/>

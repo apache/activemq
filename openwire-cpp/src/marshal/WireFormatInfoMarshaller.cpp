@@ -56,9 +56,14 @@ void WireFormatInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, B
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     WireFormatInfo& info = (WireFormatInfo&) o;
+
+    info.beforeUnmarshall(wireFormat);
+        
         info.setMagic(tightUnmarshalConstByteArray(dataIn, bs, 8));
         info.setVersion(dataIn.readInt());
         info.setMarshalledProperties(tightUnmarshalByteSequence(dataIn, bs));
+
+    info.afterUnmarshall(wireFormat);
 
 }
 
@@ -68,6 +73,8 @@ void WireFormatInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, B
  */
 int WireFormatInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
     WireFormatInfo& info = (WireFormatInfo&) o;
+
+    info.beforeMarshall(wireFormat);
 
     int rc = base.marshal1(wireFormat, info, bs);
             bs.writeBoolean(info.getMarshalledProperties()!=null);
@@ -89,5 +96,7 @@ void WireFormatInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, B
        DataStreamMarshaller.writeInt(info.getMarshalledProperties().Length, dataOut);
        dataOut.write(info.getMarshalledProperties());
     }
+
+    info.afterMarshall(wireFormat);
 
 }

@@ -56,7 +56,7 @@ namespace ActiveMQ.OpenWire.V1
         ActiveMQDestination info = (ActiveMQDestination)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalString1(info.PhysicalName, bs);
+        rc += TightMarshalString1(info.PhysicalName, bs);
 
         return rc + 0;
     }
@@ -68,7 +68,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ActiveMQDestination info = (ActiveMQDestination)o;
-    TightMarshalString2(info.PhysicalName, dataOut, bs);
+        TightMarshalString2(info.PhysicalName, dataOut, bs);
 
     }
   }

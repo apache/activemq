@@ -68,8 +68,8 @@ namespace ActiveMQ.OpenWire.V1
         LocalTransactionId info = (LocalTransactionId)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalLong1(wireFormat, info.Value, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
+        rc += TightMarshalLong1(wireFormat, info.Value, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
 
         return rc + 0;
     }
@@ -81,8 +81,8 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         LocalTransactionId info = (LocalTransactionId)o;
-    TightMarshalLong2(wireFormat, info.Value, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
+        TightMarshalLong2(wireFormat, info.Value, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
 
     }
   }

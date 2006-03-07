@@ -78,7 +78,7 @@ public class IntegerResponseMarshaller extends ResponseMarshaller {
         IntegerResponse info = (IntegerResponse)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    
+
         return rc + 4;
     }
 
@@ -93,7 +93,7 @@ public class IntegerResponseMarshaller extends ResponseMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         IntegerResponse info = (IntegerResponse)o;
-    dataOut.writeInt(info.getResult());
+        dataOut.writeInt(info.getResult());
 
     }
 
@@ -121,7 +121,7 @@ public class IntegerResponseMarshaller extends ResponseMarshaller {
         IntegerResponse info = (IntegerResponse)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    dataOut.writeInt(info.getResult());
+        dataOut.writeInt(info.getResult());
 
     }
 }

@@ -67,7 +67,7 @@ namespace ActiveMQ.OpenWire.V1
         ExceptionResponse info = (ExceptionResponse)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalBrokerError1(wireFormat, info.Exception, bs);
+        rc += TightMarshalBrokerError1(wireFormat, info.Exception, bs);
 
         return rc + 0;
     }
@@ -79,7 +79,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ExceptionResponse info = (ExceptionResponse)o;
-    TightMarshalBrokerError2(wireFormat, info.Exception, dataOut, bs);
+        TightMarshalBrokerError2(wireFormat, info.Exception, dataOut, bs);
 
     }
   }

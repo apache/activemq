@@ -16,14 +16,6 @@
  */
 package org.apache.activemq.command;
 
-import org.activeio.ByteArrayInputStream;
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.ByteSequence;
-import org.activeio.command.WireFormat;
-import org.apache.activemq.state.CommandVisitor;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.MarshallingSupport;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -31,6 +23,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.activeio.ByteArrayInputStream;
+import org.activeio.ByteArrayOutputStream;
+import org.activeio.ByteSequence;
+import org.activeio.command.WireFormat;
+import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * 

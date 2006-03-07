@@ -78,7 +78,7 @@ public class ControlCommandMarshaller extends BaseCommandMarshaller {
         ControlCommand info = (ControlCommand)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getCommand(), bs);
+        rc += tightMarshalString1(info.getCommand(), bs);
 
         return rc + 0;
     }
@@ -94,7 +94,7 @@ public class ControlCommandMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ControlCommand info = (ControlCommand)o;
-    tightMarshalString2(info.getCommand(), dataOut, bs);
+        tightMarshalString2(info.getCommand(), dataOut, bs);
 
     }
 
@@ -122,7 +122,7 @@ public class ControlCommandMarshaller extends BaseCommandMarshaller {
         ControlCommand info = (ControlCommand)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getCommand(), dataOut);
+        looseMarshalString(info.getCommand(), dataOut);
 
     }
 }

@@ -100,8 +100,8 @@ namespace ActiveMQ.Commands
         }
         public bool TightEncodingEnabled
         {
-            get { return true.Equals(Properties["tightEncodingEnabled"]); }
-            set { Properties["tightEncodingEnabled"] = value; }
+            get { return true.Equals(Properties["tightEncoding"]); }
+            set { Properties["tightEncoding"] = value; }
         }
 		
 		// MarshallAware interface

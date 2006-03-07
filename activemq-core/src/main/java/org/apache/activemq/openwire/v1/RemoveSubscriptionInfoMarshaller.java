@@ -80,9 +80,9 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
-    rc += tightMarshalString1(info.getSubcriptionName(), bs);
-    rc += tightMarshalString1(info.getClientId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
+        rc += tightMarshalString1(info.getSubcriptionName(), bs);
+        rc += tightMarshalString1(info.getClientId(), bs);
 
         return rc + 0;
     }
@@ -98,9 +98,9 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
-    tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
-    tightMarshalString2(info.getClientId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
+        tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
+        tightMarshalString2(info.getClientId(), dataOut, bs);
 
     }
 
@@ -130,9 +130,9 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
-    looseMarshalString(info.getSubcriptionName(), dataOut);
-    looseMarshalString(info.getClientId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
+        looseMarshalString(info.getSubcriptionName(), dataOut);
+        looseMarshalString(info.getClientId(), dataOut);
 
     }
 }

@@ -79,8 +79,8 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
         LocalTransactionId info = (LocalTransactionId)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
 
         return rc + 0;
     }
@@ -96,8 +96,8 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         LocalTransactionId info = (LocalTransactionId)o;
-    tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
 
     }
 
@@ -126,8 +126,8 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
         LocalTransactionId info = (LocalTransactionId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalLong(wireFormat, info.getValue(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
+        looseMarshalLong(wireFormat, info.getValue(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
 
     }
 }

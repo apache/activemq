@@ -84,12 +84,12 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
         MessageAck info = (MessageAck)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getFirstMessageId(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getLastMessageId(), bs);
-    
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getLastMessageId(), bs);
+
         return rc + 5;
     }
 
@@ -104,13 +104,13 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageAck info = (MessageAck)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
-    dataOut.writeByte(info.getAckType());
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getFirstMessageId(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getLastMessageId(), dataOut, bs);
-    dataOut.writeInt(info.getMessageCount());
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
+        dataOut.writeByte(info.getAckType());
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getFirstMessageId(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getLastMessageId(), dataOut, bs);
+        dataOut.writeInt(info.getMessageCount());
 
     }
 
@@ -144,13 +144,13 @@ public class MessageAckMarshaller extends BaseCommandMarshaller {
         MessageAck info = (MessageAck)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
-    dataOut.writeByte(info.getAckType());
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getFirstMessageId(), dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getLastMessageId(), dataOut);
-    dataOut.writeInt(info.getMessageCount());
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
+        dataOut.writeByte(info.getAckType());
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getFirstMessageId(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getLastMessageId(), dataOut);
+        dataOut.writeInt(info.getMessageCount());
 
     }
 }

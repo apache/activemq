@@ -67,7 +67,7 @@ namespace ActiveMQ.OpenWire.V1
         BrokerId info = (BrokerId)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalString1(info.Value, bs);
+        rc += TightMarshalString1(info.Value, bs);
 
         return rc + 0;
     }
@@ -79,7 +79,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         BrokerId info = (BrokerId)o;
-    TightMarshalString2(info.Value, dataOut, bs);
+        TightMarshalString2(info.Value, dataOut, bs);
 
     }
   }

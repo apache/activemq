@@ -79,8 +79,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         JournalQueueAck info = (JournalQueueAck)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageAck(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageAck(), bs);
 
         return rc + 0;
     }
@@ -96,8 +96,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalQueueAck info = (JournalQueueAck)o;
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageAck(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageAck(), dataOut, bs);
 
     }
 
@@ -126,8 +126,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         JournalQueueAck info = (JournalQueueAck)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageAck(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageAck(), dataOut);
 
     }
 }

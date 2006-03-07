@@ -67,7 +67,7 @@ namespace ActiveMQ.OpenWire.V1
         Response info = (Response)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    
+
         return rc + 2;
     }
 
@@ -78,7 +78,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         Response info = (Response)o;
-    dataOut.Write(info.CorrelationId);
+        dataOut.Write(info.CorrelationId);
 
     }
   }

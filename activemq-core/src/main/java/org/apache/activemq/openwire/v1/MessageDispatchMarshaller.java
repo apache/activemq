@@ -81,10 +81,10 @@ public class MessageDispatchMarshaller extends BaseCommandMarshaller {
         MessageDispatch info = (MessageDispatch)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessage(), bs);
-    
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessage(), bs);
+
         return rc + 4;
     }
 
@@ -99,10 +99,10 @@ public class MessageDispatchMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageDispatch info = (MessageDispatch)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessage(), dataOut, bs);
-    dataOut.writeInt(info.getRedeliveryCounter());
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessage(), dataOut, bs);
+        dataOut.writeInt(info.getRedeliveryCounter());
 
     }
 
@@ -133,10 +133,10 @@ public class MessageDispatchMarshaller extends BaseCommandMarshaller {
         MessageDispatch info = (MessageDispatch)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessage(), dataOut);
-    dataOut.writeInt(info.getRedeliveryCounter());
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessage(), dataOut);
+        dataOut.writeInt(info.getRedeliveryCounter());
 
     }
 }

@@ -80,8 +80,8 @@ public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         BaseCommand info = (BaseCommand)o;
-    dataOut.writeShort(info.getCommandId());
-    bs.readBoolean();
+        dataOut.writeShort(info.getCommandId());
+        bs.readBoolean();
 
     }
 
@@ -110,8 +110,8 @@ public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
         BaseCommand info = (BaseCommand)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    dataOut.writeShort(info.getCommandId());
-    dataOut.writeBoolean(info.isResponseRequired());
+        dataOut.writeShort(info.getCommandId());
+        dataOut.writeBoolean(info.isResponseRequired());
 
     }
 }

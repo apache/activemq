@@ -78,7 +78,7 @@ public class BrokerIdMarshaller extends BaseDataStreamMarshaller {
         BrokerId info = (BrokerId)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getValue(), bs);
+        rc += tightMarshalString1(info.getValue(), bs);
 
         return rc + 0;
     }
@@ -94,7 +94,7 @@ public class BrokerIdMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         BrokerId info = (BrokerId)o;
-    tightMarshalString2(info.getValue(), dataOut, bs);
+        tightMarshalString2(info.getValue(), dataOut, bs);
 
     }
 
@@ -122,7 +122,7 @@ public class BrokerIdMarshaller extends BaseDataStreamMarshaller {
         BrokerId info = (BrokerId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getValue(), dataOut);
+        looseMarshalString(info.getValue(), dataOut);
 
     }
 }

@@ -81,10 +81,10 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         SubscriptionInfo info = (SubscriptionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getClientId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-    rc += tightMarshalString1(info.getSelector(), bs);
-    rc += tightMarshalString1(info.getSubcriptionName(), bs);
+        rc += tightMarshalString1(info.getClientId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+        rc += tightMarshalString1(info.getSelector(), bs);
+        rc += tightMarshalString1(info.getSubcriptionName(), bs);
 
         return rc + 0;
     }
@@ -100,10 +100,10 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         SubscriptionInfo info = (SubscriptionInfo)o;
-    tightMarshalString2(info.getClientId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
-    tightMarshalString2(info.getSelector(), dataOut, bs);
-    tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
+        tightMarshalString2(info.getClientId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+        tightMarshalString2(info.getSelector(), dataOut, bs);
+        tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
 
     }
 
@@ -134,10 +134,10 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         SubscriptionInfo info = (SubscriptionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getClientId(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
-    looseMarshalString(info.getSelector(), dataOut);
-    looseMarshalString(info.getSubcriptionName(), dataOut);
+        looseMarshalString(info.getClientId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+        looseMarshalString(info.getSelector(), dataOut);
+        looseMarshalString(info.getSubcriptionName(), dataOut);
 
     }
 }

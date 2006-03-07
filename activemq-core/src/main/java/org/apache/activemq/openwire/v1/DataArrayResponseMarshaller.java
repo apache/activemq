@@ -89,7 +89,7 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
         DataArrayResponse info = (DataArrayResponse)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalObjectArray1(wireFormat, info.getData(), bs);
+        rc += tightMarshalObjectArray1(wireFormat, info.getData(), bs);
 
         return rc + 0;
     }
@@ -105,7 +105,7 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
-    tightMarshalObjectArray2(wireFormat, info.getData(), dataOut, bs);
+        tightMarshalObjectArray2(wireFormat, info.getData(), dataOut, bs);
 
     }
 
@@ -144,7 +144,7 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
         DataArrayResponse info = (DataArrayResponse)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalObjectArray(wireFormat, info.getData(), dataOut);
+        looseMarshalObjectArray(wireFormat, info.getData(), dataOut);
 
     }
 }
