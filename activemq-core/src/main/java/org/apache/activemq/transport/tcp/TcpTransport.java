@@ -46,7 +46,7 @@ import java.net.UnknownHostException;
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Log log = LogFactory.getLog(TcpTransport.class);
 
-    private int connectionTimeout = -1;
+    private int connectionTimeout = 30000;
     private int soTimeout = 10000;
     private int socketBufferSize = 64 * 1024;
     private Socket socket;
