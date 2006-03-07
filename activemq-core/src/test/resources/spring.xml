@@ -21,7 +21,7 @@
 <beans>
   <!-- JMS ConnectionFactory to use -->
   <bean id="jmsFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-    <property name="brokerURL" value="vm://localhost" />
+    <property name="brokerURL" value="vm://localhost?broker.deleteAllMessagesOnStartup=true" />
   </bean>
 
   <!-- Spring JMS Template -->
