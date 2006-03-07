@@ -133,10 +133,7 @@ public class RegionBroker implements Broker {
     public void stop() throws Exception {
         stopped = true;
         ServiceStopper ss = new ServiceStopper();
-        ss.stop(queueRegion);
-        ss.stop(topicRegion);
-        ss.stop(tempQueueRegion);
-        ss.stop(tempTopicRegion);
+        doStop(ss);
         ss.throwFirstException();
     }
     
@@ -461,6 +458,13 @@ public class RegionBroker implements Broker {
         return adaptor != null ? adaptor.getDestinations() : Collections.EMPTY_SET;
     }
 
-    
+
+    protected void doStop(ServiceStopper ss) {
+        ss.stop(queueRegion);
+        ss.stop(topicRegion);
+        ss.stop(tempQueueRegion);
+        ss.stop(tempTopicRegion);
+    }
+
 
 }
