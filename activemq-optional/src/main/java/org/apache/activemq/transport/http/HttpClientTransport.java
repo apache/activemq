@@ -47,6 +47,8 @@ import java.net.URI;
 public class HttpClientTransport extends HttpTransportSupport {
     private static final Log log = LogFactory.getLog(HttpClientTransport.class);
 
+    public static final int MAX_CLIENT_TIMEOUT = 20000;
+
     private HttpClient sendHttpClient;
     private HttpClient receiveHttpClient;
     private String clientID;
@@ -69,6 +71,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         httpMethod.setRequestBody(getTextWireFormat().toString(command));
         try {
             HttpClient client = getSendHttpClient();
+            client.setTimeout(MAX_CLIENT_TIMEOUT);
             int answer = client.executeMethod(httpMethod);
             if (answer != HttpStatus.SC_OK) {
                 throw new IOException("Failed to post command: " + command + " as response was: " + answer);
@@ -77,6 +80,9 @@ public class HttpClientTransport extends HttpTransportSupport {
         }
         catch (IOException e) {
             throw IOExceptionSupport.create("Could not post command: " + command + " due to: " + e, e);
+        } finally {
+            httpMethod.getResponseBody();
+            httpMethod.releaseConnection();
         }
     }
 
@@ -116,6 +122,9 @@ public class HttpClientTransport extends HttpTransportSupport {
             }
             catch (IOException e) {
                 log.warn("Failed to perform GET on: " + remoteUrl + " due to: " + e, e);
+            } finally {
+                httpMethod.getResponseBody();
+                httpMethod.releaseConnection();
             }
         }
     }
