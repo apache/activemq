@@ -65,6 +65,8 @@ public class UdpTransportFactory extends TransportFactory {
     public Transport configure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
         UdpTransport tcpTransport = (UdpTransport) transport;
+        
+        /*
         if (tcpTransport.isTrace()) {
             transport = new TransportLogger(transport);
         }
@@ -73,8 +75,8 @@ public class UdpTransportFactory extends TransportFactory {
             transport = new InactivityMonitor(transport, tcpTransport.getMaxInactivityDuration());
         }
 
-        transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
+        */
         return transport;
     }
 
@@ -111,7 +113,9 @@ public class UdpTransportFactory extends TransportFactory {
             return new UdpTransport(wf, location, localLocation);
         }
         */
-        return new UdpTransport((OpenWireFormat) wf, location);
+        OpenWireFormat wireFormat = (OpenWireFormat) wf;
+        wireFormat.setPrefixPacketSize(false);
+        return new UdpTransport(wireFormat, location);
     }
 
     protected ServerSocketFactory createServerSocketFactory() {

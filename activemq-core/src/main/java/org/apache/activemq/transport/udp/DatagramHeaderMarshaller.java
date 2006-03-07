@@ -31,13 +31,16 @@ public class DatagramHeaderMarshaller {
         answer.setDataSize(readBuffer.getInt());
         byte flags = readBuffer.get();
         answer.setFlags(flags);
+        //System.out.println("Read header with counter: " + answer.getCounter() + "size: " + answer.getDataSize() + " with flags: " + flags);
         return answer;
     }
 
     public void writeHeader(DatagramHeader header, ByteBuffer writeBuffer) {
         writeBuffer.putLong(header.getCounter());
         writeBuffer.putInt(header.getDataSize());
-        writeBuffer.put(header.getFlags());
+        byte flags = header.getFlags();
+        //System.out.println("Writing header with counter: " + header.getCounter() + " size: " + header.getDataSize() + " with flags: " + flags);
+        writeBuffer.put(flags);
     }
 
     public int getHeaderSize(DatagramHeader header) {
