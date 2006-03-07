@@ -103,16 +103,26 @@ public interface Subscription {
     /**
      * @return number of messages pending delivery
      */
-    int pending();
+    int getPendingQueueSize();
     
     /**
-     * @return number of messages dispatched
+     * @return number of messages dispatched to the client
      */
-    int dispatched();
+    int getDispatchedQueueSize();
+        
+    /**
+     * @return number of messages dispatched to the client
+     */
+    long getDispatchedCounter();
     
     /**
-     * @return number of messages delivered
+     * @return number of messages that matched the subscription
      */
-    int delivered();
-    
+    long getEnqueueCounter();
+
+    /**
+     * @return number of messages queued by the client
+     */
+    long getDequeueCounter();
+
 }

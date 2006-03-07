@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.util;
 
+import java.util.Date;
 import java.util.HashMap;
+
+import org.apache.activemq.command.ActiveMQDestination;
 
 public class TypeConversionSupport {
 
@@ -104,6 +107,11 @@ public class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Long.class), longConverter);
         CONVERSION_MAP.put(new ConversionKey(Short.class, Long.class), longConverter);
         CONVERSION_MAP.put(new ConversionKey(Integer.class, Long.class), longConverter);
+        CONVERSION_MAP.put(new ConversionKey(Date.class, Long.class), new Converter() {
+            public Object convert(Object value) {
+                return new Long(((Date) value).getTime());
+            }
+        });
 
         Converter intConverter = new Converter() {
             public Object convert(Object value) {
@@ -122,6 +130,11 @@ public class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Float.class, Double.class), new Converter() {
             public Object convert(Object value) {
                 return new Double(((Number) value).doubleValue());
+            }
+        });
+        CONVERSION_MAP.put(new ConversionKey(String.class, ActiveMQDestination.class), new Converter() {
+            public Object convert(Object value) {
+                return ActiveMQDestination.createDestination((String) value, ActiveMQDestination.QUEUE_TYPE);
             }
         });
     }

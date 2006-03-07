@@ -21,7 +21,7 @@ import javax.management.openmbean.TabularData;
  */
 public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean{
     /**
-     * @return name of the durable consumer
+     * @return name of the durable subscription name
      */
     public String getSubscriptionName();
 

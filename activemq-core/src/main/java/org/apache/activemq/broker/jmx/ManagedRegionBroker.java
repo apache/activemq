@@ -44,7 +44,6 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -116,18 +115,21 @@ public class ManagedRegionBroker extends RegionBroker{
 
     public void register(ActiveMQDestination destName,Destination destination){
         // Build the object name for the destination
-        Hashtable map=new Hashtable(brokerObjectName.getKeyPropertyList());
-        map.put("Type",JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString()));
-        map.put("Destination",JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
+        Hashtable map=brokerObjectName.getKeyPropertyList();
         try{
-            ObjectName destObjectName=new ObjectName(brokerObjectName.getDomain(),map);
+        	ObjectName objectName = new ObjectName(
+        			brokerObjectName.getDomain()+":"+
+            		"BrokerName="+map.get("BrokerName")+","+
+            		"Type="+JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString())+","+
+                    "Destination="+JMXSupport.encodeObjectNamePart(destName.getPhysicalName())
+            		);
             DestinationView view;
             if(destination instanceof Queue){
                 view=new QueueView(this, (Queue) destination);
             }else{
                 view=new TopicView(this, (Topic) destination);
             }
-            registerDestination(destObjectName,destName,view);
+            registerDestination(objectName,destName,view);
         }catch(Exception e){
             log.error("Failed to register destination "+destName,e);
         }
@@ -136,11 +138,14 @@ public class ManagedRegionBroker extends RegionBroker{
     public void unregister(ActiveMQDestination destName){
         // Build the object name for the destination
         Hashtable map=new Hashtable(brokerObjectName.getKeyPropertyList());
-        map.put("Type",JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString()));
-        map.put("Destination",JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
         try{
-            ObjectName destObjectName=new ObjectName(brokerObjectName.getDomain(),map);
-            unregisterDestination(destObjectName);
+        	ObjectName objectName = new ObjectName(
+        			brokerObjectName.getDomain()+":"+
+            		"BrokerName="+map.get("BrokerName")+","+
+            		"Type="+JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString())+","+
+                    "Destination="+JMXSupport.encodeObjectNamePart(destName.getPhysicalName())
+            		);
+            unregisterDestination(objectName);
         }catch(Exception e){
             log.error("Failed to unregister "+destName,e);
         }
@@ -148,13 +153,18 @@ public class ManagedRegionBroker extends RegionBroker{
 
     public void registerSubscription(ConnectionContext context,Subscription sub){
         SubscriptionKey key = new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
-        Hashtable map=new Hashtable(brokerObjectName.getKeyPropertyList());
-        map.put("Type",JMXSupport.encodeObjectNamePart("Subscription"));
+        Hashtable map=brokerObjectName.getKeyPropertyList();
         String name = key.toString() + ":" + sub.getConsumerInfo().toString();
-        map.put("name",JMXSupport.encodeObjectNamePart(name));
-        map.put("active", "true");
         try{
-            ObjectName objectName=new ObjectName(brokerObjectName.getDomain(),map);
+        	
+        	ObjectName objectName = new ObjectName(
+        			brokerObjectName.getDomain()+":"+
+            		"BrokerName="+map.get("BrokerName")+","+
+            		"Type=Subscription,"+
+            		"active=true,"+
+                    "name="+JMXSupport.encodeObjectNamePart(name)+""
+            		);
+
             SubscriptionView view;
             if(sub.getConsumerInfo().isDurable()){
                 view=new DurableSubscriptionView(this,context.getClientId(),sub);
@@ -292,12 +302,16 @@ public class ManagedRegionBroker extends RegionBroker{
     }
     
     protected void addInactiveSubscription(SubscriptionKey key,SubscriptionInfo info){
-        Hashtable map=new Hashtable(brokerObjectName.getKeyPropertyList());
-        map.put("Type",JMXSupport.encodeObjectNamePart("Subscription"));
-        map.put("name",JMXSupport.encodeObjectNamePart(key.toString()));
-        map.put("active", "false");
+        Hashtable map=brokerObjectName.getKeyPropertyList();
         try{
-            ObjectName objectName=new ObjectName(brokerObjectName.getDomain(),map);
+        	ObjectName objectName = new ObjectName(
+        			brokerObjectName.getDomain()+":"+
+            		"BrokerName="+map.get("BrokerName")+","+
+            		"Type=Subscription,"+
+            		"active=false,"+
+                    "name="+JMXSupport.encodeObjectNamePart(key.toString())+""
+            		);
+
             SubscriptionView view = new InactiveDurableSubscriptionView(this,key.getClientId(),info);
             mbeanServer.registerMBean(view,objectName);
             inactiveDurableTopicSubscribers.put(objectName,view);

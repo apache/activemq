@@ -437,7 +437,7 @@ public class Queue implements Destination {
         return (Message[]) l.toArray(new Message[l.size()]);
     }
 
-    public void removeMessage(String messageId) {
+    public boolean removeMessage(String messageId) {
         synchronized (messages) {
             ConnectionContext c = new ConnectionContext();
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
@@ -455,12 +455,14 @@ public class Queue implements Destination {
                             r.drop();
                             dropEvent();
                             iter.remove();
+                            return true;
                         }
                     }
                 } catch (IOException e) {
                 }
             }
         }
+        return false;
     }
 
     public Message getMessage(String messageId) {

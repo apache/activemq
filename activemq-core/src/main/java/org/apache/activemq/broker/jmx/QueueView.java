@@ -15,9 +15,14 @@ package org.apache.activemq.broker.jmx;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
+
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+
+/**
+ * Provides a JMX Management view of a Queue.
+ */
 public class QueueView extends DestinationView implements QueueViewMBean{
     public QueueView(ManagedRegionBroker broker, Queue destination){
         super(broker, destination);
@@ -30,8 +35,8 @@ public class QueueView extends DestinationView implements QueueViewMBean{
         return OpenTypeSupport.convert(rc);
     }
 
-    public void removeMessage(String messageId){
-        ((Queue) destination).removeMessage(messageId);
+    public boolean removeMessage(String messageId){
+        return ((Queue) destination).removeMessage(messageId);
     }
 
     public void purge(){
@@ -41,4 +46,5 @@ public class QueueView extends DestinationView implements QueueViewMBean{
     public boolean copyMessageTo(String messageId, String destinationName) throws Exception {
         return ((Queue) destination).copyMessageTo(BrokerView.getConnectionContext(broker.getContextBroker()), messageId, ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE));
     }
+    
 }

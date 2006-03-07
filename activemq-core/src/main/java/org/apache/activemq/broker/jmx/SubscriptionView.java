@@ -150,24 +150,38 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return number of messages pending delivery
      */
-    public int getPending(){
-        return subscription != null ? subscription.pending() : 0;
+    public int getPendingQueueSize(){
+        return subscription != null ? subscription.getPendingQueueSize() : 0;
     }
     
     /**
      * @return number of messages dispatched
      */
-    public int getDispatched(){
-        return subscription != null ? subscription.dispatched() : 0;
+    public int getDispatchedQueueSize(){
+        return subscription != null ? subscription.getDispatchedQueueSize() : 0;
     }
-    
+        
     /**
-     * @return number of messages delivered
+     * @return number of messages that matched the subscription
      */
-    public int getDelivered(){
-        return subscription != null ? subscription.delivered() : 0;
+    public long getDispachedCounter() {
+        return subscription != null ? subscription.getDispatchedCounter() : 0;
     }
-    
+
+    /**
+     * @return number of messages that matched the subscription
+     */
+    public long getEnqueueCounter() {
+        return subscription != null ? subscription.getEnqueueCounter() : 0;
+    }
+
+    /**
+     * @return number of messages queued by the client
+     */
+    public long getDequeueCounter() {
+        return subscription != null ? subscription.getDequeueCounter() : 0;
+    }
+
     protected ConsumerInfo getConsumerInfo(){
         return subscription != null ? subscription.getConsumerInfo() : null;
     }

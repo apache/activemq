@@ -123,12 +123,11 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         node.decrementReferenceCount();
     }
     
-    public int pending(){
+    public int getPendingQueueSize(){
         if (active){
-            return super.pending();
+            return super.getPendingQueueSize();
         }
         //TODO: need to get from store
-        
         return 0;
     }
     

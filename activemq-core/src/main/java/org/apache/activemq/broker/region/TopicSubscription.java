@@ -16,8 +16,10 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
@@ -33,21 +35,25 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
 
 
 public class TopicSubscription extends AbstractSubscription{
+	
     private static final Log log=LogFactory.getLog(TopicSubscription.class);
+    
     final protected LinkedList matched=new LinkedList();
     final protected ActiveMQDestination dlqDestination=new ActiveMQQueue("ActiveMQ.DLQ");
     final protected UsageManager usageManager;
-    protected AtomicInteger dispatched=new AtomicInteger();
-    protected AtomicInteger delivered=new AtomicInteger();
+    protected AtomicLong dispatched=new AtomicLong();
+    protected AtomicLong delivered=new AtomicLong();
     private int maximumPendingMessages=-1;
     private MessageEvictionStrategy messageEvictionStrategy = new OldestMessageEvictionStrategy();
     private int discarded = 0;
     private final Object matchedListMutex=new Object();
-
+    long enqueueCounter;
+    
     public TopicSubscription(Broker broker,ConnectionContext context,ConsumerInfo info,UsageManager usageManager)
                     throws InvalidSelectorException{
         super(broker,context,info);
@@ -55,6 +61,7 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     public void add(MessageReference node) throws InterruptedException,IOException{
+        enqueueCounter++;
         node.incrementReferenceCount();
         if(!isFull()&&!isSlaveBroker()){
             // if maximumPendingMessages is set we will only discard messages which
@@ -126,21 +133,30 @@ public class TopicSubscription extends AbstractSubscription{
         throw new JMSException("Invalid acknowledgment: "+ack);
     }
 
-    public int pending(){
-        return matched()-dispatched();
+    public int getPendingQueueSize(){
+        return matched();
     }
 
-    public int dispatched(){
-        return dispatched.get();
-    }
-
-    public int delivered(){
-        return delivered.get();
+    public int getDispatchedQueueSize(){
+        return (int)(dispatched.get()-delivered.get());
     }
 
     public int getMaximumPendingMessages(){
         return maximumPendingMessages;
     }
+    
+	public long getDispatchedCounter() {
+		return dispatched.get();
+	}
+
+	public long getEnqueueCounter() {
+		return enqueueCounter;
+	}
+    public long getDequeueCounter(){
+        return delivered.get();
+    }
+
+
 
     /**
      * @return the number of messages discarded due to being a slow consumer
@@ -223,6 +239,7 @@ public class TopicSubscription extends AbstractSubscription{
 
     public String toString(){
         return "TopicSubscription:"+" consumer="+info.getConsumerId()+", destinations="+destinations.size()
-                        +", dispatched="+dispatched()+", delivered="+delivered()+", matched="+matched()+", discarded="+discarded();
+                        +", dispatched="+getDispatchedQueueSize()+", delivered="+getDequeueCounter()+", matched="+matched()+", discarded="+discarded();
     }
+
 }

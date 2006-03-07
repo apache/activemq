@@ -310,6 +310,69 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
                 message.setGroupSequence(rc.intValue());
             }
         });
+        JMS_PROPERTY_SETERS.put("JMSCorrelationID", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+            	String rc = (String)TypeConversionSupport.convert(value, String.class);
+                if( rc == null ) {
+                    throw new MessageFormatException("Property JMSCorrelationID cannot be set from a "+value.getClass().getName()+".");
+                }
+                ((ActiveMQMessage)message).setJMSCorrelationID(rc);
+            }
+        });
+        JMS_PROPERTY_SETERS.put("JMSExpiration", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+                Long rc = (Long)TypeConversionSupport.convert(value, Long.class);
+                if( rc == null ) {
+                    throw new MessageFormatException("Property JMSExpiration cannot be set from a "+value.getClass().getName()+".");
+                }
+                ((ActiveMQMessage)message).setJMSExpiration(rc.longValue());
+            }
+        });
+        JMS_PROPERTY_SETERS.put("JMSPriority", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+                Integer rc = (Integer)TypeConversionSupport.convert(value, Integer.class);
+                if( rc == null ) {
+                    throw new MessageFormatException("Property JMSPriority cannot be set from a "+value.getClass().getName()+".");
+                }
+                ((ActiveMQMessage)message).setJMSPriority(rc.intValue());
+            }
+        });
+        JMS_PROPERTY_SETERS.put("JMSRedelivered", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+                Boolean rc = (Boolean)TypeConversionSupport.convert(value, Boolean.class);
+                if( rc == null ) {
+                    throw new MessageFormatException("Property JMSRedelivered cannot be set from a "+value.getClass().getName()+".");
+                }
+                ((ActiveMQMessage)message).setJMSRedelivered(rc.booleanValue());
+            }
+        });
+        JMS_PROPERTY_SETERS.put("JMSReplyTo", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+                ActiveMQDestination rc = (ActiveMQDestination)TypeConversionSupport.convert(value, ActiveMQDestination.class);
+                if( rc == null ) {
+                    throw new MessageFormatException("Property JMSReplyTo cannot be set from a "+value.getClass().getName()+".");
+                }
+                ((ActiveMQMessage)message).setReplyTo(rc);
+            }
+        });
+        JMS_PROPERTY_SETERS.put("JMSTimestamp", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+                Long rc = (Long)TypeConversionSupport.convert(value, Long.class);
+                if( rc == null ) {
+                    throw new MessageFormatException("Property JMSTimestamp cannot be set from a "+value.getClass().getName()+".");
+                }
+                ((ActiveMQMessage)message).setJMSTimestamp(rc.longValue());
+            }
+        });
+        JMS_PROPERTY_SETERS.put("JMSType", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+                String rc = (String)TypeConversionSupport.convert(value, String.class);
+                if( rc == null ) {
+                    throw new MessageFormatException("Property JMSType cannot be set from a "+value.getClass().getName()+".");
+                }
+                ((ActiveMQMessage)message).setJMSType(rc);
+            }
+        });
     }
 
     public void setObjectProperty(String name, Object value) throws JMSException {

@@ -35,18 +35,26 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
     /**
      * @return the number of messages discarded due to being a slow consumer
      */
-    public int getDiscarded() {
+    public int getDiscardedCount() {
         TopicSubscription topicSubscription = getTopicSubscription();
         return topicSubscription != null ? topicSubscription.discarded() : 0;
     }
 
     /**
-     * @return the number of matched messages (messages targeted for the
-     *         subscription but not yet able to be dispatched due to the
-     *         prefetch buffer being full).
+     * @return the maximun number of messages that can be pending.
      */
-    public int getMatched() {
+    public int getMaximumPendingQueueSize() {
         TopicSubscription topicSubscription = getTopicSubscription();
-        return topicSubscription != null ? topicSubscription.matched() : 0;
+        return topicSubscription != null ? topicSubscription.getMaximumPendingMessages() : 0;
+    }
+    
+    /**
+     * 
+     */
+    public void setMaximumPendingQueueSize(int max) {
+        TopicSubscription topicSubscription = getTopicSubscription();
+        if ( topicSubscription != null ) {
+        	topicSubscription.setMaximumPendingMessages(max);
+        }
     }
 }

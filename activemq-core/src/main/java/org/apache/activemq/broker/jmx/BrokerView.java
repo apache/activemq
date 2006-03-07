@@ -19,35 +19,35 @@ package org.apache.activemq.broker.jmx;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.memory.UsageManager;
 
 public class BrokerView implements BrokerViewMBean {
     
     private final ManagedRegionBroker broker;
-    private final UsageManager usageManager;
+	private final BrokerService brokerService;
 
-    public BrokerView(ManagedRegionBroker broker, UsageManager usageManager) {
-        this.broker = broker;
-        this.usageManager = usageManager;        
+    public BrokerView(BrokerService brokerService, ManagedRegionBroker managedBroker) throws Exception {
+        this.brokerService = brokerService;
+		this.broker = managedBroker;
     }
     
     public String getBrokerId() {
         return broker.getBrokerId().toString();
     }
     
-    public void gc() {
-        broker.gc();
+    public void gc() throws Exception {
+    	brokerService.getBroker().gc();
     }
 
     public void start() throws Exception {
-        broker.start();
+    	brokerService.start();
     }
     
     public void stop() throws Exception {
-        broker.stop();
+    	brokerService.stop();
     }
     
     public long getTotalEnqueueCount() {
@@ -59,7 +59,7 @@ public class BrokerView implements BrokerViewMBean {
     public long getTotalConsumerCount() {
         return broker.getDestinationStatistics().getConsumers().getCount();
     }
-    public long getTotalMessages() {
+    public long getTotalMessageCount() {
         return broker.getDestinationStatistics().getMessages().getCount();
     }    
     public long getTotalMessagesCached() {
@@ -67,13 +67,13 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public int getMemoryPercentageUsed() {
-        return usageManager.getPercentUsage();
+        return brokerService.getMemoryManager().getPercentUsage();
     }
     public long getMemoryLimit() {
-        return usageManager.getLimit();
+        return brokerService.getMemoryManager().getLimit();
     }
     public void setMemoryLimit(long limit) {
-        usageManager.setLimit(limit);
+    	brokerService.getMemoryManager().setLimit(limit);
     }
     
     public void resetStatistics() {

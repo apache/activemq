@@ -21,22 +21,41 @@ import org.apache.activemq.Service;
 
 public interface BrokerViewMBean extends Service {
 
+	/**
+	 * @return The unique id of the broker.
+	 */
     public abstract String getBrokerId();
 
-    public abstract void gc();
+    /**
+     * The Broker will fush it's caches so that the garbage
+     * collector can recalaim more memory.
+     * 
+     * @throws Exception
+     */
+    public void gc() throws Exception;
+    
+    
     public void resetStatistics();
     
     public long getTotalEnqueueCount();
     public long getTotalDequeueCount();
     public long getTotalConsumerCount();
-    public long getTotalMessages();
-    public long getTotalMessagesCached();
-
+    public long getTotalMessageCount();
+    
     public int getMemoryPercentageUsed();
     public long getMemoryLimit();
     public void setMemoryLimit(long limit);
 
+    /**
+     * Shuts down the JVM.
+     * @param exitCode the exit code that will be reported by the JVM process when it exits.
+     */
     public void terminateJVM(int exitCode);
+    
+    /**
+     * Stop the broker and all it's comonents.
+     */
+    public void stop() throws Exception;
     
     public ObjectName[] getTopics();
     public ObjectName[] getQueues();
@@ -50,9 +69,32 @@ public interface BrokerViewMBean extends Service {
     public ObjectName[] getTemporaryTopicSubscribers();
     public ObjectName[] getTemporaryQueueSubscribers();
     
+    /** 
+     * Adds a Topic destination to the broker.
+     * @param name The name of the Topic
+     * @throws Exception
+     */
     public void addTopic(String name) throws Exception;
+
+    /**
+     * Adds a Queue destination to the broker.
+     * @param name The name of the Queue
+     * @throws Exception
+     */
     public void addQueue(String name) throws Exception;
+
+    /** 
+     * Removes a Topic destination from the broker.
+     * @param name The name of the Topic
+     * @throws Exception
+     */
     public void removeTopic(String name) throws Exception;
+
+    /**
+     * Removes a Queue destination from the broker.
+     * @param name The name of the Queue
+     * @throws Exception
+     */
     public void removeQueue(String name) throws Exception;
     
 }
