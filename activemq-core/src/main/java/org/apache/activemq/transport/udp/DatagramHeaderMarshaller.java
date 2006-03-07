@@ -28,6 +28,7 @@ public class DatagramHeaderMarshaller {
     public DatagramHeader readHeader(ByteBuffer readBuffer) {
         DatagramHeader answer = new DatagramHeader();
         answer.setCounter(readBuffer.getLong());
+        answer.setDataSize(readBuffer.getInt());
         byte flags = readBuffer.get();
         answer.setFlags(flags);
         return answer;
@@ -35,11 +36,12 @@ public class DatagramHeaderMarshaller {
 
     public void writeHeader(DatagramHeader header, ByteBuffer writeBuffer) {
         writeBuffer.putLong(header.getCounter());
+        writeBuffer.putInt(header.getDataSize());
         writeBuffer.put(header.getFlags());
     }
 
     public int getHeaderSize(DatagramHeader header) {
-        return 8 + 1;
+        return 8 + 4 + 1;
     }
 
 }
