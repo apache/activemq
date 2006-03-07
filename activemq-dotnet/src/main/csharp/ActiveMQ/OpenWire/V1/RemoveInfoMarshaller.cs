@@ -67,7 +67,7 @@ namespace ActiveMQ.OpenWire.V1
         RemoveInfo info = (RemoveInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.ObjectId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ObjectId, bs);
 
         return rc + 0;
     }
@@ -79,7 +79,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         RemoveInfo info = (RemoveInfo)o;
-    TightMarshalCachedObject2(wireFormat, info.ObjectId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ObjectId, dataOut, bs);
 
     }
   }

@@ -49,7 +49,7 @@ public class ConsumerInfo extends BaseCommand {
     protected byte priority;
     protected BrokerId[] brokerPath;
     
-    protected transient BooleanExpression additionalPredicate;
+    protected BooleanExpression additionalPredicate;
     protected transient boolean networkSubscription; //this subscription originated from a network connection
     
     public ConsumerInfo() {
@@ -278,7 +278,7 @@ public class ConsumerInfo extends BaseCommand {
      * into the selector on the fly.  Handy if if say a Security Broker interceptor wants to 
      * filter out messages based on security level of the consumer.
      * 
-     * @return
+     * @openwire:property version=1
      */
     public BooleanExpression getAdditionalPredicate() {
         return additionalPredicate;

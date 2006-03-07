@@ -16,11 +16,12 @@
  */
 package org.apache.activemq.openwire.tool;
 
-import org.codehaus.jam.JClass;
-import org.codehaus.jam.JProperty;
-
-import java.io.*;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Iterator;
+
+import org.codehaus.jam.JProperty;
 
 /**
  *
@@ -31,7 +32,7 @@ public abstract class OpenWireCSharpClassesScript extends OpenWireClassesScript 
     public Object run() {
         filePostFix = ".cs";
         if (destDir == null) {
-            destDir = new File("../openwire-dotnet/src/ActiveMQ/Commands");
+            destDir = new File("../activemq-dotnet/src/main/csharp/ActiveMQ/Commands");
         }
         
         return super.run();

@@ -51,11 +51,12 @@ public class WireFormatInfoTest extends DataFileGeneratorTestSupport {
     		super.populateObject(object);
     		WireFormatInfo info = (WireFormatInfo) object;
         info.setVersion(1);
-        info.setCacheEnabled(true);
-        info.setStackTraceEnabled(false);
-        info.setTcpNoDelayEnabled(true);
-        info.setPrefixPacketSize(false);
-        info.setTightEncodingEnabled(true);
+        
+    		{
+        		byte data[] = "MarshalledProperties:1".getBytes();
+        		info.setMarshalledProperties(new org.activeio.ByteSequence(data,0,data.length));
+    		}
+    		
 
             }
         }

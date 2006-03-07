@@ -56,7 +56,7 @@ void RemoveSubscriptionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Obj
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     RemoveSubscriptionInfo& info = (RemoveSubscriptionInfo&) o;
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
         info.setClientId(tightUnmarshalString(dataIn, bs));
 

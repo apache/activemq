@@ -680,10 +680,10 @@ namespace ActiveMQ.OpenWire
                     value = dataIn.ReadInt64();
                     break;
                 case FLOAT_TYPE:
-                    value = ReadFloat(dataIn);
+                    value = dataIn.ReadSingle();
                     break;
                 case DOUBLE_TYPE:
-                    value = ReadDouble(dataIn);
+                    value = dataIn.ReadDouble();
                     break;
                 case BYTE_ARRAY_TYPE:
                     int size = dataIn.ReadInt32();
@@ -697,46 +697,7 @@ namespace ActiveMQ.OpenWire
             }
             return value;
         }
-        
-        private static Object ReadDouble(BinaryReader dataIn)
-        {
-            // TODO: Implement this method
-            return dataIn.ReadDouble();
-        }
-        
-        /// <summary>
-        /// Method ReadFloat
-        /// </summary>
-        private static Object ReadFloat(BinaryReader dataIn)
-        {
-            // TODO: Implement this method
-            return (float) dataIn.ReadDouble();
-        }
-        
-        private static Object ReadBoolean(BinaryReader dataIn)
-        {
-            // TODO: Implement this method
-            return dataIn.ReadBoolean();
-        }
-        
-        private static void WriteDouble(double value, BinaryWriter dataOut)
-        {
-            // TODO: Implement this method
-            dataOut.Write(value);
-        }
-        
-        private static void WriteFloat(float value, BinaryWriter dataOut)
-        {
-            // TODO: Implement this method
-            dataOut.Write(value);
-        }
-        
-        private static void WriteBoolean(bool value, BinaryWriter dataOut)
-        {
-            // TODO: Implement this method
-            dataOut.Write(value);
-        }
-        
+                
         /// <summary>
         /// Converts the object to a String
         /// </summary>

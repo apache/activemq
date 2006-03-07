@@ -74,7 +74,7 @@ class GenerateCMarshalling extends OpenWireScript {
    
    def generateFields(out, jclass) {
    
-      println("getting fields for: ${jclass.simpleName}");
+//      println("getting fields for: ${jclass.simpleName}");
       if( jclass.superclass == null || jclass.superclass.simpleName.equals("Object") ) {
 out << """
    ow_byte structType;

@@ -23,6 +23,7 @@
 #include "command/ConsumerId.hpp"
 #include "command/ActiveMQDestination.hpp"
 #include "command/BrokerId.hpp"
+#include "command/BooleanExpression.hpp"
 
 #include "util/ifr/ap.hpp"
 #include "util/ifr/p.hpp"
@@ -65,6 +66,7 @@ private:
     bool retroactive ;
     char priority ;
     ap<BrokerId> brokerPath ;
+    p<BooleanExpression> additionalPredicate ;
     bool networkSubscription ;
 
 public:
@@ -114,6 +116,9 @@ public:
 
     virtual ap<BrokerId> getBrokerPath() ;
     virtual void setBrokerPath(ap<BrokerId> brokerPath) ;
+
+    virtual p<BooleanExpression> getAdditionalPredicate() ;
+    virtual void setAdditionalPredicate(p<BooleanExpression> additionalPredicate) ;
 
     virtual bool getNetworkSubscription() ;
     virtual void setNetworkSubscription(bool networkSubscription) ;

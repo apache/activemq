@@ -57,11 +57,7 @@ namespace ActiveMQ.OpenWire.V1
         WireFormatInfo info = (WireFormatInfo)o;
         info.Magic = ReadBytes(dataIn, 8);
         info.Version = dataIn.ReadInt32();
-        info.CacheEnabled = bs.ReadBoolean();
-        info.StackTraceEnabled = bs.ReadBoolean();
-        info.TcpNoDelayEnabled = bs.ReadBoolean();
-        info.PrefixPacketSize = bs.ReadBoolean();
-        info.TightEncodingEnabled = bs.ReadBoolean();
+        info.MarshalledProperties = ReadBytes(dataIn, bs.ReadBoolean());
 
     }
 
@@ -73,11 +69,8 @@ namespace ActiveMQ.OpenWire.V1
         WireFormatInfo info = (WireFormatInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-            bs.WriteBoolean(info.CacheEnabled);
-    bs.WriteBoolean(info.StackTraceEnabled);
-    bs.WriteBoolean(info.TcpNoDelayEnabled);
-    bs.WriteBoolean(info.PrefixPacketSize);
-    bs.WriteBoolean(info.TightEncodingEnabled);
+            bs.WriteBoolean(info.MarshalledProperties!=null);
+        rc += info.MarshalledProperties==null ? 0 : info.MarshalledProperties.Length+4;
 
         return rc + 12;
     }
@@ -91,11 +84,10 @@ namespace ActiveMQ.OpenWire.V1
         WireFormatInfo info = (WireFormatInfo)o;
     dataOut.Write(info.Magic, 0, 8);
     dataOut.Write(info.Version);
-    bs.ReadBoolean();
-    bs.ReadBoolean();
-    bs.ReadBoolean();
-    bs.ReadBoolean();
-    bs.ReadBoolean();
+    if(bs.ReadBoolean()) {
+           dataOut.Write(info.MarshalledProperties.Length);
+           dataOut.Write(info.MarshalledProperties);
+        }
 
     }
   }

@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for LocalTransactionIdMarshaller
  *
@@ -65,7 +66,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
 
         LocalTransactionId info = (LocalTransactionId)o;
         info.setValue(tightUnmarshalLong(wireFormat, dataIn, bs));
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -79,7 +80,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
     rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
 
         return rc + 0;
     }
@@ -96,7 +97,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
 
         LocalTransactionId info = (LocalTransactionId)o;
     tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
 
     }
 
@@ -112,7 +113,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
 
         LocalTransactionId info = (LocalTransactionId)o;
         info.setValue(looseUnmarshalLong(wireFormat, dataIn));
-        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
 
     }
 
@@ -126,7 +127,7 @@ public class LocalTransactionIdMarshaller extends TransactionIdMarshaller {
 
         super.looseMarshal(wireFormat, o, dataOut);
     looseMarshalLong(wireFormat, info.getValue(), dataOut);
-    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
 
     }
 }

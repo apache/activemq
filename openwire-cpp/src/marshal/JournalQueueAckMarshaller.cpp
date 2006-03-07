@@ -56,8 +56,8 @@ void JournalQueueAckMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     JournalQueueAck& info = (JournalQueueAck&) o;
-        info.setDestination((ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageAck((MessageAck) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageAck((org.apache.activemq.command.MessageAck) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
 }
 

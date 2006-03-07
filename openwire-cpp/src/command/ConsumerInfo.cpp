@@ -43,6 +43,7 @@ ConsumerInfo::ConsumerInfo()
     this->retroactive = 0 ;
     this->priority = 0 ;
     this->brokerPath = 0 ;
+    this->additionalPredicate = 0 ;
     this->networkSubscription = 0 ;
 }
 
@@ -191,6 +192,17 @@ ap<BrokerId> ConsumerInfo::getBrokerPath()
 void ConsumerInfo::setBrokerPath(ap<BrokerId> brokerPath)
 {
     this->brokerPath = brokerPath ;
+}
+
+        
+p<BooleanExpression> ConsumerInfo::getAdditionalPredicate()
+{
+    return additionalPredicate ;
+}
+
+void ConsumerInfo::setAdditionalPredicate(p<BooleanExpression> additionalPredicate)
+{
+    this->additionalPredicate = additionalPredicate ;
 }
 
         

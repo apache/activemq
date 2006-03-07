@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for JournalQueueAckMarshaller
  *
@@ -64,8 +65,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         JournalQueueAck info = (JournalQueueAck)o;
-        info.setDestination((ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageAck((MessageAck) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageAck((org.apache.activemq.command.MessageAck) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -78,8 +79,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         JournalQueueAck info = (JournalQueueAck)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalNestedObject1(wireFormat, info.getDestination(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, info.getMessageAck(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageAck(), bs);
 
         return rc + 0;
     }
@@ -95,8 +96,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalQueueAck info = (JournalQueueAck)o;
-    tightMarshalNestedObject2(wireFormat, info.getDestination(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, info.getMessageAck(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageAck(), dataOut, bs);
 
     }
 
@@ -111,8 +112,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         JournalQueueAck info = (JournalQueueAck)o;
-        info.setDestination((ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
-        info.setMessageAck((MessageAck) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setMessageAck((org.apache.activemq.command.MessageAck) looseUnmarsalNestedObject(wireFormat, dataIn));
 
     }
 
@@ -125,8 +126,8 @@ public class JournalQueueAckMarshaller extends BaseDataStreamMarshaller {
         JournalQueueAck info = (JournalQueueAck)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalNestedObject(wireFormat, info.getDestination(), dataOut);
-    looseMarshalNestedObject(wireFormat, info.getMessageAck(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageAck(), dataOut);
 
     }
 }

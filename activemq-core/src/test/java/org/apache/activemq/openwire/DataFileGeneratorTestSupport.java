@@ -16,6 +16,24 @@
  */
 package org.apache.activemq.openwire;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.activeio.ByteSequence;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -29,33 +47,15 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.openwire.v1.ActiveMQTextMessageTest;
 import org.apache.activemq.openwire.v1.BrokerInfoTest;
 import org.apache.activemq.openwire.v1.MessageAckTest;
 import org.apache.activemq.test.TestSupport;
-
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URL;
-import java.util.*;
-
-import junit.framework.TestCase;
 
 public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
@@ -316,4 +316,9 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         // exception each time
         return singletonException;
     }
+    
+    protected BooleanExpression createBooleanExpression(String string) {
+        return new NetworkBridgeFilter(new BrokerId(string), 10);
+    }
+
 }

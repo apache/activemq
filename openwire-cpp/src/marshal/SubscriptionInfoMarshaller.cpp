@@ -57,7 +57,7 @@ void SubscriptionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o,
 
     SubscriptionInfo& info = (SubscriptionInfo&) o;
         info.setClientId(tightUnmarshalString(dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setSelector(tightUnmarshalString(dataIn, bs));
         info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
 

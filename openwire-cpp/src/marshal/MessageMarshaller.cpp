@@ -45,33 +45,33 @@ void MessageMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryRe
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     Message& info = (Message&) o;
-        info.setProducerId((ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setTransactionId((TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setOriginalDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setMessageId((MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setOriginalTransactionId((TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setOriginalDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setMessageId((org.apache.activemq.command.MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setOriginalTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setGroupID(tightUnmarshalString(dataIn, bs));
         info.setGroupSequence(dataIn.readInt());
         info.setCorrelationId(tightUnmarshalString(dataIn, bs));
         info.setPersistent(bs.readBoolean());
         info.setExpiration(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setPriority(dataIn.readByte());
-        info.setReplyTo((ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setReplyTo((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setTimestamp(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setType(tightUnmarshalString(dataIn, bs));
         info.setContent(tightUnmarshalByteSequence(dataIn, bs));
         info.setMarshalledProperties(tightUnmarshalByteSequence(dataIn, bs));
-        info.setDataStructure((DataStructure) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setTargetConsumerId((ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDataStructure((org.apache.activemq.command.DataStructure) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTargetConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setCompressed(bs.readBoolean());
         info.setRedeliveryCounter(dataIn.readInt());
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }

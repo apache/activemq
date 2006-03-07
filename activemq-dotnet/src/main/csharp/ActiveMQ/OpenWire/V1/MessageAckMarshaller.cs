@@ -73,11 +73,11 @@ namespace ActiveMQ.OpenWire.V1
         MessageAck info = (MessageAck)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.TransactionId, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.ConsumerId, bs);
-        rc += TightMarshalNestedObject1(wireFormat, info.FirstMessageId, bs);
-    rc += TightMarshalNestedObject1(wireFormat, info.LastMessageId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.Destination, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.TransactionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConsumerId, bs);
+        rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.FirstMessageId, bs);
+    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.LastMessageId, bs);
     
         return rc + 5;
     }
@@ -89,12 +89,12 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageAck info = (MessageAck)o;
-    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.TransactionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConsumerId, dataOut, bs);
     dataOut.Write(info.AckType);
-    TightMarshalNestedObject2(wireFormat, info.FirstMessageId, dataOut, bs);
-    TightMarshalNestedObject2(wireFormat, info.LastMessageId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, (DataStructure)info.FirstMessageId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, (DataStructure)info.LastMessageId, dataOut, bs);
     dataOut.Write(info.MessageCount);
 
     }

@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for TransactionInfoMarshaller
  *
@@ -64,8 +65,8 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setTransactionId((TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setType(dataIn.readByte());
 
     }
@@ -79,8 +80,8 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         TransactionInfo info = (TransactionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getTransactionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
     
         return rc + 1;
     }
@@ -96,8 +97,8 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, info.getTransactionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
     dataOut.writeByte(info.getType());
 
     }
@@ -113,8 +114,8 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         TransactionInfo info = (TransactionInfo)o;
-        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setTransactionId((TransactionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setType(dataIn.readByte());
 
     }
@@ -128,8 +129,8 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         TransactionInfo info = (TransactionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
-    looseMarshalCachedObject(wireFormat, info.getTransactionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
     dataOut.writeByte(info.getType());
 
     }

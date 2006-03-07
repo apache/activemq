@@ -57,7 +57,13 @@ namespace ActiveMQ.Commands
     //         if you need to make a change, please see the Groovy scripts in the
     //         activemq-core module
     //
-    public class ${jclass.simpleName} : $baseClass
+    public class ${jclass.simpleName} : $baseClass"""
+        
+    for( i in jclass.interfaces ) {
+    	out << ", ${i.simpleName}";
+    }
+    
+out << """
     {
         public const byte ID_${jclass.simpleName} = ${getOpenWireOpCode(jclass)};
     			

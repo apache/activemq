@@ -69,8 +69,8 @@ namespace ActiveMQ.OpenWire.V1
         TransactionInfo info = (TransactionInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.ConnectionId, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.TransactionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.TransactionId, bs);
     
         return rc + 1;
     }
@@ -82,8 +82,8 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-    TightMarshalCachedObject2(wireFormat, info.ConnectionId, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.TransactionId, dataOut, bs);
     dataOut.Write(info.Type);
 
     }

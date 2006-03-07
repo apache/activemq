@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for SubscriptionInfoMarshaller
  *
@@ -65,7 +66,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
 
         SubscriptionInfo info = (SubscriptionInfo)o;
         info.setClientId(tightUnmarshalString(dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setSelector(tightUnmarshalString(dataIn, bs));
         info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
 
@@ -81,7 +82,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
     rc += tightMarshalString1(info.getClientId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
     rc += tightMarshalString1(info.getSelector(), bs);
     rc += tightMarshalString1(info.getSubcriptionName(), bs);
 
@@ -100,7 +101,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
 
         SubscriptionInfo info = (SubscriptionInfo)o;
     tightMarshalString2(info.getClientId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
     tightMarshalString2(info.getSelector(), dataOut, bs);
     tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
 
@@ -118,7 +119,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
 
         SubscriptionInfo info = (SubscriptionInfo)o;
         info.setClientId(looseUnmarshalString(dataIn));
-        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setSelector(looseUnmarshalString(dataIn));
         info.setSubcriptionName(looseUnmarshalString(dataIn));
 
@@ -134,7 +135,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
 
         super.looseMarshal(wireFormat, o, dataOut);
     looseMarshalString(info.getClientId(), dataOut);
-    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
     looseMarshalString(info.getSelector(), dataOut);
     looseMarshalString(info.getSubcriptionName(), dataOut);
 

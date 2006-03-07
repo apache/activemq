@@ -110,7 +110,7 @@
     <java classname="org.codehaus.gram.Gram" fork="true">
       <classpath refid="openwire.classpath" />
       <sysproperty key="openwire.version" value="${openwire.version}" />
-      <arg value="src/main/java/org/apache/activemq/command" />
+      <arg value="src/main/java" />
       <arg value="src/gram/script/GenerateCppMarshallingClasses.groovy" />
       <arg value="src/gram/script/GenerateCppMarshallingHeaders.groovy" />
       <arg value="src/gram/script/GenerateJavaMarshalling.groovy" />

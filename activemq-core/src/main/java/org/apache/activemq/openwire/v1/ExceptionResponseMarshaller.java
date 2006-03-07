@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for ExceptionResponseMarshaller
  *
@@ -64,7 +65,7 @@ public class ExceptionResponseMarshaller extends ResponseMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ExceptionResponse info = (ExceptionResponse)o;
-        info.setException((Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
+        info.setException((java.lang.Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
 
     }
 
@@ -108,7 +109,7 @@ public class ExceptionResponseMarshaller extends ResponseMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         ExceptionResponse info = (ExceptionResponse)o;
-        info.setException((Throwable) looseUnmarsalThrowable(wireFormat, dataIn));
+        info.setException((java.lang.Throwable) looseUnmarsalThrowable(wireFormat, dataIn));
 
     }
 

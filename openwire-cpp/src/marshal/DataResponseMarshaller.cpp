@@ -56,7 +56,7 @@ void DataResponseMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     DataResponse& info = (DataResponse&) o;
-        info.setData((DataStructure) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setData((org.apache.activemq.command.DataStructure) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
 }
 

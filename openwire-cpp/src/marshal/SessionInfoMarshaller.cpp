@@ -56,7 +56,7 @@ void SessionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bina
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     SessionInfo& info = (SessionInfo&) o;
-        info.setSessionId((SessionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setSessionId((org.apache.activemq.command.SessionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
 }
 

@@ -57,7 +57,7 @@ void LocalTransactionIdMarshaller::unmarshal(OpenWireFormat& wireFormat, Object 
 
     LocalTransactionId& info = (LocalTransactionId&) o;
         info.setValue(tightUnmarshalLong(wireFormat, dataIn, bs));
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
 }
 

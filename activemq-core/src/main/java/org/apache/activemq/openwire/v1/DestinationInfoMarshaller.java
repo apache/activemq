@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for DestinationInfoMarshaller
  *
@@ -64,16 +65,16 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setOperationType(dataIn.readByte());
         info.setTimeout(tightUnmarshalLong(wireFormat, dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }
@@ -92,8 +93,8 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
         DestinationInfo info = (DestinationInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
         rc+=tightMarshalLong1(wireFormat, info.getTimeout(), bs);
     rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
 
@@ -111,8 +112,8 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         DestinationInfo info = (DestinationInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
     dataOut.writeByte(info.getOperationType());
     tightMarshalLong2(wireFormat, info.getTimeout(), dataOut, bs);
     tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
@@ -130,16 +131,16 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         DestinationInfo info = (DestinationInfo)o;
-        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setOperationType(dataIn.readByte());
         info.setTimeout(looseUnmarshalLong(wireFormat, dataIn));
 
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+                value[i] = (org.apache.activemq.command.BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
             }
             info.setBrokerPath(value);
         }
@@ -158,8 +159,8 @@ public class DestinationInfoMarshaller extends BaseCommandMarshaller {
         DestinationInfo info = (DestinationInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
-    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
     dataOut.writeByte(info.getOperationType());
     looseMarshalLong(wireFormat, info.getTimeout(), dataOut);
     looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);

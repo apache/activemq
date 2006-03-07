@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for WireFormatInfoMarshaller
  *
@@ -64,13 +65,14 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         WireFormatInfo info = (WireFormatInfo)o;
+
+        info.beforeUnmarshall(wireFormat);
+        
         info.setMagic(tightUnmarshalConstByteArray(dataIn, bs, 8));
         info.setVersion(dataIn.readInt());
-        info.setCacheEnabled(bs.readBoolean());
-        info.setStackTraceEnabled(bs.readBoolean());
-        info.setTcpNoDelayEnabled(bs.readBoolean());
-        info.setPrefixPacketSize(bs.readBoolean());
-        info.setTightEncodingEnabled(bs.readBoolean());
+        info.setMarshalledProperties(tightUnmarshalByteSequence(dataIn, bs));
+
+        info.afterUnmarshall(wireFormat);
 
     }
 
@@ -82,13 +84,11 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
 
         WireFormatInfo info = (WireFormatInfo)o;
 
+        info.beforeMarshall(wireFormat);
+
         int rc = super.tightMarshal1(wireFormat, o, bs);
     rc += tightMarshalConstByteArray1(info.getMagic(), bs, 8);
-        bs.writeBoolean(info.isCacheEnabled());
-    bs.writeBoolean(info.isStackTraceEnabled());
-    bs.writeBoolean(info.isTcpNoDelayEnabled());
-    bs.writeBoolean(info.isPrefixPacketSize());
-    bs.writeBoolean(info.isTightEncodingEnabled());
+        rc += tightMarshalByteSequence1(info.getMarshalledProperties(), bs);
 
         return rc + 4;
     }
@@ -106,11 +106,9 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         WireFormatInfo info = (WireFormatInfo)o;
     tightMarshalConstByteArray2(info.getMagic(), dataOut, bs, 8);
     dataOut.writeInt(info.getVersion());
-    bs.readBoolean();
-    bs.readBoolean();
-    bs.readBoolean();
-    bs.readBoolean();
-    bs.readBoolean();
+    tightMarshalByteSequence2(info.getMarshalledProperties(), dataOut, bs);
+
+        info.afterMarshall(wireFormat);
 
     }
 
@@ -125,13 +123,14 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         WireFormatInfo info = (WireFormatInfo)o;
+
+        info.beforeUnmarshall(wireFormat);
+        
         info.setMagic(looseUnmarshalConstByteArray(dataIn, 8));
         info.setVersion(dataIn.readInt());
-        info.setCacheEnabled(dataIn.readBoolean());
-        info.setStackTraceEnabled(dataIn.readBoolean());
-        info.setTcpNoDelayEnabled(dataIn.readBoolean());
-        info.setPrefixPacketSize(dataIn.readBoolean());
-        info.setTightEncodingEnabled(dataIn.readBoolean());
+        info.setMarshalledProperties(looseUnmarshalByteSequence(dataIn));
+
+        info.afterUnmarshall(wireFormat);
 
     }
 
@@ -143,14 +142,12 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
 
         WireFormatInfo info = (WireFormatInfo)o;
 
+        info.beforeMarshall(wireFormat);
+
         super.looseMarshal(wireFormat, o, dataOut);
     looseMarshalConstByteArray(wireFormat, info.getMagic(), dataOut, 8);
     dataOut.writeInt(info.getVersion());
-    dataOut.writeBoolean(info.isCacheEnabled());
-    dataOut.writeBoolean(info.isStackTraceEnabled());
-    dataOut.writeBoolean(info.isTcpNoDelayEnabled());
-    dataOut.writeBoolean(info.isPrefixPacketSize());
-    dataOut.writeBoolean(info.isTightEncodingEnabled());
+    looseMarshalByteSequence(wireFormat, info.getMarshalledProperties(), dataOut);
 
     }
 }

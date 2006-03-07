@@ -56,7 +56,7 @@ void ExceptionResponseMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     ExceptionResponse& info = (ExceptionResponse&) o;
-        info.setException((Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
+        info.setException((java.lang.Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
 
 }
 

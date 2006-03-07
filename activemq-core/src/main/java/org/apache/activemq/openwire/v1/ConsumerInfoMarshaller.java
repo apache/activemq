@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for ConsumerInfoMarshaller
  *
@@ -64,9 +65,9 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-        info.setConsumerId((ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setBrowser(bs.readBoolean());
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setPrefetchSize(dataIn.readInt());
         info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(bs.readBoolean());
@@ -79,15 +80,16 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }
         else {
             info.setBrokerPath(null);
         }
+        info.setAdditionalPredicate((org.apache.activemq.filter.BooleanExpression) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setNetworkSubscription(bs.readBoolean());
 
     }
@@ -101,9 +103,9 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         ConsumerInfo info = (ConsumerInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getConsumerId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
     bs.writeBoolean(info.isBrowser());
-    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
             bs.writeBoolean(info.isDispatchAsync());
     rc += tightMarshalString1(info.getSelector(), bs);
     rc += tightMarshalString1(info.getSubcriptionName(), bs);
@@ -111,6 +113,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
     bs.writeBoolean(info.isExclusive());
     bs.writeBoolean(info.isRetroactive());
         rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getAdditionalPredicate(), bs);
     bs.writeBoolean(info.isNetworkSubscription());
 
         return rc + 9;
@@ -127,9 +130,9 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getConsumerId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
     bs.readBoolean();
-    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
     dataOut.writeInt(info.getPrefetchSize());
     dataOut.writeInt(info.getMaximumPendingMessageLimit());
     bs.readBoolean();
@@ -140,6 +143,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
     bs.readBoolean();
     dataOut.writeByte(info.getPriority());
     tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut, bs);
     bs.readBoolean();
 
     }
@@ -155,9 +159,9 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         ConsumerInfo info = (ConsumerInfo)o;
-        info.setConsumerId((ConsumerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConsumerId((org.apache.activemq.command.ConsumerId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setBrowser(dataIn.readBoolean());
-        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setPrefetchSize(dataIn.readInt());
         info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(dataIn.readBoolean());
@@ -170,15 +174,16 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
 
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+                value[i] = (org.apache.activemq.command.BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
             }
             info.setBrokerPath(value);
         }
         else {
             info.setBrokerPath(null);
         }
+        info.setAdditionalPredicate((org.apache.activemq.filter.BooleanExpression) looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setNetworkSubscription(dataIn.readBoolean());
 
     }
@@ -192,9 +197,9 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         ConsumerInfo info = (ConsumerInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getConsumerId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
     dataOut.writeBoolean(info.isBrowser());
-    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
     dataOut.writeInt(info.getPrefetchSize());
     dataOut.writeInt(info.getMaximumPendingMessageLimit());
     dataOut.writeBoolean(info.isDispatchAsync());
@@ -205,6 +210,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
     dataOut.writeBoolean(info.isRetroactive());
     dataOut.writeByte(info.getPriority());
     looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut);
     dataOut.writeBoolean(info.isNetworkSubscription());
 
     }

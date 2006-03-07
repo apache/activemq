@@ -56,10 +56,10 @@ void MessageDispatchNotificationMarshaller::unmarshal(OpenWireFormat& wireFormat
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     MessageDispatchNotification& info = (MessageDispatchNotification&) o;
-        info.setConsumerId((ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setDeliverySequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
-        info.setMessageId((MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageId((org.apache.activemq.command.MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
 }
 

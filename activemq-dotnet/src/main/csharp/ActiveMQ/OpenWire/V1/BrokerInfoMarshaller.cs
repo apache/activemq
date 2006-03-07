@@ -82,7 +82,7 @@ namespace ActiveMQ.OpenWire.V1
         BrokerInfo info = (BrokerInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.BrokerId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.BrokerId, bs);
     rc += TightMarshalString1(info.BrokerURL, bs);
     rc += TightMarshalObjectArray1(wireFormat, info.PeerBrokerInfos, bs);
     rc += TightMarshalString1(info.BrokerName, bs);
@@ -98,7 +98,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         BrokerInfo info = (BrokerInfo)o;
-    TightMarshalCachedObject2(wireFormat, info.BrokerId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.BrokerId, dataOut, bs);
     TightMarshalString2(info.BrokerURL, dataOut, bs);
     TightMarshalObjectArray2(wireFormat, info.PeerBrokerInfos, dataOut, bs);
     TightMarshalString2(info.BrokerName, dataOut, bs);

@@ -152,19 +152,19 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
             out.println("info." + setter + "(tightUnmarshalByteSequence(dataIn, bs));");
         }
         else if (isThrowable(property.getType())) {
-            out.println("info." + setter + "((" + type + ") tightUnmarsalThrowable(wireFormat, dataIn, bs));");
+            out.println("info." + setter + "((" + property.getType().getQualifiedName() + ") tightUnmarsalThrowable(wireFormat, dataIn, bs));");
         }
         else if (isCachedProperty(property)) {
-            out.println("info." + setter + "((" + type + ") tightUnmarsalCachedObject(wireFormat, dataIn, bs));");
+            out.println("info." + setter + "((" + property.getType().getQualifiedName() + ") tightUnmarsalCachedObject(wireFormat, dataIn, bs));");
         }
         else {
-            out.println("info." + setter + "((" + type + ") tightUnmarsalNestedObject(wireFormat, dataIn, bs));");
+            out.println("info." + setter + "((" + property.getType().getQualifiedName() + ") tightUnmarsalNestedObject(wireFormat, dataIn, bs));");
         }
     }
 
     protected void generateTightUnmarshalBodyForArrayProperty(PrintWriter out, JProperty property, JAnnotationValue size) {
         JClass propertyType = property.getType();
-        String arrayType = propertyType.getArrayComponentType().getSimpleName();
+        String arrayType = propertyType.getArrayComponentType().getQualifiedName();
         String setter = property.getSetter().getSimpleName();
         out.println();
         if (size != null) {
@@ -248,10 +248,10 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
             }
             else {
                 if (isCachedProperty(property)) {
-                    out.println("rc += tightMarshalCachedObject1(wireFormat, " + getter + ", bs);");
+                    out.println("rc += tightMarshalCachedObject1(wireFormat, (DataStructure)" + getter + ", bs);");
                 }
                 else {
-                    out.println("rc += tightMarshalNestedObject1(wireFormat, " + getter + ", bs);");
+                    out.println("rc += tightMarshalNestedObject1(wireFormat, (DataStructure)" + getter + ", bs);");
                 }
             }
         }
@@ -314,10 +314,10 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
             }
             else {
                 if (isCachedProperty(property)) {
-                    out.println("tightMarshalCachedObject2(wireFormat, " + getter + ", dataOut, bs);");
+                    out.println("tightMarshalCachedObject2(wireFormat, (DataStructure)" + getter + ", dataOut, bs);");
                 }
                 else {
-                    out.println("tightMarshalNestedObject2(wireFormat, " + getter + ", dataOut, bs);");
+                    out.println("tightMarshalNestedObject2(wireFormat, (DataStructure)" + getter + ", dataOut, bs);");
                 }
             }
         }
@@ -381,10 +381,10 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
             }
             else {
                 if (isCachedProperty(property)) {
-                    out.println("looseMarshalCachedObject(wireFormat, " + getter + ", dataOut);");
+                    out.println("looseMarshalCachedObject(wireFormat, (DataStructure)" + getter + ", dataOut);");
                 }
                 else {
-                    out.println("looseMarshalNestedObject(wireFormat, " + getter + ", dataOut);");
+                    out.println("looseMarshalNestedObject(wireFormat, (DataStructure)" + getter + ", dataOut);");
                 }
             }
         }
@@ -447,19 +447,19 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
             out.println("info." + setter + "(looseUnmarshalByteSequence(dataIn));");
         }
         else if (isThrowable(property.getType())) {
-            out.println("info." + setter + "((" + type + ") looseUnmarsalThrowable(wireFormat, dataIn));");
+            out.println("info." + setter + "((" + property.getType().getQualifiedName() + ") looseUnmarsalThrowable(wireFormat, dataIn));");
         }
         else if (isCachedProperty(property)) {
-            out.println("info." + setter + "((" + type + ") looseUnmarsalCachedObject(wireFormat, dataIn));");
+            out.println("info." + setter + "((" + property.getType().getQualifiedName() + ") looseUnmarsalCachedObject(wireFormat, dataIn));");
         }
         else {
-            out.println("info." + setter + "((" + type + ") looseUnmarsalNestedObject(wireFormat, dataIn));");
+            out.println("info." + setter + "((" + property.getType().getQualifiedName() + ") looseUnmarsalNestedObject(wireFormat, dataIn));");
         }
     }
 
     protected void generateLooseUnmarshalBodyForArrayProperty(PrintWriter out, JProperty property, JAnnotationValue size) {
         JClass propertyType = property.getType();
-        String arrayType = propertyType.getArrayComponentType().getSimpleName();
+        String arrayType = propertyType.getArrayComponentType().getQualifiedName();
         String setter = property.getSetter().getSimpleName();
         out.println();
         if (size != null) {
