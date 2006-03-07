@@ -56,14 +56,14 @@ void BrokerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Binar
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     BrokerInfo& info = (BrokerInfo&) o;
-        info.setBrokerId((BrokerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setBrokerId((org.apache.activemq.command.BrokerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setBrokerURL(tightUnmarshalString(dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerInfo value[] = new BrokerInfo[size];
+            org.apache.activemq.command.BrokerInfo value[] = new org.apache.activemq.command.BrokerInfo[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerInfo) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerInfo) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setPeerBrokerInfos(value);
         }

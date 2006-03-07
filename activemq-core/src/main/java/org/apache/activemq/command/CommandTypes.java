@@ -117,6 +117,7 @@ public interface CommandTypes {
     /////////////////////////////////////////////////// 
     
     byte  MESSAGE_DISPATCH_NOTIFICATION     = 90;
+    byte  NETWORK_BRIDGE_FILTER             = 91;
     
     ///////////////////////////////////////////////////
     //

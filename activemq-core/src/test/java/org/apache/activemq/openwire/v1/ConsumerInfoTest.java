@@ -70,6 +70,7 @@ public class ConsumerInfoTest extends BaseCommandTestSupport {
 	            }
 	            info.setBrokerPath(value);
             }
+        info.setAdditionalPredicate(createBooleanExpression("AdditionalPredicate:6"));
         info.setNetworkSubscription(false);
 
             }

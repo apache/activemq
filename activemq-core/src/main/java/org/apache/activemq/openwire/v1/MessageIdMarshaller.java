@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for MessageIdMarshaller
  *
@@ -64,7 +65,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageId info = (MessageId)o;
-        info.setProducerId((ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setProducerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setBrokerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
 
@@ -79,7 +80,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         MessageId info = (MessageId)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getProducerId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
     rc+=tightMarshalLong1(wireFormat, info.getProducerSequenceId(), bs);
     rc+=tightMarshalLong1(wireFormat, info.getBrokerSequenceId(), bs);
 
@@ -97,7 +98,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageId info = (MessageId)o;
-    tightMarshalCachedObject2(wireFormat, info.getProducerId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
     tightMarshalLong2(wireFormat, info.getProducerSequenceId(), dataOut, bs);
     tightMarshalLong2(wireFormat, info.getBrokerSequenceId(), dataOut, bs);
 
@@ -114,7 +115,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         MessageId info = (MessageId)o;
-        info.setProducerId((ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setProducerId((org.apache.activemq.command.ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setProducerSequenceId(looseUnmarshalLong(wireFormat, dataIn));
         info.setBrokerSequenceId(looseUnmarshalLong(wireFormat, dataIn));
 
@@ -129,7 +130,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         MessageId info = (MessageId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getProducerId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
     looseMarshalLong(wireFormat, info.getProducerSequenceId(), dataOut);
     looseMarshalLong(wireFormat, info.getBrokerSequenceId(), dataOut);
 

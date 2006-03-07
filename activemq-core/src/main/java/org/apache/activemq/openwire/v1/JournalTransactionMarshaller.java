@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for JournalTransactionMarshaller
  *
@@ -64,7 +65,7 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         JournalTransaction info = (JournalTransaction)o;
-        info.setTransactionId((TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setType(dataIn.readByte());
         info.setWasPrepared(bs.readBoolean());
 
@@ -79,7 +80,7 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         JournalTransaction info = (JournalTransaction)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalNestedObject1(wireFormat, info.getTransactionId(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
         bs.writeBoolean(info.getWasPrepared());
 
         return rc + 1;
@@ -96,7 +97,7 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTransaction info = (JournalTransaction)o;
-    tightMarshalNestedObject2(wireFormat, info.getTransactionId(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
     dataOut.writeByte(info.getType());
     bs.readBoolean();
 
@@ -113,7 +114,7 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         JournalTransaction info = (JournalTransaction)o;
-        info.setTransactionId((TransactionId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setType(dataIn.readByte());
         info.setWasPrepared(dataIn.readBoolean());
 
@@ -128,7 +129,7 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         JournalTransaction info = (JournalTransaction)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalNestedObject(wireFormat, info.getTransactionId(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
     dataOut.writeByte(info.getType());
     dataOut.writeBoolean(info.getWasPrepared());
 

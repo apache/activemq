@@ -54,13 +54,13 @@ public class ActiveIOTransport implements Transport {
             public void onCommand(Object command) {
                 if (command.getClass() == WireFormatInfo.class) {
                     WireFormatInfo info = (WireFormatInfo) command;
-                    if (info.isTcpNoDelayEnabled()) {
-                        try {
+                    try {
+                        if (info.isTcpNoDelayEnabled()) {
                             enableTcpNodeDelay();
                         }
-                        catch (SocketException e) {
-                            onError(e);
-                        }
+                    }
+                    catch (IOException e) {
+                        onError(e);
                     }
                 }
                 transportListener.onCommand((Command) command);

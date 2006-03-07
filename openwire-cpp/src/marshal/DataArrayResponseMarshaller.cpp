@@ -59,9 +59,9 @@ void DataArrayResponseMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            DataStructure value[] = new DataStructure[size];
+            org.apache.activemq.command.DataStructure value[] = new org.apache.activemq.command.DataStructure[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (DataStructure) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.DataStructure) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setData(value);
         }

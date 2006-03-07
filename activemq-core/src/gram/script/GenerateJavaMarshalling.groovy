@@ -49,6 +49,7 @@ import java.io.IOException;
 
 import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
+
 """
 for (pkg in jclass.importedPackages) {
     for (clazz in pkg.classes) {

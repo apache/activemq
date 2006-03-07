@@ -56,12 +56,12 @@ void JournalTopicAckMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     JournalTopicAck& info = (JournalTopicAck&) o;
-        info.setDestination((ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageId((MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageId((org.apache.activemq.command.MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setMessageSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setSubscritionName(tightUnmarshalString(dataIn, bs));
         info.setClientId(tightUnmarshalString(dataIn, bs));
-        info.setTransactionId((TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
 }
 

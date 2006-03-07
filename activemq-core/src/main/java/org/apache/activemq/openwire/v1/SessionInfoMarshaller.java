@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for SessionInfoMarshaller
  *
@@ -64,7 +65,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         SessionInfo info = (SessionInfo)o;
-        info.setSessionId((SessionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setSessionId((org.apache.activemq.command.SessionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -77,7 +78,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         SessionInfo info = (SessionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getSessionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getSessionId(), bs);
 
         return rc + 0;
     }
@@ -93,7 +94,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         SessionInfo info = (SessionInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getSessionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getSessionId(), dataOut, bs);
 
     }
 
@@ -108,7 +109,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         SessionInfo info = (SessionInfo)o;
-        info.setSessionId((SessionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setSessionId((org.apache.activemq.command.SessionId) looseUnmarsalCachedObject(wireFormat, dataIn));
 
     }
 
@@ -121,7 +122,7 @@ public class SessionInfoMarshaller extends BaseCommandMarshaller {
         SessionInfo info = (SessionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getSessionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getSessionId(), dataOut);
 
     }
 }

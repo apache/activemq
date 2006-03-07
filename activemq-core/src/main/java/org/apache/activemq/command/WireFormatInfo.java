@@ -16,29 +16,36 @@
  */
 package org.apache.activemq.command;
 
+import org.activeio.ByteArrayInputStream;
+import org.activeio.ByteArrayOutputStream;
+import org.activeio.ByteSequence;
+import org.activeio.command.WireFormat;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.MarshallingSupport;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
  * @openwire:marshaller code="1"
  * @version $Revision$
  */
-public class WireFormatInfo implements Command {
+public class WireFormatInfo implements Command, MarshallAware {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
     static final private byte MAGIC[] = new byte[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
 
-    protected int version;
     protected byte magic[] = MAGIC;
-
-    protected boolean stackTraceEnabled;
-    protected boolean tcpNoDelayEnabled;
-    protected boolean cacheEnabled;
-    protected boolean tightEncodingEnabled;
-    protected boolean prefixPacketSize;
+    protected int version;
+    protected transient HashMap properties;
+    protected ByteSequence marshalledProperties;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -48,13 +55,17 @@ public class WireFormatInfo implements Command {
         return true;
     }
 
+    public boolean isMarshallAware() {
+        return true;
+    }
+
+
     /**
      * @openwire:property version=1 size=8 testSize=-1
      */
     public byte[] getMagic() {
         return magic;
     }
-
     public void setMagic(byte[] magic) {
         this.magic = magic;
     }
@@ -65,119 +76,194 @@ public class WireFormatInfo implements Command {
     public int getVersion() {
         return version;
     }
-
     public void setVersion(int version) {
         this.version = version;
     }
+    
+    /**
+     * @openwire:property version=1
+     */
+    public ByteSequence getMarshalledProperties() {
+        return marshalledProperties;
+    }
+    public void setMarshalledProperties(ByteSequence marshalledProperties) {
+        this.marshalledProperties = marshalledProperties;
+    }
+
+    //////////////////////
+    // 
+    // Implementation Methods.
+    //
+    //////////////////////
+    
+    public Object getProperty(String name) throws IOException {
+        if( properties == null ) {
+            if( marshalledProperties ==null )
+                return null;
+            properties = unmarsallProperties(marshalledProperties);
+        }
+        return properties.get(name);
+    }
+    
+    public Map getProperties() throws IOException {
+        if( properties == null ) {
+            if( marshalledProperties==null )
+                return Collections.EMPTY_MAP;
+            properties = unmarsallProperties(marshalledProperties);
+        }
+        return Collections.unmodifiableMap(properties);
+    }
+    
+    public void clearProperties() {
+        marshalledProperties = null;
+        properties=null;
+    }
+
+    public void setProperty(String name, Object value) throws IOException {
+        lazyCreateProperties();
+        properties.put(name, value);
+    }
+
+    protected void lazyCreateProperties() throws IOException {
+        if( properties == null ) {
+            if( marshalledProperties == null ) {
+                properties = new HashMap();
+            } else {
+                properties = unmarsallProperties(marshalledProperties);
+                marshalledProperties = null;
+            }
+        }
+    }
+    
+    private HashMap unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
+        return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)));
+    }
+
+    public void beforeMarshall(WireFormat wireFormat) throws IOException {
+        // Need to marshal the properties.
+        if( marshalledProperties==null && properties!=null ) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream os = new DataOutputStream(baos);
+            MarshallingSupport.marshalPrimitiveMap(properties, os);
+            os.close();
+            marshalledProperties = baos.toByteSequence();
+        }
+    }
+
+    public void afterMarshall(WireFormat wireFormat) throws IOException {
+    }
+
+    public void beforeUnmarshall(WireFormat wireFormat) throws IOException {
+    }
+
+    public void afterUnmarshall(WireFormat wireFormat) throws IOException {
+    }
+
 
     public boolean isValid() {
         return magic != null && Arrays.equals(magic, MAGIC);
-    }
-
-    public void setCommandId(short value) {
-    }
-
-    public short getCommandId() {
-        return 0;
-    }
-
-    public boolean isResponseRequired() {
-        return false;
-    }
-
-    public boolean isResponse() {
-        return false;
-    }
-
-    public boolean isBrokerInfo() {
-        return false;
-    }
-
-    public boolean isMessageDispatch() {
-        return false;
-    }
-
-    public boolean isMessage() {
-        return false;
-    }
-
-    public boolean isMessageAck() {
-        return false;
     }
 
     public void setResponseRequired(boolean responseRequired) {
     }
 
     /**
-     * @openwire:property version=1
+     * @throws IOException 
      */
-    public boolean isCacheEnabled() {
-        return cacheEnabled;
+    public boolean isCacheEnabled() throws IOException {
+        return Boolean.TRUE == getProperty("cache");
     }
-
-    public void setCacheEnabled(boolean cacheEnabled) {
-        this.cacheEnabled = cacheEnabled;
+    public void setCacheEnabled(boolean cacheEnabled) throws IOException {
+        setProperty("cache", cacheEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
-     * @openwire:property version=1
+     * @throws IOException 
      */
-    public boolean isStackTraceEnabled() {
-        return stackTraceEnabled;
+    public boolean isStackTraceEnabled() throws IOException {
+        return Boolean.TRUE == getProperty("stackTrace");
     }
-
-    public void setStackTraceEnabled(boolean stackTraceEnabled) {
-        this.stackTraceEnabled = stackTraceEnabled;
+    public void setStackTraceEnabled(boolean stackTraceEnabled) throws IOException {
+        setProperty("stackTrace", stackTraceEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
-     * @openwire:property version=1
+     * @throws IOException 
      */
-    public boolean isTcpNoDelayEnabled() {
-        return tcpNoDelayEnabled;
+    public boolean isTcpNoDelayEnabled() throws IOException {
+        return Boolean.TRUE == getProperty("tcpNoDelay");
     }
-
-    public void setTcpNoDelayEnabled(boolean tcpNoDelayEnabled) {
-        this.tcpNoDelayEnabled = tcpNoDelayEnabled;
-    }
-
-    /**
-     * @openwire:property version=1
-     */
-    public boolean isPrefixPacketSize() {
-        return prefixPacketSize;
-    }
-    public void setPrefixPacketSize(boolean prefixPacketSize) {
-        this.prefixPacketSize = prefixPacketSize;
+    public void setTcpNoDelayEnabled(boolean tcpNoDelayEnabled) throws IOException {
+        setProperty("tcpNoDelay", tcpNoDelayEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
-     * @openwire:property version=1
+     * @throws IOException 
      */
-    public boolean isTightEncodingEnabled() {
-        return tightEncodingEnabled;
+    public boolean isPrefixPacketSize() throws IOException {
+        return Boolean.TRUE == getProperty("prefixPacketSize");
     }
-    public void setTightEncodingEnabled(boolean tightEncodingEnabled) {
-        this.tightEncodingEnabled = tightEncodingEnabled;
+    public void setPrefixPacketSize(boolean prefixPacketSize) throws IOException {
+        setProperty("prefixPacketSize", prefixPacketSize ? Boolean.TRUE : Boolean.FALSE);
+    }
+
+    /**
+     * @throws IOException 
+     */
+    public boolean isTightEncodingEnabled() throws IOException {
+        return Boolean.TRUE == getProperty("tightEncoding");
+    }
+    public void setTightEncodingEnabled(boolean tightEncodingEnabled) throws IOException {
+        setProperty("tightEncoding", tightEncodingEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);
     }
 
-    public boolean isMarshallAware() {
-        return false;
-    }
-
-    public boolean isMessageDispatchNotification(){
-        return false;
-    }
-    
-    public boolean isShutdownInfo(){
-        return false;
-    }
-
     public String toString() {
         return IntrospectionSupport.toString(this, WireFormatInfo.class);
     }
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // This are not implemented.
+    //
+    ///////////////////////////////////////////////////////////////
+    
+    public void setCommandId(short value) {
+    }
+    public short getCommandId() {
+        return 0;
+    }
+    public boolean isResponseRequired() {
+        return false;
+    }
+    public boolean isResponse() {
+        return false;
+    }
+    public boolean isBrokerInfo() {
+        return false;
+    }
+    public boolean isMessageDispatch() {
+        return false;
+    }
+    public boolean isMessage() {
+        return false;
+    }
+    public boolean isMessageAck() {
+        return false;
+    }
+    public boolean isMessageDispatchNotification(){
+        return false;
+    }
+    public boolean isShutdownInfo(){
+        return false;
+    }
+    public void setCachedMarshalledForm(WireFormat wireFormat, ByteSequence data) {
+    }
+    public ByteSequence getCachedMarshalledForm(WireFormat wireFormat) {
+        return null;
+    }
+
 }

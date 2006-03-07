@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for ConnectionErrorMarshaller
  *
@@ -64,8 +65,8 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConnectionError info = (ConnectionError)o;
-        info.setException((Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
-        info.setConnectionId((ConnectionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setException((java.lang.Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -79,7 +80,7 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
     rc += tightMarshalThrowable1(wireFormat, info.getException(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, info.getConnectionId(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
 
         return rc + 0;
     }
@@ -96,7 +97,7 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
 
         ConnectionError info = (ConnectionError)o;
     tightMarshalThrowable2(wireFormat, info.getException(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
 
     }
 
@@ -111,8 +112,8 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         ConnectionError info = (ConnectionError)o;
-        info.setException((Throwable) looseUnmarsalThrowable(wireFormat, dataIn));
-        info.setConnectionId((ConnectionId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setException((java.lang.Throwable) looseUnmarsalThrowable(wireFormat, dataIn));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) looseUnmarsalNestedObject(wireFormat, dataIn));
 
     }
 
@@ -126,7 +127,7 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
 
         super.looseMarshal(wireFormat, o, dataOut);
     looseMarshalThrowable(wireFormat, info.getException(), dataOut);
-    looseMarshalNestedObject(wireFormat, info.getConnectionId(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
 
     }
 }

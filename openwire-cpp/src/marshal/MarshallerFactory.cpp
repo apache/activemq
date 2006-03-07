@@ -25,52 +25,53 @@
 
 #include "marshal/ExceptionResponseMarshaller.hpp"
 
-#include "marshal/MessageIdMarshaller.hpp"
-#include "marshal/BrokerInfoMarshaller.hpp"
-#include "marshal/ActiveMQTempQueueMarshaller.hpp"
 #include "marshal/LocalTransactionIdMarshaller.hpp"
-#include "marshal/RemoveSubscriptionInfoMarshaller.hpp"
 #include "marshal/IntegerResponseMarshaller.hpp"
 #include "marshal/ActiveMQQueueMarshaller.hpp"
-#include "marshal/DestinationInfoMarshaller.hpp"
-#include "marshal/ActiveMQBytesMessageMarshaller.hpp"
-#include "marshal/ShutdownInfoMarshaller.hpp"
-#include "marshal/DataResponseMarshaller.hpp"
-#include "marshal/SessionIdMarshaller.hpp"
-#include "marshal/DataArrayResponseMarshaller.hpp"
-#include "marshal/JournalQueueAckMarshaller.hpp"
-#include "marshal/WireFormatInfoMarshaller.hpp"
-#include "marshal/ResponseMarshaller.hpp"
-#include "marshal/ConnectionErrorMarshaller.hpp"
 #include "marshal/ActiveMQObjectMessageMarshaller.hpp"
-#include "marshal/ConsumerInfoMarshaller.hpp"
-#include "marshal/ActiveMQTempTopicMarshaller.hpp"
 #include "marshal/ConnectionIdMarshaller.hpp"
-#include "marshal/DiscoveryEventMarshaller.hpp"
 #include "marshal/ConnectionInfoMarshaller.hpp"
-#include "marshal/KeepAliveInfoMarshaller.hpp"
-#include "marshal/XATransactionIdMarshaller.hpp"
-#include "marshal/JournalTraceMarshaller.hpp"
-#include "marshal/FlushCommandMarshaller.hpp"
-#include "marshal/ConsumerIdMarshaller.hpp"
-#include "marshal/JournalTopicAckMarshaller.hpp"
-#include "marshal/ActiveMQTextMessageMarshaller.hpp"
-#include "marshal/BrokerIdMarshaller.hpp"
-#include "marshal/MessageDispatchMarshaller.hpp"
 #include "marshal/ProducerInfoMarshaller.hpp"
-#include "marshal/SubscriptionInfoMarshaller.hpp"
-#include "marshal/ActiveMQMapMessageMarshaller.hpp"
 #include "marshal/MessageDispatchNotificationMarshaller.hpp"
 #include "marshal/SessionInfoMarshaller.hpp"
-#include "marshal/ActiveMQMessageMarshaller.hpp"
 #include "marshal/TransactionInfoMarshaller.hpp"
 #include "marshal/ActiveMQStreamMessageMarshaller.hpp"
 #include "marshal/MessageAckMarshaller.hpp"
 #include "marshal/ProducerIdMarshaller.hpp"
-#include "marshal/ActiveMQTopicMarshaller.hpp"
+#include "marshal/MessageIdMarshaller.hpp"
+#include "marshal/ActiveMQTempQueueMarshaller.hpp"
+#include "marshal/RemoveSubscriptionInfoMarshaller.hpp"
+#include "marshal/SessionIdMarshaller.hpp"
+#include "marshal/DataArrayResponseMarshaller.hpp"
+#include "marshal/JournalQueueAckMarshaller.hpp"
+#include "marshal/ResponseMarshaller.hpp"
+#include "marshal/ConnectionErrorMarshaller.hpp"
+#include "marshal/ConsumerInfoMarshaller.hpp"
+#include "marshal/XATransactionIdMarshaller.hpp"
+#include "marshal/JournalTraceMarshaller.hpp"
+#include "marshal/ConsumerIdMarshaller.hpp"
+#include "marshal/ActiveMQTextMessageMarshaller.hpp"
+#include "marshal/SubscriptionInfoMarshaller.hpp"
 #include "marshal/JournalTransactionMarshaller.hpp"
-#include "marshal/RemoveInfoMarshaller.hpp"
 #include "marshal/ControlCommandMarshaller.hpp"
+#include "marshal/NetworkBridgeFilterMarshaller.hpp"
+#include "marshal/ActiveMQBytesMessageMarshaller.hpp"
+#include "marshal/WireFormatInfoMarshaller.hpp"
+#include "marshal/ActiveMQTempTopicMarshaller.hpp"
+#include "marshal/DiscoveryEventMarshaller.hpp"
+#include "marshal/ActiveMQTopicMarshaller.hpp"
+#include "marshal/BrokerInfoMarshaller.hpp"
+#include "marshal/DestinationInfoMarshaller.hpp"
+#include "marshal/ShutdownInfoMarshaller.hpp"
+#include "marshal/DataResponseMarshaller.hpp"
+#include "marshal/KeepAliveInfoMarshaller.hpp"
+#include "marshal/FlushCommandMarshaller.hpp"
+#include "marshal/JournalTopicAckMarshaller.hpp"
+#include "marshal/BrokerIdMarshaller.hpp"
+#include "marshal/MessageDispatchMarshaller.hpp"
+#include "marshal/ActiveMQMapMessageMarshaller.hpp"
+#include "marshal/ActiveMQMessageMarshaller.hpp"
+#include "marshal/RemoveInfoMarshaller.hpp"
 #include "marshal/ExceptionResponseMarshaller.hpp"
 
 
@@ -80,51 +81,52 @@ using namespace apache::activemq::client::marshal;
 void MarshallerFactory::configure(OpenWireFormat& format) 
 {
 
-    format.addMarshaller(new MessageIdMarshaller());
-    format.addMarshaller(new BrokerInfoMarshaller());
-    format.addMarshaller(new ActiveMQTempQueueMarshaller());
     format.addMarshaller(new LocalTransactionIdMarshaller());
-    format.addMarshaller(new RemoveSubscriptionInfoMarshaller());
     format.addMarshaller(new IntegerResponseMarshaller());
     format.addMarshaller(new ActiveMQQueueMarshaller());
-    format.addMarshaller(new DestinationInfoMarshaller());
-    format.addMarshaller(new ActiveMQBytesMessageMarshaller());
-    format.addMarshaller(new ShutdownInfoMarshaller());
-    format.addMarshaller(new DataResponseMarshaller());
-    format.addMarshaller(new SessionIdMarshaller());
-    format.addMarshaller(new DataArrayResponseMarshaller());
-    format.addMarshaller(new JournalQueueAckMarshaller());
-    format.addMarshaller(new WireFormatInfoMarshaller());
-    format.addMarshaller(new ResponseMarshaller());
-    format.addMarshaller(new ConnectionErrorMarshaller());
     format.addMarshaller(new ActiveMQObjectMessageMarshaller());
-    format.addMarshaller(new ConsumerInfoMarshaller());
-    format.addMarshaller(new ActiveMQTempTopicMarshaller());
     format.addMarshaller(new ConnectionIdMarshaller());
-    format.addMarshaller(new DiscoveryEventMarshaller());
     format.addMarshaller(new ConnectionInfoMarshaller());
-    format.addMarshaller(new KeepAliveInfoMarshaller());
-    format.addMarshaller(new XATransactionIdMarshaller());
-    format.addMarshaller(new JournalTraceMarshaller());
-    format.addMarshaller(new FlushCommandMarshaller());
-    format.addMarshaller(new ConsumerIdMarshaller());
-    format.addMarshaller(new JournalTopicAckMarshaller());
-    format.addMarshaller(new ActiveMQTextMessageMarshaller());
-    format.addMarshaller(new BrokerIdMarshaller());
-    format.addMarshaller(new MessageDispatchMarshaller());
     format.addMarshaller(new ProducerInfoMarshaller());
-    format.addMarshaller(new SubscriptionInfoMarshaller());
-    format.addMarshaller(new ActiveMQMapMessageMarshaller());
     format.addMarshaller(new MessageDispatchNotificationMarshaller());
     format.addMarshaller(new SessionInfoMarshaller());
-    format.addMarshaller(new ActiveMQMessageMarshaller());
     format.addMarshaller(new TransactionInfoMarshaller());
     format.addMarshaller(new ActiveMQStreamMessageMarshaller());
     format.addMarshaller(new MessageAckMarshaller());
     format.addMarshaller(new ProducerIdMarshaller());
-    format.addMarshaller(new ActiveMQTopicMarshaller());
+    format.addMarshaller(new MessageIdMarshaller());
+    format.addMarshaller(new ActiveMQTempQueueMarshaller());
+    format.addMarshaller(new RemoveSubscriptionInfoMarshaller());
+    format.addMarshaller(new SessionIdMarshaller());
+    format.addMarshaller(new DataArrayResponseMarshaller());
+    format.addMarshaller(new JournalQueueAckMarshaller());
+    format.addMarshaller(new ResponseMarshaller());
+    format.addMarshaller(new ConnectionErrorMarshaller());
+    format.addMarshaller(new ConsumerInfoMarshaller());
+    format.addMarshaller(new XATransactionIdMarshaller());
+    format.addMarshaller(new JournalTraceMarshaller());
+    format.addMarshaller(new ConsumerIdMarshaller());
+    format.addMarshaller(new ActiveMQTextMessageMarshaller());
+    format.addMarshaller(new SubscriptionInfoMarshaller());
     format.addMarshaller(new JournalTransactionMarshaller());
-    format.addMarshaller(new RemoveInfoMarshaller());
     format.addMarshaller(new ControlCommandMarshaller());
+    format.addMarshaller(new NetworkBridgeFilterMarshaller());
+    format.addMarshaller(new ActiveMQBytesMessageMarshaller());
+    format.addMarshaller(new WireFormatInfoMarshaller());
+    format.addMarshaller(new ActiveMQTempTopicMarshaller());
+    format.addMarshaller(new DiscoveryEventMarshaller());
+    format.addMarshaller(new ActiveMQTopicMarshaller());
+    format.addMarshaller(new BrokerInfoMarshaller());
+    format.addMarshaller(new DestinationInfoMarshaller());
+    format.addMarshaller(new ShutdownInfoMarshaller());
+    format.addMarshaller(new DataResponseMarshaller());
+    format.addMarshaller(new KeepAliveInfoMarshaller());
+    format.addMarshaller(new FlushCommandMarshaller());
+    format.addMarshaller(new JournalTopicAckMarshaller());
+    format.addMarshaller(new BrokerIdMarshaller());
+    format.addMarshaller(new MessageDispatchMarshaller());
+    format.addMarshaller(new ActiveMQMapMessageMarshaller());
+    format.addMarshaller(new ActiveMQMessageMarshaller());
+    format.addMarshaller(new RemoveInfoMarshaller());
     format.addMarshaller(new ExceptionResponseMarshaller());
 }

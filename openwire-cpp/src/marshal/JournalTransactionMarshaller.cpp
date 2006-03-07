@@ -56,7 +56,7 @@ void JournalTransactionMarshaller::unmarshal(OpenWireFormat& wireFormat, Object 
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     JournalTransaction& info = (JournalTransaction&) o;
-        info.setTransactionId((TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setType(dataIn.readByte());
         info.setWasPrepared(bs.readBoolean());
 

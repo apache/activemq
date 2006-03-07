@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for JournalTopicAckMarshaller
  *
@@ -64,12 +65,12 @@ public class JournalTopicAckMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-        info.setDestination((ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setMessageId((MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageId((org.apache.activemq.command.MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setMessageSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setSubscritionName(tightUnmarshalString(dataIn, bs));
         info.setClientId(tightUnmarshalString(dataIn, bs));
-        info.setTransactionId((TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -82,12 +83,12 @@ public class JournalTopicAckMarshaller extends BaseDataStreamMarshaller {
         JournalTopicAck info = (JournalTopicAck)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalNestedObject1(wireFormat, info.getDestination(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, info.getMessageId(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageId(), bs);
     rc+=tightMarshalLong1(wireFormat, info.getMessageSequenceId(), bs);
     rc += tightMarshalString1(info.getSubscritionName(), bs);
     rc += tightMarshalString1(info.getClientId(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, info.getTransactionId(), bs);
+    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
 
         return rc + 0;
     }
@@ -103,12 +104,12 @@ public class JournalTopicAckMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-    tightMarshalNestedObject2(wireFormat, info.getDestination(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, info.getMessageId(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageId(), dataOut, bs);
     tightMarshalLong2(wireFormat, info.getMessageSequenceId(), dataOut, bs);
     tightMarshalString2(info.getSubscritionName(), dataOut, bs);
     tightMarshalString2(info.getClientId(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, info.getTransactionId(), dataOut, bs);
+    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
 
     }
 
@@ -123,12 +124,12 @@ public class JournalTopicAckMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         JournalTopicAck info = (JournalTopicAck)o;
-        info.setDestination((ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
-        info.setMessageId((MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setMessageId((org.apache.activemq.command.MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setMessageSequenceId(looseUnmarshalLong(wireFormat, dataIn));
         info.setSubscritionName(looseUnmarshalString(dataIn));
         info.setClientId(looseUnmarshalString(dataIn));
-        info.setTransactionId((TransactionId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setTransactionId((org.apache.activemq.command.TransactionId) looseUnmarsalNestedObject(wireFormat, dataIn));
 
     }
 
@@ -141,12 +142,12 @@ public class JournalTopicAckMarshaller extends BaseDataStreamMarshaller {
         JournalTopicAck info = (JournalTopicAck)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalNestedObject(wireFormat, info.getDestination(), dataOut);
-    looseMarshalNestedObject(wireFormat, info.getMessageId(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageId(), dataOut);
     looseMarshalLong(wireFormat, info.getMessageSequenceId(), dataOut);
     looseMarshalString(info.getSubscritionName(), dataOut);
     looseMarshalString(info.getClientId(), dataOut);
-    looseMarshalNestedObject(wireFormat, info.getTransactionId(), dataOut);
+    looseMarshalNestedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
 
     }
 }

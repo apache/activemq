@@ -79,6 +79,7 @@ namespace ActiveMQ.OpenWire.V1
         else {
             info.BrokerPath = null;
         }
+        info.AdditionalPredicate = (BooleanExpression) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
         info.NetworkSubscription = bs.ReadBoolean();
 
     }
@@ -91,9 +92,9 @@ namespace ActiveMQ.OpenWire.V1
         ConsumerInfo info = (ConsumerInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.ConsumerId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConsumerId, bs);
     bs.WriteBoolean(info.Browser);
-    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.Destination, bs);
             bs.WriteBoolean(info.DispatchAsync);
     rc += TightMarshalString1(info.Selector, bs);
     rc += TightMarshalString1(info.SubcriptionName, bs);
@@ -101,6 +102,7 @@ namespace ActiveMQ.OpenWire.V1
     bs.WriteBoolean(info.Exclusive);
     bs.WriteBoolean(info.Retroactive);
         rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
+    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.AdditionalPredicate, bs);
     bs.WriteBoolean(info.NetworkSubscription);
 
         return rc + 9;
@@ -113,9 +115,9 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ConsumerInfo info = (ConsumerInfo)o;
-    TightMarshalCachedObject2(wireFormat, info.ConsumerId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConsumerId, dataOut, bs);
     bs.ReadBoolean();
-    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
     dataOut.Write(info.PrefetchSize);
     dataOut.Write(info.MaximumPendingMessageLimit);
     bs.ReadBoolean();
@@ -126,6 +128,7 @@ namespace ActiveMQ.OpenWire.V1
     bs.ReadBoolean();
     dataOut.Write(info.Priority);
     TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, (DataStructure)info.AdditionalPredicate, dataOut, bs);
     bs.ReadBoolean();
 
     }

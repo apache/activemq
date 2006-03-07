@@ -16,6 +16,7 @@
  */
 using ActiveMQ.Commands;
 using System;
+using ActiveMQ.OpenWire;
 
 namespace ActiveMQ.Commands
 {
@@ -137,6 +138,32 @@ namespace ActiveMQ.Commands
                 return -1;
             }
         }
+		
+		public virtual void BeforeMarshall(OpenWireFormat wireFormat)
+		{
+		}
+		
+		public virtual void AfterMarshall(OpenWireFormat wireFormat)
+		{
+		}
+		
+		public virtual void BeforeUnmarshall(OpenWireFormat wireFormat)
+		{
+		}
+		
+		public virtual void AfterUnmarshall(OpenWireFormat wireFormat)
+		{
+		}
+		
+		public virtual void SetMarshalledForm(OpenWireFormat wireFormat, byte[] data)
+		{
+		}
+		
+		public virtual byte[] GetMarshalledForm(OpenWireFormat wireFormat)
+		{
+			return null;
+		}
+		
     }
 }
 

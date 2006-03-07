@@ -69,7 +69,7 @@ namespace ActiveMQ.OpenWire.V1
         JournalTransaction info = (JournalTransaction)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalNestedObject1(wireFormat, info.TransactionId, bs);
+    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.TransactionId, bs);
         bs.WriteBoolean(info.WasPrepared);
 
         return rc + 1;
@@ -82,7 +82,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTransaction info = (JournalTransaction)o;
-    TightMarshalNestedObject2(wireFormat, info.TransactionId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, (DataStructure)info.TransactionId, dataOut, bs);
     dataOut.Write(info.Type);
     bs.ReadBoolean();
 

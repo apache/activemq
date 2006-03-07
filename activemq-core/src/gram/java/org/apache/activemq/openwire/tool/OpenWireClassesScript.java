@@ -159,7 +159,7 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
     protected void initialiseManuallyMaintainedClasses() {
         String[] names = { "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic",
                 "BaseCommand", "ActiveMQMessage", "ActiveMQTextMessage", "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage",
-                "ActiveMQStreamMessage", "DataStructureSupport" };
+                "ActiveMQStreamMessage", "DataStructureSupport", "WireFormatInfo", "ActiveMQObjectMessage" };
 
         for (int i = 0; i < names.length; i++) {
             manuallyMaintainedClasses.add(names[i]);

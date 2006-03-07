@@ -69,7 +69,7 @@ public class WireFormatNegotiator extends TransportFilter {
         super.oneway(command);
     }
 
-    protected WireFormatInfo createWireFormatInfo() {
+    protected WireFormatInfo createWireFormatInfo() throws IOException {
         WireFormatInfo info = new WireFormatInfo();
         info.setVersion(wireFormat.getVersion());
         if ( wireFormat instanceof OpenWireFormat ) {
@@ -98,20 +98,24 @@ public class WireFormatNegotiator extends TransportFilter {
                 wireFormat.setVersion(info.getVersion());
             }
             if ( wireFormat instanceof OpenWireFormat ) {
-                if( !info.isStackTraceEnabled() ) {
-                    ((OpenWireFormat)wireFormat).setStackTraceEnabled(false);
-                }
-                if( info.isTcpNoDelayEnabled() ) {
-                    ((OpenWireFormat)wireFormat).setTcpNoDelayEnabled(true);
-                }
-                if( !info.isCacheEnabled() ) {
-                    ((OpenWireFormat)wireFormat).setCacheEnabled(false);
-                }
-                if( !info.isPrefixPacketSize() ) {
-                    ((OpenWireFormat)wireFormat).setPrefixPacketSize(false);
-                }
-                if( !info.isTightEncodingEnabled() ) {
-                    ((OpenWireFormat)wireFormat).setTightEncodingEnabled(false);
+                try {
+                    if( !info.isStackTraceEnabled() ) {
+                        ((OpenWireFormat)wireFormat).setStackTraceEnabled(false);
+                    }
+                    if( info.isTcpNoDelayEnabled() ) {
+                        ((OpenWireFormat)wireFormat).setTcpNoDelayEnabled(true);
+                    }
+                    if( !info.isCacheEnabled() ) {
+                        ((OpenWireFormat)wireFormat).setCacheEnabled(false);
+                    }
+                    if( !info.isPrefixPacketSize() ) {
+                        ((OpenWireFormat)wireFormat).setPrefixPacketSize(false);
+                    }
+                    if( !info.isTightEncodingEnabled() ) {
+                        ((OpenWireFormat)wireFormat).setTightEncodingEnabled(false);
+                    }
+                } catch (IOException e) {
+                    commandListener.onException(e);
                 }
             }
                 

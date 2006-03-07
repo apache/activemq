@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for ProducerInfoMarshaller
  *
@@ -64,14 +65,14 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ProducerInfo info = (ProducerInfo)o;
-        info.setProducerId((ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }
@@ -90,8 +91,8 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         ProducerInfo info = (ProducerInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getProducerId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getDestination(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
     rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
 
         return rc + 0;
@@ -108,8 +109,8 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ProducerInfo info = (ProducerInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getProducerId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, info.getDestination(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
     tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
 
     }
@@ -125,14 +126,14 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         ProducerInfo info = (ProducerInfo)o;
-        info.setProducerId((ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setDestination((ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setProducerId((org.apache.activemq.command.ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
 
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+                value[i] = (org.apache.activemq.command.BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
             }
             info.setBrokerPath(value);
         }
@@ -151,8 +152,8 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         ProducerInfo info = (ProducerInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getProducerId(), dataOut);
-    looseMarshalCachedObject(wireFormat, info.getDestination(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
     looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
 
     }

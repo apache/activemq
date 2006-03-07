@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for RemoveSubscriptionInfoMarshaller
  *
@@ -64,7 +65,7 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
         info.setClientId(tightUnmarshalString(dataIn, bs));
 
@@ -79,7 +80,7 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
     rc += tightMarshalString1(info.getSubcriptionName(), bs);
     rc += tightMarshalString1(info.getClientId(), bs);
 
@@ -97,7 +98,7 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
     tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
     tightMarshalString2(info.getClientId(), dataOut, bs);
 
@@ -114,7 +115,7 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setSubcriptionName(looseUnmarshalString(dataIn));
         info.setClientId(looseUnmarshalString(dataIn));
 
@@ -129,7 +130,7 @@ public class RemoveSubscriptionInfoMarshaller extends BaseCommandMarshaller {
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
     looseMarshalString(info.getSubcriptionName(), dataOut);
     looseMarshalString(info.getClientId(), dataOut);
 

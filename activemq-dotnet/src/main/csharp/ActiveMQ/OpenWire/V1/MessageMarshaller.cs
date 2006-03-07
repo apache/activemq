@@ -91,25 +91,25 @@ namespace ActiveMQ.OpenWire.V1
         Message info = (Message)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.ProducerId, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.Destination, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.TransactionId, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.OriginalDestination, bs);
-    rc += TightMarshalNestedObject1(wireFormat, info.MessageId, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.OriginalTransactionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ProducerId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.Destination, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.TransactionId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.OriginalDestination, bs);
+    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.MessageId, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.OriginalTransactionId, bs);
     rc += TightMarshalString1(info.GroupID, bs);
         rc += TightMarshalString1(info.CorrelationId, bs);
     bs.WriteBoolean(info.Persistent);
     rc += TightMarshalLong1(wireFormat, info.Expiration, bs);
-        rc += TightMarshalNestedObject1(wireFormat, info.ReplyTo, bs);
+        rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.ReplyTo, bs);
     rc += TightMarshalLong1(wireFormat, info.Timestamp, bs);
     rc += TightMarshalString1(info.Type, bs);
     bs.WriteBoolean(info.Content!=null);
         rc += info.Content==null ? 0 : info.Content.Length+4;
     bs.WriteBoolean(info.MarshalledProperties!=null);
         rc += info.MarshalledProperties==null ? 0 : info.MarshalledProperties.Length+4;
-    rc += TightMarshalNestedObject1(wireFormat, info.DataStructure, bs);
-    rc += TightMarshalCachedObject1(wireFormat, info.TargetConsumerId, bs);
+    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.DataStructure, bs);
+    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.TargetConsumerId, bs);
     bs.WriteBoolean(info.Compressed);
         rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
     rc += TightMarshalLong1(wireFormat, info.Arrival, bs);
@@ -126,19 +126,19 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         Message info = (Message)o;
-    TightMarshalCachedObject2(wireFormat, info.ProducerId, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.Destination, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.TransactionId, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.OriginalDestination, dataOut, bs);
-    TightMarshalNestedObject2(wireFormat, info.MessageId, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.OriginalTransactionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ProducerId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.TransactionId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.OriginalDestination, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, (DataStructure)info.MessageId, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.OriginalTransactionId, dataOut, bs);
     TightMarshalString2(info.GroupID, dataOut, bs);
     dataOut.Write(info.GroupSequence);
     TightMarshalString2(info.CorrelationId, dataOut, bs);
     bs.ReadBoolean();
     TightMarshalLong2(wireFormat, info.Expiration, dataOut, bs);
     dataOut.Write(info.Priority);
-    TightMarshalNestedObject2(wireFormat, info.ReplyTo, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, (DataStructure)info.ReplyTo, dataOut, bs);
     TightMarshalLong2(wireFormat, info.Timestamp, dataOut, bs);
     TightMarshalString2(info.Type, dataOut, bs);
     if(bs.ReadBoolean()) {
@@ -149,8 +149,8 @@ namespace ActiveMQ.OpenWire.V1
            dataOut.Write(info.MarshalledProperties.Length);
            dataOut.Write(info.MarshalledProperties);
         }
-    TightMarshalNestedObject2(wireFormat, info.DataStructure, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, info.TargetConsumerId, dataOut, bs);
+    TightMarshalNestedObject2(wireFormat, (DataStructure)info.DataStructure, dataOut, bs);
+    TightMarshalCachedObject2(wireFormat, (DataStructure)info.TargetConsumerId, dataOut, bs);
     bs.ReadBoolean();
     dataOut.Write(info.RedeliveryCounter);
     TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);

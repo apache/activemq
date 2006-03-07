@@ -56,16 +56,16 @@ void DestinationInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     DestinationInfo& info = (DestinationInfo&) o;
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setOperationType(dataIn.readByte());
         info.setTimeout(tightUnmarshalLong(wireFormat, dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }

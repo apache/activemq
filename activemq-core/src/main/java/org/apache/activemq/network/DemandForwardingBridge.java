@@ -14,14 +14,12 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
-import javax.jms.JMSException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
@@ -31,20 +29,18 @@ import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.DestinationFilter;
-import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -61,7 +57,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  * @version $Revision$
  */
 public class DemandForwardingBridge implements Bridge{
-    static final private Log log=LogFactory.getLog(DemandForwardingBridge.class);
+    static final Log log=LogFactory.getLog(DemandForwardingBridge.class);
     protected final Transport localBroker;
     protected final Transport remoteBroker;
     protected IdGenerator idGenerator=new IdGenerator();
@@ -610,7 +606,7 @@ public class DemandForwardingBridge implements Bridge{
 
 
 
-    private boolean contains(BrokerId[] brokerPath,BrokerId brokerId){
+    public static boolean contains(BrokerId[] brokerPath,BrokerId brokerId){
         if(brokerPath!=null){
             for(int i=0;i<brokerPath.length;i++){
                 if(brokerId.equals(brokerPath[i]))
@@ -718,19 +714,7 @@ public class DemandForwardingBridge implements Bridge{
        
         // This works for now since we use a VM connection to the local broker.
         // may need to change if we ever subscribe to a remote broker.
-        sub.getLocalInfo().setAdditionalPredicate(new BooleanExpression(){
-            public boolean matches(MessageEvaluationContext message) throws JMSException{
-                try{
-                    return matchesForwardingFilter(message.getMessage());
-                }catch(IOException e){
-                    throw JMSExceptionSupport.create(e);
-                }
-            }
-
-            public Object evaluate(MessageEvaluationContext message) throws JMSException{
-                return matches(message)?Boolean.TRUE:Boolean.FALSE;
-            }
-        });
+        sub.getLocalInfo().setAdditionalPredicate(new NetworkBridgeFilter(remoteBrokerPath[0], networkTTL));
     }
     
     protected void  removeDemandSubscription(ConsumerId id) throws IOException{
@@ -742,34 +726,6 @@ public class DemandForwardingBridge implements Bridge{
         }
     }
     
-    protected boolean matchesForwardingFilter(Message message){
-        if (contains(message.getBrokerPath(),remoteBrokerPath[0])){
-            if (log.isTraceEnabled()){
-                log.trace("Message all ready routed once through this broker - ignoring: " + message);
-            }
-            return false;
-        }
-        int hops = message.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
-        if(hops >= networkTTL){
-            if (log.isTraceEnabled()){
-                log.trace("Message restricted to " + networkTTL + " network hops ignoring: " + message);
-            }
-            return false;
-        }
-        // Don't propagate advisory messages about network subscriptions
-        if(message.isAdvisory()&&message.getDataStructure()!=null
-                        &&message.getDataStructure().getDataStructureType()==CommandTypes.CONSUMER_INFO){
-            ConsumerInfo info=(ConsumerInfo) message.getDataStructure();
-            hops = info.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
-            if(hops >= networkTTL){
-                if (log.isTraceEnabled()){
-                    log.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
-                }
-                return false;
-            }
-        }
-        return true;
-    }
     
     protected void waitStarted() throws InterruptedException {
         startedLatch.await();

@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for ConnectionInfoMarshaller
  *
@@ -64,16 +65,16 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-        info.setConnectionId((ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setClientId(tightUnmarshalString(dataIn, bs));
         info.setPassword(tightUnmarshalString(dataIn, bs));
         info.setUserName(tightUnmarshalString(dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }
@@ -92,7 +93,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         ConnectionInfo info = (ConnectionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getConnectionId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
     rc += tightMarshalString1(info.getClientId(), bs);
     rc += tightMarshalString1(info.getPassword(), bs);
     rc += tightMarshalString1(info.getUserName(), bs);
@@ -112,7 +113,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getConnectionId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
     tightMarshalString2(info.getClientId(), dataOut, bs);
     tightMarshalString2(info.getPassword(), dataOut, bs);
     tightMarshalString2(info.getUserName(), dataOut, bs);
@@ -131,16 +132,16 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         ConnectionInfo info = (ConnectionInfo)o;
-        info.setConnectionId((ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setClientId(looseUnmarshalString(dataIn));
         info.setPassword(looseUnmarshalString(dataIn));
         info.setUserName(looseUnmarshalString(dataIn));
 
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+                value[i] = (org.apache.activemq.command.BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
             }
             info.setBrokerPath(value);
         }
@@ -159,7 +160,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         ConnectionInfo info = (ConnectionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getConnectionId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
     looseMarshalString(info.getClientId(), dataOut);
     looseMarshalString(info.getPassword(), dataOut);
     looseMarshalString(info.getUserName(), dataOut);

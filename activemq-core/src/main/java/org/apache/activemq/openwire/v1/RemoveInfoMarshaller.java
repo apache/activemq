@@ -25,6 +25,7 @@ import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
 
+
 /**
  * Marshalling code for Open Wire Format for RemoveInfoMarshaller
  *
@@ -64,7 +65,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         RemoveInfo info = (RemoveInfo)o;
-        info.setObjectId((DataStructure) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setObjectId((org.apache.activemq.command.DataStructure) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -77,7 +78,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         RemoveInfo info = (RemoveInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, info.getObjectId(), bs);
+    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getObjectId(), bs);
 
         return rc + 0;
     }
@@ -93,7 +94,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         RemoveInfo info = (RemoveInfo)o;
-    tightMarshalCachedObject2(wireFormat, info.getObjectId(), dataOut, bs);
+    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getObjectId(), dataOut, bs);
 
     }
 
@@ -108,7 +109,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         RemoveInfo info = (RemoveInfo)o;
-        info.setObjectId((DataStructure) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setObjectId((org.apache.activemq.command.DataStructure) looseUnmarsalCachedObject(wireFormat, dataIn));
 
     }
 
@@ -121,7 +122,7 @@ public class RemoveInfoMarshaller extends BaseCommandMarshaller {
         RemoveInfo info = (RemoveInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, info.getObjectId(), dataOut);
+    looseMarshalCachedObject(wireFormat, (DataStructure)info.getObjectId(), dataOut);
 
     }
 }

@@ -56,9 +56,9 @@ void MessageDispatchMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     MessageDispatch& info = (MessageDispatch&) o;
-        info.setConsumerId((ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setMessage((Message) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setMessage((org.apache.activemq.command.Message) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setRedeliveryCounter(dataIn.readInt());
 
 }

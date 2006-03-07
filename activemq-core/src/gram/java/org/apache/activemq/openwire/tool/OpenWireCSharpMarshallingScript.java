@@ -33,7 +33,7 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
     public Object run() {
         filePostFix = ".cs";
         if (destDir == null) {
-            destDir = new File("../openwire-dotnet/src/ActiveMQ/OpenWire/V"+getOpenwireVersion());
+            destDir = new File("../activemq-dotnet/src/main/csharp/ActiveMQ/OpenWire/V"+getOpenwireVersion());
         }
         
         return super.run();
@@ -49,16 +49,16 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
             out.println("info." + propertyName + " = bs.ReadBoolean();");
         }
         else if (type.equals("byte")) {
-            out.println("info." + propertyName + " = BaseDataStreamMarshaller.ReadByte(dataIn);");
+            out.println("info." + propertyName + " = dataIn.ReadByte();");
         }
         else if (type.equals("char")) {
-            out.println("info." + propertyName + " = BaseDataStreamMarshaller.ReadChar(dataIn);");
+            out.println("info." + propertyName + " = dataIn.ReadChar();");
         }
         else if (type.equals("short")) {
-            out.println("info." + propertyName + " = BaseDataStreamMarshaller.ReadShort(dataIn);");
+            out.println("info." + propertyName + " = dataIn.ReadInt16();");
         }
         else if (type.equals("int")) {
-            out.println("info." + propertyName + " = BaseDataStreamMarshaller.ReadInt(dataIn);");
+            out.println("info." + propertyName + " = dataIn.ReadInt32();");
         }
         else if (type.equals("long")) {
             out.println("info." + propertyName + " = TightUnmarshalLong(wireFormat, dataIn, bs);");
@@ -101,7 +101,7 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
         }
         else {
             out.println("        if (bs.ReadBoolean()) {");
-            out.println("            short size = BaseDataStreamMarshaller.ReadShort(dataIn);");
+            out.println("            short size = dataIn.ReadInt16();");
             out.println("            " + arrayType + "[] value = new " + arrayType + "[size];");
             out.println("            for( int i=0; i < size; i++ ) {");
             out.println("                value[i] = (" + arrayType + ") TightUnmarshalNestedObject(wireFormat,dataIn, bs);");
@@ -169,10 +169,10 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
             }
             else {
                 if (isCachedProperty(property)) {
-                    out.println("rc += TightMarshalCachedObject1(wireFormat, " + getter + ", bs);");
+                    out.println("rc += TightMarshalCachedObject1(wireFormat, (DataStructure)" + getter + ", bs);");
                 }
                 else {
-                    out.println("rc += TightMarshalNestedObject1(wireFormat, " + getter + ", bs);");
+                    out.println("rc += TightMarshalNestedObject1(wireFormat, (DataStructure)" + getter + ", bs);");
                 }
             }
         }
@@ -194,16 +194,16 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
                 out.println("bs.ReadBoolean();");
             }
             else if (type.equals("byte")) {
-                out.println("BaseDataStreamMarshaller.WriteByte(" + getter + ", dataOut);");
+                out.println("dataOut.Write(" + getter + ");");
             }
             else if (type.equals("char")) {
-                out.println("BaseDataStreamMarshaller.WriteChar(" + getter + ", dataOut);");
+                out.println("dataOut.Write(" + getter + ");");
             }
             else if (type.equals("short")) {
-                out.println("BaseDataStreamMarshaller.WriteShort(" + getter + ", dataOut);");
+                out.println("dataOut.Write(" + getter + ");");
             }
             else if (type.equals("int")) {
-                out.println("BaseDataStreamMarshaller.WriteInt(" + getter + ", dataOut);");
+                out.println("dataOut.Write(" + getter + ");");
             }
             else if (type.equals("long")) {
                 out.println("TightMarshalLong2(wireFormat, " + getter + ", dataOut, bs);");
@@ -217,7 +217,7 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
                 }
                 else {
                     out.println("if(bs.ReadBoolean()) {");
-                    out.println("           BaseDataStreamMarshaller.WriteInt(" + getter + ".Length, dataOut);");
+                    out.println("           dataOut.Write(" + getter + ".Length);");
                     out.println("           dataOut.Write(" + getter + ");");
                     out.println("        }");
                 }
@@ -235,10 +235,10 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
             }
             else {
                 if (isCachedProperty(property)) {
-                    out.println("TightMarshalCachedObject2(wireFormat, " + getter + ", dataOut, bs);");
+                    out.println("TightMarshalCachedObject2(wireFormat, (DataStructure)" + getter + ", dataOut, bs);");
                 }
                 else {
-                    out.println("TightMarshalNestedObject2(wireFormat, " + getter + ", dataOut, bs);");
+                    out.println("TightMarshalNestedObject2(wireFormat, (DataStructure)" + getter + ", dataOut, bs);");
                 }
             }
         }

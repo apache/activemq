@@ -56,8 +56,8 @@ void ConnectionErrorMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     ConnectionError& info = (ConnectionError&) o;
-        info.setException((Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
-        info.setConnectionId((ConnectionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setException((java.lang.Throwable) tightUnmarsalThrowable(wireFormat, dataIn, bs));
+        info.setConnectionId((org.apache.activemq.command.ConnectionId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
 }
 

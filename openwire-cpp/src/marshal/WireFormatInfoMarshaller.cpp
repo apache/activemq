@@ -58,11 +58,7 @@ void WireFormatInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, B
     WireFormatInfo& info = (WireFormatInfo&) o;
         info.setMagic(tightUnmarshalConstByteArray(dataIn, bs, 8));
         info.setVersion(dataIn.readInt());
-        info.setCacheEnabled(bs.readBoolean());
-        info.setStackTraceEnabled(bs.readBoolean());
-        info.setTcpNoDelayEnabled(bs.readBoolean());
-        info.setPrefixPacketSize(bs.readBoolean());
-        info.setTightEncodingEnabled(bs.readBoolean());
+        info.setMarshalledProperties(tightUnmarshalByteSequence(dataIn, bs));
 
 }
 
@@ -74,11 +70,8 @@ int WireFormatInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bo
     WireFormatInfo& info = (WireFormatInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
-            bs.writeBoolean(info.isCacheEnabled());
-    bs.writeBoolean(info.isStackTraceEnabled());
-    bs.writeBoolean(info.isTcpNoDelayEnabled());
-    bs.writeBoolean(info.isPrefixPacketSize());
-    bs.writeBoolean(info.isTightEncodingEnabled());
+            bs.writeBoolean(info.getMarshalledProperties()!=null);
+    rc += info.getMarshalledProperties()==null ? 0 : info.getMarshalledProperties().Length+4;
 
     return rc + 9;
 }
@@ -92,10 +85,9 @@ void WireFormatInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, B
     WireFormatInfo& info = (WireFormatInfo&) o;
     dataOut.write(info.getMagic(), 0, 8);
     DataStreamMarshaller.writeInt(info.getVersion(), dataOut);
-    bs.readBoolean();
-    bs.readBoolean();
-    bs.readBoolean();
-    bs.readBoolean();
-    bs.readBoolean();
+    if(bs.readBoolean()) {
+       DataStreamMarshaller.writeInt(info.getMarshalledProperties().Length, dataOut);
+       dataOut.write(info.getMarshalledProperties());
+    }
 
 }

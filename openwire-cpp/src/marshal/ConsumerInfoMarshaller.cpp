@@ -56,9 +56,9 @@ void ConsumerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     ConsumerInfo& info = (ConsumerInfo&) o;
-        info.setConsumerId((ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setBrowser(bs.readBoolean());
-        info.setDestination((ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setPrefetchSize(dataIn.readInt());
         info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(bs.readBoolean());
@@ -71,15 +71,16 @@ void ConsumerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
-            BrokerId value[] = new BrokerId[size];
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
             for( int i=0; i < size; i++ ) {
-                value[i] = (BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
             }
             info.setBrokerPath(value);
         }
         else {
             info.setBrokerPath(null);
         }
+        info.setAdditionalPredicate((org.apache.activemq.filter.BooleanExpression) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setNetworkSubscription(bs.readBoolean());
 
 }
@@ -102,6 +103,7 @@ int ConsumerInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bool
     bs.writeBoolean(info.isExclusive());
     bs.writeBoolean(info.isRetroactive());
         rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
+    rc += marshal1NestedObject(wireFormat, info.getAdditionalPredicate(), bs);
     bs.writeBoolean(info.isNetworkSubscription());
 
     return rc + 3;
@@ -127,6 +129,7 @@ void ConsumerInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, Bin
     bs.readBoolean();
     DataStreamMarshaller.writeByte(info.getPriority(), dataOut);
     marshalObjectArray(wireFormat, info.getBrokerPath(), dataOut, bs);
+    marshal2NestedObject(wireFormat, info.getAdditionalPredicate(), dataOut, bs);
     bs.readBoolean();
 
 }

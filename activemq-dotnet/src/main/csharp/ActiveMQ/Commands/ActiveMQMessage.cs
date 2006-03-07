@@ -275,13 +275,12 @@ namespace ActiveMQ.Commands
         }
         
         // MarshallAware interface
-        
         public override bool IsMarshallAware()
         {
             return true;
         }
         
-        public virtual void BeforeMarshall(OpenWireFormat wireFormat)
+        public override void BeforeMarshall(OpenWireFormat wireFormat)
         {
             MarshalledProperties = null;
             if (properties != null)
@@ -290,26 +289,6 @@ namespace ActiveMQ.Commands
             }
         }
         
-        public virtual void AfterMarshall(OpenWireFormat wireFormat)
-        {
-        }
-        
-        public virtual void BeforeUnmarshall(OpenWireFormat wireFormat)
-        {
-        }
-        
-        public virtual void AfterUnmarshall(OpenWireFormat wireFormat)
-        {
-        }
-        
-        public virtual void SetMarshalledForm(OpenWireFormat wireFormat, byte[] data)
-        {
-        }
-        
-        public virtual byte[] GetMarshalledForm(OpenWireFormat wireFormat)
-        {
-            return null;
-        }
         
     }
 }

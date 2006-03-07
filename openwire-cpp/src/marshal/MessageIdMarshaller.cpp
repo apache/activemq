@@ -56,7 +56,7 @@ void MessageIdMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Binary
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     MessageId& info = (MessageId&) o;
-        info.setProducerId((ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setProducerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setBrokerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
 

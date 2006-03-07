@@ -56,7 +56,7 @@ void RemoveInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Binar
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     RemoveInfo& info = (RemoveInfo&) o;
-        info.setObjectId((DataStructure) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setObjectId((org.apache.activemq.command.DataStructure) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
 }
 
