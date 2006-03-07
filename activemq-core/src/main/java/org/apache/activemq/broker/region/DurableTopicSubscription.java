@@ -97,12 +97,12 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             
             iter.remove();
         }
-        for (Iterator iter = matched.iterator(); iter.hasNext();) {
+        for (Iterator iter = pending.iterator(); iter.hasNext();) {
             MessageReference node = (MessageReference) iter.next();
             // node.decrementTargetCount();
             iter.remove();
         }        
-        delivered=0;
+        prefetchExtension=0;
     }
 
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
@@ -156,8 +156,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             " consumer="+info.getConsumerId()+
             ", destinations="+destinations.size()+
             ", dispatched="+dispatched.size()+
-            ", delivered="+this.delivered+
-            ", matched="+this.matched.size();
+            ", delivered="+this.prefetchExtension+
+            ", pending="+this.pending.size();
     }
 
     public String getClientId() {

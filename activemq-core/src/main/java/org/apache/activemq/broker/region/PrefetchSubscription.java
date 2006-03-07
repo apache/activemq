@@ -42,17 +42,17 @@ import org.apache.commons.logging.LogFactory;
 abstract public class PrefetchSubscription extends AbstractSubscription{
     
     static private final Log log=LogFactory.getLog(PrefetchSubscription.class);
-    final protected LinkedList matched=new LinkedList();
+    final protected LinkedList pending=new LinkedList();
     final protected LinkedList dispatched=new LinkedList();
     
-    protected int delivered=0;
+    protected int prefetchExtension=0;
     int preLoadLimit=1024*100;
     int preLoadSize=0;
     boolean dispatching=false;
     
     long enqueueCounter;
     long dispatchCounter;
-    long aknowledgedCounter;
+    long dequeueCounter;
     
     public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info)
                     throws InvalidSelectorException{
@@ -64,15 +64,15 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         if(!isFull()&&!isSlaveBroker()){
             dispatch(node);
         }else{
-            synchronized(matched){
-                matched.addLast(node);
+            synchronized(pending){
+                pending.addLast(node);
             }
         }
     }
 
     public void processMessageDispatchNotification(MessageDispatchNotification mdn){
-        synchronized(matched){
-            for(Iterator i=matched.iterator();i.hasNext();){
+        synchronized(pending){
+            for(Iterator i=pending.iterator();i.hasNext();){
                 MessageReference node=(MessageReference) i.next();
                 if(node.getMessageId().equals(mdn.getMessageId())){
                     i.remove();
@@ -106,16 +106,16 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 if(inAckRange){
                     // Don't remove the nodes until we are committed.
                     if(!context.isInTransaction()){
-                    	aknowledgedCounter++;
+                    	dequeueCounter++;
                         iter.remove();
                     }else{
                         // setup a Synchronization to remove nodes from the dispatched list.
                         context.getTransaction().addSynchronization(new Synchronization(){
                             public void afterCommit() throws Exception{
                                 synchronized(PrefetchSubscription.this){
-                                	aknowledgedCounter++;
+                                	dequeueCounter++;
                                     dispatched.remove(node);
-                                    delivered--;
+                                    prefetchExtension--;
                                 }
                             }
                         });
@@ -124,9 +124,9 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     acknowledge(context,ack,node);
                     if(ack.getLastMessageId().equals(messageId)){
                         if(context.isInTransaction())
-                            delivered=Math.max(delivered,index+1);
+                            prefetchExtension=Math.max(prefetchExtension,index+1);
                         else
-                            delivered=Math.max(0,delivered-(index+1));
+                            prefetchExtension=Math.max(0,prefetchExtension-(index+1));
                         if(wasFull&&!isFull()){
                             dispatchMatched();
                         }
@@ -144,7 +144,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             for(Iterator iter=dispatched.iterator();iter.hasNext();index++){
                 final MessageReference node=(MessageReference) iter.next();
                 if(ack.getLastMessageId().equals(node.getMessageId())){
-                    delivered=Math.max(delivered,index+1);
+                    prefetchExtension=Math.max(prefetchExtension,index+1);
                     if(wasFull&&!isFull()){
                         dispatchMatched();
                     }
@@ -184,11 +184,11 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         node.decrementReferenceCount();
                     }
                     iter.remove();
-                    aknowledgedCounter++;
+                    dequeueCounter++;
                     index++;
                     acknowledge(context,ack,node);
                     if(ack.getLastMessageId().equals(messageId)){
-                        delivered=Math.max(0,delivered-(index+1));
+                        prefetchExtension=Math.max(0,prefetchExtension-(index+1));
                         if(wasFull&&!isFull()){
                             dispatchMatched();
                         }
@@ -202,11 +202,11 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     }
 
     protected boolean isFull(){
-        return dispatched.size()-delivered>=info.getPrefetchSize()||preLoadSize>preLoadLimit;
+        return dispatched.size()-prefetchExtension>=info.getPrefetchSize()||preLoadSize>preLoadLimit;
     }
     
     synchronized public int getPendingQueueSize(){
-        return matched.size();
+        return pending.size();
     }
     
     synchronized public int getDispatchedQueueSize(){
@@ -214,7 +214,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     }
     
     synchronized public long getDequeueCounter(){
-        return aknowledgedCounter;
+        return dequeueCounter;
     }
     
     synchronized public long getDispatchedCounter() {
@@ -230,7 +230,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         if(!dispatching){
             dispatching=true;
             try{
-                for(Iterator iter=matched.iterator();iter.hasNext()&&!isFull();){
+                for(Iterator iter=pending.iterator();iter.hasNext()&&!isFull();){
                     MessageReference node=(MessageReference) iter.next();
                     iter.remove();
                     dispatch(node);
