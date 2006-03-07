@@ -122,8 +122,8 @@ public class DatagramHeader implements Comparable {
     }
 
     public void setFlags(byte flags) {
-        partial = (flags & 0x1) == 0;
-        complete = (flags & 0x2) == 0;
+        partial = (flags & 0x1) != 0;
+        complete = (flags & 0x2) != 0;
     }
 
     public Command getCommand() {

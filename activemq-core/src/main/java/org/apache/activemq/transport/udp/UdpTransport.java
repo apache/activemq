@@ -29,11 +29,14 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.DatagramChannel;
 
 /**
@@ -49,30 +52,34 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private ByteBufferPool bufferPool;
     private DatagramReplayStrategy replayStrategy = new ExceptionIfDroppedPacketStrategy();
     private int datagramSize = 4 * 1024;
-    private long maxInactivityDuration = 0; //30000;
-    private InetSocketAddress socketAddress;
+    private long maxInactivityDuration = 0; // 30000;
+    private InetSocketAddress targetAddress;
     private DatagramChannel channel;
     private boolean trace = false;
     private boolean useLocalHost = true;
+    private int port;
 
-    protected UdpTransport(OpenWireFormat wireFormat) {
+    protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
     }
 
     public UdpTransport(OpenWireFormat wireFormat, URI remoteLocation) throws UnknownHostException, IOException {
         this(wireFormat);
-        this.socketAddress = createAddress(remoteLocation);
+        this.targetAddress = createAddress(remoteLocation);
     }
 
-    public UdpTransport(OpenWireFormat wireFormat, InetSocketAddress socketAddress) {
+    public UdpTransport(OpenWireFormat wireFormat, InetSocketAddress socketAddress) throws IOException {
         this(wireFormat);
-        this.socketAddress = socketAddress;
+        this.targetAddress = socketAddress;
     }
 
     /**
      * A one way asynchronous send
      */
     public void oneway(Command command) throws IOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Sending oneway from port: " + port + " to target: " + targetAddress);
+        }
         checkStarted(command);
         commandChannel.write(command);
     }
@@ -81,7 +88,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      * @return pretty print of 'this'
      */
     public String toString() {
-        return "udp://" + socketAddress;
+        return "udp://" + targetAddress + "?port=" + port;
     }
 
     /**
@@ -94,18 +101,32 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 Command command = commandChannel.read();
                 doConsume(command);
             }
-            catch (SocketTimeoutException e) {
-            }
-            catch (InterruptedIOException e) {
-            }
-            catch (IOException e) {
+            /*
+             * catch (SocketTimeoutException e) { } catch
+             * (InterruptedIOException e) { }
+             */
+            catch (AsynchronousCloseException e) {
                 try {
                     stop();
                 }
                 catch (Exception e2) {
                     log.warn("Caught while closing: " + e2 + ". Now Closed", e2);
                 }
-                onException(e);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    stop();
+                }
+                catch (Exception e2) {
+                    log.warn("Caught while closing: " + e2 + ". Now Closed", e2);
+                }
+                if (e instanceof IOException) {
+                    onException((IOException) e);
+                }
+                else {
+                    log.error(e);
+                }
             }
         }
     }
@@ -124,12 +145,21 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         return maxInactivityDuration;
     }
 
+    public DatagramChannel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(DatagramChannel channel) {
+        this.channel = channel;
+    }
+
     /**
      * Sets the maximum inactivity duration
      */
     public void setMaxInactivityDuration(long maxInactivityDuration) {
         this.maxInactivityDuration = maxInactivityDuration;
     }
+
     public boolean isUseLocalHost() {
         return useLocalHost;
     }
@@ -143,7 +173,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.useLocalHost = useLocalHost;
     }
 
-
     public CommandChannel getCommandChannel() {
         return commandChannel;
     }
@@ -154,7 +183,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public void setCommandChannel(CommandChannel commandChannel) {
         this.commandChannel = commandChannel;
     }
-    
+
     public DatagramReplayStrategy getReplayStrategy() {
         return replayStrategy;
     }
@@ -164,6 +193,17 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     public void setReplayStrategy(DatagramReplayStrategy replayStrategy) {
         this.replayStrategy = replayStrategy;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    /**
+     * Sets the port to connect on
+     */
+    public void setPort(int port) {
+        this.port = port;
     }
 
     
@@ -189,18 +229,26 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void doStart() throws Exception {
-        if (socketAddress != null) {
-            channel = DatagramChannel.open();
-            channel.connect(socketAddress);
+        SocketAddress localAddress = new InetSocketAddress(port);
+        channel = DatagramChannel.open();
+        channel.configureBlocking(true);
+
+        // TODO
+        // connect to default target address to avoid security checks each time
+        // channel = channel.connect(targetAddress);
+        
+        DatagramSocket socket = channel.socket();
+        socket.bind(localAddress);
+        if (port == 0) {
+            port = socket.getLocalPort();
         }
-        else if (channel == null) {
-            throw new IllegalArgumentException("No channel configured");
-        }
+        
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
-        commandChannel = new CommandChannel(channel, wireFormat, bufferPool, datagramSize, replayStrategy);
+        commandChannel = new CommandChannel(channel, wireFormat, bufferPool, datagramSize, replayStrategy, targetAddress);
         commandChannel.start();
+
         super.doStart();
     }
 

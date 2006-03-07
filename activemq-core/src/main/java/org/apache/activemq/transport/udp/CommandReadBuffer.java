@@ -41,7 +41,7 @@ public class CommandReadBuffer {
     private OpenWireFormat wireFormat;
     private DatagramReplayStrategy replayStrategy;
     private SortedSet headers = new TreeSet();
-    private long expectedCounter;
+    private long expectedCounter = 1;
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
 
     public CommandReadBuffer(OpenWireFormat wireFormat, DatagramReplayStrategy replayStrategy) {
