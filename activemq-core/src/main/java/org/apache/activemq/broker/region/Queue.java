@@ -292,9 +292,20 @@ public class Queue implements Destination {
         }
     }
 
-    public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack,
-            final MessageReference node) throws IOException {
+    public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
         if (store != null && node.isPersistent()) {
+            // the original ack may be a ranged ack, but we are trying to delete a specific 
+            // message store here so we need to convert to a non ranged ack.
+            if( ack.getMessageCount() > 0 ) {
+                // Dup the ack
+                MessageAck a = new MessageAck();
+                ack.copy(a);
+                ack = a;
+                // Convert to non-ranged.
+                ack.setFirstMessageId(node.getMessageId());
+                ack.setLastMessageId(node.getMessageId());
+                ack.setMessageCount(1);
+            }
             store.removeMessage(context, ack);
         }
     }
