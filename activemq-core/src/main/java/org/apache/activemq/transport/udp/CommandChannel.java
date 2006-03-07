@@ -111,6 +111,7 @@ public class CommandChannel implements Service {
         int size = wireFormat.tightMarshalNestedObject1(command, bs);
         if (size < datagramSize ) {
             header.setPartial(false);
+            header.setDataSize(size);
             writeBuffer.rewind();
             wireFormat.marshal(command, dataOut);
             dataOut.flush();
@@ -132,6 +133,7 @@ public class CommandChannel implements Service {
                 writeBuffer.rewind();
                 int chunkSize = writeBuffer.capacity() - headerMarshaller.getHeaderSize(header);
                 lastFragment = offset + chunkSize >= length;
+                header.setDataSize(chunkSize);
                 header.setComplete(lastFragment);
                 headerMarshaller.writeHeader(header, writeBuffer);
 
