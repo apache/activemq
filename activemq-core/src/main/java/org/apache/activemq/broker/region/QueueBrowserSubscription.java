@@ -45,8 +45,8 @@ public class QueueBrowserSubscription extends PrefetchSubscription {
             " consumer="+info.getConsumerId()+
             ", destinations="+destinations.size()+
             ", dispatched="+dispatched.size()+
-            ", delivered="+this.delivered+
-            ", matched="+this.matched.size();
+            ", delivered="+this.prefetchExtension+
+            ", pending="+this.pending.size();
     }
 
     public void browseDone() throws Exception {
