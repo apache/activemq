@@ -83,11 +83,11 @@ public abstract class TransportThreadSupport extends TransportSupport implements
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
 
-    protected void checkStarted(Command command) {
+    protected void checkStarted(Command command) throws IOException {
         if (!isStarted()) {
             // we might try to shut down the transport before it was ever started in some test cases
             if (!(command instanceof ShutdownInfo)) {
-                throw new IllegalStateException("The transport " + this + " of type: " + getClass().getName() + " has not been started yet!");
+                throw new IOException("The transport " + this + " of type: " + getClass().getName() + " is not running.");
             }
         }
     }

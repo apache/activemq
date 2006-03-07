@@ -239,6 +239,7 @@ public class FailoverTransport implements CompositeTransport {
 
             if (connectedTransport != null) {
                 connectedTransport.stop();
+                connectedTransport=null;
             }
             reconnectMutex.notifyAll();
         }
