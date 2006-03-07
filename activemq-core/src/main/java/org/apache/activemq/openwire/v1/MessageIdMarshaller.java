@@ -80,9 +80,9 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         MessageId info = (MessageId)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
-    rc+=tightMarshalLong1(wireFormat, info.getProducerSequenceId(), bs);
-    rc+=tightMarshalLong1(wireFormat, info.getBrokerSequenceId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getProducerSequenceId(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getBrokerSequenceId(), bs);
 
         return rc + 0;
     }
@@ -98,9 +98,9 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageId info = (MessageId)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
-    tightMarshalLong2(wireFormat, info.getProducerSequenceId(), dataOut, bs);
-    tightMarshalLong2(wireFormat, info.getBrokerSequenceId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getProducerSequenceId(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getBrokerSequenceId(), dataOut, bs);
 
     }
 
@@ -130,9 +130,9 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         MessageId info = (MessageId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
-    looseMarshalLong(wireFormat, info.getProducerSequenceId(), dataOut);
-    looseMarshalLong(wireFormat, info.getBrokerSequenceId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
+        looseMarshalLong(wireFormat, info.getProducerSequenceId(), dataOut);
+        looseMarshalLong(wireFormat, info.getBrokerSequenceId(), dataOut);
 
     }
 }

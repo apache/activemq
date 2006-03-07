@@ -74,8 +74,7 @@ public class ConsumerTool extends ToolSupport implements MessageListener, Except
             tool.receiveTimeOut = Long.parseLong(args[8]);
         }
         
-        
-        tool.run();
+		tool.run();
     }
 
     public void run() {

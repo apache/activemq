@@ -80,7 +80,7 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         JournalTransaction info = (JournalTransaction)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
         bs.writeBoolean(info.getWasPrepared());
 
         return rc + 1;
@@ -97,9 +97,9 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTransaction info = (JournalTransaction)o;
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
-    dataOut.writeByte(info.getType());
-    bs.readBoolean();
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
+        dataOut.writeByte(info.getType());
+        bs.readBoolean();
 
     }
 
@@ -129,9 +129,9 @@ public class JournalTransactionMarshaller extends BaseDataStreamMarshaller {
         JournalTransaction info = (JournalTransaction)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
-    dataOut.writeByte(info.getType());
-    dataOut.writeBoolean(info.getWasPrepared());
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
+        dataOut.writeByte(info.getType());
+        dataOut.writeBoolean(info.getWasPrepared());
 
     }
 }

@@ -24,7 +24,7 @@
   </parent>
 
   <artifactId>activemq-assembly</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
   

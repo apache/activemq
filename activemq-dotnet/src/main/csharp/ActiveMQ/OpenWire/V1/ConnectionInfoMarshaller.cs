@@ -82,11 +82,11 @@ namespace ActiveMQ.OpenWire.V1
         ConnectionInfo info = (ConnectionInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
-    rc += TightMarshalString1(info.ClientId, bs);
-    rc += TightMarshalString1(info.Password, bs);
-    rc += TightMarshalString1(info.UserName, bs);
-    rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
+        rc += TightMarshalString1(info.ClientId, bs);
+        rc += TightMarshalString1(info.Password, bs);
+        rc += TightMarshalString1(info.UserName, bs);
+        rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
 
         return rc + 0;
     }
@@ -98,11 +98,11 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
-    TightMarshalString2(info.ClientId, dataOut, bs);
-    TightMarshalString2(info.Password, dataOut, bs);
-    TightMarshalString2(info.UserName, dataOut, bs);
-    TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
+        TightMarshalString2(info.ClientId, dataOut, bs);
+        TightMarshalString2(info.Password, dataOut, bs);
+        TightMarshalString2(info.UserName, dataOut, bs);
+        TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
 
     }
   }

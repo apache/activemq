@@ -78,7 +78,7 @@ namespace ActiveMQ.OpenWire.V1
         DataArrayResponse info = (DataArrayResponse)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalObjectArray1(wireFormat, info.Data, bs);
+        rc += TightMarshalObjectArray1(wireFormat, info.Data, bs);
 
         return rc + 0;
     }
@@ -90,7 +90,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
-    TightMarshalObjectArray2(wireFormat, info.Data, dataOut, bs);
+        TightMarshalObjectArray2(wireFormat, info.Data, dataOut, bs);
 
     }
   }

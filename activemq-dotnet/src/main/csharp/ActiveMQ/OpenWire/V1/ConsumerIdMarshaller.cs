@@ -69,9 +69,9 @@ namespace ActiveMQ.OpenWire.V1
         ConsumerId info = (ConsumerId)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalString1(info.ConnectionId, bs);
-    rc += TightMarshalLong1(wireFormat, info.SessionId, bs);
-    rc += TightMarshalLong1(wireFormat, info.Value, bs);
+        rc += TightMarshalString1(info.ConnectionId, bs);
+        rc += TightMarshalLong1(wireFormat, info.SessionId, bs);
+        rc += TightMarshalLong1(wireFormat, info.Value, bs);
 
         return rc + 0;
     }
@@ -83,9 +83,9 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ConsumerId info = (ConsumerId)o;
-    TightMarshalString2(info.ConnectionId, dataOut, bs);
-    TightMarshalLong2(wireFormat, info.SessionId, dataOut, bs);
-    TightMarshalLong2(wireFormat, info.Value, dataOut, bs);
+        TightMarshalString2(info.ConnectionId, dataOut, bs);
+        TightMarshalLong2(wireFormat, info.SessionId, dataOut, bs);
+        TightMarshalLong2(wireFormat, info.Value, dataOut, bs);
 
     }
   }

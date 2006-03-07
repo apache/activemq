@@ -72,12 +72,12 @@ namespace ActiveMQ.OpenWire.V1
         JournalTopicAck info = (JournalTopicAck)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.Destination, bs);
-    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.MessageId, bs);
-    rc += TightMarshalLong1(wireFormat, info.MessageSequenceId, bs);
-    rc += TightMarshalString1(info.SubscritionName, bs);
-    rc += TightMarshalString1(info.ClientId, bs);
-    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.TransactionId, bs);
+        rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.Destination, bs);
+        rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.MessageId, bs);
+        rc += TightMarshalLong1(wireFormat, info.MessageSequenceId, bs);
+        rc += TightMarshalString1(info.SubscritionName, bs);
+        rc += TightMarshalString1(info.ClientId, bs);
+        rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.TransactionId, bs);
 
         return rc + 0;
     }
@@ -89,12 +89,12 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTopicAck info = (JournalTopicAck)o;
-    TightMarshalNestedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
-    TightMarshalNestedObject2(wireFormat, (DataStructure)info.MessageId, dataOut, bs);
-    TightMarshalLong2(wireFormat, info.MessageSequenceId, dataOut, bs);
-    TightMarshalString2(info.SubscritionName, dataOut, bs);
-    TightMarshalString2(info.ClientId, dataOut, bs);
-    TightMarshalNestedObject2(wireFormat, (DataStructure)info.TransactionId, dataOut, bs);
+        TightMarshalNestedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
+        TightMarshalNestedObject2(wireFormat, (DataStructure)info.MessageId, dataOut, bs);
+        TightMarshalLong2(wireFormat, info.MessageSequenceId, dataOut, bs);
+        TightMarshalString2(info.SubscritionName, dataOut, bs);
+        TightMarshalString2(info.ClientId, dataOut, bs);
+        TightMarshalNestedObject2(wireFormat, (DataStructure)info.TransactionId, dataOut, bs);
 
     }
   }

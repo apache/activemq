@@ -79,8 +79,8 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
         SessionId info = (SessionId)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getConnectionId(), bs);
-    rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
+        rc += tightMarshalString1(info.getConnectionId(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
 
         return rc + 0;
     }
@@ -96,8 +96,8 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         SessionId info = (SessionId)o;
-    tightMarshalString2(info.getConnectionId(), dataOut, bs);
-    tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
+        tightMarshalString2(info.getConnectionId(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
 
     }
 
@@ -126,8 +126,8 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
         SessionId info = (SessionId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getConnectionId(), dataOut);
-    looseMarshalLong(wireFormat, info.getValue(), dataOut);
+        looseMarshalString(info.getConnectionId(), dataOut);
+        looseMarshalLong(wireFormat, info.getValue(), dataOut);
 
     }
 }

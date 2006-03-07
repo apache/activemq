@@ -69,8 +69,8 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         BaseCommand info = (BaseCommand)o;
-    dataOut.Write(info.CommandId);
-    bs.ReadBoolean();
+        dataOut.Write(info.CommandId);
+        bs.ReadBoolean();
 
     }
   }

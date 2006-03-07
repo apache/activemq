@@ -78,7 +78,7 @@ public class JournalTraceMarshaller extends BaseDataStreamMarshaller {
         JournalTrace info = (JournalTrace)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getMessage(), bs);
+        rc += tightMarshalString1(info.getMessage(), bs);
 
         return rc + 0;
     }
@@ -94,7 +94,7 @@ public class JournalTraceMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         JournalTrace info = (JournalTrace)o;
-    tightMarshalString2(info.getMessage(), dataOut, bs);
+        tightMarshalString2(info.getMessage(), dataOut, bs);
 
     }
 
@@ -122,7 +122,7 @@ public class JournalTraceMarshaller extends BaseDataStreamMarshaller {
         JournalTrace info = (JournalTrace)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getMessage(), dataOut);
+        looseMarshalString(info.getMessage(), dataOut);
 
     }
 }

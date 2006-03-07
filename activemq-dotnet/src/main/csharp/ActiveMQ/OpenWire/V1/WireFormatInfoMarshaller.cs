@@ -55,9 +55,14 @@ namespace ActiveMQ.OpenWire.V1
         base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
         WireFormatInfo info = (WireFormatInfo)o;
+
+        info.BeforeUnmarshall(wireFormat);
+        
         info.Magic = ReadBytes(dataIn, 8);
         info.Version = dataIn.ReadInt32();
         info.MarshalledProperties = ReadBytes(dataIn, bs.ReadBoolean());
+
+        info.AfterUnmarshall(wireFormat);
 
     }
 
@@ -68,8 +73,10 @@ namespace ActiveMQ.OpenWire.V1
     public override int TightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) {
         WireFormatInfo info = (WireFormatInfo)o;
 
+        info.BeforeMarshall(wireFormat);
+
         int rc = base.TightMarshal1(wireFormat, info, bs);
-            bs.WriteBoolean(info.MarshalledProperties!=null);
+        bs.WriteBoolean(info.MarshalledProperties!=null);
         rc += info.MarshalledProperties==null ? 0 : info.MarshalledProperties.Length+4;
 
         return rc + 12;
@@ -82,12 +89,14 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         WireFormatInfo info = (WireFormatInfo)o;
-    dataOut.Write(info.Magic, 0, 8);
-    dataOut.Write(info.Version);
-    if(bs.ReadBoolean()) {
+        dataOut.Write(info.Magic, 0, 8);
+        dataOut.Write(info.Version);
+        if(bs.ReadBoolean()) {
            dataOut.Write(info.MarshalledProperties.Length);
            dataOut.Write(info.MarshalledProperties);
         }
+
+        info.AfterMarshall(wireFormat);
 
     }
   }

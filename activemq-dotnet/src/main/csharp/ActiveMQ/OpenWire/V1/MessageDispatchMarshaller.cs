@@ -70,10 +70,10 @@ namespace ActiveMQ.OpenWire.V1
         MessageDispatch info = (MessageDispatch)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConsumerId, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.Destination, bs);
-    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.Message, bs);
-    
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConsumerId, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.Destination, bs);
+        rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.Message, bs);
+
         return rc + 4;
     }
 
@@ -84,10 +84,10 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageDispatch info = (MessageDispatch)o;
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConsumerId, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
-    TightMarshalNestedObject2(wireFormat, (DataStructure)info.Message, dataOut, bs);
-    dataOut.Write(info.RedeliveryCounter);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConsumerId, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
+        TightMarshalNestedObject2(wireFormat, (DataStructure)info.Message, dataOut, bs);
+        dataOut.Write(info.RedeliveryCounter);
 
     }
   }

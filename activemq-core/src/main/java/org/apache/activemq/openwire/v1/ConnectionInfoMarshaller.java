@@ -93,11 +93,11 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         ConnectionInfo info = (ConnectionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
-    rc += tightMarshalString1(info.getClientId(), bs);
-    rc += tightMarshalString1(info.getPassword(), bs);
-    rc += tightMarshalString1(info.getUserName(), bs);
-    rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
+        rc += tightMarshalString1(info.getClientId(), bs);
+        rc += tightMarshalString1(info.getPassword(), bs);
+        rc += tightMarshalString1(info.getUserName(), bs);
+        rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
 
         return rc + 0;
     }
@@ -113,11 +113,11 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionInfo info = (ConnectionInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
-    tightMarshalString2(info.getClientId(), dataOut, bs);
-    tightMarshalString2(info.getPassword(), dataOut, bs);
-    tightMarshalString2(info.getUserName(), dataOut, bs);
-    tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
+        tightMarshalString2(info.getClientId(), dataOut, bs);
+        tightMarshalString2(info.getPassword(), dataOut, bs);
+        tightMarshalString2(info.getUserName(), dataOut, bs);
+        tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
 
     }
 
@@ -160,11 +160,11 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         ConnectionInfo info = (ConnectionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
-    looseMarshalString(info.getClientId(), dataOut);
-    looseMarshalString(info.getPassword(), dataOut);
-    looseMarshalString(info.getUserName(), dataOut);
-    looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
+        looseMarshalString(info.getClientId(), dataOut);
+        looseMarshalString(info.getPassword(), dataOut);
+        looseMarshalString(info.getUserName(), dataOut);
+        looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
 
     }
 }

@@ -80,9 +80,9 @@ public class ProducerIdMarshaller extends BaseDataStreamMarshaller {
         ProducerId info = (ProducerId)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalString1(info.getConnectionId(), bs);
-    rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
-    rc+=tightMarshalLong1(wireFormat, info.getSessionId(), bs);
+        rc += tightMarshalString1(info.getConnectionId(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getSessionId(), bs);
 
         return rc + 0;
     }
@@ -98,9 +98,9 @@ public class ProducerIdMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ProducerId info = (ProducerId)o;
-    tightMarshalString2(info.getConnectionId(), dataOut, bs);
-    tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
-    tightMarshalLong2(wireFormat, info.getSessionId(), dataOut, bs);
+        tightMarshalString2(info.getConnectionId(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getValue(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getSessionId(), dataOut, bs);
 
     }
 
@@ -130,9 +130,9 @@ public class ProducerIdMarshaller extends BaseDataStreamMarshaller {
         ProducerId info = (ProducerId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalString(info.getConnectionId(), dataOut);
-    looseMarshalLong(wireFormat, info.getValue(), dataOut);
-    looseMarshalLong(wireFormat, info.getSessionId(), dataOut);
+        looseMarshalString(info.getConnectionId(), dataOut);
+        looseMarshalLong(wireFormat, info.getValue(), dataOut);
+        looseMarshalLong(wireFormat, info.getSessionId(), dataOut);
 
     }
 }

@@ -80,9 +80,9 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         TransactionInfo info = (TransactionInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
-    
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getTransactionId(), bs);
+
         return rc + 1;
     }
 
@@ -97,9 +97,9 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         TransactionInfo info = (TransactionInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
-    dataOut.writeByte(info.getType());
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getTransactionId(), dataOut, bs);
+        dataOut.writeByte(info.getType());
 
     }
 
@@ -129,9 +129,9 @@ public class TransactionInfoMarshaller extends BaseCommandMarshaller {
         TransactionInfo info = (TransactionInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
-    dataOut.writeByte(info.getType());
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getTransactionId(), dataOut);
+        dataOut.writeByte(info.getType());
 
     }
 }

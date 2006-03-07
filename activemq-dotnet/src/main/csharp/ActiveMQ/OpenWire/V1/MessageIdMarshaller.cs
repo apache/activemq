@@ -69,9 +69,9 @@ namespace ActiveMQ.OpenWire.V1
         MessageId info = (MessageId)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ProducerId, bs);
-    rc += TightMarshalLong1(wireFormat, info.ProducerSequenceId, bs);
-    rc += TightMarshalLong1(wireFormat, info.BrokerSequenceId, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ProducerId, bs);
+        rc += TightMarshalLong1(wireFormat, info.ProducerSequenceId, bs);
+        rc += TightMarshalLong1(wireFormat, info.BrokerSequenceId, bs);
 
         return rc + 0;
     }
@@ -83,9 +83,9 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageId info = (MessageId)o;
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ProducerId, dataOut, bs);
-    TightMarshalLong2(wireFormat, info.ProducerSequenceId, dataOut, bs);
-    TightMarshalLong2(wireFormat, info.BrokerSequenceId, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.ProducerId, dataOut, bs);
+        TightMarshalLong2(wireFormat, info.ProducerSequenceId, dataOut, bs);
+        TightMarshalLong2(wireFormat, info.BrokerSequenceId, dataOut, bs);
 
     }
   }

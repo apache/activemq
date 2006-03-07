@@ -76,7 +76,7 @@ public abstract class OpenWireScript extends GramSupport {
         }
         else {
             String simpleName = j.getSimpleName();
-            return simpleName.equals("ActiveMQMessage");
+            return simpleName.equals("ActiveMQMessage") || simpleName.equals("WireFormatInfo");
         }
         /*
          * else { // is it a message type String simpleName = j.getSimpleName();

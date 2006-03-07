@@ -91,9 +91,9 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         ProducerInfo info = (ProducerInfo)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-    rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+        rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
 
         return rc + 0;
     }
@@ -109,9 +109,9 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ProducerInfo info = (ProducerInfo)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
-    tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+        tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
 
     }
 
@@ -152,9 +152,9 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         ProducerInfo info = (ProducerInfo)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
-    looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+        looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
 
     }
 }

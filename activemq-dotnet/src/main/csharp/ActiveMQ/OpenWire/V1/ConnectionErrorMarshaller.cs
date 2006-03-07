@@ -68,8 +68,8 @@ namespace ActiveMQ.OpenWire.V1
         ConnectionError info = (ConnectionError)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalBrokerError1(wireFormat, info.Exception, bs);
-    rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
+        rc += TightMarshalBrokerError1(wireFormat, info.Exception, bs);
+        rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
 
         return rc + 0;
     }
@@ -81,8 +81,8 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionError info = (ConnectionError)o;
-    TightMarshalBrokerError2(wireFormat, info.Exception, dataOut, bs);
-    TightMarshalNestedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
+        TightMarshalBrokerError2(wireFormat, info.Exception, dataOut, bs);
+        TightMarshalNestedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
 
     }
   }

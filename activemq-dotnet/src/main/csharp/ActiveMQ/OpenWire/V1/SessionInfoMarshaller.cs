@@ -67,7 +67,7 @@ namespace ActiveMQ.OpenWire.V1
         SessionInfo info = (SessionInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.SessionId, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.SessionId, bs);
 
         return rc + 0;
     }
@@ -79,7 +79,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         SessionInfo info = (SessionInfo)o;
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.SessionId, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.SessionId, dataOut, bs);
 
     }
   }

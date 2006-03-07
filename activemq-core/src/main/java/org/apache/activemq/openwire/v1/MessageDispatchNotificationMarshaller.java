@@ -81,10 +81,10 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         MessageDispatchNotification info = (MessageDispatchNotification)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
-    rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-    rc+=tightMarshalLong1(wireFormat, info.getDeliverySequenceId(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
+        rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getDeliverySequenceId(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageId(), bs);
 
         return rc + 0;
     }
@@ -100,10 +100,10 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         MessageDispatchNotification info = (MessageDispatchNotification)o;
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
-    tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
-    tightMarshalLong2(wireFormat, info.getDeliverySequenceId(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
+        tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getDeliverySequenceId(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageId(), dataOut, bs);
 
     }
 
@@ -134,10 +134,10 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         MessageDispatchNotification info = (MessageDispatchNotification)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
-    looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
-    looseMarshalLong(wireFormat, info.getDeliverySequenceId(), dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
+        looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
+        looseMarshalLong(wireFormat, info.getDeliverySequenceId(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageId(), dataOut);
 
     }
 }

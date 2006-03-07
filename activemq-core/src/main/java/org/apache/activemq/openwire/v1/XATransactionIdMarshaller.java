@@ -81,7 +81,7 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
         rc += tightMarshalByteArray1(info.getGlobalTransactionId(), bs);
-    rc += tightMarshalByteArray1(info.getBranchQualifier(), bs);
+        rc += tightMarshalByteArray1(info.getBranchQualifier(), bs);
 
         return rc + 4;
     }
@@ -97,9 +97,9 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         XATransactionId info = (XATransactionId)o;
-    dataOut.writeInt(info.getFormatId());
-    tightMarshalByteArray2(info.getGlobalTransactionId(), dataOut, bs);
-    tightMarshalByteArray2(info.getBranchQualifier(), dataOut, bs);
+        dataOut.writeInt(info.getFormatId());
+        tightMarshalByteArray2(info.getGlobalTransactionId(), dataOut, bs);
+        tightMarshalByteArray2(info.getBranchQualifier(), dataOut, bs);
 
     }
 
@@ -129,9 +129,9 @@ public class XATransactionIdMarshaller extends TransactionIdMarshaller {
         XATransactionId info = (XATransactionId)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    dataOut.writeInt(info.getFormatId());
-    looseMarshalByteArray(wireFormat, info.getGlobalTransactionId(), dataOut);
-    looseMarshalByteArray(wireFormat, info.getBranchQualifier(), dataOut);
+        dataOut.writeInt(info.getFormatId());
+        looseMarshalByteArray(wireFormat, info.getGlobalTransactionId(), dataOut);
+        looseMarshalByteArray(wireFormat, info.getBranchQualifier(), dataOut);
 
     }
 }

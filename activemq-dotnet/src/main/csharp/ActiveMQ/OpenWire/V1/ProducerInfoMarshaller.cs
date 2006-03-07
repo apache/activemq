@@ -80,9 +80,9 @@ namespace ActiveMQ.OpenWire.V1
         ProducerInfo info = (ProducerInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ProducerId, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.Destination, bs);
-    rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ProducerId, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.Destination, bs);
+        rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
 
         return rc + 0;
     }
@@ -94,9 +94,9 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ProducerInfo info = (ProducerInfo)o;
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ProducerId, dataOut, bs);
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
-    TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.ProducerId, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.Destination, dataOut, bs);
+        TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
 
     }
   }

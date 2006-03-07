@@ -79,8 +79,8 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
         ConnectionError info = (ConnectionError)o;
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalThrowable1(wireFormat, info.getException(), bs);
-    rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
+        rc += tightMarshalThrowable1(wireFormat, info.getException(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getConnectionId(), bs);
 
         return rc + 0;
     }
@@ -96,8 +96,8 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ConnectionError info = (ConnectionError)o;
-    tightMarshalThrowable2(wireFormat, info.getException(), dataOut, bs);
-    tightMarshalNestedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
+        tightMarshalThrowable2(wireFormat, info.getException(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getConnectionId(), dataOut, bs);
 
     }
 
@@ -126,8 +126,8 @@ public class ConnectionErrorMarshaller extends BaseCommandMarshaller {
         ConnectionError info = (ConnectionError)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalThrowable(wireFormat, info.getException(), dataOut);
-    looseMarshalNestedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
+        looseMarshalThrowable(wireFormat, info.getException(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getConnectionId(), dataOut);
 
     }
 }

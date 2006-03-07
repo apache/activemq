@@ -67,7 +67,7 @@ namespace ActiveMQ.OpenWire.V1
         ControlCommand info = (ControlCommand)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalString1(info.Command, bs);
+        rc += TightMarshalString1(info.Command, bs);
 
         return rc + 0;
     }
@@ -79,7 +79,7 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         ControlCommand info = (ControlCommand)o;
-    TightMarshalString2(info.Command, dataOut, bs);
+        TightMarshalString2(info.Command, dataOut, bs);
 
     }
   }

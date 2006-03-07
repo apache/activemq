@@ -69,9 +69,9 @@ namespace ActiveMQ.OpenWire.V1
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
 
         int rc = base.TightMarshal1(wireFormat, info, bs);
-    rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
-    rc += TightMarshalString1(info.SubcriptionName, bs);
-    rc += TightMarshalString1(info.ClientId, bs);
+        rc += TightMarshalCachedObject1(wireFormat, (DataStructure)info.ConnectionId, bs);
+        rc += TightMarshalString1(info.SubcriptionName, bs);
+        rc += TightMarshalString1(info.ClientId, bs);
 
         return rc + 0;
     }
@@ -83,9 +83,9 @@ namespace ActiveMQ.OpenWire.V1
         base.TightMarshal2(wireFormat, o, dataOut, bs);
 
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)o;
-    TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
-    TightMarshalString2(info.SubcriptionName, dataOut, bs);
-    TightMarshalString2(info.ClientId, dataOut, bs);
+        TightMarshalCachedObject2(wireFormat, (DataStructure)info.ConnectionId, dataOut, bs);
+        TightMarshalString2(info.SubcriptionName, dataOut, bs);
+        TightMarshalString2(info.ClientId, dataOut, bs);
 
     }
   }

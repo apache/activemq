@@ -87,7 +87,7 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         info.beforeMarshall(wireFormat);
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
-    rc += tightMarshalConstByteArray1(info.getMagic(), bs, 8);
+        rc += tightMarshalConstByteArray1(info.getMagic(), bs, 8);
         rc += tightMarshalByteSequence1(info.getMarshalledProperties(), bs);
 
         return rc + 4;
@@ -104,9 +104,9 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         WireFormatInfo info = (WireFormatInfo)o;
-    tightMarshalConstByteArray2(info.getMagic(), dataOut, bs, 8);
-    dataOut.writeInt(info.getVersion());
-    tightMarshalByteSequence2(info.getMarshalledProperties(), dataOut, bs);
+        tightMarshalConstByteArray2(info.getMagic(), dataOut, bs, 8);
+        dataOut.writeInt(info.getVersion());
+        tightMarshalByteSequence2(info.getMarshalledProperties(), dataOut, bs);
 
         info.afterMarshall(wireFormat);
 
@@ -145,9 +145,9 @@ public class WireFormatInfoMarshaller extends BaseDataStreamMarshaller {
         info.beforeMarshall(wireFormat);
 
         super.looseMarshal(wireFormat, o, dataOut);
-    looseMarshalConstByteArray(wireFormat, info.getMagic(), dataOut, 8);
-    dataOut.writeInt(info.getVersion());
-    looseMarshalByteSequence(wireFormat, info.getMarshalledProperties(), dataOut);
+        looseMarshalConstByteArray(wireFormat, info.getMagic(), dataOut, 8);
+        dataOut.writeInt(info.getVersion());
+        looseMarshalByteSequence(wireFormat, info.getMarshalledProperties(), dataOut);
 
     }
 }
