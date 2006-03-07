@@ -42,8 +42,18 @@
         <enabled>false</enabled>
       </releases>
     </repository>
+    <repository>
+      <id>maven-csharp</id>
+      <name>maven-csharp</name>
+      <url>http://maven-csharp.javaforge.com/repo</url>
+    </repository>
+    <repository>
+      <id>codehaus-snapshot</id>
+      <name>CodeHaus Snapshot Repo</name>
+      <url>http://snapshots.maven.codehaus.org/maven2</url>
+    </repository>
   </repositories>
-   
+
   <pluginRepositories>
     <pluginRepository>
       <id>codehaus.snapshots</id>
@@ -55,6 +65,11 @@
       <releases>
         <enabled>false</enabled>
       </releases>
+    </pluginRepository>
+    <pluginRepository>
+      <id>maven-csharp-plugins</id>
+      <name>maven-csharp</name>
+      <url>http://maven-csharp.javaforge.com/repo</url>
     </pluginRepository>
   </pluginRepositories>
 
