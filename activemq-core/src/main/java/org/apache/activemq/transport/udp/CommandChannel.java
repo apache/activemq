@@ -20,6 +20,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.udp.replay.DatagramReplayStrategy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,35 +40,36 @@ import java.nio.channels.Channels;
 public class CommandChannel implements Service {
 
     private static final Log log = LogFactory.getLog(CommandChannel.class);
-    
+
     private ByteChannel channel;
     private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
     private int datagramSize = 4 * 1024;
+    private DatagramReplayStrategy replayStrategy;
     private DatagramHeaderMarshaller headerMarshaller = new DatagramHeaderMarshaller();
-    
+
     // reading
     private ByteBuffer readBuffer;
     private DataInputStream dataIn;
     private CommandReadBuffer readStack;
-    
+
     // writing
     private ByteBuffer writeBuffer;
-    private BooleanStream bs = new BooleanStream(); 
+    private BooleanStream bs = new BooleanStream();
     private DataOutputStream dataOut;
     private int largeMessageBufferSize = 128 * 1024;
     private DatagramHeader header = new DatagramHeader();
 
-
-    public CommandChannel(ByteChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize) {
+    public CommandChannel(ByteChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize, DatagramReplayStrategy replayStrategy) {
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.bufferPool = bufferPool;
         this.datagramSize = datagramSize;
+        this.replayStrategy = replayStrategy;
     }
 
     public void start() throws Exception {
-        readStack = new CommandReadBuffer(wireFormat);
+        readStack = new CommandReadBuffer(wireFormat, replayStrategy);
         bufferPool.setDefaultSize(datagramSize);
         bufferPool.start();
         readBuffer = bufferPool.borrowBuffer();
@@ -79,7 +81,7 @@ public class CommandChannel implements Service {
     public void stop() throws Exception {
         bufferPool.stop();
     }
-    
+
     public synchronized Command read() throws IOException {
         readBuffer.clear();
         int read = channel.read(readBuffer);
@@ -109,10 +111,11 @@ public class CommandChannel implements Service {
     public synchronized void write(Command command) throws IOException {
         header.incrementCounter();
         int size = wireFormat.tightMarshalNestedObject1(command, bs);
-        if (size < datagramSize ) {
+        if (size < datagramSize) {
             header.setPartial(false);
             header.setDataSize(size);
             writeBuffer.rewind();
+            headerMarshaller.writeHeader(header, writeBuffer);
             wireFormat.marshal(command, dataOut);
             dataOut.flush();
             channel.write(writeBuffer);
@@ -120,15 +123,15 @@ public class CommandChannel implements Service {
         else {
             header.setPartial(true);
             header.setComplete(false);
-            
+
             // lets split the command up into chunks
             ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(largeMessageBufferSize);
             wireFormat.marshal(command, new DataOutputStream(largeBuffer));
-            
+
             byte[] data = largeBuffer.toByteArray();
             int offset = 0;
             boolean lastFragment = false;
-            for (int fragment = 0, length = data.length; !lastFragment; fragment++ ) {
+            for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
                 // write the header
                 writeBuffer.rewind();
                 int chunkSize = writeBuffer.capacity() - headerMarshaller.getHeaderSize(header);
@@ -144,7 +147,7 @@ public class CommandChannel implements Service {
             }
         }
     }
-    
+
     // Properties
     // -------------------------------------------------------------------------
 
@@ -153,7 +156,7 @@ public class CommandChannel implements Service {
     }
 
     /**
-     * Sets the default size of a datagram on the network. 
+     * Sets the default size of a datagram on the network.
      */
     public void setDatagramSize(int datagramSize) {
         this.datagramSize = datagramSize;
@@ -168,6 +171,14 @@ public class CommandChannel implements Service {
      */
     public void setBufferPool(ByteBufferPool bufferPool) {
         this.bufferPool = bufferPool;
+    }
+
+    public DatagramHeaderMarshaller getHeaderMarshaller() {
+        return headerMarshaller;
+    }
+
+    public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller) {
+        this.headerMarshaller = headerMarshaller;
     }
 
 }

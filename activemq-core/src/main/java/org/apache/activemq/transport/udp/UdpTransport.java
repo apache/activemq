@@ -21,6 +21,8 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportThreadSupport;
+import org.apache.activemq.transport.udp.replay.DatagramReplayStrategy;
+import org.apache.activemq.transport.udp.replay.ExceptionIfDroppedPacketStrategy;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,6 +47,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private CommandChannel commandChannel;
     private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
+    private DatagramReplayStrategy replayStrategy = new ExceptionIfDroppedPacketStrategy();
     private int datagramSize = 4 * 1024;
     private long maxInactivityDuration = 0; //30000;
     private InetSocketAddress socketAddress;
@@ -85,7 +88,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      * reads packets from a Socket
      */
     public void run() {
-        log.trace("TCP consumer thread starting");
+        log.trace("Consumer thread starting for: " + toString());
         while (!isClosed()) {
             try {
                 Command command = commandChannel.read();
@@ -152,9 +155,20 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.commandChannel = commandChannel;
     }
     
+    public DatagramReplayStrategy getReplayStrategy() {
+        return replayStrategy;
+    }
+
+    /**
+     * Sets the strategy used to replay missed datagrams
+     */
+    public void setReplayStrategy(DatagramReplayStrategy replayStrategy) {
+        this.replayStrategy = replayStrategy;
+    }
+
+    
     // Implementation methods
     // -------------------------------------------------------------------------
-
 
     /**
      * Creates an address from the given URI
@@ -182,7 +196,10 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         else if (channel == null) {
             throw new IllegalArgumentException("No channel configured");
         }
-        commandChannel = new CommandChannel(channel, wireFormat, bufferPool, datagramSize);
+        if (bufferPool == null) {
+            bufferPool = new DefaultBufferPool();
+        }
+        commandChannel = new CommandChannel(channel, wireFormat, bufferPool, datagramSize, replayStrategy);
         commandChannel.start();
         super.doStart();
     }

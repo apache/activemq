@@ -18,6 +18,9 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.udp.replay.DatagramReplayStrategy;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,20 +36,32 @@ import java.util.TreeSet;
  * @version $Revision$
  */
 public class CommandReadBuffer {
+    private static final Log log = LogFactory.getLog(CommandReadBuffer.class);
 
     private OpenWireFormat wireFormat;
+    private DatagramReplayStrategy replayStrategy;
     private SortedSet headers = new TreeSet();
-    private int expectedCounter;
+    private long expectedCounter;
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-    public CommandReadBuffer(OpenWireFormat wireFormat) {
+    public CommandReadBuffer(OpenWireFormat wireFormat, DatagramReplayStrategy replayStrategy) {
         this.wireFormat = wireFormat;
+        this.replayStrategy = replayStrategy;
     }
 
+
     public Command read(DatagramHeader header) throws IOException {
-        if (expectedCounter != header.getCounter()) {
-            // lets add it to the list for later on
-            headers.add(header);
+        long actualCounter = header.getCounter();
+        if (expectedCounter != actualCounter) {
+            if (actualCounter < expectedCounter) {
+                log.warn("Ignoring out of step packet: " + header);
+            }
+            else {
+                replayStrategy.onDroppedPackets(expectedCounter, actualCounter);
+                
+                // lets add it to the list for later on
+                headers.add(header);
+            }
 
             // lets see if the first item in the set is the next header
             header = (DatagramHeader) headers.first();
@@ -56,6 +71,7 @@ public class CommandReadBuffer {
         }
 
         // we've got a valid header so increment counter
+        replayStrategy.onReceivedPacket(expectedCounter);
         expectedCounter++;
 
         Command answer = null;
@@ -75,7 +91,6 @@ public class CommandReadBuffer {
             }
         }
         return answer;
-
     }
 
 }
