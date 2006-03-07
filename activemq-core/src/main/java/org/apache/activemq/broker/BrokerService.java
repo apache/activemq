@@ -775,7 +775,8 @@ public class BrokerService implements Service {
         	ObjectName objectName = new ObjectName(
             		managementContext.getJmxDomainName()+":"+
             		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=NetworkConnector"
+            		"Type=NetworkConnector,"+
+                    "NetworkConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
             		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
@@ -792,7 +793,8 @@ public class BrokerService implements Service {
         	ObjectName objectName = new ObjectName(
             		managementContext.getJmxDomainName()+":"+
             		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=ProxyConnector"
+            		"Type=ProxyConnector,"+
+                    "ProxyConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
             		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
@@ -826,7 +828,8 @@ public class BrokerService implements Service {
         	ObjectName objectName = new ObjectName(
             		managementContext.getJmxDomainName()+":"+
             		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=JmsConnector"
+            		"Type=JmsConnector,"+
+                    "JmsConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
             		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);

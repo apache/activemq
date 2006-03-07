@@ -34,7 +34,6 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;

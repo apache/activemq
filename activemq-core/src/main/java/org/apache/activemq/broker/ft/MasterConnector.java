@@ -57,7 +57,7 @@ public class MasterConnector implements Service{
     private TransportConnector connector;
     private AtomicBoolean masterActive=new AtomicBoolean(false);
     private AtomicBoolean started=new AtomicBoolean(false);
-    IdGenerator idGenerator=new IdGenerator();
+    private final IdGenerator idGenerator=new IdGenerator();
 
     ConnectionInfo connectionInfo;
     SessionInfo sessionInfo;

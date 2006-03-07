@@ -63,6 +63,7 @@ public class TransportConnector implements Connector {
     private ConnectorStatistics statistics = new ConnectorStatistics();
     private URI discoveryUri;
     private URI connectUri;
+    private String name;
 
 
     /**
@@ -86,12 +87,13 @@ public class TransportConnector implements Connector {
      * Factory method to create a JMX managed version of this transport connector
      */
     public ManagedTransportConnector asManagedConnector(MBeanServer mbeanServer, ObjectName connectorName) throws IOException, URISyntaxException {
-        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer,connectorName,  getBroker(), getServer());
+        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer, connectorName,  getBroker(), getServer());
         rc.setTaskRunnerFactory(getTaskRunnerFactory());
         rc.setUri(uri);
         rc.setConnectUri(connectUri);
         rc.setDiscoveryAgent(discoveryAgent);
         rc.setDiscoveryUri(discoveryUri);
+        rc.setName(name);
         return rc;
     }
     
@@ -108,10 +110,6 @@ public class TransportConnector implements Connector {
             setServer(createTransportServer());
         }
         return server;
-    }
-
-    public String getName() throws IOException, URISyntaxException {
-        return getServer().getConnectURI().toString();
     }
 
     public Broker getBroker() {
@@ -195,15 +193,13 @@ public class TransportConnector implements Connector {
 
     public void start() throws Exception {
         getServer().start();
-        log.info("Accepting connection on: "+getServer().getConnectURI());
-
         DiscoveryAgent da = getDiscoveryAgent();
         if( da!=null ) {
             da.registerService(getConnectUri().toString());
             da.start();
         }
-
         this.statusDector.start();
+        log.info("Connector "+getName()+" Started");
     }
 
     public void stop() throws Exception {
@@ -220,6 +216,7 @@ public class TransportConnector implements Connector {
             ss.stop(c);
         }
         ss.throwFirstException();
+        log.info("Connector "+getName()+" Stopped");
     }
 
     // Implementation methods
@@ -286,6 +283,16 @@ public class TransportConnector implements Connector {
 
     public void onStopped(TransportConnection connection) {
         connections.remove(connection);
+    }
+
+    public String getName() {
+        if( name == null ) {
+            name = server.getConnectURI().toString();
+        }
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
 
 }
