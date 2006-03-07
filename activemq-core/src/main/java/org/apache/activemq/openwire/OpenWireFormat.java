@@ -231,6 +231,46 @@ final public class OpenWireFormat implements WireFormat {
     }
     
     /**
+     * Used by NIO or AIO transports
+     */
+    public int tightMarshal1(Object o, BooleanStream bs) throws IOException {
+        int size=1;
+        if( o != null) {
+            DataStructure c = (DataStructure) o;
+            byte type = c.getDataStructureType();
+            DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
+            if( dsm == null )
+                throw new IOException("Unknown data type: "+type);
+
+            size += dsm.tightMarshal1(this, c, bs);
+            size += bs.marshalledSize(); 
+        }
+        return size;
+    }
+    
+    /**
+     * Used by NIO or AIO transports; note that the size is not written as part of this method.
+     */
+    public void tightMarshal2(Object o, DataOutputStream ds, BooleanStream bs) throws IOException {
+        if( cacheEnabled ) {
+            runMarshallCacheEvictionSweep();
+        }
+        
+        if( o != null) {
+            DataStructure c = (DataStructure) o;
+            byte type = c.getDataStructureType();
+            DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
+            if( dsm == null )
+                throw new IOException("Unknown data type: "+type);
+
+            ds.writeByte(type);            
+            bs.marshal(ds);
+            dsm.tightMarshal2(this, c, ds, bs);            
+        } 
+    }
+
+    
+    /**
      * Allows you to dynamically switch the version of the openwire protocol being used.
      * @param version
      */
