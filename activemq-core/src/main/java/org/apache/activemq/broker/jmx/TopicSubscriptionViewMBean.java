@@ -25,12 +25,12 @@ public interface TopicSubscriptionViewMBean extends SubscriptionViewMBean {
     /**
      * @return the number of messages discarded due to being a slow consumer
      */
-    public int getDiscarded();
-    
-    /**
-     * @return the number of matched messages (messages targeted for the subscription but not
-     * yet able to be dispatched due to the prefetch buffer being full).
-     */
-    public int getMatched();
+    public int getDiscardedCount();
 
+    /**
+     * @return the maximun number of messages that can be pending.
+     */
+    public int getMaximumPendingQueueSize();
+    public void setMaximumPendingQueueSize(int max);
+    
 }

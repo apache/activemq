@@ -22,7 +22,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -754,12 +753,13 @@ public class BrokerService implements Service {
     protected void registerConnectorMBean(TransportConnector connector) throws IOException, URISyntaxException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         ConnectorViewMBean view = new ConnectorView(connector);
-        Hashtable map = new Hashtable();
-        map.put("Type", "Connector");
-        map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
-        map.put("ConnectorName", JMXSupport.encodeObjectNamePart(connector.getName()));
         try {
-            ObjectName objectName = new ObjectName("org.apache.activemq", map);
+        	ObjectName objectName = new ObjectName(
+            		managementContext.getJmxDomainName()+":"+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+            		"Type=Connector,"+
+            		"ConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
+            		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
         }
@@ -771,13 +771,12 @@ public class BrokerService implements Service {
     protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
-        Hashtable map = new Hashtable();
-        map.put("Type", "NetworkConnector");
-        map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
-        // map.put("ConnectorName",
-        // JMXSupport.encodeObjectNamePart(connector.()));
         try {
-            ObjectName objectName = new ObjectName("org.apache.activemq", map);
+        	ObjectName objectName = new ObjectName(
+            		managementContext.getJmxDomainName()+":"+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+            		"Type=NetworkConnector"
+            		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
         }
@@ -789,13 +788,12 @@ public class BrokerService implements Service {
     protected void registerProxyConnectorMBean(ProxyConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         ProxyConnectorView view = new ProxyConnectorView(connector);
-        Hashtable map = new Hashtable();
-        map.put("Type", "ProxyConnector");
-        map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
-        // map.put("ConnectorName",
-        // JMXSupport.encodeObjectNamePart(connector.()));
         try {
-            ObjectName objectName = new ObjectName("org.apache.activemq", map);
+        	ObjectName objectName = new ObjectName(
+            		managementContext.getJmxDomainName()+":"+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+            		"Type=ProxyConnector"
+            		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
         }
@@ -807,13 +805,12 @@ public class BrokerService implements Service {
     protected void registerFTConnectorMBean(MasterConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         FTConnectorView view = new FTConnectorView(connector);
-        Hashtable map = new Hashtable();
-        map.put("Type", "MasterConnector");
-        map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
-        // map.put("ConnectorName",
-        // JMXSupport.encodeObjectNamePart(connector.()));
         try {
-            ObjectName objectName = new ObjectName("org.apache.activemq", map);
+        	ObjectName objectName = new ObjectName(
+            		managementContext.getJmxDomainName()+":"+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+            		"Type=MasterConnector"
+            		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
         }
@@ -825,13 +822,12 @@ public class BrokerService implements Service {
     protected void registerJmsConnectorMBean(JmsConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         JmsConnectorView view = new JmsConnectorView(connector);
-        Hashtable map = new Hashtable();
-        map.put("Type", "JmsConnector");
-        map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
-        // map.put("ConnectorName",
-        // JMXSupport.encodeObjectNamePart(connector.()));
         try {
-            ObjectName objectName = new ObjectName("org.apache.activemq", map);
+        	ObjectName objectName = new ObjectName(
+            		managementContext.getJmxDomainName()+":"+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+            		"Type=JmsConnector"
+            		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
         }
@@ -867,7 +863,7 @@ public class BrokerService implements Service {
         if (isUseJmx()) {
             ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
             managedBroker.setContextBroker(broker);
-            BrokerViewMBean view = new BrokerView(managedBroker, getMemoryManager());
+            BrokerViewMBean view = new BrokerView(this, managedBroker);
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             ObjectName objectName = getBrokerObjectName();
             mbeanServer.registerMBean(view, objectName);
@@ -942,10 +938,11 @@ public class BrokerService implements Service {
 
     protected ObjectName createBrokerObjectName() throws IOException {
         try {
-            Hashtable map = new Hashtable();
-            map.put("Type", "Broker");
-            map.put("BrokerName", JMXSupport.encodeObjectNamePart(getBrokerName()));
-            return new ObjectName(getManagementContext().getJmxDomainName(), map);
+            return new ObjectName(
+            		getManagementContext().getJmxDomainName()+":"+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+            		"Type=Broker"
+            		);
         }
         catch (Throwable e) {
             throw IOExceptionSupport.create("Invalid JMX broker name: " + brokerName, e);

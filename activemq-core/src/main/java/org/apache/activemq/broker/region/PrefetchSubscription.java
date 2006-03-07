@@ -13,6 +13,13 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
@@ -27,11 +34,6 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
 /**
  * A subscription that honors the pre-fetch option of the ConsumerInfo.
  * 
@@ -42,6 +44,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     static private final Log log=LogFactory.getLog(PrefetchSubscription.class);
     final protected LinkedList matched=new LinkedList();
     final protected LinkedList dispatched=new LinkedList();
+    
     protected int delivered=0;
     int preLoadLimit=1024*100;
     int preLoadSize=0;
@@ -49,6 +52,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     
     long enqueueCounter;
     long dispatchCounter;
+    long aknowledgedCounter;
     
     public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info)
                     throws InvalidSelectorException{
@@ -102,12 +106,14 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 if(inAckRange){
                     // Don't remove the nodes until we are committed.
                     if(!context.isInTransaction()){
+                    	aknowledgedCounter++;
                         iter.remove();
                     }else{
                         // setup a Synchronization to remove nodes from the dispatched list.
                         context.getTransaction().addSynchronization(new Synchronization(){
                             public void afterCommit() throws Exception{
                                 synchronized(PrefetchSubscription.this){
+                                	aknowledgedCounter++;
                                     dispatched.remove(node);
                                     delivered--;
                                 }
@@ -178,6 +184,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         node.decrementReferenceCount();
                     }
                     iter.remove();
+                    aknowledgedCounter++;
                     index++;
                     acknowledge(context,ack,node);
                     if(ack.getLastMessageId().equals(messageId)){
@@ -198,17 +205,26 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         return dispatched.size()-delivered>=info.getPrefetchSize()||preLoadSize>preLoadLimit;
     }
     
-    public int pending(){
-        return matched.size() - dispatched.size();
+    synchronized public int getPendingQueueSize(){
+        return matched.size();
     }
     
-    public int dispatched(){
+    synchronized public int getDispatchedQueueSize(){
         return dispatched.size();
     }
     
-    public int delivered(){
-        return delivered;
+    synchronized public long getDequeueCounter(){
+        return aknowledgedCounter;
     }
+    
+    synchronized public long getDispatchedCounter() {
+        return dispatchCounter;
+    }
+    
+    synchronized public long getEnqueueCounter() {
+        return enqueueCounter;
+    }
+
 
     protected void dispatchMatched() throws IOException{
         if(!dispatching){
@@ -318,11 +334,4 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     throws IOException{}
 
 
-    public long getDispatchCounter() {
-        return dispatchCounter;
-    }
-
-    public long getEnqueueCounter() {
-        return enqueueCounter;
-    }
 }

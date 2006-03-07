@@ -113,11 +113,14 @@ public class ManagedTransportConnection extends TransportConnection {
 
     protected ObjectName createObjectName() throws IOException {
         // Build the object name for the destination
-        Hashtable map = new Hashtable(connectorName.getKeyPropertyList());
-        map.put("Type", "Connection");
-        map.put("Connection", JMXSupport.encodeObjectNamePart(connectionId));
+        Hashtable map = connectorName.getKeyPropertyList();
         try {
-            return new ObjectName(connectorName.getDomain(), map);
+            return new ObjectName(
+            		connectorName.getDomain()+":"+
+            		"BrokerName="+map.get("BrokerName")+","+
+            		"Type=Connection,"+
+            		"Connection="+JMXSupport.encodeObjectNamePart(connectionId)
+            		);
         }
         catch (Throwable e) {
             throw IOExceptionSupport.create(e);

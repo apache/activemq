@@ -19,7 +19,7 @@ package org.apache.activemq.broker.jmx;
 public interface SubscriptionViewMBean{
     
     /**
-     * @return the clientId
+     * @return the clientId of the Connection the Subscription is on
      */
     public String getClientId();
     /**
@@ -63,22 +63,28 @@ public interface SubscriptionViewMBean{
     public boolean isActive();
 
     /**
-     * The subscription should release as may references as it can to help the garbage collector reclaim memory.
-     */
-    public void gc();
-
-    /**
      * @return number of messages pending delivery
      */
-    public int getPending();
+    public int getPendingQueueSize();
 
     /**
      * @return number of messages dispatched
      */
-    public int getDispatched();
+    public int getDispatchedQueueSize();
+    
+    /**
+     * @return number of messages that matched the subscription
+     */
+    long getDispachedCounter();
 
     /**
-     * @return number of messages delivered
+     * @return number of messages that matched the subscription
      */
-    public int getDelivered();
+    long getEnqueueCounter();
+
+    /**
+     * @return number of messages queued by the client
+     */
+    long getDequeueCounter();
+
 }
