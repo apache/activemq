@@ -19,7 +19,6 @@ package org.apache.activemq;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Destination;
 import javax.jms.Session;
@@ -29,6 +28,7 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author rnewson
