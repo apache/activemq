@@ -298,7 +298,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
      * breaking compatibility with JCA configuration in J2EE
      */
     public RedeliveryPolicy redeliveryPolicy() {
-        if (redeliveryPolicy != null) {
+        if (redeliveryPolicy == null) {
             redeliveryPolicy = new RedeliveryPolicy();
         }
         return redeliveryPolicy;
@@ -309,7 +309,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
      * breaking compatibility with JCA configuration in J2EE
      */
     public ActiveMQPrefetchPolicy prefetchPolicy() {
-        if (prefetchPolicy != null) {
+        if (prefetchPolicy == null) {
             prefetchPolicy = new ActiveMQPrefetchPolicy();
         }
         return prefetchPolicy;
