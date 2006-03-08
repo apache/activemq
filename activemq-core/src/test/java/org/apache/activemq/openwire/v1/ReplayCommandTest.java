@@ -25,7 +25,7 @@ import org.apache.activemq.command.*;
 
 
 /**
- * Test case for the OpenWire marshalling for Response
+ * Test case for the OpenWire marshalling for ReplayCommand
  *
  *
  * NOTE!: This file is auto generated - do not modify!
@@ -35,13 +35,13 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision: $
  */
-public class ResponseTest extends BaseCommandTestSupport {
+public class ReplayCommandTest extends BaseCommandTestSupport {
 
 
-    public static ResponseTest SINGLETON = new ResponseTest();
+    public static ReplayCommandTest SINGLETON = new ReplayCommandTest();
 
     public Object createObject() throws Exception {
-    		Response info = new Response();
+    		ReplayCommand info = new ReplayCommand();
     		populateObject(info);
     		return info;
     }
@@ -49,8 +49,7 @@ public class ResponseTest extends BaseCommandTestSupport {
     
     protected void populateObject(Object object) throws Exception {
     		super.populateObject(object);
-    		Response info = (Response) object;
-        info.setCorrelationId((short) 1);
+    		ReplayCommand info = (ReplayCommand) object;
 
             }
         }
