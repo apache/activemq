@@ -72,6 +72,7 @@ namespace ActiveMQ.OpenWire.V1
             format.addMarshaller(new WireFormatInfoMarshaller());
             format.addMarshaller(new ActiveMQTempTopicMarshaller());
             format.addMarshaller(new DiscoveryEventMarshaller());
+            format.addMarshaller(new ReplayCommandMarshaller());
             format.addMarshaller(new ActiveMQTopicMarshaller());
             format.addMarshaller(new BrokerInfoMarshaller());
             format.addMarshaller(new DestinationInfoMarshaller());
