@@ -73,6 +73,7 @@ public class MarshallerFactory {
         add(new WireFormatInfoMarshaller());
         add(new ActiveMQTempTopicMarshaller());
         add(new DiscoveryEventMarshaller());
+        add(new ReplayCommandMarshaller());
         add(new ActiveMQTopicMarshaller());
         add(new BrokerInfoMarshaller());
         add(new DestinationInfoMarshaller());
