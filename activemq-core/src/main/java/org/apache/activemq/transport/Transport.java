@@ -47,6 +47,11 @@ public interface Transport extends Service {
     public Response request(Command command) throws IOException;
 
     /**
+     * Returns the current transport listener
+     */
+    public TransportListener getTransportListener();
+
+    /**
      * Registers an inbound command listener
      */
     public void setTransportListener(TransportListener commandListener);

@@ -28,16 +28,18 @@ import org.apache.activemq.command.Response;
 public class TransportFilter extends DefaultTransportListener implements Transport {
 
     final protected Transport next;
-    protected TransportListener commandListener;
+    private TransportListener transportListener;
 
     public TransportFilter(Transport next) {
         this.next = next;
     }
 
-    /**
-     */
+    public TransportListener getTransportListener() {
+        return transportListener;
+    }
+    
     public void setTransportListener(TransportListener channelListener) {
-        this.commandListener = channelListener;
+        this.transportListener = channelListener;
         if (channelListener == null)
             next.setTransportListener(null);
         else
@@ -52,7 +54,7 @@ public class TransportFilter extends DefaultTransportListener implements Transpo
     public void start() throws Exception {
         if( next == null )
             throw new IOException("The next channel has not been set.");
-        if( commandListener == null )
+        if( transportListener == null )
             throw new IOException("The command listener has not been set.");
         next.start();
     }
@@ -65,7 +67,7 @@ public class TransportFilter extends DefaultTransportListener implements Transpo
     }    
 
     public void onCommand(Command command) {
-        commandListener.onCommand(command);
+        transportListener.onCommand(command);
     }
 
     /**
@@ -75,13 +77,7 @@ public class TransportFilter extends DefaultTransportListener implements Transpo
         return next;
     }
 
-    /**
-     * @return Returns the packetListener.
-     */
-    public TransportListener getCommandListener() {
-        return commandListener;
-    }
-    
+
     public String toString() {
         return next.toString();
     }
@@ -99,7 +95,7 @@ public class TransportFilter extends DefaultTransportListener implements Transpo
     }
 
     public void onException(IOException error) {
-        commandListener.onException(error);
+        transportListener.onException(error);
     }
 
     public Object narrow(Class target) {

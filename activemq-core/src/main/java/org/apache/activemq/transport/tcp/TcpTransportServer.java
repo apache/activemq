@@ -118,12 +118,12 @@ public class TcpTransportServer extends TransportServerThreadSupport {
      * pull Sockets from the ServerSocket
      */
     public void run() {
-        while (!isClosed()) {
+        while (!isStopped()) {
             Socket socket = null;
             try {
                 socket = serverSocket.accept();
                 if (socket != null) {
-                    if (isClosed() || getAcceptListener() == null) {
+                    if (isStopped() || getAcceptListener() == null) {
                         socket.close();
                     }
                     else {
@@ -142,9 +142,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                 // expect this to happen
             }
             catch (Exception e) {
-                if (!isClosing()) {
+                if (!isStopping()) {
                     onAcceptError(e); 
-                } else if (!isClosed()) {
+                } else if (!isStopped()) {
                     log.warn("run()", e);
                     onAcceptError(e);
                 }

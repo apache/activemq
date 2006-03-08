@@ -38,9 +38,9 @@ public class MarshallingTransportFilter extends TransportFilter {
     
     public void onCommand(Command command) {
         try {
-            commandListener.onCommand((Command)localWireFormat.unmarshal(remoteWireFormat.marshal(command)));
+            getTransportListener().onCommand((Command)localWireFormat.unmarshal(remoteWireFormat.marshal(command)));
         } catch (IOException e) {
-            commandListener.onException(e);
+            getTransportListener().onException(e);
         }
     }
     

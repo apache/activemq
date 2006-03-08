@@ -17,7 +17,9 @@
 package org.apache.activemq.transport;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,8 +34,11 @@ import java.io.IOException;
 public abstract class TransportSupport extends ServiceSupport implements Transport {
     private static final Log log = LogFactory.getLog(TransportSupport.class);
 
-    private TransportListener transportListener;
+    TransportListener transportListener;
 
+    /**
+     * Returns the current transport listener
+     */
     public TransportListener getTransportListener() {
         return transportListener;
     }
@@ -89,6 +94,15 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
     public void onException(IOException e) {
         if (transportListener != null) {
             transportListener.onException(e);
+        }
+    }
+
+    protected void checkStarted(Command command) throws IOException {
+        if (!isStarted()) {
+            // we might try to shut down the transport before it was ever started in some test cases
+            if (!(command instanceof ShutdownInfo || command instanceof RemoveInfo)) {
+                throw new IOException("The transport " + this + " of type: " + getClass().getName() + " is not running.");
+            }
         }
     }
 

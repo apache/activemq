@@ -16,11 +16,7 @@
  */
 package org.apache.activemq.transport;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.RemoveInfo;
-import org.apache.activemq.command.ShutdownInfo;
 
-import java.io.IOException;
 
 /**
  * A useful base class for a transport implementation which has a background
@@ -45,14 +41,5 @@ public abstract class TransportThreadSupport extends TransportSupport implements
         runner = new Thread(this, toString());
         runner.setDaemon(daemon);
         runner.start();
-    }
-
-    protected void checkStarted(Command command) throws IOException {
-        if (!isStarted()) {
-            // we might try to shut down the transport before it was ever started in some test cases
-            if (!(command instanceof ShutdownInfo || command instanceof RemoveInfo)) {
-                throw new IOException("The transport " + this + " of type: " + getClass().getName() + " is not running.");
-            }
-        }
     }
 }

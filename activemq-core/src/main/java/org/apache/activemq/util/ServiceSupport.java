@@ -30,9 +30,9 @@ import org.apache.commons.logging.LogFactory;
 public abstract class ServiceSupport {
     private static final Log log = LogFactory.getLog(ServiceSupport.class);
 
-    private AtomicBoolean closed = new AtomicBoolean(false);
     private AtomicBoolean started = new AtomicBoolean(false);
-    private AtomicBoolean closing = new AtomicBoolean(false);
+    private AtomicBoolean stopping = new AtomicBoolean(false);
+    private AtomicBoolean stopped = new AtomicBoolean(false);
 
     public static void dispose(Service service) {
         try {
@@ -50,8 +50,8 @@ public abstract class ServiceSupport {
     }
 
     public void stop() throws Exception {
-        if (closed.compareAndSet(false, true)) {
-            closing.set(true);
+        if (stopped.compareAndSet(false, true)) {
+            stopping.set(true);
             ServiceStopper stopper = new ServiceStopper();
             try {
                 doStop(stopper);
@@ -59,9 +59,9 @@ public abstract class ServiceSupport {
             catch (Exception e) {
                 stopper.onException(this, e);
             }
-            closed.set(true);
+            stopped.set(true);
             started.set(false);
-            closing.set(false);
+            stopping.set(false);
             stopper.throwFirstException();
         }
     }
@@ -76,16 +76,16 @@ public abstract class ServiceSupport {
     /**
      * @return true if this service is in the process of closing
      */
-    public boolean isClosing() {
-        return closing.get();
+    public boolean isStopping() {
+        return stopping.get();
     }
 
     
     /**
      * @return true if this service is closed
      */
-    public boolean isClosed() {
-        return closed.get();
+    public boolean isStopped() {
+        return stopped.get();
     }
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
