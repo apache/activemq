@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTestSupport;
@@ -98,9 +99,14 @@ public class NetworkTestSupport extends BrokerTestSupport {
         }
         return remotePersistenceAdapter;
     }
-
+    
+    protected BrokerService createBroker() throws Exception {
+        return BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false"));
+    }
+    
     protected BrokerService createRemoteBroker(PersistenceAdapter persistenceAdapter) throws Exception {
         BrokerService answer = new BrokerService();
+        answer.setUseJmx(false);
         answer.setPersistenceAdapter(persistenceAdapter);
         return answer;
     }
