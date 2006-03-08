@@ -16,17 +16,23 @@
  */
 package org.apache.activemq.util;
 
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A helper class for working with services
+ * A helper class for working with services together with a useful base class for service implementations.
  *  
  * @version $Revision: 1.1 $
  */
 public abstract class ServiceSupport {
     private static final Log log = LogFactory.getLog(ServiceSupport.class);
+
+    private AtomicBoolean closed = new AtomicBoolean(false);
+    private AtomicBoolean started = new AtomicBoolean(false);
+    private AtomicBoolean closing = new AtomicBoolean(false);
 
     public static void dispose(Service service) {
         try {
@@ -36,15 +42,53 @@ public abstract class ServiceSupport {
             log.error("Could not stop service: " + service + ". Reason: " + e, e);
         }
     }
-    
+
+    public void start() throws Exception {
+        if (started.compareAndSet(false, true)) {
+            doStart();
+        }
+    }
+
     public void stop() throws Exception {
-        ServiceStopper stopper = new ServiceStopper();
-        stop(stopper);
-        stopper.throwFirstException();
+        if (closed.compareAndSet(false, true)) {
+            closing.set(true);
+            ServiceStopper stopper = new ServiceStopper();
+            try {
+                doStop(stopper);
+            }
+            catch (Exception e) {
+                stopper.onException(this, e);
+            }
+            closed.set(true);
+            started.set(false);
+            closing.set(false);
+            stopper.throwFirstException();
+        }
     }
 
     /**
-     * Provides a way for derived classes to stop resources cleanly, handling exceptions
+     * @return true if this service has been started
      */
-    protected abstract void stop(ServiceStopper stopper);
+    public boolean isStarted() {
+        return started.get();
+    }
+
+    /**
+     * @return true if this service is in the process of closing
+     */
+    public boolean isClosing() {
+        return closing.get();
+    }
+
+    
+    /**
+     * @return true if this service is closed
+     */
+    public boolean isClosed() {
+        return closed.get();
+    }
+
+    protected abstract void doStop(ServiceStopper stopper) throws Exception;
+
+    protected abstract void doStart() throws Exception;
 }

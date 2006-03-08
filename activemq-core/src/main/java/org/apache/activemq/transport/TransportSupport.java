@@ -18,6 +18,7 @@ package org.apache.activemq.transport;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,7 +29,7 @@ import java.io.IOException;
  * 
  * @version $Revision: 1.1 $
  */
-public abstract class TransportSupport implements Transport {
+public abstract class TransportSupport extends ServiceSupport implements Transport {
     private static final Log log = LogFactory.getLog(TransportSupport.class);
 
     private TransportListener transportListener;

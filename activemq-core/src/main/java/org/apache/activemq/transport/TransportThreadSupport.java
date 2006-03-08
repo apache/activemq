@@ -19,11 +19,8 @@ package org.apache.activemq.transport;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.util.ServiceStopper;
 
 import java.io.IOException;
-
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A useful base class for a transport implementation which has a background
@@ -33,39 +30,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class TransportThreadSupport extends TransportSupport implements Runnable {
 
-    private AtomicBoolean closed = new AtomicBoolean(false);
-    private AtomicBoolean started = new AtomicBoolean(false);
     private boolean daemon = false;
     private Thread runner;
-
-    public void start() throws Exception {
-        if (started.compareAndSet(false, true)) {
-            doStart();
-        }
-    }
-
-    public void stop() throws Exception {
-        if (closed.compareAndSet(false, true)) {
-            started.set(false);
-            ServiceStopper stopper = new ServiceStopper();
-            try {
-                doStop(stopper);
-            }
-            catch (Exception e) {
-                stopper.onException(this, e);
-            }
-            stopper.throwFirstException();
-        }
-        closed.set(true);
-    }
-
-    public boolean isStarted() {
-        return started.get();
-    }
-
-    public boolean isClosed() {
-        return closed.get();
-    }
 
     public boolean isDaemon() {
         return daemon;
@@ -75,14 +41,11 @@ public abstract class TransportThreadSupport extends TransportSupport implements
         this.daemon = daemon;
     }
 
-
     protected void doStart() throws Exception {
         runner = new Thread(this, toString());
         runner.setDaemon(daemon);
         runner.start();
     }
-
-    protected abstract void doStop(ServiceStopper stopper) throws Exception;
 
     protected void checkStarted(Command command) throws IOException {
         if (!isStarted()) {
