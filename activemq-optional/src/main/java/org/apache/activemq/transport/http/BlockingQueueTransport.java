@@ -21,6 +21,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.TransportSupport;
+import org.apache.activemq.util.ServiceStopper;
 
 import javax.jms.JMSException;
 
@@ -44,13 +45,13 @@ public class BlockingQueueTransport extends TransportSupport {
         return queue;
     }
 
-    public void start() throws JMSException {
-    }
-
     public void oneway(Command command) throws IOException {
         queue.add(command);
     }
 
-    public void stop() throws Exception {
+    protected void doStart() throws Exception {
     }
+
+    protected void doStop(ServiceStopper stopper) throws Exception {
+    }   
 }
