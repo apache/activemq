@@ -432,6 +432,7 @@ public class Queue implements Destination {
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
                 try {
                     MessageReference r = (MessageReference) iter.next();
+                    r.incrementReferenceCount();
                     try {
                         Message m = r.getMessage();
                         if (m != null) {
