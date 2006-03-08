@@ -32,6 +32,12 @@ public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
         super.setUp();
     }
 
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        // Give the jetty server enough time to shutdown before starting another one
+        Thread.sleep(300);
+    }
+
     public static Test suite() {
         return suite(HttpTransportBrokerTest.class);
     }
