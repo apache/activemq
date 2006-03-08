@@ -1777,6 +1777,48 @@ apr_status_t ow_unmarshal_ActiveMQTempDestination(ow_byte_array *buffer, ow_bit_
 	return APR_SUCCESS;
 }
 
+ow_boolean ow_is_a_ReplayCommand(ow_DataStructure *object) {
+   if( object == 0 )
+      return 0;
+      
+   switch(object->structType) {
+   case OW_REPLAYCOMMAND_TYPE:
+      return 1;
+   }
+   return 0;
+}
+
+
+ow_ReplayCommand *ow_ReplayCommand_create(apr_pool_t *pool) 
+{
+   ow_ReplayCommand *value = apr_pcalloc(pool,sizeof(ow_ReplayCommand));
+   if( value!=0 ) {
+      ((ow_DataStructure*)value)->structType = OW_REPLAYCOMMAND_TYPE;
+   }
+   return value;
+}
+
+
+apr_status_t ow_marshal1_ReplayCommand(ow_bit_buffer *buffer, ow_ReplayCommand *object)
+{
+   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
+   
+	return APR_SUCCESS;
+}
+apr_status_t ow_marshal2_ReplayCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_ReplayCommand *object)
+{
+   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   
+	return APR_SUCCESS;
+}
+
+apr_status_t ow_unmarshal_ReplayCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_ReplayCommand *object, apr_pool_t *pool)
+{
+   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   
+	return APR_SUCCESS;
+}
+
 ow_boolean ow_is_a_ActiveMQDestination(ow_DataStructure *object) {
    if( object == 0 )
       return 0;
@@ -2238,6 +2280,7 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
    case OW_ACTIVEMQTEXTMESSAGE_TYPE:
    case OW_CONTROLCOMMAND_TYPE:
    case OW_ACTIVEMQBYTESMESSAGE_TYPE:
+   case OW_REPLAYCOMMAND_TYPE:
    case OW_BROKERINFO_TYPE:
    case OW_DESTINATIONINFO_TYPE:
    case OW_SHUTDOWNINFO_TYPE:
@@ -2698,6 +2741,7 @@ ow_DataStructure *ow_create_object(ow_byte type, apr_pool_t *pool)
       case OW_WIREFORMATINFO_TYPE: return (ow_DataStructure *)ow_WireFormatInfo_create(pool);
       case OW_ACTIVEMQTEMPTOPIC_TYPE: return (ow_DataStructure *)ow_ActiveMQTempTopic_create(pool);
       case OW_DISCOVERYEVENT_TYPE: return (ow_DataStructure *)ow_DiscoveryEvent_create(pool);
+      case OW_REPLAYCOMMAND_TYPE: return (ow_DataStructure *)ow_ReplayCommand_create(pool);
       case OW_ACTIVEMQTOPIC_TYPE: return (ow_DataStructure *)ow_ActiveMQTopic_create(pool);
       case OW_BROKERINFO_TYPE: return (ow_DataStructure *)ow_BrokerInfo_create(pool);
       case OW_DESTINATIONINFO_TYPE: return (ow_DataStructure *)ow_DestinationInfo_create(pool);
@@ -2754,6 +2798,7 @@ apr_status_t ow_marshal1_object(ow_bit_buffer *buffer, ow_DataStructure *object)
       case OW_WIREFORMATINFO_TYPE: return ow_marshal1_WireFormatInfo(buffer, (ow_WireFormatInfo*)object);
       case OW_ACTIVEMQTEMPTOPIC_TYPE: return ow_marshal1_ActiveMQTempTopic(buffer, (ow_ActiveMQTempTopic*)object);
       case OW_DISCOVERYEVENT_TYPE: return ow_marshal1_DiscoveryEvent(buffer, (ow_DiscoveryEvent*)object);
+      case OW_REPLAYCOMMAND_TYPE: return ow_marshal1_ReplayCommand(buffer, (ow_ReplayCommand*)object);
       case OW_ACTIVEMQTOPIC_TYPE: return ow_marshal1_ActiveMQTopic(buffer, (ow_ActiveMQTopic*)object);
       case OW_BROKERINFO_TYPE: return ow_marshal1_BrokerInfo(buffer, (ow_BrokerInfo*)object);
       case OW_DESTINATIONINFO_TYPE: return ow_marshal1_DestinationInfo(buffer, (ow_DestinationInfo*)object);
@@ -2810,6 +2855,7 @@ apr_status_t ow_marshal2_object(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer
       case OW_WIREFORMATINFO_TYPE: return ow_marshal2_WireFormatInfo(buffer, bitbuffer, (ow_WireFormatInfo*)object);
       case OW_ACTIVEMQTEMPTOPIC_TYPE: return ow_marshal2_ActiveMQTempTopic(buffer, bitbuffer, (ow_ActiveMQTempTopic*)object);
       case OW_DISCOVERYEVENT_TYPE: return ow_marshal2_DiscoveryEvent(buffer, bitbuffer, (ow_DiscoveryEvent*)object);
+      case OW_REPLAYCOMMAND_TYPE: return ow_marshal2_ReplayCommand(buffer, bitbuffer, (ow_ReplayCommand*)object);
       case OW_ACTIVEMQTOPIC_TYPE: return ow_marshal2_ActiveMQTopic(buffer, bitbuffer, (ow_ActiveMQTopic*)object);
       case OW_BROKERINFO_TYPE: return ow_marshal2_BrokerInfo(buffer, bitbuffer, (ow_BrokerInfo*)object);
       case OW_DESTINATIONINFO_TYPE: return ow_marshal2_DestinationInfo(buffer, bitbuffer, (ow_DestinationInfo*)object);
@@ -2866,6 +2912,7 @@ apr_status_t ow_unmarshal_object(ow_byte_array *buffer, ow_bit_buffer *bitbuffer
       case OW_WIREFORMATINFO_TYPE: return ow_unmarshal_WireFormatInfo(buffer, bitbuffer, (ow_WireFormatInfo*)object, pool);
       case OW_ACTIVEMQTEMPTOPIC_TYPE: return ow_unmarshal_ActiveMQTempTopic(buffer, bitbuffer, (ow_ActiveMQTempTopic*)object, pool);
       case OW_DISCOVERYEVENT_TYPE: return ow_unmarshal_DiscoveryEvent(buffer, bitbuffer, (ow_DiscoveryEvent*)object, pool);
+      case OW_REPLAYCOMMAND_TYPE: return ow_unmarshal_ReplayCommand(buffer, bitbuffer, (ow_ReplayCommand*)object, pool);
       case OW_ACTIVEMQTOPIC_TYPE: return ow_unmarshal_ActiveMQTopic(buffer, bitbuffer, (ow_ActiveMQTopic*)object, pool);
       case OW_BROKERINFO_TYPE: return ow_unmarshal_BrokerInfo(buffer, bitbuffer, (ow_BrokerInfo*)object, pool);
       case OW_DESTINATIONINFO_TYPE: return ow_unmarshal_DestinationInfo(buffer, bitbuffer, (ow_DestinationInfo*)object, pool);
