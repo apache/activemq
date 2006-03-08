@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport;
 
+import org.apache.activemq.util.ServiceSupport;
+
 import java.net.URI;
 
 /**
@@ -23,7 +25,7 @@ import java.net.URI;
  * 
  * @version $Revision: 1.1 $
  */
-public abstract class TransportServerSupport implements TransportServer {
+public abstract class TransportServerSupport extends ServiceSupport implements TransportServer {
 
     private URI location;
     private TransportAcceptListener acceptListener;

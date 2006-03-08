@@ -90,6 +90,30 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     public void setBrokerInfo(BrokerInfo brokerInfo) {
     }
 
+    public long getMaxInactivityDuration() {
+        return maxInactivityDuration;
+    }
+
+    public void setMaxInactivityDuration(long maxInactivityDuration) {
+        this.maxInactivityDuration = maxInactivityDuration;
+    }
+
+    public int getMinmumWireFormatVersion() {
+        return minmumWireFormatVersion;
+    }
+
+    public void setMinmumWireFormatVersion(int minmumWireFormatVersion) {
+        this.minmumWireFormatVersion = minmumWireFormatVersion;
+    }
+
+    public boolean isTrace() {
+        return trace;
+    }
+
+    public void setTrace(boolean trace) {
+        this.trace = trace;
+    }
+
     /**
      * pull Sockets from the ServerSocket
      */
@@ -183,32 +207,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
+        super.doStop(stopper);
         if (serverSocket != null) {
             serverSocket.close();
         }
-    }
-
-    public long getMaxInactivityDuration() {
-        return maxInactivityDuration;
-    }
-
-    public void setMaxInactivityDuration(long maxInactivityDuration) {
-        this.maxInactivityDuration = maxInactivityDuration;
-    }
-
-    public int getMinmumWireFormatVersion() {
-        return minmumWireFormatVersion;
-    }
-
-    public void setMinmumWireFormatVersion(int minmumWireFormatVersion) {
-        this.minmumWireFormatVersion = minmumWireFormatVersion;
-    }
-
-    public boolean isTrace() {
-        return trace;
-    }
-
-    public void setTrace(boolean trace) {
-        this.trace = trace;
     }
 }

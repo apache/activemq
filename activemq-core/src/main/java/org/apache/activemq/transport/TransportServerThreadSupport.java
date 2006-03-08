@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.transport;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.util.ServiceStopper;
@@ -34,9 +33,6 @@ import java.net.URI;
 public abstract class TransportServerThreadSupport extends TransportServerSupport implements Runnable {
     private static final Log log = LogFactory.getLog(TransportServerThreadSupport.class);
 
-    private AtomicBoolean closed = new AtomicBoolean(false);
-    private AtomicBoolean started = new AtomicBoolean(false);
-    private AtomicBoolean closing = new AtomicBoolean(false);
     private boolean daemon = true;
     private boolean joinOnStop = true;
     private Thread runner;
@@ -46,48 +42,6 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
 
     public TransportServerThreadSupport(URI location) {
         super(location);
-    }
-
-    public void start() throws Exception {
-        if (started.compareAndSet(false, true)) {
-            doStart();
-        }
-    }
-
-    public void stop() throws Exception {
-        if (closed.compareAndSet(false, true)) {
-            closing.set(true);
-            ServiceStopper stopper = new ServiceStopper();
-            try {
-                doStop(stopper);
-            }
-            catch (Exception e) {
-                stopper.onException(this, e);
-            }
-            if (runner != null && joinOnStop) {
-                runner.join();
-                runner = null;
-            }
-            closed.set(true);
-            started.set(false);
-            closing.set(false);
-            stopper.throwFirstException();
-        }
-    }
-
-    public boolean isStarted() {
-        return started.get();
-    }
-    
-    /**
-     * @return true if the transport server is in the process of closing down.
-     */
-    public boolean isClosing() {
-        return closing.get();
-    }
-
-    public boolean isClosed() {
-        return closed.get();
     }
 
     public boolean isDaemon() {
@@ -113,7 +67,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
         this.joinOnStop = joinOnStop;
     }
 
-    protected void doStart() {
+    protected void doStart() throws Exception {
         log.info("Listening for connections at: " + getLocation());
         runner = new Thread(this, toString());
         runner.setDaemon(daemon);
@@ -121,5 +75,10 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
         runner.start();
     }
 
-    protected abstract void doStop(ServiceStopper stopper) throws Exception;
+    protected void doStop(ServiceStopper stopper) throws Exception {
+        if (runner != null && joinOnStop) {
+            runner.join();
+            runner = null;
+        }
+    }
 }
