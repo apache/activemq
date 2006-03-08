@@ -55,14 +55,14 @@ public class TransportLogger extends TransportFilter {
         if( log.isDebugEnabled() ) {
             log.debug("RECEIVED: "+command);
         }
-        commandListener.onCommand(command);
+        getTransportListener().onCommand(command);
     }
     
     public void onException(IOException error) {
         if( log.isDebugEnabled() ) {
             log.debug("RECEIVED Exception: "+error, error);
         }
-        commandListener.onException(error);
+        getTransportListener().onException(error);
     }
     
     public String toString() {

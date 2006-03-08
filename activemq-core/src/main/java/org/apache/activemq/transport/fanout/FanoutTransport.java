@@ -428,6 +428,10 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
+    public TransportListener getTransportListener() {
+        return transportListener;
+    }
+
     public void setTransportListener(TransportListener commandListener) {
         this.transportListener = commandListener;
     }

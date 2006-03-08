@@ -131,7 +131,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     public void run() {
         log.trace("TCP consumer thread starting");
-        while (!isClosed()) {
+        while (!isStopped()) {
             try {
                 Command command = (Command) wireFormat.unmarshal(dataIn);
                 doConsume(command);

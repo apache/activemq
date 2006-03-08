@@ -90,9 +90,9 @@ public class WireFormatNegotiator extends TransportFilter {
             }
             
             if( !info.isValid() ) {
-                commandListener.onException(new IOException("Remote wire format magic is invalid"));
+                getTransportListener().onException(new IOException("Remote wire format magic is invalid"));
             } else if( info.getVersion() < minimumVersion ) {
-                commandListener.onException(new IOException("Remote wire format ("+info.getVersion()+") is lower the minimum version required ("+minimumVersion+")"));
+                getTransportListener().onException(new IOException("Remote wire format ("+info.getVersion()+") is lower the minimum version required ("+minimumVersion+")"));
             } else if ( info.getVersion()!=wireFormat.getVersion() ) {
                 // Match the remote side.
                 wireFormat.setVersion(info.getVersion());
@@ -115,14 +115,14 @@ public class WireFormatNegotiator extends TransportFilter {
                         ((OpenWireFormat)wireFormat).setTightEncodingEnabled(false);
                     }
                 } catch (IOException e) {
-                    commandListener.onException(e);
+                    getTransportListener().onException(e);
                 }
             }
                 
             readyCountDownLatch.countDown();
             
         }
-        commandListener.onCommand(command);
+        getTransportListener().onCommand(command);
     }
     
     public String toString() {

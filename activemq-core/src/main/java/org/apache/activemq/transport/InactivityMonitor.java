@@ -112,7 +112,7 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     public void onCommand(Command command) {
         inReceive.set(true);
         try {
-            commandListener.onCommand(command);
+            getTransportListener().onCommand(command);
         } finally {
             inReceive.set(false);
             commandReceived.set(true);
@@ -132,6 +132,6 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     
     public void onException(IOException error) {
         Scheduler.cancel(this);
-        commandListener.onException(error);
+        getTransportListener().onException(error);
     }
 }

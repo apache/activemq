@@ -79,7 +79,7 @@ final public class ResponseCorrelator extends TransportFilter {
                 if( debug ) log.debug("Received unexpected response for command id: "+response.getCorrelationId());
             }
         } else {
-            commandListener.onCommand(command);
+            getTransportListener().onCommand(command);
         }
     }
     

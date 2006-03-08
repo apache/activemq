@@ -87,6 +87,10 @@ public class VMTransport implements Transport{
         throw new AssertionError("Unsupported Method");
     }
 
+    public synchronized TransportListener getTransportListener() {
+        return transportListener;
+    }
+
     synchronized public void setTransportListener(TransportListener commandListener){
         this.transportListener=commandListener;
     }

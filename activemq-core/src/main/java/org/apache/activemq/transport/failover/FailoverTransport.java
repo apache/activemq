@@ -443,6 +443,10 @@ public class FailoverTransport implements CompositeTransport {
         return l;
     }
 
+    public TransportListener getTransportListener() {
+        return transportListener;
+    }
+
     public void setTransportListener(TransportListener commandListener) {
         this.transportListener = commandListener;
     }

@@ -33,7 +33,7 @@ import org.apache.activemq.transport.TransportListener;
 public class MockTransport extends DefaultTransportListener implements Transport {
 
     protected Transport next;
-    protected TransportListener commandListener;
+    protected TransportListener transportListener;
 
     public MockTransport(Transport next) {
         this.next = next;
@@ -42,7 +42,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     /**
      */
     synchronized public void setTransportListener(TransportListener channelListener) {
-        this.commandListener = channelListener;
+        this.transportListener = channelListener;
         if (channelListener == null)
             next.setTransportListener(null);
         else
@@ -57,7 +57,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     public void start() throws Exception {
         if( next == null )
             throw new IOException("The next channel has not been set.");
-        if( commandListener == null )
+        if( transportListener == null )
             throw new IOException("The command listener has not been set.");
         next.start();
     }
@@ -70,7 +70,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     }    
 
     synchronized public void onCommand(Command command) {
-        commandListener.onCommand(command);
+        transportListener.onCommand(command);
     }
 
     /**
@@ -83,8 +83,8 @@ public class MockTransport extends DefaultTransportListener implements Transport
     /**
      * @return Returns the packetListener.
      */
-    synchronized public TransportListener getCommandListener() {
-        return commandListener;
+    synchronized public TransportListener getTransportListener() {
+        return transportListener;
     }
     
     synchronized public String toString() {
@@ -104,7 +104,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     }
 
     synchronized public void onException(IOException error) {
-        commandListener.onException(error);
+        transportListener.onException(error);
     }
 
     synchronized public Object narrow(Class target) {
