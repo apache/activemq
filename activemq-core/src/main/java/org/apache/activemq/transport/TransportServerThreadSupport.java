@@ -50,11 +50,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
 
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
-            log.info("Listening for connections at: " + getLocation());
-            runner = new Thread(this, toString());
-            runner.setDaemon(daemon);
-            runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);
-            runner.start();
+            doStart();
         }
     }
 
@@ -115,6 +111,14 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
      */
     public void setJoinOnStop(boolean joinOnStop) {
         this.joinOnStop = joinOnStop;
+    }
+
+    protected void doStart() {
+        log.info("Listening for connections at: " + getLocation());
+        runner = new Thread(this, toString());
+        runner.setDaemon(daemon);
+        runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);
+        runner.start();
     }
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
