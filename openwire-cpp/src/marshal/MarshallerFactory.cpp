@@ -59,6 +59,7 @@
 #include "marshal/WireFormatInfoMarshaller.hpp"
 #include "marshal/ActiveMQTempTopicMarshaller.hpp"
 #include "marshal/DiscoveryEventMarshaller.hpp"
+#include "marshal/ReplayCommandMarshaller.hpp"
 #include "marshal/ActiveMQTopicMarshaller.hpp"
 #include "marshal/BrokerInfoMarshaller.hpp"
 #include "marshal/DestinationInfoMarshaller.hpp"
@@ -115,6 +116,7 @@ void MarshallerFactory::configure(OpenWireFormat& format)
     format.addMarshaller(new WireFormatInfoMarshaller());
     format.addMarshaller(new ActiveMQTempTopicMarshaller());
     format.addMarshaller(new DiscoveryEventMarshaller());
+    format.addMarshaller(new ReplayCommandMarshaller());
     format.addMarshaller(new ActiveMQTopicMarshaller());
     format.addMarshaller(new BrokerInfoMarshaller());
     format.addMarshaller(new DestinationInfoMarshaller());
