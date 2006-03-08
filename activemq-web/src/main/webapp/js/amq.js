@@ -1,9 +1,18 @@
 
 
-// AMQ  handler
+// AMQ Ajax handler
+// This class provides the main API for using the Ajax features of AMQ. It 
+// allows JMS messages to be sent and received from javascript when used 
+// with the org.apache.activemq.web.MessageListenerServlet
+//
 var amq = 
 {
+  // The URI of the MessageListenerServlet
+  uri: '/amq',
+
+  // Polling. Set to true (default) if waiting poll for messages is needed
   poll: true,
+
   _first: true,
   _pollEvent: function(first) {},
   _handlers: new Array(),
@@ -73,17 +82,20 @@ var amq =
     if (amq._messages==0)
     {
       if (amq.poll)
-        new Ajax.Request('/amq', { method: 'get', onSuccess: amq._pollHandler }); 
+        new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler }); 
     }
     else
     {
       var body = amq._messageQueue+'&poll='+amq.poll;
       amq._messageQueue='';
       amq._messages=0;
-      new Ajax.Request('/amq', { method: 'post', onSuccess: amq._pollHandler, postBody: body }); 
+      new Ajax.Request(amq.uri, { method: 'post', onSuccess: amq._pollHandler, postBody: body }); 
     }
   },
   
+  // Add a function that gets called on every poll response, after all received
+  // messages have been handled.  The poll handler is past a boolean that indicates
+  // if this is the first poll for the page.
   addPollHandler : function(func)
   {
     var old = amq._pollEvent;
@@ -94,6 +106,8 @@ var amq =
     }
   },
   
+  // Send a JMS message to a destination (eg topic://MY.TOPIC).  Message should be xml or encoded
+  // xml content.
   sendMessage : function(destination,message)
   {
    amq._sendMessage(destination,message,'send');
@@ -107,9 +121,10 @@ var amq =
   },
   
   // remove Listener from channel or topic.  
-  removeListener : function(destination)
+  removeListener : function(id,destination)
   {   
-    amq._sendMessage(destination,'','unlisten');
+    amq._handlers[id]=null;
+    amq._sendMessage(destination,id,'unlisten');
   },
   
   _sendMessage : function(destination,message,type)
@@ -121,16 +136,25 @@ var amq =
     }
     else
     {
-      new Ajax.Request('/amq', { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type});
+      new Ajax.Request(amq.uri, { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type});
     }
   },
   
   _startPolling : function()
   {
     if (amq.poll)
-      new Ajax.Request('/amq', { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
+      new Ajax.Request(amq.uri, { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
   }
 };
 
 Behaviour.addLoadEvent(amq._startPolling);  
 
+function getKeyCode(ev)
+{
+    var keyc;
+    if (window.event)
+        keyc=window.event.keyCode;
+    else
+        keyc=ev.keyCode;
+    return keyc;
+}
