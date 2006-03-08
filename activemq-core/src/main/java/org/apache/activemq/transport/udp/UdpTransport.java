@@ -28,12 +28,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.channels.AsynchronousCloseException;
@@ -58,6 +56,10 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private boolean trace = false;
     private boolean useLocalHost = true;
     private int port;
+    private CommandProcessor commandProcessor = new CommandProcessor() {
+        public void process(Command command, SocketAddress address) {
+            doConsume(command);
+        }};
 
     protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
@@ -72,16 +74,23 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this(wireFormat);
         this.targetAddress = socketAddress;
     }
-
+    
     /**
      * A one way asynchronous send
      */
     public void oneway(Command command) throws IOException {
+        oneway(command, targetAddress);
+    }
+
+    /**
+     * A one way asynchronous send to a given address
+     */
+    public void oneway(Command command, InetSocketAddress address) throws IOException {
         if (log.isDebugEnabled()) {
             log.debug("Sending oneway from port: " + port + " to target: " + targetAddress);
         }
         checkStarted(command);
-        commandChannel.write(command);
+        commandChannel.write(command, address);
     }
 
     /**
@@ -96,10 +105,9 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     public void run() {
         log.trace("Consumer thread starting for: " + toString());
-        while (!isClosed()) {
+        while (!isStopped()) {
             try {
-                Command command = commandChannel.read();
-                doConsume(command);
+                commandChannel.read(commandProcessor);
             }
             /*
              * catch (SocketTimeoutException e) { } catch
@@ -209,7 +217,14 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     
     // Implementation methods
     // -------------------------------------------------------------------------
+    protected CommandProcessor getCommandProcessor() {
+        return commandProcessor;
+    }
 
+    protected void setCommandProcessor(CommandProcessor commandProcessor) {
+        this.commandProcessor = commandProcessor;
+    }
+    
     /**
      * Creates an address from the given URI
      */
@@ -257,4 +272,5 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
             channel.close();
         }
     }
+
 }
