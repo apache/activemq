@@ -17,7 +17,6 @@
 package org.apache.activemq.usecases;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.broker.BrokerService;
 
 import javax.jms.JMSException;
@@ -32,6 +31,7 @@ public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrok
     protected ActiveMQConnectionFactory createReceiverConnectionFactory() throws JMSException {
         try {
             receiveBroker = new BrokerService();
+            receiveBroker.setUseJmx(false);
             receiveBroker.setPersistent(false);
             receiveBroker.addConnector("tcp://localhost:62002");
             receiveBroker.addNetworkConnector("static:failover:tcp://localhost:62001");
@@ -48,6 +48,7 @@ public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrok
     protected ActiveMQConnectionFactory createSenderConnectionFactory() throws JMSException {
         try {
             sendBroker = new BrokerService();
+            sendBroker.setUseJmx(false);
             sendBroker.setPersistent(false);
             sendBroker.addConnector("tcp://localhost:62001");
             sendBroker.addNetworkConnector("static:failover:tcp://localhost:62002");
