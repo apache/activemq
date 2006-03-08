@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -87,10 +88,12 @@ public class CommandChannel implements Service {
         bufferPool.stop();
     }
 
-    public Command read() throws IOException {
+    public void read(CommandProcessor processor) throws IOException {
+        Command answer = null;
+        SocketAddress address = null;
         synchronized (readLock) {
             readBuffer.clear();
-            SocketAddress address = channel.receive(readBuffer);
+            address = channel.receive(readBuffer);
             readBuffer.flip();
 
             if (log.isDebugEnabled()) {
@@ -122,11 +125,18 @@ public class CommandChannel implements Service {
                 header.setCommand(command);
             }
 
-            return readStack.read(header);
+            answer = readStack.read(header);
+        }
+        if (answer != null) {
+            processor.process(answer, address);
         }
     }
 
     public void write(Command command) throws IOException {
+        write(command, targetAddress);
+    }
+        
+    public void write(Command command, SocketAddress address) throws IOException {
         synchronized (writeLock) {
             header.incrementCounter();
             int size = wireFormat.tightMarshal1(command, bs);
@@ -146,7 +156,7 @@ public class CommandChannel implements Service {
                 byte[] data = buffer.toByteArray();
                 writeBuffer.put(data);
 
-                sendWriteBuffer();
+                sendWriteBuffer(address);
             }
             else {
                 header.setPartial(true);
@@ -171,15 +181,15 @@ public class CommandChannel implements Service {
                     // now the data
                     writeBuffer.put(data, offset, chunkSize);
                     offset += chunkSize;
-                    sendWriteBuffer();
+                    sendWriteBuffer(address);
                 }
             }
         }
     }
 
-    protected void sendWriteBuffer() throws IOException {
+    protected void sendWriteBuffer(SocketAddress address) throws IOException {
         writeBuffer.flip();
-        channel.send(writeBuffer, targetAddress);
+        channel.send(writeBuffer, address);
     }
 
     // Properties
@@ -214,5 +224,6 @@ public class CommandChannel implements Service {
     public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller) {
         this.headerMarshaller = headerMarshaller;
     }
+
 
 }
