@@ -31,6 +31,13 @@
             </subscriptionRecoveryPolicy>
           </policyEntry>
 
+          <!-- lets force old messages to be discarded for slow consumers -->
+          <policyEntry topic="Prices.>">
+            <pendingMessageLimitStrategy>
+              <constantPendingMessageLimitStrategy value="0"/>
+            </pendingMessageLimitStrategy>
+          </policyEntry>
+
       </policyEntries></policyMap>
     </destinationPolicy>
   
