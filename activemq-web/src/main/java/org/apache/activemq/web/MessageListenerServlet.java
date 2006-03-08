@@ -186,6 +186,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         else
         {
             response.setContentType("text/xml");
+            response.setHeader("Cache-Control", "no-cache");
             response.getWriter().print("<ajax-response></ajax-response>");
         }
         // System.err.println("==");
@@ -270,6 +271,7 @@ public class MessageListenerServlet extends MessageServletSupport {
 
             // prepare the responds
             response.setContentType("text/xml");
+            response.setHeader("Cache-Control", "no-cache");
 
             StringWriter swriter = new StringWriter();
             PrintWriter writer = new PrintWriter(swriter);
