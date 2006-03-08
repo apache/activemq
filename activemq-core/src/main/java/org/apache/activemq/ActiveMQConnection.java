@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.IllegalStateException;
@@ -1468,10 +1469,23 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
     }
 
 
+    /**
+     * Creates a persistent output stream; individual messages will be written to disk/database by the broker
+     */
     public OutputStream createOutputStream(Destination dest) throws JMSException {
         return createOutputStream(dest, null, ActiveMQMessage.DEFAULT_DELIVERY_MODE, ActiveMQMessage.DEFAULT_PRIORITY, ActiveMQMessage.DEFAULT_TIME_TO_LIVE);
     }
 
+    /**
+     * Creates a non persistent output stream; messages will not be written to disk
+     */
+    public OutputStream createNonPersistentOutputStream(Destination dest) throws JMSException {
+        return createOutputStream(dest, null, DeliveryMode.NON_PERSISTENT, ActiveMQMessage.DEFAULT_PRIORITY, ActiveMQMessage.DEFAULT_TIME_TO_LIVE);
+    }
+
+    /**
+     * Creates an output stream allowing full control over the delivery mode, the priority and time to live of the messaages and the properties added to messages on the stream.
+     */
     public OutputStream createOutputStream(Destination dest, Map streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
