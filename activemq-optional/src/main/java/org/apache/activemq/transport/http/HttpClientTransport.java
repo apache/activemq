@@ -94,7 +94,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         log.trace("HTTP GET consumer thread starting: " + this);
         HttpClient httpClient = getReceiveHttpClient();
         URI remoteUrl = getRemoteUrl();
-        while (!isClosed()) {
+        while (!isStopped()) {
 
             GetMethod httpMethod = new GetMethod(remoteUrl.toString());
             configureMethod(httpMethod);

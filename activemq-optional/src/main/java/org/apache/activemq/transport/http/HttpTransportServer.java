@@ -20,6 +20,7 @@ import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
+import org.apache.activemq.util.ServiceStopper;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
@@ -46,7 +47,33 @@ public class HttpTransportServer extends TransportServerSupport {
         this.bindAddress = uri;
     }
 
-    public void start() throws Exception {
+    public void setBrokerInfo(BrokerInfo brokerInfo) {
+    }
+
+    // Properties
+    // -------------------------------------------------------------------------
+    public TextWireFormat getWireFormat() {
+        if (wireFormat == null) {
+            wireFormat = createWireFormat();
+        }
+        return wireFormat;
+    }
+
+    public void setWireFormat(TextWireFormat wireFormat) {
+        this.wireFormat = wireFormat;
+    }
+
+    // Implementation methods
+    // -------------------------------------------------------------------------
+    protected TextWireFormat createWireFormat() {
+        return new XStreamWireFormat();
+    }
+
+    protected void setConnector(Connector connector) {
+        this.connector = connector;
+    }
+    
+    protected void doStart() throws Exception {
         server = new Server();
         if (connector==null)
             connector = new SocketConnector();
@@ -81,7 +108,7 @@ public class HttpTransportServer extends TransportServerSupport {
         server.start();
     }
 
-    public synchronized void stop() throws Exception {
+    protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;
         server = null;
         if (temp != null) {
@@ -89,29 +116,4 @@ public class HttpTransportServer extends TransportServerSupport {
         }
     }
 
-    // Properties
-    // -------------------------------------------------------------------------
-    public TextWireFormat getWireFormat() {
-        if (wireFormat == null) {
-            wireFormat = createWireFormat();
-        }
-        return wireFormat;
-    }
-
-    public void setWireFormat(TextWireFormat wireFormat) {
-        this.wireFormat = wireFormat;
-    }
-
-    // Implementation methods
-    // -------------------------------------------------------------------------
-    protected TextWireFormat createWireFormat() {
-        return new XStreamWireFormat();
-    }
-
-    protected void setConnector(Connector connector) {
-        this.connector = connector;
-    }
-
-    public void setBrokerInfo(BrokerInfo brokerInfo) {
-    }
 }

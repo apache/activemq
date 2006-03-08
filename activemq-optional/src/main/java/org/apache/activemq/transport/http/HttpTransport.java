@@ -75,7 +75,7 @@ public class HttpTransport extends HttpTransportSupport {
     public void run() {
         log.trace("HTTP GET consumer thread starting for transport: " + this);
         URI remoteUrl = getRemoteUrl();
-        while (!isClosed()) {
+        while (!isStopped()) {
             try {
                 HttpURLConnection connection = getReceiveConnection();
                 int answer = connection.getResponseCode();
@@ -100,7 +100,7 @@ public class HttpTransport extends HttpTransportSupport {
                 }
             }
             catch (Exception e) {
-                if (!isClosed()) {
+                if (!isStopped()) {
                     log.warn("Failed to perform GET on: " + remoteUrl + " due to: " + e, e);
                 }
                 else {
