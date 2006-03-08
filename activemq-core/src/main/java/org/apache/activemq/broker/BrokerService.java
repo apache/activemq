@@ -80,7 +80,7 @@ public class BrokerService implements Service {
 
     private static final Log log = LogFactory.getLog(BrokerService.class);
 
-    private boolean useJmx = false;
+    private boolean useJmx = true;
     private boolean persistent = true;
     private boolean populateJMSXUserID = false;
     private boolean useShutdownHook = true;
