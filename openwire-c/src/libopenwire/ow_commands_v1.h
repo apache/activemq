@@ -548,6 +548,16 @@ typedef struct ow_ActiveMQTempDestination {
 ow_ActiveMQTempDestination *ow_ActiveMQTempDestination_create(apr_pool_t *pool);
 ow_boolean ow_is_a_ActiveMQTempDestination(ow_DataStructure *object);
 
+typedef struct ow_ReplayCommand {
+
+   ow_byte structType;
+   ow_short commandId;
+   ow_boolean responseRequired;
+
+} ow_ReplayCommand;
+ow_ReplayCommand *ow_ReplayCommand_create(apr_pool_t *pool);
+ow_boolean ow_is_a_ReplayCommand(ow_DataStructure *object);
+
 typedef struct ow_ActiveMQDestination {
 
    ow_byte structType;
