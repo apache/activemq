@@ -17,6 +17,7 @@
 package org.apache.activemq.transport;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.util.ServiceStopper;
 
@@ -86,7 +87,7 @@ public abstract class TransportThreadSupport extends TransportSupport implements
     protected void checkStarted(Command command) throws IOException {
         if (!isStarted()) {
             // we might try to shut down the transport before it was ever started in some test cases
-            if (!(command instanceof ShutdownInfo)) {
+            if (!(command instanceof ShutdownInfo || command instanceof RemoveInfo)) {
                 throw new IOException("The transport " + this + " of type: " + getClass().getName() + " is not running.");
             }
         }
