@@ -167,7 +167,7 @@ public class ManagedRegionBroker extends RegionBroker{
     public void registerSubscription(ConnectionContext context,Subscription sub){
         SubscriptionKey key = new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
         Hashtable map=brokerObjectName.getKeyPropertyList();
-        String name = key.toString() + ":" + sub.getConsumerInfo().toString();
+        String name = key.toString() + ":" + sub.getConsumerInfo().getConsumerId().toString();
         try{
         	
         	ObjectName objectName = new ObjectName(
