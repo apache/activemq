@@ -112,6 +112,9 @@ public class ManagedRegionBroker extends RegionBroker{
             try {
                 mbeanServer.unregisterMBean(name);
             }
+            catch (InstanceNotFoundException e) {
+                log.warn("The MBean: " + name + " is no longer registered with JMX");
+            }
             catch (Exception e) {
                 stopper.onException(this, e);
             }
