@@ -31,7 +31,7 @@ namespace ActiveMQ.OpenWire
         [Test]
 		public void TestBooleanMarshallingUsingAllTrue()
 		{
-			TestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAllTrue));
+			DoTestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAllTrue));
 		}
 		public bool GetBooleanValueAllTrue(int index, int count)
 		{
@@ -41,7 +41,7 @@ namespace ActiveMQ.OpenWire
         [Test]
 		public void TestBooleanMarshallingUsingAllFalse()
 		{
-			TestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAllFalse));
+			DoTestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAllFalse));
 		}
 		public bool GetBooleanValueAllFalse(int index, int count)
 		{
@@ -51,7 +51,7 @@ namespace ActiveMQ.OpenWire
         [Test]
 		public void TestBooleanMarshallingUsingAlternateTrueFalse()
 		{
-			TestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAlternateTrueFalse));
+			DoTestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAlternateTrueFalse));
 		}
 		public bool GetBooleanValueAlternateTrueFalse(int index, int count)
 		{
@@ -61,14 +61,14 @@ namespace ActiveMQ.OpenWire
 		[Test]
 		public void TestBooleanMarshallingUsingAlternateFalseTrue()
 		{
-			TestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAlternateFalseTrue));
+			DoTestBooleanStream(numberOfBytes, new GetBooleanValueDelegate(GetBooleanValueAlternateFalseTrue));
 		}
 		public bool GetBooleanValueAlternateFalseTrue(int index, int count)
 		{
 			return (index & 1) != 0;
 		}
 		
-		protected void TestBooleanStream(int numberOfBytes, GetBooleanValueDelegate valueDelegate)
+		protected void DoTestBooleanStream(int numberOfBytes, GetBooleanValueDelegate valueDelegate)
 		{
 			for (int i = 1017; i < numberOfBytes; i++)
 			{

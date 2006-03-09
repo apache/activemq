@@ -14,15 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-
-
-
-/// <summary>
-/// Summary description for TemporaryTopic.
-/// </summary>
 namespace NMS
 {
+	/// <summary>
+	/// Summary description for TemporaryTopic.
+	/// </summary>
 	public interface ITemporaryTopic : IDestination
 	{
 	}

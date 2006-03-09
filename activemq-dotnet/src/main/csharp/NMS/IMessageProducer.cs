@@ -14,17 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-using System;
-
-
-
-/// <summary>
-/// An object capable of sending messages to some destination
-/// </summary>
 namespace NMS
 {
-	public interface IMessageProducer : IDisposable
+	
+	/// <summary>
+	/// An object capable of sending messages to some destination
+	/// </summary>
+	public interface IMessageProducer : System.IDisposable
 	{
 		
         /// <summary>

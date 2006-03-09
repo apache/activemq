@@ -16,14 +16,15 @@
  */
 namespace NMS
 {
-	
 	/// <summary>
-	/// Summary description for Destination.
+	/// Represents a connection failure.
 	/// </summary>
-	public interface IDestination
+	public class NMSConnectionException : NMSException
 	{
+		public NMSConnectionException(string message) : base(message)
+		{
+		}
 	}
-	
 }
 
 

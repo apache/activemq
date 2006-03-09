@@ -15,12 +15,14 @@
  * limitations under the License.
  */
 using System.IO;
+using System;
 
 namespace ActiveMQ.OpenWire
 {
 	/// <summary>
 	/// Support class that switches from one endian to the other.
 	/// </summary>
+	[CLSCompliant(false)]
 	public class EndianSupport
 	{
 		
@@ -35,19 +37,11 @@ namespace ActiveMQ.OpenWire
         public static short SwitchEndian(short x)
         {
 			return (short) (
-				(((short)( (byte)(x)       )) << 8 ) |
-				(((short)( (byte)(x >> 8)  )) )
-				);
-        }
-		
-        public static ushort SwitchEndian(ushort x)
-        {
-			return (ushort) (
 				(((ushort)( (byte)(x)       )) << 8 ) |
 				(((ushort)( (byte)(x >> 8)  )) )
 				);
         }
-		
+				
         public static int SwitchEndian(int x)
         {
 			return
@@ -56,16 +50,7 @@ namespace ActiveMQ.OpenWire
 				(((int)( (byte)(x >> 16) )) << 8  ) |
 				(((int)( (byte)(x >> 24) )) );
         }
-
-        public static uint SwitchEndian(uint x)
-        {
-			return
-				(((uint)( (byte)(x     )  )) << 24 ) |
-				(((uint)( (byte)(x >> 8)  )) << 16 ) |
-				(((uint)( (byte)(x >> 16) )) << 8  ) |
-				(((uint)( (byte)(x >> 24) )) );
-        }
-        
+		
         public static long SwitchEndian(long x)
         {
 			return
@@ -79,6 +64,23 @@ namespace ActiveMQ.OpenWire
 				(((long)( (byte)(x >> 56) )) );
         }
 		
+        public static ushort SwitchEndian(ushort x)
+        {
+			return (ushort) (
+				(((ushort)( (byte)(x)       )) << 8 ) |
+				(((ushort)( (byte)(x >> 8)  )) )
+				);
+        }
+		
+        public static uint SwitchEndian(uint x)
+        {
+			return
+				(((uint)( (byte)(x     )  )) << 24 ) |
+				(((uint)( (byte)(x >> 8)  )) << 16 ) |
+				(((uint)( (byte)(x >> 16) )) << 8  ) |
+				(((uint)( (byte)(x >> 24) )) );
+        }
+        
         public static ulong SwitchEndian(ulong x)
         {
 			return
@@ -91,5 +93,7 @@ namespace ActiveMQ.OpenWire
 				(((ulong)( (byte)(x >> 48) )) << 8  ) |
 				(((ulong)( (byte)(x >> 56) )) );
         }
+		
 	}
 }
+

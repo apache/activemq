@@ -14,15 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-
-
-
-/// <summary>
-/// Summary description for ITemporaryQueue.
-/// </summary>
 namespace NMS
 {
+	/// <summary>
+	/// Summary description for ITemporaryQueue.
+	/// </summary>
 	public interface ITemporaryQueue : IDestination
 	{
 	}

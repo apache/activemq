@@ -14,15 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-
-
-
-/// <summary>
-/// Represents a text based message
-/// </summary>
 namespace NMS
 {
+	/// <summary>
+	/// Represents a text based message
+	/// </summary>
 	public interface ITextMessage : IMessage
     {
         

@@ -14,24 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-using System;
-
-
 namespace NMS
 {
 	public enum AcknowledgementMode
     {
         Unknown, AutoAcknowledge, ClientAcknowledge, Transactional
     }
-}
-
-/// <summary>
-/// Represents a connection with a message broker
-/// </summary>
-namespace NMS
-{
-	public interface IConnection : IDisposable, IStartable, IStoppable
+	
+	/// <summary>
+	/// Represents a connection with a message broker
+	/// </summary>
+	public interface IConnection : System.IDisposable, IStartable, IStoppable
     {
         
         /// <summary>
@@ -53,7 +46,7 @@ namespace NMS
             set;
         }
         
-        String ClientId
+        string ClientId
         {
             get;
             set;

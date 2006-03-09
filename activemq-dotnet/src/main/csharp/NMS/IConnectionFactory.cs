@@ -14,15 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-
-
-
-/// <summary>
-/// A Factory of IConnection objects
-/// </summary>
 namespace NMS
 {
+	
+	/// <summary>
+	/// A Factory of IConnection objects
+	/// </summary>
 	public interface IConnectionFactory
 	{
 		

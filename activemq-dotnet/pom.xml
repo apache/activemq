@@ -40,7 +40,7 @@
           <compilerArguments>
             <doc>true</doc>
             <!--  example of ignoring warnings -->
-            <!-- <nowarn>1591</nowarn> -->
+            <nowarn>1591</nowarn>
           </compilerArguments>
 
           <includes>
