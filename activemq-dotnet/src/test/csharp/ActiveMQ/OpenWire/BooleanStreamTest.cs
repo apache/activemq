@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
 using NUnit.Framework;
 using System;
 using System.IO;

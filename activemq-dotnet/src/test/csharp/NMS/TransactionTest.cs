@@ -19,7 +19,8 @@ using NUnit.Framework;
 using System;
 using System.Collections;
 
-namespace JMS
+
+namespace NMS
 {
 	[TestFixture]
     public class TransactionTest : JMSTestSupport
@@ -43,7 +44,7 @@ namespace JMS
 			base.TearDown();
         }
 		
-                
+		
         [Test]
         public void TestSendRollback()
         {
@@ -248,4 +249,5 @@ namespace JMS
         
     }
 }
+
 

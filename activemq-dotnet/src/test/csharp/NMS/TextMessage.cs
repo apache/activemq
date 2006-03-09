@@ -19,11 +19,14 @@ using NUnit.Framework;
 using System;
 
 
-namespace JMS
+
+namespace NMS
 {
-	[TestFixture]
-    public class BadConsumeTest : JMSTestSupport
+	[ TestFixture ]
+    public class TextMessage : JMSTestSupport
     {
+        string expected = "Hello World!";
+        
 		[SetUp]
         override public void SetUp()
         {
@@ -36,21 +39,28 @@ namespace JMS
 			base.TearDown();
         }
 		
-        [Test]
-        public void TestBadConsumeOperationToTestExceptions()
+        [ Test ]
+        public override void SendAndSyncReceive()
         {
-			try
-			{
-				IMessageConsumer consumer = session.CreateConsumer(null);
-				Console.WriteLine("Created consumer: " + consumer);
-				Assert.Fail("Should  have thrown an exception!");
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine("Caught expected exception: " + e);
-				Console.WriteLine("Stack: " + e.StackTrace);
-			}
+            base.SendAndSyncReceive();
         }
+        
+        protected override IMessage CreateMessage()
+        {
+            IMessage request = session.CreateTextMessage(expected);
+            return request;
+        }
+        
+        protected override void AssertValidMessage(IMessage message)
+        {
+            ITextMessage textMessage = (ITextMessage) message;
+            String text = textMessage.Text;
+            Console.WriteLine("Received message with text: " + text);
+            Assert.AreEqual(expected, text, "the message text");
+        }
+        
     }
 }
+
+
 

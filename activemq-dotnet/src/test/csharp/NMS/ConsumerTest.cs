@@ -18,7 +18,8 @@ using NMS;
 using NUnit.Framework;
 
 
-namespace JMS
+
+namespace NMS
 {
 	[TestFixture]
     public class ConsumerTest : JMSTestSupport
@@ -62,7 +63,7 @@ namespace JMS
             message.Properties["color"] =  "red";
             producer.Send(message);
             
-            IMessage m = consumer.Receive(receiveTimeout );
+            IMessage m = consumer.Receive(receiveTimeout);
             Assert.IsNotNull(m);
             Assert.AreEqual("1st", ((ITextMessage)m).Text);
 			
@@ -87,5 +88,6 @@ namespace JMS
 		
     }
 }
+
 
 

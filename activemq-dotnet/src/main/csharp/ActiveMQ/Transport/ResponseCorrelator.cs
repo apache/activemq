@@ -20,7 +20,6 @@ using System.Collections;
 
 using ActiveMQ.Commands;
 using ActiveMQ.Transport;
-using JMS;
 
 namespace ActiveMQ.Transport
 {
