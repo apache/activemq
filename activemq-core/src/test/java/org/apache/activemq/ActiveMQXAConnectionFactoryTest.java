@@ -20,7 +20,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import javax.jms.*;
-import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
@@ -29,6 +28,13 @@ import org.apache.activemq.broker.TransportConnector;
 
 public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     
+    public void testCopy() throws URISyntaxException, JMSException {
+        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?");
+        ActiveMQConnectionFactory copy = cf.copy();
+        assertTrue("Should be an ActiveMQXAConnectionFactory", copy instanceof ActiveMQXAConnectionFactory);
+    }
+    
+        
     public void testUseURIToSetOptionsOnConnectionFactory() throws URISyntaxException, JMSException {
         ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?jms.useAsyncSend=true");
         assertTrue(cf.isUseAsyncSend());
