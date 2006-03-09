@@ -13,6 +13,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import javax.jms.InvalidSelectorException;
+
 /**
  * @version $Revision: 1.5 $
  */
@@ -42,6 +44,18 @@ public interface SubscriptionViewMBean{
      */
     public String getDestinationName();
 
+
+    /**
+     * @return the JMS selector on the current subscription
+     */
+    public String getSelector();
+    
+    /**
+     * Attempts to change the current active selector on the subscription.
+     * This operation is not supported for persistent topics.
+     */
+    public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException;
+    
     /**
      * @return true if the destination is a Queue
      */

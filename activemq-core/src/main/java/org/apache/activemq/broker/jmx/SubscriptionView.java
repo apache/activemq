@@ -20,6 +20,8 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 
+import javax.jms.InvalidSelectorException;
+
 
 
 /**
@@ -91,7 +93,22 @@ public class SubscriptionView implements SubscriptionViewMBean {
             return dest.getPhysicalName();
         }
         return "NOTSET";
-       
+    }
+
+    public String getSelector() {
+        if (subscription != null) {
+            return subscription.getSelector();
+        }
+        return null;
+    }
+
+    public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException {
+        if (subscription != null) {
+            subscription.setSelector(selector);
+        }
+        else {
+            throw new UnsupportedOperationException("No subscription object");
+        }
     }
 
     /**

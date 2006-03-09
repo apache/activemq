@@ -45,7 +45,7 @@ abstract public class AbstractSubscription implements Subscription {
     protected ConnectionContext context;
     protected ConsumerInfo info;
     final protected DestinationFilter destinationFilter;
-    final protected BooleanExpression selector;
+    private BooleanExpression selectorExpression;
    
     final protected CopyOnWriteArrayList destinations = new CopyOnWriteArrayList();
 
@@ -54,7 +54,7 @@ abstract public class AbstractSubscription implements Subscription {
         this.context = context;
         this.info = info;
         this.destinationFilter = DestinationFilter.parseFilter(info.getDestination());
-        this.selector = parseSelector(info);
+        this.selectorExpression = parseSelector(info);
     }
     
     static private BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {
@@ -86,7 +86,7 @@ abstract public class AbstractSubscription implements Subscription {
                 return false;
         }
         try {
-            return (selector == null || selector.matches(context)) && this.context.isAllowedToConsume(node);
+            return (selectorExpression == null || selectorExpression.matches(context)) && this.context.isAllowedToConsume(node);
         } catch (JMSException e) {
             log.info("Selector failed to evaluate: " + e.getMessage(), e);
             return false;
@@ -124,7 +124,20 @@ abstract public class AbstractSubscription implements Subscription {
         return info;
     }
 
-    public BooleanExpression getSelector() {
-        return selector;
+    public BooleanExpression getSelectorExpression() {
+        return selectorExpression;
+    }
+    
+    public String getSelector() {
+        return info.getSelector();
+    }
+    
+    public void setSelector(String selector) throws InvalidSelectorException {
+        ConsumerInfo copy = info.copy();
+        copy.setSelector(selector);
+        BooleanExpression newSelector = parseSelector(copy);
+        // its valid so lets actually update it now
+        info.setSelector(selector);
+        this.selectorExpression = newSelector;
     }
 }
