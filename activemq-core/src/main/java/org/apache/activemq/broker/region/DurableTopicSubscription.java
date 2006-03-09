@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-import java.util.Iterator;
-
-import javax.jms.InvalidSelectorException;
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -29,7 +26,10 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.SubscriptionKey;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import javax.jms.InvalidSelectorException;
+
+import java.io.IOException;
+import java.util.Iterator;
 
 public class DurableTopicSubscription extends PrefetchSubscription {
     
@@ -131,6 +131,9 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         return 0;
     }
     
+    public void setSelector(String selector) throws InvalidSelectorException {
+        throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
+    }
 
     protected boolean canDispatch(MessageReference node) {
         return active;

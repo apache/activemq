@@ -25,6 +25,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
+import javax.jms.InvalidSelectorException;
+
 /**
  * @version $Revision: 1.5 $
  */
@@ -125,4 +127,14 @@ public interface Subscription {
      */
     long getDequeueCounter();
 
+    /**
+     * @return the JMS selector on the current subscription
+     */
+    public String getSelector();
+    
+    /**
+     * Attempts to change the current active selector on the subscription.
+     * This operation is not supported for persistent topics.
+     */
+    public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException;
 }

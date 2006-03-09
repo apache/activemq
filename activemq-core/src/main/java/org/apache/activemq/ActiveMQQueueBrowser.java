@@ -90,7 +90,7 @@ public class ActiveMQQueueBrowser implements
     /**
      * @param session
      * @param originalDestination
-     * @param selector
+     * @param selectorExpression
      * @param cnum
      * @return
      * @throws JMSException
