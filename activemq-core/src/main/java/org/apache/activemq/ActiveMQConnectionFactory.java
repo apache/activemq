@@ -153,7 +153,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return Returns the Connection.
      */
     public Connection createConnection() throws JMSException {
-        return createActiveMQConnection(userName, password);
+        return createActiveMQConnection();
     }
 
     /**
@@ -168,7 +168,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @throws JMSException
      */
     public QueueConnection createQueueConnection() throws JMSException {
-        return createActiveMQConnection(userName, password);
+        return createActiveMQConnection();
     }
 
     /**
@@ -183,7 +183,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @throws JMSException
      */
     public TopicConnection createTopicConnection() throws JMSException {
-        return createActiveMQConnection(userName, password);
+        return createActiveMQConnection();
     }
 
     /**
@@ -204,17 +204,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     //
     // /////////////////////////////////////////////
 
+
+    protected ActiveMQConnection createActiveMQConnection() throws JMSException {
+        return createActiveMQConnection(userName, password);
+    }
+
     /**
      * @return Returns the Connection.
      */
-    private ActiveMQConnection createActiveMQConnection(String userName, String password) throws JMSException {
+    protected ActiveMQConnection createActiveMQConnection(String userName, String password) throws JMSException {
         if (brokerURL == null) {
             throw new ConfigurationException("brokerURL not set.");
         }
         Transport transport;
         try {
             transport = TransportFactory.connect(brokerURL,DEFAULT_CONNECTION_EXECUTOR);
-            ActiveMQConnection connection = new ActiveMQConnection(transport, factoryStats);
+            ActiveMQConnection connection = createActiveMQConnection(transport, factoryStats);
 
             connection.setUserName(userName);
             connection.setPassword(password);
@@ -243,6 +248,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         catch (Exception e) {
             throw JMSExceptionSupport.create("Could not connect to broker URL: " + brokerURL + ". Reason: " + e, e);
         }
+    }
+
+    protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
+        ActiveMQConnection connection = new ActiveMQConnection(transport, stats);
+        return connection;
     }
 
     // /////////////////////////////////////////////
