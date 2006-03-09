@@ -88,7 +88,7 @@
     </j:forEach>
   </goal>
 
-  <!-- Build failure reports: initial file creation and data-->  
+  <!-- Build failure reports: initial file creation and data-->
   <preGoal name="default">
     <j:set var="generateBuildReports" value="${buildreport.generate}"/>
     <j:if test="${generateBuildReports == 'true'}">
