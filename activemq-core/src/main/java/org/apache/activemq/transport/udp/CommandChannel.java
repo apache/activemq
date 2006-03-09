@@ -207,10 +207,10 @@ public class CommandChannel implements Service {
                 boolean lastFragment = false;
                 for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
                     // write the header
-                    writeBuffer.rewind();
+                    writeBuffer.clear();
                     int chunkSize = writeBuffer.capacity() - headerMarshaller.getHeaderSize(header);
                     lastFragment = offset + chunkSize >= length;
-                    if (lastFragment) {
+                    if (chunkSize + offset > length) {
                         chunkSize = length - offset;
                     }
                     header.incrementCounter();
