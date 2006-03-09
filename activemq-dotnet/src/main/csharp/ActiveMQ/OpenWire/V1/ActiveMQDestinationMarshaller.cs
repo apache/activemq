@@ -48,7 +48,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -71,5 +70,30 @@ namespace ActiveMQ.OpenWire.V1
         TightMarshalString2(info.PhysicalName, dataOut, bs);
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        ActiveMQDestination info = (ActiveMQDestination)o;
+        info.PhysicalName = LooseUnmarshalString(dataIn);
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        ActiveMQDestination info = (ActiveMQDestination)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalString(info.PhysicalName, dataOut);
+
+    }
+    
   }
 }

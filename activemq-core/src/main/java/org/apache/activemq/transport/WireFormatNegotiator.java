@@ -19,7 +19,6 @@ package org.apache.activemq.transport;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
-import org.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -27,17 +26,19 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class WireFormatNegotiator extends TransportFilter {
 
     private static final Log log = LogFactory.getLog(WireFormatNegotiator.class);
     
-    private final WireFormat wireFormat;
+    private OpenWireFormat wireFormat;
     private final int minimumVersion;
     
-    private boolean firstStart=true;
-    private CountDownLatch readyCountDownLatch = new CountDownLatch(1);
+    private final AtomicBoolean firstStart=new AtomicBoolean(true);
+    private final CountDownLatch readyCountDownLatch = new CountDownLatch(1);
+    private final CountDownLatch wireInfoSentDownLatch = new CountDownLatch(1);
     
     /**
      * Negotiator
@@ -45,7 +46,7 @@ public class WireFormatNegotiator extends TransportFilter {
      * @param next
      * @param preferedFormat
      */
-    public WireFormatNegotiator(Transport next, WireFormat wireFormat, int minimumVersion) {
+    public WireFormatNegotiator(Transport next, OpenWireFormat wireFormat, int minimumVersion) {
         super(next);
         this.wireFormat = wireFormat;
         this.minimumVersion = minimumVersion;
@@ -54,9 +55,13 @@ public class WireFormatNegotiator extends TransportFilter {
     
     public void start() throws Exception {
         super.start();
-        if( firstStart ) {
-            WireFormatInfo info = createWireFormatInfo();
-            next.oneway(info);
+        if( firstStart.compareAndSet(true, false) ) {
+        	try {
+        		WireFormatInfo info = wireFormat.getPreferedWireFormatInfo();
+	            next.oneway(info);
+        	} finally {
+        		wireInfoSentDownLatch.countDown();
+        	}
         }
     }
     
@@ -69,18 +74,6 @@ public class WireFormatNegotiator extends TransportFilter {
         super.oneway(command);
     }
 
-    protected WireFormatInfo createWireFormatInfo() throws IOException {
-        WireFormatInfo info = new WireFormatInfo();
-        info.setVersion(wireFormat.getVersion());
-        if ( wireFormat instanceof OpenWireFormat ) {
-            info.setStackTraceEnabled(((OpenWireFormat)wireFormat).isStackTraceEnabled());
-            info.setTcpNoDelayEnabled(((OpenWireFormat)wireFormat).isTcpNoDelayEnabled());
-            info.setCacheEnabled(((OpenWireFormat)wireFormat).isCacheEnabled());
-            info.setPrefixPacketSize(((OpenWireFormat)wireFormat).isPrefixPacketSize());
-            info.setTightEncodingEnabled(((OpenWireFormat)wireFormat).isTightEncodingEnabled());
-        }            
-        return info;
-    }
  
     public void onCommand(Command command) {
         if( command.isWireFormatInfo() ) {
@@ -89,40 +82,31 @@ public class WireFormatNegotiator extends TransportFilter {
                 log.debug("Received WireFormat: " + info);
             }
             
-            if( !info.isValid() ) {
-                getTransportListener().onException(new IOException("Remote wire format magic is invalid"));
-            } else if( info.getVersion() < minimumVersion ) {
-                getTransportListener().onException(new IOException("Remote wire format ("+info.getVersion()+") is lower the minimum version required ("+minimumVersion+")"));
-            } else if ( info.getVersion()!=wireFormat.getVersion() ) {
-                // Match the remote side.
-                wireFormat.setVersion(info.getVersion());
-            }
-            if ( wireFormat instanceof OpenWireFormat ) {
-                try {
-                    if( !info.isStackTraceEnabled() ) {
-                        ((OpenWireFormat)wireFormat).setStackTraceEnabled(false);
-                    }
-                    if( info.isTcpNoDelayEnabled() ) {
-                        ((OpenWireFormat)wireFormat).setTcpNoDelayEnabled(true);
-                    }
-                    if( !info.isCacheEnabled() ) {
-                        ((OpenWireFormat)wireFormat).setCacheEnabled(false);
-                    }
-                    if( !info.isPrefixPacketSize() ) {
-                        ((OpenWireFormat)wireFormat).setPrefixPacketSize(false);
-                    }
-                    if( !info.isTightEncodingEnabled() ) {
-                        ((OpenWireFormat)wireFormat).setTightEncodingEnabled(false);
-                    }
-                } catch (IOException e) {
-                    getTransportListener().onException(e);
-                }
-            }
+            try {
+                wireInfoSentDownLatch.await();
                 
+                if( !info.isValid() ) {
+                    onException(new IOException("Remote wire format magic is invalid"));
+                } else if( info.getVersion() < minimumVersion ) {
+                    onException(new IOException("Remote wire format ("+info.getVersion()+") is lower the minimum version required ("+minimumVersion+")"));
+                }
+                
+                wireFormat.renegociatWireFormat(info);
+	
+            } catch (IOException e) {
+                onException(e);
+            } catch (InterruptedException e) {
+                onException((IOException) new InterruptedIOException().initCause(e));
+			}
             readyCountDownLatch.countDown();
             
         }
         getTransportListener().onCommand(command);
+    }
+    
+    public void onException(IOException error) {
+        readyCountDownLatch.countDown();
+    	super.onException(error);
     }
     
     public String toString() {

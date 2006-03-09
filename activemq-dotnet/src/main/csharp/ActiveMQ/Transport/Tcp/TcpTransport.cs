@@ -72,7 +72,14 @@ namespace ActiveMQ.Transport.Tcp
                 readThread.Start();
                 
                 // lets send the wireformat we're using
-                Oneway(wireformat.WireFormatInfo);
+				WireFormatInfo info = new WireFormatInfo();
+				info.StackTraceEnabled=false;
+				info.TightEncodingEnabled=false;
+				info.TcpNoDelayEnabled=false;
+				info.CacheEnabled=false;
+				info.SizePrefixDisabled=false;
+				
+                Oneway(info);
             }
         }
         

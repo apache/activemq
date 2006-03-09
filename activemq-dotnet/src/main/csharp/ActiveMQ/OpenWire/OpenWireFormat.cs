@@ -26,37 +26,37 @@ namespace ActiveMQ.OpenWire
     /// </summary>
     public class OpenWireFormat
     {
-        static private char[] MAGIC = new char[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
         
         private BaseDataStreamMarshaller[] dataMarshallers;
         private const byte NULL_TYPE = 0;
-        private WireFormatInfo wireFormatInfo = new WireFormatInfo();
-        
+		
+		private int version=1;
+		private bool stackTraceEnabled=false;
+		private bool tightEncodingEnabled=false;
+		private bool sizePrefixDisabled=false;
+		
         public OpenWireFormat()
         {
-            // lets configure the wire format
-            wireFormatInfo.Magic = CreateMagicBytes();
-            wireFormatInfo.Version = 1;
-            wireFormatInfo.StackTraceEnabled = true;
-            wireFormatInfo.TcpNoDelayEnabled = true;
-			wireFormatInfo.PrefixPacketSize = true;
-			wireFormatInfo.TightEncodingEnabled = true;
-            
             dataMarshallers = new BaseDataStreamMarshaller[256];
             MarshallerFactory factory = new MarshallerFactory();
             factory.configure(this);
         }
-        
-        public WireFormatInfo WireFormatInfo {
-            get {
-                return wireFormatInfo;
-            }
-        }
-        
+                
         public bool StackTraceEnabled {
-            get {
-                return wireFormatInfo.StackTraceEnabled;
-            }
+            get { return stackTraceEnabled; }
+			set { stackTraceEnabled = value; }
+        }
+        public int Version {
+            get { return version; }
+			set { version = value; }
+        }
+        public bool SizePrefixDisabled {
+            get { return sizePrefixDisabled; }
+			set { sizePrefixDisabled = value; }
+        }
+        public bool TightEncodingEnabled {
+            get { return tightEncodingEnabled; }
+			set { tightEncodingEnabled = value; }
         }
         
         public void addMarshaller(BaseDataStreamMarshaller marshaller)
@@ -75,15 +75,42 @@ namespace ActiveMQ.OpenWire
                 BaseDataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
                 if (dsm == null)
                     throw new IOException("Unknown data type: " + type);
-                
-                BooleanStream bs = new BooleanStream();
-                size += dsm.TightMarshal1(this, c, bs);
-                size += bs.MarshalledSize();
-                
-                ds.Write(size);
-                ds.Write(type);
-                bs.Marshal(ds);
-                dsm.TightMarshal2(this, c, ds, bs);
+
+                if(tightEncodingEnabled) {
+					
+					BooleanStream bs = new BooleanStream();
+					size += dsm.TightMarshal1(this, c, bs);
+					size += bs.MarshalledSize();
+					
+                    if( !sizePrefixDisabled ) {
+						ds.Write(size);
+					}
+					
+					ds.Write(type);
+					bs.Marshal(ds);
+					dsm.TightMarshal2(this, c, ds, bs);
+					
+				} else {
+					
+					BinaryWriter looseOut = ds;
+					MemoryStream ms = null;
+					// If we are prefixing then we need to first write it to memory,
+					// otherwise we can write direct to the stream.
+					if( !sizePrefixDisabled ) {
+						ms= new MemoryStream();
+						looseOut = new OpenWireBinaryWriter(ms);
+						looseOut.Write(size);
+					}
+					
+					looseOut.Write(type);
+					dsm.LooseMarshal(this, c, looseOut);
+					
+					if( !sizePrefixDisabled ) {
+						ms.Position=0;
+						looseOut.Write( (int)ms.Length-4 );
+						ds.Write(ms.GetBuffer(), 0, (int)ms.Length);
+					}
+				}
             }
             else
             {
@@ -95,7 +122,9 @@ namespace ActiveMQ.OpenWire
         public Object Unmarshal(BinaryReader dis)
         {
             // lets ignore the size of the packet
-            dis.ReadInt32();
+			if( !sizePrefixDisabled ) {
+				dis.ReadInt32();
+			}
             
             // first byte is the type of the packet
             byte dataType = dis.ReadByte();
@@ -106,10 +135,16 @@ namespace ActiveMQ.OpenWire
                     throw new IOException("Unknown data type: " + dataType);
                 //Console.WriteLine("Parsing type: " + dataType + " with: " + dsm);
                 Object data = dsm.CreateObject();
-                BooleanStream bs = new BooleanStream();
-                bs.Unmarshal(dis);
-                dsm.TightUnmarshal(this, data, dis, bs);
-                return data;
+				
+				if(tightEncodingEnabled) {
+					BooleanStream bs = new BooleanStream();
+					bs.Unmarshal(dis);
+					dsm.TightUnmarshal(this, data, dis, bs);
+					return data;
+				} else {
+					dsm.LooseUnmarshal(this, data, dis);
+					return data;
+				}
             }
             else
             {
@@ -205,18 +240,40 @@ namespace ActiveMQ.OpenWire
                 return null;
             }
         }
+
+
         
-        /// <summary>
-        /// Method CreateMagicBytes
-        /// </summary>
-        private byte[] CreateMagicBytes()
+        public void LooseMarshalNestedObject(DataStructure o, BinaryWriter dataOut)
         {
-            byte[] answer = new byte[MAGIC.Length];
-            for (int i = 0; i < answer.Length; i++)
-            {
-                answer[i] = (byte) MAGIC[i];
-            }
-            return answer;
+			dataOut.Write(o!=null);
+			if( o!=null ) {
+				byte type = o.GetDataStructureType();
+				dataOut.Write(type);
+                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[type & 0xFF];
+				if( dsm == null )
+					throw new IOException("Unknown data type: "+type);
+				dsm.LooseMarshal(this, o, dataOut);
+			}
         }
+        
+        public DataStructure LooseUnmarshalNestedObject(BinaryReader dis)
+        {
+            if (dis.ReadBoolean())
+            {
+                
+                byte dataType = dis.ReadByte();
+                BaseDataStreamMarshaller dsm = (BaseDataStreamMarshaller) dataMarshallers[dataType & 0xFF];
+                if (dsm == null)
+                    throw new IOException("Unknown data type: " + dataType);
+                DataStructure data = dsm.CreateObject();
+				dsm.LooseUnmarshal(this, data, dis);
+                return data;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
     }
 }

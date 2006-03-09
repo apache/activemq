@@ -29,7 +29,6 @@ import org.activeio.ByteArrayOutputStream;
 import org.activeio.ByteSequence;
 import org.activeio.command.WireFormat;
 import org.apache.activemq.state.CommandVisitor;
-import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
 
 /**
@@ -39,7 +38,8 @@ import org.apache.activemq.util.MarshallingSupport;
  */
 public class WireFormatInfo implements Command, MarshallAware {
 
-    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
+    private static final int MAX_PROPERTY_SIZE = 1024*4;
+	public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
     static final private byte MAGIC[] = new byte[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
 
     protected byte magic[] = MAGIC;
@@ -136,7 +136,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
     
     private HashMap unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
-        return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)));
+        return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)), MAX_PROPERTY_SIZE);
     }
 
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
@@ -171,50 +171,50 @@ public class WireFormatInfo implements Command, MarshallAware {
      * @throws IOException 
      */
     public boolean isCacheEnabled() throws IOException {
-        return Boolean.TRUE == getProperty("cache");
+        return Boolean.TRUE == getProperty("CacheEnabled");
     }
     public void setCacheEnabled(boolean cacheEnabled) throws IOException {
-        setProperty("cache", cacheEnabled ? Boolean.TRUE : Boolean.FALSE);
+        setProperty("CacheEnabled", cacheEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
      * @throws IOException 
      */
     public boolean isStackTraceEnabled() throws IOException {
-        return Boolean.TRUE == getProperty("stackTrace");
+        return Boolean.TRUE == getProperty("StackTraceEnabled");
     }
     public void setStackTraceEnabled(boolean stackTraceEnabled) throws IOException {
-        setProperty("stackTrace", stackTraceEnabled ? Boolean.TRUE : Boolean.FALSE);
+        setProperty("StackTraceEnabled", stackTraceEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
      * @throws IOException 
      */
     public boolean isTcpNoDelayEnabled() throws IOException {
-        return Boolean.TRUE == getProperty("tcpNoDelay");
+        return Boolean.TRUE == getProperty("TcpNoDelayEnabled");
     }
     public void setTcpNoDelayEnabled(boolean tcpNoDelayEnabled) throws IOException {
-        setProperty("tcpNoDelay", tcpNoDelayEnabled ? Boolean.TRUE : Boolean.FALSE);
+        setProperty("TcpNoDelayEnabled", tcpNoDelayEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
      * @throws IOException 
      */
-    public boolean isPrefixPacketSize() throws IOException {
-        return Boolean.TRUE == getProperty("prefixPacketSize");
+    public boolean isSizePrefixDisabled() throws IOException {
+        return Boolean.TRUE == getProperty("SizePrefixDisabled");
     }
-    public void setPrefixPacketSize(boolean prefixPacketSize) throws IOException {
-        setProperty("prefixPacketSize", prefixPacketSize ? Boolean.TRUE : Boolean.FALSE);
+    public void setSizePrefixDisabled(boolean prefixPacketSize) throws IOException {
+        setProperty("SizePrefixDisabled", prefixPacketSize ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
      * @throws IOException 
      */
     public boolean isTightEncodingEnabled() throws IOException {
-        return Boolean.TRUE == getProperty("tightEncoding");
+        return Boolean.TRUE == getProperty("TightEncodingEnabled");
     }
     public void setTightEncodingEnabled(boolean tightEncodingEnabled) throws IOException {
-        setProperty("tightEncoding", tightEncodingEnabled ? Boolean.TRUE : Boolean.FALSE);
+        setProperty("TightEncodingEnabled", tightEncodingEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
@@ -222,7 +222,12 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public String toString() {
-        return IntrospectionSupport.toString(this, WireFormatInfo.class);
+    	Map p=null;
+		try {
+			p = getProperties();
+		} catch (IOException e) {
+		}
+        return "WireFormatInfo { version="+version+", properties="+p+", magic="+Arrays.toString(magic)+"}";
     }
 
     ///////////////////////////////////////////////////////////////

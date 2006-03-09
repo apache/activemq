@@ -61,7 +61,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -95,5 +94,42 @@ namespace ActiveMQ.OpenWire.V1
         }
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        XATransactionId info = (XATransactionId)o;
+        info.FormatId = dataIn.ReadInt32();
+        info.GlobalTransactionId = ReadBytes(dataIn, dataIn.ReadBoolean());
+        info.BranchQualifier = ReadBytes(dataIn, dataIn.ReadBoolean());
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        XATransactionId info = (XATransactionId)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        dataOut.Write(info.FormatId);
+        dataOut.Write(info.GlobalTransactionId!=null);
+        if(info.GlobalTransactionId!=null) {
+           dataOut.Write(info.GlobalTransactionId.Length);
+           dataOut.Write(info.GlobalTransactionId);
+        }
+        dataOut.Write(info.BranchQualifier!=null);
+        if(info.BranchQualifier!=null) {
+           dataOut.Write(info.BranchQualifier.Length);
+           dataOut.Write(info.BranchQualifier);
+        }
+
+    }
+    
   }
 }

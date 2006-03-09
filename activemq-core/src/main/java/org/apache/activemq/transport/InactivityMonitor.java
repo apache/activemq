@@ -64,6 +64,7 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
         case 0:
             writeCheck();
             readCheckIteration++;
+            break;
         case 1:
             readCheck();
             writeCheck();
@@ -100,10 +101,10 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
         }
         
         if( !commandReceived.get() ) {
-            log.debug("No message received since last read check!");
+            log.debug("No message received since last read check! ");
             onException(new InactivityIOException("Channel was inactive for too long."));           
         } else {
-            log.debug("Message received since last read check, resetting flag");
+            log.debug("Message received since last read check, resetting flag: ");
         }
         
         commandReceived.set(false);

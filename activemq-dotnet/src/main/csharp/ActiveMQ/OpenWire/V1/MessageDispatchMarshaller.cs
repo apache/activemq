@@ -62,7 +62,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -90,5 +89,36 @@ namespace ActiveMQ.OpenWire.V1
         dataOut.Write(info.RedeliveryCounter);
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        MessageDispatch info = (MessageDispatch)o;
+        info.ConsumerId = (ConsumerId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.Destination = (ActiveMQDestination) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.Message = (Message) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.RedeliveryCounter = dataIn.ReadInt32();
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        MessageDispatch info = (MessageDispatch)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.ConsumerId, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.Destination, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.Message, dataOut);
+        dataOut.Write(info.RedeliveryCounter);
+
+    }
+    
   }
 }

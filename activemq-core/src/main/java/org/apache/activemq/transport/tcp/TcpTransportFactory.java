@@ -64,8 +64,10 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new TransportLogger(transport);
         }
 
-        if( format instanceof OpenWireFormat )
-            transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
+        // Only need the OpenWireFormat if using openwire
+        if( format instanceof OpenWireFormat ) {
+        	transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, tcpTransport.getMinmumWireFormatVersion());
+        }
         
         if( tcpTransport.getMaxInactivityDuration() > 0 ) {
             transport = new InactivityMonitor(transport, tcpTransport.getMaxInactivityDuration());
@@ -83,7 +85,11 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new TransportLogger(transport);
         }
 
-        transport = new WireFormatNegotiator(transport, format, tcpTransport.getMinmumWireFormatVersion());
+        // Only need the OpenWireFormat if using openwire
+        if( format instanceof OpenWireFormat ) {
+        	transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, tcpTransport.getMinmumWireFormatVersion());
+        }
+        
         if( tcpTransport.getMaxInactivityDuration() > 0 ) {
             transport = new InactivityMonitor(transport, tcpTransport.getMaxInactivityDuration());
         }

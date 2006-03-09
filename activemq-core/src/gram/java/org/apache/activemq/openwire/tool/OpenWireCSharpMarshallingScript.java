@@ -39,6 +39,9 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
         return super.run();
     }
     
+    //////////////////////////////////////////////////////////////////////////////////////
+    // This section is for the tight wire format encoding generator
+    //////////////////////////////////////////////////////////////////////////////////////
 
     protected void generateTightUnmarshalBodyForProperty(PrintWriter out, JProperty property, JAnnotationValue size) {
 
@@ -242,4 +245,149 @@ public abstract class OpenWireCSharpMarshallingScript extends OpenWireJavaMarsha
             }
         }
     }
+    
+    //////////////////////////////////////////////////////////////////////////////////////
+    // This section is for the loose wire format encoding generator
+    //////////////////////////////////////////////////////////////////////////////////////
+    
+    protected void generateLooseUnmarshalBodyForProperty(PrintWriter out, JProperty property, JAnnotationValue size) {
+
+        String propertyName = property.getSimpleName();
+        String type = property.getType().getSimpleName();
+
+        if (type.equals("boolean")) {
+            out.println("        info." + propertyName + " = dataIn.ReadBoolean();");
+        }
+        else if (type.equals("byte")) {
+            out.println("        info." + propertyName + " = dataIn.ReadByte();");
+        }
+        else if (type.equals("char")) {
+            out.println("        info." + propertyName + " = dataIn.ReadChar();");
+        }
+        else if (type.equals("short")) {
+            out.println("        info." + propertyName + " = dataIn.ReadInt16();");
+        }
+        else if (type.equals("int")) {
+            out.println("        info." + propertyName + " = dataIn.ReadInt32();");
+        }
+        else if (type.equals("long")) {
+            out.println("        info." + propertyName + " = LooseUnmarshalLong(wireFormat, dataIn);");
+        }
+        else if (type.equals("String")) {
+            out.println("        info." + propertyName + " = LooseUnmarshalString(dataIn);");
+        }
+        else if (type.equals("byte[]") || type.equals("ByteSequence")) {
+            if (size != null) {
+                out.println("        info." + propertyName + " = ReadBytes(dataIn, " + size.asInt() + ");");
+            }
+            else {
+                out.println("        info." + propertyName + " = ReadBytes(dataIn, dataIn.ReadBoolean());");
+            }
+        }
+        else if (isThrowable(property.getType())) {
+            out.println("        info." + propertyName + " = LooseUnmarshalBrokerError(wireFormat, dataIn);");
+        }
+        else if (isCachedProperty(property)) {
+            out.println("        info." + propertyName + " = (" + type + ") LooseUnmarshalCachedObject(wireFormat, dataIn);");
+        }
+        else {
+            out.println("        info." + propertyName + " = (" + type + ") LooseUnmarshalNestedObject(wireFormat, dataIn);");
+        }
+    }
+
+    protected void generateLooseUnmarshalBodyForArrayProperty(PrintWriter out, JProperty property, JAnnotationValue size) {
+        JClass propertyType = property.getType();
+        String arrayType = propertyType.getArrayComponentType().getSimpleName();
+        String propertyName = property.getSimpleName();
+        out.println();
+        if (size != null) {
+            out.println("        {");
+            out.println("            " + arrayType + "[] value = new " + arrayType + "[" + size.asInt() + "];");
+            out.println("            " + "for( int i=0; i < " + size.asInt() + "; i++ ) {");
+            out.println("                value[i] = (" + arrayType + ") LooseUnmarshalNestedObject(wireFormat,dataIn);");
+            out.println("            }");
+            out.println("            info." + propertyName + " = value;");
+            out.println("        }");
+        }
+        else {
+            out.println("        if (dataIn.ReadBoolean()) {");
+            out.println("            short size = dataIn.ReadInt16();");
+            out.println("            " + arrayType + "[] value = new " + arrayType + "[size];");
+            out.println("            for( int i=0; i < size; i++ ) {");
+            out.println("                value[i] = (" + arrayType + ") LooseUnmarshalNestedObject(wireFormat,dataIn);");
+            out.println("            }");
+            out.println("            info." + propertyName + " = value;");
+            out.println("        }");
+            out.println("        else {");
+            out.println("            info." + propertyName + " = null;");
+            out.println("        }");
+        }
+    }
+
+
+    protected void generateLooseMarshalBody(PrintWriter out) {
+        List properties = getProperties();
+        for (Iterator iter = properties.iterator(); iter.hasNext();) {
+            JProperty property = (JProperty) iter.next();
+            JAnnotation annotation = property.getAnnotation("openwire:property");
+            JAnnotationValue size = annotation.getValue("size");
+            JClass propertyType = property.getType();
+            String type = propertyType.getSimpleName();
+            String getter = "info." + property.getSimpleName();
+
+            if (type.equals("boolean")) {
+                out.println("        dataOut.Write(" + getter + ");");
+            }
+            else if (type.equals("byte")) {
+                out.println("        dataOut.Write(" + getter + ");");
+            }
+            else if (type.equals("char")) {
+                out.println("        dataOut.Write(" + getter + ");");
+            }
+            else if (type.equals("short")) {
+                out.println("        dataOut.Write(" + getter + ");");
+            }
+            else if (type.equals("int")) {
+                out.println("        dataOut.Write(" + getter + ");");
+            }
+            else if (type.equals("long")) {
+                out.println("        LooseMarshalLong(wireFormat, " + getter + ", dataOut);");
+            }
+            else if (type.equals("String")) {
+                out.println("        LooseMarshalString(" + getter + ", dataOut);");
+            }
+            else if (type.equals("byte[]") || type.equals("ByteSequence")) {
+                if (size != null) {
+                    out.println("        dataOut.Write(" + getter + ", 0, " + size.asInt() + ");");
+                }
+                else {
+                    out.println("        dataOut.Write(" + getter + "!=null);");
+                    out.println("        if(" + getter + "!=null) {");
+                    out.println("           dataOut.Write(" + getter + ".Length);");
+                    out.println("           dataOut.Write(" + getter + ");");
+                    out.println("        }");
+                }
+            }
+            else if (propertyType.isArrayType()) {
+                if (size != null) {
+                    out.println("        LooseMarshalObjectArrayConstSize(wireFormat, " + getter + ", dataOut, " + size.asInt() + ");");
+                }
+                else {
+                    out.println("        LooseMarshalObjectArray(wireFormat, " + getter + ", dataOut);");
+                }
+            }
+            else if (isThrowable(propertyType)) {
+                out.println("        LooseMarshalBrokerError(wireFormat, " + getter + ", dataOut);");
+            }
+            else {
+                if (isCachedProperty(property)) {
+                    out.println("        LooseMarshalCachedObject(wireFormat, (DataStructure)" + getter + ", dataOut);");
+                }
+                else {
+                    out.println("        LooseMarshalNestedObject(wireFormat, (DataStructure)" + getter + ", dataOut);");
+                }
+            }
+        }
+    }
+
 }

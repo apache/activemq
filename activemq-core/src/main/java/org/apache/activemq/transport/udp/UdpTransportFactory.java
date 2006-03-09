@@ -83,7 +83,7 @@ public class UdpTransportFactory extends TransportFactory {
 
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         OpenWireFormat wireFormat = (OpenWireFormat) wf;
-        wireFormat.setPrefixPacketSize(false);
+        wireFormat.setSizePrefixDisabled(true);
         return new UdpTransport(wireFormat, location);
     }
 

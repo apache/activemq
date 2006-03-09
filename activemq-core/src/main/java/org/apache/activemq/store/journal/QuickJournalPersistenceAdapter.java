@@ -82,7 +82,7 @@ public class QuickJournalPersistenceAdapter implements PersistenceAdapter, Journ
     private final PersistenceAdapter longTermPersistence;
     final UsageManager usageManager;
 
-    private final WireFormat wireFormat = new OpenWireFormat(false);
+    private final WireFormat wireFormat = new OpenWireFormat();
 
     private final ConcurrentHashMap queues = new ConcurrentHashMap();
     private final ConcurrentHashMap topics = new ConcurrentHashMap();

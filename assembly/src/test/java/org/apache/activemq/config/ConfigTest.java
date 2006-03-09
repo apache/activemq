@@ -106,9 +106,9 @@ public class ConfigTest extends TestCase {
             // Check spring configured wire format factory
             WireFormat myWireFormat = myTransportServer.getWireFormatFactory().createWireFormat();
             assertTrue("WireFormat should be OpenWireFormat", myWireFormat instanceof OpenWireFormat);
-            assertEquals("WireFormat Config Error (stackTraceEnabled)", false, ((OpenWireFormat)myWireFormat).isStackTraceEnabled());
-            assertEquals("WireFormat Config Error (tcpNoDelayEnabled)", true, ((OpenWireFormat)myWireFormat).isTcpNoDelayEnabled());
-            assertEquals("WireFormat Config Error (cacheEnabled)", false, ((OpenWireFormat)myWireFormat).isCacheEnabled());
+            assertEquals("WireFormat Config Error (stackTraceEnabled)", false, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isStackTraceEnabled());
+            assertEquals("WireFormat Config Error (tcpNoDelayEnabled)", true, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isTcpNoDelayEnabled());
+            assertEquals("WireFormat Config Error (cacheEnabled)", false, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isCacheEnabled());
             System.out.println("Success");
 
             // Check network connectors

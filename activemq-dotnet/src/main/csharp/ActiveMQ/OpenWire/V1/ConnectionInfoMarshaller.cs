@@ -74,7 +74,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -105,5 +104,49 @@ namespace ActiveMQ.OpenWire.V1
         TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        ConnectionInfo info = (ConnectionInfo)o;
+        info.ConnectionId = (ConnectionId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.ClientId = LooseUnmarshalString(dataIn);
+        info.Password = LooseUnmarshalString(dataIn);
+        info.UserName = LooseUnmarshalString(dataIn);
+
+        if (dataIn.ReadBoolean()) {
+            short size = dataIn.ReadInt16();
+            BrokerId[] value = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) LooseUnmarshalNestedObject(wireFormat,dataIn);
+            }
+            info.BrokerPath = value;
+        }
+        else {
+            info.BrokerPath = null;
+        }
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        ConnectionInfo info = (ConnectionInfo)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.ConnectionId, dataOut);
+        LooseMarshalString(info.ClientId, dataOut);
+        LooseMarshalString(info.Password, dataOut);
+        LooseMarshalString(info.UserName, dataOut);
+        LooseMarshalObjectArray(wireFormat, info.BrokerPath, dataOut);
+
+    }
+    
   }
 }

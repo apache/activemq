@@ -76,6 +76,9 @@ if( !abstractClass ) out << """
     }
 """
 
+/*
+ * Generate the tight encoding marshallers
+ */ 
 out << """
     // 
     // Un-marshal an object instance from the data input stream
@@ -102,8 +105,9 @@ if( marshallerAware ) out << """
 
 out << """
     }
+"""
 
-
+out << """
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -144,6 +148,69 @@ if( marshallerAware ) out << """
 
 out << """
     }
+"""
+
+/*
+ * Generate the loose encoding marshallers
+ */ 
+out << """
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+"""
+ 
+if( !properties.isEmpty() || marshallerAware )  out << """
+        ${jclass.simpleName} info = (${jclass.simpleName})o;
+"""
+
+if( marshallerAware ) out << """
+        info.BeforeUnmarshall(wireFormat);
+        
+"""
+
+generateLooseUnmarshalBody(out)
+
+if( marshallerAware ) out << """
+        info.AfterUnmarshall(wireFormat);
+"""
+
+out << """
+    }
+"""
+
+out << """
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+"""
+
+if( !properties.isEmpty() || marshallerAware ) out << """
+        ${jclass.simpleName} info = (${jclass.simpleName})o;
+"""
+
+if( marshallerAware ) out << """
+        info.BeforeMarshall(wireFormat);
+"""
+
+out << """
+        base.LooseMarshal(wireFormat, o, dataOut);
+"""
+
+generateLooseMarshalBody(out)
+
+if( marshallerAware ) out << """
+        info.AfterMarshall(wireFormat);
+"""
+out << """
+    }
+"""
+
+
+out << """    
   }
 }
 """

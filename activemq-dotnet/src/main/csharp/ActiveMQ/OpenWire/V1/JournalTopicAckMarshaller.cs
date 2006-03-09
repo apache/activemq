@@ -64,7 +64,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -97,5 +96,40 @@ namespace ActiveMQ.OpenWire.V1
         TightMarshalNestedObject2(wireFormat, (DataStructure)info.TransactionId, dataOut, bs);
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        JournalTopicAck info = (JournalTopicAck)o;
+        info.Destination = (ActiveMQDestination) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.MessageId = (MessageId) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.MessageSequenceId = LooseUnmarshalLong(wireFormat, dataIn);
+        info.SubscritionName = LooseUnmarshalString(dataIn);
+        info.ClientId = LooseUnmarshalString(dataIn);
+        info.TransactionId = (TransactionId) LooseUnmarshalNestedObject(wireFormat, dataIn);
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        JournalTopicAck info = (JournalTopicAck)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.Destination, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.MessageId, dataOut);
+        LooseMarshalLong(wireFormat, info.MessageSequenceId, dataOut);
+        LooseMarshalString(info.SubscritionName, dataOut);
+        LooseMarshalString(info.ClientId, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.TransactionId, dataOut);
+
+    }
+    
   }
 }

@@ -61,7 +61,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
     private static final Log log = LogFactory.getLog(JDBCPersistenceAdapter.class);
     private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/store/jdbc/");
 
-    private WireFormat wireFormat = new OpenWireFormat(false);
+    private WireFormat wireFormat = new OpenWireFormat();
     private DataSource dataSource;
     private Statements statements;
     private JDBCAdapter adapter;

@@ -18,28 +18,41 @@ package org.apache.activemq.openwire;
 
 import org.activeio.command.WireFormat;
 import org.activeio.command.WireFormatFactory;
+import org.apache.activemq.command.WireFormatInfo;
 
 /**
  * @version $Revision$
  */
 public class OpenWireFormatFactory implements WireFormatFactory {
 
+	//
+	// The default values here are what the wireformat chanages to after a default negociation.
+	//
+	
     private int version=1;
     private boolean stackTraceEnabled=true;
-    private boolean tcpNoDelayEnabled=false;
+    private boolean tcpNoDelayEnabled=true;
     private boolean cacheEnabled=true;
     private boolean tightEncodingEnabled=true;
-    private boolean prefixPacketSize=true;
+    private boolean sizePrefixDisabled=false;
 
     public WireFormat createWireFormat() {
-        OpenWireFormat format = new OpenWireFormat();
-        format.setVersion(version);
-        format.setStackTraceEnabled(stackTraceEnabled);
-        format.setCacheEnabled(cacheEnabled);
-        format.setTcpNoDelayEnabled(tcpNoDelayEnabled);
-        format.setTightEncodingEnabled(tightEncodingEnabled);
-        format.setPrefixPacketSize(prefixPacketSize);
-        return format;
+		WireFormatInfo info = new WireFormatInfo();
+		info.setVersion(version);
+		
+        try {
+			info.setStackTraceEnabled(stackTraceEnabled);
+			info.setCacheEnabled(cacheEnabled);
+			info.setTcpNoDelayEnabled(tcpNoDelayEnabled);
+			info.setTightEncodingEnabled(tightEncodingEnabled);
+			info.setSizePrefixDisabled(sizePrefixDisabled);
+		} catch (Exception e) {
+			throw new IllegalStateException("Could not configure WireFormatInfo", e);
+		}
+		
+        OpenWireFormat f = new OpenWireFormat();
+        f.setPreferedWireFormatInfo(info);
+        return f;
     }
 
     public boolean isStackTraceEnabled() {
@@ -82,11 +95,11 @@ public class OpenWireFormatFactory implements WireFormatFactory {
         this.tightEncodingEnabled = tightEncodingEnabled;
     }
 
-    public boolean isPrefixPacketSize() {
-        return prefixPacketSize;
-    }
+	public boolean isSizePrefixDisabled() {
+		return sizePrefixDisabled;
+	}
 
-    public void setPrefixPacketSize(boolean prefixPacketSize) {
-        this.prefixPacketSize = prefixPacketSize;
-    }
+	public void setSizePrefixDisabled(boolean sizePrefixDisabled) {
+		this.sizePrefixDisabled = sizePrefixDisabled;
+	}
 }

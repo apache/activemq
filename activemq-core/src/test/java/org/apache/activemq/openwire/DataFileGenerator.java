@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
@@ -153,5 +154,5 @@ abstract public class DataFileGenerator extends Assert {
         }
     }
     
-    abstract protected Object createObject();
+    abstract protected Object createObject() throws IOException;
 }
