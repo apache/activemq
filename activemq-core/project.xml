@@ -360,10 +360,6 @@
                 <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
                 <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
                 <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
-                
-                <!-- TODO FIXME -->
-                <exclude>**/UdpTransportUsingServerTest.*</exclude>
-                <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             </excludes>
         </unitTest>
         <resources>

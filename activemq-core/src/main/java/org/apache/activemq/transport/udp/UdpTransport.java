@@ -56,6 +56,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private DatagramChannel channel;
     private boolean trace = false;
     private boolean useLocalHost = true;
+    private boolean checkSequenceNumbers = true;
     private int port;
     private int minmumWireFormatVersion;
     private String description = null;
@@ -112,7 +113,8 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         commandChannel.write(command, address);
     }
 
-    public void doConsume(Command command, DatagramHeader header) throws IOException {
+
+    public void receivedHeader(DatagramHeader header) {
         wireFormatHeader = header;
     }
 
@@ -253,6 +255,14 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public OpenWireFormat getWireFormat() {
         return wireFormat;
     }
+    
+    public boolean isCheckSequenceNumbers() {
+        return checkSequenceNumbers;
+    }
+
+    public void setCheckSequenceNumbers(boolean checkSequenceNumbers) {
+        this.checkSequenceNumbers = checkSequenceNumbers;
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -303,7 +313,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
-        commandChannel = new CommandChannel(channel, wireFormat, bufferPool, datagramSize, replayStrategy, targetAddress);
+        commandChannel = new CommandChannel(toString(), channel, wireFormat, bufferPool, datagramSize, replayStrategy, targetAddress, isCheckSequenceNumbers());
         commandChannel.start();
 
         // lets pass the header & address into the channel so it avoids a
@@ -336,5 +346,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
             targetAddress = lastAddress;
         }
     }
+
 
 }

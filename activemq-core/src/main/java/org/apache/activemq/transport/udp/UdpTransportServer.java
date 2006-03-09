@@ -24,7 +24,6 @@ import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.WireFormatNegotiator;
@@ -55,6 +54,10 @@ public class UdpTransportServer extends TransportServerSupport implements Comman
         super(connectURI);
         this.serverTransport = serverTransport;
         this.configuredTransport = configuredTransport;
+
+        // lets disable the incremental checking of the sequence numbers
+        // as we are getting messages from many different clients
+        serverTransport.setCheckSequenceNumbers(false);
     }
 
     public String toString() {
@@ -96,12 +99,16 @@ public class UdpTransportServer extends TransportServerSupport implements Comman
 
     public void process(Command command, DatagramHeader header) throws IOException {
         SocketAddress address = header.getFromAddress();
-        System.out.println(toString() + " received command: " + command + " from address: " + address);
+        if (log.isDebugEnabled()) {
+            log.debug("Received command on: " + this + " from address: " + address + " command: " + command);
+        }
         Transport transport = null;
         synchronized (transports) {
             transport = (Transport) transports.get(address);
             if (transport == null) {
-                System.out.println("###Êcreating new server connector");
+                if (log.isDebugEnabled()) {
+                    log.debug("Creating a new UDP server connection");
+                }
                 transport = createTransport(command, header);
                 transport = configureTransport(transport);
                 transports.put(address, transport);
@@ -114,23 +121,30 @@ public class UdpTransportServer extends TransportServerSupport implements Comman
 
     protected Transport configureTransport(Transport transport) {
         transport = new ResponseCorrelator(transport);
-        
-        // TODO
-        //transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
 
+        if (serverTransport.getMaxInactivityDuration() > 0) {
+            transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
+        }
+        
         getAcceptListener().onAccept(transport);
         return transport;
     }
 
-    protected Transport createTransport(Command command, DatagramHeader header) throws IOException {
+    protected Transport createTransport(final Command command, DatagramHeader header) throws IOException {
         final SocketAddress address = header.getFromAddress();
-        // TODO lets copy the wireformat...
-        final UdpTransport transport = new UdpTransport(serverTransport.getWireFormat(), address);
-        
-        // lets send the packet into the transport so it can track packets
-        transport.doConsume(command, header);
+        final OpenWireFormat connectionWireFormat = serverTransport.getWireFormat().copy();
+        final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
 
-        return new WireFormatNegotiator(transport, serverTransport.getWireFormat(), serverTransport.getMinmumWireFormatVersion()) {
+        transport.receivedHeader(header);
+
+        return new WireFormatNegotiator(transport, transport.getWireFormat(), serverTransport.getMinmumWireFormatVersion()) {
+
+            public void start() throws Exception {
+                super.start();
+
+                // process the inbound wireformat
+                onCommand(command);
+            }
 
             // lets use the specific addressing of wire format
             protected void sendWireFormat(WireFormatInfo info) throws IOException {

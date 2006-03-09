@@ -81,11 +81,13 @@ final public class OpenWireFormat implements WireFormat {
     
     public OpenWireFormat copy() {
         OpenWireFormat answer = new OpenWireFormat();
+        answer.version = version;
         answer.stackTraceEnabled = stackTraceEnabled;
         answer.tcpNoDelayEnabled = tcpNoDelayEnabled;
         answer.cacheEnabled = cacheEnabled;
         answer.tightEncodingEnabled = tightEncodingEnabled;
         answer.sizePrefixDisabled = sizePrefixDisabled;
+        answer.preferedWireFormatInfo = preferedWireFormatInfo;
         return answer;
     }
     
@@ -104,8 +106,8 @@ final public class OpenWireFormat implements WireFormat {
     static IdGenerator g = new IdGenerator();
     String id = g.generateId();
     public String toString() {
-        //return "OpenWireFormat{version="+version+", cacheEnabled="+cacheEnabled+", stackTraceEnabled="+stackTraceEnabled+", tightEncodingEnabled="+tightEncodingEnabled+", sizePrefixDisabled="+sizePrefixDisabled+"}";
-        return "OpenWireFormat{id="+id+", tightEncodingEnabled="+tightEncodingEnabled+"}";
+        return "OpenWireFormat{version="+version+", cacheEnabled="+cacheEnabled+", stackTraceEnabled="+stackTraceEnabled+", tightEncodingEnabled="+tightEncodingEnabled+", sizePrefixDisabled="+sizePrefixDisabled+"}";
+        //return "OpenWireFormat{id="+id+", tightEncodingEnabled="+tightEncodingEnabled+"}";
     }
     
     public int getVersion() {

@@ -25,12 +25,12 @@ import java.io.IOException;
  */
 public class ExceptionIfDroppedPacketStrategy implements DatagramReplayStrategy {
 
-    public void onDroppedPackets(long expectedCounter, long actualCounter) throws IOException {
+    public void onDroppedPackets(String name, long expectedCounter, long actualCounter) throws IOException {
         long count = actualCounter - expectedCounter;
-        throw new IOException("" + count +  " packet(s) dropped. Expected: " + expectedCounter + " but was: " + actualCounter);
+        throw new IOException(name + count +  " packet(s) dropped. Expected: " + expectedCounter + " but was: " + actualCounter);
     }
 
-    public void onReceivedPacket(long expectedCounter) {
+    public void onReceivedPacket(String name, long expectedCounter) {
     }
 
 }
