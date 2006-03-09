@@ -227,7 +227,20 @@ public class WireFormatInfo implements Command, MarshallAware {
 			p = getProperties();
 		} catch (IOException e) {
 		}
-        return "WireFormatInfo { version="+version+", properties="+p+", magic="+Arrays.toString(magic)+"}";
+        return "WireFormatInfo { version="+version+", properties="+p+", magic="+toString(magic)+"}";
+    }
+    
+    private String toString(byte []data) {
+        StringBuffer sb = new StringBuffer();
+        sb.append('[');
+        for (int i = 0; i < data.length; i++) {
+            if( i != 0 ) {
+                sb.append(',');
+            }
+            sb.append((char)data[i]);            
+        }
+        sb.append(']');
+        return sb.toString();
     }
 
     ///////////////////////////////////////////////////////////////
