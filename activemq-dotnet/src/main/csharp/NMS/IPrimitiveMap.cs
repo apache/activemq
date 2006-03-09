@@ -16,13 +16,14 @@
  */
 using System.Collections;
 
-namespace JMS
+
+
+/// <summary>
+/// Represents a Map of primitive types where the keys are all string instances
+/// and the values are strings or numbers.
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Represents a Map of primitive types where the keys are all string instances
-	/// and the values are strings or numbers.
-	/// </summary>
 	public interface IPrimitiveMap
     {
         
@@ -82,4 +83,5 @@ namespace JMS
         
     }
 }
+
 

@@ -14,22 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
-using System;
+using NMS;
 
-namespace JMS
+
+
+/// <summary>
+/// Summary description for ITemporaryQueue.
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Summary description for ITopic.
-	/// </summary>
-	public interface ITopic : IDestination
+	public interface ITemporaryQueue : IDestination
 	{
-		
-		String TopicName
-		{
-			get;
-		}
 	}
 }
+
 

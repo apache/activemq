@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 using ActiveMQ.Commands;
-using ActiveMQ.Transport;
-using JMS;
+using NMS;
 using System;
 
 namespace ActiveMQ.Transport

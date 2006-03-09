@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 using ActiveMQ.Commands;
-using JMS;
+using NMS;
 using System;
 using System.Collections;
 

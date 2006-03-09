@@ -14,16 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 
-namespace JMS
+
+
+/// <summary>
+/// Represents a Map message which contains key and value pairs which are
+/// of primitive types
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Summary description for ITemporaryQueue.
-	/// </summary>
-	public interface ITemporaryQueue : IDestination
-	{
-	}
+	public interface IMapMessage : IMessage
+    {
+        IPrimitiveMap Body
+		{
+            get;
+        }
+    }
 }
+
+
 

@@ -17,7 +17,7 @@
 using ActiveMQ.Commands;
 using ActiveMQ.Transport;
 using ActiveMQ.Transport.Tcp;
-using JMS;
+using NMS;
 using System;
 
 namespace ActiveMQ

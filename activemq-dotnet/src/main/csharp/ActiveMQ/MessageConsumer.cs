@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using ActiveMQ;
 using ActiveMQ.Commands;
-using JMS;
+using NMS;
 using System.Threading;
 
 namespace ActiveMQ

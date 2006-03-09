@@ -43,14 +43,14 @@
       </releases>
     </repository>
     <repository>
-      <id>maven-csharp</id>
-      <name>maven-csharp</name>
-      <url>http://maven-csharp.javaforge.com/repo</url>
-    </repository>
-    <repository>
       <id>codehaus-snapshot</id>
       <name>CodeHaus Snapshot Repo</name>
       <url>http://snapshots.maven.codehaus.org/maven2</url>
+    </repository>
+    <repository>
+      <id>maven-csharp</id>
+      <name>maven-csharp</name>
+      <url>http://maven-csharp.javaforge.com/repo</url>
     </repository>
   </repositories>
 

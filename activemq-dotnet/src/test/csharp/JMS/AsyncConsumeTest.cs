@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 using NUnit.Framework;
 using System;
 using System.Threading;
@@ -53,8 +53,8 @@ namespace JMS
 			// now lets send a message
 			IMessageProducer producer = CreateProducer();
 			IMessage request = CreateMessage();
-			request.JMSCorrelationID = "abc";
-			request.JMSType = "Test";
+			request.NMSCorrelationID = "abc";
+			request.NMSType = "Test";
 			producer.Send(request);
 			
 			WaitForMessageToArrive();

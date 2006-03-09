@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 
 namespace ActiveMQ
 {
 	/// <summary>
         /// Exception thrown when a consumer is used that it already closed
         /// </summary>
-        public class ConsumerClosedException : JMSException {
+        public class ConsumerClosedException : NMSException {
                 public ConsumerClosedException() : base("The consumer is already closed!") {
                 }
         }

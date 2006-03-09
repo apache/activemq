@@ -14,16 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 using System;
 
-namespace JMS
+
+namespace NMS
 {
 	public delegate void MessageListener(IMessage message);
+}
 
-	/// <summary>
-	/// A consumer of messages
-	/// </summary>
+/// <summary>
+/// A consumer of messages
+/// </summary>
+namespace NMS
+{
 	public interface IMessageConsumer : IDisposable
     {
         
@@ -48,4 +52,5 @@ namespace JMS
         event MessageListener Listener;
     }
 }
+
 

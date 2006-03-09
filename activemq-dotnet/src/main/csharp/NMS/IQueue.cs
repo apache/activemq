@@ -14,22 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
+using System;
 
-namespace JMS
+
+
+/// <summary>
+/// Summary description for IQueue.
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Represents a Map message which contains key and value pairs which are
-	/// of primitive types
-	/// </summary>
-	public interface IMapMessage : IMessage
-    {
-        IPrimitiveMap Body
+	public interface IQueue : IDestination
+	{
+		
+		String QueueName
 		{
-            get;
-        }
-    }
+			get;
+		}
+	}
 }
 
 
