@@ -18,7 +18,7 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.Command;
 
-import java.net.SocketAddress;
+import java.io.IOException;
 
 /**
  * A callback used to process inbound commands
@@ -27,6 +27,6 @@ import java.net.SocketAddress;
  */
 public interface CommandProcessor {
 
-    void process(Command command, SocketAddress address);
+    void process(Command command, DatagramHeader header) throws IOException;
 
 }

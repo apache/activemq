@@ -18,6 +18,8 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.Command;
 
+import java.net.SocketAddress;
+
 /**
  * Represents a header used when sending data grams
  * 
@@ -32,6 +34,7 @@ public class DatagramHeader implements Comparable {
     private int dataSize;
 
     // transient caches
+    private transient SocketAddress fromAddress;
     private transient byte[] partialData;
     private transient Command command;
 
@@ -64,6 +67,11 @@ public class DatagramHeader implements Comparable {
             return compareTo((DatagramHeader) that);
         }
         return getClass().getName().compareTo(that.getClass().getName());
+    }
+
+    
+    public String toString() {
+        return "DatagramHeader[producer: " + producerId + " counter: " + counter + " flags: " + getFlags();
     }
 
     public boolean isComplete() {
@@ -126,6 +134,8 @@ public class DatagramHeader implements Comparable {
         complete = (flags & 0x2) != 0;
     }
 
+    // Transient cached properties
+    
     public Command getCommand() {
         return command;
     }
@@ -142,6 +152,12 @@ public class DatagramHeader implements Comparable {
         this.partialData = partialData;
     }
 
-    // Transient cached properties
+    public SocketAddress getFromAddress() {
+        return fromAddress;
+    }
+
+    public void setFromAddress(SocketAddress fromAddress) {
+        this.fromAddress = fromAddress;
+    }
 
 }
