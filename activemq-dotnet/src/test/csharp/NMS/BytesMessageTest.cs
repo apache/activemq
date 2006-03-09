@@ -19,13 +19,14 @@ using NUnit.Framework;
 using System;
 
 
-namespace JMS
+
+namespace NMS
 {
 	[ TestFixture ]
-    public class TextMessage : JMSTestSupport
+    public class BytesMessageTest : JMSTestSupport
     {
-        string expected = "Hello World!";
-        
+        byte[] expected = {1, 2, 3, 4, 5, 6, 7, 8};
+		
 		[SetUp]
         override public void SetUp()
         {
@@ -46,19 +47,24 @@ namespace JMS
         
         protected override IMessage CreateMessage()
         {
-            IMessage request = session.CreateTextMessage(expected);
+            IBytesMessage request = session.CreateBytesMessage(expected);
             return request;
         }
         
         protected override void AssertValidMessage(IMessage message)
         {
-            ITextMessage textMessage = (ITextMessage) message;
-            String text = textMessage.Text;
-            Console.WriteLine("Received message with text: " + text);
-            Assert.AreEqual(expected, text, "the message text");
+            Assert.IsTrue(message is IBytesMessage, "Did not receive a IBytesMessage: " + message);
+            
+            Console.WriteLine("Received IBytesMessage: " + message);
+            
+            IBytesMessage bytesMessage = (IBytesMessage) message;
+            byte[] actual = bytesMessage.Content;
+            Console.WriteLine("Received message with content: " + actual);
+            Assert.AreEqual(expected, actual, "the message content");
         }
         
     }
 }
+
 
 

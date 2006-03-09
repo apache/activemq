@@ -206,15 +206,15 @@
         <Compile Include="src\test\csharp\ActiveMQ\OpenWire\EndianTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\TestMain.cs"/>
         <Compile Include="src\test\csharp\CommonAssemblyInfo.cs"/>
-        <Compile Include="src\test\csharp\JMS\AsyncConsumeTest.cs"/>
-        <Compile Include="src\test\csharp\JMS\BadConsumeTest.cs"/>
-        <Compile Include="src\test\csharp\JMS\BytesMessageTest.cs"/>
-        <Compile Include="src\test\csharp\JMS\ConsumerTest.cs"/>
-        <Compile Include="src\test\csharp\JMS\JMSPropertyTest.cs"/>
-        <Compile Include="src\test\csharp\JMS\JMSTestSupport.cs"/>
-        <Compile Include="src\test\csharp\JMS\MapMessageTest.cs"/>
-        <Compile Include="src\test\csharp\JMS\MessageTest.cs"/>
-        <Compile Include="src\test\csharp\JMS\TextMessage.cs"/>
-        <Compile Include="src\test\csharp\JMS\TransactionTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\AsyncConsumeTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\BadConsumeTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\BytesMessageTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\ConsumerTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\JMSPropertyTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\JMSTestSupport.cs"/>
+        <Compile Include="src\test\csharp\NMS\MapMessageTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\MessageTest.cs"/>
+        <Compile Include="src\test\csharp\NMS\TextMessage.cs"/>
+        <Compile Include="src\test\csharp\NMS\TransactionTest.cs"/>
     </ItemGroup>
 </Project>

@@ -20,7 +20,8 @@ using NUnit.Framework;
 using System;
 
 
-namespace JMS
+
+namespace NMS
 {
 	[ TestFixture ]
     public class JMSPropertyTest : JMSTestSupport
@@ -134,5 +135,6 @@ namespace JMS
         }
     }
 }
+
 
 

@@ -21,7 +21,8 @@ using System;
 /// <summary>
 /// useful base class for test cases
 /// </summary>
-namespace JMS
+
+namespace NMS
 {
 	[ TestFixture ]
     public abstract class JMSTestSupport
@@ -59,7 +60,7 @@ namespace JMS
             Assert.IsNotNull(connection != null, "no session created");
 			Console.WriteLine("Connected.");
         }
-
+		
         
         virtual protected void Disconnect()
         {
@@ -88,7 +89,7 @@ namespace JMS
 				// Should only need to wait for first message to arrive due to the way
 				// prefetching works.
 				IMessage msg = consumer.Receive(receiveTimeout);
-				while (msg!= null)
+				while (msg != null)
 				{
 					msg = consumer.ReceiveNoWait();
 				}
@@ -105,14 +106,15 @@ namespace JMS
 				
 				IMessage request = CreateMessage();
 				producer.Send(request);
-                 
+				
 				IMessage message = consumer.Receive(receiveTimeout);
                 Assert.IsNotNull(message, "No message returned!");
                 AssertValidMessage(message);
             }
         }
-
-		protected virtual IConnectionFactory CreateConnectionFactory() {
+		
+		protected virtual IConnectionFactory CreateConnectionFactory()
+		{
 			return new ActiveMQ.ConnectionFactory(new Uri("tcp://localhost:61616"));
 		}
 		
@@ -126,7 +128,7 @@ namespace JMS
 			IMessageProducer producer = session.CreateProducer(destination);
 			return producer;
 		}
-
+		
 		protected virtual IMessageConsumer CreateConsumer()
 		{
 			IMessageConsumer consumer = session.CreateConsumer(destination);
@@ -157,7 +159,8 @@ namespace JMS
         public IDestination Destination
         {
             get {
-				if( destination == null ) {
+				if (destination == null)
+				{
 					destination = CreateDestination();
 					Assert.IsNotNull(destination, "No destination available!");
 					Console.WriteLine("Using destination: " + destination);
@@ -171,4 +174,5 @@ namespace JMS
 		
     }
 }
+
 

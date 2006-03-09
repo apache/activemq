@@ -20,7 +20,6 @@ using System.Collections;
 
 using ActiveMQ.OpenWire;
 using ActiveMQ.Commands;
-using JMS;
 
 namespace ActiveMQ.Commands
 {

@@ -20,7 +20,8 @@ using System;
 using System.Threading;
 
 
-namespace JMS
+
+namespace NMS
 {
 	[TestFixture]
     public class AsyncConsumeTest : JMSTestSupport
@@ -43,7 +44,7 @@ namespace JMS
         [Test]
         public void TestAsynchronousConsume()
         {
-                
+			
 			// lets create an async consumer
 			// START SNIPPET: demo
 			IMessageConsumer consumer = session.CreateConsumer(this.Destination);
@@ -86,4 +87,5 @@ namespace JMS
         
     }
 }
+
 

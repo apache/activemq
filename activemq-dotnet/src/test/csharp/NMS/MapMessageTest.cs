@@ -19,7 +19,8 @@ using NUnit.Framework;
 using System;
 
 
-namespace JMS
+
+namespace NMS
 {
 	[ TestFixture ]
     public class MapMessageTest : JMSTestSupport
@@ -112,7 +113,7 @@ namespace JMS
             Assert.AreEqual(j, mapMessage.Body.GetShort("j"), "map entry: j");
             Assert.AreEqual(k, mapMessage.Body.GetInt("k"), "map entry: k");
             Assert.AreEqual(l, mapMessage.Body.GetLong("l"), "map entry: l");
-            			
+			
         }
         
         protected string ToHex(long value)
@@ -121,4 +122,5 @@ namespace JMS
         }
     }
 }
+
 
