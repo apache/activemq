@@ -18,6 +18,7 @@ package org.apache.activemq.transport.http;
 
 import edu.emory.mathcs.backport.java.util.Queue;
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.TransportSupport;
@@ -35,6 +36,8 @@ import java.io.IOException;
  * @version $Revision$
  */
 public class BlockingQueueTransport extends TransportSupport {
+    public static final long MAX_TIMEOUT = 30000L;
+
     private BlockingQueue queue;
 
     public BlockingQueueTransport(BlockingQueue channel) {
@@ -46,7 +49,13 @@ public class BlockingQueueTransport extends TransportSupport {
     }
 
     public void oneway(Command command) throws IOException {
-        queue.add(command);
+        try {
+            boolean success = queue.offer(command, MAX_TIMEOUT, TimeUnit.MILLISECONDS);
+            if (!success)
+                throw new IOException("Fail to add to BlockingQueue. Add timed out after " + MAX_TIMEOUT + "ms: size=" + queue.size());
+        } catch (InterruptedException e) {
+            throw new IOException("Fail to add to BlockingQueue. Interrupted while waiting for space: size=" + queue.size());
+        }
     }
 
     protected void doStart() throws Exception {
