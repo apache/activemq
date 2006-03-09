@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.udp;
 
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.WireFormatInfo;
@@ -24,6 +27,8 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
+
+import javax.jms.MessageNotWriteableException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -41,7 +46,8 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
     protected Object lock = new Object();
     protected Command receivedCommand;
-    private TransportServer server;
+    protected TransportServer server;
+    protected boolean large;
 
     public void testSendingSmallMessage() throws Exception {
         ConsumerInfo expected = new ConsumerInfo();
@@ -50,7 +56,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         expected.setCommandId((short) 12);
         expected.setExclusive(true);
         expected.setPrefetchSize(3456);
-        
+
         try {
             System.out.println("About to send: " + expected);
             producer.oneway(expected);
@@ -68,6 +74,54 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             e.printStackTrace();
             fail("Failed to send to transport: " + e);
         }
+    }
+
+    public void testSendingMediumMessage() throws Exception {
+        String text = createMessageBodyText(4 * 105);
+        ActiveMQDestination destination = new ActiveMQQueue("Foo.Bar.Medium");
+        assertSendTextMessage(destination, text);
+    }
+
+    public void testSendingLargeMessage() throws Exception {
+        String text = createMessageBodyText(4 * 1024);
+        ActiveMQDestination destination = new ActiveMQQueue("Foo.Bar.Large");
+        assertSendTextMessage(destination, text);
+    }
+
+    protected void assertSendTextMessage(ActiveMQDestination destination, String text) throws MessageNotWriteableException {
+        large = true;
+
+        ActiveMQTextMessage expected = new ActiveMQTextMessage();
+
+        expected.setText(text);
+        expected.setDestination(destination);
+
+        try {
+            System.out.println("About to send message of type: " + expected.getClass());
+            producer.oneway(expected);
+
+            Command received = assertCommandReceived();
+            assertTrue("Should have received a ActiveMQTextMessage but was: " + received, received instanceof ActiveMQTextMessage);
+            ActiveMQTextMessage actual = (ActiveMQTextMessage) received;
+
+            assertEquals("getDestination", expected.getDestination(), actual.getDestination());
+            assertEquals("getText", expected.getText(), actual.getText());
+            
+            System.out.println("Received text message with: " + actual.getText().length() + " character(s)");
+        }
+        catch (Exception e) {
+            System.out.println("Caught: " + e);
+            e.printStackTrace();
+            fail("Failed to send to transport: " + e);
+        }
+    }
+
+    protected String createMessageBodyText(int loopSize) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < loopSize; i++) {
+            buffer.append("0123456789");
+        }
+        return buffer.toString();
     }
 
     protected void setUp() throws Exception {
@@ -133,7 +187,12 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             System.out.println("Got WireFormatInfo: " + command);
         }
         else {
-            System.out.println("### Received command: " + command);
+            if (large) {
+                System.out.println("### Received command: " + command.getClass() + " with id: " + command.getCommandId());
+            }
+            else {
+                System.out.println("### Received command: " + command);
+            }
 
             synchronized (lock) {
                 receivedCommand = command;
@@ -157,7 +216,10 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
     protected Command assertCommandReceived() throws InterruptedException {
         Command answer = null;
         synchronized (lock) {
-            lock.wait(1000);
+            answer = receivedCommand;
+            if (answer == null) {
+                lock.wait(10000);
+            }
             answer = receivedCommand;
         }
 
