@@ -79,6 +79,16 @@ final public class OpenWireFormat implements WireFormat {
             ;
     }
     
+    public OpenWireFormat copy() {
+        OpenWireFormat answer = new OpenWireFormat();
+        answer.stackTraceEnabled = stackTraceEnabled;
+        answer.tcpNoDelayEnabled = tcpNoDelayEnabled;
+        answer.cacheEnabled = cacheEnabled;
+        answer.tightEncodingEnabled = tightEncodingEnabled;
+        answer.sizePrefixDisabled = sizePrefixDisabled;
+        return answer;
+    }
+    
     public boolean equals(Object object) {
         if( object == null )
             return false;
