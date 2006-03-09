@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 using ActiveMQ.Commands;
-using JMS;
+using NMS;
 
 namespace ActiveMQ
 {
@@ -23,7 +23,7 @@ namespace ActiveMQ
 	/// <summary>
 	/// Exception thrown when the broker returns an error
 	/// </summary>
-	public class BrokerException : JMSException
+	public class BrokerException : NMSException
     {
         
         private BrokerError brokerError;

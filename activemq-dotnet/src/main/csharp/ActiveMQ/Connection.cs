@@ -1,6 +1,6 @@
 using ActiveMQ.Commands;
 using ActiveMQ.Transport;
-using JMS;
+using NMS;
 using System;
 using System.Collections;
 
@@ -105,7 +105,7 @@ namespace ActiveMQ
             set {
                 if (connected)
                 {
-                    throw new JMSException("You cannot change the ClientId once the Connection is connected");
+                    throw new NMSException("You cannot change the ClientId once the Connection is connected");
                 }
                 info.ClientId = value;
             }
@@ -145,7 +145,7 @@ namespace ActiveMQ
             {
                 ExceptionResponse exceptionResponse = (ExceptionResponse) response;
                 // TODO include stack trace
-                throw new JMSException("Request failed: " + exceptionResponse);
+                throw new NMSException("Request failed: " + exceptionResponse);
             }
             return response;
         }

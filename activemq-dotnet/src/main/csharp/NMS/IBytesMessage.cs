@@ -14,26 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 
-namespace JMS
+
+
+/// <summary>
+/// Represents a binary based message
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// A Factory of IConnection objects
-	/// </summary>
-	public interface IConnectionFactory
-	{
-		
-		/// <summary>
-		/// Creates a new connection
-		/// </summary>
-		IConnection CreateConnection();
-		
-		/// <summary>
-		/// Creates a new connection with the given user name and password
-		/// </summary>
-		IConnection CreateConnection(string userName, string password);
-	}
+	public interface IBytesMessage : IMessage
+    {
+        
+        byte[] Content
+        {
+            get;
+            set;
+        }
+    }
 }
+
 

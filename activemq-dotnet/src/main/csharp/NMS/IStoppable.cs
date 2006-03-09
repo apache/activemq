@@ -14,16 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
 
-namespace JMS
+namespace NMS
 {
-	
-	/// <summary>
-	/// Summary description for TemporaryTopic.
-	/// </summary>
-	public interface ITemporaryTopic : IDestination
+	public interface IStoppable
 	{
+		void Stop();
 	}
 }
 

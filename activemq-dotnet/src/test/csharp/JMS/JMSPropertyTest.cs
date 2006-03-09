@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 //using ActiveMQ;
-using JMS;
+using NMS;
 using NUnit.Framework;
 using System;
 
@@ -68,13 +68,13 @@ namespace JMS
             replyTo = session.CreateTemporaryQueue();
             
             // lets set the headers
-            message.JMSCorrelationID = correlationID;
-            message.JMSReplyTo = replyTo;
-            message.JMSPersistent = persistent;
-            message.JMSPriority = priority;
-            message.JMSType = type;
-            message.JMSXGroupID = groupID;
-            message.JMSXGroupSeq = groupSeq;
+            message.NMSCorrelationID = correlationID;
+            message.NMSReplyTo = replyTo;
+            message.NMSPersistent = persistent;
+            message.NMSPriority = priority;
+            message.NMSType = type;
+            message.Properties["JMSXGroupID"] = groupID;
+            message.Properties["JMSXGroupSeq"] = groupSeq;
             
             // lets set the custom headers
             message.Properties["customText"] = customText;
@@ -99,13 +99,13 @@ namespace JMS
             Assert.AreEqual(expectedText, text, "the message text");
             
             // compare standard JMS headers
-            Assert.AreEqual(correlationID, message.JMSCorrelationID, "JMSCorrelationID");
-            Assert.AreEqual(replyTo, message.JMSReplyTo, "JMSReplyTo");
-            Assert.AreEqual(persistent, message.JMSPersistent, "JMSPersistent");
-            Assert.AreEqual(priority, message.JMSPriority, "JMSPriority");
-            Assert.AreEqual(type, message.JMSType, "JMSType");
-            Assert.AreEqual(groupID, message.JMSXGroupID, "JMSXGroupID");
-            Assert.AreEqual(groupSeq, message.JMSXGroupSeq, "JMSXGroupSeq");
+            Assert.AreEqual(correlationID, message.NMSCorrelationID, "JMSCorrelationID");
+            Assert.AreEqual(replyTo, message.NMSReplyTo, "JMSReplyTo");
+            Assert.AreEqual(persistent, message.NMSPersistent, "JMSPersistent");
+            Assert.AreEqual(priority, message.NMSPriority, "JMSPriority");
+            Assert.AreEqual(type, message.NMSType, "JMSType");
+            Assert.AreEqual(groupID, message.Properties["JMSXGroupID"], "JMSXGroupID");
+            Assert.AreEqual(groupSeq, message.Properties["JMSXGroupSeq"], "JMSXGroupSeq");
             
             // compare custom headers
             Assert.AreEqual(customText, message.Properties["customText"], "customText");
@@ -125,12 +125,12 @@ namespace JMS
             Assert.AreEqual(custom6, message.Properties.GetChar("custom6"), "custom6");
             
             // lets now look at some standard JMS headers
-            Console.WriteLine("JMSExpiration: " + message.JMSExpiration);
-            Console.WriteLine("JMSMessageId: " + message.JMSMessageId);
-            Console.WriteLine("JMSRedelivered: " + message.JMSRedelivered);
-            Console.WriteLine("JMSTimestamp: " + message.JMSTimestamp);
-            Console.WriteLine("JMSXDeliveryCount: " + message.JMSXDeliveryCount);
-            Console.WriteLine("JMSXProducerTXID: " + message.JMSXProducerTXID);
+            Console.WriteLine("JMSExpiration: " + message.NMSExpiration);
+            Console.WriteLine("JMSMessageId: " + message.NMSMessageId);
+            Console.WriteLine("JMSRedelivered: " + message.NMSRedelivered);
+            Console.WriteLine("JMSTimestamp: " + message.NMSTimestamp);
+            Console.WriteLine("JMSXDeliveryCount: " + message.Properties["JMSXDeliveryCount"]);
+            Console.WriteLine("JMSXProducerTXID: " + message.Properties["JMSXProducerTXID"]);
         }
     }
 }

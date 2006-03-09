@@ -14,19 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using NMS;
 using System;
 
-namespace JMS
+
+
+/// <summary>
+/// Summary description for ITopic.
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Represents a connection failure.
-	/// </summary>
-	public class ConnectionException : JMSException
+	public interface ITopic : IDestination
 	{
-		public ConnectionException(string message) : base(message)
+		
+		String TopicName
 		{
+			get;
 		}
 	}
 }
+
 

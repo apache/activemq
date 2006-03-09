@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using JMS;
+using NMS;
 using System;
 using System.Collections;
 
@@ -219,7 +219,7 @@ namespace ActiveMQ.OpenWire
         {
             if (! type.IsInstanceOfType(value))
             {
-                throw new JMSException("Expected type: " + type.Name + " but was: " + value);
+                throw new NMSException("Expected type: " + type.Name + " but was: " + value);
             }
         }
         
@@ -230,7 +230,7 @@ namespace ActiveMQ.OpenWire
                 Type type = value.GetType();
                 if (! type.IsPrimitive && !type.IsValueType && !type.IsAssignableFrom(typeof(string)))
                 {
-                    throw new JMSException("Invalid type: " + type.Name + " for value: " + value);
+                    throw new NMSException("Invalid type: " + type.Name + " for value: " + value);
                 }
             }
         }

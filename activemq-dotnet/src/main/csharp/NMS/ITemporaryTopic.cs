@@ -14,14 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace JMS
+using NMS;
+
+
+
+/// <summary>
+/// Summary description for TemporaryTopic.
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Summary description for Destination.
-	/// </summary>
-	public interface IDestination
+	public interface ITemporaryTopic : IDestination
 	{
 	}
 }
+
 

@@ -14,12 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using NMS;
 
-namespace JMS
+
+
+/// <summary>
+/// A Factory of IConnection objects
+/// </summary>
+namespace NMS
 {
-	public interface IStartable
-    {
-        void Start();
-    }
+	public interface IConnectionFactory
+	{
+		
+		/// <summary>
+		/// Creates a new connection
+		/// </summary>
+		IConnection CreateConnection();
+		
+		/// <summary>
+		/// Creates a new connection with the given user name and password
+		/// </summary>
+		IConnection CreateConnection(string userName, string password);
+	}
 }
+
 

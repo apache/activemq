@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 
 namespace ActiveMQ
 {
 	/// <summary>
         /// Exception thrown when a connection is used that it already closed
         /// </summary>
-        public class ConnectionClosedException : JMSException {
+        public class ConnectionClosedException : NMSException {
                 public ConnectionClosedException() : base("The connection is already closed!") {
                 }
         }

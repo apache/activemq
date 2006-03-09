@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 using ActiveMQ.OpenWire;
-using JMS;
+using NMS;
 
 
 namespace ActiveMQ.Commands
@@ -53,7 +53,7 @@ namespace ActiveMQ.Commands
         {
             if (Acknowledger == null)
 			{
-                throw new JMSException("No Acknowledger has been associated with this message: " + this);
+                throw new NMSException("No Acknowledger has been associated with this message: " + this);
 			}
             else
 			{
@@ -89,7 +89,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The correlation ID used to correlate messages with conversations or long running business processes
         /// </summary>
-        public string JMSCorrelationID
+        public string NMSCorrelationID
         {
             get {
                 return CorrelationId;
@@ -102,7 +102,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The destination of the message
         /// </summary>
-        public IDestination JMSDestination
+        public IDestination NMSDestination
         {
             get {
                 return OriginalDestination;
@@ -112,7 +112,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The time in milliseconds that this message should expire in
         /// </summary>
-        public long JMSExpiration
+        public long NMSExpiration
         {
             get {
                 return Expiration;
@@ -125,7 +125,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The message ID which is set by the provider
         /// </summary>
-        public string JMSMessageId
+        public string NMSMessageId
         {
             get {
                 return BaseDataStreamMarshaller.ToString(MessageId);
@@ -135,7 +135,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// Whether or not this message is persistent
         /// </summary>
-        public bool JMSPersistent
+        public bool NMSPersistent
         {
             get {
                 return Persistent;
@@ -148,7 +148,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The Priority on this message
         /// </summary>
-        public byte JMSPriority
+        public byte NMSPriority
         {
             get {
                 return Priority;
@@ -161,7 +161,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// Returns true if this message has been redelivered to this or another consumer before being acknowledged successfully.
         /// </summary>
-        public bool JMSRedelivered
+        public bool NMSRedelivered
         {
             get {
                 return RedeliveryCounter > 0;
@@ -172,7 +172,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The destination that the consumer of this message should send replies to
         /// </summary>
-        public IDestination JMSReplyTo
+        public IDestination NMSReplyTo
         {
             get {
                 return ReplyTo;
@@ -186,7 +186,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The timestamp the broker added to the message
         /// </summary>
-        public long JMSTimestamp
+        public long NMSTimestamp
         {
             get {
                 return Timestamp;
@@ -196,7 +196,7 @@ namespace ActiveMQ.Commands
         /// <summary>
         /// The type name of this message
         /// </summary>
-        public string JMSType
+        public string NMSType
         {
             get {
                 return Type;

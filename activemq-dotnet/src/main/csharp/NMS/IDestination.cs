@@ -14,19 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 
-namespace JMS
+
+/// <summary>
+/// Summary description for Destination.
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Represents a JMS exception
-	/// </summary>
-	public class JMSException : Exception
+	public interface IDestination
 	{
-		public JMSException(string message) : base(message)
-		{
-		}
 	}
 }
+
 

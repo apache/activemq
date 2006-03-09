@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 using ActiveMQ.Commands;
-using JMS;
+using NMS;
 using System;
 
 namespace ActiveMQ
@@ -47,8 +47,8 @@ namespace ActiveMQ
                     
                     // lets send a message
                     ITextMessage request = session.CreateTextMessage("Hello World!");
-                    request.JMSCorrelationID = "abc";
-                    request.JMSXGroupID = "cheese";
+                    request.NMSCorrelationID = "abc";
+                    request.Properties["JMSXGroupID"] = "cheese";
                     request.Properties["myHeader"] = "James";
                     
                     producer.Send(request);
@@ -61,7 +61,7 @@ namespace ActiveMQ
                     }
                     else
                     {
-                        Console.WriteLine("Received message with ID:   " + message.JMSMessageId);
+                        Console.WriteLine("Received message with ID:   " + message.NMSMessageId);
                         Console.WriteLine("Received message with text: " + message.Text);
                     }
                 }

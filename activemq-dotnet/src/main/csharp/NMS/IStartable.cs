@@ -14,22 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
 
-namespace JMS
+
+namespace NMS
 {
-	
-	/// <summary>
-	/// Represents a binary based message
-	/// </summary>
-	public interface IBytesMessage : IMessage
+	public interface IStartable
     {
-        
-        byte[] Content
-        {
-            get;
-            set;
-        }
+        void Start();
     }
 }
+
 

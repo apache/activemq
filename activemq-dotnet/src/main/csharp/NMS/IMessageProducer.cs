@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 using System;
 
-namespace JMS
+
+
+/// <summary>
+/// An object capable of sending messages to some destination
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// An object capable of sending messages to some destination
-	/// </summary>
 	public interface IMessageProducer : IDisposable
 	{
 		
@@ -68,4 +69,5 @@ namespace JMS
 		
     }
 }
+
 

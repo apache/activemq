@@ -14,14 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using JMS;
+using NMS;
 
-namespace JMS
+
+
+/// <summary>
+/// Represents a message either to be sent to a message broker or received from a message broker
+/// </summary>
+namespace NMS
 {
-	
-	/// <summary>
-	/// Represents a message either to be sent to a message broker or received from a message broker
-	/// </summary>
 	public interface IMessage
     {
         
@@ -42,7 +43,7 @@ namespace JMS
         /// <summary>
         /// The correlation ID used to correlate messages from conversations or long running business processes
         /// </summary>
-        string JMSCorrelationID
+        string NMSCorrelationID
         {
             get;
             set;
@@ -51,7 +52,7 @@ namespace JMS
         /// <summary>
         /// The destination of the message
         /// </summary>
-        IDestination JMSDestination
+        IDestination NMSDestination
         {
             get;
         }
@@ -59,7 +60,7 @@ namespace JMS
         /// <summary>
         /// The time in milliseconds that this message should expire in
         /// </summary>
-        long JMSExpiration
+        long NMSExpiration
         {
             get;
             set;
@@ -68,7 +69,7 @@ namespace JMS
         /// <summary>
         /// The message ID which is set by the provider
         /// </summary>
-        string JMSMessageId
+        string NMSMessageId
         {
             get;
         }
@@ -76,7 +77,7 @@ namespace JMS
         /// <summary>
         /// Whether or not this message is persistent
         /// </summary>
-        bool JMSPersistent
+        bool NMSPersistent
         {
             get;
             set;
@@ -85,7 +86,7 @@ namespace JMS
         /// <summary>
         /// The Priority on this message
         /// </summary>
-        byte JMSPriority
+        byte NMSPriority
         {
             get;
             set;
@@ -94,7 +95,7 @@ namespace JMS
         /// <summary>
         /// Returns true if this message has been redelivered to this or another consumer before being acknowledged successfully.
         /// </summary>
-        bool JMSRedelivered
+        bool NMSRedelivered
         {
             get;
         }
@@ -103,7 +104,7 @@ namespace JMS
         /// <summary>
         /// The destination that the consumer of this message should send replies to
         /// </summary>
-        IDestination JMSReplyTo
+        IDestination NMSReplyTo
         {
             get;
             set;
@@ -113,7 +114,7 @@ namespace JMS
         /// <summary>
         /// The timestamp the broker added to the message
         /// </summary>
-        long JMSTimestamp
+        long NMSTimestamp
         {
             get;
         }
@@ -121,49 +122,13 @@ namespace JMS
         /// <summary>
         /// The type name of this message
         /// </summary>
-        string JMSType
+        string NMSType
         {
             get;
             set;
         }
-        
-        
-        // JMS Extension headers
-        
-        /// <summary>
-        /// Returns the number of times this message has been redelivered to other consumers without being acknowledged successfully.
-        /// </summary>
-        int JMSXDeliveryCount
-        {
-            get;
-        }
-        
-        
-        /// <summary>
-        /// The Message Group ID used to group messages together to the same consumer for the same group ID value
-        /// </summary>
-        string JMSXGroupID
-        {
-            get;
-            set;
-        }
-        /// <summary>
-        /// The Message Group Sequence counter to indicate the position in a group
-        /// </summary>
-        int JMSXGroupSeq
-        {
-            get;
-            set;
-        }
-        
-        /// <summary>
-        /// Returns the ID of the producers transaction
-        /// </summary>
-        string JMSXProducerTXID
-        {
-            get;
-        }
-        
+                        
     }
 }
+
 

@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 using JMS;
+using NMS;
 using NUnit.Framework;
 using System;
 
