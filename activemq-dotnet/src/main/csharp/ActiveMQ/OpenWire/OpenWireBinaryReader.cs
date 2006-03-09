@@ -24,6 +24,7 @@ namespace ActiveMQ.OpenWire
 	/// A BinaryWriter that switches the endian orientation of the read opperations so that they
 	/// are compatible with marshalling used by OpenWire.
     /// </summary>
+	[CLSCompliant(false)]
     public class OpenWireBinaryReader : BinaryReader
     {
 		

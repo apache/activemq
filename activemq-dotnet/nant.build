@@ -118,7 +118,7 @@
             </imports>
             <attributes>
                 <attribute type="ComVisibleAttribute" value="false" />
-                <attribute type="CLSCompliantAttribute" value="false" />
+                <attribute type="CLSCompliantAttribute" value="true" />
                 <attribute type="AssemblyTitleAttribute" value="ActiveMQ .NET" />
                 <attribute type="AssemblyDescriptionAttribute" value="A .NET Library for talking to ActiveMQ" />
                 <attribute type="AssemblyConfigurationAttribute" value="${project.release.type}" />

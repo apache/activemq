@@ -14,18 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-using System;
-
-
-
-/// <summary>
-/// Represents a single unit of work on an IConnection.
-/// So the ISession can be used to perform transactional receive and sends
-/// </summary>
 namespace NMS
 {
-	public interface ISession : IDisposable
+	/// <summary>
+	/// Represents a single unit of work on an IConnection.
+	/// So the ISession can be used to perform transactional receive and sends
+	/// </summary>
+	public interface ISession : System.IDisposable
     {
         
         /// <summary>

@@ -14,15 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-
-
-
-/// <summary>
-/// Represents a message either to be sent to a message broker or received from a message broker
-/// </summary>
 namespace NMS
 {
+	/// <summary>
+	/// Represents a message either to be sent to a message broker or received from a message broker
+	/// </summary>
 	public interface IMessage
     {
         

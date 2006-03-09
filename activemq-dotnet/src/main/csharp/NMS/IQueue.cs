@@ -14,20 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-using System;
-
-
-
-/// <summary>
-/// Summary description for IQueue.
-/// </summary>
 namespace NMS
 {
+	/// <summary>
+	/// Summary description for IQueue.
+	/// </summary>
 	public interface IQueue : IDestination
 	{
 		
-		String QueueName
+		string QueueName
 		{
 			get;
 		}

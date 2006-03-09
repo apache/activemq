@@ -14,21 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
-using System;
-
-
 namespace NMS
 {
+	/// <summary>
+	/// A delegate that can receive messages async.
+	/// </summary>
 	public delegate void MessageListener(IMessage message);
-}
 
-/// <summary>
-/// A consumer of messages
-/// </summary>
-namespace NMS
-{
-	public interface IMessageConsumer : IDisposable
+	/// <summary>
+	/// A consumer of messages
+	/// </summary>
+	public interface IMessageConsumer : System.IDisposable
     {
         
         /// <summary>

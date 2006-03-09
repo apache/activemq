@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 namespace NMS
 {
+	/// <summary>
+	/// Implemented by NMS objects that can be started.
+	/// </summary>
 	public interface IStoppable
 	{
 		void Stop();

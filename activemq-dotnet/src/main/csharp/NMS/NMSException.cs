@@ -16,14 +16,15 @@
  */
 namespace NMS
 {
-	
 	/// <summary>
-	/// Summary description for Destination.
+	/// Represents a NMS exception
 	/// </summary>
-	public interface IDestination
+	public class NMSException : System.Exception
 	{
+		public NMSException(string message) : base(message)
+		{
+		}
 	}
-	
 }
 
 

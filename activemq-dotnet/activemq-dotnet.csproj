@@ -182,6 +182,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\Transport\Tcp\TcpTransport.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Transport\Tcp\TcpTransportFactory.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Transport\TransportFilter.cs"/>
+        <Compile Include="src\main\csharp\CommonAssemblyInfo.cs"/>
         <Compile Include="src\main\csharp\NMS\IBytesMessage.cs"/>
         <Compile Include="src\main\csharp\NMS\IConnection.cs"/>
         <Compile Include="src\main\csharp\NMS\IConnectionFactory.cs"/>
@@ -205,7 +206,6 @@
         <Compile Include="src\test\csharp\ActiveMQ\OpenWire\BooleanStreamTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\OpenWire\EndianTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\TestMain.cs"/>
-        <Compile Include="src\test\csharp\CommonAssemblyInfo.cs"/>
         <Compile Include="src\test\csharp\NMS\AsyncConsumeTest.cs"/>
         <Compile Include="src\test\csharp\NMS\BadConsumeTest.cs"/>
         <Compile Include="src\test\csharp\NMS\BytesMessageTest.cs"/>
