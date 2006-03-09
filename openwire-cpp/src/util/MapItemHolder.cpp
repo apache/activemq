@@ -181,7 +181,12 @@ p<string> MapItemHolder::getString() throw (ConversionException)
             return retval ;
 
         case LONG:
-            sprintf(buffer, "%I64d", getLong() ) ;
+        
+        	#ifdef unix
+        		sprintf(buffer, "%ld", getLong() );
+        	#else
+            	sprintf(buffer, "%I64d", getLong() ) ;            
+            #endif
             retval = new string(buffer) ;
             return retval ;
 

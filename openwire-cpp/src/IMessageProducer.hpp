@@ -20,7 +20,7 @@
 #include <string>
 #include "IDestination.hpp"
 #include "IMessage.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -28,13 +28,16 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
 
 /*
  * 
  */
-struct IMessageProducer
+class IMessageProducer
 {
+public:
+
+	virtual ~IMessageProducer(){}
     virtual void send(p<IMessage> message) = 0 ;
     virtual void send(p<IDestination> destination, p<IMessage> message) = 0 ;
 } ;

@@ -27,8 +27,6 @@ p<BrokerInfoMarshaller> CommandMarshallerRegistry::brokerInfo = new BrokerInfoMa
 p<BrokerIdMarshaller>   CommandMarshallerRegistry::brokerId   = new BrokerIdMarshaller() ;
 
 
-// --- Constructors -------------------------------------------------
-
 /*
  *
  */

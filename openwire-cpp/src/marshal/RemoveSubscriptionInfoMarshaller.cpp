@@ -38,12 +38,12 @@ RemoveSubscriptionInfoMarshaller::~RemoveSubscriptionInfoMarshaller()
 
 
 
-DataStructure* RemoveSubscriptionInfoMarshaller::createObject() 
+IDataStructure* RemoveSubscriptionInfoMarshaller::createObject() 
 {
     return new RemoveSubscriptionInfo();
 }
 
-byte RemoveSubscriptionInfoMarshaller::getDataStructureType() 
+char RemoveSubscriptionInfoMarshaller::getDataStructureType() 
 {
     return RemoveSubscriptionInfo.ID_RemoveSubscriptionInfo;
 }
@@ -51,7 +51,7 @@ byte RemoveSubscriptionInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void RemoveSubscriptionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void RemoveSubscriptionInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -66,7 +66,7 @@ void RemoveSubscriptionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Obj
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int RemoveSubscriptionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int RemoveSubscriptionInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     RemoveSubscriptionInfo& info = (RemoveSubscriptionInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -80,7 +80,7 @@ int RemoveSubscriptionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Objec
 /* 
  * Write a object instance to data output stream
  */
-void RemoveSubscriptionInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void RemoveSubscriptionInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     RemoveSubscriptionInfo& info = (RemoveSubscriptionInfo&) o;

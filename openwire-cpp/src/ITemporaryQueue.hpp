@@ -30,8 +30,10 @@ namespace apache
 /*
  * 
  */
-struct ITemporaryQueue : IDestination
+class ITemporaryQueue : public IDestination
 {
+public:
+	virtual ~ITemporaryQueue(){}
 } ;
 
 /* namespace */

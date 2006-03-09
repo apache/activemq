@@ -38,12 +38,12 @@ MessageAckMarshaller::~MessageAckMarshaller()
 
 
 
-DataStructure* MessageAckMarshaller::createObject() 
+IDataStructure* MessageAckMarshaller::createObject() 
 {
     return new MessageAck();
 }
 
-byte MessageAckMarshaller::getDataStructureType() 
+char MessageAckMarshaller::getDataStructureType() 
 {
     return MessageAck.ID_MessageAck;
 }
@@ -51,7 +51,7 @@ byte MessageAckMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void MessageAckMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void MessageAckMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -70,7 +70,7 @@ void MessageAckMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Binar
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int MessageAckMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int MessageAckMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     MessageAck& info = (MessageAck&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -86,7 +86,7 @@ int MessageAckMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Boolea
 /* 
  * Write a object instance to data output stream
  */
-void MessageAckMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void MessageAckMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     MessageAck& info = (MessageAck&) o;

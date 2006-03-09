@@ -29,7 +29,7 @@ namespace apache
     namespace client
     {
       using namespace std;
-      using namespace ifr ;
+      using namespace ifr::v1 ;
 
 /*
  * 
@@ -41,7 +41,7 @@ private:
     
 public:
     BrokerException(p<BrokerError> cause) ;
-    virtual ~BrokerException() ;
+    virtual ~BrokerException() throw();
 
     virtual p<BrokerError> getCause() ;
 };

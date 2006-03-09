@@ -23,7 +23,7 @@
 #include "IMessageProducer.hpp"
 #include "Session.hpp"
 #include "command/ProducerInfo.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -44,7 +44,7 @@ private:
 
 public:
     MessageProducer(p<Session> session, p<ProducerInfo> producerInfo) ;
-    ~MessageProducer() ;
+    virtual ~MessageProducer() ;
 
     virtual void send(p<IMessage> message) ;
     virtual void send(p<IDestination> destination, p<IMessage> message) ;

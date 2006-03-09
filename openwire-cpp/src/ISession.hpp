@@ -24,7 +24,7 @@
 #include "IQueue.hpp"
 #include "ITopic.hpp"
 #include "ITextMessage.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -32,13 +32,16 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
 
 /*
  * 
  */
-struct ISession
+class ISession
 {
+public:
+
+	virtual ~ISession(){}
     virtual p<IMessageProducer> createProducer() = 0 ;
     virtual p<IMessageProducer> createProducer(p<IDestination> destination) = 0 ;
     virtual p<IMessageConsumer> createConsumer(p<IDestination> destination) = 0 ;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "util/guid.hpp"
+#include "Guid.hpp"
 
 using namespace apache::activemq::client::util;
 
@@ -81,7 +81,7 @@ p<string> Guid::getGuidString()
    result = new char[36] ;
 
 	// Format into a string
-   sprintf(result, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x\0",
+   sprintf(result, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
            buffer[0],  buffer[1],  buffer[2],  buffer[3],
            buffer[4],  buffer[5],  buffer[6],  buffer[7],
            buffer[8],  buffer[9],  buffer[10], buffer[11],

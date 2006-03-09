@@ -42,7 +42,7 @@ public:
     ActiveMQTempTopic(const char* name) ;
     virtual ~ActiveMQTempTopic() ;
 
-    virtual p<string> getTopicName() ;
+    virtual const char* getTopicName() ;
     virtual int getDestinationType() ;
     virtual p<ActiveMQDestination> createDestination(const char* name) ;
 } ;

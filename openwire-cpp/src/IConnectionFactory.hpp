@@ -19,7 +19,7 @@
 
 #include <string>
 #include "IConnection.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -27,13 +27,16 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
 
 /*
  * 
  */
-struct IConnectionFactory
+class IConnectionFactory
 {
+public:
+
+	virtual ~IConnectionFactory(){}
     virtual p<IConnection> createConnection() = 0 ;
     virtual p<IConnection> createConnection(const char* username, const char* password) = 0 ;
 } ;

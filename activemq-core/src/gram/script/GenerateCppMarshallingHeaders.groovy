@@ -45,7 +45,7 @@ class GenerateCppMarshallingHeaders extends OpenWireCppMarshallingHeadersScript 
 
 #include <string>
 
-#include "command/DataStructure.hpp"
+#include "command/IDataStructure.hpp"
 
 /* we could cut this down  - for now include all possible headers */
 #include "command/BrokerId.hpp"
@@ -60,6 +60,8 @@ class GenerateCppMarshallingHeaders extends OpenWireCppMarshallingHeadersScript 
 #include "command/${baseClass}.hpp"
 #include "util/ifr/p.hpp"
 
+#include "protocol/ProtocolFormat.hpp"
+
 namespace apache
 {
   namespace activemq
@@ -71,6 +73,7 @@ namespace apache
         using namespace ifr ;
         using namespace apache::activemq::client::command;
         using namespace apache::activemq::client::io;
+        using namespace apache::activemq::client::protocol;
 
 /*
  *
@@ -81,12 +84,12 @@ public:
     ${className}() ;
     virtual ~${className}() ;
 
-    virtual DataStructure* createCommand() ;
-    virtual byte getDataStructureType() ;
+    virtual IDataStructure* createCommand() ;
+    virtual char getDataStructureType() ;
     
-    virtual void unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) ;
-    virtual int marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) ;
-    virtual void marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) ;
+    virtual void unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) ;
+    virtual int marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) ;
+    virtual void marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) ;
 } ;
 
 /* namespace */
@@ -152,7 +155,7 @@ public:
     MarshallerFactory() ;
     virtual ~MarshallerFactory() ;
 
-	  virtual void configure(OpenWireFormat& format) ;
+	  virtual void configure(ProtocolFormat& format) ;
 } ;
 
 /* namespace */

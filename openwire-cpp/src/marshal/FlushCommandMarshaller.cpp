@@ -38,12 +38,12 @@ FlushCommandMarshaller::~FlushCommandMarshaller()
 
 
 
-DataStructure* FlushCommandMarshaller::createObject() 
+IDataStructure* FlushCommandMarshaller::createObject() 
 {
     return new FlushCommand();
 }
 
-byte FlushCommandMarshaller::getDataStructureType() 
+char FlushCommandMarshaller::getDataStructureType() 
 {
     return FlushCommand.ID_FlushCommand;
 }
@@ -51,7 +51,7 @@ byte FlushCommandMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void FlushCommandMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void FlushCommandMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -61,7 +61,7 @@ void FlushCommandMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int FlushCommandMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int FlushCommandMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     FlushCommand& info = (FlushCommand&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -72,7 +72,7 @@ int FlushCommandMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bool
 /* 
  * Write a object instance to data output stream
  */
-void FlushCommandMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void FlushCommandMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
 }

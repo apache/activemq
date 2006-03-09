@@ -32,7 +32,11 @@ WireFormatInfo::WireFormatInfo()
 {
     this->magic = 0 ;
     this->version = 0 ;
-    this->marshalledProperties = 0 ;
+    this->cacheEnabled = 0 ;
+    this->stackTraceEnabled = 0 ;
+    this->tcpNoDelayEnabled = 0 ;
+    this->prefixPacketSize = 0 ;
+    this->tightEncodingEnabled = 0 ;
 }
 
 WireFormatInfo::~WireFormatInfo()
@@ -62,12 +66,56 @@ void WireFormatInfo::setVersion(int version)
 }
 
         
-char* WireFormatInfo::getMarshalledProperties()
+bool WireFormatInfo::getCacheEnabled()
 {
-    return marshalledProperties ;
+    return cacheEnabled ;
 }
 
-void WireFormatInfo::setMarshalledProperties(char* marshalledProperties)
+void WireFormatInfo::setCacheEnabled(bool cacheEnabled)
 {
-    this->marshalledProperties = marshalledProperties ;
+    this->cacheEnabled = cacheEnabled ;
+}
+
+        
+bool WireFormatInfo::getStackTraceEnabled()
+{
+    return stackTraceEnabled ;
+}
+
+void WireFormatInfo::setStackTraceEnabled(bool stackTraceEnabled)
+{
+    this->stackTraceEnabled = stackTraceEnabled ;
+}
+
+        
+bool WireFormatInfo::getTcpNoDelayEnabled()
+{
+    return tcpNoDelayEnabled ;
+}
+
+void WireFormatInfo::setTcpNoDelayEnabled(bool tcpNoDelayEnabled)
+{
+    this->tcpNoDelayEnabled = tcpNoDelayEnabled ;
+}
+
+        
+bool WireFormatInfo::getPrefixPacketSize()
+{
+    return prefixPacketSize ;
+}
+
+void WireFormatInfo::setPrefixPacketSize(bool prefixPacketSize)
+{
+    this->prefixPacketSize = prefixPacketSize ;
+}
+
+        
+bool WireFormatInfo::getTightEncodingEnabled()
+{
+    return tightEncodingEnabled ;
+}
+
+void WireFormatInfo::setTightEncodingEnabled(bool tightEncodingEnabled)
+{
+    this->tightEncodingEnabled = tightEncodingEnabled ;
 }

@@ -27,7 +27,7 @@
 #include "io/BinaryWriter.hpp"
 #include "marshal/CommandMarshallerRegistry.hpp"
 #include "util/ifr/p.hpp"
-#include "util/ifr/ap"
+#include "util/ifr/ap.hpp"
 
 namespace apache
 {

@@ -21,7 +21,7 @@
 #include "command/ActiveMQDestination.hpp"
 #include "util/ConversionException.hpp"
 #include "util/ifr/ap.hpp"
-#include "util/ifr/p/hpp"
+#include "util/ifr/p.hpp"
 
 // Turn off warning message for ignored exception specification
 #ifdef _MSC_VER
@@ -36,7 +36,7 @@ namespace apache
     {
       namespace util
       {
-        using namespace ifr;
+        using namespace ifr::v1;
 
 /*
  * 
@@ -67,7 +67,7 @@ public:
     MapItemHolder(long long value) ;
     MapItemHolder(short value) ;
     MapItemHolder(p<string> value) ;
-    ~MapItemHolder() ;
+    virtual ~MapItemHolder() ;
 
     bool getBoolean() throw (ConversionException) ;
     char getByte() throw (ConversionException) ;

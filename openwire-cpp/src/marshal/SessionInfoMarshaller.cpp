@@ -38,12 +38,12 @@ SessionInfoMarshaller::~SessionInfoMarshaller()
 
 
 
-DataStructure* SessionInfoMarshaller::createObject() 
+IDataStructure* SessionInfoMarshaller::createObject() 
 {
     return new SessionInfo();
 }
 
-byte SessionInfoMarshaller::getDataStructureType() 
+char SessionInfoMarshaller::getDataStructureType() 
 {
     return SessionInfo.ID_SessionInfo;
 }
@@ -51,7 +51,7 @@ byte SessionInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void SessionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void SessionInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -64,7 +64,7 @@ void SessionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bina
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int SessionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int SessionInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     SessionInfo& info = (SessionInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -76,7 +76,7 @@ int SessionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Boole
 /* 
  * Write a object instance to data output stream
  */
-void SessionInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void SessionInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     SessionInfo& info = (SessionInfo&) o;

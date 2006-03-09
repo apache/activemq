@@ -30,9 +30,12 @@ namespace apache
 /*
  * 
  */
-struct IDestination
-{
+class IDestination
+{	
+public:
+
     // Empty marker interface
+    virtual ~IDestination(){}
 } ;
 
 /* namespace */

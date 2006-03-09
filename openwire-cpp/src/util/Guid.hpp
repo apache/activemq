@@ -42,7 +42,7 @@ namespace apache
       namespace util
       {
         using namespace std ;
-        using namespace ifr ;
+        using namespace ifr::v1 ;
 
 /*
  * Helper class that generates global unique identifiers.
@@ -53,7 +53,7 @@ private:
     Guid() ;
 
 public:
-    ~Guid() ;
+    virtual ~Guid() ;
 
     static unsigned char* getGuid() ;
     static p<string> getGuidString() ;

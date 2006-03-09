@@ -31,31 +31,27 @@ TraceException::TraceException()
  * 
  */
 TraceException::TraceException(const char* msg)
-   : exception(msg)
 {
-    // no-op
+   this->msg = msg;
 } ;
 
 /*
  * 
  */
 TraceException::TraceException(const char* fileName, int lineNo, const char* message)
-    : exception(message)
 {
+	this->msg = message;
     char buf[10] ;
-
-    trace = new string() ;
-    trace->append(fileName) ;
-    trace->append(" at ") ;
-    trace->append( itoa(lineNo, buf, 10) ) ;
+	sprintf( buf, "%d", lineNo );	
+    trace = (string)fileName + " at " + buf ;
 }
 
-TraceException::~TraceException()
+TraceException::~TraceException() throw()
 {
     // no-op
 }
 
-p<string> TraceException::where()
+const char* TraceException::where()
 {
-    return trace ;
+    return trace.c_str();
 }

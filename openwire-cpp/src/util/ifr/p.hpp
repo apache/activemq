@@ -29,6 +29,7 @@
 #define IFR_V1_P_HPP_
 
 #include "atomic.hpp"
+#include <stdlib.h>
 
 namespace ifr {
   namespace v1 {
@@ -76,7 +77,7 @@ namespace ifr {
 
       /** Destructor. Decrements reference count and eventually deletes the object.
       */
-      ~p () {
+      virtual ~p () {
         if (obj_) smartptr_release (reinterpret_cast<T*>(obj_), reinterpret_cast<T*>(NULL));
       }
       /** Copy Constructor. Increments reference count since we also own the object now.
@@ -96,6 +97,7 @@ namespace ifr {
           (DerivedClass*)NULL);
         if (obj_) smartptr_addref (reinterpret_cast<T*>(obj_), reinterpret_cast<T*>(NULL));
       }
+      
       /** Assignment operator. Increments reference count since we also own the object now.
           Decrements refcount of the old object because we don't own that anymore.
       */

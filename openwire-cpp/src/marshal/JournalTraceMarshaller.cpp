@@ -38,12 +38,12 @@ JournalTraceMarshaller::~JournalTraceMarshaller()
 
 
 
-DataStructure* JournalTraceMarshaller::createObject() 
+IDataStructure* JournalTraceMarshaller::createObject() 
 {
     return new JournalTrace();
 }
 
-byte JournalTraceMarshaller::getDataStructureType() 
+char JournalTraceMarshaller::getDataStructureType() 
 {
     return JournalTrace.ID_JournalTrace;
 }
@@ -51,7 +51,7 @@ byte JournalTraceMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void JournalTraceMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void JournalTraceMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -64,7 +64,7 @@ void JournalTraceMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int JournalTraceMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int JournalTraceMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     JournalTrace& info = (JournalTrace&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -76,7 +76,7 @@ int JournalTraceMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bool
 /* 
  * Write a object instance to data output stream
  */
-void JournalTraceMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void JournalTraceMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     JournalTrace& info = (JournalTrace&) o;

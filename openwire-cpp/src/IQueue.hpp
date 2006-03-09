@@ -19,7 +19,7 @@
 
 #include <string>
 #include "IDestination.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -27,14 +27,17 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
       using namespace std;
 
 /*
  * 
  */
-struct IQueue : IDestination
+class IQueue : public IDestination
 {
+public:
+
+	virtual ~IQueue(){}
     virtual p<string> getQueueName() = 0 ;
     virtual void setQueueName(const char* name) = 0 ;
 } ;

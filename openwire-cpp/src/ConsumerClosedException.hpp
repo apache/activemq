@@ -33,7 +33,7 @@ class ConsumerClosedException : public OpenWireException
 {
 public:
     ConsumerClosedException(const char* message) ;
-    ~ConsumerClosedException() ;
+    virtual ~ConsumerClosedException() throw();
 };
 
 /* namespace */

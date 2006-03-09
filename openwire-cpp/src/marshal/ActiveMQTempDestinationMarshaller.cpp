@@ -40,7 +40,7 @@ ActiveMQTempDestinationMarshaller::~ActiveMQTempDestinationMarshaller()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ActiveMQTempDestinationMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ActiveMQTempDestinationMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -50,7 +50,7 @@ void ActiveMQTempDestinationMarshaller::unmarshal(OpenWireFormat& wireFormat, Ob
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ActiveMQTempDestinationMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ActiveMQTempDestinationMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ActiveMQTempDestination& info = (ActiveMQTempDestination&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -61,7 +61,7 @@ int ActiveMQTempDestinationMarshaller::marshal1(OpenWireFormat& wireFormat, Obje
 /* 
  * Write a object instance to data output stream
  */
-void ActiveMQTempDestinationMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ActiveMQTempDestinationMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
 }

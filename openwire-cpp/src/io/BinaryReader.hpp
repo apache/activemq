@@ -29,7 +29,7 @@ namespace apache
     {
       namespace io
       {
-        using namespace ifr;
+        using namespace ifr::v1;
 
 /*
  * The BinaryReader class reads primitive C++ data types from an

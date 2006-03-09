@@ -31,8 +31,10 @@ namespace apache
 /*
  * Interface for commands.
  */
-struct ICommand : IDataStructure
+class ICommand : public IDataStructure
 {
+public:
+	virtual ~ICommand(){}
  //   virtual char getCommandType() = 0 ;
 } ;
 

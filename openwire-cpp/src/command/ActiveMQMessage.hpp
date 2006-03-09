@@ -31,7 +31,7 @@ namespace apache
     {
       namespace command
       {
-        using namespace ifr;
+        using namespace ifr::v1;
         using namespace apache::activemq::client;
 
 /*

@@ -38,12 +38,12 @@ JournalTopicAckMarshaller::~JournalTopicAckMarshaller()
 
 
 
-DataStructure* JournalTopicAckMarshaller::createObject() 
+IDataStructure* JournalTopicAckMarshaller::createObject() 
 {
     return new JournalTopicAck();
 }
 
-byte JournalTopicAckMarshaller::getDataStructureType() 
+char JournalTopicAckMarshaller::getDataStructureType() 
 {
     return JournalTopicAck.ID_JournalTopicAck;
 }
@@ -51,7 +51,7 @@ byte JournalTopicAckMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void JournalTopicAckMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void JournalTopicAckMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -69,7 +69,7 @@ void JournalTopicAckMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int JournalTopicAckMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int JournalTopicAckMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     JournalTopicAck& info = (JournalTopicAck&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -86,7 +86,7 @@ int JournalTopicAckMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, B
 /* 
  * Write a object instance to data output stream
  */
-void JournalTopicAckMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void JournalTopicAckMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     JournalTopicAck& info = (JournalTopicAck&) o;

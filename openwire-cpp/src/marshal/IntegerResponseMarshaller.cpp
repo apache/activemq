@@ -38,12 +38,12 @@ IntegerResponseMarshaller::~IntegerResponseMarshaller()
 
 
 
-DataStructure* IntegerResponseMarshaller::createObject() 
+IDataStructure* IntegerResponseMarshaller::createObject() 
 {
     return new IntegerResponse();
 }
 
-byte IntegerResponseMarshaller::getDataStructureType() 
+char IntegerResponseMarshaller::getDataStructureType() 
 {
     return IntegerResponse.ID_IntegerResponse;
 }
@@ -51,7 +51,7 @@ byte IntegerResponseMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void IntegerResponseMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void IntegerResponseMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -64,7 +64,7 @@ void IntegerResponseMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int IntegerResponseMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int IntegerResponseMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     IntegerResponse& info = (IntegerResponse&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -75,7 +75,7 @@ int IntegerResponseMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, B
 /* 
  * Write a object instance to data output stream
  */
-void IntegerResponseMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void IntegerResponseMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     IntegerResponse& info = (IntegerResponse&) o;

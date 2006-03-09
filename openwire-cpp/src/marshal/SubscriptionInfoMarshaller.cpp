@@ -38,12 +38,12 @@ SubscriptionInfoMarshaller::~SubscriptionInfoMarshaller()
 
 
 
-DataStructure* SubscriptionInfoMarshaller::createObject() 
+IDataStructure* SubscriptionInfoMarshaller::createObject() 
 {
     return new SubscriptionInfo();
 }
 
-byte SubscriptionInfoMarshaller::getDataStructureType() 
+char SubscriptionInfoMarshaller::getDataStructureType() 
 {
     return SubscriptionInfo.ID_SubscriptionInfo;
 }
@@ -51,7 +51,7 @@ byte SubscriptionInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void SubscriptionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void SubscriptionInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -67,7 +67,7 @@ void SubscriptionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o,
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int SubscriptionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int SubscriptionInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     SubscriptionInfo& info = (SubscriptionInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -82,7 +82,7 @@ int SubscriptionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, 
 /* 
  * Write a object instance to data output stream
  */
-void SubscriptionInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void SubscriptionInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     SubscriptionInfo& info = (SubscriptionInfo&) o;

@@ -38,12 +38,12 @@ ConnectionErrorMarshaller::~ConnectionErrorMarshaller()
 
 
 
-DataStructure* ConnectionErrorMarshaller::createObject() 
+IDataStructure* ConnectionErrorMarshaller::createObject() 
 {
     return new ConnectionError();
 }
 
-byte ConnectionErrorMarshaller::getDataStructureType() 
+char ConnectionErrorMarshaller::getDataStructureType() 
 {
     return ConnectionError.ID_ConnectionError;
 }
@@ -51,7 +51,7 @@ byte ConnectionErrorMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ConnectionErrorMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ConnectionErrorMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -65,7 +65,7 @@ void ConnectionErrorMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ConnectionErrorMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ConnectionErrorMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ConnectionError& info = (ConnectionError&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -78,7 +78,7 @@ int ConnectionErrorMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, B
 /* 
  * Write a object instance to data output stream
  */
-void ConnectionErrorMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ConnectionErrorMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     ConnectionError& info = (ConnectionError&) o;

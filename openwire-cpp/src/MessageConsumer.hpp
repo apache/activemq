@@ -25,7 +25,7 @@
 #include "OpenWireException.hpp"
 #include "ConnectionClosedException.hpp"
 #include "command/ConsumerInfo.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 // Turn off warning message for ignored exception specification
 #ifdef _MSC_VER
@@ -52,7 +52,7 @@ private:
 
 public:
     MessageConsumer(p<Session> session, p<ConsumerInfo> consumerInfo) ;
-    ~MessageConsumer() ;
+    virtual ~MessageConsumer() ;
 
     /* TODO
     virtual void setMessageListener(p<IMessageListener> listener) ;

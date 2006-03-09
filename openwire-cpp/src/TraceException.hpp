@@ -28,22 +28,35 @@ namespace apache
     namespace client
     {
       using namespace std ;
-      using namespace ifr ;
+      using namespace ifr::v1 ;
 
 /*
  * Base class for all exceptions containing trace information.
  */
 class TraceException : public exception
 {
-    p<string> trace ;
-
 public:
     TraceException() ;
     TraceException(const char* msg) ;
     TraceException(const char* fileName, int lineNo, const char* msg) ;
-    virtual ~TraceException() ;
+    virtual ~TraceException() throw();
 
-    p<string> where() ;
+	TraceException& operator=( const TraceException& ex ){
+		msg = ex.msg;
+		trace = ex.trace;
+		return *this;
+	}
+	
+    const char* where();
+    
+    virtual const char* what() const throw(){
+    	return msg.c_str();
+    }
+    
+private:
+
+	string msg;
+	string trace;
 } ;
 
 /* namespace */

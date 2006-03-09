@@ -38,12 +38,12 @@ RemoveInfoMarshaller::~RemoveInfoMarshaller()
 
 
 
-DataStructure* RemoveInfoMarshaller::createObject() 
+IDataStructure* RemoveInfoMarshaller::createObject() 
 {
     return new RemoveInfo();
 }
 
-byte RemoveInfoMarshaller::getDataStructureType() 
+char RemoveInfoMarshaller::getDataStructureType() 
 {
     return RemoveInfo.ID_RemoveInfo;
 }
@@ -51,7 +51,7 @@ byte RemoveInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void RemoveInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void RemoveInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -64,7 +64,7 @@ void RemoveInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Binar
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int RemoveInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int RemoveInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     RemoveInfo& info = (RemoveInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -76,7 +76,7 @@ int RemoveInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Boolea
 /* 
  * Write a object instance to data output stream
  */
-void RemoveInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void RemoveInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     RemoveInfo& info = (RemoveInfo&) o;

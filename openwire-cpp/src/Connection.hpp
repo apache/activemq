@@ -31,7 +31,7 @@
 #include "command/SessionId.hpp"
 #include "transport/ITransport.hpp"
 #include "util/SimpleMutex.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 // Turn off warning message for ignored exception specification
 #ifdef _MSC_VER
@@ -45,7 +45,7 @@ namespace apache
     namespace client
     {
       using namespace std;
-      using namespace ifr;
+      using namespace ifr::v1;
       using namespace apache::activemq::client::command;
       using namespace apache::activemq::client::transport;
       using namespace apache::activemq::client::util;
@@ -56,25 +56,25 @@ namespace apache
 class Connection : public IConnection
 {
 private:
-    p<ConnectionInfo>   connectionInfo ;
-    p<ITransport>       transport ;
-    list< p<ISession> > sessions ;
-    bool                transacted,
-                        connected,
-                        closed ;
-    AcknowledgementMode acknowledgementMode ;
-    long                sessionCounter ;
-    SimpleMutex         mutex ;
+    p<ConnectionInfo>   connectionInfo;
+    p<ITransport>       transport;
+    list< p<ISession> > sessions;
+    bool                transacted;
+    bool	            connected;
+    bool                closed;
+    AcknowledgementMode acknowledgementMode;
+    long                sessionCounter;
+    SimpleMutex         mutex;
 
 public:
     // Constructors
     Connection(p<ITransport> transport, p<ConnectionInfo> connectionInfo) ;
-    ~Connection() ;
+    virtual ~Connection() ;
 
     // Attribute methods
     virtual AcknowledgementMode getAcknowledgementMode() ;
     virtual void setAcknowledgementMode(AcknowledgementMode mode) ;
-    virtual p<string> getClientId() ;
+    virtual const char* getClientId() ;
     virtual void setClientId(const char* value) ;
     virtual bool getTransacted() ;
     virtual void setTransacted(bool tx) ;

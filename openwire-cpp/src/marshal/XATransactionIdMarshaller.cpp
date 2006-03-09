@@ -38,12 +38,12 @@ XATransactionIdMarshaller::~XATransactionIdMarshaller()
 
 
 
-DataStructure* XATransactionIdMarshaller::createObject() 
+IDataStructure* XATransactionIdMarshaller::createObject() 
 {
     return new XATransactionId();
 }
 
-byte XATransactionIdMarshaller::getDataStructureType() 
+char XATransactionIdMarshaller::getDataStructureType() 
 {
     return XATransactionId.ID_XATransactionId;
 }
@@ -51,7 +51,7 @@ byte XATransactionIdMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void XATransactionIdMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void XATransactionIdMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -66,7 +66,7 @@ void XATransactionIdMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int XATransactionIdMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int XATransactionIdMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     XATransactionId& info = (XATransactionId&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -81,7 +81,7 @@ int XATransactionIdMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, B
 /* 
  * Write a object instance to data output stream
  */
-void XATransactionIdMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void XATransactionIdMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     XATransactionId& info = (XATransactionId&) o;

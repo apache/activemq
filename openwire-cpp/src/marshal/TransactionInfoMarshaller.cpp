@@ -38,12 +38,12 @@ TransactionInfoMarshaller::~TransactionInfoMarshaller()
 
 
 
-DataStructure* TransactionInfoMarshaller::createObject() 
+IDataStructure* TransactionInfoMarshaller::createObject() 
 {
     return new TransactionInfo();
 }
 
-byte TransactionInfoMarshaller::getDataStructureType() 
+char TransactionInfoMarshaller::getDataStructureType() 
 {
     return TransactionInfo.ID_TransactionInfo;
 }
@@ -51,7 +51,7 @@ byte TransactionInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void TransactionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void TransactionInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -66,7 +66,7 @@ void TransactionInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int TransactionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int TransactionInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     TransactionInfo& info = (TransactionInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -79,7 +79,7 @@ int TransactionInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, B
 /* 
  * Write a object instance to data output stream
  */
-void TransactionInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void TransactionInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     TransactionInfo& info = (TransactionInfo&) o;

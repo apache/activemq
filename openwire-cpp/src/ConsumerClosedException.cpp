@@ -27,7 +27,7 @@ ConsumerClosedException::ConsumerClosedException(const char* message)
     // no-op
 }
 
-ConsumerClosedException::~ConsumerClosedException()
+ConsumerClosedException::~ConsumerClosedException() throw()
 {
     // no-op
 }

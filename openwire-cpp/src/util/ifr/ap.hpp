@@ -72,7 +72,8 @@ public:
     return a->array_[pos];
   }
   const p<T>& operator [] (size_t pos) const {
-  }
+  	return a->array_[pos];
+  }
   size_t size() const {
     return a->size_;
   }

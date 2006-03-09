@@ -31,8 +31,11 @@ namespace apache
 /*
  * 
  */
-struct ITextMessage : IMessage
+class ITextMessage : public IMessage
 {
+public:
+
+	virtual ~ITextMessage(){}
     virtual string* getText() = 0 ;
     virtual void setText(string* txt) = 0 ;
 } ;

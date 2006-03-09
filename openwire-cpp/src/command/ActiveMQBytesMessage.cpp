@@ -120,7 +120,7 @@ bool ActiveMQBytesMessage::readBoolean() throw(MessageNotReadableException, Mess
     result = readBytes((char*)&value, sizeof(bool)) ;
 
     // Check for EOF offset
-    if( result == -1 || result < sizeof(bool) )
+    if( result == -1 || result < (int)sizeof(bool) )
         throw MessageEOFException() ;
 
     return value ;
@@ -142,7 +142,7 @@ double ActiveMQBytesMessage::readDouble() throw(MessageNotReadableException, Mes
     result = readBytes((char*)&value, sizeof(double)) ;
 
     // Check for EOF offset
-    if( result == -1 || result < sizeof(double) )
+    if( result == -1 || result < (int)sizeof(double) )
         throw MessageEOFException() ;
 
     // Convert from big endian to little endian if necessary
@@ -165,7 +165,7 @@ float ActiveMQBytesMessage::readFloat() throw(MessageNotReadableException, Messa
     result = readBytes((char*)&value, sizeof(float)) ;
 
     // Check for EOF offset
-    if( result == -1 || result < sizeof(float) )
+    if( result == -1 || result < (int)sizeof(float) )
         throw MessageEOFException() ;
 
     // Convert from big endian to little endian if necessary
@@ -188,7 +188,7 @@ short ActiveMQBytesMessage::readShort() throw(MessageNotReadableException, Messa
     result = readBytes((char*)&value, sizeof(short)) ;
 
     // Check for EOF offset
-    if( result == -1 || result < sizeof(short) )
+    if( result == -1 || result < (int)sizeof(short) )
         throw MessageEOFException() ;
 
     // Convert from big endian to little endian if necessary
@@ -211,7 +211,7 @@ int ActiveMQBytesMessage::readInt() throw(MessageNotReadableException, MessageEO
     result = readBytes((char*)&value, sizeof(int)) ;
 
     // Check for EOF offset
-    if( result == -1 || result < sizeof(int) )
+    if( result == -1 || result < (int)sizeof(int) )
         throw MessageEOFException() ;
 
     // Convert from big endian to little endian if necessary
@@ -234,7 +234,7 @@ long long ActiveMQBytesMessage::readLong() throw(MessageNotReadableException, Me
     result = readBytes((char*)&value, sizeof(long long)) ;
 
     // Check for EOF offset
-    if( result == -1 || result < sizeof(long long) )
+    if( result == -1 || result < (int)sizeof(long long) )
         throw MessageEOFException() ;
 
     // Convert from big endian to little endian if necessary

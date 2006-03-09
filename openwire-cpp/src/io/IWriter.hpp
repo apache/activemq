@@ -35,7 +35,7 @@ namespace apache
       namespace io
       {
         using namespace std ;
-        using namespace ifr ;
+        using namespace ifr::v1 ;
 
 /*
  * The IWriter interface provides for converting data from any of the
@@ -44,8 +44,10 @@ namespace apache
  * encoding is performed. If a byte cannot be written for any reason,
  * an IOException is thrown. 
  */
-struct IWriter
+class IWriter
 {
+public:
+
     virtual ~IWriter() { } ;  // Needed for SP's
 
     virtual void close() throw(IOException) = 0 ;

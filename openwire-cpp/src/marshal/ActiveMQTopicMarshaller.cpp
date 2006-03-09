@@ -38,12 +38,12 @@ ActiveMQTopicMarshaller::~ActiveMQTopicMarshaller()
 
 
 
-DataStructure* ActiveMQTopicMarshaller::createObject() 
+IDataStructure* ActiveMQTopicMarshaller::createObject() 
 {
     return new ActiveMQTopic();
 }
 
-byte ActiveMQTopicMarshaller::getDataStructureType() 
+char ActiveMQTopicMarshaller::getDataStructureType() 
 {
     return ActiveMQTopic.ID_ActiveMQTopic;
 }
@@ -51,7 +51,7 @@ byte ActiveMQTopicMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ActiveMQTopicMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ActiveMQTopicMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -61,7 +61,7 @@ void ActiveMQTopicMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bi
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ActiveMQTopicMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ActiveMQTopicMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ActiveMQTopic& info = (ActiveMQTopic&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -72,7 +72,7 @@ int ActiveMQTopicMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Boo
 /* 
  * Write a object instance to data output stream
  */
-void ActiveMQTopicMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ActiveMQTopicMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
 }

@@ -19,7 +19,7 @@
 
 #include "command/ActiveMQMessage.hpp"
 #include "command/ActiveMQDestination.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -27,7 +27,7 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
       using namespace apache::activemq::client::command;
 
 /*

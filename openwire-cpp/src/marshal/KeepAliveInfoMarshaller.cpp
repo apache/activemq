@@ -38,12 +38,12 @@ KeepAliveInfoMarshaller::~KeepAliveInfoMarshaller()
 
 
 
-DataStructure* KeepAliveInfoMarshaller::createObject() 
+IDataStructure* KeepAliveInfoMarshaller::createObject() 
 {
     return new KeepAliveInfo();
 }
 
-byte KeepAliveInfoMarshaller::getDataStructureType() 
+char KeepAliveInfoMarshaller::getDataStructureType() 
 {
     return KeepAliveInfo.ID_KeepAliveInfo;
 }
@@ -51,7 +51,7 @@ byte KeepAliveInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void KeepAliveInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void KeepAliveInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -61,7 +61,7 @@ void KeepAliveInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bi
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int KeepAliveInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int KeepAliveInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     KeepAliveInfo& info = (KeepAliveInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -72,7 +72,7 @@ int KeepAliveInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Boo
 /* 
  * Write a object instance to data output stream
  */
-void KeepAliveInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void KeepAliveInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
 }
