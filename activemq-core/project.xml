@@ -355,6 +355,13 @@
                 
                 <!-- http://jira.activemq.org/jira/browse/AMQ-610 -->
                 <exclude>**/FanoutTransportBrokerTest.*</exclude>
+                
+                <!-- http://jira.activemq.org/jira/browse/AMQ-626 -->
+                <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
+                <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
+                <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
+                
+                <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             </excludes>
         </unitTest>
         <resources>
