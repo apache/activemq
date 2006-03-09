@@ -43,6 +43,7 @@ public class CommandChannel implements Service {
 
     private static final Log log = LogFactory.getLog(CommandChannel.class);
 
+    private final String name;
     private DatagramChannel channel;
     private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
@@ -50,11 +51,12 @@ public class CommandChannel implements Service {
     private DatagramReplayStrategy replayStrategy;
     private SocketAddress targetAddress;
     private DatagramHeaderMarshaller headerMarshaller = new DatagramHeaderMarshaller();
+    private final boolean checkSequenceNumbers;
 
     // reading
     private Object readLock = new Object();
     private ByteBuffer readBuffer;
-    private CommandReadBuffer readStack;
+    private DatagramReadBuffer readStack;
     private SocketAddress lastReadDatagramAddress;
 
     // writing
@@ -64,14 +66,20 @@ public class CommandChannel implements Service {
     private int largeMessageBufferSize = 128 * 1024;
     private DatagramHeader header = new DatagramHeader();
 
-    public CommandChannel(DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
-            DatagramReplayStrategy replayStrategy, SocketAddress targetAddress) {
+    public CommandChannel(String name, DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
+            DatagramReplayStrategy replayStrategy, SocketAddress targetAddress, boolean checkSequenceNumbers) {
+        this.name = name;
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.bufferPool = bufferPool;
         this.datagramSize = datagramSize;
         this.replayStrategy = replayStrategy;
         this.targetAddress = targetAddress;
+        this.checkSequenceNumbers = checkSequenceNumbers;
+    }
+
+    public String toString() {
+        return "CommandChannel#" + name;
     }
 
     public void start() throws Exception {
@@ -79,7 +87,9 @@ public class CommandChannel implements Service {
         wireFormat.setCacheEnabled(false);
         wireFormat.setTightEncodingEnabled(true);
 
-        readStack = new CommandReadBuffer(wireFormat, replayStrategy);
+        if (checkSequenceNumbers) {
+            readStack = new CommandReadBuffer(name, wireFormat, replayStrategy);
+        }
         bufferPool.setDefaultSize(datagramSize);
         bufferPool.start();
         readBuffer = bufferPool.borrowBuffer();
@@ -98,26 +108,21 @@ public class CommandChannel implements Service {
             readBuffer.clear();
             lastReadDatagramAddress = channel.receive(readBuffer);
             readBuffer.flip();
-            
-            if (log.isDebugEnabled()) {
-                log.debug("Read a datagram from: " + lastReadDatagramAddress);
-            }
+
             header = headerMarshaller.readHeader(readBuffer);
             header.setFromAddress(lastReadDatagramAddress);
 
             if (log.isDebugEnabled()) {
-                log.debug("Received datagram from: " + lastReadDatagramAddress + " header: " + header);
+                log.debug("Received datagram on: " + name + " from: " + lastReadDatagramAddress + " header: " + header);
             }
             int remaining = readBuffer.remaining();
             int size = header.getDataSize();
             /*
-            if (size > remaining) {
-                throw new IOException("Invalid command size: " + size + " when there are only: " + remaining + " byte(s) remaining");
-            }
-            else if (size < remaining) {
-                log.warn("Extra bytes in buffer. Expecting: " + size + " but has: " + remaining);
-            }
-            */
+             * if (size > remaining) { throw new IOException("Invalid command
+             * size: " + size + " when there are only: " + remaining + " byte(s)
+             * remaining"); } else if (size < remaining) { log.warn("Extra bytes
+             * in buffer. Expecting: " + size + " but has: " + remaining); }
+             */
             if (size != remaining) {
                 log.warn("Expecting: " + size + " but has: " + remaining);
             }
@@ -133,23 +138,39 @@ public class CommandChannel implements Service {
                 // TODO use a DataInput implementation that talks direct to the
                 // ByteBuffer
                 DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(data));
-                Command command = (Command) wireFormat.doUnmarshal(dataIn);
+                Command command = (Command) wireFormat.unmarshal(dataIn);
+                // Command command = (Command) wireFormat.doUnmarshal(dataIn);
                 header.setCommand(command);
             }
 
-            answer = readStack.read(header);
+            if (readStack != null) {
+                answer = readStack.read(header);
+            }
+            else {
+                answer = header.getCommand();
+            }
         }
         if (answer != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Channel: " + name + " about to process: " + answer);
+            }
             processor.process(answer, header);
         }
     }
 
     /**
-     * Called if a packet is received on a different channel from a remote client
-     * @throws IOException 
+     * Called if a packet is received on a different channel from a remote
+     * client
+     * 
+     * @throws IOException
      */
     public Command onDatagramReceived(DatagramHeader header) throws IOException {
-        return readStack.read(header);
+        if (readStack != null) {
+            return readStack.read(header);
+        }
+        else {
+            return header.getCommand();
+        }
     }
 
     public void write(Command command) throws IOException {
@@ -159,10 +180,12 @@ public class CommandChannel implements Service {
     public void write(Command command, SocketAddress address) throws IOException {
         synchronized (writeLock) {
             header.incrementCounter();
-            bs = new BooleanStream();
-            // TODO
-            //bs.clear();
-            int size = wireFormat.tightMarshal1(command, bs);
+
+            ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(largeMessageBufferSize);
+            wireFormat.marshal(command, new DataOutputStream(largeBuffer));
+            byte[] data = largeBuffer.toByteArray();
+            int size = data.length;
+
             if (size < datagramSize) {
                 header.setPartial(false);
                 header.setComplete(true);
@@ -170,13 +193,6 @@ public class CommandChannel implements Service {
                 writeBuffer.clear();
                 headerMarshaller.writeHeader(header, writeBuffer);
 
-                // TODO use a DataOutput implementation that talks direct to the
-                // ByteBuffer
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                DataOutputStream dataOut = new DataOutputStream(buffer);
-                wireFormat.tightMarshal2(command, dataOut, bs);
-                dataOut.close();
-                byte[] data = buffer.toByteArray();
                 writeBuffer.put(data);
 
                 sendWriteBuffer(address);
@@ -186,10 +202,7 @@ public class CommandChannel implements Service {
                 header.setComplete(false);
 
                 // lets split the command up into chunks
-                ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(largeMessageBufferSize);
-                wireFormat.marshal(command, new DataOutputStream(largeBuffer));
 
-                byte[] data = largeBuffer.toByteArray();
                 int offset = 0;
                 boolean lastFragment = false;
                 for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
@@ -248,15 +261,14 @@ public class CommandChannel implements Service {
             return lastReadDatagramAddress;
         }
     }
-    
 
     // Implementation methods
     // -------------------------------------------------------------------------
     protected void sendWriteBuffer(SocketAddress address) throws IOException {
         writeBuffer.flip();
-        
+
         if (log.isDebugEnabled()) {
-            log.debug("Sending datagram to: " + address + " header: " + header);
+            log.debug("Channel: " + name + " sending datagram to: " + address + " header: " + header);
         }
         channel.send(writeBuffer, address);
     }

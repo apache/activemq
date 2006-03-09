@@ -85,7 +85,6 @@ public class UdpTransportFactory extends TransportFactory {
 
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         OpenWireFormat wireFormat = asOpenWireFormat(wf);
-        wireFormat.setSizePrefixDisabled(true);
         return new UdpTransport(wireFormat, location);
     }
 
@@ -113,7 +112,7 @@ public class UdpTransportFactory extends TransportFactory {
         transport = new WireFormatNegotiator(transport, asOpenWireFormat(format), udpTransport.getMinmumWireFormatVersion()) {
             protected void onWireFormatNegotiated(WireFormatInfo info) {
                 // lets switch to the targetAddress that the last packet was
-                // received as
+                // received as so that all future requests go to the newly created UDP channel
                 udpTransport.useLastInboundDatagramAsNewTarget();
             }
         };
@@ -122,8 +121,6 @@ public class UdpTransportFactory extends TransportFactory {
 
     protected OpenWireFormat asOpenWireFormat(WireFormat wf) {
         OpenWireFormat answer = (OpenWireFormat) wf;
-        answer.setSizePrefixDisabled(true);
-        answer.setCacheEnabled(false);
         return answer;
     }
 }

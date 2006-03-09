@@ -35,7 +35,7 @@ import java.util.TreeSet;
  * 
  * @version $Revision$
  */
-public class CommandReadBuffer {
+public class CommandReadBuffer implements DatagramReadBuffer {
     private static final Log log = LogFactory.getLog(CommandReadBuffer.class);
 
     private OpenWireFormat wireFormat;
@@ -43,8 +43,10 @@ public class CommandReadBuffer {
     private SortedSet headers = new TreeSet();
     private long expectedCounter = 1;
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
+    private final String name;
 
-    public CommandReadBuffer(OpenWireFormat wireFormat, DatagramReplayStrategy replayStrategy) {
+    public CommandReadBuffer(String name, OpenWireFormat wireFormat, DatagramReplayStrategy replayStrategy) {
+        this.name = name;
         this.wireFormat = wireFormat;
         this.replayStrategy = replayStrategy;
     }
@@ -57,13 +59,16 @@ public class CommandReadBuffer {
                 log.warn("Ignoring out of step packet: " + header);
             }
             else {
-                replayStrategy.onDroppedPackets(expectedCounter, actualCounter);
+                replayStrategy.onDroppedPackets(name, expectedCounter, actualCounter);
                 
                 // lets add it to the list for later on
                 headers.add(header);
             }
 
             // lets see if the first item in the set is the next header
+            if (headers.isEmpty()) {
+                return null;
+            }
             header = (DatagramHeader) headers.first();
             if (expectedCounter != header.getCounter()) {
                 return null;
@@ -71,7 +76,7 @@ public class CommandReadBuffer {
         }
 
         // we've got a valid header so increment counter
-        replayStrategy.onReceivedPacket(expectedCounter);
+        replayStrategy.onReceivedPacket(name, expectedCounter);
         expectedCounter++;
 
         Command answer = null;

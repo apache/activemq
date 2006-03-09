@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.transport.udp;
 
-import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
@@ -35,7 +34,8 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
 
     protected Transport createProducer() throws Exception {
         System.out.println("Producer using URI: " + producerURI);
-        return TransportFactory.connect(new URI(producerURI));
+        URI uri = new URI(producerURI);
+        return TransportFactory.connect(uri);
     }
 
     protected TransportServer createServer() throws Exception {
@@ -45,12 +45,4 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
     protected Transport createConsumer() throws Exception {
         return null;
     }
-
-    protected OpenWireFormat createWireFormat() {
-        OpenWireFormat answer = new OpenWireFormat();
-        answer.setCacheEnabled(false);
-        answer.setSizePrefixDisabled(true);
-        return answer;
-    }
-
 }

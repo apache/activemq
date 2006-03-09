@@ -157,7 +157,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
     protected Command assertCommandReceived() throws InterruptedException {
         Command answer = null;
         synchronized (lock) {
-            lock.wait(5000);
+            lock.wait(1000);
             answer = receivedCommand;
         }
 
