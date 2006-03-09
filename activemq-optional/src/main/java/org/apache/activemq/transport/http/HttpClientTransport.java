@@ -47,7 +47,7 @@ import java.net.URI;
 public class HttpClientTransport extends HttpTransportSupport {
     private static final Log log = LogFactory.getLog(HttpClientTransport.class);
 
-    public static final int MAX_CLIENT_TIMEOUT = 20000;
+    public static final int MAX_CLIENT_TIMEOUT = 30000;
 
     private HttpClient sendHttpClient;
     private HttpClient receiveHttpClient;

@@ -24,8 +24,6 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.util.ServiceStopper;
 
-import javax.jms.JMSException;
-
 import java.io.IOException;
 
 /**
