@@ -179,7 +179,6 @@ public class CommandChannel implements Service {
 
     public void write(Command command, SocketAddress address) throws IOException {
         synchronized (writeLock) {
-            header.incrementCounter();
 
             ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(largeMessageBufferSize);
             wireFormat.marshal(command, new DataOutputStream(largeBuffer));
@@ -187,6 +186,7 @@ public class CommandChannel implements Service {
             int size = data.length;
 
             if (size < datagramSize) {
+                header.incrementCounter();
                 header.setPartial(false);
                 header.setComplete(true);
                 header.setDataSize(size);
@@ -210,6 +210,10 @@ public class CommandChannel implements Service {
                     writeBuffer.rewind();
                     int chunkSize = writeBuffer.capacity() - headerMarshaller.getHeaderSize(header);
                     lastFragment = offset + chunkSize >= length;
+                    if (lastFragment) {
+                        chunkSize = length - offset;
+                    }
+                    header.incrementCounter();
                     header.setDataSize(chunkSize);
                     header.setComplete(lastFragment);
                     headerMarshaller.writeHeader(header, writeBuffer);
