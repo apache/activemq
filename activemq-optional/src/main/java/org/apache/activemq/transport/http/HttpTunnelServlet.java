@@ -20,7 +20,6 @@ import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
@@ -75,14 +74,12 @@ public class HttpTunnelServlet extends HttpServlet {
         // lets return the next response
         Command packet = null;
         try {
-            System.err.println("\nrequest="+request);
             BlockingQueueTransport transportChannel = getTransportChannel(request);
             if (transportChannel == null) {
                 log("No transport available! ");
                 return;
             }
             packet = (Command) transportChannel.getQueue().poll(requestTimeout, TimeUnit.MILLISECONDS);
-            System.err.println("packet="+packet);
         }
         catch (InterruptedException e) {
             // ignore
@@ -99,21 +96,8 @@ public class HttpTunnelServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        // String body = readRequestBody(request);
-        // Command command = wireFormat.readCommand(body);
-
         // Read the command directly from the reader
-        //Command command = wireFormat.readCommand(request.getReader());
-
-        // Build the command xml before passing it to the reader
-        BufferedReader buffRead = request.getReader();
-        String commandXml = "";
-        String line;
-        while ((line = buffRead.readLine()) != null) {
-            commandXml += line;
-        }
-
-        Command command = wireFormat.readCommand(commandXml);
+        Command command = wireFormat.readCommand(request.getReader());
 
         if (command instanceof WireFormatInfo) {
             WireFormatInfo info = (WireFormatInfo) command;
@@ -168,7 +152,6 @@ public class HttpTunnelServlet extends HttpServlet {
         if (clientID == null) {
             clientID = request.getHeader("clientID");
         }
-        System.out.println("clientID="+clientID);
         /**
          * if (clientID == null) { clientID = request.getParameter("clientID"); }
          */
