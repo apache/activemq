@@ -19,7 +19,7 @@
 
 #include <string>
 #include "IMessage.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -27,13 +27,16 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
 
 /*
  * 
  */
-struct IMessageConsumer
+class IMessageConsumer
 {
+public:
+
+	virtual ~IMessageConsumer(){}
     virtual p<IMessage> receive() = 0 ;
     virtual p<IMessage> receiveNoWait() = 0 ;
 } ;

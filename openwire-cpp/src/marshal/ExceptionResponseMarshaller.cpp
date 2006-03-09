@@ -38,12 +38,12 @@ ExceptionResponseMarshaller::~ExceptionResponseMarshaller()
 
 
 
-DataStructure* ExceptionResponseMarshaller::createObject() 
+IDataStructure* ExceptionResponseMarshaller::createObject() 
 {
     return new ExceptionResponse();
 }
 
-byte ExceptionResponseMarshaller::getDataStructureType() 
+char ExceptionResponseMarshaller::getDataStructureType() 
 {
     return ExceptionResponse.ID_ExceptionResponse;
 }
@@ -51,7 +51,7 @@ byte ExceptionResponseMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ExceptionResponseMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ExceptionResponseMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -64,7 +64,7 @@ void ExceptionResponseMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ExceptionResponseMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ExceptionResponseMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ExceptionResponse& info = (ExceptionResponse&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -76,7 +76,7 @@ int ExceptionResponseMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o,
 /* 
  * Write a object instance to data output stream
  */
-void ExceptionResponseMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ExceptionResponseMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     ExceptionResponse& info = (ExceptionResponse&) o;

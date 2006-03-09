@@ -27,7 +27,7 @@ ConnectionClosedException::ConnectionClosedException(const char* message)
     // no-op
 }
 
-ConnectionClosedException::~ConnectionClosedException()
+ConnectionClosedException::~ConnectionClosedException() throw()
 {
     // no-op
 }

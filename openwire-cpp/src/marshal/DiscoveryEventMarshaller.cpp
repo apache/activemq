@@ -38,12 +38,12 @@ DiscoveryEventMarshaller::~DiscoveryEventMarshaller()
 
 
 
-DataStructure* DiscoveryEventMarshaller::createObject() 
+IDataStructure* DiscoveryEventMarshaller::createObject() 
 {
     return new DiscoveryEvent();
 }
 
-byte DiscoveryEventMarshaller::getDataStructureType() 
+char DiscoveryEventMarshaller::getDataStructureType() 
 {
     return DiscoveryEvent.ID_DiscoveryEvent;
 }
@@ -51,7 +51,7 @@ byte DiscoveryEventMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void DiscoveryEventMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void DiscoveryEventMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -65,7 +65,7 @@ void DiscoveryEventMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, B
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int DiscoveryEventMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int DiscoveryEventMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     DiscoveryEvent& info = (DiscoveryEvent&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -78,7 +78,7 @@ int DiscoveryEventMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bo
 /* 
  * Write a object instance to data output stream
  */
-void DiscoveryEventMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void DiscoveryEventMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     DiscoveryEvent& info = (DiscoveryEvent&) o;

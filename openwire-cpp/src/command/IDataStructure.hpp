@@ -29,8 +29,10 @@ namespace apache
 /*
  * Mockup interface for writing to streams.
  */
-struct IDataStructure
+class IDataStructure
 {
+public:
+	virtual ~IDataStructure(){}
     virtual int getCommandType() = 0 ;
 } ;
 

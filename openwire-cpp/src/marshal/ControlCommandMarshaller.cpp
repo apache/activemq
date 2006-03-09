@@ -38,12 +38,12 @@ ControlCommandMarshaller::~ControlCommandMarshaller()
 
 
 
-DataStructure* ControlCommandMarshaller::createObject() 
+IDataStructure* ControlCommandMarshaller::createObject() 
 {
     return new ControlCommand();
 }
 
-byte ControlCommandMarshaller::getDataStructureType() 
+char ControlCommandMarshaller::getDataStructureType() 
 {
     return ControlCommand.ID_ControlCommand;
 }
@@ -51,7 +51,7 @@ byte ControlCommandMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ControlCommandMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ControlCommandMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -64,7 +64,7 @@ void ControlCommandMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, B
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ControlCommandMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ControlCommandMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ControlCommand& info = (ControlCommand&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -76,7 +76,7 @@ int ControlCommandMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bo
 /* 
  * Write a object instance to data output stream
  */
-void ControlCommandMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ControlCommandMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     ControlCommand& info = (ControlCommand&) o;

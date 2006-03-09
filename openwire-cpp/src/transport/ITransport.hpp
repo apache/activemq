@@ -36,8 +36,11 @@ namespace apache
 /*
  * Represents the logical networking transport layer
  */
-struct ITransport
+class ITransport
 {
+public:
+
+	virtual ~ITransport(){}
 	virtual void oneway(p<ICommand> command) = 0 ;
 	virtual p<FutureResponse> asyncRequest(p<ICommand> command) = 0 ;
 	virtual p<Response> request(p<ICommand> command) = 0 ;

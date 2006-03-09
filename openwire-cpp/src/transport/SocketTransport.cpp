@@ -17,13 +17,11 @@
 #include <iostream>
 #include <exception>
 #include <typeinfo>
-#include "transport/SocketTransport.hpp"
+#include "SocketTransport.hpp"
 
 using namespace std;
 using namespace apache::activemq::client::transport;
 
-
-// --- Constructors -------------------------------------------------
 
 /*
  *
@@ -116,12 +114,12 @@ void SocketTransport::init()
 	// Initialize APR framework
     rc = apr_initialize() ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to initialize APR framework.") ;
+        throw OpenWireException("Failed to initialize APR framework.") ;
    
     // Create APR memory pool
     rc = apr_pool_create(&memoryPool, NULL) ;
     if( rc != APR_SUCCESS )
-	    throw exception("Failed to allocate APR memory pool.") ;
+	    throw OpenWireException("Failed to allocate APR memory pool.") ;
 
     // Create transmission mutex
     apr_thread_mutex_create(&mutex, APR_THREAD_MUTEX_UNNESTED, memoryPool) ;
@@ -187,31 +185,31 @@ apr_socket_t* SocketTransport::connect(const char* host, int port)
 	// Look up the remote address
 	rc = apr_sockaddr_info_get(&remote_sa, host, APR_UNSPEC, port, 0, memoryPool) ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to lookup remote address") ;
+        throw OpenWireException("Failed to lookup remote address") ;
 	
 	// Create socket
 	rc = apr_socket_create(&sock, remote_sa->sa.sin.sin_family, SOCK_STREAM, APR_PROTO_TCP, memoryPool) ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to create socket") ;
+        throw OpenWireException("Failed to create socket") ;
 
 	// Connect socket
     rc = apr_socket_connect(sock, remote_sa) ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to connect socket") ;
+        throw OpenWireException("Failed to connect socket") ;
    
     // Get socket info
     rc = apr_socket_addr_get(&remote_sa, APR_REMOTE, sock) ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to fetch remote socket address") ;
+        throw OpenWireException("Failed to fetch remote socket address") ;
     rc = apr_sockaddr_ip_get(&remote_ip, remote_sa) ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to fetch remote IP address") ;
+        throw OpenWireException("Failed to fetch remote IP address") ;
     rc = apr_socket_addr_get(&local_sa, APR_LOCAL, sock) ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to fetch local socket address") ;
+        throw OpenWireException("Failed to fetch local socket address") ;
     rc = apr_sockaddr_ip_get(&local_ip, local_sa) ;
     if( rc != APR_SUCCESS )
-        throw exception("Failed to fetch local IP address") ;
+        throw OpenWireException("Failed to fetch local IP address") ;
    
 	return sock ;
 }

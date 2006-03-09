@@ -38,12 +38,12 @@ ShutdownInfoMarshaller::~ShutdownInfoMarshaller()
 
 
 
-DataStructure* ShutdownInfoMarshaller::createObject() 
+IDataStructure* ShutdownInfoMarshaller::createObject() 
 {
     return new ShutdownInfo();
 }
 
-byte ShutdownInfoMarshaller::getDataStructureType() 
+char ShutdownInfoMarshaller::getDataStructureType() 
 {
     return ShutdownInfo.ID_ShutdownInfo;
 }
@@ -51,7 +51,7 @@ byte ShutdownInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ShutdownInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ShutdownInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -61,7 +61,7 @@ void ShutdownInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ShutdownInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ShutdownInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ShutdownInfo& info = (ShutdownInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -72,7 +72,7 @@ int ShutdownInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bool
 /* 
  * Write a object instance to data output stream
  */
-void ShutdownInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ShutdownInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
 }

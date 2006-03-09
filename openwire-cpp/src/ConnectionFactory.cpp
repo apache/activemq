@@ -177,7 +177,7 @@ p<ConnectionInfo> ConnectionFactory::createConnectionInfo(const char* username, 
 
     connectionId->setValue( createNewConnectionId()->c_str() ) ;
     connectionInfo->setConnectionId( connectionId ) ;
-    connectionInfo->setUsername( username ) ;
+    connectionInfo->setUserName( username ) ;
     connectionInfo->setPassword( password ) ;
 
     return connectionInfo ;

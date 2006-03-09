@@ -18,7 +18,7 @@
 #define IMessage_hpp_
 
 #include "IDestination.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -26,13 +26,16 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
 
 /*
  * 
  */
-struct IMessage
+class IMessage
 {
+public:
+
+	virtual ~IMessage(){}
     virtual p<IDestination> getFromDestination() = 0 ;
     virtual void setFromDestination(p<IDestination> destination) = 0 ;
 } ;

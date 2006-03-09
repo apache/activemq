@@ -38,12 +38,12 @@ ProducerInfoMarshaller::~ProducerInfoMarshaller()
 
 
 
-DataStructure* ProducerInfoMarshaller::createObject() 
+IDataStructure* ProducerInfoMarshaller::createObject() 
 {
     return new ProducerInfo();
 }
 
-byte ProducerInfoMarshaller::getDataStructureType() 
+char ProducerInfoMarshaller::getDataStructureType() 
 {
     return ProducerInfo.ID_ProducerInfo;
 }
@@ -51,7 +51,7 @@ byte ProducerInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ProducerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ProducerInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -77,7 +77,7 @@ void ProducerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Bin
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ProducerInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ProducerInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ProducerInfo& info = (ProducerInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -91,7 +91,7 @@ int ProducerInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Bool
 /* 
  * Write a object instance to data output stream
  */
-void ProducerInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ProducerInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     ProducerInfo& info = (ProducerInfo&) o;

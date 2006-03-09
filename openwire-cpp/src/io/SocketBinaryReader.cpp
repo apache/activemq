@@ -68,7 +68,8 @@ int SocketBinaryReader::read(char* buffer, int size) throw(IOException)
 
             // Construct error message
             message.assign("Failed to read from socket. Code = ") ;
-            message.append( itoa(rc, buf, 10) ) ;
+            sprintf( buf, "%d", rc );
+            message.append( buf ) ;
 
             throw IOException(__FILE__, __LINE__, message.c_str()) ;
         }

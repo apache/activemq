@@ -38,12 +38,12 @@ ActiveMQMessageMarshaller::~ActiveMQMessageMarshaller()
 
 
 
-DataStructure* ActiveMQMessageMarshaller::createObject() 
+IDataStructure* ActiveMQMessageMarshaller::createObject() 
 {
     return new ActiveMQMessage();
 }
 
-byte ActiveMQMessageMarshaller::getDataStructureType() 
+char ActiveMQMessageMarshaller::getDataStructureType() 
 {
     return ActiveMQMessage.ID_ActiveMQMessage;
 }
@@ -51,7 +51,7 @@ byte ActiveMQMessageMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ActiveMQMessageMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ActiveMQMessageMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -68,7 +68,7 @@ void ActiveMQMessageMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, 
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ActiveMQMessageMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ActiveMQMessageMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ActiveMQMessage& info = (ActiveMQMessage&) o;
 
     info.beforeMarshall(wireFormat);
@@ -81,7 +81,7 @@ int ActiveMQMessageMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, B
 /* 
  * Write a object instance to data output stream
  */
-void ActiveMQMessageMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ActiveMQMessageMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     ActiveMQMessage& info = (ActiveMQMessage&) o;

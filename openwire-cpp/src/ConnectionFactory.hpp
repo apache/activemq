@@ -27,7 +27,7 @@
 #include "command/ConnectionId.hpp"
 #include "transport/ITransport.hpp"
 #include "transport/SocketTransport.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -38,7 +38,7 @@ namespace apache
         using namespace apache::activemq::client::command;
         using namespace apache::activemq::client::transport;
         using namespace apache::activemq::client::util;
-        using namespace ifr;
+        using namespace ifr::v1;
 
 /*
  * 

@@ -18,8 +18,10 @@
 #define SIMPLE_MUTEX_HPP
 
 #if (defined(__unix__) || defined(unix) || defined(MACOSX)) && !defined(USG)
-#define unix
-#include <pthread.h>
+	#ifndef unix
+		#define unix
+	#endif
+	#include <pthread.h>
 #endif
 #if defined(WIN32) || defined(__CYGWIN__)
 #if ( !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x0400)

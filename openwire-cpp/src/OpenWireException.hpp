@@ -18,6 +18,7 @@
 #define OpenWireException_hpp_
 
 #include <exception>
+#include <string>
 
 namespace apache
 {
@@ -36,6 +37,19 @@ class OpenWireException : public exception
 public:
     OpenWireException(const char* message) ;
     virtual ~OpenWireException() throw();
+    
+    OpenWireException& operator=( const OpenWireException& ex ){
+    	msg = ex.msg;
+    	return *this;
+    }
+    
+    virtual const char* what() const throw(){
+    	return msg.c_str();
+    }
+    
+protected:
+
+	string msg;
 } ;
 
 /* namespace */

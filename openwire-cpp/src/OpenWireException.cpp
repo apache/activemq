@@ -22,12 +22,11 @@ using namespace apache::activemq::client;
  * 
  */
 OpenWireException::OpenWireException(const char* message)
-    : exception(message) 
 {
-    // no-op
+    msg = message;
 }
 
-OpenWireException::~OpenWireException()
+OpenWireException::~OpenWireException() throw()
 {
     // no-op
 }

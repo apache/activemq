@@ -35,7 +35,7 @@ namespace apache
       namespace io
       {
         using namespace std ;
-        using namespace ifr ;
+        using namespace ifr::v1 ;
 
 /*
  * The IReader interface provides for reading bytes from a binary stream
@@ -43,8 +43,10 @@ namespace apache
  * Strings are read as raw bytes, no character decoding is performed. If
  * any byte cannot be read for any reason, an IOException is thrown.
  */
-struct IReader
+class IReader
 {
+public:
+
     virtual ~IReader() { } ;  // Required for SP's
 
     virtual void close() throw(IOException) = 0 ;

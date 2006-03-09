@@ -38,12 +38,12 @@ BrokerInfoMarshaller::~BrokerInfoMarshaller()
 
 
 
-DataStructure* BrokerInfoMarshaller::createObject() 
+IDataStructure* BrokerInfoMarshaller::createObject() 
 {
     return new BrokerInfo();
 }
 
-byte BrokerInfoMarshaller::getDataStructureType() 
+char BrokerInfoMarshaller::getDataStructureType() 
 {
     return BrokerInfo.ID_BrokerInfo;
 }
@@ -51,7 +51,7 @@ byte BrokerInfoMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void BrokerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void BrokerInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -79,7 +79,7 @@ void BrokerInfoMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, Binar
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int BrokerInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int BrokerInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     BrokerInfo& info = (BrokerInfo&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -95,7 +95,7 @@ int BrokerInfoMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, Boolea
 /* 
  * Write a object instance to data output stream
  */
-void BrokerInfoMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void BrokerInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
     BrokerInfo& info = (BrokerInfo&) o;

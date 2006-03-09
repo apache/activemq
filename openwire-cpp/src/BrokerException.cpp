@@ -35,7 +35,7 @@ BrokerException::BrokerException(p<BrokerError> cause)
     message.append( cause->getStackTrace()->c_str() ) ;
 }
 
-BrokerException::~BrokerException()
+BrokerException::~BrokerException() throw()
 {
     // no-op
 }

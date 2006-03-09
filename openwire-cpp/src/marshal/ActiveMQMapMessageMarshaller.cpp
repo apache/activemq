@@ -38,12 +38,12 @@ ActiveMQMapMessageMarshaller::~ActiveMQMapMessageMarshaller()
 
 
 
-DataStructure* ActiveMQMapMessageMarshaller::createObject() 
+IDataStructure* ActiveMQMapMessageMarshaller::createObject() 
 {
     return new ActiveMQMapMessage();
 }
 
-byte ActiveMQMapMessageMarshaller::getDataStructureType() 
+char ActiveMQMapMessageMarshaller::getDataStructureType() 
 {
     return ActiveMQMapMessage.ID_ActiveMQMapMessage;
 }
@@ -51,7 +51,7 @@ byte ActiveMQMapMessageMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ActiveMQMapMessageMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ActiveMQMapMessageMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -61,7 +61,7 @@ void ActiveMQMapMessageMarshaller::unmarshal(OpenWireFormat& wireFormat, Object 
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ActiveMQMapMessageMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ActiveMQMapMessageMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ActiveMQMapMessage& info = (ActiveMQMapMessage&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -72,7 +72,7 @@ int ActiveMQMapMessageMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o
 /* 
  * Write a object instance to data output stream
  */
-void ActiveMQMapMessageMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ActiveMQMapMessageMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
 }

@@ -29,7 +29,7 @@ namespace apache
     {
       namespace io
       {
-        using namespace ifr;
+        using namespace ifr::v1;
 
 /*
  * The BinaryWriter class writes primitive C++ data types to an

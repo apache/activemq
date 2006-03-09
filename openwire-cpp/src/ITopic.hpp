@@ -19,7 +19,7 @@
 
 #include <string>
 #include "IDestination.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -27,14 +27,17 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr;
+      using namespace ifr::v1;
       using namespace std;
 
 /*
  * 
  */
-struct ITopic : IDestination
+class ITopic : public IDestination
 {
+public:
+
+	virtual ~ITopic(){}
     virtual p<string> getTopicName() = 0 ;
     virtual void setTopicName(const char* name) = 0 ;
 } ;

@@ -27,7 +27,7 @@ namespace apache
   {
     namespace client
     {
-      using namespace ifr ;
+      using namespace ifr::v1 ;
       using namespace std ;
 
 /*

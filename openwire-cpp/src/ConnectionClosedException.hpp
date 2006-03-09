@@ -33,7 +33,7 @@ class ConnectionClosedException : public OpenWireException
 {
 public:
     ConnectionClosedException(const char* message) ;
-    virtual ~ConnectionClosedException() ;
+    virtual ~ConnectionClosedException() throw();
 };
 
 /* namespace */

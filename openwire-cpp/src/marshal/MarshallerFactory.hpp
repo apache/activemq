@@ -50,7 +50,7 @@ public:
     MarshallerFactory() ;
     virtual ~MarshallerFactory() ;
 
-	  virtual void configure(OpenWireFormat& format) ;
+	  virtual void configure(ProtocolFormat& format) ;
 } ;
 
 /* namespace */

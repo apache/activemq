@@ -19,8 +19,6 @@
 using namespace apache::activemq::client;
 
 
-// --- Constructors -------------------------------------------------
-
 /*
  *
  */
@@ -62,7 +60,7 @@ void Connection::setTransport(p<ITransport> transport) throw(OpenWireException)
 /*
  *
  */
-p<string> Connection::getClientId()
+const char* Connection::getClientId()
 {
     return connectionInfo->getClientId() ;
 }
@@ -176,7 +174,7 @@ p<SessionInfo> Connection::createSessionInfo(bool transacted, AcknowledgementMod
     p<SessionInfo> sessionInfo = new SessionInfo() ;
     p<SessionId>   sessionId   = new SessionId() ;
     
-    sessionId->setConnectionId ( connectionInfo->getConnectionId()->getValue()->c_str() ) ;
+    sessionId->setConnectionId ( connectionInfo->getConnectionId()->getValue() ) ;
 
     mutex.lock() ;
     sessionId->setValue( ++sessionCounter ) ; 

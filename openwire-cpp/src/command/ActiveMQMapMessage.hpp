@@ -27,7 +27,7 @@
 #include "ActiveMQMessage.hpp"
 #include "IllegalArgumentException.hpp"
 #include "MessageFormatException.hpp"
-#include "util/ifr/ap"
+#include "util/ifr/ap.hpp"
 #include "util/ifr/p.hpp"
 #include "util/MapItemHolder.hpp"
 
@@ -39,7 +39,7 @@ namespace apache
     {
       namespace command
       {
-        using namespace ifr;
+        using namespace ifr::v1;
         using namespace apache::activemq::client::util;
 
 /*

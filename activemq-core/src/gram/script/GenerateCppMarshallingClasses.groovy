@@ -66,12 +66,12 @@ ${className}::~${className}()
 
 if( !abstractClass ) out << """
 
-DataStructure* ${className}::createObject() 
+IDataStructure* ${className}::createObject() 
 {
     return new ${jclass.simpleName}();
 }
 
-byte ${className}::getDataStructureType() 
+char ${className}::getDataStructureType() 
 {
     return ${jclass.simpleName}.ID_${jclass.simpleName};
 }
@@ -81,7 +81,7 @@ out << """
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ${className}::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ${className}::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 """
@@ -108,7 +108,7 @@ out << """
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ${className}::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ${className}::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ${jclass.simpleName}& info = (${jclass.simpleName}&) o;
 """
 
@@ -130,7 +130,7 @@ out << """
 /* 
  * Write a object instance to data output stream
  */
-void ${className}::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ${className}::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 """
 
@@ -190,7 +190,7 @@ out << """
 using namespace apache::activemq::client::marshal;
 
 
-void MarshallerFactory::configure(OpenWireFormat& format) 
+void MarshallerFactory::configure(ProtocolFormat& format) 
 {
 """
 

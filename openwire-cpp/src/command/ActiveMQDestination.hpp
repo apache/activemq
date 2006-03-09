@@ -35,9 +35,32 @@ namespace apache
  */
 class ActiveMQDestination : public AbstractCommand, IDestination
 {
+private:
+
+	string physicalName;
+	
 public:
-    ActiveMQDestination() ;
+
+	enum DestinationType{
+		ACTIVEMQ_QUEUE,
+		ACTIVEMQ_TEMP_QUEUE,
+		ACTIVEMQ_TOPIC,
+		ACTIVEMQ_TEMP_TOPIC
+	};
+	
+public:
+
+    ActiveMQDestination();
+    ActiveMQDestination( const char* physicalName );
     virtual ~ActiveMQDestination() ;
+    
+    virtual const char* getPhysicalName(){
+    	return physicalName.c_str();
+    }
+    
+    virtual void setPhysicalName( const char* name ){
+    	physicalName = name;
+    }
 } ;
 
 /* namespace */

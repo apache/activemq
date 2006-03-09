@@ -25,6 +25,11 @@ ActiveMQDestination::ActiveMQDestination()
 {
 }
 
+ActiveMQDestination::ActiveMQDestination( const char* physicalName ){
+	
+	setPhysicalName( physicalName );
+}
+
 ActiveMQDestination::~ActiveMQDestination()
 {
 }

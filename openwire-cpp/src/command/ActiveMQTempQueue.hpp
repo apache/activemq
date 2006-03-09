@@ -42,7 +42,7 @@ public:
     ActiveMQTempQueue(const char* name) ;
     virtual ~ActiveMQTempQueue() ;
 
-    virtual p<string> getQueueName() ;
+    virtual const char* getQueueName() ;
     virtual int getDestinationType() ;
     virtual p<ActiveMQDestination> createDestination(const char* name) ;
 } ;

@@ -27,7 +27,7 @@
 #include "MessageEOFException.hpp"
 #include "MessageNotReadableException.hpp"
 #include "MessageNotWritableException.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -36,13 +36,16 @@ namespace apache
     namespace client
     {
         using namespace std;
-        using namespace ifr;
+        using namespace ifr::v1;
 
 /*
  * 
  */
-struct IBytesMessage //: IMessage
+class IBytesMessage //: IMessage
 {
+public:
+
+	virtual ~IBytesMessage(){}
     virtual int getBodyLength() = 0;
     virtual void reset() = 0 ;
     virtual char readByte() throw (MessageNotReadableException, MessageEOFException) = 0 ;

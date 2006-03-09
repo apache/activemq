@@ -79,7 +79,7 @@
 using namespace apache::activemq::client::marshal;
 
 
-void MarshallerFactory::configure(OpenWireFormat& format) 
+void MarshallerFactory::configure(ProtocolFormat& format) 
 {
 
     format.addMarshaller(new LocalTransactionIdMarshaller());

@@ -19,7 +19,7 @@
 
 #include "ISession.hpp"
 #include "OpenWireException.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 // Turn off warning message for ignored exception specification
 #ifdef _MSC_VER
@@ -33,7 +33,7 @@ namespace apache
   {
     namespace client
     {
-        using namespace ifr;
+        using namespace ifr::v1;
 
 enum AcknowledgementMode {
     UnknownMode, AutoMode, ClientMode, TransactionalMode 
@@ -42,8 +42,11 @@ enum AcknowledgementMode {
 /*
  * 
  */
-struct IConnection
+class IConnection
 {
+public:
+
+	virtual ~IConnection(){}
     virtual p<ISession> createSession() throw(OpenWireException) = 0 ;
     virtual p<ISession> createSession(bool transacted, AcknowledgementMode ackMode) throw(OpenWireException) = 0 ;
     virtual bool getTransacted() = 0 ;

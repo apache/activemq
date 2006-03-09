@@ -18,8 +18,6 @@
 
 using namespace apache::activemq::client::command;
 
-// Constructors -----------------------------------------------------
-
 /*
  * 
  */
@@ -89,7 +87,9 @@ p<string> BaseCommand::toString()
         str->assign("") ;
 
     str->append(": id = ") ;
-    str->append( itoa(getCommandId(), buffer, 10) ) ;
+    
+    sprintf( buffer, "%d", getCommandId() );
+    str->append( buffer ) ;
 
     return str ;
 }

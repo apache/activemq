@@ -38,12 +38,12 @@ ActiveMQTempQueueMarshaller::~ActiveMQTempQueueMarshaller()
 
 
 
-DataStructure* ActiveMQTempQueueMarshaller::createObject() 
+IDataStructure* ActiveMQTempQueueMarshaller::createObject() 
 {
     return new ActiveMQTempQueue();
 }
 
-byte ActiveMQTempQueueMarshaller::getDataStructureType() 
+char ActiveMQTempQueueMarshaller::getDataStructureType() 
 {
     return ActiveMQTempQueue.ID_ActiveMQTempQueue;
 }
@@ -51,7 +51,7 @@ byte ActiveMQTempQueueMarshaller::getDataStructureType()
     /* 
      * Un-marshal an object instance from the data input stream
      */ 
-void ActiveMQTempQueueMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
+void ActiveMQTempQueueMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryReader& dataIn, BooleanStream& bs) 
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
@@ -61,7 +61,7 @@ void ActiveMQTempQueueMarshaller::unmarshal(OpenWireFormat& wireFormat, Object o
 /*
  * Write the booleans that this object uses to a BooleanStream
  */
-int ActiveMQTempQueueMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o, BooleanStream& bs) {
+int ActiveMQTempQueueMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, BooleanStream& bs) {
     ActiveMQTempQueue& info = (ActiveMQTempQueue&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
@@ -72,7 +72,7 @@ int ActiveMQTempQueueMarshaller::marshal1(OpenWireFormat& wireFormat, Object& o,
 /* 
  * Write a object instance to data output stream
  */
-void ActiveMQTempQueueMarshaller::marshal2(OpenWireFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
+void ActiveMQTempQueueMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
 
 }

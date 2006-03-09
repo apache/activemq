@@ -22,12 +22,12 @@ using namespace apache::activemq::client::command;
  * 
  */
 ActiveMQTempQueue::ActiveMQTempQueue()
-   : ActiveMQDestination()
 {
 }
 
 ActiveMQTempQueue::ActiveMQTempQueue(const char* name)
-   : ActiveMQDestination(name)
+:
+	ActiveMQDestination( name )
 {
 }
 
@@ -35,14 +35,14 @@ ActiveMQTempQueue::~ActiveMQTempQueue()
 {
 }
 
-p<string> ActiveMQTempQueue::getQueueName()
+const char* ActiveMQTempQueue::getQueueName()
 {
     return this->getPhysicalName() ;
 }
 
 int ActiveMQTempQueue::getDestinationType()
 {
-    return ActiveMQDestination::ACTIVEMQ_QUEUE ;
+    return ActiveMQDestination::ACTIVEMQ_TEMP_QUEUE ;
 }
 
 p<ActiveMQDestination> ActiveMQTempQueue::createDestination(const char* name)

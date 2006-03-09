@@ -20,13 +20,14 @@
 #include <string>
 #include "IMessage.hpp"
 #include "ISession.hpp"
+#include "IConnection.hpp"
 #include "command/IDataStructure.hpp"
 #include "command/ConsumerInfo.hpp"
 #include "command/ProducerInfo.hpp"
 #include "command/RemoveInfo.hpp"
 #include "command/SessionInfo.hpp"
 #include "util/SimpleMutex.hpp"
-#include "util/ifr/p"
+#include "util/ifr/p.hpp"
 
 namespace apache
 {
@@ -37,7 +38,6 @@ namespace apache
         using namespace ifr;
         using namespace apache::activemq::client::util;
         class Connection;
-        enum  AcknowledgementMode;
 
 /*
  * 
@@ -53,7 +53,7 @@ private:
 
 public:
     Session(p<Connection> connection, p<SessionInfo> sessionInfo) ;
-    ~Session() ;
+    virtual ~Session() ;
     
     virtual p<IMessageProducer> createProducer() ;
     virtual p<IMessageProducer> createProducer(p<IDestination> destination) ;
