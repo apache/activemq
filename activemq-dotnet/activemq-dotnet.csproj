@@ -87,6 +87,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ProducerInfo.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\RemoveInfo.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\RemoveSubscriptionInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ReplayCommand.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\Response.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\SessionId.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\SessionInfo.cs"/>
@@ -160,6 +161,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ProducerInfoMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\RemoveInfoMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\RemoveSubscriptionInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ReplayCommandMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ResponseMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\SessionIdMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\SessionInfoMarshaller.cs"/>

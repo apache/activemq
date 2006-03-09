@@ -83,7 +83,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -159,5 +158,97 @@ namespace ActiveMQ.OpenWire.V1
         bs.ReadBoolean();
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        Message info = (Message)o;
+        info.ProducerId = (ProducerId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.Destination = (ActiveMQDestination) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.TransactionId = (TransactionId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.OriginalDestination = (ActiveMQDestination) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.MessageId = (MessageId) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.OriginalTransactionId = (TransactionId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.GroupID = LooseUnmarshalString(dataIn);
+        info.GroupSequence = dataIn.ReadInt32();
+        info.CorrelationId = LooseUnmarshalString(dataIn);
+        info.Persistent = dataIn.ReadBoolean();
+        info.Expiration = LooseUnmarshalLong(wireFormat, dataIn);
+        info.Priority = dataIn.ReadByte();
+        info.ReplyTo = (ActiveMQDestination) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.Timestamp = LooseUnmarshalLong(wireFormat, dataIn);
+        info.Type = LooseUnmarshalString(dataIn);
+        info.Content = ReadBytes(dataIn, dataIn.ReadBoolean());
+        info.MarshalledProperties = ReadBytes(dataIn, dataIn.ReadBoolean());
+        info.DataStructure = (DataStructure) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.TargetConsumerId = (ConsumerId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.Compressed = dataIn.ReadBoolean();
+        info.RedeliveryCounter = dataIn.ReadInt32();
+
+        if (dataIn.ReadBoolean()) {
+            short size = dataIn.ReadInt16();
+            BrokerId[] value = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) LooseUnmarshalNestedObject(wireFormat,dataIn);
+            }
+            info.BrokerPath = value;
+        }
+        else {
+            info.BrokerPath = null;
+        }
+        info.Arrival = LooseUnmarshalLong(wireFormat, dataIn);
+        info.UserID = LooseUnmarshalString(dataIn);
+        info.RecievedByDFBridge = dataIn.ReadBoolean();
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        Message info = (Message)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.ProducerId, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.Destination, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.TransactionId, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.OriginalDestination, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.MessageId, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.OriginalTransactionId, dataOut);
+        LooseMarshalString(info.GroupID, dataOut);
+        dataOut.Write(info.GroupSequence);
+        LooseMarshalString(info.CorrelationId, dataOut);
+        dataOut.Write(info.Persistent);
+        LooseMarshalLong(wireFormat, info.Expiration, dataOut);
+        dataOut.Write(info.Priority);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.ReplyTo, dataOut);
+        LooseMarshalLong(wireFormat, info.Timestamp, dataOut);
+        LooseMarshalString(info.Type, dataOut);
+        dataOut.Write(info.Content!=null);
+        if(info.Content!=null) {
+           dataOut.Write(info.Content.Length);
+           dataOut.Write(info.Content);
+        }
+        dataOut.Write(info.MarshalledProperties!=null);
+        if(info.MarshalledProperties!=null) {
+           dataOut.Write(info.MarshalledProperties.Length);
+           dataOut.Write(info.MarshalledProperties);
+        }
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.DataStructure, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.TargetConsumerId, dataOut);
+        dataOut.Write(info.Compressed);
+        dataOut.Write(info.RedeliveryCounter);
+        LooseMarshalObjectArray(wireFormat, info.BrokerPath, dataOut);
+        LooseMarshalLong(wireFormat, info.Arrival, dataOut);
+        LooseMarshalString(info.UserID, dataOut);
+        dataOut.Write(info.RecievedByDFBridge);
+
+    }
+    
   }
 }

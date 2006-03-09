@@ -35,9 +35,15 @@ public class MarshallingBrokerTest extends BrokerTest {
     public WireFormat wireFormat = new OpenWireFormat();
     
     public void initCombos() {
+    	
+    	OpenWireFormat wf1 = new OpenWireFormat();
+    	wf1.setCacheEnabled(false);
+    	OpenWireFormat wf2 = new OpenWireFormat();
+    	wf2.setCacheEnabled(true);
+    	
         addCombinationValues( "wireFormat", new Object[]{ 
-                new OpenWireFormat(true), 
-                new OpenWireFormat(false),
+                wf1, 
+                wf2,
                 });        
     }
     

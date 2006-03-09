@@ -61,7 +61,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -87,5 +86,34 @@ namespace ActiveMQ.OpenWire.V1
         bs.ReadBoolean();
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        JournalTransaction info = (JournalTransaction)o;
+        info.TransactionId = (TransactionId) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.Type = dataIn.ReadByte();
+        info.WasPrepared = dataIn.ReadBoolean();
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        JournalTransaction info = (JournalTransaction)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.TransactionId, dataOut);
+        dataOut.Write(info.Type);
+        dataOut.Write(info.WasPrepared);
+
+    }
+    
   }
 }

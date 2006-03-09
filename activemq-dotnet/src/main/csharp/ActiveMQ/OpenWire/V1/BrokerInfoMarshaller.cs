@@ -74,7 +74,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -105,5 +104,49 @@ namespace ActiveMQ.OpenWire.V1
         bs.ReadBoolean();
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        BrokerInfo info = (BrokerInfo)o;
+        info.BrokerId = (BrokerId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.BrokerURL = LooseUnmarshalString(dataIn);
+
+        if (dataIn.ReadBoolean()) {
+            short size = dataIn.ReadInt16();
+            BrokerInfo[] value = new BrokerInfo[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerInfo) LooseUnmarshalNestedObject(wireFormat,dataIn);
+            }
+            info.PeerBrokerInfos = value;
+        }
+        else {
+            info.PeerBrokerInfos = null;
+        }
+        info.BrokerName = LooseUnmarshalString(dataIn);
+        info.SlaveBroker = dataIn.ReadBoolean();
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        BrokerInfo info = (BrokerInfo)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.BrokerId, dataOut);
+        LooseMarshalString(info.BrokerURL, dataOut);
+        LooseMarshalObjectArray(wireFormat, info.PeerBrokerInfos, dataOut);
+        LooseMarshalString(info.BrokerName, dataOut);
+        dataOut.Write(info.SlaveBroker);
+
+    }
+    
   }
 }

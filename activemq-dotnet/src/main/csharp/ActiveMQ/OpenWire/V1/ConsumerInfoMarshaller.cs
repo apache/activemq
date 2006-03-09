@@ -84,7 +84,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -132,5 +131,69 @@ namespace ActiveMQ.OpenWire.V1
         bs.ReadBoolean();
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        ConsumerInfo info = (ConsumerInfo)o;
+        info.ConsumerId = (ConsumerId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.Browser = dataIn.ReadBoolean();
+        info.Destination = (ActiveMQDestination) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.PrefetchSize = dataIn.ReadInt32();
+        info.MaximumPendingMessageLimit = dataIn.ReadInt32();
+        info.DispatchAsync = dataIn.ReadBoolean();
+        info.Selector = LooseUnmarshalString(dataIn);
+        info.SubcriptionName = LooseUnmarshalString(dataIn);
+        info.NoLocal = dataIn.ReadBoolean();
+        info.Exclusive = dataIn.ReadBoolean();
+        info.Retroactive = dataIn.ReadBoolean();
+        info.Priority = dataIn.ReadByte();
+
+        if (dataIn.ReadBoolean()) {
+            short size = dataIn.ReadInt16();
+            BrokerId[] value = new BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (BrokerId) LooseUnmarshalNestedObject(wireFormat,dataIn);
+            }
+            info.BrokerPath = value;
+        }
+        else {
+            info.BrokerPath = null;
+        }
+        info.AdditionalPredicate = (BooleanExpression) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.NetworkSubscription = dataIn.ReadBoolean();
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        ConsumerInfo info = (ConsumerInfo)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.ConsumerId, dataOut);
+        dataOut.Write(info.Browser);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.Destination, dataOut);
+        dataOut.Write(info.PrefetchSize);
+        dataOut.Write(info.MaximumPendingMessageLimit);
+        dataOut.Write(info.DispatchAsync);
+        LooseMarshalString(info.Selector, dataOut);
+        LooseMarshalString(info.SubcriptionName, dataOut);
+        dataOut.Write(info.NoLocal);
+        dataOut.Write(info.Exclusive);
+        dataOut.Write(info.Retroactive);
+        dataOut.Write(info.Priority);
+        LooseMarshalObjectArray(wireFormat, info.BrokerPath, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.AdditionalPredicate, dataOut);
+        dataOut.Write(info.NetworkSubscription);
+
+    }
+    
   }
 }

@@ -65,7 +65,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -98,5 +97,42 @@ namespace ActiveMQ.OpenWire.V1
         dataOut.Write(info.MessageCount);
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        MessageAck info = (MessageAck)o;
+        info.Destination = (ActiveMQDestination) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.TransactionId = (TransactionId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.ConsumerId = (ConsumerId) LooseUnmarshalCachedObject(wireFormat, dataIn);
+        info.AckType = dataIn.ReadByte();
+        info.FirstMessageId = (MessageId) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.LastMessageId = (MessageId) LooseUnmarshalNestedObject(wireFormat, dataIn);
+        info.MessageCount = dataIn.ReadInt32();
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        MessageAck info = (MessageAck)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.Destination, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.TransactionId, dataOut);
+        LooseMarshalCachedObject(wireFormat, (DataStructure)info.ConsumerId, dataOut);
+        dataOut.Write(info.AckType);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.FirstMessageId, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.LastMessageId, dataOut);
+        dataOut.Write(info.MessageCount);
+
+    }
+    
   }
 }

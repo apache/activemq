@@ -29,6 +29,7 @@ import org.activeio.adapter.SyncToAsyncChannel;
 import org.activeio.command.AsyncChannelToAsyncCommandChannel;
 import org.activeio.command.WireFormat;
 import org.activeio.net.SocketMetadata;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
@@ -229,7 +230,10 @@ public class ActiveIOTransportFactory extends TransportFactory {
         if( activeIOTransport.isTrace() ) {
             transport = new TransportLogger(transport);
         }
-        transport = new WireFormatNegotiator(transport,format, activeIOTransport.getMinmumWireFormatVersion());
+        if( format instanceof OpenWireFormat ) {
+        	transport = new WireFormatNegotiator(transport, (OpenWireFormat) format, activeIOTransport.getMinmumWireFormatVersion());
+        }
+        
         transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration());
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
@@ -275,7 +279,9 @@ public class ActiveIOTransportFactory extends TransportFactory {
         if( activeIOTransport.isTrace() ) {
             transport = new TransportLogger(transport);
         }
-        transport = new WireFormatNegotiator(transport,format, activeIOTransport.getMinmumWireFormatVersion());
+        if( format instanceof OpenWireFormat ) {
+        	transport = new WireFormatNegotiator(transport, (OpenWireFormat) format, activeIOTransport.getMinmumWireFormatVersion());
+        }
         transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration());
         return transport;        
     }

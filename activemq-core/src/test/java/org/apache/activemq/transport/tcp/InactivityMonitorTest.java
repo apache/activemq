@@ -38,10 +38,10 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     
     protected void setUp() throws Exception {
         super.setUp();
-        server = TransportFactory.bind("localhost", new URI("tcp://localhost:61616?maxInactivityDuration="+serverInactivityLimit));
+        server = TransportFactory.bind("localhost", new URI("tcp://localhost:61616?trace=true&maxInactivityDuration="+serverInactivityLimit));
         server.setAcceptListener(this);
         server.start();
-        clientTransport = TransportFactory.connect(new URI("tcp://localhost:61616?maxInactivityDuration="+clientInactivityLimit));
+        clientTransport = TransportFactory.connect(new URI("tcp://localhost:61616?trace=true&maxInactivityDuration="+clientInactivityLimit));
         clientTransport.setTransportListener(new TransportListener() {
             public void onCommand(Command command) {
                 clientReceiveCount.incrementAndGet();
@@ -130,8 +130,10 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         
         Thread.sleep(4000);
         
-        assertEquals(0, clientErrorCount.get());
-        assertEquals(0, serverErrorCount.get());
+        if( clientErrorCount.get() > 0 )
+        	assertEquals(0, clientErrorCount.get());
+        if( serverErrorCount.get() > 0 )
+        	assertEquals(0, serverErrorCount.get());
     }
 
     /**

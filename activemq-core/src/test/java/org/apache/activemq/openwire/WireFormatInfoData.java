@@ -16,13 +16,16 @@
  */
 package org.apache.activemq.openwire;
 
+import java.io.IOException;
+
 import org.apache.activemq.command.WireFormatInfo;
 
 public class WireFormatInfoData extends DataFileGenerator {
 
-    protected Object createObject() {
+    protected Object createObject() throws IOException {
         WireFormatInfo rc = new WireFormatInfo();
         rc.setResponseRequired(false);
+        rc.setCacheEnabled(true);
         rc.setVersion(1);
         return rc;
     }

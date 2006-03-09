@@ -59,7 +59,6 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-
     //
     // Write the booleans that this object uses to a BooleanStream
     //
@@ -82,5 +81,30 @@ namespace ActiveMQ.OpenWire.V1
         TightMarshalNestedObject2(wireFormat, (DataStructure)info.Data, dataOut, bs);
 
     }
+
+    // 
+    // Un-marshal an object instance from the data input stream
+    // 
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    {
+        base.LooseUnmarshal(wireFormat, o, dataIn);
+
+        DataResponse info = (DataResponse)o;
+        info.Data = (DataStructure) LooseUnmarshalNestedObject(wireFormat, dataIn);
+
+    }
+
+    // 
+    // Write a object instance to data output stream
+    //
+    public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {
+
+        DataResponse info = (DataResponse)o;
+
+        base.LooseMarshal(wireFormat, o, dataOut);
+        LooseMarshalNestedObject(wireFormat, (DataStructure)info.Data, dataOut);
+
+    }
+    
   }
 }

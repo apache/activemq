@@ -197,20 +197,7 @@ namespace ActiveMQ.OpenWire
                 return null;
             }
         }
-        
-        protected virtual String ReadAsciiString(BinaryReader dataIn)
-        {
-            int size = dataIn.ReadInt16();
-            byte[] data = new byte[size];
-            dataIn.Read(data, 0, size);
-            char[] text = new char[size];
-            for (int i = 0; i < size; i++)
-            {
-                text[i] = (char) data[i];
-            }
-            return new String(text);
-        }
-        
+                
         protected virtual int TightMarshalString1(String value, BooleanStream bs)
         {
             bs.WriteBoolean(value != null);
@@ -396,35 +383,6 @@ namespace ActiveMQ.OpenWire
             }
         }
         
-        protected virtual byte[] ReadBytes(BinaryReader dataIn, bool flag)
-        {
-            if (flag)
-            {
-                int size = dataIn.ReadInt32();
-                return dataIn.ReadBytes(size);
-            }
-            else
-            {
-                return null;
-            }
-        }
-        
-        protected virtual byte[] ReadBytes(BinaryReader dataIn)
-        {
-            int size = dataIn.ReadInt32();
-            return dataIn.ReadBytes(size);
-        }
-        
-        protected virtual byte[] ReadBytes(BinaryReader dataIn, int size)
-        {
-            return dataIn.ReadBytes(size);
-        }
-        
-        protected virtual void WriteBytes(byte[] command, BinaryWriter dataOut)
-        {
-            dataOut.Write(command.Length);
-            dataOut.Write(command);
-        }
         
         protected virtual BrokerError TightUnmarshalBrokerError(
             OpenWireFormat wireFormat,
@@ -520,6 +478,240 @@ namespace ActiveMQ.OpenWire
                 }
             }
         }
+
+		
+        public virtual void LooseMarshal(
+            OpenWireFormat wireFormat,
+            Object o,
+            BinaryWriter dataOut)
+        {
+        }
+        
+        public virtual void LooseUnmarshal(
+            OpenWireFormat wireFormat,
+            Object o,
+            BinaryReader dataIn)
+        {
+        }
+        
+        
+        protected virtual DataStructure LooseUnmarshalNestedObject(
+            OpenWireFormat wireFormat,
+            BinaryReader dataIn)
+        {
+            return wireFormat.LooseUnmarshalNestedObject(dataIn);
+        }
+        
+        protected virtual void LooseMarshalNestedObject(
+            OpenWireFormat wireFormat,
+            DataStructure o,
+            BinaryWriter dataOut)
+        {
+            wireFormat.LooseMarshalNestedObject(o, dataOut);
+        }
+        
+        protected virtual DataStructure LooseUnmarshalCachedObject(
+            OpenWireFormat wireFormat,
+            BinaryReader dataIn)
+        {
+            /*
+             if (wireFormat.isCacheEnabled()) {
+             if (bs.ReadBoolean()) {
+             short index = dataIndataIn.ReadInt16()Int16();
+             DataStructure value = wireFormat.UnmarshalNestedObject(dataIn, bs);
+             wireFormat.setInUnmarshallCache(index, value);
+             return value;
+             } else {
+             short index = dataIn.ReadInt16();
+             return wireFormat.getFromUnmarshallCache(index);
+             }
+             } else {
+             return wireFormat.UnmarshalNestedObject(dataIn, bs);
+             }
+             */
+            return wireFormat.LooseUnmarshalNestedObject(dataIn);
+        }
+        
+        
+        protected virtual void LooseMarshalCachedObject(
+            OpenWireFormat wireFormat,
+            DataStructure o,
+            BinaryWriter dataOut)
+        {
+            /*
+             if (wireFormat.isCacheEnabled()) {
+             Short index = wireFormat.getMarshallCacheIndex(o);
+             if (bs.ReadBoolean()) {
+             dataOut.Write(index.shortValue(), dataOut);
+             wireFormat.Marshal2NestedObject(o, dataOut, bs);
+             } else {
+             dataOut.Write(index.shortValue(), dataOut);
+             }
+             } else {
+             wireFormat.Marshal2NestedObject(o, dataOut, bs);
+             }
+             */
+            wireFormat.LooseMarshalNestedObject(o, dataOut);
+        }
+        
+        
+        
+        protected virtual String LooseUnmarshalString(BinaryReader dataIn)
+        {
+            if (dataIn.ReadBoolean())
+            {
+				return dataIn.ReadString();
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
+        
+        public static void LooseMarshalString(String value, BinaryWriter dataOut)
+        {
+            dataOut.Write(value != null);
+            if (value != null)
+            {
+				dataOut.Write(value);
+            }
+        }
+		        
+        public virtual void LooseMarshalLong(
+            OpenWireFormat wireFormat,
+            long o,
+            BinaryWriter dataOut)
+        {
+			dataOut.Write(o);
+        }
+		
+        public virtual long LooseUnmarshalLong(OpenWireFormat wireFormat, BinaryReader dataIn)
+        {
+			return dataIn.ReadInt64();
+        }
+		        
+        protected virtual void LooseMarshalObjectArray(
+            OpenWireFormat wireFormat,
+            DataStructure[] objects,
+            BinaryWriter dataOut)
+        {
+			dataOut.Write(objects!=null);
+            if (objects!=null)
+            {
+                dataOut.Write((short) objects.Length);
+                for (int i = 0; i < objects.Length; i++)
+                {
+                    LooseMarshalNestedObject(wireFormat, objects[i], dataOut);
+                }
+            }
+        }
+                
+        protected virtual BrokerError LooseUnmarshalBrokerError(
+            OpenWireFormat wireFormat,
+            BinaryReader dataIn)
+        {
+            if (dataIn.ReadBoolean())
+            {
+                BrokerError answer = new BrokerError();
+                
+                answer.ExceptionClass = LooseUnmarshalString(dataIn);
+                answer.Message = LooseUnmarshalString(dataIn);
+                if (wireFormat.StackTraceEnabled)
+                {
+                    short length = dataIn.ReadInt16();
+                    StackTraceElement[] stackTrace = new StackTraceElement[length];
+                    for (int i = 0; i < stackTrace.Length; i++)
+                    {
+                        StackTraceElement element = new StackTraceElement();
+                        element.ClassName = LooseUnmarshalString(dataIn);
+                        element.MethodName = LooseUnmarshalString(dataIn);
+                        element.FileName = LooseUnmarshalString(dataIn);
+                        element.LineNumber = dataIn.ReadInt32();
+                        stackTrace[i] = element;
+                    }
+                    answer.StackTraceElements = stackTrace;
+                    answer.Cause = LooseUnmarshalBrokerError(wireFormat, dataIn);
+                }
+                return answer;
+            }
+            else
+            {
+                return null;
+            }
+        }
+                
+        protected void LooseMarshalBrokerError(
+            OpenWireFormat wireFormat,
+            BrokerError o,
+            BinaryWriter dataOut)
+        {
+			dataOut.Write(o!=null);
+            if (o!=null)
+            {
+                LooseMarshalString(o.ExceptionClass, dataOut);
+                LooseMarshalString(o.Message, dataOut);
+                if (wireFormat.StackTraceEnabled)
+                {
+                    StackTraceElement[] stackTrace = o.StackTraceElements;
+                    dataOut.Write((short) stackTrace.Length);
+                    
+                    for (int i = 0; i < stackTrace.Length; i++)
+                    {
+                        StackTraceElement element = stackTrace[i];
+                        LooseMarshalString(element.ClassName, dataOut);
+                        LooseMarshalString(element.MethodName, dataOut);
+                        LooseMarshalString(element.FileName, dataOut);
+                        dataOut.Write(element.LineNumber);
+                    }
+                    LooseMarshalBrokerError(wireFormat, o.Cause, dataOut);
+                }
+            }
+        }
+		
+		protected virtual byte[] ReadBytes(BinaryReader dataIn, bool flag)
+        {
+            if (flag)
+            {
+                int size = dataIn.ReadInt32();
+                return dataIn.ReadBytes(size);
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
+        protected virtual byte[] ReadBytes(BinaryReader dataIn)
+        {
+            int size = dataIn.ReadInt32();
+            return dataIn.ReadBytes(size);
+        }
+        
+        protected virtual byte[] ReadBytes(BinaryReader dataIn, int size)
+        {
+            return dataIn.ReadBytes(size);
+        }
+        
+        protected virtual void WriteBytes(byte[] command, BinaryWriter dataOut)
+        {
+            dataOut.Write(command.Length);
+            dataOut.Write(command);
+        }
+		
+		protected virtual String ReadAsciiString(BinaryReader dataIn)
+        {
+            int size = dataIn.ReadInt16();
+            byte[] data = new byte[size];
+            dataIn.Read(data, 0, size);
+            char[] text = new char[size];
+            for (int i = 0; i < size; i++)
+            {
+                text[i] = (char) data[i];
+            }
+            return new String(text);
+        }
+		
         
         /// <summary>
         /// Marshals the primitive type map to a byte array

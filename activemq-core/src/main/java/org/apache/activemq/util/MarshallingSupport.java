@@ -61,13 +61,21 @@ public class MarshallingSupport {
         }
     }
 
+    static public HashMap unmarshalPrimitiveMap(DataInputStream in) throws IOException {
+		return unmarshalPrimitiveMap(in, Integer.MAX_VALUE);
+	}
+
     /**
      * @param in
      * @return
+     * @throws IOException 
      * @throws IOException
      */
-    static public HashMap unmarshalPrimitiveMap(DataInputStream in) throws IOException {
+	public static HashMap unmarshalPrimitiveMap(DataInputStream in, int max_property_size) throws IOException {
         int size = in.readInt();
+        if( size > max_property_size ) {
+        	throw new IOException("Primitive map is larger than the allowed size: "+size);
+        }
         if( size < 0 ) {
             return null;
         } else {
@@ -265,5 +273,6 @@ public class MarshallingSupport {
             return null;
         }
     }
+
 
 }

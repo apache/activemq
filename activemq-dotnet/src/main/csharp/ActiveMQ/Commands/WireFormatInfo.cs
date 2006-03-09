@@ -31,8 +31,17 @@ namespace ActiveMQ.Commands
     public class WireFormatInfo : AbstractCommand, Command, MarshallAware
     {
         public const byte ID_WireFormatInfo = 1;
-    			
-        byte[] magic;
+		static private byte[] MAGIC = new byte[] {
+			'A'&0xFF,
+			'c'&0xFF,
+			't'&0xFF,
+			'i'&0xFF,
+			'v'&0xFF,
+			'e'&0xFF,
+			'M'&0xFF,
+			'Q'&0xFF };
+		
+        byte[] magic = MAGIC;
         int version;
         byte[] marshalledProperties;
 		
@@ -85,23 +94,28 @@ namespace ActiveMQ.Commands
 
         public bool StackTraceEnabled
         {
-            get { return true.Equals(Properties["stackTrace"]) ; }
-            set { Properties["stackTrace"] = value; }
+            get { return true.Equals(Properties["StackTraceEnabled"]) ; }
+            set { Properties["StackTraceEnabled"] = value; }
         }
         public bool TcpNoDelayEnabled
         {
-            get { return true.Equals(Properties["tcpNoDelay"]); }
-            set { Properties["tcpNoDelay"] = value; }
+            get { return true.Equals(Properties["TcpNoDelayEnabled"]); }
+            set { Properties["TcpNoDelayEnabled"] = value; }
         }
-        public bool PrefixPacketSize
+        public bool SizePrefixDisabled
         {
-            get { return true.Equals(Properties["prefixPacketSize"]); }
-            set { Properties["prefixPacketSize"] = value; }
+            get { return true.Equals(Properties["SizePrefixDisabled"]); }
+            set { Properties["SizePrefixDisabled"] = value; }
         }
         public bool TightEncodingEnabled
         {
-            get { return true.Equals(Properties["tightEncoding"]); }
-            set { Properties["tightEncoding"] = value; }
+            get { return true.Equals(Properties["TightEncodingEnabled"]); }
+            set { Properties["TightEncodingEnabled"] = value; }
+        }
+        public bool CacheEnabled
+        {
+            get { return true.Equals(Properties["CacheEnabled"]); }
+            set { Properties["CacheEnabled"] = value; }
         }
 		
 		// MarshallAware interface
