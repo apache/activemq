@@ -58,7 +58,10 @@ public class WireFormatNegotiator extends TransportFilter {
         if( firstStart.compareAndSet(true, false) ) {
         	try {
         		WireFormatInfo info = wireFormat.getPreferedWireFormatInfo();
-	            next.oneway(info);
+                if (log.isDebugEnabled()) {
+                    log.debug("Sending: " + info);
+                }
+	            sendWireFormat(info);
         	} finally {
         		wireInfoSentDownLatch.countDown();
         	}
@@ -99,11 +102,12 @@ public class WireFormatNegotiator extends TransportFilter {
                 onException((IOException) new InterruptedIOException().initCause(e));
 			}
             readyCountDownLatch.countDown();
-            
+            onWireFormatNegotiated(info);
         }
         getTransportListener().onCommand(command);
     }
-    
+
+
     public void onException(IOException error) {
         readyCountDownLatch.countDown();
     	super.onException(error);
@@ -111,5 +115,12 @@ public class WireFormatNegotiator extends TransportFilter {
     
     public String toString() {
         return next.toString();
+    }
+
+    protected void sendWireFormat(WireFormatInfo info) throws IOException {
+        next.oneway(info);
+    }
+    
+    protected void onWireFormatNegotiated(WireFormatInfo info) {
     }
 }

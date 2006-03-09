@@ -51,15 +51,22 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private DatagramReplayStrategy replayStrategy = new ExceptionIfDroppedPacketStrategy();
     private int datagramSize = 4 * 1024;
     private long maxInactivityDuration = 0; // 30000;
-    private InetSocketAddress targetAddress;
+    private SocketAddress targetAddress;
+    private SocketAddress originalTargetAddress;
     private DatagramChannel channel;
     private boolean trace = false;
     private boolean useLocalHost = true;
     private int port;
+    private int minmumWireFormatVersion;
+    private String description = null;
+
     private CommandProcessor commandProcessor = new CommandProcessor() {
-        public void process(Command command, SocketAddress address) {
+        public void process(Command command, DatagramHeader header) {
             doConsume(command);
-        }};
+        }
+    };
+
+    private DatagramHeader wireFormatHeader;
 
     protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
@@ -68,13 +75,25 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public UdpTransport(OpenWireFormat wireFormat, URI remoteLocation) throws UnknownHostException, IOException {
         this(wireFormat);
         this.targetAddress = createAddress(remoteLocation);
+        description = remoteLocation.toString() + "@";
     }
 
-    public UdpTransport(OpenWireFormat wireFormat, InetSocketAddress socketAddress) throws IOException {
+    public UdpTransport(OpenWireFormat wireFormat, SocketAddress socketAddress) throws IOException {
         this(wireFormat);
         this.targetAddress = socketAddress;
+        this.description = "UdpServerConnection@";
     }
-    
+
+    /**
+     * Used by the server transport
+     */
+    public UdpTransport(OpenWireFormat wireFormat, int port) throws UnknownHostException, IOException {
+        this(wireFormat);
+        this.port = port;
+        this.targetAddress = null;
+        this.description = "UdpServer@";
+    }
+
     /**
      * A one way asynchronous send
      */
@@ -85,19 +104,28 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     /**
      * A one way asynchronous send to a given address
      */
-    public void oneway(Command command, InetSocketAddress address) throws IOException {
+    public void oneway(Command command, SocketAddress address) throws IOException {
         if (log.isDebugEnabled()) {
-            log.debug("Sending oneway from port: " + port + " to target: " + targetAddress);
+            log.debug("Sending oneway from: " + this + " to target: " + targetAddress);
         }
         checkStarted(command);
         commandChannel.write(command, address);
+    }
+
+    public void doConsume(Command command, DatagramHeader header) throws IOException {
+        wireFormatHeader = header;
     }
 
     /**
      * @return pretty print of 'this'
      */
     public String toString() {
-        return "udp://" + targetAddress + "?port=" + port;
+        if (description != null) {
+            return description + port;
+        }
+        else {
+            return "udp://" + targetAddress + "@" + port;
+        }
     }
 
     /**
@@ -214,7 +242,18 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.port = port;
     }
 
-    
+    public int getMinmumWireFormatVersion() {
+        return minmumWireFormatVersion;
+    }
+
+    public void setMinmumWireFormatVersion(int minmumWireFormatVersion) {
+        this.minmumWireFormatVersion = minmumWireFormatVersion;
+    }
+
+    public OpenWireFormat getWireFormat() {
+        return wireFormat;
+    }
+
     // Implementation methods
     // -------------------------------------------------------------------------
     protected CommandProcessor getCommandProcessor() {
@@ -224,7 +263,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     protected void setCommandProcessor(CommandProcessor commandProcessor) {
         this.commandProcessor = commandProcessor;
     }
-    
+
     /**
      * Creates an address from the given URI
      */
@@ -251,18 +290,27 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         // TODO
         // connect to default target address to avoid security checks each time
         // channel = channel.connect(targetAddress);
-        
+
         DatagramSocket socket = channel.socket();
+        if (log.isDebugEnabled()) {
+            log.debug("Binding to address: " + localAddress);
+        }
         socket.bind(localAddress);
         if (port == 0) {
             port = socket.getLocalPort();
         }
-        
+
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
         commandChannel = new CommandChannel(channel, wireFormat, bufferPool, datagramSize, replayStrategy, targetAddress);
         commandChannel.start();
+
+        // lets pass the header & address into the channel so it avoids a
+        // re-request
+        if (wireFormatHeader != null) {
+            commandChannel.onDatagramReceived(wireFormatHeader);
+        }
 
         super.doStart();
     }
@@ -270,6 +318,22 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (channel != null) {
             channel.close();
+        }
+    }
+
+    /**
+     * We have received the WireFormatInfo from the server on the actual channel
+     * we should use for all future communication with the server, so lets set
+     * the target to be the actual channel that the server has chosen for us to
+     * talk on.
+     */
+    public void useLastInboundDatagramAsNewTarget() {
+        if (originalTargetAddress == null) {
+            originalTargetAddress = targetAddress;
+        }
+        SocketAddress lastAddress = commandChannel.getLastReadDatagramAddress();
+        if (lastAddress != null) {
+            targetAddress = lastAddress;
         }
     }
 

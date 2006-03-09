@@ -55,6 +55,7 @@ public class CommandChannel implements Service {
     private Object readLock = new Object();
     private ByteBuffer readBuffer;
     private CommandReadBuffer readStack;
+    private SocketAddress lastReadDatagramAddress;
 
     // writing
     private Object writeLock = new Object();
@@ -63,7 +64,8 @@ public class CommandChannel implements Service {
     private int largeMessageBufferSize = 128 * 1024;
     private DatagramHeader header = new DatagramHeader();
 
-    public CommandChannel(DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize, DatagramReplayStrategy replayStrategy, SocketAddress targetAddress) {
+    public CommandChannel(DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
+            DatagramReplayStrategy replayStrategy, SocketAddress targetAddress) {
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.bufferPool = bufferPool;
@@ -73,7 +75,7 @@ public class CommandChannel implements Service {
     }
 
     public void start() throws Exception {
-        //wireFormat.setPrefixPacketSize(false);
+        // wireFormat.setPrefixPacketSize(false);
         wireFormat.setCacheEnabled(false);
         wireFormat.setTightEncodingEnabled(true);
 
@@ -89,25 +91,35 @@ public class CommandChannel implements Service {
     }
 
     public void read(CommandProcessor processor) throws IOException {
+        DatagramHeader header = null;
         Command answer = null;
-        SocketAddress address = null;
+        lastReadDatagramAddress = null;
         synchronized (readLock) {
             readBuffer.clear();
-            address = channel.receive(readBuffer);
+            lastReadDatagramAddress = channel.receive(readBuffer);
             readBuffer.flip();
+            
+            if (log.isDebugEnabled()) {
+                log.debug("Read a datagram from: " + lastReadDatagramAddress);
+            }
+            header = headerMarshaller.readHeader(readBuffer);
+            header.setFromAddress(lastReadDatagramAddress);
 
             if (log.isDebugEnabled()) {
-                log.debug("Read a datagram from: " + address);
+                log.debug("Received datagram from: " + lastReadDatagramAddress + " header: " + header);
             }
-            DatagramHeader header = headerMarshaller.readHeader(readBuffer);
-
             int remaining = readBuffer.remaining();
             int size = header.getDataSize();
+            /*
             if (size > remaining) {
                 throw new IOException("Invalid command size: " + size + " when there are only: " + remaining + " byte(s) remaining");
             }
             else if (size < remaining) {
                 log.warn("Extra bytes in buffer. Expecting: " + size + " but has: " + remaining);
+            }
+            */
+            if (size != remaining) {
+                log.warn("Expecting: " + size + " but has: " + remaining);
             }
             if (header.isPartial()) {
                 byte[] data = new byte[size];
@@ -115,7 +127,7 @@ public class CommandChannel implements Service {
                 header.setPartialData(data);
             }
             else {
-                byte[] data = new byte[size];
+                byte[] data = new byte[remaining];
                 readBuffer.get(data);
 
                 // TODO use a DataInput implementation that talks direct to the
@@ -128,17 +140,28 @@ public class CommandChannel implements Service {
             answer = readStack.read(header);
         }
         if (answer != null) {
-            processor.process(answer, address);
+            processor.process(answer, header);
         }
+    }
+
+    /**
+     * Called if a packet is received on a different channel from a remote client
+     * @throws IOException 
+     */
+    public Command onDatagramReceived(DatagramHeader header) throws IOException {
+        return readStack.read(header);
     }
 
     public void write(Command command) throws IOException {
         write(command, targetAddress);
     }
-        
+
     public void write(Command command, SocketAddress address) throws IOException {
         synchronized (writeLock) {
             header.incrementCounter();
+            bs = new BooleanStream();
+            // TODO
+            //bs.clear();
             int size = wireFormat.tightMarshal1(command, bs);
             if (size < datagramSize) {
                 header.setPartial(false);
@@ -187,11 +210,6 @@ public class CommandChannel implements Service {
         }
     }
 
-    protected void sendWriteBuffer(SocketAddress address) throws IOException {
-        writeBuffer.flip();
-        channel.send(writeBuffer, address);
-    }
-
     // Properties
     // -------------------------------------------------------------------------
 
@@ -225,5 +243,22 @@ public class CommandChannel implements Service {
         this.headerMarshaller = headerMarshaller;
     }
 
+    public SocketAddress getLastReadDatagramAddress() {
+        synchronized (readLock) {
+            return lastReadDatagramAddress;
+        }
+    }
+    
+
+    // Implementation methods
+    // -------------------------------------------------------------------------
+    protected void sendWriteBuffer(SocketAddress address) throws IOException {
+        writeBuffer.flip();
+        
+        if (log.isDebugEnabled()) {
+            log.debug("Sending datagram to: " + address + " header: " + header);
+        }
+        channel.send(writeBuffer, address);
+    }
 
 }

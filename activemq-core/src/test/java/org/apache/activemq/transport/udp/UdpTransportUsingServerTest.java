@@ -19,6 +19,7 @@ package org.apache.activemq.transport.udp;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportServer;
 
 import java.net.URI;
 
@@ -26,30 +27,30 @@ import java.net.URI;
  * 
  * @version $Revision$
  */
-public class UdpTransportTest extends UdpTestSupport {
+public class UdpTransportUsingServerTest extends UdpTestSupport {
 
     protected int consumerPort = 8830;
     protected String producerURI = "udp://localhost:" + consumerPort;
-    //protected String producerURI = "udp://localhost:8830";
-    //protected String consumerURI = "udp://localhost:8831?port=8830";
+    protected String serverURI = producerURI;
 
     protected Transport createProducer() throws Exception {
         System.out.println("Producer using URI: " + producerURI);
-        
-        // The WireFormatNegotiator means we can only connect to servers
-        return new UdpTransport(createWireFormat(), new URI(producerURI));
-        
-        //return TransportFactory.connect(new URI(producerURI));
+        return TransportFactory.connect(new URI(producerURI));
     }
 
+    protected TransportServer createServer() throws Exception {
+        return TransportFactory.bind("byBroker", new URI(serverURI));
+    }
+    
     protected Transport createConsumer() throws Exception {
-        System.out.println("Consumer on port: " + consumerPort);
-        return new UdpTransport(createWireFormat(), consumerPort);
-        //return TransportFactory.connect(new URI(consumerURI));
+        return null;
     }
 
     protected OpenWireFormat createWireFormat() {
-        return new OpenWireFormat();
+        OpenWireFormat answer = new OpenWireFormat();
+        answer.setCacheEnabled(false);
+        answer.setSizePrefixDisabled(true);
+        return answer;
     }
 
 }

@@ -18,18 +18,23 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerSupport;
-import org.apache.activemq.transport.TransportSupport;
+import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 import java.net.SocketAddress;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,14 +44,17 @@ import java.util.Map;
  * @version $Revision$
  */
 
-public class UdpTransportServer extends TransportServerSupport {
+public class UdpTransportServer extends TransportServerSupport implements CommandProcessor {
     private static final Log log = LogFactory.getLog(UdpTransportServer.class);
 
     private UdpTransport serverTransport;
+    private Transport configuredTransport;
     private Map transports = new HashMap();
 
-    public UdpTransportServer(UdpTransport serverTransport) {
+    public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport) {
+        super(connectURI);
         this.serverTransport = serverTransport;
+        this.configuredTransport = configuredTransport;
     }
 
     public String toString() {
@@ -64,56 +72,71 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected void doStart() throws Exception {
-        serverTransport.start();
-        serverTransport.setCommandProcessor(new CommandProcessor() {
-            public void process(Command command, SocketAddress address) {
-                onInboundCommand(command, address);
+        log.info("Starting " + this);
+
+        configuredTransport.setTransportListener(new TransportListener() {
+            public void onCommand(Command command) {
+            }
+
+            public void onException(IOException error) {
+            }
+
+            public void transportInterupted() {
+            }
+
+            public void transportResumed() {
             }
         });
+        configuredTransport.start();
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
-        serverTransport.stop();
+        configuredTransport.stop();
     }
 
-    protected void onInboundCommand(Command command, SocketAddress address) {
+    public void process(Command command, DatagramHeader header) throws IOException {
+        SocketAddress address = header.getFromAddress();
+        System.out.println(toString() + " received command: " + command + " from address: " + address);
         Transport transport = null;
         synchronized (transports) {
             transport = (Transport) transports.get(address);
             if (transport == null) {
-                transport = createTransport(address);
+                System.out.println("###Êcreating new server connector");
+                transport = createTransport(command, header);
                 transport = configureTransport(transport);
                 transports.put(address, transport);
             }
-        }
-        processInboundCommand(command, transport);
-    }
-
-    public void sendOutboundCommand(Command command, SocketAddress address) {
-        // TODO we should use an inbound buffer to make this async
-        
-    }
-
-    protected void processInboundCommand(Command command, Transport transport) {
-        // TODO - consider making this asynchronous
-        TransportListener listener = transport.getTransportListener();
-        if (listener != null) {
-            listener.onCommand(command);
-        }
-        else {
-            log.error("No transportListener available for transport: " + transport + " to process inbound command: " + command);
+            else {
+                log.warn("Discarding duplicate command to server: " + command + " from: " + address);
+            }
         }
     }
 
     protected Transport configureTransport(Transport transport) {
         transport = new ResponseCorrelator(transport);
-        transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
+        
+        // TODO
+        //transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
+
         getAcceptListener().onAccept(transport);
         return transport;
     }
 
-    protected TransportSupport createTransport(SocketAddress address) {
-        return new UdpTransportServerClient(this, address);
+    protected Transport createTransport(Command command, DatagramHeader header) throws IOException {
+        final SocketAddress address = header.getFromAddress();
+        // TODO lets copy the wireformat...
+        final UdpTransport transport = new UdpTransport(serverTransport.getWireFormat(), address);
+        
+        // lets send the packet into the transport so it can track packets
+        transport.doConsume(command, header);
+
+        return new WireFormatNegotiator(transport, serverTransport.getWireFormat(), serverTransport.getMinmumWireFormatVersion()) {
+
+            // lets use the specific addressing of wire format
+            protected void sendWireFormat(WireFormatInfo info) throws IOException {
+                transport.oneway(info, address);
+            }
+        };
     }
 
 }
