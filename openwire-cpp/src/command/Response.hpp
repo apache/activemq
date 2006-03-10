@@ -49,7 +49,7 @@ namespace apache
 class Response : public BaseCommand
 {
 private:
-    short correlationId ;
+    int correlationId ;
 
 public:
     const static int TYPE = 30;
@@ -60,8 +60,8 @@ public:
 
     virtual int getCommandType() ;
 
-    virtual short getCorrelationId() ;
-    virtual void setCorrelationId(short correlationId) ;
+    virtual int getCorrelationId() ;
+    virtual void setCorrelationId(int correlationId) ;
 
 
 } ;

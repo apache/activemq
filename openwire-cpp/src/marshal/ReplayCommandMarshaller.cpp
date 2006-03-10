@@ -55,6 +55,10 @@ void ReplayCommandMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, Bi
 {
     base.unmarshal(wireFormat, o, dataIn, bs);
 
+    ReplayCommand& info = (ReplayCommand&) o;
+        info.setFirstNakNumber(dataIn.readInt());
+        info.setLastNakNumber(dataIn.readInt());
+
 }
 
 
@@ -65,8 +69,8 @@ int ReplayCommandMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, Boo
     ReplayCommand& info = (ReplayCommand&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
-
-    return rc + 0;
+        
+    return rc + 2;
 }
 
 /* 
@@ -74,5 +78,9 @@ int ReplayCommandMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, Boo
  */
 void ReplayCommandMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryWriter& dataOut, BooleanStream& bs) {
     base.marshal2(wireFormat, o, dataOut, bs);
+
+    ReplayCommand& info = (ReplayCommand&) o;
+    DataStreamMarshaller.writeInt(info.getFirstNakNumber(), dataOut);
+    DataStreamMarshaller.writeInt(info.getLastNakNumber(), dataOut);
 
 }
