@@ -97,7 +97,7 @@ namespace ActiveMQ
             return AutoAcknowledge(dispatcher.Dequeue());
         }
         
-        public IMessage Receive(int timeout)
+        public IMessage Receive(System.TimeSpan timeout)
         {
             CheckClosed();
             return AutoAcknowledge(dispatcher.Dequeue(timeout));

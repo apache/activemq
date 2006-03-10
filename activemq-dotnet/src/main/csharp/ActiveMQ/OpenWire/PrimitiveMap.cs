@@ -112,7 +112,7 @@ namespace ActiveMQ.OpenWire
             return (bool) value;
         }
         
-        public void SetByte(String key, bool value)
+        public void SetBool(String key, bool value)
         {
             SetValue(key, value);
         }

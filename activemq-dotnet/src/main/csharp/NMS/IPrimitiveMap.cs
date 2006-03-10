@@ -55,7 +55,7 @@ namespace NMS
         void SetString(string key, string value);
         
         bool GetBool(string key);
-        void SetByte(string key, bool value);
+        void SetBool(string key, bool value);
         
         byte GetByte(string key);
         void SetByte(string key, byte value);

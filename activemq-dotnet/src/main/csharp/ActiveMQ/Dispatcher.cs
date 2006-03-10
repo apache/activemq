@@ -97,7 +97,7 @@ namespace ActiveMQ
         /// <summary>
         /// Method Dequeue
         /// </summary>
-        public IMessage Dequeue(int timeout)
+        public IMessage Dequeue(TimeSpan timeout)
         {
             lock (semaphore)
             {

@@ -68,13 +68,13 @@ namespace NMS
             //receives the first message
             ArrayList messages = new ArrayList();
             Console.WriteLine("About to consume message 1");
-            IMessage message = consumer.Receive(1000);
+            IMessage message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             messages.Add(message);
             Console.WriteLine("Received: " + message);
             
             //receives the second message
             Console.WriteLine("About to consume message 2");
-            message = consumer.Receive(4000);
+            message = consumer.Receive(TimeSpan.FromMilliseconds(4000));
             messages.Add(message);
             Console.WriteLine("Received: " + message);
             
@@ -111,13 +111,13 @@ namespace NMS
             //receives the first message
             ArrayList messages = new ArrayList();
             Console.WriteLine("About to consume message 1");
-            IMessage message = consumer.Receive(1000);
+            IMessage message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             messages.Add(message);
             Console.WriteLine("Received: " + message);
             
             //receives the second message
             Console.WriteLine("About to consume message 2");
-            message = consumer.Receive(4000);
+            message = consumer.Receive(TimeSpan.FromMilliseconds(4000));
             messages.Add(message);
             Console.WriteLine("Received: " + message);
             
@@ -145,20 +145,20 @@ namespace NMS
             Console.WriteLine("Sent 1: " + outbound[1]);
             
             ArrayList messages = new ArrayList();
-            IMessage message = consumer.Receive(1000);
+            IMessage message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             messages.Add(message);
             Assert.AreEqual(outbound[0], message);
             session.Commit();
             
             // rollback so we can get that last message again.
-            message = consumer.Receive(1000);
+            message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             Assert.IsNotNull(message);
             Assert.AreEqual(outbound[1], message);
             session.Rollback();
             
             // Consume again.. the previous message should
             // get redelivered.
-            message = consumer.Receive(5000);
+            message = consumer.Receive(TimeSpan.FromMilliseconds(5000));
             Assert.IsNotNull(message, "Should have re-received the message again!");
             messages.Add(message);
             session.Commit();
@@ -185,22 +185,22 @@ namespace NMS
             Console.WriteLine("Sent 1: " + outbound[1]);
             
             ArrayList messages = new ArrayList();
-            IMessage message = consumer.Receive(1000);
+            IMessage message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             AssertTextMessageEqual("first mesage received before rollback", outbound[0], message);
             
-            message = consumer.Receive(1000);
+            message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             Assert.IsNotNull(message);
             AssertTextMessageEqual("second message received before rollback", outbound[1], message);
             session.Rollback();
             
             // Consume again.. the previous message should
             // get redelivered.
-            message = consumer.Receive(5000);
+            message = consumer.Receive(TimeSpan.FromMilliseconds(5000));
             Assert.IsNotNull(message, "Should have re-received the first message again!");
             messages.Add(message);
             AssertTextMessageEqual("first message received after rollback", outbound[0], message);
             
-            message = consumer.Receive(5000);
+            message = consumer.Receive(TimeSpan.FromMilliseconds(5000));
             Assert.IsNotNull(message, "Should have re-received the second message again!");
             messages.Add(message);
             AssertTextMessageEqual("second message received after rollback", outbound[1], message);
