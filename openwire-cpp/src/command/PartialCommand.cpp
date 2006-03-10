@@ -30,11 +30,23 @@ using namespace apache::activemq::client::command;
  */
 PartialCommand::PartialCommand()
 {
+    this->commandId = 0 ;
     this->data = 0 ;
 }
 
 PartialCommand::~PartialCommand()
 {
+}
+
+        
+int PartialCommand::getCommandId()
+{
+    return commandId ;
+}
+
+void PartialCommand::setCommandId(int commandId)
+{
+    this->commandId = commandId ;
 }
 
         

@@ -56,6 +56,7 @@ void PartialCommandMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, B
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     PartialCommand& info = (PartialCommand&) o;
+        info.setCommandId(dataIn.readInt());
         info.setData(tightUnmarshalByteArray(dataIn, bs));
 
 }
@@ -68,10 +69,10 @@ int PartialCommandMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, Bo
     PartialCommand& info = (PartialCommand&) o;
 
     int rc = base.marshal1(wireFormat, info, bs);
-    bs.writeBoolean(info.getData()!=null);
+        bs.writeBoolean(info.getData()!=null);
     rc += info.getData()==null ? 0 : info.getData().Length+4;
 
-    return rc + 0;
+    return rc + 1;
 }
 
 /* 
@@ -81,6 +82,7 @@ void PartialCommandMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, B
     base.marshal2(wireFormat, o, dataOut, bs);
 
     PartialCommand& info = (PartialCommand&) o;
+    DataStreamMarshaller.writeInt(info.getCommandId(), dataOut);
     if(bs.readBoolean()) {
        DataStreamMarshaller.writeInt(info.getData().Length, dataOut);
        dataOut.write(info.getData());
