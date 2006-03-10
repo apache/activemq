@@ -18,7 +18,36 @@ namespace NMS
 {
 	public enum AcknowledgementMode
     {
-        Unknown, AutoAcknowledge, ClientAcknowledge, Transactional
+		/**
+		 * With this acknowledgment mode, the session automatically
+		 * acknowledges a client's receipt of a message either when
+		 * the session has successfully returned from a call to receive
+		 * or when the message listener the session has called to
+		 * process the message successfully returns.
+		 */
+        AutoAcknowledge,
+        
+		/**
+		 * With this acknowledgment mode, the session automatically
+		 * acknowledges a client's receipt of a message either when
+		 * the session has successfully returned from a call to receive
+		 * or when the message listener the session has called to
+		 * process the message successfully returns.  Acknowlegements
+		 * may be delayed in this mode to increase performance at
+		 * the cost of the message being redelivered this client fails.
+		 */
+		DupsOkAcknowledge,
+		
+		/**
+		 * With this acknowledgment mode, the client acknowledges a
+		 * consumed message by calling the message's acknowledge method.
+		 */
+		ClientAcknowledge,
+		
+		/**
+		 * Messages will be consumed when the transaction commits.
+		 */
+		Transactional
     }
 	
 	/// <summary>

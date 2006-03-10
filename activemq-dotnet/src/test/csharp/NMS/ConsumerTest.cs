@@ -16,8 +16,7 @@
  */
 using NMS;
 using NUnit.Framework;
-
-
+using System;
 
 namespace NMS
 {
@@ -63,7 +62,7 @@ namespace NMS
             message.Properties["color"] =  "red";
             producer.Send(message);
             
-            IMessage m = consumer.Receive(receiveTimeout);
+            IMessage m = consumer.Receive(TimeSpan.FromMilliseconds(receiveTimeout));
             Assert.IsNotNull(m);
             Assert.AreEqual("1st", ((ITextMessage)m).Text);
 			
@@ -79,7 +78,7 @@ namespace NMS
             producer.Send(message);
 			
             // Selector should skip the 2nd message.
-            m = consumer.Receive(1000);
+            m = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             Assert.IsNotNull(m);
             Assert.AreEqual("3rd", ((ITextMessage)m).Text);
             

@@ -88,7 +88,7 @@ namespace NMS
 				
 				// Should only need to wait for first message to arrive due to the way
 				// prefetching works.
-				IMessage msg = consumer.Receive(receiveTimeout);
+				IMessage msg = consumer.Receive(TimeSpan.FromMilliseconds(receiveTimeout));
 				while (msg != null)
 				{
 					msg = consumer.ReceiveNoWait();
@@ -107,7 +107,7 @@ namespace NMS
 				IMessage request = CreateMessage();
 				producer.Send(request);
 				
-				IMessage message = consumer.Receive(receiveTimeout);
+				IMessage message = consumer.Receive(TimeSpan.FromMilliseconds(receiveTimeout));
                 Assert.IsNotNull(message, "No message returned!");
                 AssertValidMessage(message);
             }

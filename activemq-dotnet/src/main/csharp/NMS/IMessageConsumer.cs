@@ -35,7 +35,7 @@ namespace NMS
         /// <summary>
         /// If a message is available within the timeout duration it is returned otherwise this method returns null
         /// </summary>
-        IMessage Receive(int timeout);
+        IMessage Receive(System.TimeSpan timeout);
         
         /// <summary>
         /// If a message is available immediately it is returned otherwise this method returns null
