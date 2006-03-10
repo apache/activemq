@@ -49,12 +49,23 @@ typedef struct ow_LocalTransactionId {
 ow_LocalTransactionId *ow_LocalTransactionId_create(apr_pool_t *pool);
 ow_boolean ow_is_a_LocalTransactionId(ow_DataStructure *object);
 
+typedef struct ow_PartialCommand {
+
+   ow_byte structType;
+   ow_int commandId;
+   ow_boolean responseRequired;
+   ow_byte_array *data;
+
+} ow_PartialCommand;
+ow_PartialCommand *ow_PartialCommand_create(apr_pool_t *pool);
+ow_boolean ow_is_a_PartialCommand(ow_DataStructure *object);
+
 typedef struct ow_IntegerResponse {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
-   ow_short correlationId;
+   ow_int correlationId;
    ow_int result;
 
 } ow_IntegerResponse;
@@ -81,7 +92,7 @@ ow_boolean ow_is_a_TransactionId(ow_DataStructure *object);
 typedef struct ow_ActiveMQObjectMessage {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -125,7 +136,7 @@ ow_boolean ow_is_a_ConnectionId(ow_DataStructure *object);
 typedef struct ow_ConnectionInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ConnectionId *connectionId;
    ow_string *clientId;
@@ -140,7 +151,7 @@ ow_boolean ow_is_a_ConnectionInfo(ow_DataStructure *object);
 typedef struct ow_ProducerInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -153,7 +164,7 @@ ow_boolean ow_is_a_ProducerInfo(ow_DataStructure *object);
 typedef struct ow_MessageDispatchNotification {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ConsumerId *consumerId;
    struct ow_ActiveMQDestination *destination;
@@ -167,7 +178,7 @@ ow_boolean ow_is_a_MessageDispatchNotification(ow_DataStructure *object);
 typedef struct ow_SessionInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_SessionId *sessionId;
 
@@ -178,7 +189,7 @@ ow_boolean ow_is_a_SessionInfo(ow_DataStructure *object);
 typedef struct ow_TransactionInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ConnectionId *connectionId;
    struct ow_TransactionId *transactionId;
@@ -191,7 +202,7 @@ ow_boolean ow_is_a_TransactionInfo(ow_DataStructure *object);
 typedef struct ow_ActiveMQStreamMessage {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -226,7 +237,7 @@ ow_boolean ow_is_a_ActiveMQStreamMessage(ow_DataStructure *object);
 typedef struct ow_MessageAck {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ActiveMQDestination *destination;
    struct ow_TransactionId *transactionId;
@@ -274,7 +285,7 @@ ow_boolean ow_is_a_ActiveMQTempQueue(ow_DataStructure *object);
 typedef struct ow_RemoveSubscriptionInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ConnectionId *connectionId;
    ow_string *subcriptionName;
@@ -297,9 +308,9 @@ ow_boolean ow_is_a_SessionId(ow_DataStructure *object);
 typedef struct ow_DataArrayResponse {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
-   ow_short correlationId;
+   ow_int correlationId;
    ow_DataStructure_array *data;
 
 } ow_DataArrayResponse;
@@ -319,9 +330,9 @@ ow_boolean ow_is_a_JournalQueueAck(ow_DataStructure *object);
 typedef struct ow_Response {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
-   ow_short correlationId;
+   ow_int correlationId;
 
 } ow_Response;
 ow_Response *ow_Response_create(apr_pool_t *pool);
@@ -330,7 +341,7 @@ ow_boolean ow_is_a_Response(ow_DataStructure *object);
 typedef struct ow_ConnectionError {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    ow_throwable *exception;
    struct ow_ConnectionId *connectionId;
@@ -342,7 +353,7 @@ ow_boolean ow_is_a_ConnectionError(ow_DataStructure *object);
 typedef struct ow_ConsumerInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ConsumerId *consumerId;
    ow_boolean browser;
@@ -398,7 +409,7 @@ ow_boolean ow_is_a_ConsumerId(ow_DataStructure *object);
 typedef struct ow_ActiveMQTextMessage {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -456,13 +467,24 @@ ow_boolean ow_is_a_JournalTransaction(ow_DataStructure *object);
 typedef struct ow_ControlCommand {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    ow_string *command;
 
 } ow_ControlCommand;
 ow_ControlCommand *ow_ControlCommand_create(apr_pool_t *pool);
 ow_boolean ow_is_a_ControlCommand(ow_DataStructure *object);
+
+typedef struct ow_LastPartialCommand {
+
+   ow_byte structType;
+   ow_int commandId;
+   ow_boolean responseRequired;
+   ow_byte_array *data;
+
+} ow_LastPartialCommand;
+ow_LastPartialCommand *ow_LastPartialCommand_create(apr_pool_t *pool);
+ow_boolean ow_is_a_LastPartialCommand(ow_DataStructure *object);
 
 typedef struct ow_NetworkBridgeFilter {
 
@@ -477,7 +499,7 @@ ow_boolean ow_is_a_NetworkBridgeFilter(ow_DataStructure *object);
 typedef struct ow_ActiveMQBytesMessage {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -551,8 +573,10 @@ ow_boolean ow_is_a_ActiveMQTempDestination(ow_DataStructure *object);
 typedef struct ow_ReplayCommand {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
+   ow_int firstNakNumber;
+   ow_int lastNakNumber;
 
 } ow_ReplayCommand;
 ow_ReplayCommand *ow_ReplayCommand_create(apr_pool_t *pool);
@@ -579,7 +603,7 @@ ow_boolean ow_is_a_ActiveMQTopic(ow_DataStructure *object);
 typedef struct ow_BrokerInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_BrokerId *brokerId;
    ow_string *brokerURL;
@@ -594,7 +618,7 @@ ow_boolean ow_is_a_BrokerInfo(ow_DataStructure *object);
 typedef struct ow_DestinationInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ConnectionId *connectionId;
    struct ow_ActiveMQDestination *destination;
@@ -609,7 +633,7 @@ ow_boolean ow_is_a_DestinationInfo(ow_DataStructure *object);
 typedef struct ow_ShutdownInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
 
 } ow_ShutdownInfo;
@@ -619,9 +643,9 @@ ow_boolean ow_is_a_ShutdownInfo(ow_DataStructure *object);
 typedef struct ow_DataResponse {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
-   ow_short correlationId;
+   ow_int correlationId;
    struct ow_DataStructure *data;
 
 } ow_DataResponse;
@@ -639,7 +663,7 @@ ow_boolean ow_is_a_KeepAliveInfo(ow_DataStructure *object);
 typedef struct ow_Message {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -674,7 +698,7 @@ ow_boolean ow_is_a_Message(ow_DataStructure *object);
 typedef struct ow_BaseCommand {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
 
 } ow_BaseCommand;
@@ -684,7 +708,7 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object);
 typedef struct ow_FlushCommand {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
 
 } ow_FlushCommand;
@@ -717,7 +741,7 @@ ow_boolean ow_is_a_BrokerId(ow_DataStructure *object);
 typedef struct ow_MessageDispatch {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ConsumerId *consumerId;
    struct ow_ActiveMQDestination *destination;
@@ -731,7 +755,7 @@ ow_boolean ow_is_a_MessageDispatch(ow_DataStructure *object);
 typedef struct ow_ActiveMQMapMessage {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -766,7 +790,7 @@ ow_boolean ow_is_a_ActiveMQMapMessage(ow_DataStructure *object);
 typedef struct ow_ActiveMQMessage {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_ProducerId *producerId;
    struct ow_ActiveMQDestination *destination;
@@ -801,7 +825,7 @@ ow_boolean ow_is_a_ActiveMQMessage(ow_DataStructure *object);
 typedef struct ow_RemoveInfo {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
    struct ow_DataStructure *objectId;
 
@@ -812,9 +836,9 @@ ow_boolean ow_is_a_RemoveInfo(ow_DataStructure *object);
 typedef struct ow_ExceptionResponse {
 
    ow_byte structType;
-   ow_short commandId;
+   ow_int commandId;
    ow_boolean responseRequired;
-   ow_short correlationId;
+   ow_int correlationId;
    ow_throwable *exception;
 
 } ow_ExceptionResponse;
