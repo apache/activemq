@@ -80,7 +80,7 @@
 		53C445BE08E4A266006387E9 /* main.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/examples/main.c; sourceTree = "<group>"; };
 		53C445C308E4A3CA006387E9 /* openwire.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = openwire.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		53C445CD08E4A6B2006387E9 /* activemq.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = activemq.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		53C445D108E4A6CA006387E9 /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
+		53C445D108E4A6CA006387E9 /* main */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
 		53D4A4E508A9091000CAE09B /* libapr-1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libapr-1.a"; path = "../../apr/lib/libapr-1.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 

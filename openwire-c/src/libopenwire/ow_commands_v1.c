@@ -78,6 +78,54 @@ apr_status_t ow_unmarshal_LocalTransactionId(ow_byte_array *buffer, ow_bit_buffe
 	return APR_SUCCESS;
 }
 
+ow_boolean ow_is_a_PartialCommand(ow_DataStructure *object) {
+   if( object == 0 )
+      return 0;
+      
+   switch(object->structType) {
+   case OW_PARTIALCOMMAND_TYPE:
+   case OW_LASTPARTIALCOMMAND_TYPE:
+      return 1;
+   }
+   return 0;
+}
+
+
+ow_PartialCommand *ow_PartialCommand_create(apr_pool_t *pool) 
+{
+   ow_PartialCommand *value = apr_pcalloc(pool,sizeof(ow_PartialCommand));
+   if( value!=0 ) {
+      ((ow_DataStructure*)value)->structType = OW_PARTIALCOMMAND_TYPE;
+   }
+   return value;
+}
+
+
+apr_status_t ow_marshal1_PartialCommand(ow_bit_buffer *buffer, ow_PartialCommand *object)
+{
+   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
+   
+                        ow_bit_buffer_append(buffer,  object->data!=0 );
+                        
+   
+	return APR_SUCCESS;
+}
+apr_status_t ow_marshal2_PartialCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_PartialCommand *object)
+{
+   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   SUCCESS_CHECK(ow_marshal2_byte_array(buffer, bitbuffer, object->data));
+   
+	return APR_SUCCESS;
+}
+
+apr_status_t ow_unmarshal_PartialCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_PartialCommand *object, apr_pool_t *pool)
+{
+   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   SUCCESS_CHECK(ow_unmarshal_byte_array(buffer, bitbuffer, &object->data, pool));
+   
+	return APR_SUCCESS;
+}
+
 ow_boolean ow_is_a_IntegerResponse(ow_DataStructure *object) {
    if( object == 0 )
       return 0;
@@ -1020,7 +1068,7 @@ apr_status_t ow_marshal1_Response(ow_bit_buffer *buffer, ow_Response *object)
 apr_status_t ow_marshal2_Response(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_Response *object)
 {
    ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
-   SUCCESS_CHECK(ow_byte_buffer_append_short(buffer, object->correlationId));
+   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->correlationId));
    
 	return APR_SUCCESS;
 }
@@ -1028,7 +1076,7 @@ apr_status_t ow_marshal2_Response(ow_byte_buffer *buffer, ow_bit_buffer *bitbuff
 apr_status_t ow_unmarshal_Response(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_Response *object, apr_pool_t *pool)
 {
    ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
-   SUCCESS_CHECK(ow_byte_array_read_short(buffer, &object->correlationId));
+   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->correlationId));
    
 	return APR_SUCCESS;
 }
@@ -1511,6 +1559,48 @@ apr_status_t ow_unmarshal_ControlCommand(ow_byte_array *buffer, ow_bit_buffer *b
 	return APR_SUCCESS;
 }
 
+ow_boolean ow_is_a_LastPartialCommand(ow_DataStructure *object) {
+   if( object == 0 )
+      return 0;
+      
+   switch(object->structType) {
+   case OW_LASTPARTIALCOMMAND_TYPE:
+      return 1;
+   }
+   return 0;
+}
+
+
+ow_LastPartialCommand *ow_LastPartialCommand_create(apr_pool_t *pool) 
+{
+   ow_LastPartialCommand *value = apr_pcalloc(pool,sizeof(ow_LastPartialCommand));
+   if( value!=0 ) {
+      ((ow_DataStructure*)value)->structType = OW_LASTPARTIALCOMMAND_TYPE;
+   }
+   return value;
+}
+
+
+apr_status_t ow_marshal1_LastPartialCommand(ow_bit_buffer *buffer, ow_LastPartialCommand *object)
+{
+   ow_marshal1_PartialCommand(buffer, (ow_PartialCommand*)object);
+   
+	return APR_SUCCESS;
+}
+apr_status_t ow_marshal2_LastPartialCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_LastPartialCommand *object)
+{
+   ow_marshal2_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object);   
+   
+	return APR_SUCCESS;
+}
+
+apr_status_t ow_unmarshal_LastPartialCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_LastPartialCommand *object, apr_pool_t *pool)
+{
+   ow_unmarshal_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object, pool);   
+   
+	return APR_SUCCESS;
+}
+
 ow_boolean ow_is_a_NetworkBridgeFilter(ow_DataStructure *object) {
    if( object == 0 )
       return 0;
@@ -1803,11 +1893,15 @@ apr_status_t ow_marshal1_ReplayCommand(ow_bit_buffer *buffer, ow_ReplayCommand *
 {
    ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
    
+   
+   
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_ReplayCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_ReplayCommand *object)
 {
    ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->firstNakNumber));
+   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->lastNakNumber));
    
 	return APR_SUCCESS;
 }
@@ -1815,6 +1909,8 @@ apr_status_t ow_marshal2_ReplayCommand(ow_byte_buffer *buffer, ow_bit_buffer *bi
 apr_status_t ow_unmarshal_ReplayCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_ReplayCommand *object, apr_pool_t *pool)
 {
    ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->firstNakNumber));
+   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->lastNakNumber));
    
 	return APR_SUCCESS;
 }
@@ -2263,6 +2359,7 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
       return 0;
       
    switch(object->structType) {
+   case OW_PARTIALCOMMAND_TYPE:
    case OW_INTEGERRESPONSE_TYPE:
    case OW_ACTIVEMQOBJECTMESSAGE_TYPE:
    case OW_CONNECTIONINFO_TYPE:
@@ -2279,6 +2376,7 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
    case OW_CONSUMERINFO_TYPE:
    case OW_ACTIVEMQTEXTMESSAGE_TYPE:
    case OW_CONTROLCOMMAND_TYPE:
+   case OW_LASTPARTIALCOMMAND_TYPE:
    case OW_ACTIVEMQBYTESMESSAGE_TYPE:
    case OW_REPLAYCOMMAND_TYPE:
    case OW_BROKERINFO_TYPE:
@@ -2308,7 +2406,7 @@ apr_status_t ow_marshal1_BaseCommand(ow_bit_buffer *buffer, ow_BaseCommand *obje
 apr_status_t ow_marshal2_BaseCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_BaseCommand *object)
 {
    ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
-   SUCCESS_CHECK(ow_byte_buffer_append_short(buffer, object->commandId));
+   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->commandId));
    ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
@@ -2317,7 +2415,7 @@ apr_status_t ow_marshal2_BaseCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitb
 apr_status_t ow_unmarshal_BaseCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_BaseCommand *object, apr_pool_t *pool)
 {
    ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
-   SUCCESS_CHECK(ow_byte_array_read_short(buffer, &object->commandId));
+   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->commandId));
    object->responseRequired = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
@@ -2708,6 +2806,7 @@ ow_DataStructure *ow_create_object(ow_byte type, apr_pool_t *pool)
    switch( type ) {
 
       case OW_LOCALTRANSACTIONID_TYPE: return (ow_DataStructure *)ow_LocalTransactionId_create(pool);
+      case OW_PARTIALCOMMAND_TYPE: return (ow_DataStructure *)ow_PartialCommand_create(pool);
       case OW_INTEGERRESPONSE_TYPE: return (ow_DataStructure *)ow_IntegerResponse_create(pool);
       case OW_ACTIVEMQQUEUE_TYPE: return (ow_DataStructure *)ow_ActiveMQQueue_create(pool);
       case OW_ACTIVEMQOBJECTMESSAGE_TYPE: return (ow_DataStructure *)ow_ActiveMQObjectMessage_create(pool);
@@ -2736,6 +2835,7 @@ ow_DataStructure *ow_create_object(ow_byte type, apr_pool_t *pool)
       case OW_SUBSCRIPTIONINFO_TYPE: return (ow_DataStructure *)ow_SubscriptionInfo_create(pool);
       case OW_JOURNALTRANSACTION_TYPE: return (ow_DataStructure *)ow_JournalTransaction_create(pool);
       case OW_CONTROLCOMMAND_TYPE: return (ow_DataStructure *)ow_ControlCommand_create(pool);
+      case OW_LASTPARTIALCOMMAND_TYPE: return (ow_DataStructure *)ow_LastPartialCommand_create(pool);
       case OW_NETWORKBRIDGEFILTER_TYPE: return (ow_DataStructure *)ow_NetworkBridgeFilter_create(pool);
       case OW_ACTIVEMQBYTESMESSAGE_TYPE: return (ow_DataStructure *)ow_ActiveMQBytesMessage_create(pool);
       case OW_WIREFORMATINFO_TYPE: return (ow_DataStructure *)ow_WireFormatInfo_create(pool);
@@ -2765,6 +2865,7 @@ apr_status_t ow_marshal1_object(ow_bit_buffer *buffer, ow_DataStructure *object)
    switch( object->structType ) {
 
       case OW_LOCALTRANSACTIONID_TYPE: return ow_marshal1_LocalTransactionId(buffer, (ow_LocalTransactionId*)object);
+      case OW_PARTIALCOMMAND_TYPE: return ow_marshal1_PartialCommand(buffer, (ow_PartialCommand*)object);
       case OW_INTEGERRESPONSE_TYPE: return ow_marshal1_IntegerResponse(buffer, (ow_IntegerResponse*)object);
       case OW_ACTIVEMQQUEUE_TYPE: return ow_marshal1_ActiveMQQueue(buffer, (ow_ActiveMQQueue*)object);
       case OW_ACTIVEMQOBJECTMESSAGE_TYPE: return ow_marshal1_ActiveMQObjectMessage(buffer, (ow_ActiveMQObjectMessage*)object);
@@ -2793,6 +2894,7 @@ apr_status_t ow_marshal1_object(ow_bit_buffer *buffer, ow_DataStructure *object)
       case OW_SUBSCRIPTIONINFO_TYPE: return ow_marshal1_SubscriptionInfo(buffer, (ow_SubscriptionInfo*)object);
       case OW_JOURNALTRANSACTION_TYPE: return ow_marshal1_JournalTransaction(buffer, (ow_JournalTransaction*)object);
       case OW_CONTROLCOMMAND_TYPE: return ow_marshal1_ControlCommand(buffer, (ow_ControlCommand*)object);
+      case OW_LASTPARTIALCOMMAND_TYPE: return ow_marshal1_LastPartialCommand(buffer, (ow_LastPartialCommand*)object);
       case OW_NETWORKBRIDGEFILTER_TYPE: return ow_marshal1_NetworkBridgeFilter(buffer, (ow_NetworkBridgeFilter*)object);
       case OW_ACTIVEMQBYTESMESSAGE_TYPE: return ow_marshal1_ActiveMQBytesMessage(buffer, (ow_ActiveMQBytesMessage*)object);
       case OW_WIREFORMATINFO_TYPE: return ow_marshal1_WireFormatInfo(buffer, (ow_WireFormatInfo*)object);
@@ -2822,6 +2924,7 @@ apr_status_t ow_marshal2_object(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer
    switch( object->structType ) {
 
       case OW_LOCALTRANSACTIONID_TYPE: return ow_marshal2_LocalTransactionId(buffer, bitbuffer, (ow_LocalTransactionId*)object);
+      case OW_PARTIALCOMMAND_TYPE: return ow_marshal2_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object);
       case OW_INTEGERRESPONSE_TYPE: return ow_marshal2_IntegerResponse(buffer, bitbuffer, (ow_IntegerResponse*)object);
       case OW_ACTIVEMQQUEUE_TYPE: return ow_marshal2_ActiveMQQueue(buffer, bitbuffer, (ow_ActiveMQQueue*)object);
       case OW_ACTIVEMQOBJECTMESSAGE_TYPE: return ow_marshal2_ActiveMQObjectMessage(buffer, bitbuffer, (ow_ActiveMQObjectMessage*)object);
@@ -2850,6 +2953,7 @@ apr_status_t ow_marshal2_object(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer
       case OW_SUBSCRIPTIONINFO_TYPE: return ow_marshal2_SubscriptionInfo(buffer, bitbuffer, (ow_SubscriptionInfo*)object);
       case OW_JOURNALTRANSACTION_TYPE: return ow_marshal2_JournalTransaction(buffer, bitbuffer, (ow_JournalTransaction*)object);
       case OW_CONTROLCOMMAND_TYPE: return ow_marshal2_ControlCommand(buffer, bitbuffer, (ow_ControlCommand*)object);
+      case OW_LASTPARTIALCOMMAND_TYPE: return ow_marshal2_LastPartialCommand(buffer, bitbuffer, (ow_LastPartialCommand*)object);
       case OW_NETWORKBRIDGEFILTER_TYPE: return ow_marshal2_NetworkBridgeFilter(buffer, bitbuffer, (ow_NetworkBridgeFilter*)object);
       case OW_ACTIVEMQBYTESMESSAGE_TYPE: return ow_marshal2_ActiveMQBytesMessage(buffer, bitbuffer, (ow_ActiveMQBytesMessage*)object);
       case OW_WIREFORMATINFO_TYPE: return ow_marshal2_WireFormatInfo(buffer, bitbuffer, (ow_WireFormatInfo*)object);
@@ -2879,6 +2983,7 @@ apr_status_t ow_unmarshal_object(ow_byte_array *buffer, ow_bit_buffer *bitbuffer
    switch( object->structType ) {
 
       case OW_LOCALTRANSACTIONID_TYPE: return ow_unmarshal_LocalTransactionId(buffer, bitbuffer, (ow_LocalTransactionId*)object, pool);
+      case OW_PARTIALCOMMAND_TYPE: return ow_unmarshal_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object, pool);
       case OW_INTEGERRESPONSE_TYPE: return ow_unmarshal_IntegerResponse(buffer, bitbuffer, (ow_IntegerResponse*)object, pool);
       case OW_ACTIVEMQQUEUE_TYPE: return ow_unmarshal_ActiveMQQueue(buffer, bitbuffer, (ow_ActiveMQQueue*)object, pool);
       case OW_ACTIVEMQOBJECTMESSAGE_TYPE: return ow_unmarshal_ActiveMQObjectMessage(buffer, bitbuffer, (ow_ActiveMQObjectMessage*)object, pool);
@@ -2907,6 +3012,7 @@ apr_status_t ow_unmarshal_object(ow_byte_array *buffer, ow_bit_buffer *bitbuffer
       case OW_SUBSCRIPTIONINFO_TYPE: return ow_unmarshal_SubscriptionInfo(buffer, bitbuffer, (ow_SubscriptionInfo*)object, pool);
       case OW_JOURNALTRANSACTION_TYPE: return ow_unmarshal_JournalTransaction(buffer, bitbuffer, (ow_JournalTransaction*)object, pool);
       case OW_CONTROLCOMMAND_TYPE: return ow_unmarshal_ControlCommand(buffer, bitbuffer, (ow_ControlCommand*)object, pool);
+      case OW_LASTPARTIALCOMMAND_TYPE: return ow_unmarshal_LastPartialCommand(buffer, bitbuffer, (ow_LastPartialCommand*)object, pool);
       case OW_NETWORKBRIDGEFILTER_TYPE: return ow_unmarshal_NetworkBridgeFilter(buffer, bitbuffer, (ow_NetworkBridgeFilter*)object, pool);
       case OW_ACTIVEMQBYTESMESSAGE_TYPE: return ow_unmarshal_ActiveMQBytesMessage(buffer, bitbuffer, (ow_ActiveMQBytesMessage*)object, pool);
       case OW_WIREFORMATINFO_TYPE: return ow_unmarshal_WireFormatInfo(buffer, bitbuffer, (ow_WireFormatInfo*)object, pool);
