@@ -23,6 +23,7 @@ import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
@@ -38,7 +39,8 @@ public class StubConnection implements Service {
     private Connection connection;
     private Transport transport;
     boolean shuttingDown = false;
-
+    private OpenWireFormat wireFormat = new OpenWireFormat();
+    
     public StubConnection(BrokerService broker) throws Exception {
         this(broker, null);
     }
@@ -52,6 +54,10 @@ public class StubConnection implements Service {
                 catch (Exception e) {
                     serviceException(e);
                 }
+            }
+
+            protected OpenWireFormat getWireFormat() {
+                return wireFormat;
             }
         };
     }

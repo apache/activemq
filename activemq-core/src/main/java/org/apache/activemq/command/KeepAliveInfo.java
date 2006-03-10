@@ -26,15 +26,18 @@ import org.apache.activemq.util.IntrospectionSupport;
 public class KeepAliveInfo implements Command {
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.KEEP_ALIVE_INFO;
-    
+
+    private transient Endpoint from;
+    private transient Endpoint to;
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
-    public void setCommandId(short value) {
+    public void setCommandId(int value) {
     }
 
-    public short getCommandId() {
+    public int getCommandId() {
         return 0;
     }
 
@@ -69,6 +72,29 @@ public class KeepAliveInfo implements Command {
         return false;
     }
 
+    /**
+     * The endpoint within the transport where this message came from.
+     */
+    public Endpoint getFrom() {
+        return from;
+    }
+
+    public void setFrom(Endpoint from) {
+        this.from = from;
+    }
+
+    /**
+     * The endpoint within the transport where this message is going to - null means all endpoints.
+     */
+    public Endpoint getTo() {
+        return to;
+    }
+
+    public void setTo(Endpoint to) {
+        this.to = to;
+    }
+    
+    
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processKeepAlive( this );
     }

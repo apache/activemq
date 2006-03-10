@@ -83,7 +83,7 @@ public class FailoverTransport implements CompositeTransport {
                 return;
             }
             if (command.isResponse()) {
-                requestMap.remove(new Short(((Response) command).getCorrelationId()));
+                requestMap.remove(new Integer(((Response) command).getCorrelationId()));
             }
             if (!initialized){
                 if (command.isBrokerInfo()){
@@ -343,7 +343,7 @@ public class FailoverTransport implements CompositeTransport {
                         // then hold it in the requestMap so that we can replay
                         // it later.
                         if (!stateTracker.track(command) && command.isResponseRequired()) {
-                            requestMap.put(new Short(command.getCommandId()), command);
+                            requestMap.put(new Integer(command.getCommandId()), command);
                         }
                                                 
                         // Send the message.
@@ -352,7 +352,7 @@ public class FailoverTransport implements CompositeTransport {
                         } catch (IOException e) {
                             // If there is an IOException in the send, remove the command from the requestMap
                             if (!stateTracker.track(command) && command.isResponseRequired()) {
-                                requestMap.remove(new Short(command.getCommandId()), command);
+                                requestMap.remove(new Integer(command.getCommandId()), command);
                             }
                             
                             // Rethrow the exception so it will handled by the outer catch

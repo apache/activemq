@@ -218,7 +218,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         synchronized (lock) {
             answer = receivedCommand;
             if (answer == null) {
-                lock.wait(10000);
+                lock.wait(5000);
             }
             answer = receivedCommand;
         }

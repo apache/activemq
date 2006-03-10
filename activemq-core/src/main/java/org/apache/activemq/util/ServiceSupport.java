@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  *  
  * @version $Revision: 1.1 $
  */
-public abstract class ServiceSupport {
+public abstract class ServiceSupport implements Service {
     private static final Log log = LogFactory.getLog(ServiceSupport.class);
 
     private AtomicBoolean started = new AtomicBoolean(false);

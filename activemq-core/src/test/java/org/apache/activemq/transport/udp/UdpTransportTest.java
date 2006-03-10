@@ -17,8 +17,8 @@
 package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
 
 import java.net.URI;
 
@@ -30,22 +30,24 @@ public class UdpTransportTest extends UdpTestSupport {
 
     protected int consumerPort = 8830;
     protected String producerURI = "udp://localhost:" + consumerPort;
-    //protected String producerURI = "udp://localhost:8830";
-    //protected String consumerURI = "udp://localhost:8831?port=8830";
 
     protected Transport createProducer() throws Exception {
         System.out.println("Producer using URI: " + producerURI);
         
-        // The WireFormatNegotiator means we can only connect to servers
-        return new UdpTransport(createWireFormat(), new URI(producerURI));
+        // we are not using the TransportFactory as this assumes that
+        // UDP transports talk to a server using a WireFormat Negotiation step
+        // rather than talking directly to each other
         
-        //return TransportFactory.connect(new URI(producerURI));
+        OpenWireFormat wireFormat = createWireFormat();
+        UdpTransport transport = new UdpTransport(wireFormat, new URI(producerURI));
+        return new CommandJoiner(transport, wireFormat);
     }
 
     protected Transport createConsumer() throws Exception {
         System.out.println("Consumer on port: " + consumerPort);
-        return new UdpTransport(createWireFormat(), consumerPort);
-        //return TransportFactory.connect(new URI(consumerURI));
+        OpenWireFormat wireFormat = createWireFormat();
+        UdpTransport transport = new UdpTransport(wireFormat, consumerPort);
+        return new CommandJoiner(transport, wireFormat);
     }
 
     protected OpenWireFormat createWireFormat() {

@@ -53,7 +53,7 @@ public class TransportLogger extends TransportFilter {
     
     public void onCommand(Command command) {
         if( log.isDebugEnabled() ) {
-            log.debug("RECEIVED: "+command);
+            log.debug("RECEIVED: from: "+ command.getFrom() + " : " + command);
         }
         getTransportListener().onCommand(command);
     }

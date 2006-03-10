@@ -16,11 +16,15 @@
  */
 package org.apache.activemq.transport.udp;
 
+import org.activeio.ByteSequence;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Endpoint;
+import org.apache.activemq.command.LastPartialCommand;
+import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.udp.replay.DatagramReplayStrategy;
+import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,34 +51,27 @@ public class CommandChannel implements Service {
     private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
     private int datagramSize = 4 * 1024;
-    private DatagramReplayStrategy replayStrategy;
     private SocketAddress targetAddress;
     private DatagramHeaderMarshaller headerMarshaller;
-    private final boolean checkSequenceNumbers;
 
     // reading
     private Object readLock = new Object();
     private ByteBuffer readBuffer;
-    private DatagramReadBuffer readStack;
     private SocketAddress lastReadDatagramAddress;
 
     // writing
     private Object writeLock = new Object();
     private ByteBuffer writeBuffer;
-    private BooleanStream bs = new BooleanStream();
-    private int largeMessageBufferSize = 128 * 1024;
-    private DatagramHeader header = new DatagramHeader();
+    private int defaultMarshalBufferSize = 64 * 1024;
 
     public CommandChannel(String name, DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
-            DatagramReplayStrategy replayStrategy, SocketAddress targetAddress, boolean checkSequenceNumbers, DatagramHeaderMarshaller headerMarshaller) {
+            SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller) {
         this.name = name;
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.bufferPool = bufferPool;
         this.datagramSize = datagramSize;
-        this.replayStrategy = replayStrategy;
         this.targetAddress = targetAddress;
-        this.checkSequenceNumbers = checkSequenceNumbers;
         this.headerMarshaller = headerMarshaller;
     }
 
@@ -87,9 +84,6 @@ public class CommandChannel implements Service {
         wireFormat.setCacheEnabled(false);
         wireFormat.setTightEncodingEnabled(true);
 
-        if (checkSequenceNumbers) {
-            readStack = new CommandReadBuffer(name, wireFormat, replayStrategy);
-        }
         bufferPool.setDefaultSize(datagramSize);
         bufferPool.start();
         readBuffer = bufferPool.borrowBuffer();
@@ -100,8 +94,7 @@ public class CommandChannel implements Service {
         bufferPool.stop();
     }
 
-    public void read(CommandProcessor processor) throws IOException {
-        DatagramHeader header = null;
+    public Command read() throws IOException {
         Command answer = null;
         lastReadDatagramAddress = null;
         synchronized (readLock) {
@@ -109,53 +102,26 @@ public class CommandChannel implements Service {
             lastReadDatagramAddress = channel.receive(readBuffer);
             readBuffer.flip();
 
-            header = headerMarshaller.readHeader(readBuffer);
-            header.setFromAddress(lastReadDatagramAddress);
+            Endpoint from = headerMarshaller.createEndpoint(readBuffer, lastReadDatagramAddress);
 
-            if (log.isDebugEnabled()) {
-                log.debug("Received datagram on: " + name + " from: " + lastReadDatagramAddress + " header: " + header);
-            }
             int remaining = readBuffer.remaining();
-            int size = header.getDataSize();
-            /*
-             * if (size > remaining) { throw new IOException("Invalid command
-             * size: " + size + " when there are only: " + remaining + " byte(s)
-             * remaining"); } else if (size < remaining) { log.warn("Extra bytes
-             * in buffer. Expecting: " + size + " but has: " + remaining); }
-             */
-            if (size != remaining) {
-                log.warn("Expecting: " + size + " but has: " + remaining);
-            }
-            if (header.isPartial()) {
-                byte[] data = new byte[size];
-                readBuffer.get(data);
-                header.setPartialData(data);
-            }
-            else {
-                byte[] data = new byte[remaining];
-                readBuffer.get(data);
+            
+            byte[] data = new byte[remaining];
+            readBuffer.get(data);
 
-                // TODO use a DataInput implementation that talks direct to the
-                // ByteBuffer
-                DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(data));
-                Command command = (Command) wireFormat.unmarshal(dataIn);
-                // Command command = (Command) wireFormat.doUnmarshal(dataIn);
-                header.setCommand(command);
-            }
-
-            if (readStack != null) {
-                answer = readStack.read(header);
-            }
-            else {
-                answer = header.getCommand();
-            }
+            // TODO could use a DataInput implementation that talks direct to
+            // the
+            // ByteBuffer
+            DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(data));
+            answer = (Command) wireFormat.unmarshal(dataIn);
+            answer.setFrom(from);
         }
         if (answer != null) {
             if (log.isDebugEnabled()) {
                 log.debug("Channel: " + name + " about to process: " + answer);
             }
-            processor.process(answer, header);
         }
+        return answer;
     }
 
     /**
@@ -164,13 +130,7 @@ public class CommandChannel implements Service {
      * 
      * @throws IOException
      */
-    public Command onDatagramReceived(DatagramHeader header) throws IOException {
-        if (readStack != null) {
-            return readStack.read(header);
-        }
-        else {
-            return header.getCommand();
-        }
+    public void setWireFormatInfoEndpoint(DatagramEndpoint endpoint) throws IOException {
     }
 
     public void write(Command command) throws IOException {
@@ -180,46 +140,62 @@ public class CommandChannel implements Service {
     public void write(Command command, SocketAddress address) throws IOException {
         synchronized (writeLock) {
 
-            ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(largeMessageBufferSize);
+            ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(defaultMarshalBufferSize);
             wireFormat.marshal(command, new DataOutputStream(largeBuffer));
             byte[] data = largeBuffer.toByteArray();
             int size = data.length;
 
             if (size < datagramSize) {
-                header.incrementCounter();
-                header.setPartial(false);
-                header.setComplete(true);
-                header.setDataSize(size);
                 writeBuffer.clear();
-                headerMarshaller.writeHeader(header, writeBuffer);
+                headerMarshaller.writeHeader(command, writeBuffer);
 
                 writeBuffer.put(data);
 
                 sendWriteBuffer(address);
             }
             else {
-                header.setPartial(true);
-                header.setComplete(false);
-
                 // lets split the command up into chunks
-
                 int offset = 0;
                 boolean lastFragment = false;
                 for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
                     // write the header
                     writeBuffer.clear();
-                    int chunkSize = writeBuffer.capacity() - headerMarshaller.getHeaderSize(header);
+                    headerMarshaller.writeHeader(command, writeBuffer);
+                    
+                    int chunkSize = writeBuffer.remaining();
+
+                    // we need to remove the amount of overhead to write the partial command
+
+                    // lets remove the header of the partial command
+                    // which is the byte for the type and an int for the size of the byte[]
+                    chunkSize -= 1 + 4 + 4;
+                    
+                    if (!wireFormat.isSizePrefixDisabled()) {
+                        // lets write the size of the command buffer
+                        writeBuffer.putInt(chunkSize);
+                        chunkSize -= 4;
+                    }
+                    
                     lastFragment = offset + chunkSize >= length;
                     if (chunkSize + offset > length) {
                         chunkSize = length - offset;
                     }
-                    header.incrementCounter();
-                    header.setDataSize(chunkSize);
-                    header.setComplete(lastFragment);
-                    headerMarshaller.writeHeader(header, writeBuffer);
 
+                    if (lastFragment) {
+                        writeBuffer.put(LastPartialCommand.DATA_STRUCTURE_TYPE);
+                    }
+                    else {
+                        writeBuffer.put(PartialCommand.DATA_STRUCTURE_TYPE);
+                    }
+                    
+                    writeBuffer.putInt(command.getCommandId());
+                    
+                    // size of byte array
+                    writeBuffer.putInt(chunkSize);
+                    
                     // now the data
                     writeBuffer.put(data, offset, chunkSize);
+
                     offset += chunkSize;
                     sendWriteBuffer(address);
                 }
@@ -272,7 +248,7 @@ public class CommandChannel implements Service {
         writeBuffer.flip();
 
         if (log.isDebugEnabled()) {
-            log.debug("Channel: " + name + " sending datagram to: " + address + " header: " + header);
+            log.debug("Channel: " + name + " sending datagram to: " + address);
         }
         channel.send(writeBuffer, address);
     }

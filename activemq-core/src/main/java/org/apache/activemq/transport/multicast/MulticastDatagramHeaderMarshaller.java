@@ -14,20 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.udp.replay;
+package org.apache.activemq.transport.multicast;
 
-import java.io.IOException;
+import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
 
 /**
- * A pluggable strategy for how to deal with dropped packets.
- * 
+ *
  * @version $Revision$
  */
-public interface DatagramReplayStrategy {
-
-    void onDroppedPackets(String name, long expectedCounter, long actualCounter) throws IOException;
-
-    void onReceivedPacket(String name, long expectedCounter);
+public class MulticastDatagramHeaderMarshaller extends DatagramHeaderMarshaller {
 
 }
-

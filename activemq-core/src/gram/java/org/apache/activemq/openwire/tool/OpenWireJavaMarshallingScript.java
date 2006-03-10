@@ -288,6 +288,7 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
                 out.println("        tightMarshalString2(" + getter + ", dataOut, bs);");
             }
             else if (type.equals("byte[]")) {
+                String mandatory = getMandatoryFlag(annotation);
                 if (size != null) {
                     out.println("        tightMarshalConstByteArray2(" + getter + ", dataOut, bs, " + size.asInt() + ");");
                 }
@@ -319,7 +320,6 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
             }
         }
     }
-
 
 
     protected void generateLooseMarshalBody(PrintWriter out) {
@@ -479,5 +479,19 @@ public abstract class OpenWireJavaMarshallingScript extends OpenWireClassesScrip
             out.println("            info." + setter + "(null);");
             out.println("        }");
         }
+    }
+
+    /**
+     * Returns whether or not the given annotation has a mandatory flag on it or not
+     */
+    protected String getMandatoryFlag(JAnnotation annotation) {
+        JAnnotationValue value = annotation.getValue("mandatory");
+        if (value != null) {
+            String text = value.asString();
+            if (text != null && text.equalsIgnoreCase("true")) {
+                return "true";
+            }
+        }
+        return "false";
     }
 }

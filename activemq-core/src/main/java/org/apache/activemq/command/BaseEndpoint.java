@@ -14,19 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.udp;
-
-import org.apache.activemq.command.Command;
-
-import java.io.IOException;
+package org.apache.activemq.command;
 
 /**
- * A callback used to process inbound commands
+ * A default endpoint.
  * 
  * @version $Revision$
  */
-public interface CommandProcessor {
+public class BaseEndpoint implements Endpoint {
 
-    void process(Command command, DatagramHeader header) throws IOException;
+    private String name;
+
+    public BaseEndpoint(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
 
 }

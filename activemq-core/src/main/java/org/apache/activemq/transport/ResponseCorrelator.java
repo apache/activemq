@@ -27,9 +27,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 
 /**
- * Creates a {@see org.activeio.RequestChannel} out of a {@see org.activeio.AsynchChannel}.  This 
- * {@see org.activeio.RequestChannel} is thread safe and mutiplexes concurrent requests and responses over
- * the underlying {@see org.activeio.AsynchChannel}.
+ * Adds the incrementing sequence number to commands along with performing the corelation of
+ * responses to requests to create a blocking request-response semantics.
  * 
  * @version $Revision: 1.4 $
  */
@@ -38,9 +37,9 @@ final public class ResponseCorrelator extends TransportFilter {
     private static final Log log = LogFactory.getLog(ResponseCorrelator.class);
     
     private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
-    private short lastCommandId = 0;
+    private int lastCommandId = 0;
 
-    synchronized short getNextCommandId() {
+    synchronized int getNextCommandId() {
         return ++lastCommandId;
     }
     
@@ -58,7 +57,7 @@ final public class ResponseCorrelator extends TransportFilter {
         command.setCommandId(getNextCommandId());
         command.setResponseRequired(true);
         FutureResponse future = new FutureResponse();
-        requestMap.put(new Short(command.getCommandId()), future);
+        requestMap.put(new Integer(command.getCommandId()), future);
         next.oneway(command);
         return future;
     }
@@ -72,7 +71,7 @@ final public class ResponseCorrelator extends TransportFilter {
         boolean debug = log.isDebugEnabled();
         if( command.isResponse() ) {
             Response response = (Response) command;
-            FutureResponse future = (FutureResponse) requestMap.remove(new Short(response.getCorrelationId()));
+            FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
             if( future!=null ) {
                 future.set(response);
             } else {

@@ -71,7 +71,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected int tempDestGenerator=0;
     protected PersistenceAdapter persistenceAdapter;
 
-    protected int MAX_WAIT = 1000;
+    protected int MAX_WAIT = 4000;
 
     protected UsageManager memoryManager;
 

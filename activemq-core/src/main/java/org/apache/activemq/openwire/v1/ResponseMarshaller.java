@@ -65,7 +65,7 @@ public class ResponseMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         Response info = (Response)o;
-        info.setCorrelationId(dataIn.readShort());
+        info.setCorrelationId(dataIn.readInt());
 
     }
 
@@ -79,7 +79,7 @@ public class ResponseMarshaller extends BaseCommandMarshaller {
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
 
-        return rc + 2;
+        return rc + 4;
     }
 
     /**
@@ -93,7 +93,7 @@ public class ResponseMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         Response info = (Response)o;
-        dataOut.writeShort(info.getCorrelationId());
+        dataOut.writeInt(info.getCorrelationId());
 
     }
 
@@ -108,7 +108,7 @@ public class ResponseMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         Response info = (Response)o;
-        info.setCorrelationId(dataIn.readShort());
+        info.setCorrelationId(dataIn.readInt());
 
     }
 
@@ -121,7 +121,7 @@ public class ResponseMarshaller extends BaseCommandMarshaller {
         Response info = (Response)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-        dataOut.writeShort(info.getCorrelationId());
+        dataOut.writeInt(info.getCorrelationId());
 
     }
 }

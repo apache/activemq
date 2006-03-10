@@ -33,7 +33,7 @@ import org.apache.activemq.command.*;
  *        under src/gram/script and then use maven openwire:generate to regenerate 
  *        this file.
  *
- * @version $Revision$
+ * @version $Revision: $
  */
 public abstract class BaseCommandTestSupport extends DataFileGeneratorTestSupport {
 
@@ -41,7 +41,7 @@ public abstract class BaseCommandTestSupport extends DataFileGeneratorTestSuppor
     protected void populateObject(Object object) throws Exception {
     		super.populateObject(object);
     		BaseCommand info = (BaseCommand) object;
-        info.setCommandId((short) 1);
+        info.setCommandId(1);
         info.setResponseRequired(true);
 
             }

@@ -40,6 +40,7 @@ public class MarshallerFactory {
     static {
 
         add(new LocalTransactionIdMarshaller());
+        add(new PartialCommandMarshaller());
         add(new IntegerResponseMarshaller());
         add(new ActiveMQQueueMarshaller());
         add(new ActiveMQObjectMessageMarshaller());
@@ -68,6 +69,7 @@ public class MarshallerFactory {
         add(new SubscriptionInfoMarshaller());
         add(new JournalTransactionMarshaller());
         add(new ControlCommandMarshaller());
+        add(new LastPartialCommandMarshaller());
         add(new NetworkBridgeFilterMarshaller());
         add(new ActiveMQBytesMessageMarshaller());
         add(new WireFormatInfoMarshaller());

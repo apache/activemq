@@ -44,8 +44,11 @@ public class WireFormatInfo implements Command, MarshallAware {
 
     protected byte magic[] = MAGIC;
     protected int version;
-    protected transient HashMap properties;
     protected ByteSequence marshalledProperties;
+    
+    protected transient HashMap properties;
+    private transient Endpoint from;
+    private transient Endpoint to;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -58,7 +61,6 @@ public class WireFormatInfo implements Command, MarshallAware {
     public boolean isMarshallAware() {
         return true;
     }
-
 
     /**
      * @openwire:property version=1 size=8 testSize=-1
@@ -90,6 +92,28 @@ public class WireFormatInfo implements Command, MarshallAware {
         this.marshalledProperties = marshalledProperties;
     }
 
+    /**
+     * The endpoint within the transport where this message came from.
+     */
+    public Endpoint getFrom() {
+        return from;
+    }
+
+    public void setFrom(Endpoint from) {
+        this.from = from;
+    }
+
+    /**
+     * The endpoint within the transport where this message is going to - null means all endpoints.
+     */
+    public Endpoint getTo() {
+        return to;
+    }
+
+    public void setTo(Endpoint to) {
+        this.to = to;
+    }
+    
     //////////////////////
     // 
     // Implementation Methods.
@@ -249,9 +273,9 @@ public class WireFormatInfo implements Command, MarshallAware {
     //
     ///////////////////////////////////////////////////////////////
     
-    public void setCommandId(short value) {
+    public void setCommandId(int value) {
     }
-    public short getCommandId() {
+    public int getCommandId() {
         return 0;
     }
     public boolean isResponseRequired() {

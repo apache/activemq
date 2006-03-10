@@ -78,14 +78,6 @@ public interface CommandTypes {
 
     ///////////////////////////////////////////////////
     //
-    // Optional additional responses
-    //
-    ///////////////////////////////////////////////////    
-    byte  REPLAY                            = 38;
-
-    
-    ///////////////////////////////////////////////////
-    //
     // Used by discovery
     //
     ///////////////////////////////////////////////////    
@@ -102,6 +94,20 @@ public interface CommandTypes {
     byte  JOURNAL_TRANSACTION               = 54;
     byte  DURABLE_SUBSCRIPTION_INFO         = 55;
 
+
+    ///////////////////////////////////////////////////
+    //
+    // Reliability and fragmentation
+    //
+    ///////////////////////////////////////////////////    
+    byte  PARTIAL_COMMAND                   = 60;
+    byte  PARTIAL_LAST_COMMAND              = 61;
+    
+    byte  REPLAY                            = 65;
+
+
+
+    
     ///////////////////////////////////////////////////
     //
     // Types used represent basic Java types.
