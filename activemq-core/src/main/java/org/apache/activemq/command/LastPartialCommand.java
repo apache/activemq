@@ -19,29 +19,29 @@ package org.apache.activemq.command;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
- * Represents a partial command; a large command that has been split up into
- * pieces.
+ * Represents the end marker of a stream of {@link PartialCommand} instances.
  * 
  * @openwire:marshaller code="61"
  * @version $Revision$
  */
-public class LastPartialCommand extends PartialCommand {
+public class LastPartialCommand extends BaseCommand {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.PARTIAL_LAST_COMMAND;
 
     public LastPartialCommand() {
     }
 
+    public LastPartialCommand(Command command) {
+        setCommandId(command.getCommandId());
+        setResponseRequired(command.isResponseRequired());
+    }
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
-    public boolean isLastPart() {
-        return true;
-    }
-
     public Response visit(CommandVisitor visitor) throws Exception {
-        throw new IllegalStateException("The transport layer should filter out PartialCommand instances but received: " + this);
+        throw new IllegalStateException("The transport layer should filter out LastPartialCommand instances but received: " + this);
     }
 
 }

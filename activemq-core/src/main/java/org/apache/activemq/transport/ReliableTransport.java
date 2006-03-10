@@ -46,22 +46,17 @@ public class ReliableTransport extends TransportFilter {
 
     public void onCommand(Command command) {
         int actualCounter = command.getCommandId();
-        boolean valid = expectedCounter != actualCounter;
+        boolean valid = expectedCounter == actualCounter;
 
         if (!valid) {
-            if (actualCounter < expectedCounter) {
-                log.warn("Ignoring out of step packet: " + command);
-            }
-            else {
-                // lets add it to the list for later on
-                headers.add(command);
+            // lets add it to the list for later on
+            headers.add(command);
 
-                try {
-                    replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
-                }
-                catch (IOException e) {
-                    getTransportListener().onException(e);
-                }
+            try {
+                replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
+            }
+            catch (IOException e) {
+                getTransportListener().onException(e);
             }
 
             if (!headers.isEmpty()) {

@@ -35,7 +35,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision: $
  */
-public class PartialCommandTest extends BaseCommandTestSupport {
+public class PartialCommandTest extends DataFileGeneratorTestSupport {
 
 
     public static PartialCommandTest SINGLETON = new PartialCommandTest();
@@ -50,6 +50,7 @@ public class PartialCommandTest extends BaseCommandTestSupport {
     protected void populateObject(Object object) throws Exception {
     		super.populateObject(object);
     		PartialCommand info = (PartialCommand) object;
+        info.setCommandId(1);
         info.setData("Data:1".getBytes());
 
             }

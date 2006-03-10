@@ -19,6 +19,7 @@ package org.apache.activemq.openwire;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 final public class BooleanStream {
 
@@ -74,6 +75,21 @@ final public class BooleanStream {
         clear();
     }
     
+    public void marshal(ByteBuffer dataOut) {
+        if( arrayLimit < 64 ) {
+            dataOut.put((byte) arrayLimit);
+        } else if( arrayLimit < 256 ) { // max value of unsigned byte
+            dataOut.put((byte) 0xC0);
+            dataOut.put((byte) arrayLimit);            
+        } else {
+            dataOut.put((byte) 0x80);
+            dataOut.putShort(arrayLimit);            
+        }
+        
+        dataOut.put(data, 0, arrayLimit);
+    }
+
+
     public void unmarshal(DataInputStream dataIn) throws IOException {
         
         arrayLimit = (short) (dataIn.readByte() & 0xFF);

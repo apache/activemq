@@ -25,17 +25,32 @@ import org.apache.activemq.state.CommandVisitor;
  * @openwire:marshaller code="60"
  * @version $Revision$
  */
-public class PartialCommand extends BaseCommand {
+public class PartialCommand implements Command {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.PARTIAL_COMMAND;
 
+    private int commandId;
     private byte[] data;
+
+    private transient Endpoint from;
+    private transient Endpoint to;
 
     public PartialCommand() {
     }
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
+    }
+
+    /**
+     * @openwire:property version=1
+     */
+    public int getCommandId() {
+        return commandId;
+    }
+
+    public void setCommandId(int commandId) {
+        this.commandId = commandId;
     }
 
     /**
@@ -51,12 +66,66 @@ public class PartialCommand extends BaseCommand {
         this.data = data;
     }
 
-    public boolean isLastPart() {
-        return false;
+    public Endpoint getFrom() {
+        return from;
+    }
+
+    public void setFrom(Endpoint from) {
+        this.from = from;
+    }
+
+    public Endpoint getTo() {
+        return to;
+    }
+
+    public void setTo(Endpoint to) {
+        this.to = to;
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
         throw new IllegalStateException("The transport layer should filter out PartialCommand instances but received: " + this);
     }
 
+    public boolean isResponseRequired() {
+        return false;
+    }
+
+    public boolean isResponse() {
+        return false;
+    }
+
+    public boolean isBrokerInfo() {
+        return false;
+    }
+
+    public boolean isMessageDispatch() {
+        return false;
+    }
+
+    public boolean isMessage() {
+        return false;
+    }
+
+    public boolean isMessageAck() {
+        return false;
+    }
+
+    public boolean isMessageDispatchNotification() {
+        return false;
+    }
+
+    public boolean isShutdownInfo() {
+        return false;
+    }
+
+    public void setResponseRequired(boolean responseRequired) {
+    }
+
+    public boolean isWireFormatInfo() {
+        return false;
+    }
+
+    public boolean isMarshallAware() {
+        return false;
+    }
 }

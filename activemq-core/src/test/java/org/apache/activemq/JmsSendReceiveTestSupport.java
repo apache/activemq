@@ -89,7 +89,9 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
             message.setIntProperty("intProperty",i);
         
             if (verbose) {
-                log.info("About to send a message: " + message + " with text: " + data[i]);
+                if (log.isDebugEnabled()) {
+                    log.debug("About to send a message: " + message + " with text: " + data[i]);
+                }
             }
             
             producer.send(producerDestination, message);
@@ -123,7 +125,9 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         if (data.length != copyOfMessages.size()) {
             for (Iterator iter = copyOfMessages.iterator(); iter.hasNext();) {
                 TextMessage message = (TextMessage) iter.next();
-                log.info("<== " + counter++ + " = " + message);
+                if (log.isDebugEnabled()) {
+                    log.info("<== " + counter++ + " = " + message);
+                }
             }
         }
         
@@ -136,7 +140,9 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
             int intProperty = received.getIntProperty("intProperty");
             
             if (verbose) {
-                log.info("Received Text: " + text);
+                if (log.isDebugEnabled()) {
+                    log.info("Received Text: " + text);
+                }
             }
             
             assertEquals("Message: " + i, data[i], text);
@@ -182,7 +188,9 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      */
     protected void consumeMessage(Message message, List messageList) {
         if (verbose) {
-            log.info("Received message: " + message);
+            if (log.isDebugEnabled()) {
+                log.info("Received message: " + message);
+            }
         }
         
         messageList.add(message);

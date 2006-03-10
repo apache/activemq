@@ -54,6 +54,8 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
     protected final Object lock = new Object();
     protected boolean verbose = false;
     protected boolean useSeparateSession = false;
+    protected boolean largeMessages = false;
+    protected int largeMessageLoopSize = 4 * 1024;
 
     /*
      * @see junit.framework.TestCase#setUp()
@@ -73,11 +75,27 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         data = new String[messageCount];
         
         for (int i = 0; i < messageCount; i++) {
-            data[i] = "Text for message: " + i + " at " + new Date();
+            data[i] = createMessageText(i);
         }
     }
-    
-    
+
+
+    protected String createMessageText(int i) {
+        if (largeMessages) {
+            return createMessageBodyText();
+        }
+        else {
+            return "Text for message: " + i + " at " + new Date();
+        }
+    }
+
+    protected String createMessageBodyText() {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < largeMessageLoopSize; i++) {
+            buffer.append("0123456789");
+        }
+        return buffer.toString();
+    }
 
     /**
      * Test if all the messages sent are being received.  

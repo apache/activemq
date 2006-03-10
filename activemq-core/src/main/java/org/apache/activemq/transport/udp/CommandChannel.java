@@ -21,6 +21,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
+import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -100,7 +101,8 @@ public class CommandChannel implements Service {
             readBuffer.get(data);
 
             // TODO could use a DataInput implementation that talks direct to
-            // the ByteBuffer to avoid object allocation and unnecessary buffering?
+            // the ByteBuffer to avoid object allocation and unnecessary
+            // buffering?
             DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(data));
             answer = (Command) wireFormat.unmarshal(dataIn);
             answer.setFrom(from);
@@ -125,15 +127,7 @@ public class CommandChannel implements Service {
             byte[] data = largeBuffer.toByteArray();
             int size = data.length;
 
-            if (size < datagramSize) {
-                writeBuffer.clear();
-                headerMarshaller.writeHeader(command, writeBuffer);
-
-                writeBuffer.put(data);
-
-                sendWriteBuffer(address);
-            }
-            else {
+            if (size >= datagramSize) {
                 // lets split the command up into chunks
                 int offset = 0;
                 boolean lastFragment = false;
@@ -141,45 +135,80 @@ public class CommandChannel implements Service {
                     // write the header
                     writeBuffer.clear();
                     headerMarshaller.writeHeader(command, writeBuffer);
-                    
+
                     int chunkSize = writeBuffer.remaining();
 
-                    // we need to remove the amount of overhead to write the partial command
+                    // we need to remove the amount of overhead to write the
+                    // partial command
+
+                    // lets write the flags in there
+                    BooleanStream bs = null;
+                    if (wireFormat.isTightEncodingEnabled()) {
+                        bs = new BooleanStream();
+                        bs.writeBoolean(true); // the partial data byte[] is
+                        // never null
+                    }
 
                     // lets remove the header of the partial command
-                    // which is the byte for the type and an int for the size of the byte[]
-                    chunkSize -= 1 + 4 + 4;
-                    
+                    // which is the byte for the type and an int for the size of
+                    // the byte[]
+                    chunkSize -= 1 // the data type
+                    + 4 // the command ID
+                    + 4; // the size of the partial data
+
+                    // the boolean flags
+                    if (bs != null) {
+                        chunkSize -= bs.marshalledSize();
+                    }
+                    else {
+                        chunkSize -= 1;
+                    }
+
                     if (!wireFormat.isSizePrefixDisabled()) {
                         // lets write the size of the command buffer
                         writeBuffer.putInt(chunkSize);
                         chunkSize -= 4;
                     }
-                    
+
                     lastFragment = offset + chunkSize >= length;
                     if (chunkSize + offset > length) {
                         chunkSize = length - offset;
                     }
 
-                    if (lastFragment) {
-                        writeBuffer.put(LastPartialCommand.DATA_STRUCTURE_TYPE);
+                    writeBuffer.put(PartialCommand.DATA_STRUCTURE_TYPE);
+
+                    if (bs != null) {
+                        bs.marshal(writeBuffer);
                     }
-                    else {
-                        writeBuffer.put(PartialCommand.DATA_STRUCTURE_TYPE);
-                    }
-                    
+
                     writeBuffer.putInt(command.getCommandId());
-                    
+                    if (bs == null) {
+                        writeBuffer.put((byte) 1);
+                    }
+
                     // size of byte array
                     writeBuffer.putInt(chunkSize);
-                    
+
                     // now the data
                     writeBuffer.put(data, offset, chunkSize);
 
                     offset += chunkSize;
                     sendWriteBuffer(address);
                 }
+                
+                // now lets write the last partial command
+                command = new LastPartialCommand(command);
+                largeBuffer = new ByteArrayOutputStream(defaultMarshalBufferSize);
+                wireFormat.marshal(command, new DataOutputStream(largeBuffer));
+                data = largeBuffer.toByteArray();
             }
+            
+            writeBuffer.clear();
+            headerMarshaller.writeHeader(command, writeBuffer);
+
+            writeBuffer.put(data);
+
+            sendWriteBuffer(address);
         }
     }
 
@@ -215,7 +244,6 @@ public class CommandChannel implements Service {
     public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller) {
         this.headerMarshaller = headerMarshaller;
     }
-
 
     // Implementation methods
     // -------------------------------------------------------------------------

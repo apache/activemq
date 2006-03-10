@@ -361,10 +361,8 @@
                 <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
                 <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
                 
-                
-                <!-- TODO FIXME -->
-                <exclude>**/PartialCommandTest.*</exclude>
-                <exclude>**/LastPartialCommandTest.*</exclude>
+                <!-- TODO FIX ME -->
+                <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             </excludes>
         </unitTest>
         <resources>

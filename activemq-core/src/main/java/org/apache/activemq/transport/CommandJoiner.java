@@ -26,14 +26,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-
 /**
- * Joins together of partial commands which were split into individual chunks of data.
+ * Joins together of partial commands which were split into individual chunks of
+ * data.
  * 
  * @version $Revision$
  */
 public class CommandJoiner extends TransportFilter {
-    
+
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
     private OpenWireFormat wireFormat;
 
@@ -41,21 +41,27 @@ public class CommandJoiner extends TransportFilter {
         super(next);
         this.wireFormat = wireFormat;
     }
-    
+
     public void onCommand(Command command) {
         byte type = command.getDataStructureType();
-        if (type == PartialCommand.DATA_STRUCTURE_TYPE || type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
+        if (type == PartialCommand.DATA_STRUCTURE_TYPE) {
             PartialCommand header = (PartialCommand) command;
             byte[] partialData = header.getData();
             try {
                 out.write(partialData);
-
-                if (header.isLastPart()) {
-                    byte[] fullData = out.toByteArray();
-                    Command completeCommand = (Command) wireFormat.unmarshal(new DataInputStream(new ByteArrayInputStream(fullData)));
-                    resetBuffer();
-                    getTransportListener().onCommand(completeCommand);
-                }
+            }
+            catch (IOException e) {
+                getTransportListener().onException(e);
+            }
+        }
+        else if (type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
+            try {
+                byte[] fullData = out.toByteArray();
+                Command completeCommand = (Command) wireFormat.unmarshal(new DataInputStream(new ByteArrayInputStream(fullData)));
+                completeCommand.setCommandId(command.getCommandId());
+                completeCommand.setResponseRequired(command.isResponseRequired());
+                resetBuffer();
+                getTransportListener().onCommand(completeCommand);
             }
             catch (IOException e) {
                 getTransportListener().onException(e);
@@ -65,7 +71,7 @@ public class CommandJoiner extends TransportFilter {
             getTransportListener().onCommand(command);
         }
     }
-    
+
     public void stop() throws Exception {
         super.stop();
         resetBuffer();

@@ -29,6 +29,7 @@ public class UdpSendReceiveWithTwoConnectionsTest extends JmsTopicSendReceiveWit
     protected BrokerService broker;
 
     protected void setUp() throws Exception {
+        largeMessages = true;
         broker = createBroker();
         broker.start();
 
