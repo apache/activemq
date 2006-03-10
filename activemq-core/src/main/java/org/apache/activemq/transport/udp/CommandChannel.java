@@ -16,15 +16,12 @@
  */
 package org.apache.activemq.transport.udp;
 
-import org.activeio.ByteSequence;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
-import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -57,7 +54,6 @@ public class CommandChannel implements Service {
     // reading
     private Object readLock = new Object();
     private ByteBuffer readBuffer;
-    private SocketAddress lastReadDatagramAddress;
 
     // writing
     private Object writeLock = new Object();
@@ -80,10 +76,6 @@ public class CommandChannel implements Service {
     }
 
     public void start() throws Exception {
-        // wireFormat.setPrefixPacketSize(false);
-        wireFormat.setCacheEnabled(false);
-        wireFormat.setTightEncodingEnabled(true);
-
         bufferPool.setDefaultSize(datagramSize);
         bufferPool.start();
         readBuffer = bufferPool.borrowBuffer();
@@ -96,22 +88,19 @@ public class CommandChannel implements Service {
 
     public Command read() throws IOException {
         Command answer = null;
-        lastReadDatagramAddress = null;
         synchronized (readLock) {
             readBuffer.clear();
-            lastReadDatagramAddress = channel.receive(readBuffer);
+            SocketAddress address = channel.receive(readBuffer);
             readBuffer.flip();
 
-            Endpoint from = headerMarshaller.createEndpoint(readBuffer, lastReadDatagramAddress);
+            Endpoint from = headerMarshaller.createEndpoint(readBuffer, address);
 
             int remaining = readBuffer.remaining();
-            
             byte[] data = new byte[remaining];
             readBuffer.get(data);
 
             // TODO could use a DataInput implementation that talks direct to
-            // the
-            // ByteBuffer
+            // the ByteBuffer to avoid object allocation and unnecessary buffering?
             DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(data));
             answer = (Command) wireFormat.unmarshal(dataIn);
             answer.setFrom(from);
@@ -122,15 +111,6 @@ public class CommandChannel implements Service {
             }
         }
         return answer;
-    }
-
-    /**
-     * Called if a packet is received on a different channel from a remote
-     * client
-     * 
-     * @throws IOException
-     */
-    public void setWireFormatInfoEndpoint(DatagramEndpoint endpoint) throws IOException {
     }
 
     public void write(Command command) throws IOException {
@@ -236,11 +216,6 @@ public class CommandChannel implements Service {
         this.headerMarshaller = headerMarshaller;
     }
 
-    public SocketAddress getLastReadDatagramAddress() {
-        synchronized (readLock) {
-            return lastReadDatagramAddress;
-        }
-    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
