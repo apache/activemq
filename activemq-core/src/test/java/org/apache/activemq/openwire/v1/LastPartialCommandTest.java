@@ -35,7 +35,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision: $
  */
-public class LastPartialCommandTest extends PartialCommandTest {
+public class LastPartialCommandTest extends BaseCommandTestSupport {
 
 
     public static LastPartialCommandTest SINGLETON = new LastPartialCommandTest();

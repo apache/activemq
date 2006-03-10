@@ -37,7 +37,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class PartialCommandMarshaller extends BaseCommandMarshaller {
+public class PartialCommandMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
@@ -65,6 +65,7 @@ public class PartialCommandMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         PartialCommand info = (PartialCommand)o;
+        info.setCommandId(dataIn.readInt());
         info.setData(tightUnmarshalByteArray(dataIn, bs));
 
     }
@@ -80,7 +81,7 @@ public class PartialCommandMarshaller extends BaseCommandMarshaller {
         int rc = super.tightMarshal1(wireFormat, o, bs);
         rc += tightMarshalByteArray1(info.getData(), bs);
 
-        return rc + 0;
+        return rc + 4;
     }
 
     /**
@@ -94,6 +95,7 @@ public class PartialCommandMarshaller extends BaseCommandMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         PartialCommand info = (PartialCommand)o;
+        dataOut.writeInt(info.getCommandId());
         tightMarshalByteArray2(info.getData(), dataOut, bs);
 
     }
@@ -109,6 +111,7 @@ public class PartialCommandMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         PartialCommand info = (PartialCommand)o;
+        info.setCommandId(dataIn.readInt());
         info.setData(looseUnmarshalByteArray(dataIn));
 
     }
@@ -122,6 +125,7 @@ public class PartialCommandMarshaller extends BaseCommandMarshaller {
         PartialCommand info = (PartialCommand)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
+        dataOut.writeInt(info.getCommandId());
         looseMarshalByteArray(wireFormat, info.getData(), dataOut);
 
     }
