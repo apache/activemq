@@ -82,7 +82,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public UdpTransport(OpenWireFormat wireFormat, SocketAddress socketAddress) throws IOException {
         this(wireFormat);
         this.targetAddress = socketAddress;
-        this.description = "UdpServerConnection@";
+        this.description = getProtocolName() + "ServerConnection@";
     }
 
     /**
@@ -92,7 +92,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this(wireFormat);
         this.port = port;
         this.targetAddress = null;
-        this.description = "UdpServer@";
+        this.description = getProtocolName() + "Server@";
     }
 
     /**
@@ -113,7 +113,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         commandChannel.write(command, address);
     }
 
-
     public void receivedHeader(DatagramHeader header) {
         wireFormatHeader = header;
     }
@@ -126,7 +125,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
             return description + port;
         }
         else {
-            return "udp://" + targetAddress + "@" + port;
+            return getProtocolUriScheme() + targetAddress + "@" + port;
         }
     }
 
@@ -166,6 +165,22 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                     log.error(e);
                 }
             }
+        }
+    }
+
+    /**
+     * We have received the WireFormatInfo from the server on the actual channel
+     * we should use for all future communication with the server, so lets set
+     * the target to be the actual channel that the server has chosen for us to
+     * talk on.
+     */
+    public void useLastInboundDatagramAsNewTarget() {
+        if (originalTargetAddress == null) {
+            originalTargetAddress = targetAddress;
+        }
+        SocketAddress lastAddress = commandChannel.getLastReadDatagramAddress();
+        if (lastAddress != null) {
+            targetAddress = lastAddress;
         }
     }
 
@@ -255,7 +270,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public OpenWireFormat getWireFormat() {
         return wireFormat;
     }
-    
+
     public boolean isCheckSequenceNumbers() {
         return checkSequenceNumbers;
     }
@@ -313,7 +328,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
-        commandChannel = new CommandChannel(toString(), channel, wireFormat, bufferPool, datagramSize, replayStrategy, targetAddress, isCheckSequenceNumbers());
+        commandChannel = new CommandChannel(toString(), channel, wireFormat, bufferPool, datagramSize, replayStrategy, targetAddress, isCheckSequenceNumbers(), createDatagramHeaderMarshaller());
         commandChannel.start();
 
         // lets pass the header & address into the channel so it avoids a
@@ -331,21 +346,15 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         }
     }
 
-    /**
-     * We have received the WireFormatInfo from the server on the actual channel
-     * we should use for all future communication with the server, so lets set
-     * the target to be the actual channel that the server has chosen for us to
-     * talk on.
-     */
-    public void useLastInboundDatagramAsNewTarget() {
-        if (originalTargetAddress == null) {
-            originalTargetAddress = targetAddress;
-        }
-        SocketAddress lastAddress = commandChannel.getLastReadDatagramAddress();
-        if (lastAddress != null) {
-            targetAddress = lastAddress;
-        }
+    protected DatagramHeaderMarshaller createDatagramHeaderMarshaller() {
+        return new DatagramHeaderMarshaller();
     }
 
+    protected String getProtocolName() {
+        return "Udp";
+    }
 
+    protected String getProtocolUriScheme() {
+        return "udp://";
+    }
 }
