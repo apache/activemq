@@ -25,8 +25,12 @@ import java.nio.ByteBuffer;
  */
 public class DatagramHeaderMarshaller {
 
+    public DatagramHeader createDatagramHeader() {
+        return new DatagramHeader();
+    }
+
     public DatagramHeader readHeader(ByteBuffer readBuffer) {
-        DatagramHeader answer = new DatagramHeader();
+        DatagramHeader answer = createDatagramHeader();
         answer.setCounter(readBuffer.getLong());
         answer.setDataSize(readBuffer.getInt());
         byte flags = readBuffer.get();
@@ -46,5 +50,4 @@ public class DatagramHeaderMarshaller {
     public int getHeaderSize(DatagramHeader header) {
         return 8 + 4 + 1;
     }
-
 }

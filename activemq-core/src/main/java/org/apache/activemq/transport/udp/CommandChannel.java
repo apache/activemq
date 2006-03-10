@@ -29,7 +29,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -50,7 +49,7 @@ public class CommandChannel implements Service {
     private int datagramSize = 4 * 1024;
     private DatagramReplayStrategy replayStrategy;
     private SocketAddress targetAddress;
-    private DatagramHeaderMarshaller headerMarshaller = new DatagramHeaderMarshaller();
+    private DatagramHeaderMarshaller headerMarshaller;
     private final boolean checkSequenceNumbers;
 
     // reading
@@ -67,7 +66,7 @@ public class CommandChannel implements Service {
     private DatagramHeader header = new DatagramHeader();
 
     public CommandChannel(String name, DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
-            DatagramReplayStrategy replayStrategy, SocketAddress targetAddress, boolean checkSequenceNumbers) {
+            DatagramReplayStrategy replayStrategy, SocketAddress targetAddress, boolean checkSequenceNumbers, DatagramHeaderMarshaller headerMarshaller) {
         this.name = name;
         this.channel = channel;
         this.wireFormat = wireFormat;
@@ -76,6 +75,7 @@ public class CommandChannel implements Service {
         this.replayStrategy = replayStrategy;
         this.targetAddress = targetAddress;
         this.checkSequenceNumbers = checkSequenceNumbers;
+        this.headerMarshaller = headerMarshaller;
     }
 
     public String toString() {
