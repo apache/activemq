@@ -84,7 +84,6 @@ ow_boolean ow_is_a_PartialCommand(ow_DataStructure *object) {
       
    switch(object->structType) {
    case OW_PARTIALCOMMAND_TYPE:
-   case OW_LASTPARTIALCOMMAND_TYPE:
       return 1;
    }
    return 0;
@@ -103,7 +102,8 @@ ow_PartialCommand *ow_PartialCommand_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_PartialCommand(ow_bit_buffer *buffer, ow_PartialCommand *object)
 {
-   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
+   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
+   
    
                         ow_bit_buffer_append(buffer,  object->data!=0 );
                         
@@ -112,7 +112,8 @@ apr_status_t ow_marshal1_PartialCommand(ow_bit_buffer *buffer, ow_PartialCommand
 }
 apr_status_t ow_marshal2_PartialCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_PartialCommand *object)
 {
-   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
+   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->commandId));
    SUCCESS_CHECK(ow_marshal2_byte_array(buffer, bitbuffer, object->data));
    
 	return APR_SUCCESS;
@@ -120,7 +121,8 @@ apr_status_t ow_marshal2_PartialCommand(ow_byte_buffer *buffer, ow_bit_buffer *b
 
 apr_status_t ow_unmarshal_PartialCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_PartialCommand *object, apr_pool_t *pool)
 {
-   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
+   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->commandId));
    SUCCESS_CHECK(ow_unmarshal_byte_array(buffer, bitbuffer, &object->data, pool));
    
 	return APR_SUCCESS;
@@ -1583,20 +1585,20 @@ ow_LastPartialCommand *ow_LastPartialCommand_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_LastPartialCommand(ow_bit_buffer *buffer, ow_LastPartialCommand *object)
 {
-   ow_marshal1_PartialCommand(buffer, (ow_PartialCommand*)object);
+   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_LastPartialCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_LastPartialCommand *object)
 {
-   ow_marshal2_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object);   
+   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
    
 	return APR_SUCCESS;
 }
 
 apr_status_t ow_unmarshal_LastPartialCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_LastPartialCommand *object, apr_pool_t *pool)
 {
-   ow_unmarshal_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object, pool);   
+   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
    
 	return APR_SUCCESS;
 }
@@ -2359,7 +2361,6 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
       return 0;
       
    switch(object->structType) {
-   case OW_PARTIALCOMMAND_TYPE:
    case OW_INTEGERRESPONSE_TYPE:
    case OW_ACTIVEMQOBJECTMESSAGE_TYPE:
    case OW_CONNECTIONINFO_TYPE:
