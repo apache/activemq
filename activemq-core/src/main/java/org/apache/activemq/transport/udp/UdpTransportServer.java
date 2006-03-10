@@ -18,8 +18,10 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
@@ -43,7 +45,7 @@ import java.util.Map;
  * @version $Revision$
  */
 
-public class UdpTransportServer extends TransportServerSupport implements CommandProcessor {
+public class UdpTransportServer extends TransportServerSupport {
     private static final Log log = LogFactory.getLog(UdpTransportServer.class);
 
     private UdpTransport serverTransport;
@@ -53,6 +55,8 @@ public class UdpTransportServer extends TransportServerSupport implements Comman
     public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport) {
         super(connectURI);
         this.serverTransport = serverTransport;
+        
+        
         this.configuredTransport = configuredTransport;
 
         // lets disable the incremental checking of the sequence numbers
@@ -79,6 +83,7 @@ public class UdpTransportServer extends TransportServerSupport implements Comman
 
         configuredTransport.setTransportListener(new TransportListener() {
             public void onCommand(Command command) {
+                processInboundConnection(command);
             }
 
             public void onException(IOException error) {
@@ -97,24 +102,29 @@ public class UdpTransportServer extends TransportServerSupport implements Comman
         configuredTransport.stop();
     }
 
-    public void process(Command command, DatagramHeader header) throws IOException {
-        SocketAddress address = header.getFromAddress();
+    protected void processInboundConnection(Command command) {
+        DatagramEndpoint endpoint = (DatagramEndpoint) command.getFrom();
         if (log.isDebugEnabled()) {
-            log.debug("Received command on: " + this + " from address: " + address + " command: " + command);
+            log.debug("Received command on: " + this + " from address: " + endpoint + " command: " + command);
         }
         Transport transport = null;
         synchronized (transports) {
-            transport = (Transport) transports.get(address);
+            transport = (Transport) transports.get(endpoint);
             if (transport == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("Creating a new UDP server connection");
                 }
-                transport = createTransport(command, header);
-                transport = configureTransport(transport);
-                transports.put(address, transport);
+                try {
+                    transport = createTransport(command, endpoint);
+                    transport = configureTransport(transport);
+                    transports.put(endpoint, transport);
+                }
+                catch (IOException e) {
+                    getAcceptListener().onAcceptError(e);
+                }
             }
             else {
-                log.warn("Discarding duplicate command to server: " + command + " from: " + address);
+                log.warn("Discarding duplicate command to server from: " + endpoint + " command: " + command);
             }
         }
     }
@@ -125,19 +135,22 @@ public class UdpTransportServer extends TransportServerSupport implements Comman
         if (serverTransport.getMaxInactivityDuration() > 0) {
             transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
         }
-        
+
         getAcceptListener().onAccept(transport);
         return transport;
     }
 
-    protected Transport createTransport(final Command command, DatagramHeader header) throws IOException {
-        final SocketAddress address = header.getFromAddress();
+    protected Transport createTransport(final Command command, DatagramEndpoint endpoint) throws IOException {
+        final SocketAddress address = endpoint.getAddress();
         final OpenWireFormat connectionWireFormat = serverTransport.getWireFormat().copy();
         final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
 
-        transport.receivedHeader(header);
+        // TODO - is this still required?
+        transport.receivedHeader(endpoint);
 
-        return new WireFormatNegotiator(transport, transport.getWireFormat(), serverTransport.getMinmumWireFormatVersion()) {
+        Transport configuredTransport = new CommandJoiner(transport, connectionWireFormat);
+        
+        return new WireFormatNegotiator(configuredTransport, transport.getWireFormat(), serverTransport.getMinmumWireFormatVersion()) {
 
             public void start() throws Exception {
                 super.start();

@@ -64,6 +64,10 @@ public class ReplayCommandMarshaller extends BaseCommandMarshaller {
     public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
+        ReplayCommand info = (ReplayCommand)o;
+        info.setFirstNakNumber(dataIn.readInt());
+        info.setLastNakNumber(dataIn.readInt());
+
     }
 
 
@@ -72,9 +76,11 @@ public class ReplayCommandMarshaller extends BaseCommandMarshaller {
      */
     public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
 
+        ReplayCommand info = (ReplayCommand)o;
+
         int rc = super.tightMarshal1(wireFormat, o, bs);
 
-        return rc + 0;
+        return rc + 8;
     }
 
     /**
@@ -86,6 +92,10 @@ public class ReplayCommandMarshaller extends BaseCommandMarshaller {
      */
     public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
+
+        ReplayCommand info = (ReplayCommand)o;
+        dataOut.writeInt(info.getFirstNakNumber());
+        dataOut.writeInt(info.getLastNakNumber());
 
     }
 
@@ -99,6 +109,10 @@ public class ReplayCommandMarshaller extends BaseCommandMarshaller {
     public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
+        ReplayCommand info = (ReplayCommand)o;
+        info.setFirstNakNumber(dataIn.readInt());
+        info.setLastNakNumber(dataIn.readInt());
+
     }
 
 
@@ -107,7 +121,11 @@ public class ReplayCommandMarshaller extends BaseCommandMarshaller {
      */
     public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
 
+        ReplayCommand info = (ReplayCommand)o;
+
         super.looseMarshal(wireFormat, o, dataOut);
+        dataOut.writeInt(info.getFirstNakNumber());
+        dataOut.writeInt(info.getLastNakNumber());
 
     }
 }

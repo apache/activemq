@@ -32,7 +32,9 @@ import org.activeio.command.WireFormat;
 import org.activeio.packet.ByteArrayPacket;
 import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.MarshallAware;
+import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.util.IdGenerator;
 
@@ -225,6 +227,13 @@ final public class OpenWireFormat implements WireFormat {
         	
             DataStructure c = (DataStructure) o;
             byte type = c.getDataStructureType();
+            
+            // TODO - we could remove this if we have a way to disable BooleanStream on 
+            // certain types of message
+            if (type == CommandTypes.PARTIAL_COMMAND || type == CommandTypes.PARTIAL_LAST_COMMAND) {
+                marshalPartialCommand((PartialCommand) o, dataOut);
+                return;
+            }
             DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[type & 0xFF];
             if( dsm == null )
                 throw new IOException("Unknown data type: "+type);
@@ -264,7 +273,7 @@ final public class OpenWireFormat implements WireFormat {
             dataOut.writeByte(NULL_TYPE);
         }
     }
-    
+
     public Object unmarshal(DataInputStream dis) throws IOException {
         if( !sizePrefixDisabled ) {
         	dis.readInt();
@@ -335,7 +344,13 @@ final public class OpenWireFormat implements WireFormat {
         
     public Object doUnmarshal(DataInputStream dis) throws IOException {
         byte dataType = dis.readByte();
-        if( dataType!=NULL_TYPE ) {
+        
+        // TODO - we could remove this if we have a way to disable BooleanStream on 
+        // certain types of message
+        if (dataType == CommandTypes.PARTIAL_COMMAND || dataType == CommandTypes.PARTIAL_LAST_COMMAND) {
+            return doUnmarshalPartialCommand(dataType, dis);
+        }
+        else if( dataType!=NULL_TYPE ) {
             DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[dataType & 0xFF];
             if( dsm == null )
                 throw new IOException("Unknown data type: "+dataType);
@@ -352,6 +367,7 @@ final public class OpenWireFormat implements WireFormat {
             return null;
         }
     }
+
 //    public void debug(String msg) {
 //    	String t = (Thread.currentThread().getName()+"                                         ").substring(0, 40);
 //    	System.out.println(t+": "+msg);
@@ -569,5 +585,54 @@ final public class OpenWireFormat implements WireFormat {
 		this.sizePrefixDisabled = info.isSizePrefixDisabled() && preferedWireFormatInfo.isSizePrefixDisabled();
 		
 	}
+
+    
+    
+    // Partial command marshalling
+    // 
+    // TODO - remove if we can figure out a clean way to disable BooleanStream in OpenWire on commands 
+    // with no optional values (partial commands only have a mandatory byte[])
+	//
+    
+    protected void marshalPartialCommand(PartialCommand command, DataOutputStream dataOut) throws IOException {
+        byte[] data = command.getData();
+        int dataSize = data.length;
+
+        if (!isSizePrefixDisabled()) {
+            int size = dataSize + 1 + 4;
+            dataOut.writeInt(size);
+        }
+
+        if (command.isLastPart()) {
+            dataOut.write(LastPartialCommand.DATA_STRUCTURE_TYPE);
+        }
+        else {
+            dataOut.write(PartialCommand.DATA_STRUCTURE_TYPE);
+        }
+
+        dataOut.writeInt(command.getCommandId());
+        dataOut.writeInt(dataSize);
+        dataOut.write(data);
+
+    }
+    
+    protected Object doUnmarshalPartialCommand(byte dataType, DataInputStream dis) throws IOException {
+        // size of entire command is already read
+        
+        PartialCommand answer = null;
+        if (dataType == LastPartialCommand.DATA_STRUCTURE_TYPE) {
+            answer = new LastPartialCommand();
+        }
+        else {
+            answer = new PartialCommand();
+        }
+        answer.setCommandId(dis.readInt());
+        
+        int size = dis.readInt();
+        byte[] data = new byte[size];
+        dis.readFully(data);
+        answer.setData(data);
+        return answer;
+    }
 
 }

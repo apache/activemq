@@ -26,8 +26,11 @@ import org.apache.activemq.util.IntrospectionSupport;
  */
 abstract public class BaseCommand implements Command {
 
-    protected short commandId;
+    protected int commandId;
     protected boolean responseRequired;
+    
+    private transient Endpoint from;
+    private transient Endpoint to;
     
     public void copy(BaseCommand copy) {
         copy.commandId = commandId;
@@ -37,11 +40,11 @@ abstract public class BaseCommand implements Command {
     /**
      * @openwire:property version=1
      */
-    public short getCommandId() {
+    public int getCommandId() {
         return commandId;
     }
 
-    public void setCommandId(short commandId) {
+    public void setCommandId(int commandId) {
         this.commandId = commandId;
     }
 
@@ -95,4 +98,28 @@ abstract public class BaseCommand implements Command {
     public boolean isShutdownInfo() {
         return false;
     }
+
+    /**
+     * The endpoint within the transport where this message came from.
+     */
+    public Endpoint getFrom() {
+        return from;
+    }
+
+    public void setFrom(Endpoint from) {
+        this.from = from;
+    }
+
+    /**
+     * The endpoint within the transport where this message is going to - null means all endpoints.
+     */
+    public Endpoint getTo() {
+        return to;
+    }
+
+    public void setTo(Endpoint to) {
+        this.to = to;
+    }
+    
+    
 }

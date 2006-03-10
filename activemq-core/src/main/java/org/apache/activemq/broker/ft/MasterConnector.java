@@ -193,7 +193,7 @@ public class MasterConnector implements Service{
 
             }else{
                 boolean responseRequired = command.isResponseRequired();
-                short commandId = command.getCommandId();
+                int commandId = command.getCommandId();
                 localBroker.oneway(command);
                 if (responseRequired){
                     Response response=new Response();

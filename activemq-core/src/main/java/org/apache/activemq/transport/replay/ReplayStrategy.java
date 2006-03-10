@@ -14,20 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.udp;
+package org.apache.activemq.transport.replay;
 
-import org.apache.activemq.command.Command;
+import org.apache.activemq.transport.ReliableTransport;
 
 import java.io.IOException;
 
 /**
- * Represents an inbound buffer of datagrams for dealing with out of order
- * or fragmented commands.
+ * A pluggable strategy for how to deal with dropped packets.
  * 
  * @version $Revision$
  */
-public interface DatagramReadBuffer {
+public interface ReplayStrategy {
 
-    Command read(DatagramHeader header) throws IOException;
+    void onDroppedPackets(ReliableTransport transport, long expectedCounter, long actualCounter) throws IOException;
+
+    void onReceivedPacket(ReliableTransport transport, long expectedCounter);
 
 }
+

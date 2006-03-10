@@ -14,23 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.udp.replay;
+package org.apache.activemq.transport.udp;
 
-import java.io.IOException;
+import org.apache.activemq.command.BaseEndpoint;
+
+import java.net.SocketAddress;
 
 /**
- * Throws an exception if packets are dropped causing the transport to be closed.
  * 
  * @version $Revision$
  */
-public class ExceptionIfDroppedPacketStrategy implements DatagramReplayStrategy {
+public class DatagramEndpoint extends BaseEndpoint {
 
-    public void onDroppedPackets(String name, long expectedCounter, long actualCounter) throws IOException {
-        long count = actualCounter - expectedCounter;
-        throw new IOException(name + count +  " packet(s) dropped. Expected: " + expectedCounter + " but was: " + actualCounter);
+    private final SocketAddress address;
+
+    public DatagramEndpoint(String name, SocketAddress address) {
+        super(name);
+        this.address = address;
     }
 
-    public void onReceivedPacket(String name, long expectedCounter) {
+    public SocketAddress getAddress() {
+        return address;
     }
 
 }

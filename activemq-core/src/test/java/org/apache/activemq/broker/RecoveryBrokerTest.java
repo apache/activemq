@@ -207,7 +207,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         
         // Message should have been dropped due to broker restart.
         Message m = receiveMessage(connection);
-        assertNotNull(m);
+        assertNotNull("Should have received a message by now!", m);
         assertEquals( m.getMessageId(), message.getMessageId() );
     }
     

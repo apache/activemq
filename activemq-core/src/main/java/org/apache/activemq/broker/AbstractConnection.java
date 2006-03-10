@@ -186,7 +186,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         Response response=null;
         boolean responseRequired = command.isResponseRequired();
-        short commandId = command.getCommandId();
+        int commandId = command.getCommandId();
         try {
             response = command.visit(this);
         } catch ( Throwable e ) {

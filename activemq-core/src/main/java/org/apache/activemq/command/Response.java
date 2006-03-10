@@ -25,7 +25,7 @@ import org.apache.activemq.state.CommandVisitor;
 public class Response extends BaseCommand {
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.RESPONSE;
-    short correlationId;
+    int correlationId;
     
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -34,11 +34,11 @@ public class Response extends BaseCommand {
     /**
      * @openwire:property version=1
      */
-    public short getCorrelationId() {
+    public int getCorrelationId() {
         return correlationId;
     }
     
-    public void setCorrelationId(short responseId) {
+    public void setCorrelationId(int responseId) {
         this.correlationId = responseId;
     }
     

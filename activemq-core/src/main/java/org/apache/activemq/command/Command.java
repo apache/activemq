@@ -26,12 +26,12 @@ import org.apache.activemq.state.CommandVisitor;
  */
 public interface Command extends DataStructure {
     
-    void setCommandId(short value);
+    void setCommandId(int value);
     
     /**
      * @return the unique ID of this request used to map responses to requests
      */
-    short getCommandId();
+    int getCommandId();
     
     void setResponseRequired(boolean responseRequired);
     boolean isResponseRequired();
@@ -44,6 +44,21 @@ public interface Command extends DataStructure {
     boolean isMessageAck();
     boolean isMessageDispatchNotification();
     boolean isShutdownInfo();
-    
+
     Response visit( CommandVisitor visitor) throws Exception;
+
+    /**
+     * The endpoint within the transport where this message came from which could be null if the 
+     * transport only supports a single endpoint.
+     */
+    public Endpoint getFrom();
+
+    public void setFrom(Endpoint from);
+
+    /**
+     * The endpoint within the transport where this message is going to - null means all endpoints.
+     */
+    public Endpoint getTo();
+
+    public void setTo(Endpoint to);
 }

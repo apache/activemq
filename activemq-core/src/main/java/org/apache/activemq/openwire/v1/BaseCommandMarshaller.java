@@ -50,7 +50,7 @@ public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         BaseCommand info = (BaseCommand)o;
-        info.setCommandId(dataIn.readShort());
+        info.setCommandId(dataIn.readInt());
         info.setResponseRequired(bs.readBoolean());
 
     }
@@ -66,7 +66,7 @@ public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
         int rc = super.tightMarshal1(wireFormat, o, bs);
         bs.writeBoolean(info.isResponseRequired());
 
-        return rc + 2;
+        return rc + 4;
     }
 
     /**
@@ -80,7 +80,7 @@ public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         BaseCommand info = (BaseCommand)o;
-        dataOut.writeShort(info.getCommandId());
+        dataOut.writeInt(info.getCommandId());
         bs.readBoolean();
 
     }
@@ -96,7 +96,7 @@ public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         BaseCommand info = (BaseCommand)o;
-        info.setCommandId(dataIn.readShort());
+        info.setCommandId(dataIn.readInt());
         info.setResponseRequired(dataIn.readBoolean());
 
     }
@@ -110,7 +110,7 @@ public abstract class BaseCommandMarshaller extends BaseDataStreamMarshaller {
         BaseCommand info = (BaseCommand)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-        dataOut.writeShort(info.getCommandId());
+        dataOut.writeInt(info.getCommandId());
         dataOut.writeBoolean(info.isResponseRequired());
 
     }

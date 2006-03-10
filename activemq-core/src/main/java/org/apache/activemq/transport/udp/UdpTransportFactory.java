@@ -19,6 +19,7 @@ package org.apache.activemq.transport.udp;
 import org.activeio.command.WireFormat;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
@@ -47,11 +48,11 @@ public class UdpTransportFactory extends TransportFactory {
             }
             WireFormat wf = createWireFormat(options);
             int port = location.getPort();
-            UdpTransport transport = new UdpTransport(asOpenWireFormat(wf), port);
+            OpenWireFormat openWireFormat = asOpenWireFormat(wf);
+            UdpTransport transport = new UdpTransport(openWireFormat, port);
 
             Transport configuredTransport = configure(transport, wf, options, true);
             UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport);
-            transport.setCommandProcessor(server);
             return server;
         }
         catch (URISyntaxException e) {
@@ -69,6 +70,10 @@ public class UdpTransportFactory extends TransportFactory {
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
         final UdpTransport udpTransport = (UdpTransport) transport;
+        
+        // deal with fragmentation
+        transport = new CommandJoiner(transport, asOpenWireFormat(format));
+
         if (udpTransport.isTrace()) {
             transport = new TransportLogger(transport);
         }
@@ -105,6 +110,10 @@ public class UdpTransportFactory extends TransportFactory {
         }
 
         transport = new ResponseCorrelator(transport);
+
+        // deal with fragmentation
+        transport = new CommandJoiner(transport, asOpenWireFormat(format));
+        
         return transport;
     }
 

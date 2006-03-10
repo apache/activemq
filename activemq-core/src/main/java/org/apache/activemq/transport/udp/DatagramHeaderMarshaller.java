@@ -17,6 +17,10 @@
 package org.apache.activemq.transport.udp;
 
 
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Endpoint;
+
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
 /**
@@ -25,29 +29,20 @@ import java.nio.ByteBuffer;
  */
 public class DatagramHeaderMarshaller {
 
-    public DatagramHeader createDatagramHeader() {
-        return new DatagramHeader();
+    /**
+     * Reads any header if applicable and then creates an endpoint object
+     */
+    public Endpoint createEndpoint(ByteBuffer readBuffer, SocketAddress address) {
+        return new DatagramEndpoint(address.toString(), address);
     }
 
-    public DatagramHeader readHeader(ByteBuffer readBuffer) {
-        DatagramHeader answer = createDatagramHeader();
-        answer.setCounter(readBuffer.getLong());
-        answer.setDataSize(readBuffer.getInt());
-        byte flags = readBuffer.get();
-        answer.setFlags(flags);
-        //System.out.println("Read header with counter: " + answer.getCounter() + "size: " + answer.getDataSize() + " with flags: " + flags);
-        return answer;
-    }
-
-    public void writeHeader(DatagramHeader header, ByteBuffer writeBuffer) {
-        writeBuffer.putLong(header.getCounter());
-        writeBuffer.putInt(header.getDataSize());
-        byte flags = header.getFlags();
+    public void writeHeader(Command command, ByteBuffer writeBuffer) {
+        /*
+        writeBuffer.putLong(command.getCounter());
+        writeBuffer.putInt(command.getDataSize());
+        byte flags = command.getFlags();
         //System.out.println("Writing header with counter: " + header.getCounter() + " size: " + header.getDataSize() + " with flags: " + flags);
         writeBuffer.put(flags);
-    }
-
-    public int getHeaderSize(DatagramHeader header) {
-        return 8 + 4 + 1;
+        */
     }
 }

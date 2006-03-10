@@ -21,8 +21,8 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportThreadSupport;
-import org.apache.activemq.transport.udp.replay.DatagramReplayStrategy;
-import org.apache.activemq.transport.udp.replay.ExceptionIfDroppedPacketStrategy;
+import org.apache.activemq.transport.replay.ReplayStrategy;
+import org.apache.activemq.transport.replay.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,7 +48,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private CommandChannel commandChannel;
     private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
-    private DatagramReplayStrategy replayStrategy = new ExceptionIfDroppedPacketStrategy();
+    private ReplayStrategy replayStrategy = new ExceptionIfDroppedReplayStrategy();
     private int datagramSize = 4 * 1024;
     private long maxInactivityDuration = 0; // 30000;
     private SocketAddress targetAddress;
@@ -60,14 +60,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private int port;
     private int minmumWireFormatVersion;
     private String description = null;
-
-    private CommandProcessor commandProcessor = new CommandProcessor() {
-        public void process(Command command, DatagramHeader header) {
-            doConsume(command);
-        }
-    };
-
-    private DatagramHeader wireFormatHeader;
+    private DatagramEndpoint wireFormatHeader;
 
     protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
@@ -113,8 +106,8 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         commandChannel.write(command, address);
     }
 
-    public void receivedHeader(DatagramHeader header) {
-        wireFormatHeader = header;
+    public void receivedHeader(DatagramEndpoint endpoint) {
+        wireFormatHeader = endpoint;
     }
 
     /**
@@ -136,7 +129,8 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         log.trace("Consumer thread starting for: " + toString());
         while (!isStopped()) {
             try {
-                commandChannel.read(commandProcessor);
+                Command command = commandChannel.read();
+                doConsume(command);
             }
             /*
              * catch (SocketTimeoutException e) { } catch
@@ -237,14 +231,14 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.commandChannel = commandChannel;
     }
 
-    public DatagramReplayStrategy getReplayStrategy() {
+    public ReplayStrategy getReplayStrategy() {
         return replayStrategy;
     }
 
     /**
      * Sets the strategy used to replay missed datagrams
      */
-    public void setReplayStrategy(DatagramReplayStrategy replayStrategy) {
+    public void setReplayStrategy(ReplayStrategy replayStrategy) {
         this.replayStrategy = replayStrategy;
     }
 
@@ -281,13 +275,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected CommandProcessor getCommandProcessor() {
-        return commandProcessor;
-    }
-
-    protected void setCommandProcessor(CommandProcessor commandProcessor) {
-        this.commandProcessor = commandProcessor;
-    }
 
     /**
      * Creates an address from the given URI
@@ -328,13 +315,13 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
-        commandChannel = new CommandChannel(toString(), channel, wireFormat, bufferPool, datagramSize, replayStrategy, targetAddress, isCheckSequenceNumbers(), createDatagramHeaderMarshaller());
+        commandChannel = new CommandChannel(toString(), channel, wireFormat, bufferPool, datagramSize, targetAddress, createDatagramHeaderMarshaller());
         commandChannel.start();
 
         // lets pass the header & address into the channel so it avoids a
         // re-request
         if (wireFormatHeader != null) {
-            commandChannel.onDatagramReceived(wireFormatHeader);
+            commandChannel.setWireFormatInfoEndpoint(wireFormatHeader);
         }
 
         super.doStart();

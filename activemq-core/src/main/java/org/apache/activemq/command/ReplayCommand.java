@@ -24,7 +24,7 @@ import org.apache.activemq.state.CommandVisitor;
  * non-reliable transport such as UDP or multicast but could also be used on
  * TCP/IP if a socket has been re-established.
  * 
- * @openwire:marshaller code="38"
+ * @openwire:marshaller code="65"
  * @version $Revision$
  */
 public class ReplayCommand extends BaseCommand {
@@ -32,8 +32,10 @@ public class ReplayCommand extends BaseCommand {
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.REPLAY;
 
     private String producerId;
-    private long firstSequenceNumber;
-    private long lastSequenceNumber;
+    private int firstAckNumber;
+    private int lastAckNumber;
+    private int firstNakNumber;
+    private int lastNakNumber;
 
     public ReplayCommand() {
     }
@@ -55,8 +57,36 @@ public class ReplayCommand extends BaseCommand {
         this.producerId = producerId;
     }
 
-    public long getFirstSequenceNumber() {
-        return firstSequenceNumber;
+    public int getFirstAckNumber() {
+        return firstAckNumber;
+    }
+
+    /**
+     * Is used to specify the first sequence number being acknowledged as delivered on the transport
+     * so that it can be removed from cache
+     * 
+     * @openwire:property version=1
+     */
+    public void setFirstAckNumber(int firstSequenceNumber) {
+        this.firstAckNumber = firstSequenceNumber;
+    }
+
+    public int getLastAckNumber() {
+        return lastAckNumber;
+    }
+
+    /**
+     * Is used to specify the last sequence number being acknowledged as delivered on the transport
+     * so that it can be removed from cache
+     * 
+     * @openwire:property version=1
+     */
+    public void setLastAckNumber(int lastSequenceNumber) {
+        this.lastAckNumber = lastSequenceNumber;
+    }
+
+    public Response visit(CommandVisitor visitor) throws Exception {
+        return null;
     }
 
     /**
@@ -64,12 +94,12 @@ public class ReplayCommand extends BaseCommand {
      * 
      * @openwire:property version=1
      */
-    public void setFirstSequenceNumber(long firstSequenceNumber) {
-        this.firstSequenceNumber = firstSequenceNumber;
+    public int getFirstNakNumber() {
+        return firstNakNumber;
     }
 
-    public long getLastSequenceNumber() {
-        return lastSequenceNumber;
+    public void setFirstNakNumber(int firstNakNumber) {
+        this.firstNakNumber = firstNakNumber;
     }
 
     /**
@@ -77,12 +107,13 @@ public class ReplayCommand extends BaseCommand {
      * 
      * @openwire:property version=1
      */
-    public void setLastSequenceNumber(long lastSequenceNumber) {
-        this.lastSequenceNumber = lastSequenceNumber;
+    public int getLastNakNumber() {
+        return lastNakNumber;
     }
 
-    public Response visit(CommandVisitor visitor) throws Exception {
-        return null;
+    public void setLastNakNumber(int lastNakNumber) {
+        this.lastNakNumber = lastNakNumber;
     }
 
+    
 }
