@@ -24,9 +24,8 @@
     <dependencySet>
       <outputDirectory>/</outputDirectory>
       <unpack>true</unpack>
-      <scope>runtime</scope>
       <includes>
-         <include>org.apache.activemq:activemq-core</include>
+         <include>org.apache.activemq:activemq-console</include>
       </includes>
     </dependencySet>
   </dependencySets>
