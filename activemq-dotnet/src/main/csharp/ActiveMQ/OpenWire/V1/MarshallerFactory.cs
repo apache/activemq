@@ -40,6 +40,7 @@ namespace ActiveMQ.OpenWire.V1
         {
 
             format.addMarshaller(new LocalTransactionIdMarshaller());
+            format.addMarshaller(new PartialCommandMarshaller());
             format.addMarshaller(new IntegerResponseMarshaller());
             format.addMarshaller(new ActiveMQQueueMarshaller());
             format.addMarshaller(new ActiveMQObjectMessageMarshaller());
@@ -68,6 +69,7 @@ namespace ActiveMQ.OpenWire.V1
             format.addMarshaller(new SubscriptionInfoMarshaller());
             format.addMarshaller(new JournalTransactionMarshaller());
             format.addMarshaller(new ControlCommandMarshaller());
+            format.addMarshaller(new LastPartialCommandMarshaller());
             format.addMarshaller(new NetworkBridgeFilterMarshaller());
             format.addMarshaller(new ActiveMQBytesMessageMarshaller());
             format.addMarshaller(new WireFormatInfoMarshaller());
