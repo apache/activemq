@@ -102,6 +102,10 @@ public class ActiveIOTransport implements Transport {
     public Response request(Command command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
+    
+    public Response request(Command command,int timeout) throws IOException {
+        throw new AssertionError("Unsupported Method");
+    }
 
     public void start() throws Exception {
         commandChannel.start();
