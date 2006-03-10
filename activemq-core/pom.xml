@@ -190,11 +190,13 @@
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.1.2-SNAPSHOT</version>
         <configuration>
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
+          <includes>
+            <include>**/*Test.*</include>
+          </includes>
           <excludes>
             <!-- These tests run too slow to execute as part of the unit tests -->
             <exclude>**/DefaultStoreBrokerTest.*</exclude>
@@ -207,6 +209,18 @@
 
           </excludes>
         </configuration>
+      </plugin>
+
+      <!-- generate the attached tests jar -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>

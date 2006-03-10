@@ -73,46 +73,6 @@
     </pluginRepository>
   </pluginRepositories>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.4</source>
-          <target>1.4</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-eclipse-plugin</artifactId>
-        <configuration>
-          <outputDirectory>bin</outputDirectory>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.1.1</version>
-        <configuration>
-          <!-- <forkMode>pertest</forkMode> -->
-          <forkMode>none</forkMode>
-        </configuration>
-      </plugin>
-      <!-- generate the attached tests jar -->
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
   <modules>
 
     <module>activemq-core</module>
@@ -139,7 +99,7 @@
     </license>
   </licenses>
 
- <scm>
+  <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
     <developerConnection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
     <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/</url>
@@ -213,6 +173,7 @@
         <groupId>org.apache.xbean</groupId>
         <artifactId>xbean-spring</artifactId>
         <version>2.2</version>
+        <optional>true</optional>
       </dependency>
  
       <!-- Used to configure the activemq logs -->
@@ -236,6 +197,7 @@
         <groupId>commons-collections</groupId>
         <artifactId>commons-collections</artifactId>
         <version>2.1</version>
+        <optional>true</optional>
       </dependency>
       
       <!-- Optional Spring Support -->
@@ -243,6 +205,7 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring</artifactId>
         <version>1.2.4</version>
+        <optional>true</optional>
       </dependency>
       
       <!-- an optional discovery agent -->
@@ -250,6 +213,7 @@
         <groupId>activecluster</groupId>
         <artifactId>activecluster</artifactId>
         <version>1.1-SNAPSHOT</version>
+        <optional>true</optional>
       </dependency>
     
       <!-- Optional Derby support-->
@@ -257,6 +221,7 @@
         <groupId>org.apache.derby</groupId>
         <artifactId>derby</artifactId>
         <version>10.1.1.0</version>
+        <optional>true</optional>
       </dependency>
       
       <!-- Optional Axion support -->
@@ -264,18 +229,21 @@
         <groupId>axion</groupId>
         <artifactId>axion</artifactId>
         <version>1.0-M3-dev</version>
+        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>commons-primitives</groupId>
         <artifactId>commons-primitives</artifactId>
         <version>1.0</version>
+        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>regexp</groupId>
         <artifactId>regexp</artifactId>
         <version>1.3</version>
+        <optional>true</optional>
       </dependency>
       
       <!-- Optional HSQL DB Support -->
@@ -284,11 +252,13 @@
       <groupId>hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
         <version>1.7.2.2</version>
+        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>commons-dbcp</groupId>
         <artifactId>commons-dbcp</artifactId>
         <version>1.2</version>
+        <optional>true</optional>
       </dependency>
       -->
 
@@ -296,6 +266,7 @@
         <groupId>commons-pool</groupId>
         <artifactId>commons-pool</artifactId>
         <version>1.2</version>
+        <optional>true</optional>
       </dependency>
       
       <!-- Optional Journal Implementation -->
@@ -304,20 +275,23 @@
         <groupId>howl</groupId>
         <artifactId>howl-logger</artifactId>
         <version>0.1.7</version>
+        <optional>true</optional>
       </dependency>
       -->
-    
+
       <!-- Optional Jabber support -->
       <dependency>
         <groupId>activemq</groupId>
         <artifactId>smack</artifactId>
         <version>1.5.0</version>
+        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>activemq</groupId>
         <artifactId>smackx</artifactId>
         <version>1.5.0</version>
+        <optional>true</optional>
       </dependency>
   
       <!-- =============================== -->
@@ -481,7 +455,7 @@
         <artifactId>ant</artifactId>
         <version>1.6.2</version>
       </dependency>
- 
+
     </dependencies>
   </dependencyManagement>
 <!--
@@ -509,19 +483,48 @@
   </dependencies>
 -->
 
-  <distributionManagement>
-    <!--
-    <repository>
-      <id>apache.releases</id>
-      <name>Apache Repository</name>
-      <url>scpexe://minotaur.apache.org/www/www.apache.org/dist/maven-repository</url>
-    </repository>
-    -->
-    <snapshotRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Repository</name>
-      <url>scpexe://minotaur.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
-    </snapshotRepository>
-  </distributionManagement>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.1.3-SNAPSHOT</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.4</source>
+          <target>1.4</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <outputDirectory>bin</outputDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>pertest</forkMode>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>surefire-report-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
 
 </project>

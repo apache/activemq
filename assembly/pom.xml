@@ -31,39 +31,39 @@
   <dependencies>
   
     <dependency>
-      <groupId>org.apache.activemq</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-optional</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
       <type>rar</type>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
       <type>war</type>
       <version>${project.version}</version>
@@ -138,33 +138,34 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.1-SNAPSHOT</version>
         <executions>
           <execution>
-            <phase>compile</phase>
+            <id>bin</id>
+            <phase>package</phase>
             <goals>
               <goal>assembly</goal>
             </goals>
             <configuration>
-              <descriptor>src/main/descriptors/jar.xml</descriptor>
+              <descriptors>
+                 <descriptor>src/main/descriptors/bin.xml</descriptor>
+              </descriptors>
+              <finalName>activemq-${project.version}</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
             </configuration>
           </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.1-SNAPSHOT</version>
-        <executions>
           <execution>
-            <phase>install</phase>
+            <id>full</id>
+            <phase>package</phase>
             <goals>
               <goal>assembly</goal>
             </goals>
             <configuration>
               <descriptors>
                  <descriptor>src/main/descriptors/all-jar.xml</descriptor>
-                 <descriptor>src/main/descriptors/bin.xml</descriptor>
-             </descriptors>
+              </descriptors>
+              <finalName>activemq-full-${project.version}</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
             </configuration>
           </execution>
         </executions>

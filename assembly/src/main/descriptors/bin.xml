@@ -43,13 +43,21 @@
   </fileSets>
   <dependencySets>
     <dependencySet>
+      <outputDirectory>/bin</outputDirectory>
+      <outputFileNameMapping>run.jar</outputFileNameMapping>
+      <unpack>false</unpack>
+      <includes>
+         <include>org.apache.activemq:activemq-console</include>
+      </includes>
+    </dependencySet>
+    <dependencySet>
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
          <include>activeio:activeio</include>
          <include>mx4j:mx4j</include>
-         <include>${pom.groupId}:activemq-core</include>
+         <include>org.apache.activemq:activemq-core</include>
          <include>backport-util-concurrent:backport-util-concurrent</include>
          <include>commons-logging:commons-logging</include>
          <include>geronimo-spec:geronimo-spec-jms</include>
@@ -77,10 +85,6 @@
          <include>mx4j:mx4j-remote</include>
          <include>geronimo-spec:geronimo-spec-j2ee-jacc</include>
          <include>log4j:log4j</include>
-         <include>activeio:activeio</include>
-         <include>activeio:activeio</include>
-         <include>activeio:activeio</include>
-         <include>activeio:activeio</include>
          <include>activeio:activeio</include>
       </includes>
     </dependencySet>
