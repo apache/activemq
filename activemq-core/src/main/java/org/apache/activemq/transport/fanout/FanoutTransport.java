@@ -418,6 +418,10 @@ public class FanoutTransport implements CompositeTransport {
     public Response request(Command command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
+    
+    public Response request(Command command,int timeout) throws IOException {
+        throw new AssertionError("Unsupported Method");
+    }
 
     public void reconnect() {
         log.debug("Waking up reconnect task");

@@ -102,6 +102,10 @@ public class MockTransport extends DefaultTransportListener implements Transport
     synchronized public Response request(Command command) throws IOException {
         return next.request(command);
     }
+    
+    public Response request(Command command,int timeout) throws IOException {
+        return next.request(command, timeout);
+    }
 
     synchronized public void onException(IOException error) {
         transportListener.onException(error);

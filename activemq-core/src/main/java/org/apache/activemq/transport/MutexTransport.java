@@ -51,6 +51,12 @@ public class MutexTransport extends TransportFilter {
         }
     }
     
+    public Response request(Command command,int timeout) throws IOException {
+        synchronized(writeMutex){
+            return next.request(command,timeout);
+        }
+    }
+    
     public String toString() {
         return next.toString();
     }

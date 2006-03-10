@@ -116,6 +116,7 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
     protected boolean asyncDispatch = true;
     private boolean useAsyncSend = false;
     private boolean useRetroactiveConsumer;
+    private int closeTimeout = 15000;
     
     private long flowControlSleepTime = 0;
     private final JMSConnectionStatsImpl stats;
@@ -541,7 +542,7 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
                 
                 
                 if (isConnectionInfoSentToBroker) {
-                    syncSendPacket(info.createRemoveCommand());
+                    syncSendPacket(info.createRemoveCommand(),closeTimeout);
                 }
 
                 asyncSendPacket(new ShutdownInfo());
@@ -733,6 +734,22 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
     public void setOptimizedMessageDispatch(boolean dispatchOptimizedMessage) {
         this.optimizedMessageDispatch = dispatchOptimizedMessage;
     }
+
+    /**
+     * @return Returns the closeTimeout.
+     */
+    public int getCloseTimeout(){
+        return closeTimeout;
+    }
+
+
+    /**
+     * @param closeTimeout The closeTimeout to set.
+     */
+    public void setCloseTimeout(int closeTimeout){
+        this.closeTimeout=closeTimeout;
+    }
+
 
     /**
      * 
@@ -1064,6 +1081,41 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
 
             try {
                 Response response = this.transport.request(command);
+                if (response.isException()) {
+                    ExceptionResponse er = (ExceptionResponse) response;
+                    if (er.getException() instanceof JMSException)
+                        throw (JMSException) er.getException();
+                    else
+                        throw JMSExceptionSupport.create(er.getException());
+                }
+                return response;
+            } catch (IOException e) {
+                throw JMSExceptionSupport.create(e);
+            }
+        }
+    }
+    
+    /**
+     * Send a packet through a Connection - for internal use only
+     * 
+     * @param command
+     * @return
+     * @throws JMSException
+     */
+    public Response syncSendPacket(Command command, int timeout) throws JMSException {
+        if (isClosed()) {
+            throw new ConnectionClosedException();
+        } else {
+
+            if (command.isMessage() && flowControlSleepTime > 0) {
+                try {
+                    Thread.sleep(flowControlSleepTime);
+                } catch (InterruptedException e) {
+                }
+            }
+
+            try {
+                Response response = this.transport.request(command,timeout);
                 if (response.isException()) {
                     ExceptionResponse er = (ExceptionResponse) response;
                     if (er.getException() instanceof JMSException)

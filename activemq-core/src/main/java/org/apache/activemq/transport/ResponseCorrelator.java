@@ -67,6 +67,11 @@ final public class ResponseCorrelator extends TransportFilter {
         return response.getResult();
     }
     
+    public Response request(Command command,int timeout) throws IOException {
+        FutureResponse response = asyncRequest(command);
+        return response.getResult(timeout);
+    }
+    
     public void onCommand(Command command) {
         boolean debug = log.isDebugEnabled();
         if( command.isResponse() ) {

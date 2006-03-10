@@ -86,6 +86,10 @@ public class VMTransport implements Transport{
     public Response request(Command command) throws IOException{
         throw new AssertionError("Unsupported Method");
     }
+    
+    public Response request(Command command,int timeout) throws IOException {
+        throw new AssertionError("Unsupported Method");
+    }
 
     public synchronized TransportListener getTransportListener() {
         return transportListener;
