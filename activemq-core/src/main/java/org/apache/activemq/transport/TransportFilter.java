@@ -93,6 +93,10 @@ public class TransportFilter extends DefaultTransportListener implements Transpo
     public Response request(Command command) throws IOException {
         return next.request(command);
     }
+    
+    public Response request(Command command,int timeout) throws IOException {
+        return next.request(command,timeout);
+    }
 
     public void onException(IOException error) {
         transportListener.onException(error);

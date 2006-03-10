@@ -32,30 +32,53 @@ public interface Transport extends Service {
 
     /**
      * A one way asynchronous send
+     * @param command 
+     * @throws IOException 
      */
     public void oneway(Command command) throws IOException;
 
     /**
      * An asynchronous request response where the Receipt will be returned
      * in the future
+     * @param command 
+     * @return the FutureResponse
+     * @throws IOException 
      */
     public FutureResponse asyncRequest(Command command) throws IOException;
-
+    
     /**
      * A synchronous request response
+     * @param command 
+     * @return the response
+     * @throws IOException 
      */
     public Response request(Command command) throws IOException;
 
     /**
+     * A synchronous request response
+     * @param command 
+     * @param timeout 
+     * @return the repsonse or null if timeout
+     * @throws IOException 
+     */
+    public Response request(Command command, int timeout) throws IOException;
+
+    /**
      * Returns the current transport listener
+     * @return 
      */
     public TransportListener getTransportListener();
 
     /**
      * Registers an inbound command listener
+     * @param commandListener 
      */
     public void setTransportListener(TransportListener commandListener);
     
+    /**
+     * @param target
+     * @return the target
+     */
     public Object narrow(Class target);
 
 }

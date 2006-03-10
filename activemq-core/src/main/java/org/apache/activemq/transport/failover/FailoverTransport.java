@@ -389,6 +389,10 @@ public class FailoverTransport implements CompositeTransport {
     public Response request(Command command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
+    
+    public Response request(Command command,int timeout) throws IOException {
+        throw new AssertionError("Unsupported Method");
+    }
 
     public void add(URI u[]) {
         for (int i = 0; i < u.length; i++) {

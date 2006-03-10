@@ -19,6 +19,8 @@ package org.apache.activemq.transport;
 import edu.emory.mathcs.backport.java.util.concurrent.Callable;
 import edu.emory.mathcs.backport.java.util.concurrent.ExecutionException;
 import edu.emory.mathcs.backport.java.util.concurrent.FutureTask;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeoutException;
 
 import org.apache.activemq.command.Response;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -49,6 +51,23 @@ public class FutureResponse extends FutureTask {
             } else {
                 throw IOExceptionSupport.create(target);
             }
+        }
+    }
+    
+    public synchronized Response getResult(int timeout) throws IOException {
+        try {
+            return (Response) super.get(timeout,TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException("Interrupted.");
+        } catch (ExecutionException e) {
+            Throwable target = e.getCause();
+            if( target instanceof IOException ) {
+                throw (IOException)target;
+            } else {
+                throw IOExceptionSupport.create(target);
+            }
+        }catch(TimeoutException e){
+            return null;
         }
     }
     

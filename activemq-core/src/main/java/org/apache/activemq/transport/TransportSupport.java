@@ -73,6 +73,10 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
     public Response request(Command command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
+    
+    public Response request(Command command,int timeout) throws IOException {
+        throw new AssertionError("Unsupported Method");
+    }
 
     /**
      * Process the inbound command

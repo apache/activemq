@@ -81,6 +81,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean objectMessageSerializationDefered = false;
     protected boolean asyncDispatch = true;
     private boolean useAsyncSend = false;
+    private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
 
     JMSStatsImpl factoryStats = new JMSStatsImpl();
@@ -415,6 +416,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
         props.setProperty("userName", getUserName());
+        props.setProperty("closeTimeout", Integer.toString(getCloseTimeout()));
     }
 
     public boolean isOnSendPrepareMessageBody() {
@@ -447,5 +449,19 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     public void setAsyncDispatch(boolean asyncDispatch) {
         this.asyncDispatch = asyncDispatch;
+    }
+
+    /**
+     * @return Returns the closeTimeout.
+     */
+    public int getCloseTimeout(){
+        return closeTimeout;
+    }
+
+    /**
+     * @param closeTimeout The closeTimeout to set.
+     */
+    public void setCloseTimeout(int closeTimeout){
+        this.closeTimeout=closeTimeout;
     }
 }
