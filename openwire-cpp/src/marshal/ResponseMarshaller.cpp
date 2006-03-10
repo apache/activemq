@@ -56,7 +56,7 @@ void ResponseMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, BinaryR
     base.unmarshal(wireFormat, o, dataIn, bs);
 
     Response& info = (Response&) o;
-        info.setCorrelationId(dataIn.readShort());
+        info.setCorrelationId(dataIn.readInt());
 
 }
 
@@ -79,6 +79,6 @@ void ResponseMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, BinaryW
     base.marshal2(wireFormat, o, dataOut, bs);
 
     Response& info = (Response&) o;
-    DataStreamMarshaller.writeShort(info.getCorrelationId(), dataOut);
+    DataStreamMarshaller.writeInt(info.getCorrelationId(), dataOut);
 
 }

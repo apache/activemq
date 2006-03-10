@@ -26,6 +26,7 @@
 #include "marshal/ExceptionResponseMarshaller.hpp"
 
 #include "marshal/LocalTransactionIdMarshaller.hpp"
+#include "marshal/PartialCommandMarshaller.hpp"
 #include "marshal/IntegerResponseMarshaller.hpp"
 #include "marshal/ActiveMQQueueMarshaller.hpp"
 #include "marshal/ActiveMQObjectMessageMarshaller.hpp"
@@ -54,6 +55,7 @@
 #include "marshal/SubscriptionInfoMarshaller.hpp"
 #include "marshal/JournalTransactionMarshaller.hpp"
 #include "marshal/ControlCommandMarshaller.hpp"
+#include "marshal/LastPartialCommandMarshaller.hpp"
 #include "marshal/NetworkBridgeFilterMarshaller.hpp"
 #include "marshal/ActiveMQBytesMessageMarshaller.hpp"
 #include "marshal/WireFormatInfoMarshaller.hpp"
@@ -83,6 +85,7 @@ void MarshallerFactory::configure(ProtocolFormat& format)
 {
 
     format.addMarshaller(new LocalTransactionIdMarshaller());
+    format.addMarshaller(new PartialCommandMarshaller());
     format.addMarshaller(new IntegerResponseMarshaller());
     format.addMarshaller(new ActiveMQQueueMarshaller());
     format.addMarshaller(new ActiveMQObjectMessageMarshaller());
@@ -111,6 +114,7 @@ void MarshallerFactory::configure(ProtocolFormat& format)
     format.addMarshaller(new SubscriptionInfoMarshaller());
     format.addMarshaller(new JournalTransactionMarshaller());
     format.addMarshaller(new ControlCommandMarshaller());
+    format.addMarshaller(new LastPartialCommandMarshaller());
     format.addMarshaller(new NetworkBridgeFilterMarshaller());
     format.addMarshaller(new ActiveMQBytesMessageMarshaller());
     format.addMarshaller(new WireFormatInfoMarshaller());

@@ -30,8 +30,32 @@ using namespace apache::activemq::client::command;
  */
 ReplayCommand::ReplayCommand()
 {
+    this->firstNakNumber = 0 ;
+    this->lastNakNumber = 0 ;
 }
 
 ReplayCommand::~ReplayCommand()
 {
+}
+
+        
+int ReplayCommand::getFirstNakNumber()
+{
+    return firstNakNumber ;
+}
+
+void ReplayCommand::setFirstNakNumber(int firstNakNumber)
+{
+    this->firstNakNumber = firstNakNumber ;
+}
+
+        
+int ReplayCommand::getLastNakNumber()
+{
+    return lastNakNumber ;
+}
+
+void ReplayCommand::setLastNakNumber(int lastNakNumber)
+{
+    this->lastNakNumber = lastNakNumber ;
 }
