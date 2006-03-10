@@ -120,9 +120,10 @@ public class UdpTransportFactory extends TransportFactory {
     protected Transport configureClientSideNegotiator(Transport transport, WireFormat format, final UdpTransport udpTransport) {
         transport = new WireFormatNegotiator(transport, asOpenWireFormat(format), udpTransport.getMinmumWireFormatVersion()) {
             protected void onWireFormatNegotiated(WireFormatInfo info) {
-                // lets switch to the targetAddress that the last packet was
-                // received as so that all future requests go to the newly created UDP channel
-                udpTransport.useLastInboundDatagramAsNewTarget();
+                // lets switch to the target endpoint
+                // based on the last packet that was received
+                // so that all future requests go to the newly created UDP channel
+                udpTransport.setTargetEndpoint(info.getFrom());
             }
         };
         return transport;

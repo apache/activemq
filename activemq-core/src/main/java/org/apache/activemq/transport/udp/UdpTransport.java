@@ -18,11 +18,12 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportThreadSupport;
-import org.apache.activemq.transport.replay.ReplayStrategy;
 import org.apache.activemq.transport.replay.ExceptionIfDroppedReplayStrategy;
+import org.apache.activemq.transport.replay.ReplayStrategy;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,7 +61,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private int port;
     private int minmumWireFormatVersion;
     private String description = null;
-    private DatagramEndpoint wireFormatHeader;
 
     protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
@@ -105,11 +105,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         checkStarted(command);
         commandChannel.write(command, address);
     }
-
-    public void receivedHeader(DatagramEndpoint endpoint) {
-        wireFormatHeader = endpoint;
-    }
-
+    
     /**
      * @return pretty print of 'this'
      */
@@ -132,10 +128,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 Command command = commandChannel.read();
                 doConsume(command);
             }
-            /*
-             * catch (SocketTimeoutException e) { } catch
-             * (InterruptedIOException e) { }
-             */
             catch (AsynchronousCloseException e) {
                 try {
                     stop();
@@ -168,13 +160,16 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      * the target to be the actual channel that the server has chosen for us to
      * talk on.
      */
-    public void useLastInboundDatagramAsNewTarget() {
-        if (originalTargetAddress == null) {
-            originalTargetAddress = targetAddress;
-        }
-        SocketAddress lastAddress = commandChannel.getLastReadDatagramAddress();
-        if (lastAddress != null) {
-            targetAddress = lastAddress;
+    public void setTargetEndpoint(Endpoint newTarget) {
+        if (newTarget instanceof DatagramEndpoint) {
+            DatagramEndpoint endpoint = (DatagramEndpoint) newTarget;
+            SocketAddress address = endpoint.getAddress();
+            if (address != null) {
+                if (originalTargetAddress == null) {
+                    originalTargetAddress = targetAddress;
+                }
+                targetAddress = address;
+            }
         }
     }
 
@@ -317,12 +312,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         }
         commandChannel = new CommandChannel(toString(), channel, wireFormat, bufferPool, datagramSize, targetAddress, createDatagramHeaderMarshaller());
         commandChannel.start();
-
-        // lets pass the header & address into the channel so it avoids a
-        // re-request
-        if (wireFormatHeader != null) {
-            commandChannel.setWireFormatInfoEndpoint(wireFormatHeader);
-        }
 
         super.doStart();
     }

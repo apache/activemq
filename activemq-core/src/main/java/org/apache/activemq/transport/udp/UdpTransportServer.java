@@ -18,7 +18,6 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
@@ -144,9 +143,6 @@ public class UdpTransportServer extends TransportServerSupport {
         final SocketAddress address = endpoint.getAddress();
         final OpenWireFormat connectionWireFormat = serverTransport.getWireFormat().copy();
         final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
-
-        // TODO - is this still required?
-        transport.receivedHeader(endpoint);
 
         Transport configuredTransport = new CommandJoiner(transport, connectionWireFormat);
         
