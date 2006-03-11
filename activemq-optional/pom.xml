@@ -101,9 +101,31 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     
   </dependencies>
+
+
+  <build>
+    <plugins>
+
+      <!-- Configure which tests are included/excuded -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/Nothing</include>
+            <!--
+            <include>**/*Test.*</include>
+            -->
+          </includes>
+          <excludes>
+          </excludes>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
 
 </project>

@@ -45,6 +45,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
     <sourceDirectory>src/java</sourceDirectory>
     <testSourceDirectory>src/test</testSourceDirectory>
@@ -56,9 +57,12 @@
           <excludes>
             <exclude implementation="java.lang.String">**/Testing*.java</exclude>
             <exclude implementation="java.lang.String">**/TestSupport.java</exclude>
+            <exclude implementation="java.lang.String">**/ClusterTest.java</exclude>
+            <exclude implementation="java.lang.String">**/ClusterFunctionTest.java</exclude>
          </excludes>
        </configuration>
       </plugin>
     </plugins>
   </build>
+
 </project>
