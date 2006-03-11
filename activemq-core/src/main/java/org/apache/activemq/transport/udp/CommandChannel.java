@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.udp;
 
+import org.activeio.ByteArrayInputStream;
+import org.activeio.ByteArrayOutputStream;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
@@ -26,8 +28,6 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
