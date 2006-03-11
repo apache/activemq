@@ -485,7 +485,6 @@
 
   <build>
     <pluginManagement>
-      <!--
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -493,7 +492,6 @@
           <version>2.1.3-SNAPSHOT</version>
         </plugin>
       </plugins>
-      -->
     </pluginManagement>
     <plugins>
       <plugin>

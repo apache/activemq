@@ -195,9 +195,9 @@
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <includes>
-            <include>org.apache.activemq.ActiveMQConnectionFactoryTest</include>
-            <!--
             <include>**/*Test.*</include>
+            <!--
+            <include>org.apache.activemq.ActiveMQConnectionFactoryTest</include>
             -->
           </includes>
           <excludes>
