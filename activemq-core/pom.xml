@@ -195,7 +195,10 @@
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <includes>
+            <include>org.apache.activemq.ActiveMQConnectionFactoryTest</include>
+            <!--
             <include>**/*Test.*</include>
+            -->
           </includes>
           <excludes>
             <!-- These tests run too slow to execute as part of the unit tests -->
