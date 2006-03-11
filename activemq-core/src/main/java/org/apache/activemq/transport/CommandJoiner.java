@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.transport;
 
+import org.activeio.ByteArrayInputStream;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.OpenWireFormat;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
