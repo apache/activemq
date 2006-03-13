@@ -47,6 +47,10 @@ public final class LargeStreamletTest extends TestCase {
 
     private AtomicBoolean stopThreads = new AtomicBoolean(false);
 
+    protected Exception writerException;
+
+    protected Exception readerException;
+
     public void testStreamlets() throws Exception {
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                 BROKER_URL);
@@ -77,6 +81,7 @@ public final class LargeStreamletTest extends TestCase {
                                 inputStream.close();
                             }
                         } catch (Exception e) {
+                            readerException  = e;
                             e.printStackTrace();
                         } finally {
                             System.err
@@ -105,6 +110,7 @@ public final class LargeStreamletTest extends TestCase {
                                 outputStream.close();
                             }
                         } catch (Exception e) {
+                            writerException = e;
                             e.printStackTrace();
                         } finally {
                             System.err.println(totalWritten
@@ -116,11 +122,14 @@ public final class LargeStreamletTest extends TestCase {
                 readerThread.start();
                 writerThread.start();
 
-                readerThread.join(30*1000);
-                writerThread.join(10);
+                writerThread.join(60 * 1000);
+                readerThread.join(60 * 1000);
                 
                 stopThreads.set(true);
-                                
+
+                assertTrue("Should not have received a reader exception", readerException == null);
+                assertTrue("Should not have received a writer exception", writerException == null);
+                
                 Assert.assertEquals("Not all messages accounted for", 
                         totalWritten, totalRead);
                 
