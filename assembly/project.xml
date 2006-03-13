@@ -329,7 +329,7 @@
           <!-- https://jira.logicblaze.com/jira/browse/AMQ-472 -->
           <exclude>**/TopicClusterTest.*</exclude>
 
-	  <!-- http://jira.activemq.org/jira/browse/AMQ-562 -->
+	      <!-- http://jira.activemq.org/jira/browse/AMQ-562 -->
           <exclude>**/TwoMulticastDiscoveryBrokerTopicSendReceiveTest.*</exclude>
           <!-- http://jira.activemq.org/jira/browse/AMQ-540 --> 
           <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
@@ -354,7 +354,7 @@
           <!-- https://jira.logicblaze.com/jira/browse/AMQ-474 -->
           <exclude>**/MultiBrokersMultiClientsUsingTcpTest.*</exclude>
 	  
-	  <!-- http://jira.activemq.org/jira/browse/AMQ-575 -->                                                                                          
+	      <!-- http://jira.activemq.org/jira/browse/AMQ-575 -->                                                                                          
           <exclude>**/QueueClusterTest.*</exclude>  
 
       </excludes>
