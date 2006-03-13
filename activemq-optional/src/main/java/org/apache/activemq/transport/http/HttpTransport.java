@@ -43,7 +43,7 @@ public class HttpTransport extends HttpTransportSupport {
     private HttpURLConnection receiveConnection;
     private URL url;
     private String clientID;
-    private String sessionID;
+//    private String sessionID;
 
     public HttpTransport(TextWireFormat wireFormat, URI remoteUrl) throws MalformedURLException {
         super(wireFormat, remoteUrl);
@@ -64,8 +64,7 @@ public class HttpTransport extends HttpTransportSupport {
             if (answer != HttpURLConnection.HTTP_OK) {
                 throw new IOException("Failed to post command: " + command + " as response was: " + answer);
             }
-            checkSession(connection);
-            
+//            checkSession(connection);
         }
         catch (IOException e) {
             throw IOExceptionSupport.create("Could not post command: " + command + " due to: " + e, e);
@@ -88,7 +87,7 @@ public class HttpTransport extends HttpTransportSupport {
                     }
                 }
                 else {
-                    checkSession(connection);
+//                    checkSession(connection);
                     Command command = getTextWireFormat().readCommand(new DataInputStream(connection.getInputStream()));
                     
                     if (command == null) {
@@ -133,21 +132,22 @@ public class HttpTransport extends HttpTransportSupport {
         return conn;
     }
 
-    protected void checkSession(HttpURLConnection connection)
-    {
-        String set_cookie=connection.getHeaderField("Set-Cookie");
-        if (set_cookie!=null && set_cookie.startsWith("JSESSIONID="))
-        {
-            String[] bits=set_cookie.split("[=;]");
-            sessionID=bits[1];
-        }
-    }
+//    protected void checkSession(HttpURLConnection connection)
+//    {
+//        String set_cookie=connection.getHeaderField("Set-Cookie");
+//        if (set_cookie!=null && set_cookie.startsWith("JSESSIONID="))
+//        {
+//            String[] bits=set_cookie.split("[=;]");
+//            sessionID=bits[1];
+//        }
+//    }
     
     protected void configureConnection(HttpURLConnection connection) {
-        if (sessionID !=null) {
-            connection.addRequestProperty("Cookie", "JSESSIONID="+sessionID);
-        }
-        else if (clientID != null) {
+//        if (sessionID !=null) {
+//            connection.addRequestProperty("Cookie", "JSESSIONID="+sessionID);
+//        }
+//        else
+        if (clientID != null) {
             connection.setRequestProperty("clientID", clientID);
         }
     }

@@ -34,7 +34,7 @@ public class HttpsTransportServer extends HttpTransportServer {
 		super( uri );
 	}
 
-	public void start() throws Exception {
+	public void doStart() throws Exception {
 		SslSocketConnector sslConnector = new SslSocketConnector();
 		sslConnector.setKeystore( keyStore );
 		sslConnector.setPassword( keyStorePassword );
@@ -55,7 +55,7 @@ public class HttpsTransportServer extends HttpTransportServer {
 		
         setConnector(sslConnector);
 		
-		super.start();
+		super.doStart();
 	}
 	
 	// Properties

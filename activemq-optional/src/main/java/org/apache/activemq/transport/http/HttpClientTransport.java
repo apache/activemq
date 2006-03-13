@@ -52,7 +52,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     private HttpClient sendHttpClient;
     private HttpClient receiveHttpClient;
     private String clientID;
-    private String sessionID;
+//    private String sessionID;
 
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
@@ -76,9 +76,8 @@ public class HttpClientTransport extends HttpTransportSupport {
             if (answer != HttpStatus.SC_OK) {
                 throw new IOException("Failed to post command: " + command + " as response was: " + answer);
             }
-            checkSession(httpMethod);
-        }
-        catch (IOException e) {
+//            checkSession(httpMethod);
+        } catch (IOException e) {
             throw IOExceptionSupport.create("Could not post command: " + command + " due to: " + e, e);
         } finally {
             httpMethod.getResponseBody();
@@ -110,7 +109,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                     }
                 }
                 else {
-                    checkSession(httpMethod);
+//                    checkSession(httpMethod);
                     Command command = getTextWireFormat().readCommand(new DataInputStream(httpMethod.getResponseBodyAsStream()));
                     if (command == null) {
                         log.warn("Received null command from url: " + remoteUrl);
@@ -164,24 +163,25 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected void configureMethod(HttpMethod method) {
-        if (sessionID != null) {
-            method.addRequestHeader("Cookie", "JSESSIONID=" + sessionID);
-        }
-        else if (clientID != null) {
+//        if (sessionID != null) {
+//            method.addRequestHeader("Cookie", "JSESSIONID=" + sessionID);
+//        }
+//        else
+          if (clientID != null) {
             method.setRequestHeader("clientID", clientID);
         }
     }
 
-    protected void checkSession(HttpMethod client) {
-        Header header = client.getRequestHeader("Set-Cookie");
-        if (header != null) {
-            String set_cookie = header.getValue();
-
-            if (set_cookie != null && set_cookie.startsWith("JSESSIONID=")) {
-                String[] bits = set_cookie.split("[=;]");
-                sessionID = bits[1];
-            }
-        }
-    }
+//    protected void checkSession(HttpMethod client) {
+//        Header header = client.getRequestHeader("Set-Cookie");
+//        if (header != null) {
+//            String set_cookie = header.getValue();
+//
+//            if (set_cookie != null && set_cookie.startsWith("JSESSIONID=")) {
+//                String[] bits = set_cookie.split("[=;]");
+//                sessionID = bits[1];
+//            }
+//        }
+//    }
 
 }
