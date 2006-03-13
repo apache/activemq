@@ -47,7 +47,9 @@ public class OpenWireFormatFactory implements WireFormatFactory {
 			info.setTightEncodingEnabled(tightEncodingEnabled);
 			info.setSizePrefixDisabled(sizePrefixDisabled);
 		} catch (Exception e) {
-			throw new IllegalStateException("Could not configure WireFormatInfo", e);
+			IllegalStateException ise = new IllegalStateException("Could not configure WireFormatInfo");
+            ise.initCause(e);
+            throw ise;
 		}
 		
         OpenWireFormat f = new OpenWireFormat();
