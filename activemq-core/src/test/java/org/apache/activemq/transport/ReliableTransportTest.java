@@ -19,8 +19,9 @@ package org.apache.activemq.transport;
 import edu.emory.mathcs.backport.java.util.Queue;
 
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.transport.replay.ExceptionIfDroppedReplayStrategy;
-import org.apache.activemq.transport.replay.ReplayStrategy;
+import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
+import org.apache.activemq.transport.reliable.ReliableTransport;
+import org.apache.activemq.transport.reliable.ReplayStrategy;
 
 import junit.framework.TestCase;
 
@@ -36,17 +37,33 @@ public class ReliableTransportTest extends TestCase {
 
     public void testValidSequenceOfPackets() throws Exception {
         int[] sequenceNumbers = { 1, 2, 3, 4, 5, 6, 7 };
+        
+        sendStreamOfCommands(sequenceNumbers, true);
+    }
+    
+    public void testDuplicatePacketsDropped() throws Exception {
+        int[] sequenceNumbers = { 1, 2, 2, 3, 4, 5, 6, 7 };
+        
+        sendStreamOfCommands(sequenceNumbers, true, 7);
+    }
+    
+    public void testWrongOrderOfPackets() throws Exception {
+        int[] sequenceNumbers = { 4, 3, 1, 5, 2, 7, 6, 8, 10, 9 };
 
         sendStreamOfCommands(sequenceNumbers, true);
     }
 
-    public void testInvalidSequenceOfPackets() throws Exception {
-        int[] sequenceNumbers = { 1, 2, /* 3, */  4, 5, 6, 7 };
+    public void testMissingPacketsFails() throws Exception {
+        int[] sequenceNumbers = { 1, 2, /* 3, */  4, 5, 6, 7, 8, 9, 10 };
 
         sendStreamOfCommands(sequenceNumbers, false);
     }
 
     protected void sendStreamOfCommands(int[] sequenceNumbers, boolean expected) {
+        sendStreamOfCommands(sequenceNumbers, expected, sequenceNumbers.length);
+    }
+    
+    protected void sendStreamOfCommands(int[] sequenceNumbers, boolean expected, int expectedCount) {
         for (int i = 0; i < sequenceNumbers.length; i++) {
             int commandId = sequenceNumbers[i];
             
@@ -65,7 +82,7 @@ public class ReliableTransportTest extends TestCase {
                 e.printStackTrace();
                 fail("Caught exception: " + e);
             }
-            assertEquals("number of messages received", sequenceNumbers.length, commands.size());
+            assertEquals("number of messages received", expectedCount, commands.size());
         }
         else {
             assertTrue("Should have received an exception!", exceptions.size() > 0);

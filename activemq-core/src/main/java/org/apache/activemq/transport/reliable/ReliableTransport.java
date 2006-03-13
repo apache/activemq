@@ -14,13 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport;
+package org.apache.activemq.transport.reliable;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.CommandIdComparator;
-import org.apache.activemq.transport.replay.ReplayStrategy;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFilter;
 
 import java.io.IOException;
 import java.util.SortedSet;
@@ -33,10 +32,8 @@ import java.util.TreeSet;
  * @version $Revision$
  */
 public class ReliableTransport extends TransportFilter {
-    private static final Log log = LogFactory.getLog(ReliableTransport.class);
-
     private ReplayStrategy replayStrategy;
-    private SortedSet headers = new TreeSet(new CommandIdComparator());
+    private SortedSet commands = new TreeSet(new CommandIdComparator());
     private int expectedCounter = 1;
 
     public ReliableTransport(Transport next, ReplayStrategy replayStrategy) {
@@ -49,28 +46,48 @@ public class ReliableTransport extends TransportFilter {
         boolean valid = expectedCounter == actualCounter;
 
         if (!valid) {
-            // lets add it to the list for later on
-            headers.add(command);
+            synchronized (commands) {
+                // lets add it to the list for later on
+                commands.add(command);
 
-            try {
-                replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
-            }
-            catch (IOException e) {
-                getTransportListener().onException(e);
-            }
+                try {
+                    replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
+                }
+                catch (IOException e) {
+                    getTransportListener().onException(e);
+                }
 
-            if (!headers.isEmpty()) {
-                // lets see if the first item in the set is the next header
-                command = (Command) headers.first();
-                valid = expectedCounter == command.getCommandId();
+                if (!commands.isEmpty()) {
+                    // lets see if the first item in the set is the next
+                    // expected
+                    command = (Command) commands.first();
+                    valid = expectedCounter == command.getCommandId();
+                    if (valid) {
+                        commands.remove(command);
+                    }
+                }
             }
         }
 
-        if (valid) {
+        while (valid) {
             // we've got a valid header so increment counter
             replayStrategy.onReceivedPacket(this, expectedCounter);
             expectedCounter++;
             getTransportListener().onCommand(command);
+
+            synchronized (commands) {
+                // we could have more commands left
+                valid = !commands.isEmpty();
+                if (valid) {
+                    // lets see if the first item in the set is the next
+                    // expected
+                    command = (Command) commands.first();
+                    valid = expectedCounter == command.getCommandId();
+                    if (valid) {
+                        commands.remove(command);
+                    }
+                }
+            }
         }
     }
 

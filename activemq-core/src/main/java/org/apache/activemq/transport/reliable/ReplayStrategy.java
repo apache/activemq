@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.replay;
+package org.apache.activemq.transport.reliable;
 
-import org.apache.activemq.transport.ReliableTransport;
 
 import java.io.IOException;
 
@@ -27,7 +26,7 @@ import java.io.IOException;
  */
 public interface ReplayStrategy {
 
-    void onDroppedPackets(ReliableTransport transport, long expectedCounter, long actualCounter) throws IOException;
+    void onDroppedPackets(ReliableTransport transport, int expectedCounter, int actualCounter) throws IOException;
 
     void onReceivedPacket(ReliableTransport transport, long expectedCounter);
 
