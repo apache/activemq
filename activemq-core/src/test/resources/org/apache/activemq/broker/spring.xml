@@ -17,8 +17,9 @@
 
 <!-- START SNIPPET: spring -->
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-
 <beans>
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
   <!-- an embedded broker -->
 
   <bean id="broker" class="org.apache.activemq.broker.BrokerService" 

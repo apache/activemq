@@ -19,6 +19,7 @@
 <!-- START SNIPPET: xbean -->
 <beans xmlns="http://activemq.org/config/1.0"
   xmlns:s="http://xbean.org/spring/">
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <broker persistent="false">
 

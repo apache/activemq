@@ -19,10 +19,12 @@
 <!-- START SNIPPET: xbean -->
 <beans xmlns="http://activemq.org/config/1.0">
 
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
   <broker useJmx="true">
 
     <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="foo" />
+      <journaledJDBC journalLogFiles="5" dataDirectory="${basedir}/target/foo" />
     </persistenceAdapter>
 
     <transportConnectors>

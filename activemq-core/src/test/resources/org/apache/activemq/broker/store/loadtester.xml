@@ -15,6 +15,7 @@
     limitations under the License.
 -->
 <beans xmlns="http://activemq.org/config/1.0">
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <usageManager id="memory-manager" limit="1048576"/> <!--  1 meg limit -->
   
