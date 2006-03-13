@@ -16,6 +16,7 @@ package org.apache.activemq.broker;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
@@ -54,12 +55,13 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
-        next.addConsumer(context,info);
+    public Subscription addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
+        Subscription answer = next.addConsumer(context,info);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
             brokers[i].addConsumer(context,info);
         }
+        return answer;
     }
 
     public void addProducer(ConnectionContext context,ProducerInfo info) throws Exception{

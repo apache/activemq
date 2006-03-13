@@ -200,7 +200,7 @@ public class RegionBroker implements Broker {
             answer = tempTopicRegion.addDestination(context, destination);
             break;
         default:
-            throwUnknownDestinationType(destination);
+            throw createUnknownDestinationTypeException(destination);
         }
 
         destinations.add(destination);
@@ -225,7 +225,7 @@ public class RegionBroker implements Broker {
             tempTopicRegion.removeDestination(context, destination, timeout);
             break;
         default:
-            throwUnknownDestinationType(destination);
+            throw createUnknownDestinationTypeException(destination);
         }
         
         destinations.remove(destination);
@@ -251,23 +251,23 @@ public class RegionBroker implements Broker {
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         switch(destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
-            queueRegion.addConsumer(context, info);
-            break;
+            return queueRegion.addConsumer(context, info);
+            
         case ActiveMQDestination.TOPIC_TYPE:
-            topicRegion.addConsumer(context, info);
-            break;
+            return topicRegion.addConsumer(context, info);
+        
         case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            tempQueueRegion.addConsumer(context, info);
-            break;
+            return tempQueueRegion.addConsumer(context, info);
+            
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            tempTopicRegion.addConsumer(context, info);
-            break;
+            return tempTopicRegion.addConsumer(context, info);
+            
         default:
-            throwUnknownDestinationType(destination);
+            throw createUnknownDestinationTypeException(destination);
         }
     }
 
@@ -287,7 +287,7 @@ public class RegionBroker implements Broker {
             tempTopicRegion.removeConsumer(context, info);
             break;
         default:
-            throwUnknownDestinationType(destination);
+            throw createUnknownDestinationTypeException(destination);
         }
     }
 
@@ -316,7 +316,7 @@ public class RegionBroker implements Broker {
             tempTopicRegion.send(context, message);
             break;
         default:
-            throwUnknownDestinationType(destination);
+            throw createUnknownDestinationTypeException(destination);
         }
     }
 
@@ -336,7 +336,7 @@ public class RegionBroker implements Broker {
             tempTopicRegion.acknowledge(context, ack);
             break;
         default:
-            throwUnknownDestinationType(destination);
+            throw createUnknownDestinationTypeException(destination);
         }
     }
 
@@ -402,8 +402,8 @@ public class RegionBroker implements Broker {
         return destinationStatistics;
     }
 
-    protected void throwUnknownDestinationType(ActiveMQDestination destination) throws JMSException {
-        throw new JMSException("Unknown destination type: " + destination.getDestinationType());
+    protected JMSException createUnknownDestinationTypeException(ActiveMQDestination destination) {
+        return new JMSException("Unknown destination type: " + destination.getDestinationType());
     }
 
     public synchronized void addBroker(Connection connection,BrokerInfo info){
@@ -442,7 +442,7 @@ public class RegionBroker implements Broker {
             tempTopicRegion.processDispatchNotification(messageDispatchNotification);
             break;
         default:
-            throwUnknownDestinationType(destination);
+            throw createUnknownDestinationTypeException(destination);
         }
     }
     

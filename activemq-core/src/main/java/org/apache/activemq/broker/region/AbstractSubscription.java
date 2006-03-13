@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
+import javax.management.ObjectName;
 
 import java.io.IOException;
 
@@ -46,6 +47,7 @@ abstract public class AbstractSubscription implements Subscription {
     protected ConsumerInfo info;
     final protected DestinationFilter destinationFilter;
     private BooleanExpression selectorExpression;
+    private ObjectName objectName;
    
     final protected CopyOnWriteArrayList destinations = new CopyOnWriteArrayList();
 
@@ -139,5 +141,13 @@ abstract public class AbstractSubscription implements Subscription {
         // its valid so lets actually update it now
         info.setSelector(selector);
         this.selectorExpression = newSelector;
+    }
+
+    public ObjectName getObjectName() {
+        return objectName;
+    }
+
+    public void setObjectName(ObjectName objectName) {
+        this.objectName = objectName;
     }
 }

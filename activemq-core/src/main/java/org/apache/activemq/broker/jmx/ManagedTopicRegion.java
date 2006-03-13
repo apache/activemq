@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 import javax.jms.JMSException;
+import javax.management.ObjectName;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
@@ -41,7 +42,8 @@ public class ManagedTopicRegion extends TopicRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         Subscription sub = super.createSubscription(context, info);
-        regionBroker.registerSubscription(context,sub);
+        ObjectName name = regionBroker.registerSubscription(context,sub);
+        sub.setObjectName(name);
         return sub;
     }
     

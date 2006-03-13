@@ -18,6 +18,7 @@ package org.apache.activemq.broker;
 
 import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -75,8 +76,8 @@ public class MutableBrokerFilter implements Broker {
         getNext().addConnection(context, info);
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        getNext().addConsumer(context, info);
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        return getNext().addConsumer(context, info);
     }
 
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
