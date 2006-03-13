@@ -196,19 +196,40 @@
           <useFile>true</useFile>
           <includes>
             <include>**/*Test.*</include>
-            <!--
-            <include>org.apache.activemq.ActiveMQConnectionFactoryTest</include>
-            -->
           </includes>
           <excludes>
+
             <!-- These tests run too slow to execute as part of the unit tests -->
             <exclude>**/DefaultStoreBrokerTest.*</exclude>
             <exclude>**/TcpTransportBrokerTest.*</exclude>
-            <exclude>**/activeio/**</exclude>
-            <exclude>**/perf/**</exclude>
-
-            <!-- These tests fails -->
-            <exclude>**/*ItStillMarshallsTheSameTest.*</exclude>
+            <exclude>**/activeio/*</exclude>
+                
+            <!-- These are performance tests so take too long to run -->
+            <exclude>**/perf/*</exclude>
+                
+            <!-- This test currently fails -->
+            <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
+                
+            <!-- http://jira.activemq.org/jira/browse/AMQ-522 -->
+            <exclude>**/ProxyConnectorTest.*</exclude>
+                
+            <!-- http://jira.activemq.org/jira/browse/AMQ-594 -->
+            <exclude>**/SimpleNetworkTest.*</exclude>
+                
+            <!-- http://jira.activemq.org/jira/browse/AMQ-583 -->
+            <exclude>**/DiscoveryTransportBrokerTest.*</exclude>
+            
+            <!-- http://jira.activemq.org/jira/browse/AMQ-610 -->
+            <exclude>**/FanoutTransportBrokerTest.*</exclude>
+                
+            <!-- http://jira.activemq.org/jira/browse/AMQ-626 -->
+            <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
+            <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
+            <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
+                
+            <!-- TODO FIX ME -->
+            <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
+            <exclude>**/MulticastTransportTest.*</exclude>
 
           </excludes>
         </configuration>
