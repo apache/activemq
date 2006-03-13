@@ -18,6 +18,11 @@ package org.apache.activemq.broker.jmx;
 
 import javax.management.ObjectName;
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 public interface BrokerViewMBean extends Service {
 
@@ -96,5 +101,23 @@ public interface BrokerViewMBean extends Service {
      * @throws Exception
      */
     public void removeQueue(String name) throws Exception;
+
+    /**
+     * Creates a new durable topic subscriber
+     * 
+     * @param clientId the JMS client ID
+     * @param subscriberName the durable subscriber name
+     * @param topicName the name of the topic to subscribe to
+     * @param selector a selector or null
+     */
+    public void createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception;
+
+    /**
+     * Destroys a durable subscriber
+     * 
+     * @param clientId the JMS client ID
+     * @param subscriberName the durable subscriber name
+     */
+    public void destroyDurableSubscriber(String clientId, String subscriberName) throws Exception;
     
 }

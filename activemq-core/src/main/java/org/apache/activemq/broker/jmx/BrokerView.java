@@ -23,10 +23,13 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 public class BrokerView implements BrokerViewMBean {
     
-    private final ManagedRegionBroker broker;
+    final ManagedRegionBroker broker;
 	private final BrokerService brokerService;
 
     public BrokerView(BrokerService brokerService, ManagedRegionBroker managedBroker) throws Exception {
@@ -138,6 +141,33 @@ public class BrokerView implements BrokerViewMBean {
 
     public void removeQueue(String name) throws Exception {
         broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name), 1000);
+    }
+    
+    public void createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception {
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(broker);
+        context.setClientId(clientId);
+        ConsumerInfo info = new ConsumerInfo();
+        ConsumerId consumerId = new ConsumerId();
+        consumerId.setConnectionId(clientId);
+        consumerId.setSessionId(0);
+        consumerId.setValue(0);
+        info.setConsumerId(consumerId);
+        info.setDestination(new ActiveMQTopic(topicName));
+        info.setSubcriptionName(subscriberName);
+        info.setSelector(selector);
+        broker.addConsumer(context, info);
+        broker.removeConsumer(context, info);
+    }
+
+    public void destroyDurableSubscriber(String clientId, String subscriberName) throws Exception {
+        RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+        info.setClientId(clientId);
+        info.setSubcriptionName(subscriberName);
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(broker);
+        context.setClientId(clientId);
+        broker.removeSubscription(context, info);
     }
     
     static public ConnectionContext getConnectionContext(Broker broker) {

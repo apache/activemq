@@ -138,14 +138,14 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         assertEquals("Durable subscriber count", 0, broker.getDurableTopicSubscribers().length);
 
-        ObjectName newTopicName = assertRegisteredObjectName(domain + ":Type=Topic,Destination=" + getDestinationString() + ",BrokerName=localhost");
-        TopicViewMBean topic = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, newTopicName, TopicViewMBean.class, true);
-        topic.createDurableSubscriber(clientID, "subscriber1");
-        topic.createDurableSubscriber(clientID, "subscriber2");
+        String topicName = getDestinationString();
+        String selector = null;
+        broker.createDurableSubscriber(clientID, "subscriber1", topicName , selector);
+        broker.createDurableSubscriber(clientID, "subscriber2", topicName, selector);
         assertEquals("Durable subscriber count", 2, broker.getDurableTopicSubscribers().length);
 
         // now lets try destroy it
-        topic.destroyDurableSubscriber(clientID, "subscriber1");
+        broker.destroyDurableSubscriber(clientID, "subscriber1");
         assertEquals("Durable subscriber count", 1, broker.getDurableTopicSubscribers().length);
     }
 
