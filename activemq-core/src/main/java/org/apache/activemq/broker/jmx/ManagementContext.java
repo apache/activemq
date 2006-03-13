@@ -63,23 +63,27 @@ public class ManagementContext implements Service{
         this.beanServer=server;
     }
 
-    public void start() throws IOException{
+    public void start() throws IOException {
         // lets force the MBeanServer to be created if needed
-        if(started.compareAndSet(false,true)){
+        if (started.compareAndSet(false, true)) {
             getMBeanServer();
-            if(connectorServer!=null){
-                try{
-                    getMBeanServer().invoke(namingServiceObjectName,"start",null,null);
-                }catch(Throwable ignore){}
-                Thread t=new Thread("JMX connector"){
-                    public void run(){
-                        try{
-                            if(started.get()&&connectorServer!=null){
-                                connectorServer.start();
-                                log.info("JMX consoles can connect to "+connectorServer.getAddress());
+            if (connectorServer != null) {
+                try {
+                    getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
+                }
+                catch (Throwable ignore) {
+                }
+                Thread t = new Thread("JMX connector") {
+                    public void run() {
+                        try {
+                            JMXConnectorServer server = connectorServer;
+                            if (started.get() && server != null) {
+                                server.start();
+                                log.info("JMX consoles can connect to " + server.getAddress());
                             }
-                        }catch(IOException e){
-                            log.warn("Failed to start jmx connector: "+e.getMessage());
+                        }
+                        catch (IOException e) {
+                            log.warn("Failed to start jmx connector: " + e.getMessage());
                         }
                     }
                 };
@@ -89,23 +93,27 @@ public class ManagementContext implements Service{
         }
     }
 
-    public void stop() throws IOException{
-        if(started.compareAndSet(true,false)){
-            if(connectorServer!=null){
-                try{
-                    connectorServer.stop();
-                }catch(IOException e){
-                    log.warn("Failed to stop jmx connector: "+e.getMessage());
+    public void stop() throws IOException {
+        if (started.compareAndSet(true, false)) {
+            JMXConnectorServer server = connectorServer;
+            connectorServer = null;
+            if (server != null) {
+                try {
+                    server.stop();
                 }
-                connectorServer=null;
-                try{
-                    getMBeanServer().invoke(namingServiceObjectName,"stop",null,null);
-                }catch(Throwable ignore){}
+                catch (IOException e) {
+                    log.warn("Failed to stop jmx connector: " + e.getMessage());
+                }
+                try {
+                    getMBeanServer().invoke(namingServiceObjectName, "stop", null, null);
+                }
+                catch (Throwable ignore) {
+                }
             }
-            if(locallyCreateMBeanServer&&beanServer!=null){
+            if (locallyCreateMBeanServer && beanServer != null) {
                 // check to see if the factory knows about this server
-                List list=MBeanServerFactory.findMBeanServer(null);
-                if(list!=null&&!list.isEmpty()&&list.contains(beanServer)){
+                List list = MBeanServerFactory.findMBeanServer(null);
+                if (list != null && !list.isEmpty() && list.contains(beanServer)) {
                     MBeanServerFactory.releaseMBeanServer(beanServer);
                 }
             }
