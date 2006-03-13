@@ -31,7 +31,7 @@ import junit.framework.TestCase;
  */
 public class ReliableTransportTest extends TestCase {
 
-    protected TransportFilter transport;
+    protected ReliableTransport transport;
     protected StubTransportListener listener = new StubTransportListener();
     protected ReplayStrategy replayStrategy;
 
@@ -41,10 +41,38 @@ public class ReliableTransportTest extends TestCase {
         sendStreamOfCommands(sequenceNumbers, true);
     }
     
+    public void testValidWrapAroundPackets() throws Exception {
+        int[] sequenceNumbers = new int[10];
+        
+        int value = Integer.MAX_VALUE - 3;
+        transport.setExpectedCounter(value);
+        
+        for (int i = 0; i < 10; i++) {
+            System.out.println("command: " + i + " = " + value);
+            sequenceNumbers[i] = value++;
+        }
+        
+        sendStreamOfCommands(sequenceNumbers, true);
+    }
+    
     public void testDuplicatePacketsDropped() throws Exception {
         int[] sequenceNumbers = { 1, 2, 2, 3, 4, 5, 6, 7 };
         
         sendStreamOfCommands(sequenceNumbers, true, 7);
+    }
+    
+    public void testOldDuplicatePacketsDropped() throws Exception {
+        int[] sequenceNumbers = { 1, 2, 3, 4, 5, 2, 6, 7 };
+        
+        sendStreamOfCommands(sequenceNumbers, true, 7);
+    }
+    
+    public void testOldDuplicatePacketsDroppedUsingNegativeCounters() throws Exception {
+        int[] sequenceNumbers = { -3, -1, -3, -2, -1, 0, 1, -1, 3, 2, 0, 2, 4 };
+        
+        transport.setExpectedCounter(-3);
+        
+        sendStreamOfCommands(sequenceNumbers, true, 8);
     }
     
     public void testWrongOrderOfPackets() throws Exception {
@@ -83,13 +111,14 @@ public class ReliableTransportTest extends TestCase {
                 fail("Caught exception: " + e);
             }
             assertEquals("number of messages received", expectedCount, commands.size());
-        }
+            
+            assertEquals("Should have no buffered commands", 0, transport.getBufferedCommandCount());
+                   }
         else {
             assertTrue("Should have received an exception!", exceptions.size() > 0);
             Exception e = (Exception) exceptions.remove();
             System.out.println("Caught expected response: " + e);
         }
-        
     }
 
     protected void setUp() throws Exception {
