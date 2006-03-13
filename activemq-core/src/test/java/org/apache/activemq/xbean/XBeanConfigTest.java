@@ -48,6 +48,8 @@ public class XBeanConfigTest extends TestCase {
 
     public void testBrokerConfiguredCorrectly() throws Exception {
 
+        // Validate the system properties are being evaluated in xbean.
+        assertEquals("testbroker", brokerService.getBrokerName());
 
         Topic topic = (Topic) broker.addDestination(context, new ActiveMQTopic("FOO.BAR"));
         DispatchPolicy dispatchPolicy = topic.getDispatchPolicy();
@@ -77,6 +79,7 @@ public class XBeanConfigTest extends TestCase {
     }
 
     protected void setUp() throws Exception {
+        System.setProperty("brokername", "testbroker");
         brokerService = createBroker();
         broker = brokerService.getBroker();
 
