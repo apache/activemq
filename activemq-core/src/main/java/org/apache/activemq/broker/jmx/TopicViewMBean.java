@@ -17,23 +17,4 @@
 package org.apache.activemq.broker.jmx;
 
 public interface TopicViewMBean extends DestinationViewMBean {
-    
-	/**
-	 * Creates a durable subscription that is subscribed to this topic.
-	 * 
-	 * @param clientId
-	 * @param subscriberName
-	 * @throws Exception
-	 */
-    public void createDurableSubscriber(String clientId, String subscriberName) throws Exception;
-
-    /**
-	 * Destroys a durable subscription that had previously subscribed to this topic.
-	 * 
-	 * @param clientId
-	 * @param subscriberName
-	 * @throws Exception
-	 */
-    public void destroyDurableSubscriber(String clientId, String subscriberName) throws Exception;
-
 }

@@ -19,37 +19,10 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
-public class TopicView extends DestinationView implements TopicViewMBean{
-    
-     public TopicView(ManagedRegionBroker broker, Topic destination){
+public class TopicView extends DestinationView implements TopicViewMBean {
+
+    public TopicView(ManagedRegionBroker broker, Topic destination) {
         super(broker, destination);
     }
 
-    public void createDurableSubscriber(String clientId,String subscriberName) throws Exception{
-        ConnectionContext context = new ConnectionContext();
-        context.setBroker(broker);
-        context.setClientId(clientId);
-        ConsumerInfo info = new ConsumerInfo();
-        ConsumerId consumerId = new ConsumerId();
-        consumerId.setConnectionId(clientId);
-        consumerId.setSessionId(0);
-        consumerId.setValue(0);
-        info.setConsumerId(consumerId);
-        info.setDestination(destination.getActiveMQDestination());
-        info.setSubcriptionName(subscriberName);
-        broker.addConsumer(context, info);
-        broker.removeConsumer(context, info);        
-    }
-
-    public void destroyDurableSubscriber(String clientId,String subscriberName) throws Exception{
-        RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
-        info.setClientId(clientId);
-        info.setSubcriptionName(subscriberName);
-        ConnectionContext context = new ConnectionContext();
-        context.setBroker(broker);
-        context.setClientId(clientId);
-        broker.removeSubscription(context, info);
-  
-        
-    }
 }
