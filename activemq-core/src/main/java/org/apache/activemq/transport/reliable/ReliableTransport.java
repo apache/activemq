@@ -47,11 +47,13 @@ public class ReliableTransport extends TransportFilter {
 
         if (!valid) {
             synchronized (commands) {
-                // lets add it to the list for later on
-                commands.add(command);
-
                 try {
-                    replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
+                    boolean keep = replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
+                    
+                    if (keep) {
+                        // lets add it to the list for later on
+                        commands.add(command);
+                    }
                 }
                 catch (IOException e) {
                     getTransportListener().onException(e);
@@ -89,6 +91,23 @@ public class ReliableTransport extends TransportFilter {
                 }
             }
         }
+    }
+
+    public int getBufferedCommandCount() {
+        synchronized (commands) {
+            return commands.size();
+        }
+    }
+    
+    public int getExpectedCounter() {
+        return expectedCounter;
+    }
+
+    /**
+     * This property should never really be set - but is mutable primarily for test cases
+     */
+    public void setExpectedCounter(int expectedCounter) {
+        this.expectedCounter = expectedCounter;
     }
 
     public String toString() {

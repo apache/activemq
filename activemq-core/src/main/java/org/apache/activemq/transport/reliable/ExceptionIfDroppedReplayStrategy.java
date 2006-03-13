@@ -28,11 +28,15 @@ public class ExceptionIfDroppedReplayStrategy implements ReplayStrategy {
 
     private int maximumDifference = 5;
 
-    public void onDroppedPackets(ReliableTransport transport, int expectedCounter, int actualCounter) throws IOException {
-        long count = Math.abs(actualCounter - expectedCounter);
+    public boolean onDroppedPackets(ReliableTransport transport, int expectedCounter, int actualCounter) throws IOException {
+        int difference = actualCounter - expectedCounter;
+        long count = Math.abs(difference);
         if (count > maximumDifference) {
             throw new IOException("Packets dropped on: " + transport + " count: " + count + " expected: " + expectedCounter + " but was: " + actualCounter);
         }
+        
+        // lets discard old commands
+        return difference > 0;
     }
 
     public void onReceivedPacket(ReliableTransport transport, long expectedCounter) {
