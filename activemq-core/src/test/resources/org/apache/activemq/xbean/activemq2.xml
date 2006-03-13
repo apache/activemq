@@ -17,6 +17,8 @@
 
 <beans xmlns="http://activemq.org/config/1.0">
 
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
   <!-- for easier integration with the JUnit tests, lets not start the broker when the ApplicationContext starts -->
   <broker useJmx="true" start="false">
     <destinationPolicy>
@@ -37,7 +39,7 @@
 
 
     <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="../data" />
+      <journaledJDBC journalLogFiles="5" dataDirectory="${basedir}/target/data" />
     </persistenceAdapter>
 
     <transportConnectors>

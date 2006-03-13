@@ -19,7 +19,9 @@
 <!-- START SNIPPET: xbean -->
 <beans xmlns="http://activemq.org/config/1.0">
 
-  <broker persistent="false">
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
+  <broker persistent="false" brokerName="${brokername}">
 
     <!--  lets define the dispatch policy -->
     <destinationPolicy>

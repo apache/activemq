@@ -16,6 +16,7 @@
 -->
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <bean id="policy" class="org.apache.activemq.filter.DummyPolicy">
     <property name="entries">

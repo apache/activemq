@@ -19,6 +19,8 @@
 <!-- START SNIPPET: xbean -->
 <beans xmlns="http://activemq.org/config/1.0">
 
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
   <broker useJmx="true">
 	<managementContext>
 	   <managementContext connectorPort="2011" jmxDomainName="test.domain"/>

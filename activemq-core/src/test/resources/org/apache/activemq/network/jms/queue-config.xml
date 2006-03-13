@@ -17,6 +17,8 @@
 
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
   <!-- remote broker -->
 
   <bean id="remotebroker" class="org.apache.activemq.broker.BrokerService" 
