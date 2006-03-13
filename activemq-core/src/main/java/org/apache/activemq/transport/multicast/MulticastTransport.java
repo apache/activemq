@@ -17,12 +17,26 @@
 package org.apache.activemq.transport.multicast;
 
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.udp.CommandChannel;
+import org.apache.activemq.transport.udp.CommandDatagramChannel;
+import org.apache.activemq.transport.udp.CommandDatagramSocket;
+import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
+import org.apache.activemq.transport.udp.DefaultBufferPool;
 import org.apache.activemq.transport.udp.UdpTransport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.channels.DatagramChannel;
 
 /**
  * A multicast based transport.
@@ -31,20 +45,19 @@ import java.net.UnknownHostException;
  */
 public class MulticastTransport extends UdpTransport {
 
-    public MulticastTransport(OpenWireFormat wireFormat, int port) throws UnknownHostException, IOException {
-        super(wireFormat, port);
-    }
+    private static final Log log = LogFactory.getLog(MulticastTransport.class);
 
-    public MulticastTransport(OpenWireFormat wireFormat, SocketAddress socketAddress) throws IOException {
-        super(wireFormat, socketAddress);
-    }
+    private static final int DEFAULT_IDLE_TIME = 5000;
+
+    private MulticastSocket socket;
+    private InetAddress mcastAddress;
+    private int mcastPort;
+    private int timeToLive = 1;
+    private boolean loopBackMode = false;
+    private long keepAliveInterval = DEFAULT_IDLE_TIME;
 
     public MulticastTransport(OpenWireFormat wireFormat, URI remoteLocation) throws UnknownHostException, IOException {
         super(wireFormat, remoteLocation);
-    }
-
-    public MulticastTransport(OpenWireFormat wireFormat) throws IOException {
-        super(wireFormat);
     }
 
     protected String getProtocolName() {
@@ -54,4 +67,43 @@ public class MulticastTransport extends UdpTransport {
     protected String getProtocolUriScheme() {
         return "multicast://";
     }
+
+    protected void bind(DatagramSocket socket, SocketAddress localAddress) throws SocketException {
+    }
+
+    protected void doStop(ServiceStopper stopper) throws Exception {
+        super.doStop(stopper);
+        if (socket != null) {
+            try {
+                socket.leaveGroup(mcastAddress);
+            }
+            catch (IOException e) {
+                stopper.onException(this, e);
+            }
+            socket.close();
+        }
+    }
+
+    protected CommandChannel createCommandChannel() throws IOException {
+        socket = new MulticastSocket(mcastPort);
+        socket.setLoopbackMode(loopBackMode);
+        socket.setTimeToLive(timeToLive);
+
+        log.debug("Joining multicast address: " + mcastAddress);
+        socket.joinGroup(mcastAddress);
+        socket.setSoTimeout((int) keepAliveInterval);
+
+        return new CommandDatagramSocket(toString(), socket, getWireFormat(), getDatagramSize(), mcastAddress, mcastPort, createDatagramHeaderMarshaller());
+    }
+
+    protected InetSocketAddress createAddress(URI remoteLocation) throws UnknownHostException, IOException {
+        this.mcastAddress = InetAddress.getByName(remoteLocation.getHost());
+        this.mcastPort = remoteLocation.getPort();
+        return new InetSocketAddress(mcastAddress, mcastPort);
+    }
+
+    protected DatagramHeaderMarshaller createDatagramHeaderMarshaller() {
+        return new MulticastDatagramHeaderMarshaller("udp://dummyHostName:" + getPort());
+    }
+
 }

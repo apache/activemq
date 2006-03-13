@@ -18,6 +18,7 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.BaseEndpoint;
 
+import java.net.InetAddress;
 import java.net.SocketAddress;
 
 /**
@@ -36,5 +37,5 @@ public class DatagramEndpoint extends BaseEndpoint {
     public SocketAddress getAddress() {
         return address;
     }
-
+    
 }
