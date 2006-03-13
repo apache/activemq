@@ -155,9 +155,11 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         producer = createProducer();
         producer.setTransportListener(new TransportListener() {
             public void onCommand(Command command) {
+                System.out.println("Producer received: " + command);
             }
 
             public void onException(IOException error) {
+                System.out.println("Producer exception: " + error);
             }
 
             public void transportInterupted() {

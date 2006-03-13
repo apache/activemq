@@ -363,6 +363,7 @@
                 
                 <!-- TODO FIX ME -->
                 <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
+                <exclude>**/MulticastTransportTest.*</exclude>
             </excludes>
         </unitTest>
         <resources>

@@ -17,9 +17,14 @@
 package org.apache.activemq.transport.udp;
 
 
+import org.activeio.ByteArrayOutputStream;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
@@ -36,6 +41,11 @@ public class DatagramHeaderMarshaller {
         return new DatagramEndpoint(address.toString(), address);
     }
 
+    public Endpoint createEndpoint(DatagramPacket datagram, DataInputStream dataIn) {
+        SocketAddress address = datagram.getSocketAddress();
+        return new DatagramEndpoint(address.toString(), address);
+    }
+
     public void writeHeader(Command command, ByteBuffer writeBuffer) {
         /*
         writeBuffer.putLong(command.getCounter());
@@ -45,4 +55,8 @@ public class DatagramHeaderMarshaller {
         writeBuffer.put(flags);
         */
     }
+
+    public void writeHeader(Command command, DataOutputStream dataOut) {
+    }
+
 }

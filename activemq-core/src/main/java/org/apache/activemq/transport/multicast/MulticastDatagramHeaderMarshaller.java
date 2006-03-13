@@ -16,12 +16,39 @@
  */
 package org.apache.activemq.transport.multicast;
 
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Endpoint;
+import org.apache.activemq.transport.udp.DatagramEndpoint;
 import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
 
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+
 /**
- *
+ * 
  * @version $Revision$
  */
 public class MulticastDatagramHeaderMarshaller extends DatagramHeaderMarshaller {
+
+    private final String localUri;
+    private final byte[] localUriAsBytes;
+
+    public MulticastDatagramHeaderMarshaller(String localUri) {
+        this.localUri = localUri;
+        this.localUriAsBytes = localUri.getBytes();
+    }
+
+    public Endpoint createEndpoint(ByteBuffer readBuffer, SocketAddress address) {
+        int size = readBuffer.getInt();
+        byte[] data = new byte[size];
+        readBuffer.get(data);
+        return new DatagramEndpoint(new String(data), address);
+    }
+
+    public void writeHeader(Command command, ByteBuffer writeBuffer) {
+        writeBuffer.putInt(localUriAsBytes.length);
+        writeBuffer.put(localUriAsBytes);
+        super.writeHeader(command, writeBuffer);
+    }
 
 }

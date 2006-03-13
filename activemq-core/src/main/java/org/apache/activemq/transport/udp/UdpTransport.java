@@ -33,6 +33,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.channels.AsynchronousCloseException;
@@ -129,6 +130,17 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 doConsume(command);
             }
             catch (AsynchronousCloseException e) {
+                // DatagramChannel closed
+                try {
+                    stop();
+                }
+                catch (Exception e2) {
+                    log.warn("Caught while closing: " + e2 + ". Now Closed", e2);
+                }
+            }
+            catch (SocketException e) {
+                // DatagramSocket closed
+                log.debug("Socket closed: " + e, e);
                 try {
                     stop();
                 }
@@ -137,6 +149,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 }
             }
             catch (Exception e) {
+                System.out.println("Caught exception of type: " + e.getClass());
                 e.printStackTrace();
                 try {
                     stop();
@@ -187,12 +200,12 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         return maxInactivityDuration;
     }
 
-    public DatagramChannel getChannel() {
-        return channel;
+    public int getDatagramSize() {
+        return datagramSize;
     }
 
-    public void setChannel(DatagramChannel channel) {
-        this.channel = channel;
+    public void setDatagramSize(int datagramSize) {
+        this.datagramSize = datagramSize;
     }
 
     /**
@@ -222,7 +235,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     /**
      * Sets the implementation of the command channel to use.
      */
-    public void setCommandChannel(CommandChannel commandChannel) {
+    public void setCommandChannel(CommandDatagramChannel commandChannel) {
         this.commandChannel = commandChannel;
     }
 
@@ -290,19 +303,20 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void doStart() throws Exception {
-        SocketAddress localAddress = new InetSocketAddress(port);
-        channel = DatagramChannel.open();
-        channel.configureBlocking(true);
+        commandChannel = createCommandChannel();
+        commandChannel.start();
 
-        // TODO
-        // connect to default target address to avoid security checks each time
-        // channel = channel.connect(targetAddress);
+        super.doStart();
+    }
+
+    protected CommandChannel createCommandChannel() throws IOException {
+        SocketAddress localAddress = createLocalAddress();
+        channel = DatagramChannel.open();
+
+        channel = connect(channel, targetAddress);
 
         DatagramSocket socket = channel.socket();
-        if (log.isDebugEnabled()) {
-            log.debug("Binding to address: " + localAddress);
-        }
-        socket.bind(localAddress);
+        bind(socket, localAddress);
         if (port == 0) {
             port = socket.getLocalPort();
         }
@@ -310,10 +324,28 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
-        commandChannel = new CommandChannel(toString(), channel, wireFormat, bufferPool, datagramSize, targetAddress, createDatagramHeaderMarshaller());
-        commandChannel.start();
+        return new CommandDatagramChannel(toString(), channel, wireFormat, bufferPool, datagramSize, targetAddress, createDatagramHeaderMarshaller());
+    }
 
-        super.doStart();
+    protected void bind(DatagramSocket socket, SocketAddress localAddress) throws IOException {
+        channel.configureBlocking(true);
+        
+        if (log.isDebugEnabled()) {
+            log.debug("Binding to address: " + localAddress);
+        }
+        socket.bind(localAddress);
+    }
+
+    protected DatagramChannel connect(DatagramChannel channel, SocketAddress targetAddress2) throws IOException {
+        // TODO
+        // connect to default target address to avoid security checks each time
+        // channel = channel.connect(targetAddress);
+        
+        return channel;
+    }
+
+    protected SocketAddress createLocalAddress() {
+        return new InetSocketAddress(port);
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
@@ -332,5 +364,13 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
     protected String getProtocolUriScheme() {
         return "udp://";
+    }
+
+    protected SocketAddress getTargetAddress() {
+        return targetAddress;
+    }
+
+    public void setCommandChannel(CommandChannel commandChannel) {
+        this.commandChannel = commandChannel;
     }
 }
