@@ -189,6 +189,8 @@
         <include>**/*Test.*</include>
       </includes>
       <excludes>
+        <!-- http://jira.activemq.org/jira/browse/AMQ-628 -->
+        <exclude>**/HttpTransportBrokerTest.*</exclude>
       </excludes>
     </unitTest>
 
