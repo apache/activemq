@@ -161,6 +161,19 @@
       <version>${jmdns_version}</version>
     </dependency>
 
+    <!-- MX4J Dependency -->
+    <dependency>
+      <groupId>mx4j</groupId>
+      <artifactId>mx4j</artifactId>
+      <version>${mx4j_version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>mx4j</groupId>
+      <artifactId>mx4j-remote</artifactId>
+      <version>${mx4j_remote_version}</version>
+    </dependency>
+
     <!-- Used for unit tests -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -192,10 +205,13 @@
 
         <!-- http://jira.activemq.org/jira/browse/AMQ-628 -->
         <exclude>**/HttpTransportBrokerTest.*</exclude>
-        
+
         <!-- http://jira.activemq.org/jira/browse/AMQ-629 -->
         <exclude>**/SslTransportBrokerTest.*</exclude>
-        
+
+        <!-- http://jira.activemq.org/jira/browse/AMQ-631 -->
+        <exclude>**/HttpsTransportBrokerTest.*</exclude>
+
       </excludes>
     </unitTest>
 
