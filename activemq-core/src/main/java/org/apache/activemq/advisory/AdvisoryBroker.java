@@ -22,6 +22,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -70,8 +71,8 @@ public class AdvisoryBroker extends BrokerFilter {
         connections.put(info.getConnectionId(), info);
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        next.addConsumer(context, info);
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        Subscription answer = next.addConsumer(context, info);
 
         // Don't advise advisory topics.
         if( !AdvisorySupport.isAdvisoryTopic(info.getDestination()) ) { 
@@ -120,6 +121,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 }
             }
         }
+        return answer;
     }
 
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {

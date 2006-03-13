@@ -113,7 +113,7 @@ abstract public class AbstractRegion implements Region {
         }
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
 
         Subscription sub = createSubscription(context, info);
 
@@ -148,6 +148,7 @@ abstract public class AbstractRegion implements Region {
             ((QueueBrowserSubscription)sub).browseDone();
         }
         
+        return sub;
     }
     
     /**

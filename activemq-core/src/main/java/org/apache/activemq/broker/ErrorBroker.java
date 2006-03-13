@@ -18,6 +18,7 @@ package org.apache.activemq.broker;
 
 import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -124,7 +125,7 @@ public class ErrorBroker implements Broker {
         throw new IllegalStateException(this.message);
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         throw new IllegalStateException(this.message);
     }
 

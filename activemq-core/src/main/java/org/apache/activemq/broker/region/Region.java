@@ -60,9 +60,10 @@ public interface Region extends Service {
     /**
      * Adds a consumer.
      * @param context the environment the operation is being executed under.
+     * @return TODO
      * @throws Exception TODO
      */
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
 
     /**
      * Removes a consumer.

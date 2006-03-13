@@ -109,8 +109,10 @@ public interface BrokerViewMBean extends Service {
      * @param subscriberName the durable subscriber name
      * @param topicName the name of the topic to subscribe to
      * @param selector a selector or null
+     * 
+     * @return the object name of the MBean registered in JMX
      */
-    public void createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception;
+    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception;
 
     /**
      * Destroys a durable subscriber

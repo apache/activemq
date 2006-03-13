@@ -26,6 +26,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 import javax.jms.InvalidSelectorException;
+import javax.management.ObjectName;
 
 /**
  * @version $Revision: 1.5 $
@@ -137,4 +138,14 @@ public interface Subscription {
      * This operation is not supported for persistent topics.
      */
     public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException;
+
+    /**
+     * @return the JMX object name that this subscription was registered as if applicable
+     */
+    public ObjectName getObjectName();
+
+    /**
+     * Set when the subscription is registered in JMX
+     */
+    public void setObjectName(ObjectName objectName);
 }

@@ -62,6 +62,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
+
 public class ManagedRegionBroker extends RegionBroker{
     private static final Log log=LogFactory.getLog(ManagedRegionBroker.class);
     private final MBeanServer mbeanServer;
@@ -154,7 +155,7 @@ public class ManagedRegionBroker extends RegionBroker{
         }
     }
 
-    public void registerSubscription(ConnectionContext context,Subscription sub){
+    public ObjectName registerSubscription(ConnectionContext context,Subscription sub){
         Hashtable map=brokerObjectName.getKeyPropertyList();
         String name="";
         SubscriptionKey key=new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
@@ -179,8 +180,10 @@ public class ManagedRegionBroker extends RegionBroker{
             }
             registerSubscription(objectName,sub.getConsumerInfo(),key,view);
             subscriptionMap.put(sub,objectName);
+            return objectName;
         }catch(Exception e){
             log.error("Failed to register subscription "+sub,e);
+            return null;
         }
     }
 

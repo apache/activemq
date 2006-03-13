@@ -57,7 +57,7 @@ public class TopicRegion extends AbstractRegion {
         
     }
 
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
 
             ActiveMQDestination destination = info.getDestination();
@@ -103,9 +103,10 @@ public class TopicRegion extends AbstractRegion {
             }
             
             sub.activate(context, info);
+            return sub;
         }
         else {
-            super.addConsumer(context, info);
+            return super.addConsumer(context, info);
         }
     }
 

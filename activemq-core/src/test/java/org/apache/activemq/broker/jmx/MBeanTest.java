@@ -140,10 +140,14 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         String topicName = getDestinationString();
         String selector = null;
-        broker.createDurableSubscriber(clientID, "subscriber1", topicName , selector);
+        ObjectName name1 = broker.createDurableSubscriber(clientID, "subscriber1", topicName , selector);
         broker.createDurableSubscriber(clientID, "subscriber2", topicName, selector);
         assertEquals("Durable subscriber count", 2, broker.getDurableTopicSubscribers().length);
 
+        assertNotNull("Should have created an mbean name for the durable subscriber!", name1);
+        
+        System.out.println("Created durable subscriber with name: "  + name1);
+        
         // now lets try destroy it
         broker.destroyDurableSubscriber(clientID, "subscriber1");
         assertEquals("Durable subscriber count", 1, broker.getDurableTopicSubscribers().length);

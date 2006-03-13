@@ -21,6 +21,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.InsertableMutableBrokerFilter;
 import org.apache.activemq.broker.MutableBrokerFilter;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
@@ -132,9 +133,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
         sendAsyncToSlave(new RemoveInfo(info.getProducerId()));
     }
     
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        super.addConsumer(context, info);
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        Subscription answer = super.addConsumer(context, info);
         sendAsyncToSlave(info);
+        return answer;
     }
 
     

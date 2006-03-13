@@ -20,6 +20,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -85,7 +86,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super.removeDestination(context, destination, timeout);
     }
     
-    public void addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         
         final SecurityContext subject = (SecurityContext) context.getSecurityContext();
         if( subject == null )
@@ -117,7 +118,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             
         }
         
-        super.addConsumer(context, info);
+        return super.addConsumer(context, info);
     }
     
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {

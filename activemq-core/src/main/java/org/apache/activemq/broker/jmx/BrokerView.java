@@ -21,6 +21,7 @@ import javax.management.ObjectName;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
@@ -143,7 +144,7 @@ public class BrokerView implements BrokerViewMBean {
         broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name), 1000);
     }
     
-    public void createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception {
+    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception {
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);
@@ -156,8 +157,12 @@ public class BrokerView implements BrokerViewMBean {
         info.setDestination(new ActiveMQTopic(topicName));
         info.setSubcriptionName(subscriberName);
         info.setSelector(selector);
-        broker.addConsumer(context, info);
+        Subscription subscription = broker.addConsumer(context, info);
         broker.removeConsumer(context, info);
+        if (subscription != null) {
+            return subscription.getObjectName();
+        }
+        return null;
     }
 
     public void destroyDurableSubscriber(String clientId, String subscriberName) throws Exception {

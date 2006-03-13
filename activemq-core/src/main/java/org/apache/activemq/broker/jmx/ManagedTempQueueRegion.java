@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 import javax.jms.InvalidSelectorException;
+import javax.management.ObjectName;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
@@ -39,7 +40,8 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
     
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         Subscription sub = super.createSubscription(context, info);
-        regionBroker.registerSubscription(context,sub);
+        ObjectName name = regionBroker.registerSubscription(context,sub);
+        sub.setObjectName(name);
         return sub;
     }
     
