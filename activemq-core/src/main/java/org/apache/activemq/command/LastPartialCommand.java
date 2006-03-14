@@ -31,9 +31,8 @@ public class LastPartialCommand extends BaseCommand {
     public LastPartialCommand() {
     }
 
-    public LastPartialCommand(Command command) {
-        setCommandId(command.getCommandId());
-        setResponseRequired(command.isResponseRequired());
+    public LastPartialCommand(boolean responseRequired) {
+        setResponseRequired(responseRequired);
     }
 
     public byte getDataStructureType() {
@@ -42,6 +41,24 @@ public class LastPartialCommand extends BaseCommand {
 
     public Response visit(CommandVisitor visitor) throws Exception {
         throw new IllegalStateException("The transport layer should filter out LastPartialCommand instances but received: " + this);
+    }
+
+    /**
+     * Lets copy across the required fields from this last partial command to
+     * the newly unmarshalled complete command
+     *
+     * @param completeCommand the newly unmarshalled complete command
+     */
+    public void configure(Command completeCommand) {
+        // overwrite the commandId as the numbers change when we introduce 
+        // fragmentation commands
+        completeCommand.setCommandId(getCommandId());
+        
+        // copy across the transient properties
+        completeCommand.setFrom(getFrom());
+
+        // TODO should not be required as the large command would be marshalled with this property
+        //completeCommand.setResponseRequired(isResponseRequired());
     }
 
 }

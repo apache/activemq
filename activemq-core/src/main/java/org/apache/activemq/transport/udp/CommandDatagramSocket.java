@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.udp;
 
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.Future;
+
 import org.activeio.ByteArrayInputStream;
 import org.activeio.ByteArrayOutputStream;
 import org.apache.activemq.command.Command;
@@ -24,6 +27,8 @@ import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,6 +40,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Map;
 
 /**
  * A strategy for reading datagrams and de-fragmenting them together.
@@ -45,6 +51,7 @@ public class CommandDatagramSocket implements CommandChannel {
 
     private static final Log log = LogFactory.getLog(CommandDatagramSocket.class);
 
+    private final UdpTransport transport;
     private final String name;
     private DatagramSocket channel;
     private InetAddress targetAddress;
@@ -59,16 +66,16 @@ public class CommandDatagramSocket implements CommandChannel {
     // writing
     private Object writeLock = new Object();
 
-
-    public CommandDatagramSocket(String name, DatagramSocket channel, OpenWireFormat wireFormat, int datagramSize, InetAddress targetAddress, int targetPort,
-            DatagramHeaderMarshaller headerMarshaller) {
-        this.name = name;
+    public CommandDatagramSocket(UdpTransport transport, DatagramSocket channel, OpenWireFormat wireFormat, int datagramSize, InetAddress targetAddress,
+            int targetPort, DatagramHeaderMarshaller headerMarshaller) {
+        this.transport = transport;
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.datagramSize = datagramSize;
         this.targetAddress = targetAddress;
         this.targetPort = targetPort;
         this.headerMarshaller = headerMarshaller;
+        this.name = transport.toString();
     }
 
     public String toString() {
@@ -100,7 +107,7 @@ public class CommandDatagramSocket implements CommandChannel {
         }
         if (answer != null) {
             answer.setFrom(from);
-            
+
             if (log.isDebugEnabled()) {
                 log.debug("Channel: " + name + " about to process: " + answer);
             }
@@ -108,23 +115,15 @@ public class CommandDatagramSocket implements CommandChannel {
         return answer;
     }
 
-    public void write(Command command) throws IOException {
-        write(command, targetAddress, targetPort);
+    public void write(Command command, SocketAddress address, Map requestMap, Future future) throws IOException {
+        InetSocketAddress ia = (InetSocketAddress) address;
+        write(command, ia.getAddress(), ia.getPort(), requestMap, future);
     }
 
-    public void write(Command command, SocketAddress address) throws IOException {
-        if (address instanceof InetSocketAddress) {
-            InetSocketAddress ia = (InetSocketAddress) address;
-            write(command, ia.getAddress(), ia.getPort());
-        }
-        else {
-            write(command);
-        }
-    }
-
-    public void write(Command command, InetAddress address, int port) throws IOException {
+    public void write(Command command, InetAddress address, int port, Map requestMap, Future future) throws IOException {
         synchronized (writeLock) {
 
+            command.setCommandId(transport.getNextCommandId());
             ByteArrayOutputStream writeBuffer = createByteArrayOutputStream();
             DataOutputStream dataOut = new DataOutputStream(writeBuffer);
             headerMarshaller.writeHeader(command, dataOut);
@@ -134,6 +133,9 @@ public class CommandDatagramSocket implements CommandChannel {
             wireFormat.marshal(command, dataOut);
 
             if (remaining(writeBuffer) >= 0) {
+                if (command.isResponseRequired()) {
+                    requestMap.put(new Integer(command.getCommandId()), future);
+                }
                 sendWriteBuffer(address, port, writeBuffer);
             }
             else {
@@ -189,7 +191,11 @@ public class CommandDatagramSocket implements CommandChannel {
                         bs.marshal(dataOut);
                     }
 
-                    dataOut.writeInt(command.getCommandId());
+                    int commandId = command.getCommandId();
+                    if (fragment > 0) {
+                        commandId = transport.getNextCommandId();
+                    }
+                    dataOut.writeInt(commandId);
                     if (bs == null) {
                         dataOut.write((byte) 1);
                     }
@@ -205,12 +211,16 @@ public class CommandDatagramSocket implements CommandChannel {
                 }
 
                 // now lets write the last partial command
-                command = new LastPartialCommand(command);
+                command = new LastPartialCommand(command.isResponseRequired());
+                command.setCommandId(transport.getNextCommandId());
 
                 writeBuffer.reset();
                 headerMarshaller.writeHeader(command, dataOut);
                 wireFormat.marshal(command, dataOut);
 
+                if (command.isResponseRequired()) {
+                    requestMap.put(new Integer(command.getCommandId()), future);
+                }
                 sendWriteBuffer(address, port, writeBuffer);
             }
         }
@@ -236,6 +246,22 @@ public class CommandDatagramSocket implements CommandChannel {
 
     public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller) {
         this.headerMarshaller = headerMarshaller;
+    }
+
+    
+    public SocketAddress getTargetAddress() {
+        return new InetSocketAddress(targetAddress, targetPort);
+    }
+
+    public void setTargetAddress(SocketAddress address) {
+        if (address instanceof InetSocketAddress) {
+            InetSocketAddress ia = (InetSocketAddress) address;
+            targetAddress = ia.getAddress();
+            targetPort = ia.getPort();
+        }
+        else {
+            throw new IllegalArgumentException("Address must be instance of InetSocketAddress");
+        }
     }
 
     // Implementation methods

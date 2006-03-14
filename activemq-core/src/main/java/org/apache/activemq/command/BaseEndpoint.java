@@ -33,4 +33,9 @@ public class BaseEndpoint implements Endpoint {
         return name;
     }
 
+    public String toString() {
+        return "Endpoint[" + name + "]";
+    }
+
+    
 }

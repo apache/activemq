@@ -17,9 +17,13 @@
 package org.apache.activemq.transport.reliable;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.CommandIdComparator;
+import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFilter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.SortedSet;
@@ -31,17 +35,54 @@ import java.util.TreeSet;
  * 
  * @version $Revision$
  */
-public class ReliableTransport extends TransportFilter {
+public class ReliableTransport extends ResponseCorrelator {
+    private static final Log log = LogFactory.getLog(ReliableTransport.class);
+
     private ReplayStrategy replayStrategy;
     private SortedSet commands = new TreeSet(new CommandIdComparator());
     private int expectedCounter = 1;
+    private int requestTimeout = 2000;
 
     public ReliableTransport(Transport next, ReplayStrategy replayStrategy) {
         super(next);
         this.replayStrategy = replayStrategy;
     }
 
+    public Response request(Command command) throws IOException {
+        FutureResponse response = asyncRequest(command);
+        while (true) {
+            Response result = response.getResult(requestTimeout);
+            if (result != null) {
+                return result;
+            }
+            replayRequest(command, response);
+        }
+    }
+
+    public Response request(Command command, int timeout) throws IOException {
+        FutureResponse response = asyncRequest(command);
+        while (timeout > 0) {
+            int time = timeout;
+            if (timeout > requestTimeout) { 
+                time = requestTimeout;
+            }
+            Response result = response.getResult(time);
+            if (result != null) {
+                return result;
+            }
+            replayRequest(command, response);
+            timeout -= time;
+        }
+        return response.getResult(0);
+    }
+
     public void onCommand(Command command) {
+        // lets pass wireformat through
+        if (command.isWireFormatInfo()) {
+            super.onCommand(command);
+            return;
+        }
+
         int actualCounter = command.getCommandId();
         boolean valid = expectedCounter == actualCounter;
 
@@ -49,9 +90,12 @@ public class ReliableTransport extends TransportFilter {
             synchronized (commands) {
                 try {
                     boolean keep = replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
-                    
+
                     if (keep) {
                         // lets add it to the list for later on
+                        if (log.isDebugEnabled()) {
+                            log.debug("Received out of order command which is being buffered for later: " + command);
+                        }
                         commands.add(command);
                     }
                 }
@@ -75,7 +119,7 @@ public class ReliableTransport extends TransportFilter {
             // we've got a valid header so increment counter
             replayStrategy.onReceivedPacket(this, expectedCounter);
             expectedCounter++;
-            getTransportListener().onCommand(command);
+            super.onCommand(command);
 
             synchronized (commands) {
                 // we could have more commands left
@@ -98,13 +142,14 @@ public class ReliableTransport extends TransportFilter {
             return commands.size();
         }
     }
-    
+
     public int getExpectedCounter() {
         return expectedCounter;
     }
 
     /**
-     * This property should never really be set - but is mutable primarily for test cases
+     * This property should never really be set - but is mutable primarily for
+     * test cases
      */
     public void setExpectedCounter(int expectedCounter) {
         this.expectedCounter = expectedCounter;
@@ -114,4 +159,10 @@ public class ReliableTransport extends TransportFilter {
         return next.toString();
     }
 
+
+    /**
+     * Lets attempt to replay the request as a command may have disappeared
+     */
+    protected void replayRequest(Command command, FutureResponse response) {
+    }
 }

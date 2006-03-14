@@ -93,7 +93,7 @@ public class MulticastTransport extends UdpTransport {
         socket.joinGroup(mcastAddress);
         socket.setSoTimeout((int) keepAliveInterval);
 
-        return new CommandDatagramSocket(toString(), socket, getWireFormat(), getDatagramSize(), mcastAddress, mcastPort, createDatagramHeaderMarshaller());
+        return new CommandDatagramSocket(this, socket, getWireFormat(), getDatagramSize(), mcastAddress, mcastPort, createDatagramHeaderMarshaller());
     }
 
     protected InetSocketAddress createAddress(URI remoteLocation) throws UnknownHostException, IOException {

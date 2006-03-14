@@ -17,6 +17,8 @@
 package org.apache.activemq.transport.udp;
 
 import org.activeio.command.WireFormat;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
@@ -24,9 +26,13 @@ import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.WireFormatNegotiator;
+import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
+import org.apache.activemq.transport.reliable.ReliableTransport;
+import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -85,6 +91,9 @@ public class UdpTransportFactory extends TransportFactory {
         if (udpTransport.getMaxInactivityDuration() > 0) {
             transport = new InactivityMonitor(transport, udpTransport.getMaxInactivityDuration());
         }
+        
+        // TODO should we have this?
+        //transport = udpTransport.createFilter(transport);
         return transport;
     }
 
@@ -96,6 +105,7 @@ public class UdpTransportFactory extends TransportFactory {
     protected Transport configure(Transport transport, WireFormat format, Map options, boolean server) {
         IntrospectionSupport.setProperties(transport, options);
         UdpTransport udpTransport = (UdpTransport) transport;
+        OpenWireFormat openWireFormat = asOpenWireFormat(format);
 
         if (udpTransport.isTrace()) {
             transport = new TransportLogger(transport);
@@ -109,24 +119,46 @@ public class UdpTransportFactory extends TransportFactory {
             transport = new InactivityMonitor(transport, udpTransport.getMaxInactivityDuration());
         }
 
-        transport = new ResponseCorrelator(transport);
-
+        // add reliabilty
+        //transport = new ReliableTransport(transport, createReplayStrategy());
+        
         // deal with fragmentation
-        transport = new CommandJoiner(transport, asOpenWireFormat(format));
+        transport = new CommandJoiner(transport, openWireFormat);
+        
+        transport = udpTransport.createFilter(transport);
         
         return transport;
     }
 
+    protected ReplayStrategy createReplayStrategy() {
+        return new ExceptionIfDroppedReplayStrategy(1);
+    }
+
     protected Transport configureClientSideNegotiator(Transport transport, WireFormat format, final UdpTransport udpTransport) {
+        return new TransportFilter(transport) {
+
+            public void onCommand(Command command) {
+                // redirect to the endpoint that the last response came from
+                Endpoint from = command.getFrom();
+                udpTransport.setTargetEndpoint(from);
+                
+                super.onCommand(command);
+            }
+            
+        };
+        /*
         transport = new WireFormatNegotiator(transport, asOpenWireFormat(format), udpTransport.getMinmumWireFormatVersion()) {
             protected void onWireFormatNegotiated(WireFormatInfo info) {
                 // lets switch to the target endpoint
                 // based on the last packet that was received
                 // so that all future requests go to the newly created UDP channel
-                udpTransport.setTargetEndpoint(info.getFrom());
+                Endpoint from = info.getFrom();
+                System.out.println("####Êsetting the client side target to: " + from);
+                udpTransport.setTargetEndpoint(from);
             }
         };
         return transport;
+        */
     }
 
     protected OpenWireFormat asOpenWireFormat(WireFormat wf) {

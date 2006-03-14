@@ -21,6 +21,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -189,6 +190,11 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             System.out.println("Got WireFormatInfo: " + command);
         }
         else {
+            if (command.isResponseRequired()) {
+                // lets send a response back...
+                sendResponse(command);
+
+            }
             if (large) {
                 System.out.println("### Received command: " + command.getClass() + " with id: " + command.getCommandId());
             }
@@ -200,6 +206,19 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
                 receivedCommand = command;
                 lock.notifyAll();
             }
+        }
+    }
+
+    protected void sendResponse(Command command) {
+        Response response = new Response();                
+        response.setCorrelationId(command.getCommandId());
+        try {
+            consumer.oneway(response);
+        }
+        catch (IOException e) {
+            System.out.println("Caught: " + e);
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
