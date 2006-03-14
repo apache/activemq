@@ -88,15 +88,15 @@ public class WireFormatNegotiator extends TransportFilter {
             try {
                 wireInfoSentDownLatch.await();
                 
+                if (log.isDebugEnabled()) {
+                    log.debug(this + " before negotiation: " + wireFormat);
+                }
                 if( !info.isValid() ) {
                     onException(new IOException("Remote wire format magic is invalid"));
                 } else if( info.getVersion() < minimumVersion ) {
                     onException(new IOException("Remote wire format ("+info.getVersion()+") is lower the minimum version required ("+minimumVersion+")"));
                 }
                 
-                if (log.isDebugEnabled()) {
-                    log.debug(this + " before negotiation: " + wireFormat);
-                }
                 wireFormat.renegociatWireFormat(info);
                 
                 if (log.isDebugEnabled()) {

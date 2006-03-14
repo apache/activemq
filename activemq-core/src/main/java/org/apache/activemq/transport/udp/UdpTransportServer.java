@@ -24,6 +24,7 @@ import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerSupport;
@@ -49,13 +50,13 @@ public class UdpTransportServer extends TransportServerSupport {
 
     private UdpTransport serverTransport;
     private Transport configuredTransport;
+    private boolean usingWireFormatNegotiation;
     private Map transports = new HashMap();
 
     public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport) {
         super(connectURI);
         this.serverTransport = serverTransport;
-        
-        
+
         this.configuredTransport = configuredTransport;
 
         // lets disable the incremental checking of the sequence numbers
@@ -86,6 +87,7 @@ public class UdpTransportServer extends TransportServerSupport {
             }
 
             public void onException(IOException error) {
+                log.error("Caught: " + error, error);
             }
 
             public void transportInterupted() {
@@ -110,16 +112,22 @@ public class UdpTransportServer extends TransportServerSupport {
         synchronized (transports) {
             transport = (Transport) transports.get(endpoint);
             if (transport == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Creating a new UDP server connection");
+                if (usingWireFormatNegotiation && !command.isWireFormatInfo()) {
+                    log.error("Received inbound server communication from: " + command.getFrom() + " expecting WireFormatInfo but was command: " + command);
                 }
-                try {
-                    transport = createTransport(command, endpoint);
-                    transport = configureTransport(transport);
-                    transports.put(endpoint, transport);
-                }
-                catch (IOException e) {
-                    getAcceptListener().onAcceptError(e);
+                else {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Creating a new UDP server connection");
+                    }
+                    try {
+                        transport = createTransport(command, endpoint);
+                        transport = configureTransport(transport);
+                        transports.put(endpoint, transport);
+                    }
+                    catch (IOException e) {
+                        log.error("Caught: " + e, e);
+                        getAcceptListener().onAcceptError(e);
+                    }
                 }
             }
             else {
@@ -129,7 +137,7 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected Transport configureTransport(Transport transport) {
-        transport = new ResponseCorrelator(transport);
+        // transport = new ResponseCorrelator(transport);
 
         if (serverTransport.getMaxInactivityDuration() > 0) {
             transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
@@ -140,26 +148,54 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected Transport createTransport(final Command command, DatagramEndpoint endpoint) throws IOException {
+        if (endpoint == null) {
+            //log.error("No endpoint available for command: " + command);
+            throw new IOException("No endpoint available for command: " + command);
+        }
         final SocketAddress address = endpoint.getAddress();
         final OpenWireFormat connectionWireFormat = serverTransport.getWireFormat().copy();
         final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
 
         Transport configuredTransport = new CommandJoiner(transport, connectionWireFormat);
-        
-        return new WireFormatNegotiator(configuredTransport, transport.getWireFormat(), serverTransport.getMinmumWireFormatVersion()) {
+
+        // lets pass in the received transport
+        return new TransportFilter(configuredTransport) {
+            public void start() throws Exception {
+                super.start();
+                onCommand(command);
+            }
+        };
+
+        /**
+        // return configuredTransport;
+
+        // configuredTransport = transport.createFilter(configuredTransport);
+
+        final WireFormatNegotiator wireFormatNegotiator = new WireFormatNegotiator(configuredTransport, transport.getWireFormat(), serverTransport
+                .getMinmumWireFormatVersion()) {
 
             public void start() throws Exception {
                 super.start();
-
-                // process the inbound wireformat
+                System.out.println("Starting a new server transport: " + this + " with command: " + command);
                 onCommand(command);
             }
 
             // lets use the specific addressing of wire format
             protected void sendWireFormat(WireFormatInfo info) throws IOException {
+                System.out.println("#### we have negotiated the wireformat; sending a wireformat to: " + address);
                 transport.oneway(info, address);
             }
         };
+        return wireFormatNegotiator;
+        */
+        
+        /*
+         * transport.setStartupRunnable(new Runnable() {
+         * 
+         * public void run() { System.out.println("Passing the incoming
+         * WireFormat into into: " + this);
+         *  // process the inbound wireformat
+         * wireFormatNegotiator.onCommand(command); }});
+         */
     }
-
 }

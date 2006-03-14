@@ -16,9 +16,10 @@
  */
 package org.apache.activemq.transport.udp;
 
+import edu.emory.mathcs.backport.java.util.concurrent.Future;
+
 import org.activeio.ByteArrayInputStream;
 import org.activeio.ByteArrayOutputStream;
-import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.LastPartialCommand;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.Map;
 
 /**
  * A strategy for reading datagrams and de-fragmenting them together.
@@ -44,6 +46,7 @@ public class CommandDatagramChannel implements CommandChannel {
 
     private static final Log log = LogFactory.getLog(CommandDatagramChannel.class);
 
+    private final UdpTransport transport;
     private final String name;
     private DatagramChannel channel;
     private OpenWireFormat wireFormat;
@@ -61,15 +64,17 @@ public class CommandDatagramChannel implements CommandChannel {
     private ByteBuffer writeBuffer;
     private int defaultMarshalBufferSize = 64 * 1024;
 
-    public CommandDatagramChannel(String name, DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
+
+    public CommandDatagramChannel(UdpTransport transport, DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
             SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller) {
-        this.name = name;
+        this.transport = transport;
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.bufferPool = bufferPool;
         this.datagramSize = datagramSize;
         this.targetAddress = targetAddress;
         this.headerMarshaller = headerMarshaller;
+        this.name = transport.toString();
     }
 
     public String toString() {
@@ -87,34 +92,21 @@ public class CommandDatagramChannel implements CommandChannel {
         bufferPool.stop();
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.transport.udp.CommandChannel#read()
-     */
     public Command read() throws IOException {
         Command answer = null;
+        Endpoint from = null;
         synchronized (readLock) {
             while (true) {
                 readBuffer.clear();
                 SocketAddress address = channel.receive(readBuffer);
 
-                /*
-                if (address == null) {
-                    System.out.println("No address on packet: " + readBuffer);
-                    // continue;
-                }
-                */
-
                 readBuffer.flip();
 
                 if (readBuffer.limit() == 0) {
-                    //System.out.println("Empty packet!");
                     continue;
                 }
-
-                //log.debug("buffer: " + readBuffer + " has remaining: " + readBuffer.remaining());
-
-                Endpoint from = headerMarshaller.createEndpoint(readBuffer, address);
-
+                from = headerMarshaller.createEndpoint(readBuffer, address);
+ 
                 int remaining = readBuffer.remaining();
                 byte[] data = new byte[remaining];
                 readBuffer.get(data);
@@ -125,33 +117,25 @@ public class CommandDatagramChannel implements CommandChannel {
                 // buffering?
                 DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(data));
                 answer = (Command) wireFormat.unmarshal(dataIn);
-                if (answer != null) {
-                    answer.setFrom(from);
-                }
                 break;
             }
         }
         if (answer != null) {
+            answer.setFrom(from);
+            
             if (log.isDebugEnabled()) {
-                log.debug("Channel: " + name + " about to process: " + answer);
+                log.debug("Channel: " + name + " received from: " + from + " about to process: " + answer);
             }
         }
         return answer;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.transport.udp.CommandChannel#write(org.apache.activemq.command.Command)
-     */
-    public void write(Command command) throws IOException {
-        write(command, targetAddress);
-    }
-
-    /* (non-Javadoc)
-     * @see org.apache.activemq.transport.udp.CommandChannel#write(org.apache.activemq.command.Command, java.net.SocketAddress)
-     */
-    public void write(Command command, SocketAddress address) throws IOException {
+    public void write(Command command, SocketAddress address, Map requestMap, Future future) throws IOException {
         synchronized (writeLock) {
 
+            if (!command.isWireFormatInfo() && command.getCommandId() == 0) {
+                command.setCommandId(transport.getNextCommandId());
+            }
             ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(defaultMarshalBufferSize);
             wireFormat.marshal(command, new DataOutputStream(largeBuffer));
             byte[] data = largeBuffer.toByteArray();
@@ -160,7 +144,7 @@ public class CommandDatagramChannel implements CommandChannel {
             writeBuffer.clear();
             headerMarshaller.writeHeader(command, writeBuffer);
 
-            if (size >= writeBuffer.remaining()) {
+            if (size > writeBuffer.remaining()) {
                 // lets split the command up into chunks
                 int offset = 0;
                 boolean lastFragment = false;
@@ -216,7 +200,11 @@ public class CommandDatagramChannel implements CommandChannel {
                         bs.marshal(writeBuffer);
                     }
 
-                    writeBuffer.putInt(command.getCommandId());
+                    int commandId = command.getCommandId();
+                    if (fragment > 0) {
+                        commandId = transport.getNextCommandId();
+                    }
+                    writeBuffer.putInt(commandId);
                     if (bs == null) {
                         writeBuffer.put((byte) 1);
                     }
@@ -232,7 +220,9 @@ public class CommandDatagramChannel implements CommandChannel {
                 }
 
                 // now lets write the last partial command
-                command = new LastPartialCommand(command);
+                command = new LastPartialCommand(command.isResponseRequired());
+                command.setCommandId(transport.getNextCommandId());
+                
                 largeBuffer = new ByteArrayOutputStream(defaultMarshalBufferSize);
                 wireFormat.marshal(command, new DataOutputStream(largeBuffer));
                 data = largeBuffer.toByteArray();
@@ -243,6 +233,9 @@ public class CommandDatagramChannel implements CommandChannel {
 
             writeBuffer.put(data);
 
+            if (command.isResponseRequired()) {
+                requestMap.put(new Integer(command.getCommandId()), future);
+            }
             sendWriteBuffer(address);
         }
     }
@@ -250,16 +243,10 @@ public class CommandDatagramChannel implements CommandChannel {
     // Properties
     // -------------------------------------------------------------------------
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.transport.udp.CommandChannel#getDatagramSize()
-     */
     public int getDatagramSize() {
         return datagramSize;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.transport.udp.CommandChannel#setDatagramSize(int)
-     */
     public void setDatagramSize(int datagramSize) {
         this.datagramSize = datagramSize;
     }
@@ -275,18 +262,21 @@ public class CommandDatagramChannel implements CommandChannel {
         this.bufferPool = bufferPool;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.transport.udp.CommandChannel#getHeaderMarshaller()
-     */
     public DatagramHeaderMarshaller getHeaderMarshaller() {
         return headerMarshaller;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.transport.udp.CommandChannel#setHeaderMarshaller(org.apache.activemq.transport.udp.DatagramHeaderMarshaller)
-     */
     public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller) {
         this.headerMarshaller = headerMarshaller;
+    }
+
+    
+    public SocketAddress getTargetAddress() {
+        return targetAddress;
+    }
+
+    public void setTargetAddress(SocketAddress targetAddress) {
+        this.targetAddress = targetAddress;
     }
 
     // Implementation methods

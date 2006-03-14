@@ -21,6 +21,8 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -33,6 +35,7 @@ import java.io.IOException;
  * @version $Revision$
  */
 public class CommandJoiner extends TransportFilter {
+    private static final Log log = LogFactory.getLog(CommandJoiner.class);
 
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
     private OpenWireFormat wireFormat;
@@ -57,13 +60,16 @@ public class CommandJoiner extends TransportFilter {
         else if (type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
             try {
                 byte[] fullData = out.toByteArray();
+                out.reset();
                 Command completeCommand = (Command) wireFormat.unmarshal(new DataInputStream(new ByteArrayInputStream(fullData)));
-                completeCommand.setCommandId(command.getCommandId());
-                completeCommand.setResponseRequired(command.isResponseRequired());
-                resetBuffer();
+                
+                LastPartialCommand lastCommand = (LastPartialCommand) command;
+                lastCommand.configure(completeCommand);
+                
                 getTransportListener().onCommand(completeCommand);
             }
             catch (IOException e) {
+                log.warn("Failed to unmarshal partial command: " + command);
                 getTransportListener().onException(e);
             }
         }
@@ -74,14 +80,10 @@ public class CommandJoiner extends TransportFilter {
 
     public void stop() throws Exception {
         super.stop();
-        resetBuffer();
+        out = null;
     }
 
     public String toString() {
         return next.toString();
-    }
-
-    protected void resetBuffer() {
-        out.reset();
     }
 }

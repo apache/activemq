@@ -32,14 +32,14 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  * 
  * @version $Revision: 1.4 $
  */
-final public class ResponseCorrelator extends TransportFilter {
+public class ResponseCorrelator extends TransportFilter {
     
     private static final Log log = LogFactory.getLog(ResponseCorrelator.class);
     
     private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
     private int lastCommandId = 0;
 
-    synchronized int getNextCommandId() {
+    public synchronized int getNextCommandId() {
         return ++lastCommandId;
     }
     
@@ -48,13 +48,19 @@ final public class ResponseCorrelator extends TransportFilter {
     }
     
     public void oneway(Command command) throws IOException {
-        command.setCommandId(getNextCommandId());
+        // a parent transport could have set the ID
+        if (command.getCommandId() == 0) {
+            command.setCommandId(getNextCommandId());
+        }
         command.setResponseRequired(false);
         next.oneway(command);
     }
 
     public FutureResponse asyncRequest(Command command) throws IOException {
-        command.setCommandId(getNextCommandId());
+        // a parent transport could have set the ID
+        if (command.getCommandId() == 0) {
+            command.setCommandId(getNextCommandId());
+        }
         command.setResponseRequired(true);
         FutureResponse future = new FutureResponse();
         requestMap.put(new Integer(command.getCommandId()), future);

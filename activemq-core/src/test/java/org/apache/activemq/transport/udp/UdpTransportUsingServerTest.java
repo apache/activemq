@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.udp;
 
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
@@ -32,6 +34,18 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
     protected String producerURI = "udp://localhost:" + consumerPort;
     protected String serverURI = producerURI;
 
+    public void testRequestResponse() throws Exception {
+        ConsumerInfo expected = new ConsumerInfo();
+        expected.setSelector("Edam");
+        expected.setResponseRequired(true);
+        System.out.println("About to send: " + expected);
+        Response response = producer.request(expected, 2000);
+
+        System.out.println("Received: " + response);
+        assertNotNull("Received a response", response);
+        assertTrue("Should not be an exception", !response.isException());
+    }
+
     protected Transport createProducer() throws Exception {
         System.out.println("Producer using URI: " + producerURI);
         URI uri = new URI(producerURI);
@@ -41,7 +55,7 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
     protected TransportServer createServer() throws Exception {
         return TransportFactory.bind("byBroker", new URI(serverURI));
     }
-    
+
     protected Transport createConsumer() throws Exception {
         return null;
     }

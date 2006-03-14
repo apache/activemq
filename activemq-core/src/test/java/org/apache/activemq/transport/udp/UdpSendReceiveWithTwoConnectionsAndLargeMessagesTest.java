@@ -16,27 +16,16 @@
  */
 package org.apache.activemq.transport.udp;
 
-import org.apache.activemq.command.BaseEndpoint;
-
-import java.net.InetAddress;
-import java.net.SocketAddress;
-
 /**
- * 
+ *
  * @version $Revision$
  */
-public class DatagramEndpoint extends BaseEndpoint {
+public class UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest extends UdpSendReceiveWithTwoConnectionsTest {
 
-    private final SocketAddress address;
-
-    public DatagramEndpoint(String name, SocketAddress address) {
-        super(name);
-        this.address = address;
+    protected void setUp() throws Exception {
+        largeMessages = true;
+        //messageCount = 1;
+        super.setUp();
     }
 
-    public SocketAddress getAddress() {
-        return address;
-    }
-    
-    
 }

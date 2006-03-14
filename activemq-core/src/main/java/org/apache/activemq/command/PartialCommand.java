@@ -128,4 +128,10 @@ public class PartialCommand implements Command {
     public boolean isMarshallAware() {
         return false;
     }
+
+    public String toString() {
+        return "PartialCommand[id: " + commandId + " data: " + data.length + " byte(s)]";
+    }
+    
+    
 }

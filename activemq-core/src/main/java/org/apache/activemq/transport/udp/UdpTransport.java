@@ -16,11 +16,17 @@
  */
 package org.apache.activemq.transport.udp;
 
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
@@ -28,6 +34,7 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -62,6 +69,10 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private int port;
     private int minmumWireFormatVersion;
     private String description = null;
+    private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
+    private int lastCommandId = 0;
+
+    private Runnable runnable;
 
     protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
@@ -89,6 +100,28 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.description = getProtocolName() + "Server@";
     }
 
+    public TransportFilter createFilter(Transport transport) {
+        return new TransportFilter(transport) {
+            public void onCommand(Command command) {
+                boolean debug = log.isDebugEnabled();
+                if (command.isResponse()) {
+                    Response response = (Response) command;
+                    FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
+                    if (future != null) {
+                        future.set(response);
+                    }
+                    else {
+                        if (debug)
+                            log.debug("Received unexpected response for command id: " + response.getCorrelationId());
+                    }
+                }
+                else {
+                    super.onCommand(command);
+                }
+            }
+        };
+    }
+
     /**
      * A one way asynchronous send
      */
@@ -97,16 +130,52 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     /**
+     * A one way asynchronous send
+     */
+    public void oneway(Command command, FutureResponse future) throws IOException {
+        oneway(command, targetAddress, future);
+    }
+
+    protected void oneway(Command command, SocketAddress address, FutureResponse future) throws IOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Sending oneway from: " + this + " to target: " + targetAddress + " command: " + command);
+        }
+        checkStarted(command);
+        commandChannel.write(command, address, requestMap, future);
+    }
+
+    /**
      * A one way asynchronous send to a given address
      */
     public void oneway(Command command, SocketAddress address) throws IOException {
-        if (log.isDebugEnabled()) {
-            log.debug("Sending oneway from: " + this + " to target: " + targetAddress);
-        }
-        checkStarted(command);
-        commandChannel.write(command, address);
+        oneway(command, address, null);
     }
-    
+
+    public FutureResponse asyncRequest(Command command) throws IOException {
+        if (command.getCommandId() == 0) {
+            command.setCommandId(getNextCommandId());
+        }
+        command.setResponseRequired(true);
+        FutureResponse future = new FutureResponse();
+        oneway(command, future);
+        return future;
+    }
+
+    public Response request(Command command) throws IOException {
+        FutureResponse response = asyncRequest(command);
+        return response.getResult();
+    }
+
+    public Response request(Command command, int timeout) throws IOException {
+        FutureResponse response = asyncRequest(command);
+        return response.getResult(timeout);
+    }
+
+
+    public void setStartupRunnable(Runnable runnable) {
+        this.runnable = runnable;
+    }
+
     /**
      * @return pretty print of 'this'
      */
@@ -124,6 +193,9 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     public void run() {
         log.trace("Consumer thread starting for: " + toString());
+        if (runnable != null) {
+            runnable.run();
+        }
         while (!isStopped()) {
             try {
                 Command command = commandChannel.read();
@@ -135,7 +207,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                     stop();
                 }
                 catch (Exception e2) {
-                    log.warn("Caught while closing: " + e2 + ". Now Closed", e2);
+                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
             }
             catch (SocketException e) {
@@ -145,23 +217,32 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                     stop();
                 }
                 catch (Exception e2) {
-                    log.warn("Caught while closing: " + e2 + ". Now Closed", e2);
+                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
             }
-            catch (Exception e) {
-                System.out.println("Caught exception of type: " + e.getClass());
-                e.printStackTrace();
+            catch (EOFException e) {
+                // DataInputStream closed
+                log.debug("Socket closed: " + e, e);
                 try {
                     stop();
                 }
                 catch (Exception e2) {
-                    log.warn("Caught while closing: " + e2 + ". Now Closed", e2);
+                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                }
+            }
+            catch (Exception e) {
+                try {
+                    stop();
+                }
+                catch (Exception e2) {
+                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
                 if (e instanceof IOException) {
                     onException((IOException) e);
                 }
                 else {
-                    log.error(e);
+                    log.error("Caught: " + e, e);
+                    e.printStackTrace();
                 }
             }
         }
@@ -182,6 +263,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                     originalTargetAddress = targetAddress;
                 }
                 targetAddress = address;
+                commandChannel.setTargetAddress(address);
             }
         }
     }
@@ -324,12 +406,12 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
-        return new CommandDatagramChannel(toString(), channel, wireFormat, bufferPool, datagramSize, targetAddress, createDatagramHeaderMarshaller());
+        return new CommandDatagramChannel(this, channel, wireFormat, bufferPool, datagramSize, targetAddress, createDatagramHeaderMarshaller());
     }
 
     protected void bind(DatagramSocket socket, SocketAddress localAddress) throws IOException {
         channel.configureBlocking(true);
-        
+
         if (log.isDebugEnabled()) {
             log.debug("Binding to address: " + localAddress);
         }
@@ -340,7 +422,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         // TODO
         // connect to default target address to avoid security checks each time
         // channel = channel.connect(targetAddress);
-        
+
         return channel;
     }
 
@@ -370,7 +452,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         return targetAddress;
     }
 
-    public void setCommandChannel(CommandChannel commandChannel) {
-        this.commandChannel = commandChannel;
+    protected synchronized int getNextCommandId() {
+        return ++lastCommandId;
     }
 }

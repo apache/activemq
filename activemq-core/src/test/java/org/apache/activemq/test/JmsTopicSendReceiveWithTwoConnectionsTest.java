@@ -44,10 +44,14 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
 
         connectionFactory = createConnectionFactory();
 
+        log.info("Creating send connection");
         sendConnection = createSendConnection();
+        log.info("Starting send connection");
         sendConnection.start();
 
+        log.info("Creating receive connection");
         receiveConnection = createReceiveConnection();
+        log.info("Starting receive connection");
         receiveConnection.start();
 
         log.info("Created sendConnection: " + sendConnection);
