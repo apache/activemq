@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.transport.udp;
 
-import edu.emory.mathcs.backport.java.util.concurrent.Future;
-
 import org.activeio.ByteArrayInputStream;
 import org.activeio.ByteArrayOutputStream;
 import org.apache.activemq.command.Command;
@@ -26,6 +24,7 @@ import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,7 +34,6 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.util.Map;
 
 /**
  * A strategy for reading datagrams and de-fragmenting them together.
@@ -46,8 +44,8 @@ public class CommandDatagramChannel implements CommandChannel {
 
     private static final Log log = LogFactory.getLog(CommandDatagramChannel.class);
 
-    private final UdpTransport transport;
     private final String name;
+    private final IntSequenceGenerator sequenceGenerator;
     private DatagramChannel channel;
     private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
@@ -65,9 +63,9 @@ public class CommandDatagramChannel implements CommandChannel {
     private int defaultMarshalBufferSize = 64 * 1024;
 
 
+
     public CommandDatagramChannel(UdpTransport transport, DatagramChannel channel, OpenWireFormat wireFormat, ByteBufferPool bufferPool, int datagramSize,
             SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller) {
-        this.transport = transport;
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.bufferPool = bufferPool;
@@ -75,6 +73,10 @@ public class CommandDatagramChannel implements CommandChannel {
         this.targetAddress = targetAddress;
         this.headerMarshaller = headerMarshaller;
         this.name = transport.toString();
+        this.sequenceGenerator = transport.getSequenceGenerator();
+        if (sequenceGenerator == null) {
+            throw new IllegalArgumentException("No sequenceGenerator on the given transport: " + transport);
+        }
     }
 
     public String toString() {
@@ -130,12 +132,9 @@ public class CommandDatagramChannel implements CommandChannel {
         return answer;
     }
 
-    public void write(Command command, SocketAddress address, Map requestMap, Future future) throws IOException {
+    public void write(Command command, SocketAddress address) throws IOException {
         synchronized (writeLock) {
 
-            if (!command.isWireFormatInfo() && command.getCommandId() == 0) {
-                command.setCommandId(transport.getNextCommandId());
-            }
             ByteArrayOutputStream largeBuffer = new ByteArrayOutputStream(defaultMarshalBufferSize);
             wireFormat.marshal(command, new DataOutputStream(largeBuffer));
             byte[] data = largeBuffer.toByteArray();
@@ -202,7 +201,7 @@ public class CommandDatagramChannel implements CommandChannel {
 
                     int commandId = command.getCommandId();
                     if (fragment > 0) {
-                        commandId = transport.getNextCommandId();
+                        commandId = sequenceGenerator.getNextSequenceId();
                     }
                     writeBuffer.putInt(commandId);
                     if (bs == null) {
@@ -216,12 +215,12 @@ public class CommandDatagramChannel implements CommandChannel {
                     writeBuffer.put(data, offset, chunkSize);
 
                     offset += chunkSize;
-                    sendWriteBuffer(address);
+                    sendWriteBuffer(address, commandId);
                 }
 
                 // now lets write the last partial command
                 command = new LastPartialCommand(command.isResponseRequired());
-                command.setCommandId(transport.getNextCommandId());
+                command.setCommandId(sequenceGenerator.getNextSequenceId());
                 
                 largeBuffer = new ByteArrayOutputStream(defaultMarshalBufferSize);
                 wireFormat.marshal(command, new DataOutputStream(largeBuffer));
@@ -232,11 +231,7 @@ public class CommandDatagramChannel implements CommandChannel {
             }
 
             writeBuffer.put(data);
-
-            if (command.isResponseRequired()) {
-                requestMap.put(new Integer(command.getCommandId()), future);
-            }
-            sendWriteBuffer(address);
+            sendWriteBuffer(address, command.getCommandId());
         }
     }
 
@@ -281,11 +276,11 @@ public class CommandDatagramChannel implements CommandChannel {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void sendWriteBuffer(SocketAddress address) throws IOException {
+    protected void sendWriteBuffer(SocketAddress address, int commandId) throws IOException {
         writeBuffer.flip();
 
         if (log.isDebugEnabled()) {
-            log.debug("Channel: " + name + " sending datagram to: " + address);
+            log.debug("Channel: " + name + " sending datagram: " + commandId + " to: " + address);
         }
         channel.send(writeBuffer, address);
     }

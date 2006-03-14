@@ -45,6 +45,7 @@ public class UdpSendReceiveWithTwoConnectionsTest extends JmsTopicSendReceiveWit
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setPersistent(false);
+        answer.setUseJmx(false);
         answer.addConnector(brokerURI);
         return answer;
     }

@@ -328,31 +328,37 @@ public class BrokerService implements Service {
             return;
         }
         
-        processHelperProperties();
+        try {
+            processHelperProperties();
 
-        BrokerRegistry.getInstance().bind(getBrokerName(), this);
+            BrokerRegistry.getInstance().bind(getBrokerName(), this);
 
-        addShutdownHook();
-        if (deleteAllMessagesOnStartup) {
-            deleteAllMessages();
-        }
-
-        if (isUseJmx()) {
-            getManagementContext().start();
-        }
-
-        getBroker().start();
-        if (masterConnectorURI!=null){
-            initializeMasterConnector(new URI(masterConnectorURI));
-            if (masterConnector!=null){
-                masterConnector.start();
+            addShutdownHook();
+            if (deleteAllMessagesOnStartup) {
+                deleteAllMessages();
             }
-        }
-        
-        startAllConnectors();
-        
 
-        log.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ") started");
+            if (isUseJmx()) {
+                getManagementContext().start();
+            }
+
+            getBroker().start();
+            if (masterConnectorURI!=null){
+                initializeMasterConnector(new URI(masterConnectorURI));
+                if (masterConnector!=null){
+                    masterConnector.start();
+                }
+            }
+            
+            startAllConnectors();
+            
+
+            log.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ") started");
+        }
+        catch (Exception e) {
+            log.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
+            throw e;
+        }
     }
 
     public void stop() throws Exception {

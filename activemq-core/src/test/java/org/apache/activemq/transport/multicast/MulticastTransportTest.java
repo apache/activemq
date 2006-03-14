@@ -21,6 +21,7 @@ import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.transport.udp.UdpTransportTest;
+import org.apache.activemq.util.IntSequenceGenerator;
 
 import java.net.URI;
 
@@ -42,12 +43,14 @@ public class MulticastTransportTest extends UdpTransportTest {
         
         OpenWireFormat wireFormat = createWireFormat();
         MulticastTransport transport = new MulticastTransport(wireFormat, new URI(multicastURI));
+        transport.setSequenceGenerator(new IntSequenceGenerator());
         return new CommandJoiner(transport, wireFormat);
     }
 
     protected Transport createConsumer() throws Exception {
         OpenWireFormat wireFormat = createWireFormat();
         MulticastTransport transport = new MulticastTransport(wireFormat, new URI(multicastURI));
+        transport.setSequenceGenerator(new IntSequenceGenerator());
         return new CommandJoiner(transport, wireFormat);
     }
 

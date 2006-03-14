@@ -14,28 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.udp;
+package org.apache.activemq.util;
 
-import org.apache.activemq.command.BaseEndpoint;
+public class IntSequenceGenerator {
 
-import java.net.SocketAddress;
+    private int lastSequenceId;
 
-/**
- * 
- * @version $Revision$
- */
-public class DatagramEndpoint extends BaseEndpoint {
-
-    private final SocketAddress address;
-
-    public DatagramEndpoint(String name, SocketAddress address) {
-        super(name);
-        this.address = address;
+    public synchronized int getNextSequenceId() {
+        return ++lastSequenceId;
     }
 
-    public SocketAddress getAddress() {
-        return address;
+    public synchronized int getLastSequenceId() {
+        return lastSequenceId;
     }
-    
-    
+
+    public synchronized void setLastSequenceId(int l) {
+        lastSequenceId = l;
+    }
 }

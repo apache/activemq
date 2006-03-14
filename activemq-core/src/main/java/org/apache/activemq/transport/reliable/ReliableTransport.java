@@ -22,6 +22,7 @@ import org.apache.activemq.openwire.CommandIdComparator;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,6 +48,12 @@ public class ReliableTransport extends ResponseCorrelator {
         super(next);
         this.replayStrategy = replayStrategy;
     }
+
+    public ReliableTransport(Transport next, IntSequenceGenerator sequenceGenerator, ReplayStrategy replayStrategy) {
+        super(next, sequenceGenerator);
+        this.replayStrategy = replayStrategy;
+    }
+
 
     public Response request(Command command) throws IOException {
         FutureResponse response = asyncRequest(command);
@@ -155,14 +162,31 @@ public class ReliableTransport extends ResponseCorrelator {
         this.expectedCounter = expectedCounter;
     }
 
-    public String toString() {
-        return next.toString();
+    
+    public int getRequestTimeout() {
+        return requestTimeout;
+    }
+
+    /**
+     * Sets the default timeout of requests before starting to request commands are replayed
+     */
+    public void setRequestTimeout(int requestTimeout) {
+        this.requestTimeout = requestTimeout;
     }
 
 
+    public ReplayStrategy getReplayStrategy() {
+        return replayStrategy;
+    }
+
+
+    public String toString() {
+        return next.toString();
+    }
     /**
      * Lets attempt to replay the request as a command may have disappeared
      */
     protected void replayRequest(Command command, FutureResponse response) {
+        log.debug("Still waiting for response on: " + this + " to command: " + command);
     }
 }

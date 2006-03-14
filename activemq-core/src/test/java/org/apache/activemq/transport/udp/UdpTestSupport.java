@@ -54,7 +54,6 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         ConsumerInfo expected = new ConsumerInfo();
         expected.setSelector("Cheese");
         expected.setExclusive(true);
-        expected.setCommandId((short) 12);
         expected.setExclusive(true);
         expected.setPrefetchSize(3456);
 
@@ -67,7 +66,6 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             ConsumerInfo actual = (ConsumerInfo) received;
             assertEquals("Selector", expected.getSelector(), actual.getSelector());
             assertEquals("isExclusive", expected.isExclusive(), actual.isExclusive());
-            assertEquals("getCommandId", expected.getCommandId(), actual.getCommandId());
             assertEquals("getPrefetchSize", expected.getPrefetchSize(), actual.getPrefetchSize());
         }
         catch (Exception e) {
