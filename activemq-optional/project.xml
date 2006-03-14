@@ -59,17 +59,6 @@
       <version>${activeio_version}</version>
     </dependency>
 
-
-    <dependency>
-      <groupId>geronimo</groupId>
-      <artifactId>geronimo-kernel</artifactId>
-      <version>${geronimo_kernel_version}</version>
-    </dependency>
-    <dependency>
-      <groupId>geronimo</groupId>
-      <artifactId>geronimo-system</artifactId>
-      <version>${geronimo_system_version}</version>
-    </dependency>
     <dependency>
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-j2ee-connector</artifactId>
