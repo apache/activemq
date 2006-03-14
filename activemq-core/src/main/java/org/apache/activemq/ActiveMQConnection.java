@@ -143,8 +143,8 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
 
     private AdvisoryConsumer advisoryConsumer;
     private final CountDownLatch brokerInfoReceived = new CountDownLatch(1);
-
     private BrokerInfo brokerInfo;
+    private IOException firstFailureError;
 
 
 
@@ -1150,7 +1150,7 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
     protected synchronized void checkClosedOrFailed() throws JMSException {
         checkClosed();
         if (transportFailed.get()){
-            throw new ConnectionFailedException();
+            throw new ConnectionFailedException(firstFailureError);
         }
     }
     
@@ -1644,8 +1644,11 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
         }
     }
     
-    protected void transportFailed(Throwable error){
+    protected void transportFailed(IOException error){
         transportFailed.set(true);
+        if (firstFailureError == null) {
+            firstFailureError = error;
+        }
         if (!closed.get() && !closing.get()) {
             try{
                 cleanup();
