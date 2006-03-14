@@ -16,20 +16,15 @@
  */
 package org.apache.activemq.transport.udp;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.FutureResponse;
-import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
+import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,10 +64,8 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private int port;
     private int minmumWireFormatVersion;
     private String description = null;
-    private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
-    private int lastCommandId = 0;
-
     private Runnable runnable;
+    private IntSequenceGenerator sequenceGenerator;
 
     protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
@@ -100,28 +93,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.description = getProtocolName() + "Server@";
     }
 
-    public TransportFilter createFilter(Transport transport) {
-        return new TransportFilter(transport) {
-            public void onCommand(Command command) {
-                boolean debug = log.isDebugEnabled();
-                if (command.isResponse()) {
-                    Response response = (Response) command;
-                    FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
-                    if (future != null) {
-                        future.set(response);
-                    }
-                    else {
-                        if (debug)
-                            log.debug("Received unexpected response for command id: " + response.getCorrelationId());
-                    }
-                }
-                else {
-                    super.onCommand(command);
-                }
-            }
-        };
-    }
-
     /**
      * A one way asynchronous send
      */
@@ -130,47 +101,15 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     /**
-     * A one way asynchronous send
+     * A one way asynchronous send to a given address
      */
-    public void oneway(Command command, FutureResponse future) throws IOException {
-        oneway(command, targetAddress, future);
-    }
-
-    protected void oneway(Command command, SocketAddress address, FutureResponse future) throws IOException {
+    public void oneway(Command command, SocketAddress address) throws IOException {
         if (log.isDebugEnabled()) {
             log.debug("Sending oneway from: " + this + " to target: " + targetAddress + " command: " + command);
         }
         checkStarted(command);
-        commandChannel.write(command, address, requestMap, future);
+        commandChannel.write(command, address);
     }
-
-    /**
-     * A one way asynchronous send to a given address
-     */
-    public void oneway(Command command, SocketAddress address) throws IOException {
-        oneway(command, address, null);
-    }
-
-    public FutureResponse asyncRequest(Command command) throws IOException {
-        if (command.getCommandId() == 0) {
-            command.setCommandId(getNextCommandId());
-        }
-        command.setResponseRequired(true);
-        FutureResponse future = new FutureResponse();
-        oneway(command, future);
-        return future;
-    }
-
-    public Response request(Command command) throws IOException {
-        FutureResponse response = asyncRequest(command);
-        return response.getResult();
-    }
-
-    public Response request(Command command, int timeout) throws IOException {
-        FutureResponse response = asyncRequest(command);
-        return response.getResult(timeout);
-    }
-
 
     public void setStartupRunnable(Runnable runnable) {
         this.runnable = runnable;
@@ -363,6 +302,15 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.checkSequenceNumbers = checkSequenceNumbers;
     }
 
+
+    public IntSequenceGenerator getSequenceGenerator() {
+        return sequenceGenerator;
+    }
+
+    public void setSequenceGenerator(IntSequenceGenerator sequenceGenerator) {
+        this.sequenceGenerator = sequenceGenerator;
+    }
+    
     // Implementation methods
     // -------------------------------------------------------------------------
 
@@ -450,9 +398,5 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
     protected SocketAddress getTargetAddress() {
         return targetAddress;
-    }
-
-    protected synchronized int getNextCommandId() {
-        return ++lastCommandId;
     }
 }

@@ -16,14 +16,11 @@
  */
 package org.apache.activemq.transport.udp;
 
-import edu.emory.mathcs.backport.java.util.concurrent.Future;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.util.Map;
 
 /**
  *
@@ -33,7 +30,7 @@ public interface CommandChannel extends Service {
 
     public abstract Command read() throws IOException;
 
-    public abstract void write(Command command, SocketAddress address, Map requestMap, Future future) throws IOException;
+    public abstract void write(Command command, SocketAddress address) throws IOException;
 
     public abstract int getDatagramSize();
 

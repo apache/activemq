@@ -50,10 +50,6 @@ public class LastPartialCommand extends BaseCommand {
      * @param completeCommand the newly unmarshalled complete command
      */
     public void configure(Command completeCommand) {
-        // overwrite the commandId as the numbers change when we introduce 
-        // fragmentation commands
-        completeCommand.setCommandId(getCommandId());
-        
         // copy across the transient properties
         completeCommand.setFrom(getFrom());
 

@@ -19,21 +19,19 @@ package org.apache.activemq.transport.udp;
 import org.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
-import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
-import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.transport.reliable.ReliableTransport;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 
@@ -58,7 +56,15 @@ public class UdpTransportFactory extends TransportFactory {
             UdpTransport transport = new UdpTransport(openWireFormat, port);
 
             Transport configuredTransport = configure(transport, wf, options, true);
-            UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport);
+            ReplayStrategy replayStrategy = null;
+            if (configuredTransport instanceof ReliableTransport) {
+                ReliableTransport rt = (ReliableTransport) configuredTransport;
+                replayStrategy = rt.getReplayStrategy();
+            }
+            if (replayStrategy == null) {
+                replayStrategy = createReplayStrategy();
+            }
+            UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport, replayStrategy);
             return server;
         }
         catch (URISyntaxException e) {
@@ -76,7 +82,7 @@ public class UdpTransportFactory extends TransportFactory {
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
         final UdpTransport udpTransport = (UdpTransport) transport;
-        
+
         // deal with fragmentation
         transport = new CommandJoiner(transport, asOpenWireFormat(format));
 
@@ -91,9 +97,7 @@ public class UdpTransportFactory extends TransportFactory {
         if (udpTransport.getMaxInactivityDuration() > 0) {
             transport = new InactivityMonitor(transport, udpTransport.getMaxInactivityDuration());
         }
-        
-        // TODO should we have this?
-        //transport = udpTransport.createFilter(transport);
+
         return transport;
     }
 
@@ -119,15 +123,23 @@ public class UdpTransportFactory extends TransportFactory {
             transport = new InactivityMonitor(transport, udpTransport.getMaxInactivityDuration());
         }
 
-        // add reliabilty
-        //transport = new ReliableTransport(transport, createReplayStrategy());
-        
         // deal with fragmentation
-        transport = new CommandJoiner(transport, openWireFormat);
-        
-        transport = udpTransport.createFilter(transport);
-        
-        return transport;
+
+        if (server) {
+            // we don't want to do reliable checks on this transport as we
+            // delegate to one that does
+            transport = new CommandJoiner(transport, openWireFormat);
+            udpTransport.setSequenceGenerator(new IntSequenceGenerator());
+            return transport;
+        }
+        else {
+            ReliableTransport reliableTransport = new ReliableTransport(transport, createReplayStrategy());
+            udpTransport.setSequenceGenerator(reliableTransport.getSequenceGenerator());
+
+            // Joiner must be on outside as the inbound messages must be
+            // processed by the reliable transport first
+            return new CommandJoiner(reliableTransport, openWireFormat);
+        }
     }
 
     protected ReplayStrategy createReplayStrategy() {
@@ -141,24 +153,21 @@ public class UdpTransportFactory extends TransportFactory {
                 // redirect to the endpoint that the last response came from
                 Endpoint from = command.getFrom();
                 udpTransport.setTargetEndpoint(from);
-                
+
                 super.onCommand(command);
             }
-            
+
         };
         /*
-        transport = new WireFormatNegotiator(transport, asOpenWireFormat(format), udpTransport.getMinmumWireFormatVersion()) {
-            protected void onWireFormatNegotiated(WireFormatInfo info) {
-                // lets switch to the target endpoint
-                // based on the last packet that was received
-                // so that all future requests go to the newly created UDP channel
-                Endpoint from = info.getFrom();
-                System.out.println("####Êsetting the client side target to: " + from);
-                udpTransport.setTargetEndpoint(from);
-            }
-        };
-        return transport;
-        */
+         * transport = new WireFormatNegotiator(transport,
+         * asOpenWireFormat(format), udpTransport.getMinmumWireFormatVersion()) {
+         * protected void onWireFormatNegotiated(WireFormatInfo info) { // lets
+         * switch to the target endpoint // based on the last packet that was
+         * received // so that all future requests go to the newly created UDP
+         * channel Endpoint from = info.getFrom();
+         * System.out.println("####Êsetting the client side target to: " +
+         * from); udpTransport.setTargetEndpoint(from); } }; return transport;
+         */
     }
 
     protected OpenWireFormat asOpenWireFormat(WireFormat wf) {

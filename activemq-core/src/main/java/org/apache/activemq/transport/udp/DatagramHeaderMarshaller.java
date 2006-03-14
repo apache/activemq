@@ -17,14 +17,12 @@
 package org.apache.activemq.transport.udp;
 
 
-import org.activeio.ByteArrayOutputStream;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.DatagramPacket;
-import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 

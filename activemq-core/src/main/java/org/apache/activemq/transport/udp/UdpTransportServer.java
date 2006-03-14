@@ -18,17 +18,15 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
-import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerSupport;
-import org.apache.activemq.transport.WireFormatNegotiator;
+import org.apache.activemq.transport.reliable.ReliableTransport;
+import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,15 +47,17 @@ public class UdpTransportServer extends TransportServerSupport {
     private static final Log log = LogFactory.getLog(UdpTransportServer.class);
 
     private UdpTransport serverTransport;
+    private ReplayStrategy replayStrategy;
     private Transport configuredTransport;
     private boolean usingWireFormatNegotiation;
     private Map transports = new HashMap();
 
-    public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport) {
+
+    public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport, ReplayStrategy replayStrategy) {
         super(connectURI);
         this.serverTransport = serverTransport;
-
         this.configuredTransport = configuredTransport;
+        this.replayStrategy = replayStrategy;
 
         // lets disable the incremental checking of the sequence numbers
         // as we are getting messages from many different clients
@@ -137,8 +137,6 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected Transport configureTransport(Transport transport) {
-        // transport = new ResponseCorrelator(transport);
-
         if (serverTransport.getMaxInactivityDuration() > 0) {
             transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
         }
@@ -149,28 +147,26 @@ public class UdpTransportServer extends TransportServerSupport {
 
     protected Transport createTransport(final Command command, DatagramEndpoint endpoint) throws IOException {
         if (endpoint == null) {
-            //log.error("No endpoint available for command: " + command);
             throw new IOException("No endpoint available for command: " + command);
         }
         final SocketAddress address = endpoint.getAddress();
         final OpenWireFormat connectionWireFormat = serverTransport.getWireFormat().copy();
         final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
 
-        Transport configuredTransport = new CommandJoiner(transport, connectionWireFormat);
-
-        // lets pass in the received transport
-        return new TransportFilter(configuredTransport) {
+        final ReliableTransport reliableTransport = new ReliableTransport(transport, replayStrategy);
+        transport.setSequenceGenerator(reliableTransport.getSequenceGenerator());
+        
+        // Joiner must be on outside as the inbound messages must be processed by the reliable transport first
+        return new CommandJoiner(reliableTransport, connectionWireFormat) {
             public void start() throws Exception {
                 super.start();
-                onCommand(command);
+                reliableTransport.onCommand(command);
             }
         };
 
+
+        
         /**
-        // return configuredTransport;
-
-        // configuredTransport = transport.createFilter(configuredTransport);
-
         final WireFormatNegotiator wireFormatNegotiator = new WireFormatNegotiator(configuredTransport, transport.getWireFormat(), serverTransport
                 .getMinmumWireFormatVersion()) {
 
@@ -188,14 +184,5 @@ public class UdpTransportServer extends TransportServerSupport {
         };
         return wireFormatNegotiator;
         */
-        
-        /*
-         * transport.setStartupRunnable(new Runnable() {
-         * 
-         * public void run() { System.out.println("Passing the incoming
-         * WireFormat into into: " + this);
-         *  // process the inbound wireformat
-         * wireFormatNegotiator.onCommand(command); }});
-         */
     }
 }

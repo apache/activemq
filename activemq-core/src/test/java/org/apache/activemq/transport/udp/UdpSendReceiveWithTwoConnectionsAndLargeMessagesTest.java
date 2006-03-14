@@ -24,7 +24,7 @@ public class UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest extends UdpSen
 
     protected void setUp() throws Exception {
         largeMessages = true;
-        //messageCount = 1;
+        //messageCount = 2;
         super.setUp();
     }
 

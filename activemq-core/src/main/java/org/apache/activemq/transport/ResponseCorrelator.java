@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,30 +38,25 @@ public class ResponseCorrelator extends TransportFilter {
     private static final Log log = LogFactory.getLog(ResponseCorrelator.class);
     
     private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
-    private int lastCommandId = 0;
-
-    public synchronized int getNextCommandId() {
-        return ++lastCommandId;
-    }
+    private IntSequenceGenerator sequenceGenerator;
     
     public ResponseCorrelator(Transport next) {
-        super(next);
+        this(next, new IntSequenceGenerator());
     }
     
+    public ResponseCorrelator(Transport next, IntSequenceGenerator sequenceGenerator) {
+        super(next);
+        this.sequenceGenerator = sequenceGenerator;
+    }
+
     public void oneway(Command command) throws IOException {
-        // a parent transport could have set the ID
-        if (command.getCommandId() == 0) {
-            command.setCommandId(getNextCommandId());
-        }
+        command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(false);
         next.oneway(command);
     }
 
     public FutureResponse asyncRequest(Command command) throws IOException {
-        // a parent transport could have set the ID
-        if (command.getCommandId() == 0) {
-            command.setCommandId(getNextCommandId());
-        }
+        command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(true);
         FutureResponse future = new FutureResponse();
         requestMap.put(new Integer(command.getCommandId()), future);
@@ -93,6 +89,10 @@ public class ResponseCorrelator extends TransportFilter {
         }
     }
     
+    public IntSequenceGenerator getSequenceGenerator() {
+        return sequenceGenerator;
+    }
+
     public String toString() {
         return next.toString();
     }

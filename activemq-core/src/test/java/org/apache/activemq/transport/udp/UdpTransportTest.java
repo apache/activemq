@@ -19,6 +19,7 @@ package org.apache.activemq.transport.udp;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.IntSequenceGenerator;
 
 import java.net.URI;
 
@@ -40,6 +41,7 @@ public class UdpTransportTest extends UdpTestSupport {
         
         OpenWireFormat wireFormat = createWireFormat();
         UdpTransport transport = new UdpTransport(wireFormat, new URI(producerURI));
+        transport.setSequenceGenerator(new IntSequenceGenerator());
         return new CommandJoiner(transport, wireFormat);
     }
 
@@ -47,6 +49,7 @@ public class UdpTransportTest extends UdpTestSupport {
         System.out.println("Consumer on port: " + consumerPort);
         OpenWireFormat wireFormat = createWireFormat();
         UdpTransport transport = new UdpTransport(wireFormat, consumerPort);
+        transport.setSequenceGenerator(new IntSequenceGenerator());
         return new CommandJoiner(transport, wireFormat);
     }
 

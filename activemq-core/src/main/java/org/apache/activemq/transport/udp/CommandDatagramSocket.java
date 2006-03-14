@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.transport.udp;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
-import edu.emory.mathcs.backport.java.util.concurrent.Future;
-
 import org.activeio.ByteArrayInputStream;
 import org.activeio.ByteArrayOutputStream;
 import org.apache.activemq.command.Command;
@@ -27,8 +24,7 @@ import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.FutureResponse;
-import org.apache.activemq.transport.ResponseCorrelator;
+import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -40,7 +36,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Map;
 
 /**
  * A strategy for reading datagrams and de-fragmenting them together.
@@ -51,7 +46,6 @@ public class CommandDatagramSocket implements CommandChannel {
 
     private static final Log log = LogFactory.getLog(CommandDatagramSocket.class);
 
-    private final UdpTransport transport;
     private final String name;
     private DatagramSocket channel;
     private InetAddress targetAddress;
@@ -59,16 +53,12 @@ public class CommandDatagramSocket implements CommandChannel {
     private OpenWireFormat wireFormat;
     private int datagramSize = 4 * 1024;
     private DatagramHeaderMarshaller headerMarshaller;
-
-    // reading
+    private IntSequenceGenerator sequenceGenerator;
     private Object readLock = new Object();
-
-    // writing
     private Object writeLock = new Object();
 
     public CommandDatagramSocket(UdpTransport transport, DatagramSocket channel, OpenWireFormat wireFormat, int datagramSize, InetAddress targetAddress,
             int targetPort, DatagramHeaderMarshaller headerMarshaller) {
-        this.transport = transport;
         this.channel = channel;
         this.wireFormat = wireFormat;
         this.datagramSize = datagramSize;
@@ -76,6 +66,10 @@ public class CommandDatagramSocket implements CommandChannel {
         this.targetPort = targetPort;
         this.headerMarshaller = headerMarshaller;
         this.name = transport.toString();
+        this.sequenceGenerator = transport.getSequenceGenerator();
+        if (sequenceGenerator == null) {
+            throw new IllegalArgumentException("No sequenceGenerator on the given transport: " + transport);
+        }
     }
 
     public String toString() {
@@ -115,15 +109,14 @@ public class CommandDatagramSocket implements CommandChannel {
         return answer;
     }
 
-    public void write(Command command, SocketAddress address, Map requestMap, Future future) throws IOException {
+    public void write(Command command, SocketAddress address) throws IOException {
         InetSocketAddress ia = (InetSocketAddress) address;
-        write(command, ia.getAddress(), ia.getPort(), requestMap, future);
+        write(command, ia.getAddress(), ia.getPort());
     }
 
-    public void write(Command command, InetAddress address, int port, Map requestMap, Future future) throws IOException {
+    public void write(Command command, InetAddress address, int port) throws IOException {
         synchronized (writeLock) {
 
-            command.setCommandId(transport.getNextCommandId());
             ByteArrayOutputStream writeBuffer = createByteArrayOutputStream();
             DataOutputStream dataOut = new DataOutputStream(writeBuffer);
             headerMarshaller.writeHeader(command, dataOut);
@@ -133,10 +126,7 @@ public class CommandDatagramSocket implements CommandChannel {
             wireFormat.marshal(command, dataOut);
 
             if (remaining(writeBuffer) >= 0) {
-                if (command.isResponseRequired()) {
-                    requestMap.put(new Integer(command.getCommandId()), future);
-                }
-                sendWriteBuffer(address, port, writeBuffer);
+                sendWriteBuffer(address, port, writeBuffer, command.getCommandId());
             }
             else {
                 // lets split the command up into chunks
@@ -193,7 +183,7 @@ public class CommandDatagramSocket implements CommandChannel {
 
                     int commandId = command.getCommandId();
                     if (fragment > 0) {
-                        commandId = transport.getNextCommandId();
+                        commandId = sequenceGenerator.getNextSequenceId();
                     }
                     dataOut.writeInt(commandId);
                     if (bs == null) {
@@ -207,21 +197,18 @@ public class CommandDatagramSocket implements CommandChannel {
                     dataOut.write(data, offset, chunkSize);
 
                     offset += chunkSize;
-                    sendWriteBuffer(address, port, writeBuffer);
+                    sendWriteBuffer(address, port, writeBuffer, commandId);
                 }
 
                 // now lets write the last partial command
                 command = new LastPartialCommand(command.isResponseRequired());
-                command.setCommandId(transport.getNextCommandId());
+                command.setCommandId(sequenceGenerator.getNextSequenceId());
 
                 writeBuffer.reset();
                 headerMarshaller.writeHeader(command, dataOut);
                 wireFormat.marshal(command, dataOut);
 
-                if (command.isResponseRequired()) {
-                    requestMap.put(new Integer(command.getCommandId()), future);
-                }
-                sendWriteBuffer(address, port, writeBuffer);
+                sendWriteBuffer(address, port, writeBuffer, command.getCommandId());
             }
         }
     }
@@ -266,9 +253,9 @@ public class CommandDatagramSocket implements CommandChannel {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void sendWriteBuffer(InetAddress address, int port, ByteArrayOutputStream writeBuffer) throws IOException {
+    protected void sendWriteBuffer(InetAddress address, int port, ByteArrayOutputStream writeBuffer, int commandId) throws IOException {
         if (log.isDebugEnabled()) {
-            log.debug("Channel: " + name + " sending datagram to: " + address);
+            log.debug("Channel: " + name + " sending datagram: " + commandId + " to: " + address);
         }
         byte[] data = writeBuffer.toByteArray();
         DatagramPacket packet = new DatagramPacket(data, 0, data.length, address, port);
