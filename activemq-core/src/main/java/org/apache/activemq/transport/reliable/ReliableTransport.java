@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.reliable;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ReplayCommand;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.CommandIdComparator;
 import org.apache.activemq.transport.FutureResponse;
@@ -42,7 +43,10 @@ public class ReliableTransport extends ResponseCorrelator {
     private ReplayStrategy replayStrategy;
     private SortedSet commands = new TreeSet(new CommandIdComparator());
     private int expectedCounter = 1;
+    private int replayBufferCommandCount = 50;
     private int requestTimeout = 2000;
+    private ReplayBuffer replayBuffer;
+    private Replayer replayer;
 
     public ReliableTransport(Transport next, ReplayStrategy replayStrategy) {
         super(next);
@@ -54,6 +58,21 @@ public class ReliableTransport extends ResponseCorrelator {
         this.replayStrategy = replayStrategy;
     }
 
+    /**
+     * Requests that a range of commands be replayed
+     */
+    public void requestReplay(int fromCommandId, int toCommandId) {
+        ReplayCommand replay = new ReplayCommand();
+        replay.setFirstNakNumber(fromCommandId);
+        replay.setLastNakNumber(toCommandId);
+        try {
+            oneway(replay);
+        }
+        catch (IOException e) {
+            getTransportListener().onException(e);
+        }
+    }
+    
 
     public Response request(Command command) throws IOException {
         FutureResponse response = asyncRequest(command);
@@ -62,7 +81,7 @@ public class ReliableTransport extends ResponseCorrelator {
             if (result != null) {
                 return result;
             }
-            replayRequest(command, response);
+            onMissingResponse(command, response);
         }
     }
 
@@ -77,7 +96,7 @@ public class ReliableTransport extends ResponseCorrelator {
             if (result != null) {
                 return result;
             }
-            replayRequest(command, response);
+            onMissingResponse(command, response);
             timeout -= time;
         }
         return response.getResult(0);
@@ -87,6 +106,10 @@ public class ReliableTransport extends ResponseCorrelator {
         // lets pass wireformat through
         if (command.isWireFormatInfo()) {
             super.onCommand(command);
+            return;
+        }
+        else if (command.getDataStructureType() == ReplayCommand.DATA_STRUCTURE_TYPE) {
+            replayCommands((ReplayCommand) command);
             return;
         }
 
@@ -107,7 +130,7 @@ public class ReliableTransport extends ResponseCorrelator {
                     }
                 }
                 catch (IOException e) {
-                    getTransportListener().onException(e);
+                    onException(e);
                 }
 
                 if (!commands.isEmpty()) {
@@ -180,13 +203,61 @@ public class ReliableTransport extends ResponseCorrelator {
     }
 
 
+    public ReplayBuffer getReplayBuffer() {
+        return replayBuffer;
+    }
+
+    public void setReplayBuffer(ReplayBuffer replayBuffer) {
+        this.replayBuffer = replayBuffer;
+    }
+
+    public int getReplayBufferCommandCount() {
+        return replayBufferCommandCount;
+    }
+
+    /**
+     * Sets the default number of commands which are buffered
+     */
+    public void setReplayBufferCommandCount(int replayBufferSize) {
+        this.replayBufferCommandCount = replayBufferSize;
+    }
+
     public String toString() {
         return next.toString();
     }
+    
+    
+    public void start() throws Exception {
+        super.start();
+        if (replayBuffer == null) {
+            replayBuffer = createReplayBuffer();
+        }
+    }
+
     /**
      * Lets attempt to replay the request as a command may have disappeared
      */
-    protected void replayRequest(Command command, FutureResponse response) {
-        log.debug("Still waiting for response on: " + this + " to command: " + command);
+    protected void onMissingResponse(Command command, FutureResponse response) {
+        log.debug("Still waiting for response on: " + this + " to command: " + command + " sending replay message");
+        
+        int commandId = command.getCommandId();
+        requestReplay(commandId, commandId);
     }
+    
+    protected ReplayBuffer createReplayBuffer() {
+        return new DefaultReplayBuffer(getReplayBufferCommandCount());
+    }
+
+    protected void replayCommands(ReplayCommand command) {
+        try {
+            replayBuffer.replayMessages(command.getFirstNakNumber(), command.getLastNakNumber(), replayer);
+            
+            // TODO we could proactively remove ack'd stuff from the replay buffer
+            // if we only have a single client talking to us
+        }
+        catch (IOException e) {
+            onException(e);
+        }
+    }
+
 }
