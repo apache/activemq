@@ -322,7 +322,12 @@ public class FailoverTransport implements CompositeTransport {
                         // Wait for transport to be connected.
                         while (connectedTransport == null && !disposed && connectionFailure==null ) {
                             log.debug("Waiting for transport to reconnect.");
-                            reconnectMutex.wait(1000);
+                            try {
+                                reconnectMutex.wait(1000);
+                            }
+                            catch (InterruptedException e) {
+                                log.debug("Interupted: " + e, e);
+                            }
                         }
 
                         if( connectedTransport==null ) {
