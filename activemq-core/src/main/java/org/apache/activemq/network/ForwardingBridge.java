@@ -218,19 +218,25 @@ public class ForwardingBridge implements Bridge {
 
                 remoteBroker.oneway( message );
                 
-                if( md.getConsumerId().equals(queueConsumerInfo.getConsumerId()) ) {
-                    queueDispatched++;
-                    if( queueDispatched > (queueConsumerInfo.getPrefetchSize()/2) ) {
-                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, queueDispatched));
-                        queueDispatched=0;
-                    }
-                } else {
-                    topicDispatched++;
-                    if( topicDispatched > (topicConsumerInfo.getPrefetchSize()/2) ) {
-                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, topicDispatched));
-                        topicDispatched=0;
-                    }
-                }
+                // Ack on every message since we don't know if the broker is blocked due to memory
+                // usage and is waiting for an Ack to un-block him. 
+                localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+
+                // Acking a range is more efficient, but also more prone to locking up a server
+                // Perhaps doing something like the following should be policy based.
+//                if( md.getConsumerId().equals(queueConsumerInfo.getConsumerId()) ) {
+//                    queueDispatched++;
+//                    if( queueDispatched > (queueConsumerInfo.getPrefetchSize()/2) ) {
+//                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, queueDispatched));
+//                        queueDispatched=0;
+//                    }
+//                } else {
+//                    topicDispatched++;
+//                    if( topicDispatched > (topicConsumerInfo.getPrefetchSize()/2) ) {
+//                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, topicDispatched));
+//                        topicDispatched=0;
+//                    }
+//                }
             } else if(command.isBrokerInfo() ) {
                 synchronized( this ) {
                     localBrokerId = ((BrokerInfo)command).getBrokerId();
