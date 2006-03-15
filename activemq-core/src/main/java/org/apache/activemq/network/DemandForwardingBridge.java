@@ -13,8 +13,6 @@
  */
 package org.apache.activemq.network;
 
-import java.io.IOException;
-
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
@@ -22,6 +20,8 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.ServiceSupport;
+
+import java.io.IOException;
 
 /**
  * Forwards messages from the local broker to the remote broker based on demand.
@@ -76,9 +76,8 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
             }
         }
     }
-
-    protected NetworkBridgeFilter createNetworkBridgeFilter() {
+    
+    protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
         return new NetworkBridgeFilter(remoteBrokerPath[0], networkTTL);
     }
-
 }

@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.network;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 
 /**
@@ -44,7 +45,7 @@ public class ConduitBridge extends DemandForwardingBridge{
         super(localBroker,remoteBroker);
     }
     
-    protected DemandSubscription createDemandSubscription(ConsumerInfo info){
+    protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException{
         
         if (addToAlreadyInterestedConsumers(info)){
             return null; //don't want this subscription added

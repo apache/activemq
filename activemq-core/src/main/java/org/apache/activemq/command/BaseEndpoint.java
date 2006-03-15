@@ -24,6 +24,7 @@ package org.apache.activemq.command;
 public class BaseEndpoint implements Endpoint {
 
     private String name;
+    BrokerInfo brokerInfo;
 
     public BaseEndpoint(String name) {
         this.name = name;
@@ -34,8 +35,35 @@ public class BaseEndpoint implements Endpoint {
     }
 
     public String toString() {
-        return "Endpoint[" + name + "]";
+        String brokerText = "";
+        BrokerId brokerId = getBrokerId();
+        if (brokerId != null) {
+            brokerText = " broker: " + brokerId;
+        }
+        return "Endpoint[name:" + name + brokerText + "]";
     }
 
-    
+    /**
+     * Returns the broker ID for this endpoint, if the endpoint is a broker or
+     * null
+     */
+    public BrokerId getBrokerId() {
+        if (brokerInfo != null) {
+            return brokerInfo.getBrokerId();
+        }
+        return null;
+    }
+
+    /**
+     * Returns the broker information for this endpoint, if the endpoint is a
+     * broker or null
+     */
+    public BrokerInfo getBrokerInfo() {
+        return brokerInfo;
+    }
+
+    public void setBrokerInfo(BrokerInfo brokerInfo) {
+        this.brokerInfo = brokerInfo;
+    }
+
 }
