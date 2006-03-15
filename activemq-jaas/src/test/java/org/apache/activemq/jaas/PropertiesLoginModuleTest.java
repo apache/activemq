@@ -17,6 +17,8 @@
 package org.apache.activemq.jaas;
 
 import java.io.IOException;
+import java.net.URL;
+
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -27,9 +29,6 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.activemq.jaas.UserPrincipal;
-
 import junit.framework.TestCase;
 
 
@@ -37,6 +36,18 @@ import junit.framework.TestCase;
  * @version $Rev: $ $Date: $
  */
 public class PropertiesLoginModuleTest extends TestCase {
+    
+    static {
+        String path = System.getProperty("java.security.auth.login.config");
+        if (path == null) {
+            URL resource = PropertiesLoginModuleTest.class.getClassLoader().getResource("login.config");
+            if (resource != null) {
+                path = resource.getFile();
+                System.setProperty("java.security.auth.login.config", path);
+            }
+        }
+        System.out.println("Path to login config: " + path);
+    }
 
     public void testLogin() throws LoginException {
         LoginContext context = new LoginContext("PropertiesLogin", new CallbackHandler() {
