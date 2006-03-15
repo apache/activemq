@@ -192,14 +192,8 @@
       </includes>
       <excludes>
 
-        <!-- http://jira.activemq.org/jira/browse/AMQ-628 -->
-        <exclude>**/HttpTransportBrokerTest.*</exclude>
-
         <!-- http://jira.activemq.org/jira/browse/AMQ-629 -->
         <exclude>**/SslTransportBrokerTest.*</exclude>
-
-        <!-- http://jira.activemq.org/jira/browse/AMQ-631 -->
-        <exclude>**/HttpsTransportBrokerTest.*</exclude>
 
       </excludes>
     </unitTest>

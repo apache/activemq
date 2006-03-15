@@ -29,7 +29,6 @@ import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
-import org.axiondb.engine.commands.ShutdownCommand;
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 
@@ -75,7 +74,7 @@ public class StubConnection implements Service {
         transport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Command command) {
                 try {
-                    if (command.getClass() == ShutdownCommand.class) {
+                    if (command.getClass() == ShutdownInfo.class) {
                         shuttingDown = true;
                     }
                     StubConnection.this.dispatch(command);
