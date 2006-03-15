@@ -375,11 +375,18 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                                 serviceLocalException(er.getException());
                             }
                         }
-                        int dispatched = sub.incrementDispatched();
-                        if(dispatched>(sub.getLocalInfo().getPrefetchSize()*.75)){
-                            localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,dispatched));
-                            sub.setDispatched(0);
-                        }
+                        
+                      // Ack on every message since we don't know if the broker is blocked due to memory
+                      // usage and is waiting for an Ack to un-block him. 
+                      localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+
+                      // Acking a range is more efficient, but also more prone to locking up a server
+                      // Perhaps doing something like the following should be policy based.
+//                        int dispatched = sub.incrementDispatched();
+//                        if(dispatched>(sub.getLocalInfo().getPrefetchSize()*.75)){
+//                            localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,dispatched));
+//                            sub.setDispatched(0);
+//                        }
                     }
                 }else if(command.isBrokerInfo()){
                     serviceLocalBrokerInfo(command);
