@@ -32,7 +32,7 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-        String brokerURI = "broker:(tcp://localhost:61616)?persistent=false&useJmx=true";
+        String brokerURI = "broker:(tcp://localhost:61616,stomp://localhost:61613)?persistent=false&useJmx=true";
         if (args.length > 0) {
             brokerURI = args[0];
         }
