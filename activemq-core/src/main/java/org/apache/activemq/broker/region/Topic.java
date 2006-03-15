@@ -73,7 +73,8 @@ public class Topic implements Destination {
 
         this.destination = destination;
         this.store = store;
-        this.usageManager = memoryManager;
+        this.usageManager = new UsageManager(memoryManager);
+        this.usageManager.setLimit(Long.MAX_VALUE);
         this.destinationStatistics.setParent(parentStats);
     }
 

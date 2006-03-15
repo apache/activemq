@@ -73,6 +73,16 @@ public class DestinationView {
         return destination.getDestinationStatistics().getMessagesCached().getCount();
     }
 
+    public int getMemoryPercentageUsed() {
+        return destination.getUsageManager().getPercentUsage();
+    }
+    public long getMemoryLimit() {
+        return destination.getUsageManager().getLimit();
+    }
+    public void setMemoryLimit(long limit) {
+        destination.getUsageManager().setLimit(limit);
+    }
+
     public CompositeData[] browse() throws OpenDataException{
         Message[] messages=destination.browse();
         CompositeData c[]=new CompositeData[messages.length];

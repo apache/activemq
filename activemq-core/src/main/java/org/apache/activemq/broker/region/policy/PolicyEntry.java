@@ -42,6 +42,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int messageGroupHashBucketCount = 1024;
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
+    private long memoryLimit;
 
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -51,6 +52,9 @@ public class PolicyEntry extends DestinationMapEntry {
             queue.setDeadLetterStrategy(deadLetterStrategy);
         }
         queue.setMessageGroupHashBucketCount(messageGroupHashBucketCount);
+        if( memoryLimit>0 ) {
+            queue.getUsageManager().setLimit(memoryLimit);
+        }
     }
 
     public void configure(Topic topic) {
@@ -64,6 +68,9 @@ public class PolicyEntry extends DestinationMapEntry {
             topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy);
         }
         topic.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
+        if( memoryLimit>0 ) {
+            topic.getUsageManager().setLimit(memoryLimit);
+        }
     }
 
     public void configure(TopicSubscription subscription) {
@@ -171,6 +178,14 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setMessageEvictionStrategy(MessageEvictionStrategy messageEvictionStrategy) {
         this.messageEvictionStrategy = messageEvictionStrategy;
+    }
+
+    public long getMemoryLimit() {
+        return memoryLimit;
+    }
+
+    public void setMemoryLimit(long memoryLimit) {
+        this.memoryLimit = memoryLimit;
     }
 
 }
