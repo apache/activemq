@@ -29,6 +29,8 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
@@ -38,6 +40,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  * @version $Revision: 1.4 $
  */
 public class MemoryPersistenceAdapter implements PersistenceAdapter {
+    private static final Log log = LogFactory.getLog(MemoryPersistenceAdapter.class);
 
     MemoryTransactionStore transactionStore;
     ConcurrentHashMap topics = new ConcurrentHashMap();
@@ -111,12 +114,16 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
 
     public void deleteAllMessages() throws IOException {
         for (Iterator iter = topics.values().iterator(); iter.hasNext();) {
-            MemoryMessageStore store = (MemoryMessageStore) iter.next();
-            store.delete();
+            MemoryMessageStore store = asMemoryMessageStore(iter.next());
+            if (store != null) {
+                store.delete();
+            }
         }
         for (Iterator iter = queues.values().iterator(); iter.hasNext();) {
-            MemoryMessageStore store = (MemoryMessageStore) iter.next();
-            store.delete();
+            MemoryMessageStore store = asMemoryMessageStore(iter.next());
+            if (store != null) {
+                store.delete();
+            }
         }
         transactionStore.delete();
     }
@@ -127,6 +134,14 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
 
     public void setUseExternalMessageReferences(boolean useExternalMessageReferences) {
         this.useExternalMessageReferences = useExternalMessageReferences;
+    }
+
+    protected MemoryMessageStore asMemoryMessageStore(Object value) {
+        if (value instanceof MemoryMessageStore) {
+            return (MemoryMessageStore) value;
+        }
+        log.warn("Expected an instance of MemoryMessageStore but was: " + value);
+        return null;
     }
 
 }
