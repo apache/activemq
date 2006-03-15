@@ -18,6 +18,7 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.transport.reliable.Replayer;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -26,7 +27,7 @@ import java.net.SocketAddress;
  *
  * @version $Revision$
  */
-public interface CommandChannel extends Service {
+public interface CommandChannel extends Replayer, Service {
 
     public abstract Command read() throws IOException;
 
@@ -45,4 +46,5 @@ public interface CommandChannel extends Service {
 
     public abstract void setTargetAddress(SocketAddress address);
 
+    public abstract void setReplayAddress(SocketAddress address);
 }

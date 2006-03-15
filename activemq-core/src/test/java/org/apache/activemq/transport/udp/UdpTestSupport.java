@@ -25,14 +25,12 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
-import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
 
 import javax.jms.MessageNotWriteableException;
 
 import java.io.IOException;
-import java.net.URI;
 
 import junit.framework.TestCase;
 

@@ -24,6 +24,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
+import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
@@ -66,6 +67,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private String description = null;
     private Runnable runnable;
     private IntSequenceGenerator sequenceGenerator;
+    private boolean replayEnabled = true;
 
     protected UdpTransport(OpenWireFormat wireFormat) throws IOException {
         this.wireFormat = wireFormat;
@@ -91,6 +93,18 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.port = port;
         this.targetAddress = null;
         this.description = getProtocolName() + "Server@";
+    }
+
+
+    /**
+     * Creates a replayer for working with the reliable transport
+     * @return
+     */
+    public Replayer createReplayer() {
+        if (replayEnabled ) {
+            return commandChannel;
+        }
+        return null;
     }
 
     /**
@@ -311,6 +325,19 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.sequenceGenerator = sequenceGenerator;
     }
     
+    public boolean isReplayEnabled() {
+        return replayEnabled;
+    }
+
+    /**
+     * Sets whether or not replay should be enabled when using the reliable transport.
+     * i.e. should we maintain a buffer of messages that can be replayed?
+     */
+    public void setReplayEnabled(boolean replayEnabled) {
+        this.replayEnabled = replayEnabled;
+    }
+
+    
     // Implementation methods
     // -------------------------------------------------------------------------
 
@@ -354,7 +381,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (bufferPool == null) {
             bufferPool = new DefaultBufferPool();
         }
-        return new CommandDatagramChannel(this, channel, wireFormat, bufferPool, datagramSize, targetAddress, createDatagramHeaderMarshaller());
+        return new CommandDatagramChannel(this, wireFormat, datagramSize, targetAddress, createDatagramHeaderMarshaller(), channel, bufferPool);
     }
 
     protected void bind(DatagramSocket socket, SocketAddress localAddress) throws IOException {

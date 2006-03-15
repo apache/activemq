@@ -18,10 +18,8 @@ package org.apache.activemq.transport.multicast;
 
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.udp.CommandChannel;
-import org.apache.activemq.transport.udp.CommandDatagramChannel;
 import org.apache.activemq.transport.udp.CommandDatagramSocket;
 import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
-import org.apache.activemq.transport.udp.DefaultBufferPool;
 import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
@@ -36,7 +34,6 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.nio.channels.DatagramChannel;
 
 /**
  * A multicast based transport.
@@ -75,7 +72,7 @@ public class MulticastTransport extends UdpTransport {
         super.doStop(stopper);
         if (socket != null) {
             try {
-                socket.leaveGroup(mcastAddress);
+                socket.leaveGroup(getMulticastAddress());
             }
             catch (IOException e) {
                 stopper.onException(this, e);
@@ -89,11 +86,15 @@ public class MulticastTransport extends UdpTransport {
         socket.setLoopbackMode(loopBackMode);
         socket.setTimeToLive(timeToLive);
 
-        log.debug("Joining multicast address: " + mcastAddress);
-        socket.joinGroup(mcastAddress);
+        log.debug("Joining multicast address: " + getMulticastAddress());
+        socket.joinGroup(getMulticastAddress());
         socket.setSoTimeout((int) keepAliveInterval);
 
-        return new CommandDatagramSocket(this, socket, getWireFormat(), getDatagramSize(), mcastAddress, mcastPort, createDatagramHeaderMarshaller());
+        return new CommandDatagramSocket( this, getWireFormat(), getDatagramSize(), getTargetAddress(), createDatagramHeaderMarshaller(), socket);
+    }
+
+    protected InetAddress getMulticastAddress() {
+        return mcastAddress;
     }
 
     protected InetSocketAddress createAddress(URI remoteLocation) throws UnknownHostException, IOException {

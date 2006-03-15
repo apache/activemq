@@ -27,9 +27,11 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.reliable.DefaultReplayStrategy;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.transport.reliable.ReliableTransport;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
+import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -56,15 +58,7 @@ public class UdpTransportFactory extends TransportFactory {
             UdpTransport transport = new UdpTransport(openWireFormat, port);
 
             Transport configuredTransport = configure(transport, wf, options, true);
-            ReplayStrategy replayStrategy = null;
-            if (configuredTransport instanceof ReliableTransport) {
-                ReliableTransport rt = (ReliableTransport) configuredTransport;
-                replayStrategy = rt.getReplayStrategy();
-            }
-            if (replayStrategy == null) {
-                replayStrategy = createReplayStrategy();
-            }
-            UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport, replayStrategy);
+            UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport, createReplayStrategy());
             return server;
         }
         catch (URISyntaxException e) {
@@ -106,16 +100,25 @@ public class UdpTransportFactory extends TransportFactory {
         return new UdpTransport(wireFormat, location);
     }
 
-    protected Transport configure(Transport transport, WireFormat format, Map options, boolean server) {
+    /**
+     * Configures the transport
+     * 
+     * @param acceptServer
+     *            true if this transport is used purely as an 'accept' transport
+     *            for new connections which work like TCP SocketServers where
+     *            new connections spin up a new separate UDP transport
+     */
+    protected Transport configure(Transport transport, WireFormat format, Map options, boolean acceptServer) {
         IntrospectionSupport.setProperties(transport, options);
         UdpTransport udpTransport = (UdpTransport) transport;
+
         OpenWireFormat openWireFormat = asOpenWireFormat(format);
 
         if (udpTransport.isTrace()) {
             transport = new TransportLogger(transport);
         }
 
-        if (!server && format instanceof OpenWireFormat) {
+        if (!acceptServer && format instanceof OpenWireFormat) {
             transport = configureClientSideNegotiator(transport, format, udpTransport);
         }
 
@@ -125,7 +128,11 @@ public class UdpTransportFactory extends TransportFactory {
 
         // deal with fragmentation
 
-        if (server) {
+        if (acceptServer) {
+            // lets not support a buffer of messages to enable reliable
+            // messaging on the 'accept server' transport
+            udpTransport.setReplayEnabled(true);
+
             // we don't want to do reliable checks on this transport as we
             // delegate to one that does
             transport = new CommandJoiner(transport, openWireFormat);
@@ -133,7 +140,8 @@ public class UdpTransportFactory extends TransportFactory {
             return transport;
         }
         else {
-            ReliableTransport reliableTransport = new ReliableTransport(transport, createReplayStrategy());
+            Replayer replayer = udpTransport.createReplayer();
+            ReliableTransport reliableTransport = new ReliableTransport(transport, createReplayStrategy(replayer));
             udpTransport.setSequenceGenerator(reliableTransport.getSequenceGenerator());
 
             // Joiner must be on outside as the inbound messages must be
@@ -142,8 +150,15 @@ public class UdpTransportFactory extends TransportFactory {
         }
     }
 
-    protected ReplayStrategy createReplayStrategy() {
+    protected ReplayStrategy createReplayStrategy(Replayer replayer) {
+        if (replayer != null) {
+            return new DefaultReplayStrategy(5);
+        }
         return new ExceptionIfDroppedReplayStrategy(1);
+    }
+
+    protected ReplayStrategy createReplayStrategy() {
+        return new DefaultReplayStrategy(5);
     }
 
     protected Transport configureClientSideNegotiator(Transport transport, WireFormat format, final UdpTransport udpTransport) {
