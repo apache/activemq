@@ -56,7 +56,7 @@ public class StompTest extends CombinationTestSupport {
         broker.start();
         
         URI connectUri = connector.getConnectUri();
-        stompSocket = new Socket(connectUri.getHost(), connectUri.getPort());
+        stompSocket = new Socket("127.0.0.1", connectUri.getPort());
         inputBuffer = new ByteArrayOutputStream();
         
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");

@@ -76,4 +76,9 @@ public interface DestinationViewMBean {
      * @throws Exception
      */
     public String sendTextMessage(Map headers, String body) throws Exception;
+
+    public int getMemoryPercentageUsed();
+    public long getMemoryLimit();
+    public void setMemoryLimit(long limit);
+
 }

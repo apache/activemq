@@ -79,7 +79,9 @@ public class Queue implements Destination {
     public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store,
             DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
         this.destination = destination;
-        this.usageManager = memoryManager;
+        this.usageManager = new UsageManager(memoryManager);
+        this.usageManager.setLimit(Long.MAX_VALUE);
+        
         this.store = store;
 
         destinationStatistics.setParent(parentStats);
