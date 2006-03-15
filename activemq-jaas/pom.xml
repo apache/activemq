@@ -43,12 +43,6 @@
           <includes>
             <include implementation="java.lang.String">**/*Test.*</include>
           </includes>
-          <systemProperties>
-            <property>
-              <name>java.security.auth.login.config</name>
-              <value>${basedir}/src/test/resources/login.config</value>
-            </property>
-          </systemProperties>
         </configuration>
       </plugin>
 
