@@ -25,6 +25,8 @@ import java.io.DataOutputStream;
 import java.net.DatagramPacket;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
@@ -32,16 +34,20 @@ import java.nio.ByteBuffer;
  */
 public class DatagramHeaderMarshaller {
 
+    // TODO for large dynamic networks
+    // we may want to evict endpoints that disconnect
+    // from a transport - e.g. for multicast
+    private Map endpoints = new HashMap();
+    
     /**
      * Reads any header if applicable and then creates an endpoint object
      */
     public Endpoint createEndpoint(ByteBuffer readBuffer, SocketAddress address) {
-        return new DatagramEndpoint(address.toString(), address);
+        return getEndpoint(address);
     }
 
     public Endpoint createEndpoint(DatagramPacket datagram, DataInputStream dataIn) {
-        SocketAddress address = datagram.getSocketAddress();
-        return new DatagramEndpoint(address.toString(), address);
+        return getEndpoint(datagram.getSocketAddress());
     }
 
     public void writeHeader(Command command, ByteBuffer writeBuffer) {
@@ -57,4 +63,23 @@ public class DatagramHeaderMarshaller {
     public void writeHeader(Command command, DataOutputStream dataOut) {
     }
 
+    /**
+     * Gets the current endpoint object for this address or creates one if not available.
+     * 
+     * Note that this method does not need to be synchronized as its only ever going to be
+     * used by the already-synchronized read() method of a CommandChannel 
+     * 
+     */
+    protected Endpoint getEndpoint(SocketAddress address) {
+        Endpoint endpoint = (Endpoint) endpoints.get(address);
+        if (endpoint == null) {
+            endpoint = createEndpoint(address);
+            endpoints.put(address, endpoint);
+        }
+        return endpoint;
+    }
+
+    protected Endpoint createEndpoint(SocketAddress address) {
+        return new DatagramEndpoint(address.toString(), address);
+    }
 }
