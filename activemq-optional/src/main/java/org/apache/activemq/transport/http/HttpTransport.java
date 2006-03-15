@@ -100,7 +100,7 @@ public class HttpTransport extends HttpTransportSupport {
             }
             catch (Exception e) {
                 if (!isStopped()) {
-                    log.warn("Failed to perform GET on: " + remoteUrl + " due to: " + e, e);
+                    log.error("Failed to perform GET on: " + remoteUrl + " due to: " + e, e);
                 }
                 else {
                     log.trace("Caught error after closed: " + e, e);
