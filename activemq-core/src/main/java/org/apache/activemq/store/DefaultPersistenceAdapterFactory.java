@@ -207,7 +207,7 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
      * @throws IOException
      */
     protected void createJournal() throws IOException {
-        File journalDir = new File(getDataDirectory(), "journal");
+        File journalDir = new File(getDataDirectory(), "journal").getCanonicalFile();
         journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize, getJournalArchiveDirectory());
     }
 
