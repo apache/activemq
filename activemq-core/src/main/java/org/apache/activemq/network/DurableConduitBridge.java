@@ -13,8 +13,6 @@
  */
 package org.apache.activemq.network;
 
-import java.io.IOException;
-import java.util.Iterator;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -22,6 +20,9 @@ import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.Iterator;
 /**
  * Consolidates subscriptions
  * 
@@ -41,7 +42,7 @@ public class DurableConduitBridge extends ConduitBridge{
     }
 
     /**
-     * Subscriptions for these desitnations are always created
+     * Subscriptions for these destinations are always created
      * 
      */
     protected void setupStaticDestinations(){
@@ -67,7 +68,7 @@ public class DurableConduitBridge extends ConduitBridge{
         }
     }
 
-    protected DemandSubscription createDemandSubscription(ConsumerInfo info){
+    protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException{
         if(addToAlreadyInterestedConsumers(info)){
             return null; // don't want this subscription added
         }
@@ -79,7 +80,7 @@ public class DurableConduitBridge extends ConduitBridge{
             info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),consumerIdGenerator.getNextSequenceId()));
         }
         if(info.isDurable()){
-            // set the subscriber name to something reproducable
+            // set the subscriber name to something reproducible
             info.setSubcriptionName(getLocalBrokerName());
         }
         return doCreateDemandSubscription(info);

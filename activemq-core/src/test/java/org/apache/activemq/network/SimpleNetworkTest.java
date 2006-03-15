@@ -114,11 +114,11 @@ public class SimpleNetworkTest extends TestCase{
     }
 
     protected void doSetUp() throws Exception{
-        Resource resource=new ClassPathResource("org/apache/activemq/network/localBroker.xml");
+        Resource resource=new ClassPathResource(getLocalBrokerURI());
         BrokerFactoryBean factory=new BrokerFactoryBean(resource);
         factory.afterPropertiesSet();
         localBroker=factory.getBroker();
-        resource=new ClassPathResource("org/apache/activemq/network/remoteBroker.xml");
+        resource=new ClassPathResource(getRemoteBrokerURI());
         factory=new BrokerFactoryBean(resource);
         factory.afterPropertiesSet();
         remoteBroker=factory.getBroker();
@@ -138,5 +138,13 @@ public class SimpleNetworkTest extends TestCase{
         excluded=new ActiveMQTopic("exclude.test.bar");
         localSession=localConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
         remoteSession=remoteConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
+    }
+
+    protected String getRemoteBrokerURI() {
+        return "org/apache/activemq/network/remoteBroker.xml";
+    }
+
+    protected String getLocalBrokerURI() {
+        return "org/apache/activemq/network/localBroker.xml";
     }
 }

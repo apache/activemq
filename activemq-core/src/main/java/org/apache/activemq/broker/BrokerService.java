@@ -47,6 +47,7 @@ import org.apache.activemq.broker.jmx.ProxyConnectorView;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.activemq.proxy.ProxyConnector;
@@ -196,9 +197,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public NetworkConnector addNetworkConnector(URI discoveryAddress) throws Exception{
-        NetworkConnector connector=new NetworkConnector();
-        // add the broker name to the parameters if not set
-        connector.setUri(discoveryAddress);
+        NetworkConnector connector=new DiscoveryNetworkConnector(discoveryAddress);
         return addNetworkConnector(connector);
     }
 

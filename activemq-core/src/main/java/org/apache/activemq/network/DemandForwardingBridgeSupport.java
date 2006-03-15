@@ -61,14 +61,6 @@ import java.io.IOException;
  * @version $Revision$
  */
 public abstract class DemandForwardingBridgeSupport implements Bridge {
-    protected abstract NetworkBridgeFilter createNetworkBridgeFilter();
-
-    protected abstract void serviceLocalBrokerInfo(Command command) throws InterruptedException;
-
-    protected abstract void addRemoteBrokerToBrokerPath(ConsumerInfo info);
-
-    protected abstract void serviceRemoteBrokerInfo(Command command) throws IOException;
-
     protected static final Log log = LogFactory.getLog(DemandForwardingBridge.class);
     protected final Transport localBroker;
     protected final Transport remoteBroker;
@@ -654,11 +646,11 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
         }
     }
 
-    protected DemandSubscription createDemandSubscription(ConsumerInfo info) {
-     return doCreateDemandSubscription(info);
+    protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
+        return doCreateDemandSubscription(info);
     }
 
-    protected DemandSubscription doCreateDemandSubscription(ConsumerInfo info) {
+    protected DemandSubscription doCreateDemandSubscription(ConsumerInfo info) throws IOException {
         DemandSubscription result=new DemandSubscription(info);
         result.getLocalInfo().setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),consumerIdGenerator
                         .getNextSequenceId()));
@@ -671,7 +663,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             }
             result.getLocalInfo().setPriority(priority);
         }
-        configureDemandSubscription(result);
+        configureDemandSubscription(info, result);
         return result;
     }
 
@@ -688,7 +680,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
         return result;
     }
 
-    protected void configureDemandSubscription(DemandSubscription sub) {
+    protected void configureDemandSubscription(ConsumerInfo info, DemandSubscription sub) throws IOException {
         sub.getLocalInfo().setDispatchAsync(dispatchAsync);
         sub.getLocalInfo().setPrefetchSize(prefetchSize);
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(),sub);
@@ -696,7 +688,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     
         // This works for now since we use a VM connection to the local broker.
         // may need to change if we ever subscribe to a remote broker.
-        sub.getLocalInfo().setAdditionalPredicate(createNetworkBridgeFilter());
+        sub.getLocalInfo().setAdditionalPredicate(createNetworkBridgeFilter(info));
     }
 
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
@@ -715,6 +707,13 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected void clearDownSubscriptions() {
         
     }
-    
+
+    protected abstract NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException;
+
+    protected abstract void serviceLocalBrokerInfo(Command command) throws InterruptedException;
+
+    protected abstract void addRemoteBrokerToBrokerPath(ConsumerInfo info) throws IOException;
+
+    protected abstract void serviceRemoteBrokerInfo(Command command) throws IOException;
 
 }
