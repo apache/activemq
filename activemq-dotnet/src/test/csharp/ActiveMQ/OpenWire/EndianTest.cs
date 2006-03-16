@@ -21,7 +21,7 @@ using System.IO;
 
 namespace ActiveMQ.OpenWire
 {
-	[TestFixture]
+    [TestFixture]
     public class EndianTest
     {
         
@@ -46,7 +46,17 @@ namespace ActiveMQ.OpenWire
             int actual = EndianSupport.SwitchEndian(newValue);
             Assert.AreEqual(value, actual);
         }
-		
+        
+        [Test]
+        public void TestCharEndian()
+        {
+            char value = 'J';
+            char newValue = EndianSupport.SwitchEndian(value);
+            Console.WriteLine("New value: " + newValue);
+            char actual = EndianSupport.SwitchEndian(newValue);
+            Assert.AreEqual(value, actual);
+        }
+
         [Test]
         public void TestShortEndian()
         {
@@ -57,7 +67,7 @@ namespace ActiveMQ.OpenWire
             short actual = EndianSupport.SwitchEndian(newValue);
             Assert.AreEqual(value, actual);
         }
-
+        
         [Test]
         public void TestNegativeLongEndian()
         {
@@ -77,7 +87,7 @@ namespace ActiveMQ.OpenWire
             int actual = EndianSupport.SwitchEndian(newValue);
             Assert.AreEqual(value, actual);
         }
-		
+        
         [Test]
         public void TestNegativeShortEndian()
         {
@@ -87,42 +97,42 @@ namespace ActiveMQ.OpenWire
             short actual = EndianSupport.SwitchEndian(newValue);
             Assert.AreEqual(value, actual);
         }
-		
-		[Test]
+        
+        [Test]
         public void TestFloatDontNeedEndianSwitch()
         {
             float value = -1.223F;
             Console.WriteLine("value: " + value);
             
-			// Convert to int so we can compare to Java version.
-			MemoryStream ms = new MemoryStream(4);
-			BinaryWriter bw = new BinaryWriter(ms);
-			bw.Write(value);
-			bw.Close();
-			ms = new MemoryStream(ms.ToArray());
-			BinaryReader br = new BinaryReader(ms);
-						
-			// System.out.println(Integer.toString(Float.floatToIntBits(-1.223F), 16));
+            // Convert to int so we can compare to Java version.
+            MemoryStream ms = new MemoryStream(4);
+            BinaryWriter bw = new BinaryWriter(ms);
+            bw.Write(value);
+            bw.Close();
+            ms = new MemoryStream(ms.ToArray());
+            BinaryReader br = new BinaryReader(ms);
+                        
+            // System.out.println(Integer.toString(Float.floatToIntBits(-1.223F), 16));
             Assert.AreEqual(-0x406374bc, br.ReadInt32());
             
         }
-		
-		[Test]
+        
+        [Test]
         public void TestDoublDontNeedEndianSwitch()
         {
             double value = -1.223D;
             Console.WriteLine("New value: " + value);
             
-			// Convert to int so we can compare to Java version.
-			MemoryStream ms = new MemoryStream(4);
-			BinaryWriter bw = new BinaryWriter(ms);
-			bw.Write(value);
-			bw.Close();
-			ms = new MemoryStream(ms.ToArray());
-			BinaryReader br = new BinaryReader(ms);
-			long longVersion = br.ReadInt64();
-			
-			// System.out.println(Long.toString(Double.doubleToLongBits(-1.223D), 16));
+            // Convert to int so we can compare to Java version.
+            MemoryStream ms = new MemoryStream(4);
+            BinaryWriter bw = new BinaryWriter(ms);
+            bw.Write(value);
+            bw.Close();
+            ms = new MemoryStream(ms.ToArray());
+            BinaryReader br = new BinaryReader(ms);
+            long longVersion = br.ReadInt64();
+            
+            // System.out.println(Long.toString(Double.doubleToLongBits(-1.223D), 16));
             Assert.AreEqual(-0x400c6e978d4fdf3b, longVersion);
         }
     }

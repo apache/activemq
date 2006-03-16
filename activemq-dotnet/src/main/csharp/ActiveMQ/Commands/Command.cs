@@ -18,13 +18,13 @@ using ActiveMQ.Commands;
 
 namespace ActiveMQ.Commands
 {
-	
-	/// <summary>
-	/// An OpenWire command
-	/// </summary>
-	public interface Command : DataStructure
+    
+    /// <summary>
+    /// An OpenWire command
+    /// </summary>
+    public interface Command : DataStructure
     {
-        short CommandId
+        int CommandId
         {
             get;
             set;
