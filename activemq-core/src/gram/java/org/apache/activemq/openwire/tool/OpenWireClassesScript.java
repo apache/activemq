@@ -130,7 +130,7 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
     protected abstract void generateFile(PrintWriter out);
 
     protected String getBaseClassName(JClass jclass) {
-        String answer = "AbstractCommand";
+        String answer = "BaseDataStructure";
         if (superclass != null) {
             String name = superclass.getSimpleName();
             if (name != null && !name.equals("Object")) {
