@@ -17,7 +17,7 @@
 <beans xmlns="http://activemq.org/config/1.0">
 
 
-  <broker name="receiver" persistent="false" useJmx="false">
+  <broker brokerName="receiver" persistent="false" useJmx="false">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default"/>
     </transportConnectors>
