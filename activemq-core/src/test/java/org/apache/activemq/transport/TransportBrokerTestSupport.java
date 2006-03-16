@@ -63,7 +63,7 @@ abstract public class TransportBrokerTestSupport extends BrokerTest {
         URI bindURI = getBindURI();
         
         // Note: on platforms like OS X we cannot bind to the actual hostname, so we
-        // instead use the orignal host name (typically localhost) to bind to 
+        // instead use the original host name (typically localhost) to bind to 
         
         URI actualURI = connector.getServer().getConnectURI();
         URI connectURI = new URI(actualURI.getScheme(), actualURI.getUserInfo(), bindURI.getHost(), actualURI.getPort(), actualURI.getPath(), actualURI
