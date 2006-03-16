@@ -656,6 +656,7 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
         info.setSubcriptionName(subscriptionName);
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
+        info.setDispatchAsync(asyncDispatch);
 
         // Allows the options on the destination to configure the consumerInfo
         if( info.getDestination().getOptions()!=null ) {
@@ -963,12 +964,14 @@ public class ActiveMQConnection extends DefaultTransportListener implements Conn
         
         checkClosedOrFailed();
         ensureConnectionInfoSent();
+        
         ConsumerId consumerId = createConsumerId();
         ConsumerInfo info = new ConsumerInfo(consumerId);
         info.setDestination(ActiveMQMessageTransformation.transformDestination(destination));
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
         info.setNoLocal(noLocal);
+        info.setDispatchAsync(asyncDispatch);
         
         // Allows the options on the destination to configure the consumerInfo
         if( info.getDestination().getOptions()!=null ) {
