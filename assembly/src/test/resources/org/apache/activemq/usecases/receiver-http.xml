@@ -16,7 +16,7 @@
 -->
 <beans xmlns="http://activemq.org/config/1.0">
 
-  <broker name="receiver" persistent="false">
+  <broker brokerName="receiver" persistent="false">
     <transportConnectors>
       <transportConnector uri="http://localhost:62302"/>
     </transportConnectors>

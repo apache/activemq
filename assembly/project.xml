@@ -38,9 +38,8 @@
         </properties>
       </dependency>
 
-      <!--
       <dependency>
-        <groupId>activemq</groupId>
+        <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-optional</artifactId>
         <version>${pom.currentVersion}</version>
         <properties>
@@ -48,7 +47,6 @@
           <optional>true</optional>
         </properties>
       </dependency>
-      -->
 
       <dependency>
         <groupId>activeio</groupId>
