@@ -16,18 +16,11 @@
  */
 package org.apache.activemq.transport.http;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
-
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.KeepAliveInfo;
-import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.transport.TransportAcceptListener;
-import org.apache.activemq.transport.util.TextWireFormat;
-import org.apache.activemq.transport.xstream.XStreamWireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -35,11 +28,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.transport.TransportAcceptListener;
+import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.transport.xstream.XStreamWireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 /**
  * A servlet which handles server side HTTP transport, delegating to the
@@ -56,7 +55,6 @@ public class HttpTunnelServlet extends HttpServlet {
     private TextWireFormat wireFormat;
     private Map clients = new HashMap();
     private long requestTimeout = 30000L;
-    private KeepAliveInfo ping = new KeepAliveInfo();
 
     public void init() throws ServletException {
         super.init();
@@ -76,6 +74,7 @@ public class HttpTunnelServlet extends HttpServlet {
         try {
             BlockingQueueTransport transportChannel = getTransportChannel(request);
             if (transportChannel == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "clientID not specified.");
                 log("No transport available! ");
                 return;
             }

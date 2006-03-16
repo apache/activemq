@@ -52,8 +52,17 @@ public class HttpTransport extends HttpTransportSupport {
 
     public void oneway(Command command) throws IOException {
         try {
-            if (command.getDataStructureType()==ConnectionInfo.DATA_STRUCTURE_TYPE)
+            if (command.getDataStructureType()==ConnectionInfo.DATA_STRUCTURE_TYPE) {
+                boolean startGetThread = clientID==null;
                 clientID=((ConnectionInfo)command).getClientId();
+                if( startGetThread && isStarted() ) {
+                    try {
+                        super.doStart();
+                    } catch (Exception e) {
+                        throw IOExceptionSupport.create(e);
+                    }
+                }
+            }
             
             HttpURLConnection connection = getSendConnection();
             String text = getTextWireFormat().toString(command);
@@ -98,13 +107,16 @@ public class HttpTransport extends HttpTransportSupport {
                     }
                 }
             }
-            catch (Exception e) {
+            catch (Throwable e) {
                 if (!isStopped()) {
                     log.error("Failed to perform GET on: " + remoteUrl + " due to: " + e, e);
                 }
                 else {
                     log.trace("Caught error after closed: " + e, e);
                 }
+            } finally {
+                safeClose(receiveConnection);
+                receiveConnection=null;
             }
         }
     }
@@ -167,35 +179,43 @@ public class HttpTransport extends HttpTransportSupport {
     }
 
     protected void setSendConnection(HttpURLConnection conn) {
-        if (sendConnection != null) {
-            sendConnection.disconnect();
-        }
+        safeClose(sendConnection);
         sendConnection = conn;
     }
 
     protected void setReceiveConnection(HttpURLConnection conn) {
-        if (receiveConnection != null) {
-            receiveConnection.disconnect();
-        }
+        safeClose(receiveConnection);
         receiveConnection = conn;
     }
 
-    protected void doStop(ServiceStopper stopper) throws Exception {
-        if (sendConnection != null) {
-            stopper.run(new Callback() {
-                public void execute() throws Exception {
-                    sendConnection.disconnect();
-                }
-            });
-            sendConnection = null;
+    protected void doStart() throws Exception {
+        // Don't start the background thread until the clientId has been established.
+        if( clientID != null ) {
+            super.doStart();
         }
-        if (receiveConnection != null) {
-            stopper.run(new Callback() {
-                public void execute() throws Exception {
-                    receiveConnection.disconnect();
-                }
-            });
-            receiveConnection = null;
+    }
+    
+    protected void doStop(ServiceStopper stopper) throws Exception {
+        stopper.run(new Callback() {
+            public void execute() throws Exception {
+                safeClose(sendConnection);
+            }
+        });
+        sendConnection = null;
+        stopper.run(new Callback() {
+            public void execute() {
+                safeClose(receiveConnection);
+            }
+        });
+    }
+    
+    /**
+     * @param connection TODO
+     * 
+     */
+    private void safeClose(HttpURLConnection connection) {
+        if( connection!=null ) {
+            connection.disconnect();
         }
     }
 
