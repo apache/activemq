@@ -182,13 +182,58 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         messages.toArray(inbound);
         assertTextMessagesEqual("Rollback did not work.", outbound, inbound);
     }
-
+    
     /**
      * Sends a batch of messages and validates that the message sent before session close is not consumed.
      *
      * @throws Exception
      */
     public void testSendSessionClose() throws Exception {
+        Message[] outbound = new Message[]{
+                session.createTextMessage("First Message"),
+                session.createTextMessage("Second Message")
+        };
+        
+        //sends a message
+        producer.send(outbound[0]);
+        session.commit();
+        
+        //sends a message that gets rollbacked
+        producer.send(session.createTextMessage("I'm going to get rolled back."));
+        consumer.close();
+        
+        reconnectSession();
+        
+        //sends a message
+        producer.send(outbound[1]);
+        session.commit();
+        
+        //receives the first message
+        ArrayList messages = new ArrayList();
+        log.info("About to consume message 1");
+        Message message = consumer.receive(1000);
+        messages.add(message);
+        log.info("Received: " + message);
+        
+        //receives the second message
+        log.info("About to consume message 2");
+        message = consumer.receive(4000);
+        messages.add(message);
+        log.info("Received: " + message);
+        
+        //validates that the rollbacked was not consumed
+        session.commit();
+        Message inbound[] = new Message[messages.size()];
+        messages.toArray(inbound);
+        assertTextMessagesEqual("Rollback did not work.", outbound, inbound);
+    }
+
+    /**
+     * Sends a batch of messages and validates that the message sent before session close is not consumed.
+     *
+     * @throws Exception
+     */
+    public void testSendSessionAndConnectionClose() throws Exception {
         Message[] outbound = new Message[]{
             session.createTextMessage("First Message"),
             session.createTextMessage("Second Message")
@@ -486,18 +531,31 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
      * @throws JMSException
      */
     protected void reconnect() throws JMSException {
-
+        
         if (connection != null) {
             // Close the previous connection.
             connection.close();
         }
+        session = null;
         connection = resourceProvider.createConnection(connectionFactory);
-
+        reconnectSession();
+        connection.start();
+    }
+    
+    /**
+     * Recreates the connection.
+     * 
+     * @throws JMSException
+     */
+    protected void reconnectSession() throws JMSException {
+        if (session != null) {
+            session.close();
+        }
+        
         session = resourceProvider.createSession(connection);
         destination = resourceProvider.createDestination(session, getSubject());
         producer = resourceProvider.createProducer(session, destination);
         consumer = resourceProvider.createConsumer(session, destination);
-        connection.start();
     }
 
     /**
