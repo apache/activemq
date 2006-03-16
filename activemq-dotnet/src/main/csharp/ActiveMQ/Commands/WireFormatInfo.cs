@@ -24,35 +24,35 @@ namespace ActiveMQ.Commands
     //  Marshalling code for Open Wire Format for WireFormatInfo
     //
     //
-    public class WireFormatInfo : AbstractCommand, Command, MarshallAware
+    public class WireFormatInfo : BaseCommand, Command, MarshallAware
     {
         public const byte ID_WireFormatInfo = 1;
-		static private byte[] MAGIC = new byte[] {
-			'A'&0xFF,
-			'c'&0xFF,
-			't'&0xFF,
-			'i'&0xFF,
-			'v'&0xFF,
-			'e'&0xFF,
-			'M'&0xFF,
-			'Q'&0xFF };
-		
+        static private byte[] MAGIC = new byte[] {
+            'A'&0xFF,
+            'c'&0xFF,
+            't'&0xFF,
+            'i'&0xFF,
+            'v'&0xFF,
+            'e'&0xFF,
+            'M'&0xFF,
+            'Q'&0xFF };
+        
         byte[] magic = MAGIC;
         int version;
         byte[] marshalledProperties;
-		
+        
         protected static MessagePropertyHelper propertyHelper = new MessagePropertyHelper();
         private PrimitiveMap properties;
-		
-		public override string ToString() {
+        
+        public override string ToString() {
             return GetType().Name + "["
                 + " Magic=" + Magic
                 + " Version=" + Version
                 + " MarshalledProperties=" + MarshalledProperties
                 + " ]";
 
-		}
-	
+        }
+    
         public override byte GetDataStructureType() {
             return ID_WireFormatInfo;
         }
@@ -76,8 +76,8 @@ namespace ActiveMQ.Commands
             get { return marshalledProperties; }
             set { this.marshalledProperties = value; }
         }
-		
-		public IPrimitiveMap Properties
+        
+        public IPrimitiveMap Properties
         {
             get {
                 if (properties == null)
@@ -113,8 +113,8 @@ namespace ActiveMQ.Commands
             get { return true.Equals(Properties["CacheEnabled"]); }
             set { Properties["CacheEnabled"] = value; }
         }
-		
-		// MarshallAware interface
+        
+        // MarshallAware interface
         public override bool IsMarshallAware()
         {
             return true;
@@ -128,7 +128,7 @@ namespace ActiveMQ.Commands
                 MarshalledProperties = properties.Marshal();
             }
         }
-		
+        
 
     }
 }

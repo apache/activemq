@@ -18,11 +18,11 @@ using NMS;
 using System;
 namespace ActiveMQ.Commands
 {
-	
-	/// <summary>
-	/// Summary description for ActiveMQDestination.
-	/// </summary>
-	public abstract class ActiveMQDestination : AbstractCommand, IDestination
+    
+    /// <summary>
+    /// Summary description for ActiveMQDestination.
+    /// </summary>
+    public abstract class ActiveMQDestination : BaseDataStructure, IDestination
     {
         
         /**
@@ -68,14 +68,9 @@ namespace ActiveMQ.Commands
          */
         public const String DEFAULT_ORDERED_TARGET = "coordinator";
         
-        private const int NULL_DESTINATION = 10;
-        
         private const String TEMP_PREFIX = "{TD{";
         private const String TEMP_POSTFIX = "}TD}";
         private const String COMPOSITE_SEPARATOR = ",";
-        private const String QUEUE_PREFIX = "queue://";
-        private const String TOPIC_PREFIX = "topic://";
-        
         
         private String physicalName = "";
         

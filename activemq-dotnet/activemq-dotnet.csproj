@@ -49,6 +49,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQTextMessage.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQTopic.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\BaseCommand.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\BaseDataStructure.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\BooleanExpression.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\BrokerError.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\BrokerId.cs"/>
@@ -74,6 +75,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\Commands\JournalTrace.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\JournalTransaction.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\KeepAliveInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\LastPartialCommand.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\LocalTransactionId.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\MarshallAware.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\Message.cs"/>
@@ -83,6 +85,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\Commands\MessageId.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\MessageReference.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\NetworkBridgeFilter.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\PartialCommand.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ProducerId.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ProducerInfo.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\RemoveInfo.cs"/>
@@ -149,6 +152,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\JournalTraceMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\JournalTransactionMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\KeepAliveInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\LastPartialCommandMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\LocalTransactionIdMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MarshallerFactory.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageAckMarshaller.cs"/>
@@ -157,6 +161,7 @@
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageIdMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\MessageMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\NetworkBridgeFilterMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\PartialCommandMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ProducerIdMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ProducerInfoMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\RemoveInfoMarshaller.cs"/>

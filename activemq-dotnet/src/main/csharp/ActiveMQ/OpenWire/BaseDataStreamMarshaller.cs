@@ -205,34 +205,34 @@ namespace ActiveMQ.OpenWire
             {
                 int strlen = value.Length;
                 
-				int utflen = 0;
-				int c = 0;
-				bool isOnlyAscii = true;
-				char[] charr = value.ToCharArray();
-				for (int i = 0; i < strlen; i++)
-				{
-					c = charr[i];
-					if ((c >= 0x0001) && (c <= 0x007F))
-					{
-						utflen++;
-					}
-					else if (c > 0x07FF)
-					{
-						utflen += 3;
-						isOnlyAscii = false;
-					}
-					else
-					{
-						isOnlyAscii = false;
-						utflen += 2;
-					}
-				}
-				
-				if (utflen >= Int16.MaxValue)
-					throw new IOException("Encountered a String value that is too long to encode.");
-				
-				bs.WriteBoolean(isOnlyAscii);
-				return utflen + 2;
+                int utflen = 0;
+                int c = 0;
+                bool isOnlyAscii = true;
+                char[] charr = value.ToCharArray();
+                for (int i = 0; i < strlen; i++)
+                {
+                    c = charr[i];
+                    if ((c >= 0x0001) && (c <= 0x007F))
+                    {
+                        utflen++;
+                    }
+                    else if (c > 0x07FF)
+                    {
+                        utflen += 3;
+                        isOnlyAscii = false;
+                    }
+                    else
+                    {
+                        isOnlyAscii = false;
+                        utflen += 2;
+                    }
+                }
+                
+                if (utflen >= Int16.MaxValue)
+                    throw new IOException("Encountered a String value that is too long to encode.");
+                
+                bs.WriteBoolean(isOnlyAscii);
+                return utflen + 2;
             }
             else
             {
@@ -479,7 +479,7 @@ namespace ActiveMQ.OpenWire
             }
         }
 
-		
+        
         public virtual void LooseMarshal(
             OpenWireFormat wireFormat,
             Object o,
@@ -560,7 +560,7 @@ namespace ActiveMQ.OpenWire
         {
             if (dataIn.ReadBoolean())
             {
-				return dataIn.ReadString();
+                return dataIn.ReadString();
             }
             else
             {
@@ -574,29 +574,29 @@ namespace ActiveMQ.OpenWire
             dataOut.Write(value != null);
             if (value != null)
             {
-				dataOut.Write(value);
+                dataOut.Write(value);
             }
         }
-		        
+                
         public virtual void LooseMarshalLong(
             OpenWireFormat wireFormat,
             long o,
             BinaryWriter dataOut)
         {
-			dataOut.Write(o);
+            dataOut.Write(o);
         }
-		
+        
         public virtual long LooseUnmarshalLong(OpenWireFormat wireFormat, BinaryReader dataIn)
         {
-			return dataIn.ReadInt64();
+            return dataIn.ReadInt64();
         }
-		        
+                
         protected virtual void LooseMarshalObjectArray(
             OpenWireFormat wireFormat,
             DataStructure[] objects,
             BinaryWriter dataOut)
         {
-			dataOut.Write(objects!=null);
+            dataOut.Write(objects!=null);
             if (objects!=null)
             {
                 dataOut.Write((short) objects.Length);
@@ -646,7 +646,7 @@ namespace ActiveMQ.OpenWire
             BrokerError o,
             BinaryWriter dataOut)
         {
-			dataOut.Write(o!=null);
+            dataOut.Write(o!=null);
             if (o!=null)
             {
                 LooseMarshalString(o.ExceptionClass, dataOut);
@@ -668,8 +668,8 @@ namespace ActiveMQ.OpenWire
                 }
             }
         }
-		
-		protected virtual byte[] ReadBytes(BinaryReader dataIn, bool flag)
+        
+        protected virtual byte[] ReadBytes(BinaryReader dataIn, bool flag)
         {
             if (flag)
             {
@@ -698,8 +698,8 @@ namespace ActiveMQ.OpenWire
             dataOut.Write(command.Length);
             dataOut.Write(command);
         }
-		
-		protected virtual String ReadAsciiString(BinaryReader dataIn)
+        
+        protected virtual String ReadAsciiString(BinaryReader dataIn)
         {
             int size = dataIn.ReadInt16();
             byte[] data = new byte[size];
@@ -711,7 +711,7 @@ namespace ActiveMQ.OpenWire
             }
             return new String(text);
         }
-		
+        
         
         /// <summary>
         /// Marshals the primitive type map to a byte array
@@ -729,6 +729,7 @@ namespace ActiveMQ.OpenWire
                 return memoryStream.GetBuffer();
             }
         }
+        
         public static void MarshalPrimitiveMap(IDictionary map, BinaryWriter dataOut)
         {
             if (map == null)
