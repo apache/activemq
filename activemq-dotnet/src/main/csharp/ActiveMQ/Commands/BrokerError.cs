@@ -21,7 +21,7 @@ using System.IO;
 
 namespace ActiveMQ.Commands
 {
-	public struct StackTraceElement
+    public struct StackTraceElement
     {
         public string ClassName;
         public string FileName;
@@ -29,10 +29,10 @@ namespace ActiveMQ.Commands
         public int LineNumber;
     }
 
-	/// <summary>
-	/// Represents an exception on the broker
-	/// </summary>
-	public class BrokerError : AbstractCommand
+    /// <summary>
+    /// Represents an exception on the broker
+    /// </summary>
+    public class BrokerError : BaseCommand
     {
         private string message;
         private string exceptionClass;
@@ -64,7 +64,7 @@ namespace ActiveMQ.Commands
         }
         
         public String StackTrace
-		{
+        {
             get {
                 StringWriter writer = new StringWriter();
                 PrintStackTrace(writer);
