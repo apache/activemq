@@ -142,11 +142,17 @@
       <groupId>jetty</groupId>
       <artifactId>servlet-api</artifactId>
       <version>${servlet_api_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
     </dependency>
     <dependency>
       <groupId>jetty</groupId>
       <artifactId>jetty</artifactId>
       <version>${jetty_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
     </dependency>
 
     <dependency>
