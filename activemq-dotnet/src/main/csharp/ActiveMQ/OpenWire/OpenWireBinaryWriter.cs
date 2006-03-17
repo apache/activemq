@@ -102,7 +102,8 @@ namespace ActiveMQ.OpenWire
 		/// <param name="ch">A  char</param>
 		public override void Write(char ch)
 		{
-			base.Write(EndianSupport.SwitchEndian(ch));
+			base.Write( (byte)( ( ch>>8 ) & 0xFF ) );
+			base.Write( (byte)( ch & 0xFF ) );
 		}
 		
 		/// <summary>

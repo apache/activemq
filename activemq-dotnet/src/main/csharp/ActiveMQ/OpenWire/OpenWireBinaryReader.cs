@@ -79,7 +79,12 @@ namespace ActiveMQ.OpenWire
 		/// <returns>A char</returns>
 		public override char ReadChar()
 		{
-			return EndianSupport.SwitchEndian(base.ReadChar());
+			return (char) (
+				(((char)( (byte)(base.ReadByte())       )) << 8 ) |
+				(((char)( (byte)(base.ReadByte())  )) )
+				);
+			
+//			return EndianSupport.SwitchEndian(base.ReadChar());
 		}
 				
 		/// <summary>
