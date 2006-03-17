@@ -154,18 +154,6 @@ public class BrokerService implements Service {
      */
     public TransportConnector addConnector(TransportConnector connector) throws Exception {
         
-        connector.setBroker(getBroker());
-        connector.setBrokerName(getBrokerName());
-        connector.setTaskRunnerFactory(getTaskRunnerFactory());
-        MessageAuthorizationPolicy policy = getMessageAuthorizationPolicy();
-        if (policy != null) {
-            connector.setMessageAuthorizationPolicy(policy);
-        }
-        
-        if (isUseJmx()) {
-            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
-            registerConnectorMBean(connector);
-        }        
         transportConnectors.add(connector);
 
         return connector;
@@ -1056,7 +1044,7 @@ public class BrokerService implements Service {
         if (!isSlave()){
             for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
                 TransportConnector connector = (TransportConnector) iter.next();
-                connector.start();
+                startTransportConnector(connector);
             }
 
             for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
@@ -1076,6 +1064,22 @@ public class BrokerService implements Service {
                 connector.start();
             }
             }
+    }
+
+    protected void startTransportConnector(TransportConnector connector) throws Exception {
+        connector.setBroker(getBroker());
+        connector.setBrokerName(getBrokerName());
+        connector.setTaskRunnerFactory(getTaskRunnerFactory());
+        MessageAuthorizationPolicy policy = getMessageAuthorizationPolicy();
+        if (policy != null) {
+            connector.setMessageAuthorizationPolicy(policy);
+        }
+        
+        if (isUseJmx()) {
+            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
+            registerConnectorMBean(connector);
+        }        
+        connector.start();
     }
 
     public boolean isDeleteAllMessagesOnStartup() {
