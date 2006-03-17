@@ -173,8 +173,10 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             localClientId="NC_"+remoteBrokerName+"_inbound"+name;
             localConnectionInfo.setClientId(localClientId);
             localBroker.oneway(localConnectionInfo);
+
             localSessionInfo=new SessionInfo(localConnectionInfo,1);
             localBroker.oneway(localSessionInfo);
+            
             log.info("Network connection between "+localBroker+" and "+remoteBroker+"("+remoteBrokerName
                             +") has been established.");
             startedLatch.countDown();
@@ -184,18 +186,23 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 
     protected void startRemoteBridge() throws IOException {
         if(remoteBridgeStarted.compareAndSet(false,true)){
-            BrokerInfo brokerInfo=new BrokerInfo();
-            brokerInfo.setBrokerName(localBrokerName);
-            remoteBroker.oneway(brokerInfo);
+
             remoteConnectionInfo=new ConnectionInfo();
             remoteConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
             remoteConnectionInfo.setClientId("NC_"+localBrokerName+"_outbound"+name);
             remoteBroker.oneway(remoteConnectionInfo);
+
+            BrokerInfo brokerInfo=new BrokerInfo();
+            brokerInfo.setBrokerName(localBrokerName);
+            remoteBroker.oneway(brokerInfo);
+
             SessionInfo remoteSessionInfo=new SessionInfo(remoteConnectionInfo,1);
             remoteBroker.oneway(remoteSessionInfo);
+
             producerInfo=new ProducerInfo(remoteSessionInfo,1);
             producerInfo.setResponseRequired(false);
             remoteBroker.oneway(producerInfo);
+
             // Listen to consumer advisory messages on the remote broker to determine demand.
             demandConsumerInfo=new ConsumerInfo(remoteSessionInfo,1);
             demandConsumerInfo.setDispatchAsync(dispatchAsync);
@@ -203,6 +210,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                             +destinationFilter));
             demandConsumerInfo.setPrefetchSize(prefetchSize);
             remoteBroker.oneway(demandConsumerInfo);
+
             startedLatch.countDown();
         }
     }
