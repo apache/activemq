@@ -78,6 +78,8 @@ public class UsageManager {
      * @throws InterruptedException
      */
     public void waitForSpace() throws InterruptedException {
+        if(parent!=null)
+            parent.waitForSpace();
         synchronized (usageMutex) {
             for( int i=0; percentUsage >= 100 ; i++) {
                 usageMutex.wait();
@@ -118,6 +120,8 @@ public class UsageManager {
     }
     
     public boolean isFull() {
+        if(parent!=null && parent.isFull())
+            return true;
         synchronized (usageMutex) {
             return percentUsage >= 100;
         }
