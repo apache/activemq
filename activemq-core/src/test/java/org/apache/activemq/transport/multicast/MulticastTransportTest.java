@@ -19,7 +19,6 @@ package org.apache.activemq.transport.multicast;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.transport.udp.UdpTransportTest;
 import org.apache.activemq.util.IntSequenceGenerator;
 
@@ -43,6 +42,7 @@ public class MulticastTransportTest extends UdpTransportTest {
         
         OpenWireFormat wireFormat = createWireFormat();
         MulticastTransport transport = new MulticastTransport(wireFormat, new URI(multicastURI));
+        transport.setLoopBackMode(false);
         transport.setSequenceGenerator(new IntSequenceGenerator());
         return new CommandJoiner(transport, wireFormat);
     }
@@ -50,6 +50,7 @@ public class MulticastTransportTest extends UdpTransportTest {
     protected Transport createConsumer() throws Exception {
         OpenWireFormat wireFormat = createWireFormat();
         MulticastTransport transport = new MulticastTransport(wireFormat, new URI(multicastURI));
+        transport.setLoopBackMode(false);
         transport.setSequenceGenerator(new IntSequenceGenerator());
         return new CommandJoiner(transport, wireFormat);
     }
