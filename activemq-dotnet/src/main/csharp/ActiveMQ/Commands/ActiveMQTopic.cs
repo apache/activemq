@@ -33,6 +33,14 @@ namespace ActiveMQ.Commands
         public ActiveMQTopic(String name) : base(name)
         {
         }
+		
+		override public DestinationType DestinationType
+		{
+			get {
+				return DestinationType.Topic;
+			}
+		}
+		
         
         public String TopicName
         {

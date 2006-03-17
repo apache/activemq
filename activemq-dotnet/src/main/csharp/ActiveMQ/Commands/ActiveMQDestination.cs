@@ -517,6 +517,13 @@ namespace ActiveMQ.Commands
          * @return the created Destination
          */
         public abstract ActiveMQDestination CreateDestination(String name);
+
+
+		public abstract DestinationType DestinationType
+		{
+			get;
+		}
+	
     }
 }
 

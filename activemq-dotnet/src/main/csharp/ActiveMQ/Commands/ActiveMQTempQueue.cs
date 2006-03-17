@@ -35,6 +35,13 @@ namespace ActiveMQ.Commands
         {
         }
         
+		override public DestinationType DestinationType
+		{
+			get {
+				return DestinationType.TemporaryQueue;
+			}
+		}
+		
         public String GetQueueName()
         {
             return PhysicalName;

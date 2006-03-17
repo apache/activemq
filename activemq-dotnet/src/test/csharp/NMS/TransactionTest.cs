@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using NMS;
 using NUnit.Framework;
 using System;
 using System.Collections;
@@ -33,9 +32,11 @@ namespace NMS
         [SetUp]
 		override public void SetUp()
         {
-			acknowledgementMode = AcknowledgementMode.Transactional;
             base.SetUp();
+			acknowledgementMode = AcknowledgementMode.Transactional;
             Drain();
+            consumer = Session.CreateConsumer(Destination);
+            producer = Session.CreateProducer(Destination);
         }
 		
         [TearDown]
@@ -49,21 +50,21 @@ namespace NMS
         public void TestSendRollback()
         {
             IMessage[] outbound = new IMessage[]{
-                session.CreateTextMessage("First Message"),
-                session.CreateTextMessage("Second Message")
+                Session.CreateTextMessage("First Message"),
+                Session.CreateTextMessage("Second Message")
             };
             
             //sends a message
             producer.Send(outbound[0]);
-            session.Commit();
+            Session.Commit();
             
             //sends a message that gets rollbacked
-            producer.Send(session.CreateTextMessage("I'm going to get rolled back."));
-            session.Rollback();
+            producer.Send(Session.CreateTextMessage("I'm going to get rolled back."));
+            Session.Rollback();
             
             //sends a message
             producer.Send(outbound[1]);
-            session.Commit();
+            Session.Commit();
             
             //receives the first message
             ArrayList messages = new ArrayList();
@@ -79,7 +80,7 @@ namespace NMS
             Console.WriteLine("Received: " + message);
             
             //validates that the rollbacked was not consumed
-            session.Commit();
+            Session.Commit();
             IMessage[] inbound = new IMessage[messages.Count];
             messages.CopyTo(inbound);
             AssertTextMessagesEqual("Rollback did not work.", outbound, inbound);
@@ -89,24 +90,24 @@ namespace NMS
         public void TestSendSessionClose()
         {
             IMessage[] outbound = new IMessage[]{
-                session.CreateTextMessage("First Message"),
-                session.CreateTextMessage("Second Message")
+                Session.CreateTextMessage("First Message"),
+                Session.CreateTextMessage("Second Message")
             };
             
             //sends a message
             producer.Send(outbound[0]);
-            session.Commit();
+            Session.Commit();
             
             //sends a message that gets rollbacked
-            producer.Send(session.CreateTextMessage("I'm going to get rolled back."));
+            producer.Send(Session.CreateTextMessage("I'm going to get rolled back."));
             consumer.Dispose();
-            session.Dispose();
+            Session.Dispose();
             
             Reconnect();
             
             //sends a message
             producer.Send(outbound[1]);
-            session.Commit();
+            Session.Commit();
             
             //receives the first message
             ArrayList messages = new ArrayList();
@@ -122,7 +123,7 @@ namespace NMS
             Console.WriteLine("Received: " + message);
             
             //validates that the rollbacked was not consumed
-            session.Commit();
+            Session.Commit();
             IMessage[] inbound = new IMessage[messages.Count];
             messages.CopyTo(inbound);
             AssertTextMessagesEqual("Rollback did not work.", outbound, inbound);
@@ -132,14 +133,14 @@ namespace NMS
         public void TestReceiveRollback()
         {
             IMessage[] outbound = new IMessage[]{
-                session.CreateTextMessage("First Message"),
-                session.CreateTextMessage("Second Message")
+                Session.CreateTextMessage("First Message"),
+                Session.CreateTextMessage("Second Message")
             };
             
             //sent both messages
             producer.Send(outbound[0]);
             producer.Send(outbound[1]);
-            session.Commit();
+            Session.Commit();
             
             Console.WriteLine("Sent 0: " + outbound[0]);
             Console.WriteLine("Sent 1: " + outbound[1]);
@@ -148,20 +149,20 @@ namespace NMS
             IMessage message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             messages.Add(message);
             Assert.AreEqual(outbound[0], message);
-            session.Commit();
+            Session.Commit();
             
             // rollback so we can get that last message again.
             message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             Assert.IsNotNull(message);
             Assert.AreEqual(outbound[1], message);
-            session.Rollback();
+            Session.Rollback();
             
             // Consume again.. the previous message should
             // get redelivered.
             message = consumer.Receive(TimeSpan.FromMilliseconds(5000));
             Assert.IsNotNull(message, "Should have re-received the message again!");
             messages.Add(message);
-            session.Commit();
+            Session.Commit();
             
             IMessage[] inbound = new IMessage[messages.Count];
             messages.CopyTo(inbound);
@@ -173,13 +174,13 @@ namespace NMS
         public void TestReceiveTwoThenRollback()
         {
             IMessage[] outbound = new IMessage[]{
-                session.CreateTextMessage("First Message"),
-                session.CreateTextMessage("Second Message")
+                Session.CreateTextMessage("First Message"),
+                Session.CreateTextMessage("Second Message")
             };
             
             producer.Send(outbound[0]);
             producer.Send(outbound[1]);
-            session.Commit();
+            Session.Commit();
             
             Console.WriteLine("Sent 0: " + outbound[0]);
             Console.WriteLine("Sent 1: " + outbound[1]);
@@ -191,7 +192,7 @@ namespace NMS
             message = consumer.Receive(TimeSpan.FromMilliseconds(1000));
             Assert.IsNotNull(message);
             AssertTextMessageEqual("second message received before rollback", outbound[1], message);
-            session.Rollback();
+            Session.Rollback();
             
             // Consume again.. the previous message should
             // get redelivered.
@@ -206,7 +207,7 @@ namespace NMS
             AssertTextMessageEqual("second message received after rollback", outbound[1], message);
             
             Assert.IsNull(consumer.ReceiveNoWait());
-            session.Commit();
+            Session.Commit();
             
             IMessage[] inbound = new IMessage[messages.Count];
             messages.CopyTo(inbound);
@@ -239,14 +240,17 @@ namespace NMS
             
             Assert.AreEqual(expectedText, actualText, message);
         }
-        
-        protected override void Connect()
-        {
-			base.Connect();
-            consumer = session.CreateConsumer(Destination);
-            producer = session.CreateProducer(Destination);
-        }
-        
+		
+		/// <summary>
+		/// Method Reconnect
+		/// </summary>
+		protected override void Reconnect()
+		{
+			base.Reconnect();
+            consumer = Session.CreateConsumer(Destination);
+            producer = Session.CreateProducer(Destination);
+		}
+		
     }
 }
 

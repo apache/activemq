@@ -38,20 +38,20 @@ namespace ActiveMQ.OpenWire.V1
   {
 
 
-    public override DataStructure CreateObject() 
+    public override DataStructure CreateObject()
     {
         return new ActiveMQTempTopic();
     }
 
-    public override byte GetDataStructureType() 
+    public override byte GetDataStructureType()
     {
         return ActiveMQTempTopic.ID_ActiveMQTempTopic;
     }
 
-    // 
+    //
     // Un-marshal an object instance from the data input stream
-    // 
-    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs) 
+    //
+    public override void TightUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn, BooleanStream bs)
     {
         base.TightUnmarshal(wireFormat, o, dataIn, bs);
 
@@ -68,7 +68,7 @@ namespace ActiveMQ.OpenWire.V1
         return rc + 0;
     }
 
-    // 
+    //
     // Write a object instance to data output stream
     //
     public override void TightMarshal2(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut, BooleanStream bs) {
@@ -76,16 +76,16 @@ namespace ActiveMQ.OpenWire.V1
 
     }
 
-    // 
+    //
     // Un-marshal an object instance from the data input stream
-    // 
-    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn) 
+    //
+    public override void LooseUnmarshal(OpenWireFormat wireFormat, Object o, BinaryReader dataIn)
     {
         base.LooseUnmarshal(wireFormat, o, dataIn);
 
     }
 
-    // 
+    //
     // Write a object instance to data output stream
     //
     public override void LooseMarshal(OpenWireFormat wireFormat, Object o, BinaryWriter dataOut) {

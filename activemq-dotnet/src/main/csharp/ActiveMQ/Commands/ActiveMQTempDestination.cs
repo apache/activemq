@@ -17,6 +17,7 @@
 
 using ActiveMQ.Commands;
 using System;
+using NMS;
 
 
 //
@@ -31,6 +32,33 @@ namespace ActiveMQ.Commands
 {
 	public abstract class ActiveMQTempDestination : ActiveMQDestination
     {
+		
+		/// <summary>
+		/// Method GetDestinationType
+		/// </summary>
+		/// <returns>An int</returns>
+		public override int GetDestinationType()
+		{
+			// TODO: Implement this method
+			return 0;
+		}
+		
+		/// <summary>
+		/// Method CreateDestination
+		/// </summary>
+		/// <returns>An ActiveMQDestination</returns>
+		/// <param name="name">A  String</param>
+		public override ActiveMQDestination CreateDestination(String name)
+		{
+			// TODO: Implement this method
+			return null;
+		}
+		
+		abstract override public DestinationType DestinationType
+		{
+			get;
+		}
+		
         public const byte ID_ActiveMQTempDestination = 0;
         
         public ActiveMQTempDestination() : base()
