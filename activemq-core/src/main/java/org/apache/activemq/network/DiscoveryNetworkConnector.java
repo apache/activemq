@@ -88,7 +88,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 }
             }
 
-            log.info("Establishing network connection between " + localURI + " and " + event.getBrokerName() + " at " + connectUri);
+            log.info("Establishing network connection between from " + localURI + " to " + connectUri);
 
             Transport localTransport;
             try {
