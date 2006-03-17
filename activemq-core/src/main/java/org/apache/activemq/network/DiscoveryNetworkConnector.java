@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -44,7 +45,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     private DiscoveryAgent discoveryAgent;
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
-
+    
     public DiscoveryNetworkConnector() {
     }
 
@@ -69,8 +70,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            // Has it allready been added?
-            if (bridges.containsKey(uri) || localURI.equals(uri))
+            // Should we try to connect to that URI?
+            if (    bridges.containsKey(uri) 
+                    || localURI.equals(uri) 
+                    || (connectionFilter!=null && !connectionFilter.connectTo(uri))
+                    )
                 return;
 
             URI connectUri = uri;
@@ -131,7 +135,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            Bridge bridge = (Bridge) bridges.get(uri);
+            Bridge bridge = (Bridge) bridges.remove(uri);
             if (bridge == null)
                 return;
 
