@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -50,6 +51,9 @@ public abstract class NetworkConnector extends ServiceSupport {
     private boolean decreaseNetworkConsumerPriority;
     private int networkTTL = 1;
     private String name = "bridge";
+    private int prefetchSize = 1000;
+    private boolean dispatchAsync = true;
+    protected ConnectionFilter connectionFilter;
 
     public NetworkConnector() {
     }
@@ -234,6 +238,8 @@ public abstract class NetworkConnector extends ServiceSupport {
         result.setLocalBrokerName(getBrokerName());
         result.setName(getBrokerName());
         result.setNetworkTTL(getNetworkTTL());
+        result.setPrefetchSize(prefetchSize);
+        result.setDispatchAsync(dispatchAsync);
         result.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
 
         List destsList = getDynamicallyIncludedDestinations();
@@ -271,5 +277,29 @@ public abstract class NetworkConnector extends ServiceSupport {
 
     protected Transport createLocalTransport() throws Exception {
         return TransportFactory.connect(localURI);
+    }
+
+    public boolean isDispatchAsync() {
+        return dispatchAsync;
+    }
+
+    public void setDispatchAsync(boolean dispatchAsync) {
+        this.dispatchAsync = dispatchAsync;
+    }
+
+    public int getPrefetchSize() {
+        return prefetchSize;
+    }
+
+    public void setPrefetchSize(int prefetchSize) {
+        this.prefetchSize = prefetchSize;
+    }
+
+    public ConnectionFilter getConnectionFilter() {
+        return connectionFilter;
+    }
+
+    public void setConnectionFilter(ConnectionFilter connectionFilter) {
+        this.connectionFilter = connectionFilter;
     }
 }

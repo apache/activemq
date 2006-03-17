@@ -47,6 +47,7 @@ import org.apache.activemq.broker.jmx.ProxyConnectorView;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.network.ConnectionFilter;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.jms.JmsConnector;
@@ -224,6 +225,24 @@ public class BrokerService implements Service {
         map.put("network", "true");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         connector.setLocalUri(uri);
+        
+        // Set a connection filter so that the connector does not establish loop back connections.
+        connector.setConnectionFilter(new ConnectionFilter() {
+            public boolean connectTo(URI location) {
+                List transportConnectors = getTransportConnectors();
+                for (Iterator iter = transportConnectors.iterator(); iter.hasNext();) {
+                    try {
+                        TransportConnector tc = (TransportConnector) iter.next();
+                        if( location.equals(tc.getConnectUri()) ) {
+                            return false;
+                        }
+                    } catch (Throwable e) {
+                    }
+                }
+                return true;
+            }
+        });
+        
         networkConnectors.add(connector);
         if (isUseJmx()) {
             registerNetworkConnectorMBean(connector);
