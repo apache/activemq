@@ -18,6 +18,7 @@ package org.apache.activemq.ra;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ServiceSupport;
@@ -129,6 +130,12 @@ public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
             }
         }
         ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
+
+        // have we configured a redelivery policy
+        RedeliveryPolicy redeliveryPolicy = activationSpec.redeliveryPolicy();
+        if (redeliveryPolicy != null) {
+            physicalConnection.setRedeliveryPolicy(redeliveryPolicy);
+        }
         return physicalConnection;
     }
 

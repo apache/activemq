@@ -31,6 +31,7 @@ import javax.resource.spi.ActivationSpec;
 import javax.resource.spi.InvalidPropertyException;
 import javax.resource.spi.ResourceAdapter;
 
+import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -74,6 +75,7 @@ public class ActiveMQActivationSpec implements ActivationSpec, Serializable {
     private String maxMessagesPerSessions="10";
     private String enableBatch = "false";
     private String maxMessagesPerBatch = "10";
+    private RedeliveryPolicy redeliveryPolicy;
 
     
     /**
@@ -536,4 +538,60 @@ public class ActiveMQActivationSpec implements ActivationSpec, Serializable {
         }
     }
 
+    public short getBackOffMultiplier() {
+        if (redeliveryPolicy == null) {
+            return 0;
+        }
+        return redeliveryPolicy.getBackOffMultiplier();
+    }
+
+    public long getInitialRedeliveryDelay() {
+        if (redeliveryPolicy == null) {
+            return 0;
+        }
+        return redeliveryPolicy.getInitialRedeliveryDelay();
+    }
+
+    public int getMaximumRedeliveries() {
+        if (redeliveryPolicy == null) {
+            return 0;
+        }
+        return redeliveryPolicy.getMaximumRedeliveries();
+    }
+
+    public boolean isUseExponentialBackOff() {
+        if (redeliveryPolicy == null) {
+            return false;
+        }
+        return redeliveryPolicy.isUseExponentialBackOff();
+    }
+
+    public void setBackOffMultiplier(short backOffMultiplier) {
+        lazyCreateRedeliveryPolicy().setBackOffMultiplier(backOffMultiplier);
+    }
+
+    public void setInitialRedeliveryDelay(long initialRedeliveryDelay) {
+        lazyCreateRedeliveryPolicy().setInitialRedeliveryDelay(initialRedeliveryDelay);
+    }
+
+    public void setMaximumRedeliveries(int maximumRedeliveries) {
+        lazyCreateRedeliveryPolicy().setMaximumRedeliveries(maximumRedeliveries);
+    }
+
+    public void setUseExponentialBackOff(boolean useExponentialBackOff) {
+        lazyCreateRedeliveryPolicy().setUseExponentialBackOff(useExponentialBackOff);
+    }
+
+    // don't use getter to avoid causing introspection errors in containers
+    public RedeliveryPolicy redeliveryPolicy() {
+        return redeliveryPolicy;
+    }
+    
+    protected RedeliveryPolicy lazyCreateRedeliveryPolicy() {
+        if (redeliveryPolicy == null) {
+            redeliveryPolicy = new RedeliveryPolicy();
+        }
+        return redeliveryPolicy;
+    }
 }
+
