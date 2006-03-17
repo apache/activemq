@@ -35,7 +35,6 @@
     <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets"/>
     <ItemGroup>
         <Compile Include="src\main\csharp\ActiveMQ\BrokerException.cs"/>
-        <Compile Include="src\main\csharp\ActiveMQ\Commands\AbstractCommand.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQBytesMessage.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQDestination.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ActiveMQMapMessage.cs"/>
@@ -210,6 +209,7 @@
         <Compile Include="src\test\csharp\ActiveMQ\Commands\CommandTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\OpenWire\BooleanStreamTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\OpenWire\EndianTest.cs"/>
+        <Compile Include="src\test\csharp\ActiveMQ\OpenWire\PrimitiveMapTest.cs"/>
         <Compile Include="src\test\csharp\ActiveMQ\TestMain.cs"/>
         <Compile Include="src\test\csharp\NMS\AsyncConsumeTest.cs"/>
         <Compile Include="src\test\csharp\NMS\BadConsumeTest.cs"/>
