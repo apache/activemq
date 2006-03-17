@@ -25,6 +25,14 @@ import javax.jms.JMSException;
  */
 public class TwoBrokerTopicSendReceiveUsingHttpTest extends TwoBrokerTopicSendReceiveTest {
 
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        // Give jetty server enough time to setup,
+        // so we don't lose messages when connection fails
+        Thread.sleep(5000);
+    }
+
     protected ActiveMQConnectionFactory createReceiverConnectionFactory() throws JMSException {
         return createConnectionFactory("org/apache/activemq/usecases/receiver-http.xml", "receiver", "vm://receiver");
     }
