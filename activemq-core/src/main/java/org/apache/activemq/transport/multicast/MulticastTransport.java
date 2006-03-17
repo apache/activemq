@@ -57,6 +57,30 @@ public class MulticastTransport extends UdpTransport {
         super(wireFormat, remoteLocation);
     }
 
+    public long getKeepAliveInterval() {
+        return keepAliveInterval;
+    }
+
+    public void setKeepAliveInterval(long keepAliveInterval) {
+        this.keepAliveInterval = keepAliveInterval;
+    }
+
+    public boolean isLoopBackMode() {
+        return loopBackMode;
+    }
+
+    public void setLoopBackMode(boolean loopBackMode) {
+        this.loopBackMode = loopBackMode;
+    }
+
+    public int getTimeToLive() {
+        return timeToLive;
+    }
+
+    public void setTimeToLive(int timeToLive) {
+        this.timeToLive = timeToLive;
+    }
+
     protected String getProtocolName() {
         return "Multicast";
     }
