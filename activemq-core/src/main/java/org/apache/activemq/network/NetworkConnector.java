@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.network;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Set;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -27,10 +29,7 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Set;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @version $Revision$
@@ -42,7 +41,7 @@ public abstract class NetworkConnector extends ServiceSupport {
     private String brokerName = "localhost";
 
     private Set durableDestinations;
-    protected boolean failover = true;
+    protected boolean failover = false;
     private List excludedDestinations = new CopyOnWriteArrayList();
     private List dynamicallyIncludedDestinations = new CopyOnWriteArrayList();
     private List staticallyIncludedDestinations = new CopyOnWriteArrayList();
