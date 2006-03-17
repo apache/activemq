@@ -69,7 +69,7 @@ public class ResponseHolder {
                     lock.wait(timeout);
                 }
                 catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
                 }
             }
         }

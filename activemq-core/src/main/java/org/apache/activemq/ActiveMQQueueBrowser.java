@@ -229,10 +229,12 @@ public class ActiveMQQueueBrowser implements
      */
     protected void waitForMessage() {
         try {
-            synchronized (semaphore ) {
+            synchronized (semaphore) {
                 semaphore.wait(2000);
             }
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
     
