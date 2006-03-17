@@ -169,7 +169,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
         
     public void serviceException(Throwable e) {
-        if( !disposed && !inServiceException ) {
+        // are we a transport exception such as not being able to dispatch
+        // synchronously to a transport
+        if (e instanceof IOException) {
+            serviceTransportException((IOException) e);
+        }
+        else if( !disposed && !inServiceException ) {
             inServiceException = true;
                 try {
                 serviceLog.info("Async error occurred: "+e,e);
