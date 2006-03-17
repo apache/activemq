@@ -16,6 +16,7 @@
  */
 using NMS;
 using System;
+using System.CodeDom.Compiler;
 
 namespace ActiveMQ.Commands
 {
@@ -34,6 +35,14 @@ namespace ActiveMQ.Commands
         public ActiveMQTempTopic(String name) : base(name)
         {
         }
+		
+		override public DestinationType DestinationType
+		{
+			get {
+				return DestinationType.TemporaryTopic;
+			}
+		}
+		
         
         public String GetTopicName()
         {

@@ -16,12 +16,24 @@
  */
 namespace NMS
 {
+	public enum DestinationType
+	{
+		Queue,
+		Topic,
+		TemporaryQueue,
+		TemporaryTopic
+	}
+	
 	
 	/// <summary>
 	/// Summary description for Destination.
 	/// </summary>
 	public interface IDestination
 	{
+		
+		DestinationType DestinationType {
+			get;
+		}
 	}
 	
 }

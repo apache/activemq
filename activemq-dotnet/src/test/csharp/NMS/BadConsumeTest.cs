@@ -42,7 +42,7 @@ namespace NMS
         {
 			try
 			{
-				IMessageConsumer consumer = session.CreateConsumer(null);
+				IMessageConsumer consumer = Session.CreateConsumer(null);
 				Console.WriteLine("Created consumer: " + consumer);
 				Assert.Fail("Should  have thrown an exception!");
 			}

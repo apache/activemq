@@ -28,17 +28,19 @@ namespace NMS
     public abstract class JMSTestSupport
     {
         
-		protected IConnectionFactory factory;
-        protected IConnection connection;
-		protected ISession session;
+		private IConnectionFactory factory;
+        private IConnection connection;
+		private ISession session;
 		private IDestination destination;
+		
 		protected int receiveTimeout = 1000;
+		protected string clientId;
+		protected DestinationType destinationType = DestinationType.Queue;
 		protected AcknowledgementMode acknowledgementMode = AcknowledgementMode.ClientAcknowledge;
 		
 		[SetUp]
         virtual public void SetUp()
         {
-			Connect();
         }
 		
         [TearDown]
@@ -47,21 +49,58 @@ namespace NMS
 			Disconnect();
         }
 		
+		// Properties
+        public bool Connected
+        {
+            get { return connection!=null; }
+            set { if( value ) Connect(); else Disconnect(); }
+        }
+
+        public IConnectionFactory Factory
+        {
+            get {
+				if( factory == null ) {
+					factory = CreateConnectionFactory();
+					Assert.IsNotNull(factory, "no factory created");
+				}
+				return factory;
+			}
+            set { this.factory = value; }
+        }
+		
+        public IConnection Connection
+        {
+            get {
+				if( connection == null ) {
+					Connect();
+				}
+				return connection;
+			}
+            set { this.connection = value; }
+        }
+		
+        public ISession Session
+        {
+            get {
+				if( session == null ) {
+					session = Connection.CreateSession(acknowledgementMode);
+					Assert.IsNotNull(connection != null, "no session created");
+				}
+				return session;
+			}
+            set { this.session = value; }
+        }
 		
 		virtual protected void Connect()
         {
 			Console.WriteLine("Connectting...");
-            factory = CreateConnectionFactory();
-            Assert.IsNotNull(factory, "no factory created");
-            connection = CreateConnection();
-            Assert.IsNotNull(connection, "no connection created");
+			connection = CreateConnection();
+			Assert.IsNotNull(connection, "no connection created");
 			connection.Start();
-			session = connection.CreateSession(acknowledgementMode);
-            Assert.IsNotNull(connection != null, "no session created");
 			Console.WriteLine("Connected.");
+			Assert.IsNotNull(connection, "no connection created");
         }
-		
-        
+		        
         virtual protected void Disconnect()
         {
             if (connection != null)
@@ -69,6 +108,7 @@ namespace NMS
 				Console.WriteLine("Disconnecting...");
                 connection.Dispose();
                 connection = null;
+				session=null;
 				Console.WriteLine("Disconnected.");
             }
         }
@@ -81,7 +121,7 @@ namespace NMS
 		
 		protected virtual void Drain()
 		{
-            using (ISession session = connection.CreateSession())
+            using (ISession session = Connection.CreateSession())
             {
 				// Tries to consume any messages on the Destination
 				IMessageConsumer consumer = session.CreateConsumer(Destination);
@@ -98,7 +138,7 @@ namespace NMS
 		
         public virtual void SendAndSyncReceive()
         {
-            using (ISession session = connection.CreateSession())
+            using (ISession session = Connection.CreateSession())
             {
 				
 				IMessageConsumer consumer = session.CreateConsumer(Destination);
@@ -120,24 +160,38 @@ namespace NMS
 		
 		protected virtual IConnection CreateConnection()
 		{
-			return factory.CreateConnection();
+			IConnection connection =  Factory.CreateConnection();
+			if( clientId!=null ) {
+				connection.ClientId = clientId;
+			}
+			return connection;
 		}
 		
 		protected virtual IMessageProducer CreateProducer()
 		{
-			IMessageProducer producer = session.CreateProducer(destination);
+			IMessageProducer producer = Session.CreateProducer(destination);
 			return producer;
 		}
 		
 		protected virtual IMessageConsumer CreateConsumer()
 		{
-			IMessageConsumer consumer = session.CreateConsumer(destination);
+			IMessageConsumer consumer = Session.CreateConsumer(destination);
 			return consumer;
 		}
         
         protected virtual IDestination CreateDestination()
         {
-            return session.GetQueue(CreateDestinationName());
+			if( destinationType == DestinationType.Queue ) {
+				return Session.GetQueue(CreateDestinationName());
+			} else if( destinationType == DestinationType.Topic ) {
+				return Session.GetTopic(CreateDestinationName());
+			} else if( destinationType == DestinationType.TemporaryQueue ) {
+				return Session.CreateTemporaryQueue();
+			} else if( destinationType == DestinationType.TemporaryTopic ) {
+				return Session.CreateTemporaryTopic();
+			} else {
+				throw new Exception("Unknown destination type: "+destinationType);
+			}
         }
 		
         protected virtual string CreateDestinationName()
@@ -147,7 +201,7 @@ namespace NMS
         
         protected virtual IMessage CreateMessage()
         {
-            return session.CreateMessage();
+            return Session.CreateMessage();
         }
         
         protected virtual  void AssertValidMessage(IMessage message)

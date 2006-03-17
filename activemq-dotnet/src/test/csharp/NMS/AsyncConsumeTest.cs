@@ -47,7 +47,7 @@ namespace NMS
 			
 			// lets create an async consumer
 			// START SNIPPET: demo
-			IMessageConsumer consumer = session.CreateConsumer(this.Destination);
+			IMessageConsumer consumer = Session.CreateConsumer(this.Destination);
 			consumer.Listener += new MessageListener(OnMessage);
 			// END SNIPPET: demo
 			

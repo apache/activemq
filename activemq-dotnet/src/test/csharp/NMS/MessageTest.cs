@@ -57,7 +57,7 @@ namespace NMS
 		
         protected override IMessage CreateMessage()
         {
-            IMessage message = session.CreateMessage();
+            IMessage message = Session.CreateMessage();
             
             message.Properties["a"] = a;
             message.Properties["b"] = b;

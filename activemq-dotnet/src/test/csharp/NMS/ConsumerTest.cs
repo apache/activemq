@@ -23,9 +23,15 @@ namespace NMS
 	[TestFixture]
     public class ConsumerTest : JMSTestSupport
     {
+		
+		public bool persistent;
+		public int prefetch;
+		public bool durableConsumer;
+		
 		[SetUp]
         override public void SetUp()
         {
+			clientId = "test";
 			base.SetUp();
         }
 		
@@ -35,30 +41,32 @@ namespace NMS
 			base.TearDown();
         }
 		
-		protected override IConnection CreateConnection()
-		{
-			IConnection connection = base.CreateConnection();
-			connection.ClientId = "test";
-			return connection;
-		}
 		
-		protected override IDestination CreateDestination()
-		{
-            return session.GetTopic(CreateDestinationName());
-		}
-		
-		
-        //[Ignore("Not fully implemented yet.")]
         [Test]
-        public void testDurableConsumerSelectorChange()
+        public void TestDurableConsumerSelectorChangePersistent()
+        {
+			this.destinationType = DestinationType.Topic;
+			this.persistent = true;
+			doTestDurableConsumerSelectorChange();
+		}
+		
+        [Test]
+        public void TestDurableConsumerSelectorChangeNonPersistent()
+        {
+			this.destinationType = DestinationType.Topic;
+			this.persistent = true;
+			doTestDurableConsumerSelectorChange();
+		}
+		
+        public void doTestDurableConsumerSelectorChange()
         {
             
-            IMessageProducer producer = session.CreateProducer(Destination);
-            producer.Persistent = true;
-            IMessageConsumer consumer = session.CreateDurableConsumer((ITopic)Destination, "test", "color='red'", false);
+            IMessageProducer producer = Session.CreateProducer(Destination);
+			producer.Persistent = persistent;
+            IMessageConsumer consumer = Session.CreateDurableConsumer((ITopic)Destination, "test", "color='red'", false);
 			
             // Send the messages
-            ITextMessage message = session.CreateTextMessage("1st");
+            ITextMessage message = Session.CreateTextMessage("1st");
             message.Properties["color"] =  "red";
             producer.Send(message);
             
@@ -68,12 +76,12 @@ namespace NMS
 			
             // Change the subscription.
             consumer.Dispose();
-            consumer = session.CreateDurableConsumer((ITopic)Destination, "test", "color='blue'", false);
+            consumer = Session.CreateDurableConsumer((ITopic)Destination, "test", "color='blue'", false);
             
-            message = session.CreateTextMessage("2nd");
+            message = Session.CreateTextMessage("2nd");
             message.Properties["color"] =  "red";
             producer.Send(message);
-            message = session.CreateTextMessage("3rd");
+            message = Session.CreateTextMessage("3rd");
             message.Properties["color"] =  "blue";
             producer.Send(message);
 			
@@ -84,7 +92,7 @@ namespace NMS
             
             Assert.IsNull(consumer.ReceiveNoWait());
         }
-		
+				
     }
 }
 

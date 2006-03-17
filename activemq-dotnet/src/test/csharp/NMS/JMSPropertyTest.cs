@@ -65,8 +65,8 @@ namespace NMS
         
         protected override IMessage CreateMessage()
         {
-            ITextMessage message = session.CreateTextMessage(expectedText);
-            replyTo = session.CreateTemporaryQueue();
+            ITextMessage message = Session.CreateTextMessage(expectedText);
+            replyTo = Session.CreateTemporaryQueue();
             
             // lets set the headers
             message.NMSCorrelationID = correlationID;

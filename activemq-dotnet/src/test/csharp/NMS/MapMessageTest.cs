@@ -58,7 +58,7 @@ namespace NMS
 		
         protected override IMessage CreateMessage()
         {
-            IMapMessage message = session.CreateMapMessage();
+            IMapMessage message = Session.CreateMapMessage();
             
             message.Body["a"] = a;
             message.Body["b"] = b;

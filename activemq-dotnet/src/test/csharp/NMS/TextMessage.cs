@@ -47,7 +47,7 @@ namespace NMS
         
         protected override IMessage CreateMessage()
         {
-            IMessage request = session.CreateTextMessage(expected);
+            IMessage request = Session.CreateTextMessage(expected);
             return request;
         }
         

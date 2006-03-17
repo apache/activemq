@@ -33,7 +33,14 @@ namespace ActiveMQ.Commands
         public ActiveMQQueue(String name) : base(name)
         {
         }
-        
+		
+		override public DestinationType DestinationType
+		{
+			get {
+				return DestinationType.Queue;
+			}
+		}
+		
         public String QueueName
         {
             get { return PhysicalName; }
