@@ -137,7 +137,6 @@ public class Consumer extends Sampler implements MessageListener {
             if ((ServerConnectionFactory.JORAM_SERVER.equals(this.getMQServer())) ||
                 (ServerConnectionFactory.MANTARAY_SERVER.equals(this.getMQServer()))) {
                 //Id set by server
-
             } else {
                 IdGenerator idGenerator = new IdGenerator();
                 connection.setClientID(idGenerator.generateId());
@@ -145,8 +144,7 @@ public class Consumer extends Sampler implements MessageListener {
         }
 
         //start connection before receiving messages.
-        connection.start();
-
+//        connection.start();
         Session session = ServerConnectionFactory.createSession(connection,
                                                                 this.getTransacted(),
                                                                 this.getMQServer(),
@@ -159,6 +157,7 @@ public class Consumer extends Sampler implements MessageListener {
                                                                             this.getTopic());
 
         MessageConsumer consumer = null;
+        connection.start();
 
         if (ServerConnectionFactory.OPENJMS_SERVER.equals(this.getMQServer())) {
             if (this.getTopic()) {
@@ -214,7 +213,6 @@ public class Consumer extends Sampler implements MessageListener {
         try {
             TextMessage textMessage = (TextMessage) message;
             Session session;
-
             // lets force the content to be deserialized
             String text = textMessage.getText();
             count(1);

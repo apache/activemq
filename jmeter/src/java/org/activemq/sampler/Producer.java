@@ -278,7 +278,6 @@ public class Producer extends Sampler implements TestListener {
      * @throws Exception
      */
     public void run() throws Exception {
-
         start();
         publish();
     }

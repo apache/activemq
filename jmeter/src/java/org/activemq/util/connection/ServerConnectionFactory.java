@@ -94,6 +94,10 @@ public class ServerConnectionFactory {
     private static int mantarayProducerPortCount = 0;
     private static int mantarayConsumerPortCount = 0;
 
+    protected static String user = ActiveMQConnection.DEFAULT_USER;
+    protected static String pwd = ActiveMQConnection.DEFAULT_PASSWORD;
+
+
     /**
      * Closes the connection passed through the parameter
      *
@@ -199,9 +203,8 @@ public class ServerConnectionFactory {
         } else {
             //Used to create a session from the default MQ server ActiveMQConnectionFactory.
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
-            factory.setUseAsyncSend(true);
-            
             ActiveMQConnection c = (ActiveMQConnection) factory.createConnection();
+            factory.setUseAsyncSend(true);
 
             c.getPrefetchPolicy().setQueuePrefetch(1000);
             c.getPrefetchPolicy().setQueueBrowserPrefetch(1000);
@@ -276,6 +279,7 @@ public class ServerConnectionFactory {
                                         boolean isTransacted,
                                         String mqServer,
                                         boolean isTopic) throws JMSException {
+
         if (OPENJMS_SERVER.equals(mqServer) || MANTARAY_SERVER.equals(mqServer)) {
             if (isTransacted) {
                 if (isTopic) {
@@ -305,9 +309,29 @@ public class ServerConnectionFactory {
         } else {
             // check when to use Transacted or Non-Transacted type.
             if (isTransacted) {
-                return connection.createSession(true, Session.SESSION_TRANSACTED);
+                if (isTopic) {
+                    TopicSession session = ((TopicConnection) connection).createTopicSession(false, Session.SESSION_TRANSACTED);
+
+                    return ((Session) session);
+
+                } else {
+                    QueueSession session = ((QueueConnection) connection).createQueueSession(false, Session.SESSION_TRANSACTED);
+
+                    return ((Session) session);
+
+                }
             } else {
-                return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                if (isTopic) {
+                    TopicSession session = ((TopicConnection) connection).createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+
+                    return ((Session) session);
+
+                } else {
+                    QueueSession session = ((QueueConnection) connection).createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+
+                    return ((Session) session);
+
+                }
             }
         }
     }

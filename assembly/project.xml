@@ -321,8 +321,6 @@
         <include>**/*Test.*</include>
       </includes>
       <excludes>
-          <!-- http://jira.activemq.org/jira/browse/AMQ-586: fails on Windows 2003 -->
-          <exclude>**/TwoBrokerTopicSendReceiveTest.*</exclude>
           <!-- http://jira.activemq.org/jira/browse/AMQ-537 --> 
           <exclude>**/PublishOnQueueConsumedMessageUsingActivemqXMLTest.*</exclude>
           <!-- http://jira.activemq.org/jira/browse/AMQ-538 --> 

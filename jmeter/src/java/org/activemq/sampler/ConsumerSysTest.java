@@ -172,7 +172,6 @@ public class ConsumerSysTest extends Sampler implements MessageListener {
                                                                             ACTIVEMQ_SERVER,
                                                                             this.getTopic());
 
-
         if (this.getDurable() && this.getTopic()) {
             consumer = session.createDurableSubscriber((Topic) destination, getClass().getName());
         } else {
@@ -191,10 +190,12 @@ public class ConsumerSysTest extends Sampler implements MessageListener {
     protected void publishConfirmMessage() throws JMSException {
         MessageProducer publisher = null;
         String text = PUBLISH_MSG;
+
         Connection connection = ServerConnectionFactory.createConnectionFactory(this.getURL(),
                                                                                 ACTIVEMQ_SERVER,
                                                                                 this.getTopic(),
                                                                                 this.getEmbeddedBroker());
+
         if (this.getDurable()) {
             IdGenerator idGenerator = new IdGenerator();
             connection.setClientID(idGenerator.generateId());
@@ -247,13 +248,10 @@ public class ConsumerSysTest extends Sampler implements MessageListener {
      * @throws JMSException
      */
     public void run() throws JMSException {
-
         // Receives the config message
         suscribeConfigMessage();
-
         // Create subscriber
         subscribe();
-
         // Publish confirm messages
         publishConfirmMessage();
     }
