@@ -125,7 +125,10 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
                 store.delete();
             }
         }
-        transactionStore.delete();
+
+        if (transactionStore != null) {
+            transactionStore.delete();
+        }
     }
 
     public boolean isUseExternalMessageReferences() {

@@ -51,6 +51,15 @@ public class ConfigTest extends TestCase {
     protected static final String DERBY_ROOT = "target/test-data/";
     protected static final String CONF_ROOT = "src/sample-conf/";
 
+    static {
+        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+    }
+
     /*
      * IMPORTANT NOTE: Assertions checking for the existence of the derby directory will fail if the first derby
      *                 directory is not created under target/test-data/. The test in unable to change the derby
