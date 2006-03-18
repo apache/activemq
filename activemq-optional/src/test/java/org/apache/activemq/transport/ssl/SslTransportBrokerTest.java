@@ -28,10 +28,10 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", "src/test/client.keystore");
+        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");        
-        System.setProperty("javax.net.ssl.keyStore", "src/test/server.keystore");
+        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");        
         //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");        
