@@ -140,7 +140,8 @@ public class StompWireFormat implements WireFormat {
             MessageDispatch md = (MessageDispatch)packet;
             Message message = md.getMessage();
             Subscription sub = (Subscription) subscriptionsByConsumerId.get(md.getConsumerId());
-            sub.receive(md, out);
+            if (sub != null)
+                sub.receive(md, out);
         }
         return null;
     }

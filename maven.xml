@@ -181,6 +181,7 @@
     <maven:reactor basedir="." goals="test" includes="${maven.multiproject.includes}" ignoreFailures="true"/>
     
     <j:if test="${!failedProjects.isEmpty()}">
+        <ant:echo> </ant:echo>
         <ant:echo>There are test failures in the following modules:</ant:echo>
         <j:forEach var="failedProj" items="${failedProjects}">
             <ant:echo>  ${failedProj} </ant:echo>
