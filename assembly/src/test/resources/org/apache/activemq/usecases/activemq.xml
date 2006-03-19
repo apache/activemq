@@ -34,7 +34,7 @@
           <!-- lets force old messages to be discarded for slow consumers -->
           <policyEntry topic="Prices.>">
             <pendingMessageLimitStrategy>
-              <constantPendingMessageLimitStrategy value="0"/>
+              <constantPendingMessageLimitStrategy limit="0"/>
             </pendingMessageLimitStrategy>
           </policyEntry>
 
