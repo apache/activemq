@@ -1,15 +1,11 @@
 package org.apache.activemq.kaha;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
-import org.apache.activemq.kaha.ListContainer;
-import org.apache.activemq.kaha.Store;
-import org.apache.activemq.kaha.StoreFactory;
+
 import junit.framework.TestCase;
 
 public class ListContainerTest extends TestCase{
@@ -310,6 +306,9 @@ public class ListContainerTest extends TestCase{
 
     protected void tearDown() throws Exception{
         super.tearDown();
+        if( store!= null ) {
+        	store.close();
+        }
         assertTrue(StoreFactory.delete(name));
     }
 }
