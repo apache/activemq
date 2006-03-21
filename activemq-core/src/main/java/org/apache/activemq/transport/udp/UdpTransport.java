@@ -63,11 +63,9 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private DatagramChannel channel;
     private boolean trace = false;
     private boolean useLocalHost = true;
-    private boolean checkSequenceNumbers = true;
     private int port;
     private int minmumWireFormatVersion;
     private String description = null;
-    private Runnable runnable;
     private IntSequenceGenerator sequenceGenerator;
     private boolean replayEnabled = true;
 
@@ -126,10 +124,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         commandChannel.write(command, address);
     }
 
-    public void setStartupRunnable(Runnable runnable) {
-        this.runnable = runnable;
-    }
-
     /**
      * @return pretty print of 'this'
      */
@@ -147,9 +141,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     public void run() {
         log.trace("Consumer thread starting for: " + toString());
-        if (runnable != null) {
-            runnable.run();
-        }
         while (!isStopped()) {
             try {
                 Command command = commandChannel.read();
@@ -311,15 +302,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public OpenWireFormat getWireFormat() {
         return wireFormat;
     }
-
-    public boolean isCheckSequenceNumbers() {
-        return checkSequenceNumbers;
-    }
-
-    public void setCheckSequenceNumbers(boolean checkSequenceNumbers) {
-        this.checkSequenceNumbers = checkSequenceNumbers;
-    }
-
 
     public IntSequenceGenerator getSequenceGenerator() {
         if (sequenceGenerator == null) {

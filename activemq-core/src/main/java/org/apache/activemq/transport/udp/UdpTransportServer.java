@@ -59,10 +59,6 @@ public class UdpTransportServer extends TransportServerSupport {
         this.serverTransport = serverTransport;
         this.configuredTransport = configuredTransport;
         this.replayStrategy = replayStrategy;
-
-        // lets disable the incremental checking of the sequence numbers
-        // as we are getting messages from many different clients
-        serverTransport.setCheckSequenceNumbers(false);
     }
 
     public String toString() {
