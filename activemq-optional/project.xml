@@ -196,6 +196,9 @@
         <exclude>**/HttpsTransportBrokerTest.*</exclude>
         <exclude>**/HttpTransportBrokerTest.*</exclude>
 
+        <exclude>**/Http*Test.*</exclude>
+        <exclude>**/Ssl*Test.*</exclude>
+
       </excludes>
     </unitTest>
 
