@@ -47,7 +47,7 @@ public class CommandJoiner extends TransportFilter {
 
     public void onCommand(Command command) {
         byte type = command.getDataStructureType();
-        if (type == PartialCommand.DATA_STRUCTURE_TYPE) {
+        if (type == PartialCommand.DATA_STRUCTURE_TYPE || type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
             PartialCommand header = (PartialCommand) command;
             byte[] partialData = header.getData();
             try {
@@ -56,21 +56,22 @@ public class CommandJoiner extends TransportFilter {
             catch (IOException e) {
                 getTransportListener().onException(e);
             }
-        }
-        else if (type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
-            try {
-                byte[] fullData = out.toByteArray();
-                out.reset();
-                Command completeCommand = (Command) wireFormat.unmarshal(new DataInputStream(new ByteArrayInputStream(fullData)));
-                
-                LastPartialCommand lastCommand = (LastPartialCommand) command;
-                lastCommand.configure(completeCommand);
-                
-                getTransportListener().onCommand(completeCommand);
-            }
-            catch (IOException e) {
-                log.warn("Failed to unmarshal partial command: " + command);
-                getTransportListener().onException(e);
+            if (type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
+                try {
+                    byte[] fullData = out.toByteArray();
+                    out.reset();
+                    DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(fullData));
+                    Command completeCommand = (Command) wireFormat.unmarshal(dataIn);
+
+                    LastPartialCommand lastCommand = (LastPartialCommand) command;
+                    lastCommand.configure(completeCommand);
+
+                    getTransportListener().onCommand(completeCommand);
+                }
+                catch (IOException e) {
+                    log.warn("Failed to unmarshal partial command: " + command);
+                    getTransportListener().onException(e);
+                }
             }
         }
         else {

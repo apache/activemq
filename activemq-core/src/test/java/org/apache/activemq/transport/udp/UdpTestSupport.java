@@ -21,6 +21,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.KeepAliveInfo;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.Transport;
@@ -47,6 +49,9 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
     protected Command receivedCommand;
     protected TransportServer server;
     protected boolean large;
+
+    // You might want to set this to massive number if debugging
+    protected int waitForCommandTimeout = 40000;
 
     public void testSendingSmallMessage() throws Exception {
         ConsumerInfo expected = new ConsumerInfo();
@@ -85,7 +90,8 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         assertSendTextMessage(destination, text);
     }
 
-    protected void assertSendTextMessage(ActiveMQDestination destination, String text) throws MessageNotWriteableException {
+    protected void assertSendTextMessage(ActiveMQDestination destination, String text)
+            throws MessageNotWriteableException {
         large = true;
 
         ActiveMQTextMessage expected = new ActiveMQTextMessage();
@@ -97,13 +103,21 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             System.out.println("About to send message of type: " + expected.getClass());
             producer.oneway(expected);
 
+            // lets send a dummy command to ensure things don't block if we
+            // discard the last one
+            // keepalive does not have a commandId...
+            // producer.oneway(new KeepAliveInfo());
+            producer.oneway(new ProducerInfo());
+            producer.oneway(new ProducerInfo());
+
             Command received = assertCommandReceived();
-            assertTrue("Should have received a ActiveMQTextMessage but was: " + received, received instanceof ActiveMQTextMessage);
+            assertTrue("Should have received a ActiveMQTextMessage but was: " + received,
+                    received instanceof ActiveMQTextMessage);
             ActiveMQTextMessage actual = (ActiveMQTextMessage) received;
 
             assertEquals("getDestination", expected.getDestination(), actual.getDestination());
             assertEquals("getText", expected.getText(), actual.getText());
-            
+
             System.out.println("Received text message with: " + actual.getText().length() + " character(s)");
         }
         catch (Exception e) {
@@ -157,6 +171,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
             public void onException(IOException error) {
                 System.out.println("Producer exception: " + error);
+                error.printStackTrace();
             }
 
             public void transportInterupted() {
@@ -192,21 +207,27 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
             }
             if (large) {
-                System.out.println("### Received command: " + command.getClass() + " with id: " + command.getCommandId());
+                System.out.println("### Received command: " + command.getClass() + " with id: "
+                        + command.getCommandId());
             }
             else {
                 System.out.println("### Received command: " + command);
             }
 
             synchronized (lock) {
-                receivedCommand = command;
+                if (receivedCommand == null) {
+                    receivedCommand = command;
+                }
+                else {
+                    System.out.println("Ignoring superfluous command: " + command);
+                }
                 lock.notifyAll();
             }
         }
     }
 
     protected void sendResponse(Command command) {
-        Response response = new Response();                
+        Response response = new Response();
         response.setCorrelationId(command.getCommandId());
         try {
             consumer.oneway(response);
@@ -220,6 +241,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
     public void onException(IOException error) {
         System.out.println("### Received error: " + error);
+        error.printStackTrace();
     }
 
     public void transportInterupted() {
@@ -235,7 +257,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         synchronized (lock) {
             answer = receivedCommand;
             if (answer == null) {
-                lock.wait(5000);
+                lock.wait(waitForCommandTimeout);
             }
             answer = receivedCommand;
         }

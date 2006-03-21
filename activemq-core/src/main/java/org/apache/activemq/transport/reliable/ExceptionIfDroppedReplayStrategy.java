@@ -35,7 +35,7 @@ public class ExceptionIfDroppedReplayStrategy implements ReplayStrategy {
         this.maximumDifference = maximumDifference;
     }
 
-    public boolean onDroppedPackets(ReliableTransport transport, int expectedCounter, int actualCounter) throws IOException {
+    public boolean onDroppedPackets(ReliableTransport transport, int expectedCounter, int actualCounter, int nextAvailableCounter) throws IOException {
         int difference = actualCounter - expectedCounter;
         long count = Math.abs(difference);
         if (count > maximumDifference) {

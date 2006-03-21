@@ -24,6 +24,7 @@ import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,8 +48,8 @@ public class CommandDatagramSocket extends CommandChannelSupport {
     private Object readLock = new Object();
     private Object writeLock = new Object();
 
-    public CommandDatagramSocket(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress,
-            DatagramHeaderMarshaller headerMarshaller, DatagramSocket channel) {
+    public CommandDatagramSocket(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize,
+            SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller, DatagramSocket channel) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller);
         this.channel = channel;
     }
@@ -105,7 +106,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
                 byte[] data = writeBuffer.toByteArray();
                 boolean lastFragment = false;
                 for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
-                    writeBuffer.reset();
+                    writeBuffer = createByteArrayOutputStream();
                     headerMarshaller.writeHeader(command, dataOut);
 
                     int chunkSize = remaining(writeBuffer);
@@ -147,7 +148,12 @@ public class CommandDatagramSocket extends CommandChannelSupport {
                         chunkSize = length - offset;
                     }
 
-                    dataOut.write(PartialCommand.DATA_STRUCTURE_TYPE);
+                    if (lastFragment) {
+                        dataOut.write(LastPartialCommand.DATA_STRUCTURE_TYPE);
+                    }
+                    else {
+                        dataOut.write(PartialCommand.DATA_STRUCTURE_TYPE);
+                    }
 
                     if (bs != null) {
                         bs.marshal(dataOut);
@@ -171,16 +177,6 @@ public class CommandDatagramSocket extends CommandChannelSupport {
                     offset += chunkSize;
                     sendWriteBuffer(address, writeBuffer, commandId);
                 }
-
-                // now lets write the last partial command
-                command = new LastPartialCommand(command.isResponseRequired());
-                command.setCommandId(sequenceGenerator.getNextSequenceId());
-
-                writeBuffer.reset();
-                headerMarshaller.writeHeader(command, dataOut);
-                wireFormat.marshal(command, dataOut);
-
-                sendWriteBuffer(address, writeBuffer, command.getCommandId());
             }
         }
     }
@@ -195,22 +191,39 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void sendWriteBuffer(SocketAddress address, ByteArrayOutputStream writeBuffer, int commandId) throws IOException {
+    protected void sendWriteBuffer(SocketAddress address, ByteArrayOutputStream writeBuffer, int commandId)
+            throws IOException {
         byte[] data = writeBuffer.toByteArray();
-        sendWriteBuffer(address, commandId, data);
+        sendWriteBuffer(commandId, address, data, false);
     }
 
-    protected void sendWriteBuffer(SocketAddress address, int commandId, byte[] data) throws IOException {
+    protected void sendWriteBuffer(int commandId, SocketAddress address, byte[] data, boolean redelivery)
+            throws IOException {
+        // lets put the datagram into the replay buffer first to prevent timing
+        // issues
+        ReplayBuffer bufferCache = getReplayBuffer();
+        if (bufferCache != null && !redelivery) {
+            bufferCache.addBuffer(commandId, data);
+        }
+
         if (log.isDebugEnabled()) {
-            log.debug("Channel: " + name + " sending datagram: " + commandId + " to: " + address);
+            String text = (redelivery) ? "REDELIVERING" : "sending";
+            log.debug("Channel: " + name + " " + text + " datagram: " + commandId + " to: " + address);
         }
         DatagramPacket packet = new DatagramPacket(data, 0, data.length, address);
         channel.send(packet);
     }
 
     public void sendBuffer(int commandId, Object buffer) throws IOException {
-        byte[] data = (byte[]) buffer;
-        sendWriteBuffer(replayAddress, commandId, data);
+        if (buffer != null) {
+            byte[] data = (byte[]) buffer;
+            sendWriteBuffer(commandId, replayAddress, data, true);
+        }
+        else {
+            if (log.isWarnEnabled()) {
+                log.warn("Request for buffer: " + commandId + " is no longer present");
+            }
+        }
     }
 
     protected DatagramPacket createDatagramPacket() {

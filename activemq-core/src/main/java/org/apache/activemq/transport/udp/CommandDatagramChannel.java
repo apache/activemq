@@ -24,6 +24,7 @@ import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -45,6 +46,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
 
     private DatagramChannel channel;
     private ByteBufferPool bufferPool;
+
     // reading
     private Object readLock = new Object();
     private ByteBuffer readBuffer;
@@ -53,7 +55,9 @@ public class CommandDatagramChannel extends CommandChannelSupport {
     private Object writeLock = new Object();
     private int defaultMarshalBufferSize = 64 * 1024;
 
-    public CommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller, DatagramChannel channel, ByteBufferPool bufferPool) {
+    public CommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize,
+            SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller, DatagramChannel channel,
+            ByteBufferPool bufferPool) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller);
         this.channel = channel;
         this.bufferPool = bufferPool;
@@ -83,7 +87,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                     continue;
                 }
                 from = headerMarshaller.createEndpoint(readBuffer, address);
- 
+
                 int remaining = readBuffer.remaining();
                 byte[] data = new byte[remaining];
                 readBuffer.get(data);
@@ -99,7 +103,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
         }
         if (answer != null) {
             answer.setFrom(from);
-            
+
             if (log.isDebugEnabled()) {
                 log.debug("Channel: " + name + " received from: " + from + " about to process: " + answer);
             }
@@ -107,7 +111,6 @@ public class CommandDatagramChannel extends CommandChannelSupport {
         return answer;
     }
 
-    
     public void write(Command command, SocketAddress address) throws IOException {
         synchronized (writeLock) {
 
@@ -127,6 +130,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                 for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
                     // write the header
                     if (fragment > 0) {
+                        writeBuffer = bufferPool.borrowBuffer();
                         writeBuffer.clear();
                         headerMarshaller.writeHeader(command, writeBuffer);
                     }
@@ -170,7 +174,12 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                         chunkSize = length - offset;
                     }
 
-                    writeBuffer.put(PartialCommand.DATA_STRUCTURE_TYPE);
+                    if (lastFragment) {
+                        writeBuffer.put(LastPartialCommand.DATA_STRUCTURE_TYPE);
+                    }
+                    else {
+                        writeBuffer.put(PartialCommand.DATA_STRUCTURE_TYPE);
+                    }
 
                     if (bs != null) {
                         bs.marshal(writeBuffer);
@@ -192,23 +201,13 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                     writeBuffer.put(data, offset, chunkSize);
 
                     offset += chunkSize;
-                    sendWriteBuffer(address, writeBuffer, commandId);
+                    sendWriteBuffer(commandId, address, writeBuffer, false);
                 }
-
-                // now lets write the last partial command
-                command = new LastPartialCommand(command.isResponseRequired());
-                command.setCommandId(sequenceGenerator.getNextSequenceId());
-                
-                largeBuffer = new ByteArrayOutputStream(defaultMarshalBufferSize);
-                wireFormat.marshal(command, new DataOutputStream(largeBuffer));
-                data = largeBuffer.toByteArray();
-
-                writeBuffer.clear();
-                headerMarshaller.writeHeader(command, writeBuffer);
             }
-
-            writeBuffer.put(data);
-            sendWriteBuffer(address, writeBuffer, command.getCommandId());
+            else {
+                writeBuffer.put(data);
+                sendWriteBuffer(command.getCommandId(), address, writeBuffer, false);
+            }
         }
     }
 
@@ -228,21 +227,34 @@ public class CommandDatagramChannel extends CommandChannelSupport {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void sendWriteBuffer(SocketAddress address, ByteBuffer writeBuffer, int commandId) throws IOException {
+    protected void sendWriteBuffer(int commandId, SocketAddress address, ByteBuffer writeBuffer, boolean redelivery)
+            throws IOException {
+        // lets put the datagram into the replay buffer first to prevent timing
+        // issues
+        ReplayBuffer bufferCache = getReplayBuffer();
+        if (bufferCache != null && !redelivery) {
+            bufferCache.addBuffer(commandId, writeBuffer);
+        }
+        
         writeBuffer.flip();
 
         if (log.isDebugEnabled()) {
-            log.debug("Channel: " + name + " sending datagram: " + commandId + " to: " + address);
+            String text = (redelivery) ? "REDELIVERING" : "sending";
+            log.debug("Channel: " + name + " " + text + " datagram: " + commandId + " to: " + address);
         }
         channel.send(writeBuffer, address);
-        
-        // now lets put the buffer back into the replay buffer
     }
 
     public void sendBuffer(int commandId, Object buffer) throws IOException {
-        ByteBuffer writeBuffer = (ByteBuffer) buffer;
-        sendWriteBuffer(getReplayAddress(), writeBuffer, commandId);
+        if (buffer != null) {
+            ByteBuffer writeBuffer = (ByteBuffer) buffer;
+            sendWriteBuffer(commandId, getReplayAddress(), writeBuffer, true);
+        }
+        else {
+            if (log.isWarnEnabled()) {
+                log.warn("Request for buffer: " + commandId + " is no longer present");
+            }
+        }
     }
 
-    
 }

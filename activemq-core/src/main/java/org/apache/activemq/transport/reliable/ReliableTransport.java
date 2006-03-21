@@ -23,6 +23,7 @@ import org.apache.activemq.openwire.CommandIdComparator;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,15 +48,18 @@ public class ReliableTransport extends ResponseCorrelator {
     private int requestTimeout = 2000;
     private ReplayBuffer replayBuffer;
     private Replayer replayer;
+    private UdpTransport udpTransport;
 
     public ReliableTransport(Transport next, ReplayStrategy replayStrategy) {
         super(next);
         this.replayStrategy = replayStrategy;
     }
 
-    public ReliableTransport(Transport next, IntSequenceGenerator sequenceGenerator, ReplayStrategy replayStrategy) {
-        super(next, sequenceGenerator);
-        this.replayStrategy = replayStrategy;
+    public ReliableTransport(Transport next, UdpTransport udpTransport)
+            throws IOException {
+        super(next, udpTransport.getSequenceGenerator());
+        this.udpTransport = udpTransport;
+        this.replayer = udpTransport.createReplayer();
     }
 
     /**
@@ -72,7 +76,6 @@ public class ReliableTransport extends ResponseCorrelator {
             getTransportListener().onException(e);
         }
     }
-    
 
     public Response request(Command command) throws IOException {
         FutureResponse response = asyncRequest(command);
@@ -89,7 +92,7 @@ public class ReliableTransport extends ResponseCorrelator {
         FutureResponse response = asyncRequest(command);
         while (timeout > 0) {
             int time = timeout;
-            if (timeout > requestTimeout) { 
+            if (timeout > requestTimeout) {
                 time = requestTimeout;
             }
             Response result = response.getResult(time);
@@ -118,8 +121,15 @@ public class ReliableTransport extends ResponseCorrelator {
 
         if (!valid) {
             synchronized (commands) {
+                int nextCounter = actualCounter;
+                boolean empty = commands.isEmpty();
+                if (!empty) {
+                    Command nextAvailable = (Command) commands.first();
+                    nextCounter = nextAvailable.getCommandId();
+                }
+                
                 try {
-                    boolean keep = replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter);
+                    boolean keep = replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter, nextCounter);
 
                     if (keep) {
                         // lets add it to the list for later on
@@ -133,7 +143,7 @@ public class ReliableTransport extends ResponseCorrelator {
                     onException(e);
                 }
 
-                if (!commands.isEmpty()) {
+                if (!empty) {
                     // lets see if the first item in the set is the next
                     // expected
                     command = (Command) commands.first();
@@ -185,25 +195,26 @@ public class ReliableTransport extends ResponseCorrelator {
         this.expectedCounter = expectedCounter;
     }
 
-    
     public int getRequestTimeout() {
         return requestTimeout;
     }
 
     /**
-     * Sets the default timeout of requests before starting to request commands are replayed
+     * Sets the default timeout of requests before starting to request commands
+     * are replayed
      */
     public void setRequestTimeout(int requestTimeout) {
         this.requestTimeout = requestTimeout;
     }
 
-
     public ReplayStrategy getReplayStrategy() {
         return replayStrategy;
     }
 
-
     public ReplayBuffer getReplayBuffer() {
+        if (replayBuffer == null) {
+            replayBuffer = createReplayBuffer();
+        }
         return replayBuffer;
     }
 
@@ -222,16 +233,30 @@ public class ReliableTransport extends ResponseCorrelator {
         this.replayBufferCommandCount = replayBufferSize;
     }
 
+    public void setReplayStrategy(ReplayStrategy replayStrategy) {
+        this.replayStrategy = replayStrategy;
+    }
+
+    public Replayer getReplayer() {
+        return replayer;
+    }
+
+    public void setReplayer(Replayer replayer) {
+        this.replayer = replayer;
+    }
+
     public String toString() {
         return next.toString();
     }
-    
-    
+
     public void start() throws Exception {
-        super.start();
-        if (replayBuffer == null) {
-            replayBuffer = createReplayBuffer();
+        if (udpTransport != null) {
+            udpTransport.setReplayBuffer(getReplayBuffer());
         }
+        if (replayStrategy == null) {
+            throw new IllegalArgumentException("Property replayStrategy not specified");
+        }
+        super.start();
     }
 
     /**
@@ -239,20 +264,27 @@ public class ReliableTransport extends ResponseCorrelator {
      */
     protected void onMissingResponse(Command command, FutureResponse response) {
         log.debug("Still waiting for response on: " + this + " to command: " + command + " sending replay message");
-        
+
         int commandId = command.getCommandId();
         requestReplay(commandId, commandId);
     }
-    
+
     protected ReplayBuffer createReplayBuffer() {
         return new DefaultReplayBuffer(getReplayBufferCommandCount());
     }
 
     protected void replayCommands(ReplayCommand command) {
         try {
-            replayBuffer.replayMessages(command.getFirstNakNumber(), command.getLastNakNumber(), replayer);
-            
-            // TODO we could proactively remove ack'd stuff from the replay buffer
+            if (replayer == null) {
+                onException(new IOException("Cannot replay commands. No replayer property configured"));
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("Processing replay command: " + command);
+            }
+            getReplayBuffer().replayMessages(command.getFirstNakNumber(), command.getLastNakNumber(), replayer);
+
+            // TODO we could proactively remove ack'd stuff from the replay
+            // buffer
             // if we only have a single client talking to us
         }
         catch (IOException e) {

@@ -198,7 +198,7 @@ public abstract class TransportFactory {
         return "default";
     }
 
-    protected Transport configure(Transport transport, WireFormat wf, Map options) {
+    protected Transport configure(Transport transport, WireFormat wf, Map options) throws Exception {
         IntrospectionSupport.setProperties(transport, options);
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);

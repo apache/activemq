@@ -35,15 +35,15 @@ public class DefaultReplayStrategy implements ReplayStrategy {
         this.maximumDifference = maximumDifference;
     }
 
-    public boolean onDroppedPackets(ReliableTransport transport, int expectedCounter, int actualCounter) throws IOException {
+    public boolean onDroppedPackets(ReliableTransport transport, int expectedCounter, int actualCounter, int nextAvailableCounter) throws IOException {
         int difference = actualCounter - expectedCounter;
         long count = Math.abs(difference);
         if (count > maximumDifference) {
-            int upperLimit = actualCounter;
+            int upperLimit = actualCounter - 1;
             if (upperLimit < expectedCounter) {
                 upperLimit = expectedCounter;
             }
-            transport.requestReplay(expectedCounter, upperLimit );
+            transport.requestReplay(expectedCounter, upperLimit);
         }
 
         // lets discard old commands

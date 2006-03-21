@@ -363,6 +363,8 @@
                 
                 <!-- TODO FIX ME ASAP -->
                 <exclude>**/MulticastNetworkTest.*</exclude>
+                <exclude>**/UnreliableUdpTransportTest.*</exclude>
+                <exclude>**/MulticastTransportTest.*</exclude>
                 <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
             </excludes>
         </unitTest>

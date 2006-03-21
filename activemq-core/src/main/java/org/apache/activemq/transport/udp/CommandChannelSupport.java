@@ -18,6 +18,7 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.activemq.util.IntSequenceGenerator;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ public abstract class CommandChannelSupport implements CommandChannel {
     protected final String name;
     protected final IntSequenceGenerator sequenceGenerator;
     protected DatagramHeaderMarshaller headerMarshaller;
+    private ReplayBuffer replayBuffer;
 
     public CommandChannelSupport(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress,
             DatagramHeaderMarshaller headerMarshaller) {
@@ -96,6 +98,14 @@ public abstract class CommandChannelSupport implements CommandChannel {
 
     public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller) {
         this.headerMarshaller = headerMarshaller;
+    }
+
+    public ReplayBuffer getReplayBuffer() {
+        return replayBuffer;
+    }
+
+    public void setReplayBuffer(ReplayBuffer replayBuffer) {
+        this.replayBuffer = replayBuffer;
     }
 
 }

@@ -114,11 +114,20 @@ public class MulticastTransport extends UdpTransport {
         socket.joinGroup(getMulticastAddress());
         socket.setSoTimeout((int) keepAliveInterval);
 
-        return new CommandDatagramSocket( this, getWireFormat(), getDatagramSize(), getTargetAddress(), createDatagramHeaderMarshaller(), socket);
+        return new CommandDatagramSocket(this, getWireFormat(), getDatagramSize(), getTargetAddress(),
+                createDatagramHeaderMarshaller(), getSocket());
     }
 
     protected InetAddress getMulticastAddress() {
         return mcastAddress;
+    }
+
+    protected MulticastSocket getSocket() {
+        return socket;
+    }
+
+    protected void setSocket(MulticastSocket socket) {
+        this.socket = socket;
     }
 
     protected InetSocketAddress createAddress(URI remoteLocation) throws UnknownHostException, IOException {
