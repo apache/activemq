@@ -46,9 +46,9 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     protected ActiveMQDestination originalDestination;
     protected TransactionId originalTransactionId;
 
-    protected ProducerId producerId;    
-    protected ActiveMQDestination destination;    
-    protected TransactionId transactionId;    
+    protected ProducerId producerId;
+    protected ActiveMQDestination destination;
+    protected TransactionId transactionId;
     
     protected long expiration;
     protected long timestamp;
@@ -68,20 +68,21 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     protected ByteSequence marshalledProperties;
     protected DataStructure dataStructure;
     protected int redeliveryCounter;
-    
-    protected transient int size;    
-    protected transient HashMap properties;
-    protected transient boolean readOnlyProperties = false;
-    protected transient boolean readOnlyBody = false;
+
+    protected int size;
+    protected HashMap properties;
+    protected boolean readOnlyProperties = false;
+    protected boolean readOnlyBody = false;
     protected transient boolean recievedByDFBridge = false;
 
-    private BrokerId [] brokerPath;
     private transient short referenceCount;
     private transient ActiveMQConnection connection;
     private transient org.apache.activemq.broker.region.Destination regionDestination;
-    private WireFormat cachedWireFormat;
-    private ByteSequence cachedWireFormatData;
-    
+    private transient WireFormat cachedWireFormat;
+    private transient ByteSequence cachedWireFormatData;
+
+    private BrokerId [] brokerPath;
+
     abstract public Message copy();
     
     protected void copy(Message copy) {
@@ -104,10 +105,12 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         copy.groupID = groupID;
         copy.userID = userID;
         copy.groupSequence = groupSequence;
+
         if( properties!=null )
             copy.properties = new HashMap(properties);
         else
             copy.properties = properties;
+
         copy.content = content;
         copy.marshalledProperties = marshalledProperties;
         copy.dataStructure = dataStructure;
