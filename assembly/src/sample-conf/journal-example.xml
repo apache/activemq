@@ -15,13 +15,7 @@
                 </constructor-arg>
 
                 <constructor-arg index="1">
-                    <amq:jdbcPersistenceAdapter>
-                        <property name="cleanupPeriod" value="60000"/>
-                        <property name="dataSource" ref="embedded-ds"/>
-                        <property name="wireFormat">
-                            <bean id="myWireFormat" class="org.activeio.command.DefaultWireFormat"/>
-                        </property>
-                    </amq:jdbcPersistenceAdapter>
+                    <amq:memoryPersistenceAdapter init-method="createTransactionStore"/>
                 </constructor-arg>
 
                 <constructor-arg index="2">
@@ -46,9 +40,4 @@
         </constructor-arg>
     </bean>
 
-    <!-- The Datasource that will be used by the Broker -->
-    <bean id="embedded-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
-        <property name="databaseName" value="testJournalConfig/derbydb"/>
-        <property name="createDatabase" value="create"/>
-    </bean>
 </beans>

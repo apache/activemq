@@ -82,18 +82,10 @@
             <amq:usageManager limit="200000" percentUsageMinDelta="20"/>
         </amq:memoryManager>
 
-        <amq:persistenceFactory>
-            <bean id="myPersistenceFactory" class="org.apache.activemq.store.DefaultPersistenceAdapterFactory">
-                <property name="journalLogFileSize" value="32768" />
-                <property name="journalLogFiles" value="4" />
-                <property name="useJournal" value="true" />
-                <property name="dataDirectory" value="target/test-data" />
-            </bean>
-        </amq:persistenceFactory>
-
         <amq:persistenceAdapter>
-            <amq:journaledJDBC journalLogFiles="4" journalLogFileSize="32768" dataDirectory="target/test-data" />
+            <amq:memoryPersistenceAdapter init-method="createTransactionStore"/>
         </amq:persistenceAdapter>
+
     </amq:broker>
 
     <!-- testing normal Spring stuff inside the same config file -->
