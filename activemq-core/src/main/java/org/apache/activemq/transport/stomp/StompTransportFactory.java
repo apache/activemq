@@ -36,7 +36,7 @@ public class StompTransportFactory extends TransportFactory {
             URI tcpURI = new URI(
                     "tcp://"+location.getHost()+
                     (location.getPort()>=0 ? ":"+location.getPort() : "")+
-                    "?wireFormat=stomp&maxInactivityDuration=0"
+                    "?wireFormat=stomp"
                     );
             return TransportFactory.bind(brokerId, tcpURI);
         } catch (URISyntaxException e) {
