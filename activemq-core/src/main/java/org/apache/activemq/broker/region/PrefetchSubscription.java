@@ -100,7 +100,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 final MessageReference node=(MessageReference) iter.next();
                 MessageId messageId=node.getMessageId();
                 if(ack.getFirstMessageId()==null||ack.getFirstMessageId().equals(messageId)){
-System.out.println("in range: "+messageId);
                     inAckRange=true;
                 }
                 if(inAckRange){
