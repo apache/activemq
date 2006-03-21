@@ -95,11 +95,14 @@ public class SpringTest extends TestCase {
         assertTrue("Found a valid consumer", consumer != null);
 
         consumer.start();
+        
+        // Wait a little to drain any left over messages.
+        Thread.sleep(1000);
+        consumer.flushMessages();
 
         producer = (SpringProducer) context.getBean("producer");
         assertTrue("Found a valid producer", producer != null);
 
-        consumer.flushMessages();
         producer.start();
 
         // lets sleep a little to give the JMS time to dispatch stuff
