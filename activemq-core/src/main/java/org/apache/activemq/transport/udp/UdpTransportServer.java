@@ -134,10 +134,7 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected Transport configureTransport(Transport transport) {
-        if (serverTransport.getMaxInactivityDuration() > 0) {
-            transport = new InactivityMonitor(transport, serverTransport.getMaxInactivityDuration());
-        }
-
+        transport = new InactivityMonitor(transport);
         getAcceptListener().onAccept(transport);
         return transport;
     }

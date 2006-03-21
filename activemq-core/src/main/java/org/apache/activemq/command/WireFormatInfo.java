@@ -240,6 +240,17 @@ public class WireFormatInfo implements Command, MarshallAware {
     public void setTightEncodingEnabled(boolean tightEncodingEnabled) throws IOException {
         setProperty("TightEncodingEnabled", tightEncodingEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
+    
+    /**
+     * @throws IOException 
+     */
+    public long getMaxInactivityDuration() throws IOException {
+        Long l = (Long) getProperty("MaxInactivityDuration");
+        return l == null ? 0 : l.longValue();
+    }
+    public void seMaxInactivityDuration(long maxInactivityDuration) throws IOException {
+        setProperty("MaxInactivityDuration", new Long(maxInactivityDuration));
+    }
 
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);

@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.KeepAliveInfo;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,12 +32,13 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @version $Revision$
  */
-public class InactivityMonitor extends TransportFilter implements Runnable {
+public class InactivityMonitor extends TransportFilter {
 
     private final Log log = LogFactory.getLog(InactivityMonitor.class);
     
-    private final long maxInactivityDuration;
-    private byte readCheckIteration=0;
+    private WireFormatInfo localWireFormatInfo;
+    private WireFormatInfo remoteWireFormatInfo;
+    private boolean monitorStarted=false;
 
     private final AtomicBoolean commandSent=new AtomicBoolean(false);
     private final AtomicBoolean inSend=new AtomicBoolean(false);
@@ -44,35 +46,29 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     private final AtomicBoolean commandReceived=new AtomicBoolean(true);
     private final AtomicBoolean inReceive=new AtomicBoolean(false);
     
-    public InactivityMonitor(Transport next, long maxInactivityDuration) {
-        super(next);
-        this.maxInactivityDuration = maxInactivityDuration;
-    }
-        
-    public void start() throws Exception {
-        next.start();
-        Scheduler.executePeriodically(this, maxInactivityDuration/2);
-    }
+    private final Runnable readChecker = new Runnable() {
+        public void run() {
+            readCheck();
+        }
+    };
     
+    private final Runnable writeChecker = new Runnable() {
+        public void run() {
+            writeCheck();
+        }
+    };
+    
+    
+    public InactivityMonitor(Transport next) {
+        super(next);
+    }
+
     public void stop() throws Exception {
-        Scheduler.cancel(this);
+        stopMonitorThreads();
         next.stop();
     }
-    
-    synchronized public void run() {
-        switch(readCheckIteration) {
-        case 0:
-            writeCheck();
-            readCheckIteration++;
-            break;
-        case 1:
-            readCheck();
-            writeCheck();
-            readCheckIteration=0;
-            break;
-        }        
-    }
-    
+
+        
     private void writeCheck() {
         if( inSend.get() ) {
             log.debug("A send is in progress");
@@ -82,7 +78,7 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
         if( !commandSent.get() ) {
             log.debug("No message sent since last write check, sending a KeepAliveInfo");
             try {
-                next.oneway(new KeepAliveInfo());
+                next.oneway(new KeepAliveInfo());                
             } catch (IOException e) {
                 onException(e);
             }
@@ -113,18 +109,35 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     public void onCommand(Command command) {
         inReceive.set(true);
         try {
+            if( command.isWireFormatInfo() ) {
+                synchronized( this ) {
+                    remoteWireFormatInfo = (WireFormatInfo) command;
+                    try {
+                        startMonitorThreads();
+                    } catch (IOException e) {
+                        onException(e);
+                    }
+                }
+            }
             getTransportListener().onCommand(command);
         } finally {
             inReceive.set(false);
             commandReceived.set(true);
         }
     }
+
     
     public void oneway(Command command) throws IOException {
         // Disable inactivity monitoring while processing a command.
         inSend.set(true);
         commandSent.set(true);
         try {
+            if( command.isWireFormatInfo() ) {
+                synchronized( this ) {
+                    localWireFormatInfo = (WireFormatInfo) command;
+                    startMonitorThreads();
+                }
+            }
             next.oneway(command);
         } finally {
             inSend.set(false);
@@ -132,7 +145,37 @@ public class InactivityMonitor extends TransportFilter implements Runnable {
     }
     
     public void onException(IOException error) {
-        Scheduler.cancel(this);
+        stopMonitorThreads();
         getTransportListener().onException(error);
     }
+    
+    
+    synchronized private void startMonitorThreads() throws IOException {
+        if( monitorStarted ) 
+            return;
+        if( localWireFormatInfo == null )
+            return;
+        if( remoteWireFormatInfo == null )
+            return;
+        
+        long l = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
+        if( l > 0 ) {
+            Scheduler.executePeriodically(writeChecker, l/2);
+            Scheduler.executePeriodically(readChecker, l);
+            monitorStarted=true;        
+        }
+    }
+    
+    /**
+     * 
+     */
+    synchronized private void stopMonitorThreads() {
+        if( monitorStarted ) {
+            Scheduler.cancel(readChecker);
+            Scheduler.cancel(writeChecker);
+            monitorStarted=false;
+        }
+    }
+    
+
 }

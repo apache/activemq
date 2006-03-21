@@ -57,7 +57,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private ReplayStrategy replayStrategy = new ExceptionIfDroppedReplayStrategy();
     private ReplayBuffer replayBuffer;
     private int datagramSize = 4 * 1024;
-    private long maxInactivityDuration = 0; // 30000;
     private SocketAddress targetAddress;
     private SocketAddress originalTargetAddress;
     private DatagramChannel channel;
@@ -223,23 +222,12 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.trace = trace;
     }
 
-    public long getMaxInactivityDuration() {
-        return maxInactivityDuration;
-    }
-
     public int getDatagramSize() {
         return datagramSize;
     }
 
     public void setDatagramSize(int datagramSize) {
         this.datagramSize = datagramSize;
-    }
-
-    /**
-     * Sets the maximum inactivity duration
-     */
-    public void setMaxInactivityDuration(long maxInactivityDuration) {
-        this.maxInactivityDuration = maxInactivityDuration;
     }
 
     public boolean isUseLocalHost() {

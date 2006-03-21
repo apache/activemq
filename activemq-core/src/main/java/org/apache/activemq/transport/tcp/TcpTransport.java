@@ -56,7 +56,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private boolean trace;
     private boolean useLocalHost = true;
     private int minmumWireFormatVersion;
-    private long maxInactivityDuration = 0; //30000;
     private InetSocketAddress socketAddress;
 
     
@@ -204,17 +203,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     public void setSoTimeout(int soTimeout) {
         this.soTimeout = soTimeout;
-    }
-
-    public long getMaxInactivityDuration() {
-        return maxInactivityDuration;
-    }
-
-    /**
-     * Sets the maximum inactivity duration
-     */
-    public void setMaxInactivityDuration(long maxInactivityDuration) {
-        this.maxInactivityDuration = maxInactivityDuration;
     }
 
     public int getConnectionTimeout() {
