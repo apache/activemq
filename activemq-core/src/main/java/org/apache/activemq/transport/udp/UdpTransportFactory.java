@@ -81,12 +81,10 @@ public class UdpTransportFactory extends TransportFactory {
             transport = new TransportLogger(transport);
         }
 
+        transport = new InactivityMonitor(transport);
+
         if (format instanceof OpenWireFormat) {
             transport = configureClientSideNegotiator(transport, format, udpTransport);
-        }
-
-        if (udpTransport.getMaxInactivityDuration() > 0) {
-            transport = new InactivityMonitor(transport, udpTransport.getMaxInactivityDuration());
         }
 
         return transport;
@@ -115,12 +113,10 @@ public class UdpTransportFactory extends TransportFactory {
             transport = new TransportLogger(transport);
         }
 
+        transport = new InactivityMonitor(transport);
+
         if (!acceptServer && format instanceof OpenWireFormat) {
             transport = configureClientSideNegotiator(transport, format, udpTransport);
-        }
-
-        if (udpTransport.getMaxInactivityDuration() > 0) {
-            transport = new InactivityMonitor(transport, udpTransport.getMaxInactivityDuration());
         }
 
         // deal with fragmentation

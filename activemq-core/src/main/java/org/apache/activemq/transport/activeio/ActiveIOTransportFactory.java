@@ -230,11 +230,13 @@ public class ActiveIOTransportFactory extends TransportFactory {
         if( activeIOTransport.isTrace() ) {
             transport = new TransportLogger(transport);
         }
+        
+        transport = new InactivityMonitor(transport);
+
         if( format instanceof OpenWireFormat ) {
         	transport = new WireFormatNegotiator(transport, (OpenWireFormat) format, activeIOTransport.getMinmumWireFormatVersion());
         }
         
-        transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration());
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
         return transport;
@@ -279,10 +281,12 @@ public class ActiveIOTransportFactory extends TransportFactory {
         if( activeIOTransport.isTrace() ) {
             transport = new TransportLogger(transport);
         }
+        
+        transport = new InactivityMonitor(transport);
+        
         if( format instanceof OpenWireFormat ) {
         	transport = new WireFormatNegotiator(transport, (OpenWireFormat) format, activeIOTransport.getMinmumWireFormatVersion());
         }
-        transport = new InactivityMonitor(transport, activeIOTransport.getMaxInactivityDuration());
         return transport;        
     }
     
