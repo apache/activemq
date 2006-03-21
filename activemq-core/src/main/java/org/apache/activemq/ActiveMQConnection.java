@@ -418,13 +418,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * @return true if this Connection is started
-     */
-    protected boolean isStarted() {
-        return started.get();
-    }
-
-    /**
      * Temporarily stops a connection's delivery of incoming messages. Delivery
      * can be restarted using the connection's <CODE>start</CODE> method. When
      * the connection is stopped, delivery to all the connection's message
@@ -672,6 +665,36 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     // Properties
     // -------------------------------------------------------------------------
 
+    /**
+     * Returns true if this connection has been started
+     * 
+     * @return true if this Connection is started
+     */
+    public boolean isStarted() {
+        return started.get();
+    }
+
+    /**
+     * Returns true if the connection is closed
+     */
+    public boolean isClosed() {
+        return closed.get();
+    }
+
+    /**
+     * Returns true if the connection is in the process of being closed
+     */
+    public boolean isClosing() {
+        return closing.get();
+    }
+    
+    /**
+     * Returns true if the underlying transport has failed
+     */
+    public boolean isTransportFailed() {
+        return transportFailed.get();
+    }
+    
     /**
      * @return Returns the prefetchPolicy.
      */
@@ -1143,10 +1166,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 throw JMSExceptionSupport.create(e);
             }
         }
-    }
-
-    public boolean isClosed() {
-        return closed.get();
     }
 
     /**
