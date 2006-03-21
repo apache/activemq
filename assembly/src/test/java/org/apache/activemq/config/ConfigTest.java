@@ -65,7 +65,72 @@ public class ConfigTest extends TestCase {
      *                 directory is not created under target/test-data/. The test in unable to change the derby
      *                 root directory for succeeding creation. It uses the first created directory as the root.
      */
-    
+
+    /*
+     * This tests creating a journal persistence adapter using the persistence adapter factory bean
+     */
+    public void testJournaledJDBCConfig() throws Exception {
+        System.out.print("Checking journaled JDBC persistence adapter configuration... ");
+
+        File journalFile = new File(JOURNAL_ROOT + "testJournaledJDBCConfig/journal");
+        recursiveDelete(journalFile);
+
+        File derbyFile = new File(DERBY_ROOT + "testJournaledJDBCConfig/derbydb"); // Default derby name
+        recursiveDelete(derbyFile);
+
+        BrokerService broker;
+        broker = createBroker(new FileSystemResource(CONF_ROOT + "journaledjdbc-example.xml"));
+        try {
+            assertEquals("Broker Config Error (brokerName)", "brokerJournaledJDBCConfigTest", broker.getBrokerName());
+
+            PersistenceAdapter adapter = broker.getPersistenceAdapter();
+
+            assertTrue("Should have created a journal persistence adapter", adapter instanceof JournalPersistenceAdapter);
+            assertTrue("Should have created a derby directory at " + derbyFile.getAbsolutePath(), derbyFile.exists());
+            assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
+
+            
+            // Check persistence factory configurations
+            System.out.print("Checking persistence adapter factory settings... ");
+            JournalPersistenceAdapter pa = (JournalPersistenceAdapter) broker.getPersistenceAdapter();
+            
+            System.out.println("Success");
+        } finally {
+            if (broker != null) {
+                broker.stop();
+            }
+        }
+    }
+
+    /*
+     * This tests creating a jdbc persistence adapter using xbeans-spring
+     */
+    public void testJdbcConfig() throws Exception {
+        System.out.print("Checking jdbc persistence adapter configuration... ");
+
+        BrokerService broker;
+        broker = createBroker(new FileSystemResource(CONF_ROOT + "jdbc-example.xml"));
+        try {
+            assertEquals("Broker Config Error (brokerName)", "brokerJdbcConfigTest", broker.getBrokerName());
+
+            PersistenceAdapter adapter = broker.getPersistenceAdapter();
+
+            assertTrue("Should have created a jdbc persistence adapter", adapter instanceof JDBCPersistenceAdapter);
+            assertEquals("JDBC Adapter Config Error (cleanupPeriod)", 60000,
+                    ((JDBCPersistenceAdapter)adapter).getCleanupPeriod());
+            assertTrue("Should have created an EmbeddedDataSource",
+                    ((JDBCPersistenceAdapter)adapter).getDataSource() instanceof EmbeddedDataSource);
+            assertTrue("Should have created a DefaultWireFormat",
+                    ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof DefaultWireFormat);
+
+            System.out.println("Success");
+        } finally {
+            if (broker != null) {
+                broker.stop();
+            }
+        }
+    }
+
     /*
      * This tests configuring the different broker properties using xbeans-spring
      */
@@ -181,23 +246,6 @@ public class ConfigTest extends TestCase {
             assertEquals("UsageManager Config Error (percentUsageMinDelta)", 20, memMgr.getPercentUsageMinDelta());
             System.out.println("Success");
 
-            // Check persistence factory configurations
-            System.out.print("Checking persistence adapter factory settings... ");
-            PersistenceAdapterFactory factory = broker.getPersistenceFactory();
-            assertTrue("Should have a default persistence factory", factory instanceof DefaultPersistenceAdapterFactory);
-            assertEquals("PersistenceFactory Config Error (journalLogFileSize)", 32768,
-                    ((DefaultPersistenceAdapterFactory)factory).getJournalLogFileSize());
-            assertEquals("PersistenceFactory Config Error (journalLogFiles)", 4,
-                    ((DefaultPersistenceAdapterFactory)factory).getJournalLogFiles());
-            assertEquals("PersistenceFactory Config Error (useJournal)", true,
-                    ((DefaultPersistenceAdapterFactory)factory).isUseJournal());
-            assertEquals("PersistenceFactory Config Error (dataDirectory)", journalFile.getAbsolutePath(),
-                    ((DefaultPersistenceAdapterFactory)factory).getDataDirectory().getAbsolutePath());
-            System.out.println("Success");
-
-            // Check journal configurations
-            System.out.print("Checking if persistence adapter was succesfully created... ");
-            assertTrue("Should have created a journal persistence adapter", broker.getPersistenceAdapter() instanceof JournalPersistenceAdapter);
             System.out.println("Success");
         } finally {
             if (broker != null) {
@@ -215,9 +263,6 @@ public class ConfigTest extends TestCase {
         File journalFile = new File(JOURNAL_ROOT + "testJournalConfig/journal");
         recursiveDelete(journalFile);
 
-        File derbyFile = new File(DERBY_ROOT + "testJournalConfig/derbydb");
-        recursiveDelete(derbyFile);
-
         BrokerService broker;
         broker = createBroker(new FileSystemResource(CONF_ROOT + "journal-example.xml"));
         try {
@@ -226,71 +271,6 @@ public class ConfigTest extends TestCase {
             PersistenceAdapter adapter = broker.getPersistenceAdapter();
 
             assertTrue("Should have created a journal persistence adapter", adapter instanceof JournalPersistenceAdapter);
-            assertTrue("Should have created a derby directory at " + derbyFile.getAbsolutePath(), derbyFile.exists());
-            assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
-
-            System.out.println("Success");
-        } finally {
-            if (broker != null) {
-                broker.stop();
-            }
-        }
-    }
-
-    /*
-     * This tests creating a jdbc persistence adapter using xbeans-spring
-     */
-    public void testJdbcConfig() throws Exception {
-        System.out.print("Checking jdbc persistence adapter configuration... ");
-
-        File derbyFile = new File(DERBY_ROOT + "testJdbcConfig");
-        recursiveDelete(derbyFile);
-
-        BrokerService broker;
-        broker = createBroker(new FileSystemResource(CONF_ROOT + "jdbc-example.xml"));
-        try {
-            assertEquals("Broker Config Error (brokerName)", "brokerJdbcConfigTest", broker.getBrokerName());
-
-            PersistenceAdapter adapter = broker.getPersistenceAdapter();
-
-            assertTrue("Should have created a jdbc persistence adapter", adapter instanceof JDBCPersistenceAdapter);
-            assertEquals("JDBC Adapter Config Error (cleanupPeriod)", 60000,
-                    ((JDBCPersistenceAdapter)adapter).getCleanupPeriod());
-            assertTrue("Should have created an EmbeddedDataSource",
-                    ((JDBCPersistenceAdapter)adapter).getDataSource() instanceof EmbeddedDataSource);
-            assertTrue("Should have created a DefaultWireFormat",
-                    ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof DefaultWireFormat);
-            assertTrue("Should have created a derby directory at " + derbyFile.getAbsolutePath(), derbyFile.exists());
-
-            System.out.println("Success");
-        } finally {
-            if (broker != null) {
-                broker.stop();
-            }
-        }
-    }
-
-    /*
-     * This tests creating a journal persistence adapter using the persistence adapter factory bean
-     */
-    public void testJournaledJDBCConfig() throws Exception {
-        System.out.print("Checking journaled JDBC persistence adapter configuration... ");
-
-        File journalFile = new File(JOURNAL_ROOT + "testJournaledJDBCConfig");
-        recursiveDelete(journalFile);
-
-        File derbyFile = new File(DERBY_ROOT + "derbydb"); // Default derby name
-        recursiveDelete(derbyFile);
-
-        BrokerService broker;
-        broker = createBroker(new FileSystemResource(CONF_ROOT + "journaledjdbc-example.xml"));
-        try {
-            assertEquals("Broker Config Error (brokerName)", "brokerJournaledJDBCConfigTest", broker.getBrokerName());
-
-            PersistenceAdapter adapter = broker.getPersistenceAdapter();
-
-            assertTrue("Should have created a journal persistence adapter", adapter instanceof JournalPersistenceAdapter);
-            assertTrue("Should have created a derby directory at " + derbyFile.getAbsolutePath(), derbyFile.exists());
             assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
 
             System.out.println("Success");
