@@ -61,7 +61,7 @@ public class JmsQueueCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
     protected String getProducerSubject() {
         return "FOO.BAR.HUMBUG,FOO.BAR.HUMBUG2";
     }
-
+   
     /**
      * Test if all the messages sent are being received.
      *
