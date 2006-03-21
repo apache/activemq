@@ -18,6 +18,7 @@ package org.apache.activemq.transport.udp;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.activemq.transport.reliable.Replayer;
 
 import java.io.IOException;
@@ -29,22 +30,24 @@ import java.net.SocketAddress;
  */
 public interface CommandChannel extends Replayer, Service {
 
-    public abstract Command read() throws IOException;
+    public Command read() throws IOException;
 
-    public abstract void write(Command command, SocketAddress address) throws IOException;
+    public void write(Command command, SocketAddress address) throws IOException;
 
-    public abstract int getDatagramSize();
+    public int getDatagramSize();
 
     /**
      * Sets the default size of a datagram on the network.
      */
-    public abstract void setDatagramSize(int datagramSize);
+    public void setDatagramSize(int datagramSize);
 
-    public abstract DatagramHeaderMarshaller getHeaderMarshaller();
+    public DatagramHeaderMarshaller getHeaderMarshaller();
 
-    public abstract void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller);
+    public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller);
 
-    public abstract void setTargetAddress(SocketAddress address);
+    public void setTargetAddress(SocketAddress address);
 
-    public abstract void setReplayAddress(SocketAddress address);
+    public void setReplayAddress(SocketAddress address);
+
+    public void setReplayBuffer(ReplayBuffer replayBuffer);
 }

@@ -37,7 +37,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class LastPartialCommandMarshaller extends BaseCommandMarshaller {
+public class LastPartialCommandMarshaller extends PartialCommandMarshaller {
 
     /**
      * Return the type of Data Structure we marshal

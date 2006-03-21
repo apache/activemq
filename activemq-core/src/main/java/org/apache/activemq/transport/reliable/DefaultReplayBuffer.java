@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.reliable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +28,8 @@ import java.util.Map;
  * @version $Revision$
  */
 public class DefaultReplayBuffer implements ReplayBuffer {
+
+    private static final Log log = LogFactory.getLog(DefaultReplayBuffer.class);
 
     private final int size;
     private ReplayBufferListener listener;
@@ -38,6 +43,9 @@ public class DefaultReplayBuffer implements ReplayBuffer {
     }
 
     public void addBuffer(int commandId, Object buffer) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding command ID: " + commandId + " to replay buffer: " + this + " object: " + buffer);
+        }
         synchronized (lock) {
             int max = size - 1;
             while (map.size() >= max) {
@@ -54,6 +62,12 @@ public class DefaultReplayBuffer implements ReplayBuffer {
     }
 
     public void replayMessages(int fromCommandId, int toCommandId, Replayer replayer) throws IOException {
+        if (replayer == null) {
+            throw new IllegalArgumentException("No Replayer parameter specified");
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Buffer: " + this + " replaying messages from: " + fromCommandId + " to: " + toCommandId);
+        }
         for (int i = fromCommandId; i <= toCommandId; i++) {
             Object buffer = null;
             synchronized (lock) {
@@ -72,5 +86,4 @@ public class DefaultReplayBuffer implements ReplayBuffer {
             listener.onBufferDiscarded(commandId, buffer);
         }
     }
-
 }

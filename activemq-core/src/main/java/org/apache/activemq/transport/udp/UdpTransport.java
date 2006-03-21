@@ -23,6 +23,7 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
+import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.IntSequenceGenerator;
@@ -54,6 +55,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private OpenWireFormat wireFormat;
     private ByteBufferPool bufferPool;
     private ReplayStrategy replayStrategy = new ExceptionIfDroppedReplayStrategy();
+    private ReplayBuffer replayBuffer;
     private int datagramSize = 4 * 1024;
     private long maxInactivityDuration = 0; // 30000;
     private SocketAddress targetAddress;
@@ -98,11 +100,10 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
     /**
      * Creates a replayer for working with the reliable transport
-     * @return
      */
-    public Replayer createReplayer() {
+    public Replayer createReplayer() throws IOException {
         if (replayEnabled ) {
-            return commandChannel;
+            return getCommandChannel();
         }
         return null;
     }
@@ -263,7 +264,10 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.useLocalHost = useLocalHost;
     }
 
-    public CommandChannel getCommandChannel() {
+    public CommandChannel getCommandChannel() throws IOException {
+        if (commandChannel == null) {
+            commandChannel = createCommandChannel();
+        }
         return commandChannel;
     }
 
@@ -318,6 +322,9 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
 
     public IntSequenceGenerator getSequenceGenerator() {
+        if (sequenceGenerator == null) {
+            sequenceGenerator = new IntSequenceGenerator();
+        }
         return sequenceGenerator;
     }
 
@@ -335,6 +342,26 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     public void setReplayEnabled(boolean replayEnabled) {
         this.replayEnabled = replayEnabled;
+    }
+
+    public ByteBufferPool getBufferPool() {
+        if (bufferPool == null) {
+            bufferPool = new DefaultBufferPool();
+        }
+        return bufferPool;
+    }
+
+    public void setBufferPool(ByteBufferPool bufferPool) {
+        this.bufferPool = bufferPool;
+    }
+    
+    public ReplayBuffer getReplayBuffer() {
+        return replayBuffer;
+    }
+
+    public void setReplayBuffer(ReplayBuffer replayBuffer) throws IOException {
+        this.replayBuffer = replayBuffer;
+        getCommandChannel().setReplayBuffer(replayBuffer);
     }
 
     
@@ -360,8 +387,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void doStart() throws Exception {
-        commandChannel = createCommandChannel();
-        commandChannel.start();
+        getCommandChannel().start();
 
         super.doStart();
     }
@@ -378,10 +404,11 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
             port = socket.getLocalPort();
         }
 
-        if (bufferPool == null) {
-            bufferPool = new DefaultBufferPool();
-        }
-        return new CommandDatagramChannel(this, wireFormat, datagramSize, targetAddress, createDatagramHeaderMarshaller(), channel, bufferPool);
+        return createCommandDatagramChannel();
+    }
+
+    protected CommandChannel createCommandDatagramChannel() {
+        return new CommandDatagramChannel(this, getWireFormat(), getDatagramSize(), getTargetAddress(), createDatagramHeaderMarshaller(), getChannel(), getBufferPool());
     }
 
     protected void bind(DatagramSocket socket, SocketAddress localAddress) throws IOException {
@@ -425,5 +452,13 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 
     protected SocketAddress getTargetAddress() {
         return targetAddress;
+    }
+
+    protected DatagramChannel getChannel() {
+        return channel;
+    }
+
+    protected void setChannel(DatagramChannel channel) {
+        this.channel = channel;
     }
 }

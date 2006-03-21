@@ -24,15 +24,11 @@ import org.apache.activemq.state.CommandVisitor;
  * @openwire:marshaller code="61"
  * @version $Revision$
  */
-public class LastPartialCommand extends BaseCommand {
+public class LastPartialCommand extends PartialCommand {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.PARTIAL_LAST_COMMAND;
 
     public LastPartialCommand() {
-    }
-
-    public LastPartialCommand(boolean responseRequired) {
-        setResponseRequired(responseRequired);
     }
 
     public byte getDataStructureType() {
@@ -44,17 +40,13 @@ public class LastPartialCommand extends BaseCommand {
     }
 
     /**
-     * Lets copy across the required fields from this last partial command to
-     * the newly unmarshalled complete command
+     * Lets copy across any transient fields from this command 
+     * to the complete command when it is unmarshalled on the other end
      *
      * @param completeCommand the newly unmarshalled complete command
      */
     public void configure(Command completeCommand) {
-        // copy across the transient properties
+        // copy across the transient properties added by the low level transport
         completeCommand.setFrom(getFrom());
-
-        // TODO should not be required as the large command would be marshalled with this property
-        //completeCommand.setResponseRequired(isResponseRequired());
     }
-
 }

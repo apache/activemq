@@ -27,6 +27,7 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.reliable.ReliableTransport;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
+import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -153,8 +154,9 @@ public class UdpTransportServer extends TransportServerSupport {
         final OpenWireFormat connectionWireFormat = serverTransport.getWireFormat().copy();
         final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
 
-        final ReliableTransport reliableTransport = new ReliableTransport(transport, replayStrategy);
-        transport.setSequenceGenerator(reliableTransport.getSequenceGenerator());
+        final ReliableTransport reliableTransport = new ReliableTransport(transport, transport);
+        Replayer replayer = reliableTransport.getReplayer();
+        reliableTransport.setReplayStrategy(replayStrategy);
         
         // Joiner must be on outside as the inbound messages must be processed by the reliable transport first
         return new CommandJoiner(reliableTransport, connectionWireFormat) {

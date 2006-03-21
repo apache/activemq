@@ -17,14 +17,11 @@
 package org.apache.activemq.transport.udp;
 
 import org.activeio.command.WireFormat;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.reliable.DefaultReplayStrategy;
@@ -69,7 +66,7 @@ public class UdpTransportFactory extends TransportFactory {
         }
     }
 
-    public Transport configure(Transport transport, WireFormat format, Map options) {
+    public Transport configure(Transport transport, WireFormat format, Map options) throws Exception {
         return configure(transport, format, options, false);
     }
 
@@ -108,7 +105,7 @@ public class UdpTransportFactory extends TransportFactory {
      *            for new connections which work like TCP SocketServers where
      *            new connections spin up a new separate UDP transport
      */
-    protected Transport configure(Transport transport, WireFormat format, Map options, boolean acceptServer) {
+    protected Transport configure(Transport transport, WireFormat format, Map options, boolean acceptServer) throws Exception {
         IntrospectionSupport.setProperties(transport, options);
         UdpTransport udpTransport = (UdpTransport) transport;
 
@@ -131,18 +128,17 @@ public class UdpTransportFactory extends TransportFactory {
         if (acceptServer) {
             // lets not support a buffer of messages to enable reliable
             // messaging on the 'accept server' transport
-            udpTransport.setReplayEnabled(true);
+            udpTransport.setReplayEnabled(false);
 
             // we don't want to do reliable checks on this transport as we
             // delegate to one that does
             transport = new CommandJoiner(transport, openWireFormat);
-            udpTransport.setSequenceGenerator(new IntSequenceGenerator());
             return transport;
         }
         else {
-            Replayer replayer = udpTransport.createReplayer();
-            ReliableTransport reliableTransport = new ReliableTransport(transport, createReplayStrategy(replayer));
-            udpTransport.setSequenceGenerator(reliableTransport.getSequenceGenerator());
+            ReliableTransport reliableTransport = new ReliableTransport(transport, udpTransport);
+            Replayer replayer = reliableTransport.getReplayer();
+            reliableTransport.setReplayStrategy(createReplayStrategy(replayer));
 
             // Joiner must be on outside as the inbound messages must be
             // processed by the reliable transport first
@@ -162,17 +158,7 @@ public class UdpTransportFactory extends TransportFactory {
     }
 
     protected Transport configureClientSideNegotiator(Transport transport, WireFormat format, final UdpTransport udpTransport) {
-        return new TransportFilter(transport) {
-
-            public void onCommand(Command command) {
-                // redirect to the endpoint that the last response came from
-                Endpoint from = command.getFrom();
-                udpTransport.setTargetEndpoint(from);
-
-                super.onCommand(command);
-            }
-
-        };
+        return new ResponseRedirectInterceptor(transport, udpTransport);
         /*
          * transport = new WireFormatNegotiator(transport,
          * asOpenWireFormat(format), udpTransport.getMinmumWireFormatVersion()) {

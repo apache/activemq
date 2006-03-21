@@ -115,5 +115,8 @@ public class ReplayCommand extends BaseCommand {
         this.lastNakNumber = lastNakNumber;
     }
 
+    public String toString() {
+        return "ReplayCommand {commandId = " + getCommandId() + ", firstNakNumber = " + getFirstNakNumber() + ", lastNakNumber = " + getLastNakNumber() + "}";
+    }
     
 }
