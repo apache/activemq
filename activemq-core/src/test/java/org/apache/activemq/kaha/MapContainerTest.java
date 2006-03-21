@@ -173,6 +173,10 @@ public class MapContainerTest extends TestCase{
 
     protected void tearDown() throws Exception{
         super.tearDown();
+        if( store != null ) {
+        	store.close();
+        	store=null;
+        }
         assertTrue(StoreFactory.delete(name));
     }
     

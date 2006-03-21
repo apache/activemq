@@ -203,6 +203,11 @@ public class StoreTest extends TestCase{
 
     protected void tearDown() throws Exception{
         super.tearDown();
-        assertTrue(StoreFactory.delete(name));
+        if( store!=null ) {
+        	store.close();
+        	store=null;
+        }
+        boolean rc = StoreFactory.delete(name);
+        assertTrue(rc);
     }
 }
