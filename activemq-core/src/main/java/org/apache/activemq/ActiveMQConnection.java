@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -42,6 +43,7 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 import javax.jms.XAConnection;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -70,7 +72,6 @@ import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
@@ -80,6 +81,7 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
@@ -119,7 +121,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean useRetroactiveConsumer;
     private int closeTimeout = 15000;
     
-    private long flowControlSleepTime = 0;
     private final JMSConnectionStatsImpl stats;
     private final JMSStatsImpl factoryStats;
     private final Transport transport;
@@ -1083,13 +1084,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             throw new ConnectionClosedException();
         } else {
 
-            if (command.isMessage() && flowControlSleepTime > 0) {
-                try {
-                    Thread.sleep(flowControlSleepTime);
-                } catch (InterruptedException e) {
-                }
-            }
-
             try {
                 this.transport.oneway(command);
             } catch (IOException e) {
@@ -1109,13 +1103,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (isClosed()) {
             throw new ConnectionClosedException();
         } else {
-
-            if (command.isMessage() && flowControlSleepTime > 0) {
-                try {
-                    Thread.sleep(flowControlSleepTime);
-                } catch (InterruptedException e) {
-                }
-            }
 
             try {
                 Response response = this.transport.request(command);
@@ -1144,13 +1131,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (isClosed()) {
             throw new ConnectionClosedException();
         } else {
-
-            if (command.isMessage() && flowControlSleepTime > 0) {
-                try {
-                    Thread.sleep(flowControlSleepTime);
-                } catch (InterruptedException e) {
-                }
-            }
 
             try {
                 Response response = this.transport.request(command,timeout);
