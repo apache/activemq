@@ -105,9 +105,9 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
     public void testSendReceive() throws Exception {
         messages.clear();
         
+        Thread.sleep(1000);
         for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(data[i]);
-            Thread.sleep(200);
             if (verbose) {
                 log.info("About to send a message: " + message + " with text: " + data[i]);
             }
