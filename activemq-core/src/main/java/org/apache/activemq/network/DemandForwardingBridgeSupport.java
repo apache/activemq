@@ -32,6 +32,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
@@ -274,6 +275,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                     serviceRemoteBrokerInfo(command);
                 }else{
                     switch(command.getDataStructureType()){
+                    case KeepAliveInfo.DATA_STRUCTURE_TYPE:
                     case WireFormatInfo.DATA_STRUCTURE_TYPE:
                         break;
                     default:
