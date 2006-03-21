@@ -46,8 +46,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     final protected LinkedList dispatched=new LinkedList();
     
     protected int prefetchExtension=0;
-    int preLoadLimit=1024*100;
-    int preLoadSize=0;
     boolean dispatching=false;
     
     long enqueueCounter;
@@ -65,6 +63,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             dispatch(node);
         }else{
             synchronized(pending){
+                if( pending.isEmpty() )
+                    log.info("Prefetch limit.");
                 pending.addLast(node);
             }
         }
@@ -79,7 +79,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     try{
                         MessageDispatch md=createMessageDispatch(node,node.getMessage());
                         dispatched.addLast(node);
-                        incrementPreloadSize(node.getSize());
                         node.decrementReferenceCount();
                     }catch(Exception e){
                         log.error("Problem processing MessageDispatchNotification: "+mdn,e);
@@ -101,6 +100,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 final MessageReference node=(MessageReference) iter.next();
                 MessageId messageId=node.getMessageId();
                 if(ack.getFirstMessageId()==null||ack.getFirstMessageId().equals(messageId)){
+System.out.println("in range: "+messageId);
                     inAckRange=true;
                 }
                 if(inAckRange){
@@ -202,7 +202,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     }
 
     protected boolean isFull(){
-        return dispatched.size()-prefetchExtension>=info.getPrefetchSize()||preLoadSize>preLoadLimit;
+        return dispatched.size()-prefetchExtension>=info.getPrefetchSize();
     }
     
     synchronized public int getPendingQueueSize(){
@@ -252,7 +252,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             dispatchCounter++;
             MessageDispatch md=createMessageDispatch(node,message);
             dispatched.addLast(node);            
-            incrementPreloadSize(node.getMessage().getSize());
             if(info.isDispatchAsync()){
                 md.setConsumer(new Runnable(){
                     public void run(){
@@ -275,7 +274,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
 
     synchronized private void onDispatch(final MessageReference node,final Message message){
         boolean wasFull=isFull();
-        decrementPreloadSize(message.getSize());
         node.decrementReferenceCount();
         if(node.getRegionDestination()!=null){
             node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
@@ -288,16 +286,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 }
             }
         }
-    }
-
-    private int incrementPreloadSize(int size){
-        preLoadSize+=size;
-        return preLoadSize;
-    }
-
-    private int decrementPreloadSize(int size){
-        preLoadSize-=size;
-        return preLoadSize;
     }
 
     /**
