@@ -296,7 +296,7 @@ public abstract class JmsConnector implements Service{
     
     static int nextId;
     static private synchronized int getNextId() {
-        return nextId;
+        return nextId++;
     }
 
     public void setName(String name) {
