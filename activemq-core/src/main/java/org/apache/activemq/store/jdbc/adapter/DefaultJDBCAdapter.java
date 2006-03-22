@@ -93,6 +93,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 // This will fail usually since the tables will be
                 // created already.
                 try {
+                    log.debug("Executing SQL: "+createStatments[i]);
                     boolean rc = s.execute(createStatments[i]);
                 }
                 catch (SQLException e) {
