@@ -6,19 +6,19 @@ ActiveMQ is a high performance Apache 2.0 licenced Message Broker and JMS 1.1 im
 To help you get started, try the following links:-
 
 Getting Started
-http://activemq.org/Getting+Started
+http://incubator.apache.org/activemq/Getting+Started
 
 Building
-http://activemq.org/Building
+http://incubator.apache.org/activemq/Building
 
 Examples
-http://activemq.org/Examples
+http://incubator.apache.org/activemq/Examples
 
 We welcome contributions of all kinds, for details of how you can help
-http://activemq.codehaus.org/Contributing
+http://incubator.apache.org/activemq/Contributing
 
 Please refer to the website for details of finding the issue tracker, email lists, wiki or IRC channel
-http://activemq.org/
+http://incubator.apache.org/activemq/
 
 
 Please help us make ActiveMQ better - we appreciate any feedback you may have.
