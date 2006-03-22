@@ -33,7 +33,7 @@
 
   <organization>
     <name>Apache Software Foundation</name>
-    <url>http://geronimo.apache.org.apache.activemq</url>
+    <url>http://geronimo.apache.org</url>
     <logo>http://geronimo.apache.org/images/geronimo-logo.png</logo>
   </organization>
 
@@ -47,9 +47,7 @@
 
   <!-- Used for artifact deployment -->
   <siteAddress>geronimo.apache.org</siteAddress>
-  <siteDirectory>/www/geronimo.apache.org.apache.activemq</siteDirectory>
-  <distributionSite>geronimo.apache.org</distributionSite>
-  <distributionDirectory>/www/geronimo.apache.org/builds</distributionDirectory>
+  <siteDirectory>/www/incubator.apache.org/activemq</siteDirectory>
 
   <!-- SCM Information-->
   <repository>
@@ -77,19 +75,19 @@
       <name>ActiveMQ Developer List</name>
       <subscribe>dev-subscribe@activemq.codehaus.org</subscribe>
       <unsubscribe>dev-unsubscribe@activemq.codehaus.org</unsubscribe>
-      <archive>http://dir.gmane.org/gmane.comp.java.activemq.devel</archive>
+      <archive></archive>
     </mailingList>
     <mailingList>
       <name>ActiveMQ User List</name>
-      <subscribe>user-subscribe@activemq.codehaus.org</subscribe>
-      <unsubscribe>user-unsubscribe@activemq.codehaus.org</unsubscribe>
-      <archive>http://dir.gmane.org/gmane.comp.java.activemq.user</archive>
+      <subscribe>activemq-users-subscribe@geronimo.apache.org</subscribe>
+      <unsubscribe>activemq-users-unsubscribe@geronimo.apache.org</unsubscribe>
+      <archive></archive>
     </mailingList>
     <mailingList>
       <name>ActiveMQ SCM List</name>
-      <subscribe>scm-subscribe@activemq.codehaus.org</subscribe>
-      <unsubscribe>scm-unsubscribe@activemq.codehaus.org</unsubscribe>
-      <archive>http://archive.activemq.codehaus.org/scm/</archive>
+      <subscribe>activemq-commits-subscribe@geronimo.apache.org</subscribe>
+      <unsubscribe>activemq-commits-unsubscribe@geronimo.apache.org</unsubscribe>
+      <archive></archive>
     </mailingList>
   </mailingLists>
 
