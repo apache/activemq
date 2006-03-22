@@ -1,0 +1,48 @@
+/**
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq.advisory;
+
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ProducerInfo;
+
+/**
+ * An event when a new consumer has started.
+ * 
+ * @version $Revision: 359679 $
+ */
+public class ProducerStartedEvent extends ProducerEvent {
+
+    private static final long serialVersionUID = 5088138839609391074L;
+
+    private final ProducerInfo consumerInfo;
+
+    public ProducerStartedEvent(ProducerEventSource source, ActiveMQDestination destination, ProducerInfo consumerInfo, int count) {
+        super(source, destination, consumerInfo.getProducerId(), count);
+        this.consumerInfo = consumerInfo;
+    }
+
+    public boolean isStarted() {
+        return true;
+    }
+
+    /**
+     * @return details of the subscription
+     */
+    public ProducerInfo getProducerInfo() {
+        return consumerInfo;
+    }
+}

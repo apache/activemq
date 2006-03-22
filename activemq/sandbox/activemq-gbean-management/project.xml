@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE project>
+<project>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../../etc/project.xml</extend>
+
+    <name>ActiveMQ :: GBean Interfaces</name>
+    <id>activemq-gbean-management</id>
+    <shortDescription>Geronimo / GBean management support</shortDescription>
+    <description>ActiveMQ management interfaces used for integration into Apache Geronimo</description>
+  
+    <package>org.activemq.gbean</package>
+    <packageGroups>
+      <packageGroup>
+        <title>Geronimo / GBean management support</title>
+        <packages>org.activemq.gbean</packages>
+      </packageGroup>
+    </packageGroups>
+ 
+    <!-- ============ -->
+    <!-- Dependencies -->
+    <!-- ============ -->
+    <dependencies>
+      <dependency>
+        <groupId>geronimo</groupId>
+        <artifactId>geronimo-management</artifactId>
+        <version>${geronimo_management_version}</version>
+      </dependency>
+   </dependencies>  
+
+</project>
