@@ -129,39 +129,39 @@
       </dependency>
   
       <dependency>
-        <groupId>geronimo-spec</groupId>
-        <artifactId>geronimo-spec-jms</artifactId>
-        <version>1.1-rc4</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jms_1.1_spec</artifactId>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
-        <groupId>geronimo-spec</groupId>
-        <artifactId>geronimo-spec-jta</artifactId>
-        <version>1.0.1B-rc4</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
-        <groupId>geronimo-spec</groupId>
-        <artifactId>geronimo-spec-j2ee-management</artifactId>
-        <version>1.0-rc4</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
-        <groupId>geronimo-spec</groupId>
-        <artifactId>geronimo-spec-j2ee-jacc</artifactId>
-        <version>1.0-rc4</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
-        <groupId>geronimo-spec</groupId>
-        <artifactId>geronimo-spec-j2ee-connector</artifactId>
-        <version>1.5-rc4</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
-        <groupId>geronimo-spec</groupId>
-        <artifactId>geronimo-spec-jsp</artifactId>
-        <version>2.0-rc4</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jsp_2.0_spec</artifactId>
+        <version>1.0</version>
       </dependency>
 
       

@@ -328,24 +328,9 @@
       </properties>
     </dependency>
 
-    <!--
-
-    lets switch to using the specific J2EE jars we need
-
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee</artifactId>
-      <version>${geronimo_spec_version}</version>
-      <properties>
-        <rar.bundle>false</rar.bundle>
-        <lib>true</lib>
-      </properties>
-    </dependency>
-    -->
-
-    <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-jms</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_1.1_spec</artifactId>
       <version>${geronimo_spec_jms_version}</version>
       <properties>
         <activemq.module>true</activemq.module>
@@ -357,8 +342,8 @@
     </dependency>
 
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-jta</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
       <version>${geronimo_spec_jta_version}</version>
       <properties>
         <lib>false</lib>
@@ -368,8 +353,8 @@
     </dependency>
 
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee-management</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
       <version>${geronimo_spec_j2ee_management_version}</version>
       <properties>
         <activemq.module>true</activemq.module>
@@ -380,8 +365,8 @@
     </dependency>
 
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee-jacc</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
       <version>${geronimo_spec_j2ee_jacc_version}</version>
       <properties>
         <rar.bundle>false</rar.bundle>

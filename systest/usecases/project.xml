@@ -15,8 +15,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-servlet</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-servlet_2.4_spec</artifactId>
       <version>${geronimo_spec_servlet_version}</version>
       <properties>
         <war.bundle>false</war.bundle>

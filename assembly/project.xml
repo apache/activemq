@@ -261,8 +261,8 @@
 
     <!-- to create a web server to test out the web stuff -->
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-jsp</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jsp_2.0_spec</artifactId>
       <version>${geronimo_spec_jsp_version}</version>
       <properties>
         <war.bundle>false</war.bundle>
@@ -271,8 +271,8 @@
     </dependency>
 
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee-connector</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
       <version>${geronimo_spec_j2ee_connector_version}</version>
       <properties>
         <optional>true</optional>

@@ -64,19 +64,24 @@
       <url>http://jakarta.apache.org/commons/logging/</url>
     </dependency>
    
-    <dependency>
-      <id>geronimo-spec+jms</id>
-      <version>1.1-rc4</version>
-    </dependency>
-    <dependency>
-      <id>geronimo-spec+jta</id>
-      <version>1.0.1B-rc4</version>
-    </dependency>
-    <dependency>
-      <id>geronimo-spec+j2ee-management</id>
-      <version>1.0-rc4</version>
-    </dependency>
-
+      <dependency>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jms_1.1_spec</artifactId>
+        <version>1.0</version>
+      </dependency>
+    
+      <dependency>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
+        <version>1.0</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
+        <version>1.0</version>
+      </dependency>
+  
     <!-- default JMS provider used for implementation -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
