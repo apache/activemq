@@ -1,0 +1,6 @@
+#Producer TCP sampler
+# The default handler class
+#tcp.prod.handler=ProducerClientImpl
+#
+# eolByte = byte value for end of line
+#tcp.prod.eolByte=0

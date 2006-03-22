@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../etc/project.xml</extend>
+
+    <name>ActiveMQ :: Jmeter</name>
+    <id>JMeter_sampler</id>
+    <shortDescription>ActiveMQ JMeter</shortDescription>
+    <description>ActiveMQ Jmeter creates an ActiveMQ sampler for Jmeter</description>
+
+<!--    <package>org.apache.activemq</package>
+
+    <build>
+        <sourceDirectory>src/java</sourceDirectory>
+        <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+    </build>
+-->
+    <dependencies>
+
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activemq-core</artifactId>
+            <version>${pom.currentVersion}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jorphan</groupId>
+            <artifactId>jorphan</artifactId>
+            <version>${jorphan_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <!-- an optional discovery agent -->
+        <dependency>
+            <groupId>activeio</groupId>
+            <artifactId>activeio</artifactId>
+            <version>${activeio_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <lib>true</lib>
+            </properties>
+        </dependency>
+
+        <!-- Derby SQL DB used for testing JDBC message store -->
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>${derby_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <lib>true</lib>
+            </properties>
+        </dependency>
+
+        <!-- jmeter specific jars -->
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_components</artifactId>
+            <version>${ApacheJMeter_components_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_core</artifactId>
+            <version>${ApacheJMeter_core_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_ftp</artifactId>
+            <version>${ApacheJMeter_ftp_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_functions</artifactId>
+            <version>${ApacheJMeter_functions_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_http</artifactId>
+            <version>${ApacheJMeter_http_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_java</artifactId>
+            <version>${ApacheJMeter_java_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_jdbc</artifactId>
+            <version>${ApacheJMeter_jdbc_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_jms</artifactId>
+            <version>${ApacheJMeter_jms_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_ldap</artifactId>
+            <version>${ApacheJMeter_ldap_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_mail</artifactId>
+            <version>${ApacheJMeter_mail_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_monitors</artifactId>
+            <version>${ApacheJMeter_monitors_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter_tcp</artifactId>
+            <version>${ApacheJMeter_tcp_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <ext>true</ext>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jmeter</groupId>
+            <artifactId>ApacheJMeter</artifactId>
+            <version>${ApacheJMeter_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	        <bin>true</bin>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <id>ant</id>
+            <version>1.5</version>
+        </dependency>
+
+        <!-- jmeter lib jars --> 
+        <dependency>
+            <groupId>avalon-framework</groupId>
+            <artifactId>avalon-framework</artifactId>
+            <version>${avalon_framework_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>batik</groupId>
+            <artifactId>batik-awt-util</artifactId>
+            <version>${batik_awt_util_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons_collections_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>${commons_httpclient_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons_logging_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>concurrent</groupId>
+            <artifactId>concurrent</artifactId>
+            <version>${concurrent_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>excalibur-datasource</groupId>
+            <artifactId>excalibur-datasource</artifactId>
+            <version>${excalibur_datasource_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>excalibur-instrument</groupId>
+            <artifactId>excalibur-instrument</artifactId>
+            <version>${excalibur_instrument_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>excalibur-logger</groupId>
+            <artifactId>excalibur-logger</artifactId>
+            <version>${excalibur_logger_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>excalibur-pool</groupId>
+            <artifactId>excalibur-pool</artifactId>
+            <version>${excalibur_pool_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-j2ee</artifactId>
+            <version>${geronimo_spec_j2ee_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>htmlparser</groupId>
+            <artifactId>htmlparser</artifactId>
+            <version>${htmlparser_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>oro</groupId>
+            <artifactId>oro</artifactId>
+            <version>${jakarta_oro_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
+            <version>${jdom_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>js</groupId>
+            <artifactId>js</artifactId>
+            <version>${js_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>logkit</groupId>
+            <artifactId>logkit</artifactId>
+            <version>${logkit_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>soap</groupId>
+            <artifactId>soap</artifactId>
+            <version>${soap_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>tidy</groupId>
+            <artifactId>Tidy</artifactId>
+            <version>${Tidy_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>${velocity_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+            <version>${xalan_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>${xercesImpl_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+            <version>${xml_apis_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>xpp3</groupId>
+            <artifactId>xpp3_min</artifactId>
+            <version>${xpp3_min_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>${xstream_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+        
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+        
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j</artifactId>
+            <version>${mx4j_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>${antlr_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency>
+        
+        <dependency>
+            <groupId>manta</groupId>
+            <artifactId>manta</artifactId>
+            <version>${manta_version}</version>
+            <properties>
+	        <jmeter.module>true</jmeter.module>
+	    	<lib>true</lib>
+            </properties>
+        </dependency> 
+                
+    </dependencies>
+    
+   <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+    <integrationUnitTestSourceDirectory/>
+    <aspectSourceDirectory/>
+    <unitTest>
+      <resources>
+        <resource>
+          <directory>src/test/resources</directory>
+          <includes>
+            <include>**/*.properties</include>
+            <include>**/*.xml</include>
+          </includes>
+        </resource>
+      </resources>
+      <includes>
+      	<include>**/*Test.*</include>
+      </includes>
+      <!-- Test case hangs after receiving 34,946 messages-->
+      <excludes>
+      	<exclude>**/NoDestinationErrorTest.*</exclude>
+      </excludes>
+
+    </unitTest>
+  </build>
+
+</project>

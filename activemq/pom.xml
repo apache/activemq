@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.activemq</groupId>
+  <artifactId>activemq</artifactId>
+  <version>4.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>ActiveMQ</name>
+
+  <ciManagement>
+    <system>continuum</system>
+    <url>http://ci.gbuild.org/continuum</url>
+    <notifiers>
+      <notifier>
+        <configuration>
+          <address>activemq-commits@geronimo.apache.org</address>
+        </configuration>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+
+  <mailingLists>
+    <mailingList>
+      <name>Development List</name>
+      <subscribe>activemq-dev@geronimo.apache.org</subscribe>
+      <unsubscribe>activemq-dev@geronimo.apache.org</unsubscribe>
+      <post>activemq-dev@geronimo.apache.org</post>
+    </mailingList>
+  </mailingLists>
+
+  <repositories>
+    <repository>
+      <id>apache.snapshots</id>
+      <name>Apache Snapshots Repository</name>
+      <url>http://cvs.apache.org/maven-snapshot-repository</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>codehaus-snapshot</id>
+      <name>CodeHaus Snapshot Repo</name>
+      <url>http://snapshots.maven.codehaus.org/maven2</url>
+    </repository>
+    <repository>
+      <id>maven-csharp</id>
+      <name>maven-csharp</name>
+      <url>http://maven-csharp.javaforge.com/repo</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>codehaus.snapshots</id>
+      <name>Maven Central Plugins Development Repository</name>
+      <url>http://snapshots.maven.codehaus.org/maven2</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </pluginRepository>
+    <pluginRepository>
+      <id>maven-csharp-plugins</id>
+      <name>maven-csharp</name>
+      <url>http://maven-csharp.javaforge.com/repo</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <modules>
+
+    <module>activemq-core</module>
+    <module>activemq-console</module>
+    <module>activemq-ra</module>
+    <module>activemq-jaas</module>
+    <module>activemq-optional</module>
+    <module>activemq-web</module>
+    <module>activemq-systest</module>
+    <module>assembly</module>
+
+<!--
+    <module>activeio</module>
+-->
+    <module>activecluster</module>
+
+  </modules> 
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
+    <developerConnection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/</url>
+  </scm>
+
+  <organization>
+    <name>Apache Software Foundation.</name>
+    <url>http://www.apache.org/</url>
+  </organization>
+
+  <dependencyManagement>
+    <dependencies>
+    
+      <!-- =============================== -->
+      <!-- Required dependencies -->
+      <!-- =============================== -->
+      <dependency>
+        <groupId>backport-util-concurrent</groupId>
+        <artifactId>backport-util-concurrent</artifactId>
+        <version>2.0_01_pd</version>
+      </dependency>
+  
+      <dependency>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
+        <version>1.0.3</version>
+      </dependency>
+  
+      <dependency>
+        <groupId>geronimo-spec</groupId>
+        <artifactId>geronimo-spec-jms</artifactId>
+        <version>1.1-rc4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>geronimo-spec</groupId>
+        <artifactId>geronimo-spec-jta</artifactId>
+        <version>1.0.1B-rc4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>geronimo-spec</groupId>
+        <artifactId>geronimo-spec-j2ee-management</artifactId>
+        <version>1.0-rc4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>geronimo-spec</groupId>
+        <artifactId>geronimo-spec-j2ee-jacc</artifactId>
+        <version>1.0-rc4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>geronimo-spec</groupId>
+        <artifactId>geronimo-spec-j2ee-connector</artifactId>
+        <version>1.5-rc4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>geronimo-spec</groupId>
+        <artifactId>geronimo-spec-jsp</artifactId>
+        <version>2.0-rc4</version>
+      </dependency>
+
+      
+      <!-- =============================== -->
+      <!-- Optional dependencies -->
+      <!-- =============================== -->
+      <!--  for custom XML parsing -->
+      <dependency>
+        <groupId>org.apache.xbean</groupId>
+        <artifactId>xbean-spring</artifactId>
+        <version>2.2</version>
+        <optional>true</optional>
+      </dependency>
+ 
+      <!-- Used to configure the activemq logs -->
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.12</version>
+        <scope>runtime</scope>
+      </dependency>
+      
+      <!-- used to support optional transport configuration via URI query strings -->
+      <!--
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>1.6.1</version>
+      </dependency>
+      -->
+      
+      <dependency>
+        <groupId>commons-collections</groupId>
+        <artifactId>commons-collections</artifactId>
+        <version>2.1</version>
+        <optional>true</optional>
+      </dependency>
+      
+      <!-- Optional Spring Support -->
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring</artifactId>
+        <version>1.2.4</version>
+        <optional>true</optional>
+      </dependency>
+      
+      <!-- an optional discovery agent -->
+      <dependency>
+        <groupId>activecluster</groupId>
+        <artifactId>activecluster</artifactId>
+        <version>1.1-SNAPSHOT</version>
+        <optional>true</optional>
+      </dependency>
+    
+      <!-- Optional Derby support-->
+      <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derby</artifactId>
+        <version>10.1.1.0</version>
+        <optional>true</optional>
+      </dependency>
+      
+      <!-- Optional Axion support -->
+      <dependency>
+        <groupId>axion</groupId>
+        <artifactId>axion</artifactId>
+        <version>1.0-M3-dev</version>
+        <optional>true</optional>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-primitives</groupId>
+        <artifactId>commons-primitives</artifactId>
+        <version>1.0</version>
+        <optional>true</optional>
+      </dependency>
+
+      <dependency>
+        <groupId>regexp</groupId>
+        <artifactId>regexp</artifactId>
+        <version>1.3</version>
+        <optional>true</optional>
+      </dependency>
+      
+      <!-- Optional HSQL DB Support -->
+      <!--
+      <dependency>
+      <groupId>hsqldb</groupId>
+        <artifactId>hsqldb</artifactId>
+        <version>1.7.2.2</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>commons-dbcp</groupId>
+        <artifactId>commons-dbcp</artifactId>
+        <version>1.2</version>
+        <optional>true</optional>
+      </dependency>
+      -->
+
+      <dependency>
+        <groupId>commons-pool</groupId>
+        <artifactId>commons-pool</artifactId>
+        <version>1.2</version>
+        <optional>true</optional>
+      </dependency>
+      
+      <!-- Optional Journal Implementation -->
+      <!--
+      <dependency>
+        <groupId>howl</groupId>
+        <artifactId>howl-logger</artifactId>
+        <version>0.1.7</version>
+        <optional>true</optional>
+      </dependency>
+      -->
+
+      <!-- Optional Jabber support -->
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>smack</artifactId>
+        <version>1.5.0</version>
+        <optional>true</optional>
+      </dependency>
+
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>smackx</artifactId>
+        <version>1.5.0</version>
+        <optional>true</optional>
+      </dependency>
+  
+      <!-- =============================== -->
+      <!-- XML processing dependencies -->
+      <!-- =============================== -->
+      <!-- For XMLBeans -->
+      <dependency>
+        <groupId>xmlbeans</groupId>
+        <artifactId>xbean</artifactId>
+        <version>2.0.0-beta1</version>
+      </dependency>
+      <dependency>
+        <groupId>xmlbeans</groupId>
+        <artifactId>xmlpublic</artifactId>
+        <version>2.0.0-beta1</version>
+      </dependency>
+      <dependency>
+        <groupId>xmlbeans</groupId>
+        <artifactId>xbean_xpath</artifactId>
+        <version>2.0.0-beta1</version>
+      </dependency>
+  
+      <!-- For Stax -->
+      <dependency>
+        <groupId>stax</groupId>
+        <artifactId>stax-api</artifactId>
+        <version>1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>stax</groupId>
+        <artifactId>stax</artifactId>
+        <version>1.1.1-dev</version>
+      </dependency>
+  
+      <!-- To use XPath using JAXP 1.3 (std in Java 5) -->
+      <dependency>
+        <groupId>activesoap</groupId>
+        <artifactId>jaxp-api</artifactId>
+        <version>1.3</version>
+      </dependency>
+  
+    <!-- To use XPath using JAXP 1.2 (easier to add to Java 1.4.x) -->
+      <dependency>
+        <groupId>xalan</groupId>
+        <artifactId>xalan</artifactId>
+        <version>2.6.0</version>
+      </dependency>
+  
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>jmdns</artifactId>
+        <version>1.0-RC2</version>
+      </dependency>
+      <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j</artifactId>
+        <version>2.1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-jmx</artifactId>
+        <version>2.1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-remote</artifactId>
+        <version>2.1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-tools</artifactId>
+        <version>2.1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-impl</artifactId>
+        <version>2.1.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-jaas</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>xstream</groupId>
+        <artifactId>xstream</artifactId>
+        <version>1.1.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>xmlpull</groupId>
+        <artifactId>xmlpull</artifactId>
+        <version>1.1.3.4d_b4_min</version>
+      </dependency>
+
+      <dependency>
+        <groupId>jetty</groupId>
+        <artifactId>servlet-api</artifactId>
+        <version>2.5-6.0.0beta6</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>jetty</groupId>
+        <artifactId>jetty</artifactId>
+        <version>6.0.0beta6</version>
+      </dependency>
+
+      <dependency>
+        <groupId>axis</groupId>
+        <artifactId>axis</artifactId>
+        <version>1.2-RC1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-httpclient</groupId>
+        <artifactId>commons-httpclient</artifactId>
+        <version>2.0.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>aopalliance</groupId>
+        <artifactId>aopalliance</artifactId>
+        <version>1.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>3.8.1</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>jmock</groupId>
+        <artifactId>jmock</artifactId>
+        <version>1.0.1</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>jmock</groupId>
+        <artifactId>jmock-cglib</artifactId>
+        <version>1.0.1</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>cglib</groupId>
+        <artifactId>cglib-full</artifactId>
+        <version>2.0</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>annogen</groupId>
+        <artifactId>annogen</artifactId>
+        <version>0.1.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>ant</groupId>
+        <artifactId>ant</artifactId>
+        <version>1.6.2</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+<!--
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>jmock</groupId>
+      <artifactId>jmock</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>jmock</groupId>
+      <artifactId>jmock-cglib</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>cglib</groupId>
+      <artifactId>cglib-full</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+-->
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.1.3-SNAPSHOT</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.4</source>
+          <target>1.4</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <outputDirectory>bin</outputDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.1.3-SNAPSHOT</version>
+        <configuration>
+          <forkMode>once</forkMode>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>surefire-report-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
+</project>

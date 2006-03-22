@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+    <display-name>ActiveMQ Message Broker Web Application</display-name>
+    <description>
+    Provides a REST API to the ActiveMQ Message Broker
+    </description>
+
+    <!-- context config -->
+    <context-param>
+        <param-name>org.apache.activemq.brokerURL</param-name>
+        <param-value>vm://localhost</param-value>
+        <description>The URL of the Message Broker to connect to</description>
+    </context-param>
+
+    <context-param>
+        <param-name>org.apache.activemq.embeddedBroker</param-name>
+        <param-value>true</param-value>
+        <description>Whether we should include an embedded broker or not</description>
+    </context-param>
+
+    <!-- connection manager -->
+    <listener>
+        <listener-class>org.apache.activemq.web.ConnectionManager</listener-class>
+    </listener>
+
+
+    <!-- servlet mappings -->
+    
+    <!-- the subscription REST servlet -->
+    <servlet>
+        <servlet-name>MessageListenerServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.MessageListenerServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <!-- servlets for the portfolio demo -->
+    <servlet>
+        <servlet-name>PortfolioPublishServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.PortfolioPublishServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>MessageListenerServlet</servlet-name>
+        <url-pattern>/amq/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>PortfolioPublishServlet</servlet-name>
+        <url-pattern>/portfolioPublish</url-pattern>
+    </servlet-mapping>
+
+    <filter>
+      <filter-name>session</filter-name>
+      <filter-class>org.apache.activemq.web.SessionFilter</filter-class>
+    </filter>
+    
+    <filter-mapping>
+      <filter-name>session</filter-name>
+      <url-pattern>/*</url-pattern>
+    </filter-mapping>
+</web-app>

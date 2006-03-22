@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE project>
+<project>
+  <pomVersion>3</pomVersion>
+  <extend>${basedir}/../etc/project.xml</extend>
+
+  <name>ActiveMQ :: Resource Adapter</name>
+  <id>activemq-ra</id>
+  <shortDescription>
+    JCA Managed Connections and Resource Adapters
+  </shortDescription>
+  <description>
+    The ActiveMQ Java Connector Architecture Resource Adapter used to
+    manage ActiveMQ connection when run inside a J2EE app server.
+  </description>
+
+  <package>org.apache.activemq.ra</package>
+  <packageGroups>
+    <packageGroup>
+      <title>JCA Managed Connections and Resource Adapters</title>
+      <packages>org.apache.activemq.ra</packages>
+    </packageGroup>
+  </packageGroups>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-j2ee-connector</artifactId>
+      <version>${geronimo_spec_j2ee_connector_version}</version>
+      <properties>
+        <rar.bundle>false</rar.bundle>
+        <lib>true</lib>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${pom.currentVersion}</version>
+      <properties>
+        <rar.bundle>true</rar.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>jmock</groupId>
+      <artifactId>jmock</artifactId>
+      <version>${jmock_version}</version>
+      <url>http://jmock.codehaus.org/</url>
+    </dependency>
+
+    <dependency>
+      <groupId>jmock</groupId>
+      <artifactId>jmock-cglib</artifactId>
+      <version>${jmock_cglib_version}</version>
+      <url>http://jmock.codehaus.org/</url>
+    </dependency>
+
+    <dependency>
+      <groupId>cglib</groupId>
+      <artifactId>cglib-full</artifactId>
+      <version>${cglib_full_version}</version>
+      <url>http://cglib.sourceforge.net/</url>
+    </dependency>
+
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>jmdns</artifactId>
+      <version>${jmdns_version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>activeio</groupId>
+      <artifactId>activeio</artifactId>
+      <version>${activeio_version}</version>
+      <properties>
+        <rar.bundle>true</rar.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>${derby_version}</version>
+      <properties>
+        <rar.bundle>true</rar.bundle>
+      </properties>
+    </dependency>
+
+    <!-- Needed to start the broker on java 1.4 -->
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j</artifactId>
+        <version>${mx4j_version}</version>
+    </dependency>
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-jmx</artifactId>
+        <version>${mx4j_version}</version>
+    </dependency>
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-remote</artifactId>
+        <version>${mx4j_remote_version}</version>
+    </dependency>
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-tools</artifactId>
+        <version>${mx4j_version}</version>
+    </dependency>
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-impl</artifactId>
+        <version>${mx4j_version}</version>
+    </dependency>
+
+    <!-- For Spring -->
+    <dependency>
+        <groupId>springframework</groupId>
+        <artifactId>spring</artifactId>
+        <version>${spring_ra_version}</version>
+        <url>http://www.springframework.org</url>
+        <properties>
+              <rar.bundle>true</rar.bundle>
+        </properties>
+    </dependency>
+
+    <!--  for custom XML parsing -->
+
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+      <version>${xbean_spring_version}</version>
+      <url>http://www.gbean.org</url>
+      <properties>
+        <war.bundle>true</war.bundle>
+        <rar.bundle>true</rar.bundle>  
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>annogen</groupId>
+      <artifactId>annogen</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+
+    <dependency>
+       <groupId>qdox</groupId>
+       <artifactId>qdox</artifactId>
+       <version>1.5</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+
+    <unitTest>
+      <resources>
+        <resource>
+          <directory>src/test/resources</directory>
+          <includes>
+            <include>**/*.properties</include>
+            <include>**/*.xml</include>
+          </includes>
+        </resource>
+      </resources>
+      <includes>
+        <include>**/*Test.*</include>
+      </includes>
+      <excludes>
+      </excludes>
+    </unitTest>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+
+</project>

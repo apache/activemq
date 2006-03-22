@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2005-2006 The Apache Software Foundation
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<!-- $Rev: 54087 $ $Date: 2005/08/09 02:34:04 $ --> 
+<project>
+
+    <name>ActiveMQ</name>
+    <id>activemq</id>
+    <groupId>incubator-activemq</groupId>
+    <currentVersion>4.0-RC1</currentVersion>
+
+    <organization>
+        <name>Apache Software Foundation</name>
+        <url>http://incubator.apache.org/activemq</url>
+        <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
+    </organization>
+
+    <inceptionYear>2003</inceptionYear>
+    <package>org.apache.activemq</package>
+    <logo>http://www.logicblaze.com/images/logos/products/ActiveMQ/ActiveMQ_logo_200.jpg</logo>
+    <description>
+    ActiveMQ is a fast open source JMS 1.1 provider and Message Fabric supporting
+    clustering, peer networks, discovery, TCP, SSL, multicast, persistence, XA
+    and integrates seamlessly into J2EE 1.4 containers, light weight
+    containers and any Java application.
+    </description>
+    <shortDescription>An open source JMS 1.1 provider</shortDescription>
+
+    <url>http://activemq.org/</url>
+    <issueTrackingUrl>ihttps://jira.logicblaze.com/jira/browse/AMQ</issueTrackingUrl>
+
+    <siteAddress>http://incubator.apache.org/activemq</siteAddress>
+    <siteDirectory>/www/geronimo.apache.org.apache.activemq/${pom.artifactId}</siteDirectory>
+    <distributionSite>geronimo.apache.org</distributionSite>
+    <distributionDirectory>/www/geronimo.apache.org/builds</distributionDirectory>
+
+    <repository>
+       <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</connection>
+       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</developerConnection>
+       <url>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</url>
+    </repository>     
+
+    <mailingLists>
+        <mailingList>
+            <name>ActiveMQ User List</name>
+            <subscribe>mailto:activemq-users-subscribe@geronimo.apache.org</subscribe>
+            <unsubscribe>mailto:activemq-users-unsubscribe@geronimo.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-users/</archive>
+        </mailingList>
+        <mailingList>
+            <name>ActiveMQ Developer List</name>
+            <subscribe>mailto:activemq-dev-subscribe@geronimo.apache.org</subscribe>
+            <unsubscribe>mailto:activemq-dev-unsubscribe@geronimo.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>ActiveMQ SCM List</name>
+            <subscribe>mailto:activemq-commits-subscribe@geronimo.apache.org</subscribe>
+            <unsubscribe>mailto:activemq-commits-unsubscribe@geronimo.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-commits/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <developers>
+        <developer>
+            <name>James Strachan</name>
+            <id>jstrachan</id>
+            <email>jstrachan@logicblaze.com</email>
+        </developer>
+        <developer>
+            <name>Hiram Chirino</name>
+            <id>chirino</id>
+            <email>hiram@logicblaze.com</email>
+        </developer>
+        <developer>
+            <name>Rob Davies</name>
+            <id>stewie</id>
+            <email>rajdavies@exist.com</email>
+        </developer>
+        <developer>
+            <name>Jonas Lim</name>
+            <id>jlim</id>
+            <email>jlim@exist.com</email>
+        </developer>
+        <developer>
+            <name>Frederick Oconer</name>
+            <id>foconer</id>
+            <email>foconer@exist.com</email>
+        </developer>
+        <developer>
+            <name>Joseph Gapuz</name>
+            <id>jgapuz</id>
+            <email>jgapuz@exist.com</email>
+        </developer>
+        <developer>
+            <name>Patrick Villacorta</name>
+            <id>pvillacorta</id>
+            <email>pvillacorta@exist.com</email>
+        </developer>
+        <developer>
+            <name>Darwin Flores</name>
+            <id>dflores</id>
+            <email>dflores@exist.com</email>
+        </developer>
+        <developer>
+            <name>Merwin Yap</name>
+            <id>myap</id>
+            <email>myap@exist.com</email>
+        </developer>
+        <developer>
+            <name>Adrian Co</name>
+            <id>aco</id>
+            <email>aco@exist.com</email>
+        </developer>
+        <developer>
+            <name>Dennis Cook</name>
+            <id>dcook</id>
+            <email>dj_cook@yahoo.com</email>
+        </developer>
+        <developer>
+            <name>Dag Liodden</name>
+            <id>daggerrz</id>
+            <email>dag.liodden@giantleap.no</email>
+        </developer>
+        <developer>
+            <name>Peter Brooke</name>
+            <id>pbrooke</id>
+        </developer>  
+        <developer>
+            <name>Ramzi Saba</name>
+            <id>rsaba</id>
+            <email>rsaba@optaros.com</email>
+        </developer>
+        <developer>
+            <name>Brian McCallister</name>
+            <id>brianm</id>
+            <email>brianm@apache.org</email>
+        </developer>              
+    </developers>
+
+    <build>
+        <nagEmailAddress>mailto:activemq-dev@geronimo.apache.org</nagEmailAddress>
+        <sourceDirectory />
+        <unitTestSourceDirectory />
+        <unitTest>
+            <includes>
+                <include>**/*Test.java</include>
+            </includes>
+            <excludes>
+                <exclude />
+            </excludes>
+        </unitTest>
+    </build>    
+
+    <reports>
+        <report>maven-changelog-plugin</report>
+        <report>maven-changes-plugin</report>
+        <report>maven-checkstyle-plugin</report>
+        <!-- <report>maven-cobertura-plugin</report> -->
+        <report>maven-developer-activity-plugin</report>
+        <report>maven-faq-plugin</report>
+        <report>maven-file-activity-plugin</report>
+        <!-- <report>maven-findbugs-plugin</report> -->
+        <report>maven-javadoc-plugin</report>
+        <report>maven-jdepend-plugin</report>
+        <report>maven-junit-report-plugin</report>
+        <report>maven-jxr-plugin</report>
+        <report>maven-pmd-plugin</report>
+        <report>maven-simian-plugin</report>
+        <report>maven-tasklist-plugin</report>
+    </reports>
+
+</project>

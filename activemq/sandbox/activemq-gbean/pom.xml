@@ -1,0 +1,68 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.activemq.sandbox</groupId>
+    <artifactId>activemq-sandbox</artifactId>
+    <version>4.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>activemq-gbean</artifactId>
+  <name>ActiveMQ :: GBeans</name>
+  
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <testSourceDirectory>src/test</testSourceDirectory>
+  </build>  
+    
+   <dependencies>
+   
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>activemq-gbean-management</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>geronimo</groupId>
+        <artifactId>geronimo-kernel</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>geronimo</groupId>
+        <artifactId>geronimo-system</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>geronimo</groupId>
+        <artifactId>geronimo-management</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>geronimo</groupId>
+        <artifactId>geronimo-j2ee</artifactId>
+      </dependency>
+
+      <dependency>
+        <groupId>activeio</groupId>
+        <artifactId>activeio</artifactId>
+      </dependency>
+
+      <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j</artifactId>
+      </dependency>
+
+   </dependencies> 
+
+</project>
