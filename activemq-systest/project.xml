@@ -45,8 +45,8 @@
   <dependencies>
 
     <dependency>
-      <groupId>geronimo-spec</groupId>
-      <artifactId>geronimo-spec-j2ee-connector</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
       <version>${geronimo_spec_j2ee_connector_version}</version>
       <properties>
         <rar.bundle>false</rar.bundle>
