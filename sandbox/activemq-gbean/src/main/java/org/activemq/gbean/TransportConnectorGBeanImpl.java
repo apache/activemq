@@ -20,32 +20,26 @@ package org.activemq.gbean;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import javax.jms.JMSException;
 
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.geronimo.gbean.GBeanInfo;
 import org.apache.geronimo.gbean.GBeanInfoBuilder;
 import org.apache.geronimo.gbean.GBeanLifecycle;
 import org.apache.geronimo.gbean.GConstructorInfo;
-import org.apache.geronimo.kernel.Kernel;
-import org.activemq.ActiveMQConnectionFactory;
-import org.activemq.broker.BrokerConnector;
-import org.activemq.broker.impl.BrokerConnectorImpl;
-import org.activemq.io.WireFormat;
-import org.activemq.io.impl.DefaultWireFormat;
 
 /**
  * Default implementation of the ActiveMQ connector
  *
  * @version $Revision: 1.1.1.1 $
  */
-public class ActiveMQConnectorGBean implements GBeanLifecycle, ActiveMQConnector {
+public class TransportConnectorGBeanImpl implements GBeanLifecycle, ActiveMQConnector {
     private Log log = LogFactory.getLog(getClass().getName());
 
-    private BrokerConnector brokerConnector;
-    private ActiveMQContainer container;
-    private WireFormat wireFormat = new DefaultWireFormat();
+    private TransportConnector transportConnector;
+    private BrokerServiceGBean brokerService;
+    
     private String protocol;
     private String host;
     private int port;
@@ -53,8 +47,8 @@ public class ActiveMQConnectorGBean implements GBeanLifecycle, ActiveMQConnector
     private String query;
     private String urlAsStarted;
 
-    public ActiveMQConnectorGBean(ActiveMQContainer container, String protocol, String host, int port) {
-        this.container = container;
+    public TransportConnectorGBeanImpl(BrokerServiceGBean brokerService, String protocol, String host, int port) {
+        this.brokerService = brokerService;
         this.protocol = protocol;
         this.host = host;
         this.port = port;
@@ -108,27 +102,23 @@ public class ActiveMQConnectorGBean implements GBeanLifecycle, ActiveMQConnector
         }
     }
 
-    public WireFormat getWireFormat() {
-        return wireFormat;
-    }
-
-    public void setWireFormat(WireFormat wireFormat) {
-        this.wireFormat = wireFormat;
-    }
-
     public InetSocketAddress getListenAddress() {
-	return brokerConnector == null ? null : brokerConnector.getServerChannel().getSocketAddress();
+        try {
+            return transportConnector.getServer().getSocketAddress();
+        } catch (Throwable e) {
+            log.debug("Failure to determine ListenAddress: "+e,e);
+            return null;
+        }
     }
 
     public synchronized void doStart() throws Exception {
     	ClassLoader old = Thread.currentThread().getContextClassLoader();
-    	Thread.currentThread().setContextClassLoader(ActiveMQContainerGBean.class.getClassLoader());
+    	Thread.currentThread().setContextClassLoader(BrokerServiceGBeanImpl.class.getClassLoader());
     	try {
-	        if (brokerConnector == null) {
+	        if (transportConnector == null) {
                 urlAsStarted = getUrl();
-	            brokerConnector = createBrokerConnector(urlAsStarted);
-	            brokerConnector.start();
-	            ActiveMQConnectionFactory.registerBroker(urlAsStarted, brokerConnector);
+	            transportConnector = createBrokerConnector(urlAsStarted);
+	            transportConnector.start();
 	        }
     	} finally {
         	Thread.currentThread().setContextClassLoader(old);
@@ -136,40 +126,38 @@ public class ActiveMQConnectorGBean implements GBeanLifecycle, ActiveMQConnector
     }
 
     public synchronized void doStop() throws Exception {
-        if (brokerConnector != null) {
-            ActiveMQConnectionFactory.unregisterBroker(urlAsStarted);
-            BrokerConnector temp = brokerConnector;
-            brokerConnector = null;
+        if (transportConnector != null) {
+            TransportConnector temp = transportConnector;
+            transportConnector = null;
             temp.stop();
         }
     }
 
     public synchronized void doFail() {
-        if (brokerConnector != null) {
-            BrokerConnector temp = brokerConnector;
-            brokerConnector = null;
+        if (transportConnector != null) {
+            TransportConnector temp = transportConnector;
+            transportConnector = null;
             try {
                 temp.stop();
             }
-            catch (JMSException e) {
+            catch (Exception e) {
                 log.info("Caught while closing due to failure: " + e, e);
             }
         }
     }
 
-    protected BrokerConnector createBrokerConnector(String url) throws Exception {
-        return new BrokerConnectorImpl(container.getBrokerContainer(), url, wireFormat);
+    protected TransportConnector createBrokerConnector(String url) throws Exception {
+        return brokerService.getBrokerContainer().addConnector(url);
     }
 
     public static final GBeanInfo GBEAN_INFO;
 
     static {
-        GBeanInfoBuilder infoFactory = new GBeanInfoBuilder("ActiveMQ Message Broker Connector", ActiveMQConnectorGBean.class, CONNECTOR_J2EE_TYPE);
+        GBeanInfoBuilder infoFactory = new GBeanInfoBuilder("ActiveMQ Transport Connector", TransportConnectorGBeanImpl.class, CONNECTOR_J2EE_TYPE);
         infoFactory.addAttribute("url", String.class.getName(), false);
-        infoFactory.addAttribute("wireFormat", WireFormat.class.getName(), false);
-        infoFactory.addReference("activeMQContainer", ActiveMQContainer.class);
+        infoFactory.addReference("brokerService", BrokerServiceGBean.class);
         infoFactory.addInterface(ActiveMQConnector.class, new String[]{"host","port","protocol","path","query"});
-        infoFactory.setConstructor(new GConstructorInfo(new String[]{"activeMQContainer", "protocol", "host", "port"}));
+        infoFactory.setConstructor(new GConstructorInfo(new String[]{"brokerService", "protocol", "host", "port"}));
         GBEAN_INFO = infoFactory.getBeanInfo();
     }
 

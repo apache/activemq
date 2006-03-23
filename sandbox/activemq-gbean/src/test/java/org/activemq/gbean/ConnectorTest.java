@@ -25,13 +25,13 @@ import junit.framework.TestCase;
  * @version $Revision: 1.0$
  */
 public class ConnectorTest extends TestCase {
-    public ActiveMQConnectorGBean test;
+    public TransportConnectorGBeanImpl test;
 
     protected void setUp() throws Exception {
     }
 
     public void testURLManipulation() {
-        test = new ActiveMQConnectorGBean(null, "foo", "localhost", 1234);
+        test = new TransportConnectorGBeanImpl(null, "foo", "localhost", 1234);
         assertEquals("foo://localhost:1234", test.getUrl());
         assertEquals("foo", test.getProtocol());
         assertEquals("localhost", test.getHost());
@@ -51,7 +51,7 @@ public class ConnectorTest extends TestCase {
         assertEquals("bar", test.getProtocol());
         assertEquals("0.0.0.0", test.getHost());
         assertEquals(8765, test.getPort());
-        test = new ActiveMQConnectorGBean(null, "vm", "localhost", -1);
+        test = new TransportConnectorGBeanImpl(null, "vm", "localhost", -1);
         assertEquals("vm://localhost", test.getUrl());
         assertEquals("vm", test.getProtocol());
         assertEquals("localhost", test.getHost());
