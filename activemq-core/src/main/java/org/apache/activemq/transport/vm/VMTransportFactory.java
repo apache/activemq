@@ -86,29 +86,38 @@ public class VMTransportFactory extends TransportFactory{
         VMTransportServer server=(VMTransportServer) servers.get(host);
         // validate the broker is still active
         if(!validateBroker(host)||server==null){
-            BrokerService broker=BrokerRegistry.getInstance().lookup(host);
-            if(broker==null){
-                try{
-                    if(brokerFactoryHandler!=null){
-                        broker=brokerFactoryHandler.createBroker(brokerURI);
-                    }else{
-                        broker=BrokerFactory.createBroker(brokerURI);
+            BrokerService broker=null;
+            // Synchronize on the registry so that multiple concurrent threads 
+            // doing this do not think that the broker has not been created and cause multiple
+            // brokers to be started.
+            synchronized( BrokerRegistry.getInstance().getRegistryMutext() ) {
+                broker=BrokerRegistry.getInstance().lookup(host);
+                if(broker==null){
+                    try{
+                        if(brokerFactoryHandler!=null){
+                            broker=brokerFactoryHandler.createBroker(brokerURI);
+                        }else{
+                            broker=BrokerFactory.createBroker(brokerURI);
+                        }
+                        broker.start();
+                    }catch(URISyntaxException e){
+                        throw IOExceptionSupport.create(e);
                     }
-                    broker.start();
-                }catch(URISyntaxException e){
-                    throw IOExceptionSupport.create(e);
+                    brokers.put(host,broker);
                 }
-                brokers.put(host,broker);
+                
+                server=(VMTransportServer) servers.get(host);
+                if(server==null){
+                    server=(VMTransportServer) bind(location,true);
+                    TransportConnector connector=new TransportConnector(broker.getBroker(),server);
+                    connector.setTaskRunnerFactory( broker.getTaskRunnerFactory() );
+                    connector.start();
+                    connectors.put(host,connector);
+                }
+                
             }
-            server=(VMTransportServer) servers.get(host);
-            if(server==null){
-                server=(VMTransportServer) bind(location,true);
-                TransportConnector connector=new TransportConnector(broker.getBroker(),server);
-                connector.setTaskRunnerFactory( broker.getTaskRunnerFactory() );
-                connector.start();
-                connectors.put(host,connector);
-            }
-        }else{}
+        }
+        
         VMTransport vmtransport=server.connect();
         IntrospectionSupport.setProperties(vmtransport,options);
         Transport transport=vmtransport;
