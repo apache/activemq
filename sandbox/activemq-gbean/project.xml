@@ -23,7 +23,7 @@
     <dependencies>
     
       <dependency>
-        <groupId>activemq</groupId>
+        <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-core</artifactId>
         <version>${pom.currentVersion}</version>
         <properties>
@@ -31,7 +31,7 @@
         </properties>
       </dependency>
       <dependency>
-        <groupId>activemq</groupId>
+        <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-gbean-management</artifactId>
         <version>${pom.currentVersion}</version>
         <properties>
@@ -39,7 +39,7 @@
         </properties>
       </dependency>
       <dependency> <!-- Used for unit tests -->
-        <groupId>activemq</groupId>
+        <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-core-test</artifactId>
         <version>${pom.currentVersion}</version>
       </dependency>
