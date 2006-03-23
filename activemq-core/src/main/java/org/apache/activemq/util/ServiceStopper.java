@@ -37,7 +37,9 @@ public class ServiceStopper {
      */
     public void stop(Service service) {
         try {
-            service.stop();
+            if( service!=null ) {
+                service.stop();
+            }
         }
         catch (Exception e) {
             onException(service, e);
