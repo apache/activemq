@@ -198,7 +198,7 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         if (clockDaemon == null) {
             clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
                 public Thread newThread(Runnable runnable) {
-                    Thread thread = new Thread(runnable, "Cleanup Timmer");
+                    Thread thread = new Thread(runnable, "ActiveMQ Cleanup Timer");
                     thread.setDaemon(true);
                     return thread;
                 }
