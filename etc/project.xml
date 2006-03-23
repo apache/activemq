@@ -75,19 +75,19 @@
       <name>ActiveMQ Developer List</name>
       <subscribe>dev-subscribe@activemq.codehaus.org</subscribe>
       <unsubscribe>dev-unsubscribe@activemq.codehaus.org</unsubscribe>
-      <archive></archive>
+      <archive>http://www.nabble.com/ActiveMQ---Dev-f2355.html</archive>
     </mailingList>
     <mailingList>
       <name>ActiveMQ User List</name>
       <subscribe>activemq-users-subscribe@geronimo.apache.org</subscribe>
       <unsubscribe>activemq-users-unsubscribe@geronimo.apache.org</unsubscribe>
-      <archive></archive>
+      <archive>http://www.nabble.com/ActiveMQ---User-f2356.html</archive>
     </mailingList>
     <mailingList>
       <name>ActiveMQ SCM List</name>
       <subscribe>activemq-commits-subscribe@geronimo.apache.org</subscribe>
       <unsubscribe>activemq-commits-unsubscribe@geronimo.apache.org</unsubscribe>
-      <archive></archive>
+      <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-commits/</archive>
     </mailingList>
   </mailingLists>
 
