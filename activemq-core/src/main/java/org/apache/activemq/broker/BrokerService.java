@@ -407,8 +407,7 @@ public class BrokerService implements Service {
         VMTransportFactory.stopped(getBrokerName());
 
 
-
-        stopper.stop(getPersistenceAdapter());
+        stopper.stop(persistenceAdapter);
 
         if (broker != null) {
             stopper.stop(broker);
