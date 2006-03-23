@@ -30,7 +30,6 @@ public class Statements {
 
     protected String binaryDataType = "BLOB";
     protected String containerNameDataType = "VARCHAR(250)";
-    protected String xidDataType = "VARCHAR(250)";
     protected String msgIdDataType = "VARCHAR(250)";
     protected String sequenceDataType = "INTEGER";
     protected String longDataType = "BIGINT";
@@ -324,21 +323,6 @@ public class Statements {
      */
     public void setTablePrefix(String tablePrefix) {
         this.tablePrefix = tablePrefix;
-    }
-
-    /**
-     * @return Returns the xidDataType.
-     */
-    public String getXidDataType() {
-        return xidDataType;
-    }
-
-    /**
-     * @param xidDataType
-     *            The xidDataType to set.
-     */
-    public void setXidDataType(String xidDataType) {
-        this.xidDataType = xidDataType;
     }
 
     /**
