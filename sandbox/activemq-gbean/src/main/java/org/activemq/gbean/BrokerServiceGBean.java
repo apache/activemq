@@ -1,6 +1,6 @@
-/**
+/** 
  * 
- * Copyright 2004 Hiram Chirino
+ * Copyright 2004 Protique Ltd
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License. 
@@ -15,11 +15,20 @@
  * limitations under the License. 
  * 
  **/
-package org.activemq.store.jdbc;
+package org.activemq.gbean;
+
+import org.apache.activemq.broker.BrokerService;
 
 /**
+ * An interface to the ActiveMQContainerGBean for use by the 
+ * ActiveMQConnectorGBean.
  *
+ * @version $Revision: 1.1.1.1 $
  */
-public interface ResourceManager {
-    public Object $getResource();
+public interface BrokerServiceGBean extends ActiveMQBroker {
+	
+	public abstract BrokerService getBrokerContainer();	
+	public String getBrokerName();
+
+	
 }

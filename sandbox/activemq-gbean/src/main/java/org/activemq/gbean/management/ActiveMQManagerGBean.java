@@ -27,7 +27,7 @@ import javax.management.MalformedObjectNameException;
 import org.activemq.gbean.ActiveMQManager;
 import org.activemq.gbean.ActiveMQBroker;
 import org.activemq.gbean.ActiveMQConnector;
-import org.activemq.gbean.ActiveMQConnectorGBean;
+import org.activemq.gbean.TransportConnectorGBeanImpl;
 import org.apache.geronimo.gbean.GBeanInfo;
 import org.apache.geronimo.gbean.GBeanInfoBuilder;
 import org.apache.geronimo.gbean.GBeanQuery;
@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Implementation of the ActiveMQ management interface.  These are the ActiveMQ
- * mangement features available at runtime.
+ * management features available at runtime.
  *
  * @version $Revision: 1.0$
  */
@@ -66,8 +66,7 @@ public class ActiveMQManagerGBean implements ActiveMQManager {
     }
 
     public String[] getSupportedProtocols() {
-        // see files in modules/core/src/conf/META-INF/services/org/activemq/transport/server/
-        return new String[]{"activeio","jabber","multicast","openwire","peer","stomp","tcp","udp","vm",};
+        return new String[]{"tcp","vm","ssl", "udp", "nio"};
     }
 
     public String[] getConnectors() {
@@ -112,7 +111,7 @@ public class ActiveMQManagerGBean implements ActiveMQManager {
             for (Iterator it = set.iterator(); it.hasNext();) {
                 ObjectName name = (ObjectName) it.next(); // a single ActiveMQ connector
                 GBeanData data = kernel.getGBeanData(name);
-                Set refs = data.getReferencePatterns("activeMQContainer");
+                Set refs = data.getReferencePatterns("brokerService");
                 for (Iterator refit = refs.iterator(); refit.hasNext();) {
                     ObjectName ref = (ObjectName) refit.next();
                     if(ref.isPattern()) {
@@ -152,7 +151,7 @@ public class ActiveMQManagerGBean implements ActiveMQManager {
             for (Iterator it = set.iterator(); it.hasNext();) {
                 ObjectName name = (ObjectName) it.next(); // a single ActiveMQ connector
                 GBeanData data = kernel.getGBeanData(name);
-                Set refs = data.getReferencePatterns("activeMQContainer");
+                Set refs = data.getReferencePatterns("brokerService");
                 for (Iterator refit = refs.iterator(); refit.hasNext();) {
                     ObjectName ref = (ObjectName) refit.next();
                     boolean match = false;
@@ -203,12 +202,12 @@ public class ActiveMQManagerGBean implements ActiveMQManager {
             throw new IllegalArgumentException("Unable to parse ObjectName '"+broker+"'");
         }
         ObjectName name = getConnectorName(brokerName, protocol, host, port, uniqueName);
-        GBeanData connector = new GBeanData(name, ActiveMQConnectorGBean.GBEAN_INFO);
+        GBeanData connector = new GBeanData(name, TransportConnectorGBeanImpl.GBEAN_INFO);
         //todo: if SSL is supported, need to add more properties or use a different GBean?
         connector.setAttribute("protocol", protocol);
         connector.setAttribute("host", host);
         connector.setAttribute("port", new Integer(port));
-        connector.setReferencePattern("activeMQContainer", brokerName);
+        connector.setReferencePattern("brokerService", brokerName);
         ObjectName config = Util.getConfiguration(kernel, brokerName);
         try {
             kernel.invoke(config, "addGBean", new Object[]{connector, Boolean.FALSE}, new String[]{GBeanData.class.getName(), boolean.class.getName()});
