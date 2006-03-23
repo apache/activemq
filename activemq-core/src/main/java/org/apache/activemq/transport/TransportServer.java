@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 
 import org.apache.activemq.Service;
@@ -35,7 +36,7 @@ public interface TransportServer extends Service {
 	 *  
 	 * @param acceptListener
 	 */
-    void setAcceptListener(TransportAcceptListener acceptListener);
+    public void setAcceptListener(TransportAcceptListener acceptListener);
     
     /**
      * Associates a broker info with the transport server so that the transport can do
@@ -43,8 +44,15 @@ public interface TransportServer extends Service {
      * 
      * @param brokerInfo
      */
-    void setBrokerInfo(BrokerInfo brokerInfo);
+    public void setBrokerInfo(BrokerInfo brokerInfo);
 
     public URI getConnectURI();
+
+    
+    /**
+     * @return The socket address that this transport is accepting connections on or null if 
+     * this does not or is not currently accepting connections on a socket.
+     */
+    public InetSocketAddress getSocketAddress();
     
 }

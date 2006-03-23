@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.util.HashMap;
@@ -179,5 +180,9 @@ public class UdpTransportServer extends TransportServerSupport {
         };
         return wireFormatNegotiator;
         */
+    }
+    
+    public InetSocketAddress getSocketAddress() {
+        return serverTransport.getLocalSocketAddress();
     }
 }

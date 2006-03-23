@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -211,5 +212,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         if (serverSocket != null) {
             serverSocket.close();
         }
+    }
+
+    public InetSocketAddress getSocketAddress() {
+        return (InetSocketAddress)serverSocket.getLocalSocketAddress();
     }
 }
