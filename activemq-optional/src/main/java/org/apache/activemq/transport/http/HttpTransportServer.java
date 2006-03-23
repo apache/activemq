@@ -30,6 +30,7 @@ import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.servlet.ServletMapping;
 import org.mortbay.jetty.servlet.SessionHandler;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 
 /**
@@ -113,6 +114,10 @@ public class HttpTransportServer extends TransportServerSupport {
         if (temp != null) {
             temp.stop();
         }
+    }
+
+    public InetSocketAddress getSocketAddress() {        
+        return null;
     }
 
 }
