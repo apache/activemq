@@ -2,7 +2,7 @@
 <!DOCTYPE project>
 <project>
     <pomVersion>3</pomVersion>
-    <extend>${basedir}/../../etc/project.xml</extend>
+    <extend>${basedir}/../etc/project.xml</extend>
 
     <name>ActiveMQ :: GBeans</name>
     <id>activemq-gbean</id>
