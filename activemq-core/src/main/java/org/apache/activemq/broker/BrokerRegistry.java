@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 /**
  * 
@@ -29,22 +29,30 @@ public class BrokerRegistry {
     public static BrokerRegistry getInstance() {
         return instance;
     }
-    
-    ConcurrentHashMap brokers = new ConcurrentHashMap();
-    
-    private BrokerRegistry() {        
-    }
 
+    private final Object mutex = new Object();
+    private final HashMap brokers = new HashMap();
+    
     public BrokerService lookup(String brokerName) {
-        return (BrokerService)brokers.get(brokerName);
+        synchronized(mutex) {
+            return (BrokerService)brokers.get(brokerName);
+        }
     }
     
     public void bind(String brokerName, BrokerService broker) {
-        brokers.put(brokerName, broker);
+        synchronized(mutex) {
+            brokers.put(brokerName, broker);
+        }
     }
     
     public void unbind(String brokerName) {
-        brokers.remove(brokerName);
+        synchronized(mutex) {
+            brokers.remove(brokerName);
+        }
+    }
+
+    public Object getRegistryMutext() {
+        return mutex;
     }
 
 }
