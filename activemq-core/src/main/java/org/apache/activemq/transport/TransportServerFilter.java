@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 
 import org.apache.activemq.command.BrokerInfo;
@@ -49,6 +50,10 @@ public class TransportServerFilter implements TransportServer {
 
     public void stop() throws Exception {
         next.stop();
+    }
+
+    public InetSocketAddress getSocketAddress() {
+        return next.getSocketAddress();
     }
     
 }

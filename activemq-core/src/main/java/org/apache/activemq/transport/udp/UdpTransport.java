@@ -431,4 +431,12 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     protected void setChannel(DatagramChannel channel) {
         this.channel = channel;
     }
+
+    public InetSocketAddress getLocalSocketAddress() {
+        if( channel==null ) {
+            return null;
+        } else {
+            return (InetSocketAddress)channel.socket().getLocalSocketAddress();
+        }
+    }
 }

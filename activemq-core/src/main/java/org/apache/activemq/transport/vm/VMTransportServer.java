@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.vm;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 
 import org.apache.activemq.command.BrokerInfo;
@@ -127,5 +128,9 @@ public class VMTransportServer implements TransportServer {
     }
 
     public void setBrokerInfo(BrokerInfo brokerInfo) {
+    }
+
+    public InetSocketAddress getSocketAddress() {
+        return null;
     }
 }

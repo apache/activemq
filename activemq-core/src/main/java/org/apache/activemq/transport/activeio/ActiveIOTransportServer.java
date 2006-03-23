@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.activeio;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
@@ -111,6 +112,11 @@ public class ActiveIOTransportServer implements TransportServer {
 
     public void setStopTimeout(long stopTimeout) {
         this.stopTimeout = stopTimeout;
+    }
+
+    public InetSocketAddress getSocketAddress() {
+        // TODO: need to drill into the server object to get the socket address
+        return null;
     }
     
     
