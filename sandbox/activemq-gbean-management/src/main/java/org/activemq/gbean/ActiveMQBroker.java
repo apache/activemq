@@ -20,7 +20,7 @@ package org.activemq.gbean;
 import org.apache.geronimo.management.geronimo.JMSBroker;
 
 /**
- * The mangement interface for the ActiveMQ broker GBean.
+ * The management interface for the ActiveMQ broker GBean.
  * This is separate from ActiveMQContainer because that interface has hard
  * links to code in activemq-core, yet we still want to be able to
  * distinguish ActiveMQ brokers from non-ActiveMQ JMS brokers.
