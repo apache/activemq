@@ -19,8 +19,8 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.activeio.command.WireFormat;
-import org.activeio.packet.ByteArrayPacket;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;

@@ -18,8 +18,8 @@ package org.apache.activemq.command;
 
 import java.io.IOException;
 
-import org.activeio.ByteSequence;
-import org.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteSequence;
 
 public interface MarshallAware {
 

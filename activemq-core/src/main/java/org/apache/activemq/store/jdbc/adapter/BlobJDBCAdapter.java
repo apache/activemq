@@ -27,7 +27,7 @@ import java.sql.SQLException;
 
 import javax.jms.JMSException;
 
-import org.activeio.ByteArrayOutputStream;
+import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.store.jdbc.TransactionContext;
 
 

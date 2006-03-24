@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.command;
 
-import org.activeio.Packet;
-import org.activeio.command.WireFormat;
-import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.openwire.OpenWireFormat;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,6 +23,11 @@ import java.util.Arrays;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.Packet;
+import org.apache.activemq.CombinationTestSupport;
+import org.apache.activemq.openwire.OpenWireFormat;
 
 public class DataStructureTestSupport extends CombinationTestSupport {
     public boolean cacheEnabled;

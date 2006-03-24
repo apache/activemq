@@ -18,7 +18,7 @@ package org.apache.activemq.store;
 
 import java.io.IOException;
 
-import org.activeio.Service;
+import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;

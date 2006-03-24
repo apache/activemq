@@ -19,9 +19,9 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.activeio.Packet;
-import org.activeio.command.WireFormat;
-import org.activeio.packet.ByteArrayPacket;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteArrayPacket;
+import org.apache.activeio.packet.Packet;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -170,10 +170,10 @@ public class JDBCMessageStore implements MessageStore {
         }
     }
 
-    public void start() throws IOException {
+    public void start() {
     }
 
-    public void stop(long timeout) throws IOException {
+    public void stop() {
     }
 
     /**

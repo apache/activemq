@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.transport.https;
 
-import org.activeio.command.WireFormat;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.http.HttpTransportFactory;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.http.HttpTransportFactory;
 
 /**
  * Factory of HTTPS based transports

@@ -22,13 +22,13 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.activeio.AsyncChannel;
-import org.activeio.Channel;
-import org.activeio.ChannelFactory;
-import org.activeio.adapter.SyncToAsyncChannel;
-import org.activeio.command.AsyncChannelToAsyncCommandChannel;
-import org.activeio.command.WireFormat;
-import org.activeio.net.SocketMetadata;
+import org.apache.activeio.Channel;
+import org.apache.activeio.ChannelFactory;
+import org.apache.activeio.adapter.SyncToAsyncChannel;
+import org.apache.activeio.command.AsyncChannelToAsyncCommandChannel;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.async.AsyncChannel;
+import org.apache.activeio.stream.sync.socket.SocketMetadata;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.MutexTransport;
@@ -250,18 +250,18 @@ public class ActiveIOTransportFactory extends TransportFactory {
         return compositeConfigure(new ChannelFactory().openAsyncChannel(location), format, options,ex);
     }
 
-    public static Transport compositeConfigure(Channel c, org.activeio.command.WireFormat format, Map options) {
+    public static Transport compositeConfigure(Channel c, WireFormat format, Map options) {
         AsyncChannel channel = SyncToAsyncChannel.adapt(c); 
         return compositeConfigure(channel, format, options);
     }
     
-    public static Transport compositeConfigure(Channel c, org.activeio.command.WireFormat format, Map options,Executor ex) {
+    public static Transport compositeConfigure(Channel c, WireFormat format, Map options,Executor ex) {
         AsyncChannel channel = SyncToAsyncChannel.adapt(c,ex); 
         return compositeConfigure(channel, format, options);
     }
     
     
-    public static Transport compositeConfigure(AsyncChannel channel, org.activeio.command.WireFormat format, Map options) {
+    public static Transport compositeConfigure(AsyncChannel channel, WireFormat format, Map options) {
         ActivityMonitor activityMonitor = new ActivityMonitor(channel);
         channel = new PacketAggregatingAsyncChannel(activityMonitor);
         AsyncChannelToAsyncCommandChannel commandChannel = new AsyncChannelToAsyncCommandChannel(channel,format);

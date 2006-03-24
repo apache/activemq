@@ -18,9 +18,9 @@ package org.apache.activemq.transport.activeio;
 
 import java.io.IOException;
 
-import org.activeio.AsyncChannel;
-import org.activeio.FilterAsyncChannel;
-import org.activeio.Packet;
+import org.apache.activeio.packet.Packet;
+import org.apache.activeio.packet.async.AsyncChannel;
+import org.apache.activeio.packet.async.FilterAsyncChannel;
 import org.apache.activemq.management.CountStatisticImpl;
 
 /**

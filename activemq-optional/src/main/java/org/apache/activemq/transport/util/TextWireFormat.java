@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.transport.util;
 
-import org.activeio.command.WireFormat;
-import org.apache.activemq.command.Command;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.Reader;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activemq.command.Command;
 
 /**
  * Adds the extra methods available to text based wire format implementations

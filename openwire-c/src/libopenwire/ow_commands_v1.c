@@ -84,6 +84,7 @@ ow_boolean ow_is_a_PartialCommand(ow_DataStructure *object) {
       
    switch(object->structType) {
    case OW_PARTIALCOMMAND_TYPE:
+   case OW_LASTPARTIALCOMMAND_TYPE:
       return 1;
    }
    return 0;
@@ -1585,20 +1586,20 @@ ow_LastPartialCommand *ow_LastPartialCommand_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_LastPartialCommand(ow_bit_buffer *buffer, ow_LastPartialCommand *object)
 {
-   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
+   ow_marshal1_PartialCommand(buffer, (ow_PartialCommand*)object);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_LastPartialCommand(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_LastPartialCommand *object)
 {
-   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   ow_marshal2_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object);   
    
 	return APR_SUCCESS;
 }
 
 apr_status_t ow_unmarshal_LastPartialCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_LastPartialCommand *object, apr_pool_t *pool)
 {
-   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   ow_unmarshal_PartialCommand(buffer, bitbuffer, (ow_PartialCommand*)object, pool);   
    
 	return APR_SUCCESS;
 }
@@ -2377,7 +2378,6 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
    case OW_CONSUMERINFO_TYPE:
    case OW_ACTIVEMQTEXTMESSAGE_TYPE:
    case OW_CONTROLCOMMAND_TYPE:
-   case OW_LASTPARTIALCOMMAND_TYPE:
    case OW_ACTIVEMQBYTESMESSAGE_TYPE:
    case OW_REPLAYCOMMAND_TYPE:
    case OW_BROKERINFO_TYPE:

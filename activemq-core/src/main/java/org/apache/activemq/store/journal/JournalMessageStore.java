@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
-import org.activeio.journal.RecordLocation;
+import org.apache.activeio.journal.RecordLocation;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.JournalQueueAck;
@@ -333,12 +333,12 @@ public class JournalMessageStore implements MessageStore {
         longTermStore.recover(listener);
     }
 
-    public void start() throws IOException {
+    public void start() throws Exception {
         longTermStore.start();
     }
 
-    public void stop(long timeout) throws IOException {
-        longTermStore.stop(timeout);
+    public void stop() throws Exception {
+        longTermStore.stop();
     }
 
     /**

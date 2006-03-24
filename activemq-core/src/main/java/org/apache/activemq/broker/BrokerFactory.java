@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.broker;
 
-import org.activeio.FactoryFinder;
-import org.apache.activemq.util.IOExceptionSupport;
-
 import java.io.IOException;
 import java.net.URI;
+
+import org.apache.activeio.util.FactoryFinder;
+import org.apache.activemq.util.IOExceptionSupport;
 
 /**
  * A helper class to create a fully configured broker service using a URI.

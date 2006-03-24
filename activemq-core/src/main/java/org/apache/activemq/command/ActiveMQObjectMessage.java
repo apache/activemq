@@ -20,16 +20,6 @@ package org.apache.activemq.command;
 
 
 
-import org.activeio.ByteArrayInputStream;
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.ByteSequence;
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.util.ClassLoading;
-import org.apache.activemq.util.JMSExceptionSupport;
-
-import javax.jms.JMSException;
-import javax.jms.ObjectMessage;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -42,6 +32,16 @@ import java.io.Serializable;
 import java.lang.reflect.Proxy;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+
+import javax.jms.JMSException;
+import javax.jms.ObjectMessage;
+
+import org.apache.activeio.packet.ByteSequence;
+import org.apache.activeio.util.ByteArrayInputStream;
+import org.apache.activeio.util.ByteArrayOutputStream;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.util.ClassLoading;
+import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * An <CODE>ObjectMessage</CODE> object is used to send a message that contains a serializable object in the Java

@@ -16,16 +16,6 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import org.activeio.command.WireFormat;
-import org.activeio.command.WireFormatFactory;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.openwire.OpenWireFormatFactory;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServerThreadSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -36,6 +26,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormatFactory;
+import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.openwire.OpenWireFormatFactory;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.TransportServerThreadSupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A TCP based implementation of {@link TransportServer}

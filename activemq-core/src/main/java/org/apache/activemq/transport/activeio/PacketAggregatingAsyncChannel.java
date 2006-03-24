@@ -18,12 +18,12 @@ package org.apache.activemq.transport.activeio;
 
 import java.io.IOException;
 
-import org.activeio.AsyncChannel;
-import org.activeio.FilterAsyncChannel;
-import org.activeio.Packet;
-import org.activeio.PacketData;
-import org.activeio.packet.AppendedPacket;
-import org.activeio.packet.EOSPacket;
+import org.apache.activeio.packet.AppendedPacket;
+import org.apache.activeio.packet.EOSPacket;
+import org.apache.activeio.packet.Packet;
+import org.apache.activeio.packet.PacketData;
+import org.apache.activeio.packet.async.AsyncChannel;
+import org.apache.activeio.packet.async.FilterAsyncChannel;
 
 /**
  * This PacketAggregatingAsyncChannel can be used when the client is sending a

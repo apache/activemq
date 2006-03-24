@@ -61,11 +61,11 @@
         </dependency>
         
         <dependency>
-            <groupId>activeio</groupId>
-            <artifactId>activeio</artifactId>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activeio-core</artifactId>
             <version>${activeio_version}</version>
         </dependency>
-        
+
         <!-- used to support optional transport configuration via URI query strings -->
         <dependency>
             <groupId>commons-beanutils</groupId>

@@ -16,8 +16,15 @@
  */
 package org.apache.activemq.transport.udp;
 
-import org.activeio.ByteArrayInputStream;
-import org.activeio.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketAddress;
+
+import org.apache.activeio.util.ByteArrayInputStream;
+import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.LastPartialCommand;
@@ -27,13 +34,6 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketAddress;
 
 /**
  * A strategy for reading datagrams and de-fragmenting them together.

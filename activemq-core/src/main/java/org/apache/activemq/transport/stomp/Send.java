@@ -16,20 +16,20 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.activeio.ByteSequence;
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.TransactionId;
-
-import javax.jms.JMSException;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.IOException;
 import java.net.ProtocolException;
 import java.util.Properties;
+
+import javax.jms.JMSException;
+
+import org.apache.activeio.packet.ByteSequence;
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.TransactionId;
 
 class Send implements StompCommand {
     private final HeaderParser parser = new HeaderParser();

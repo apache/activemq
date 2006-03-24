@@ -15,6 +15,7 @@ package org.apache.activemq.store.kahadaptor;
 
 import java.io.IOException;
 import java.util.Iterator;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -74,9 +75,9 @@ public class KahaMessageStore implements MessageStore{
         listener.finished();
     }
 
-    public void start() throws IOException{}
+    public void start() {}
 
-    public void stop(long timeout) throws IOException{}
+    public void stop() {}
 
     public void removeAllMessages(ConnectionContext context) throws IOException{
         messageContainer.clear();

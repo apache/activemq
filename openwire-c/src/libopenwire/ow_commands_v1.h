@@ -478,7 +478,7 @@ typedef struct ow_LastPartialCommand {
 
    ow_byte structType;
    ow_int commandId;
-   ow_boolean responseRequired;
+   ow_byte_array *data;
 
 } ow_LastPartialCommand;
 ow_LastPartialCommand *ow_LastPartialCommand_create(apr_pool_t *pool);

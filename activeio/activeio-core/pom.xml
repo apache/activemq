@@ -18,7 +18,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.apache.activemq.activeio</groupId>
+    <groupId>incubator-activemq</groupId>
     <artifactId>activeio</artifactId>
     <version>3.0-SNAPSHOT</version>
   </parent>
@@ -27,6 +27,24 @@
   <name>ActiveIO :: Core</name>
   <description>A high performance IO abstraction framework</description>
   
+  <build>
+    <plugins>
+
+      <!-- generate the attached tests jar -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
   <dependencies>
     <!-- Required Dependencies -->
     <dependency>

@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.activeio.ByteSequence;
+import org.apache.activeio.packet.ByteSequence;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;

@@ -25,10 +25,7 @@ import javax.jms.MessageNotWriteableException;
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
 
-import org.activeio.ByteSequence;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.Message;
+import org.apache.activeio.packet.ByteSequence;
 
 /**
  * @version $Revision$

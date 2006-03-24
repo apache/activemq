@@ -59,13 +59,13 @@ public abstract class MessageTestSupport extends BaseCommandTestSupport {
         
     		{
         		byte data[] = "Content:11".getBytes();
-        		info.setContent(new org.activeio.ByteSequence(data,0,data.length));
+        		info.setContent(new org.apache.activeio.packet.ByteSequence(data,0,data.length));
     		}
     		
         
     		{
         		byte data[] = "MarshalledProperties:12".getBytes();
-        		info.setMarshalledProperties(new org.activeio.ByteSequence(data,0,data.length));
+        		info.setMarshalledProperties(new org.apache.activeio.packet.ByteSequence(data,0,data.length));
     		}
     		
         info.setDataStructure(createDataStructure("DataStructure:13"));

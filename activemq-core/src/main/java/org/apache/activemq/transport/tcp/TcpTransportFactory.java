@@ -22,9 +22,11 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
-import org.activeio.command.WireFormat;
+
+import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.MutexTransport;

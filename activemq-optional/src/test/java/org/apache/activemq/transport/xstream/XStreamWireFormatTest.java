@@ -16,12 +16,11 @@
  */
 package org.apache.activemq.transport.xstream;
 
-import org.activeio.command.WireFormat;
+import java.io.IOException;
+
+import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.MessageTest;
-import org.apache.activemq.transport.xstream.XStreamWireFormat;
-
-import java.io.IOException;
 
 /**
  * @version $Revision$

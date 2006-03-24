@@ -55,11 +55,11 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
         delegate.removeMessage(context, ack);
     }
-    public void start() throws IOException {
+    public void start() throws Exception {
         delegate.start();
     }
-    public void stop(long timeout) throws IOException {
-        delegate.stop(timeout);
+    public void stop() throws Exception {
+        delegate.stop();
     }
     
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {

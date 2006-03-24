@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.command;
 
-import org.activeio.command.WireFormat;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.openwire.OpenWireFormat;
-
 import java.io.IOException;
 
 import junit.framework.Test;

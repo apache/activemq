@@ -33,10 +33,10 @@ import javax.jms.MapMessage;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
 
-import org.activeio.ByteArrayInputStream;
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.ByteSequence;
-import org.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteSequence;
+import org.apache.activeio.util.ByteArrayInputStream;
+import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.MarshallingSupport;

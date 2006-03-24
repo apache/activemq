@@ -23,8 +23,8 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
-import org.activeio.FactoryFinder;
-import org.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.util.FactoryFinder;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;

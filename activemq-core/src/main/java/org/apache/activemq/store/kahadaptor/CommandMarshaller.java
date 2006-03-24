@@ -20,9 +20,10 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import org.activeio.Packet;
-import org.activeio.command.WireFormat;
-import org.activeio.packet.ByteArrayPacket;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteArrayPacket;
+import org.apache.activeio.packet.Packet;
 import org.apache.activemq.kaha.Marshaller;
 
 /**

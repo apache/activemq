@@ -90,9 +90,9 @@
     </dependency>
 
     <dependency>
-      <groupId>activeio</groupId>
-      <artifactId>activeio</artifactId>
-      <version>2.1-SNAPSHOT</version>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
+      <version>${activeio_version}</version>
     </dependency>
 
     <!-- for unit test cases -->
