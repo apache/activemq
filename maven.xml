@@ -110,7 +110,8 @@
   <goal name="build" prereqs="default"/>
   <goal name="default" prereqs="init">
     <j:set var="goal" value="default"/>
-    <attainGoal name="multiproject:goal"/>
+    <!--<attainGoal name="multiproject:goal"/>-->
+    <attainGoal name="test"/> 
   </goal>
 
   <goal name="assembly:goal" prereqs="init">
@@ -190,11 +191,30 @@
     </j:if>
     
   </goal>
-
+<!--
   <goal name="test" prereqs="init">
     <j:set var="goal" value="test"/>
     <attainGoal name="multiproject:goal"/>
   </goal>
+-->
+
+  <goal name="test:no-ignore-failures" prereqs="init">
+    <j:set var="goal" value="test"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="test" prereqs="">
+    <j:if test="${ignoreTest == 'true'}">
+    	<!--<ant:echo>IGNORE TEST</ant:echo>-->
+       <attainGoal name="test:ignore-failures"/>
+    </j:if>
+    <j:if test="${ignoreTest == 'false' || ignoreTest == null}">
+    	<!--<ant:echo>DO NOT IGNORE TEST</ant:echo>-->
+       <attainGoal name="test:no-ignore-failures"/>
+    </j:if>
+  </goal>
+  
+  
   
   <goal name="eclipse" prereqs="init">
     <j:set var="goal" value="eclipse"/>
@@ -278,3 +298,4 @@
 
 
 </project>
+
