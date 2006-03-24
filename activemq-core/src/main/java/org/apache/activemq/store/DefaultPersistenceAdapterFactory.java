@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import javax.sql.DataSource;
 
-import org.activeio.journal.Journal;
-import org.activeio.journal.active.JournalImpl;
+import org.apache.activeio.journal.Journal;
+import org.apache.activeio.journal.active.JournalImpl;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;

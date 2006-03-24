@@ -16,16 +16,6 @@
  */
 package org.apache.activemq.transport;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
-import edu.emory.mathcs.backport.java.util.concurrent.Executor;
-
-import org.activeio.FactoryFinder;
-import org.activeio.command.WireFormat;
-import org.activeio.command.WireFormatFactory;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -33,6 +23,16 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormatFactory;
+import org.apache.activeio.util.FactoryFinder;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
+
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 
 public abstract class TransportFactory {
 

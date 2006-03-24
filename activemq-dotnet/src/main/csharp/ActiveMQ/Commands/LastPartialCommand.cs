@@ -32,7 +32,7 @@ namespace ActiveMQ.Commands
 	/// <summary>
     ///  The ActiveMQ LastPartialCommand Command
 	/// </summary>
-    public class LastPartialCommand : BaseCommand
+    public class LastPartialCommand : PartialCommand
     {
         public const byte ID_LastPartialCommand = 61;
     			

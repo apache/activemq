@@ -16,21 +16,21 @@
  */
 package org.apache.activemq.transport.xstream;
 
-import com.thoughtworks.xstream.XStream;
-
-import org.activeio.Packet;
-import org.activeio.command.WireFormat;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.transport.util.TextWireFormat;
-
-import javax.jms.JMSException;
-
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Reader;
+
+import javax.jms.JMSException;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.Packet;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.transport.util.TextWireFormat;
+
+import com.thoughtworks.xstream.XStream;
 
 /**
  * A {@link WireFormat} implementation which uses the <a

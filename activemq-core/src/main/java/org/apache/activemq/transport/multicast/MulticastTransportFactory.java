@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.transport.multicast;
 
-import org.activeio.command.WireFormat;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.udp.UdpTransportFactory;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
+
+import org.apache.activeio.command.WireFormat;
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.udp.UdpTransportFactory;
 
 /**
  * A factory of multicast transport classes

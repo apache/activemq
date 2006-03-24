@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.activeio.ByteArrayInputStream;
-import org.activeio.ByteArrayOutputStream;
+import org.apache.activeio.util.ByteArrayInputStream;
 
 /**
  * This JDBCAdapter inserts and extracts BLOB data using the 

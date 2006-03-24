@@ -38,17 +38,15 @@
         </properties>
       </dependency>
 
-
       <dependency>
-        <groupId>activeio</groupId>
-        <artifactId>activeio</artifactId>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activeio-core</artifactId>
         <version>${activeio_version}</version>
         <properties>
           <activemq.module>true</activemq.module>
           <lib>true</lib>
         </properties>
       </dependency>
-
 
     <dependency>
       <groupId>${pom.groupId}</groupId>

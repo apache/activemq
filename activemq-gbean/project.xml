@@ -32,6 +32,12 @@
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
+        <artifactId>activeio-core</artifactId>
+        <version>${activeio_version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-gbean-management</artifactId>
         <version>${pom.currentVersion}</version>
         <properties>
@@ -65,11 +71,6 @@
         <version>${geronimo_j2ee_version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>activeio</groupId>
-        <artifactId>activeio</artifactId>
-        <version>${activeio_version}</version>
-      </dependency>
 
       <dependency>
         <groupId>mx4j</groupId>

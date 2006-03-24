@@ -18,7 +18,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.activeio.command.WireFormat;
+
+import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -33,6 +34,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.memory.MemoryTransactionStore;
+
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 /**
  * @org.apache.xbean.XBean

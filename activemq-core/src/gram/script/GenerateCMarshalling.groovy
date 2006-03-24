@@ -114,10 +114,10 @@ out << """
           case "byte[]":
               out << "ow_byte_array *$name;"; break;
               break;
-          case "org.activeio.ByteSequence":
+          case "org.apache.activeio.packet.ByteSequence":
               out << "ow_byte_array *$name;"; break;
               break;
-	      case "org.activeio.ByteSequence":
+	      case "org.apache.activeio.packet.ByteSequence":
               out << "ow_byte_array *$name;"; break;
               break;
           case "java.lang.String":
@@ -369,7 +369,7 @@ apr_status_t ow_marshal1_${name}(ow_bit_buffer *buffer, ow_${name} *object)
                         """;
                      }
                      break;
-                   case "org.activeio.ByteSequence":
+                   case "org.apache.activeio.packet.ByteSequence":
                      if( size ==null ) {
                         out << """
                         ow_bit_buffer_append(buffer,  object->$propname!=0 );
@@ -442,7 +442,7 @@ apr_status_t ow_marshal2_${name}(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffe
                           out << "SUCCESS_CHECK(ow_marshal2_byte_array(buffer, bitbuffer, object->$propname));"; break;
                        }
                        break;
-                   case "org.activeio.ByteSequence":
+                   case "org.apache.activeio.packet.ByteSequence":
                        if( size!=null ) {
                           out << "SUCCESS_CHECK(ow_marshal2_byte_array_const_size(buffer, object->$propname, ${size.asInt()}));"; break;
                        } else {
@@ -517,7 +517,7 @@ apr_status_t ow_unmarshal_${name}(ow_byte_array *buffer, ow_bit_buffer *bitbuffe
                            out << "SUCCESS_CHECK(ow_unmarshal_byte_array(buffer, bitbuffer, &object->$propname, pool));"; break;
                        }
                        break;
-                   case "org.activeio.ByteSequence":
+                   case "org.apache.activeio.packet.ByteSequence":
                        if( size!=null ) {
                            out << "SUCCESS_CHECK(ow_unmarshal_byte_array_const_size(buffer, &object->$propname, ${size.asInt()}, pool));"; break;
                        } else {

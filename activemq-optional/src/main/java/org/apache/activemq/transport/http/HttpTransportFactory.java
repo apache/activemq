@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.transport.http;
 
-import org.activeio.command.WireFormat;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+
+import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
@@ -24,10 +28,6 @@ import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
 
 /**
  * @version $Revision$

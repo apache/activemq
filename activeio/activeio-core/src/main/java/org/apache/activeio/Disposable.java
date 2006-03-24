@@ -14,16 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.stomp;
+package org.apache.activeio;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.command.WireFormatFactory;
 
 /**
- * Creates WireFormat objects that implement the <a href="http://stomp.codehaus.org/">Stomp</a> protocol.
+ * @version $Revision$
  */
-public class StompWireFormatFactory implements WireFormatFactory {
-    public WireFormat createWireFormat() {
-        return new StompWireFormat();
-    }
+public interface Disposable {
+    
+    /**
+     */
+    void dispose();
 }

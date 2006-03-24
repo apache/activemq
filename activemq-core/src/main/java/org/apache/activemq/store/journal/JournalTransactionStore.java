@@ -23,7 +23,7 @@ import java.util.Iterator;
 
 import javax.transaction.xa.XAException;
 
-import org.activeio.journal.RecordLocation;
+import org.apache.activeio.journal.RecordLocation;
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;

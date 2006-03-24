@@ -28,11 +28,11 @@ import java.util.Set;
 
 import javax.jms.JMSException;
 
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.Packet;
-import org.activeio.adapter.PacketInputStream;
-import org.activeio.command.WireFormat;
-import org.activeio.packet.ByteArrayPacket;
+import org.apache.activeio.adapter.PacketInputStream;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteArrayPacket;
+import org.apache.activeio.packet.Packet;
+import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.CommandTypes;

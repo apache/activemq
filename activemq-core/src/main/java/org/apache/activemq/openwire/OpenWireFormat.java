@@ -16,25 +16,25 @@
  */
 package org.apache.activemq.openwire;
 
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.ByteSequence;
-import org.activeio.Packet;
-import org.activeio.PacketData;
-import org.activeio.adapter.PacketToInputStream;
-import org.activeio.command.ClassLoading;
-import org.activeio.command.WireFormat;
-import org.activeio.packet.ByteArrayPacket;
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.command.MarshallAware;
-import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.util.IdGenerator;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+
+import org.apache.activeio.adapter.PacketToInputStream;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteArrayPacket;
+import org.apache.activeio.packet.ByteSequence;
+import org.apache.activeio.packet.Packet;
+import org.apache.activeio.packet.PacketData;
+import org.apache.activeio.util.ByteArrayOutputStream;
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.MarshallAware;
+import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.util.ClassLoading;
+import org.apache.activemq.util.IdGenerator;
 
 /**
  * 

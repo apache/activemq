@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import junit.framework.Test;
 
-import org.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.OpenWireFormat;

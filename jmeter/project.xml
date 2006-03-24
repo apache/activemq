@@ -52,10 +52,9 @@
             </properties>
         </dependency>
 
-        <!-- an optional discovery agent -->
         <dependency>
-            <groupId>activeio</groupId>
-            <artifactId>activeio</artifactId>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activeio-core</artifactId>
             <version>${activeio_version}</version>
             <properties>
 	        <jmeter.module>true</jmeter.module>

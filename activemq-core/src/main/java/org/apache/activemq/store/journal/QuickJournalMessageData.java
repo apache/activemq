@@ -17,7 +17,7 @@
 
 package org.apache.activemq.store.journal;
 
-import org.activeio.journal.RecordLocation;
+import org.apache.activeio.journal.RecordLocation;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 

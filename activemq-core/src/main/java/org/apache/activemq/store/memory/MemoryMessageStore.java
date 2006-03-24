@@ -86,10 +86,10 @@ public class MemoryMessageStore implements MessageStore {
         }
     }
 
-    public void start() throws IOException {
+    public void start() {
     }
 
-    public void stop(long timeout) throws IOException {
+    public void stop() {
     }
 
     public void removeAllMessages(ConnectionContext context) throws IOException {

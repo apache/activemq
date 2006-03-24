@@ -16,32 +16,37 @@
  */
 package org.apache.activemq.config;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.policy.*;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.activemq.transport.activeio.ActiveIOTransportServer;
-import org.apache.activemq.transport.tcp.TcpTransportServer;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.PersistenceAdapterFactory;
-import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.activemq.store.journal.JournalPersistenceAdapter;
-import org.apache.activemq.memory.UsageManager;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.activeio.command.WireFormat;
-import org.activeio.command.DefaultWireFormat;
-import org.apache.derby.jdbc.EmbeddedDataSource;
-
 import java.io.File;
 import java.util.List;
 
 import junit.framework.TestCase;
+
+import org.apache.activeio.command.DefaultWireFormat;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.policy.FixedSizedSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
+import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
+import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
+import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.journal.JournalPersistenceAdapter;
+import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.activemq.transport.activeio.ActiveIOTransportServer;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
 /**
  * @version $Revision: 1.2 $

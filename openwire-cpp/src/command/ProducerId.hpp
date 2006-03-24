@@ -18,7 +18,7 @@
 #define ProducerId_hpp_
 
 #include <string>
-#include "command/AbstractCommand.hpp"
+#include "command/BaseDataStructure.hpp"
     
 
 #include "util/ifr/ap.hpp"
@@ -46,7 +46,7 @@ namespace apache
  *         activemq-core module
  *
  */
-class ProducerId : public AbstractCommand
+class ProducerId : public BaseDataStructure
 {
 private:
     p<string> connectionId ;

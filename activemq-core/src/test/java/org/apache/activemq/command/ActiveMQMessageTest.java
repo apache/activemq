@@ -27,15 +27,8 @@ import javax.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
 
-import org.activeio.ByteSequence;
-import org.activeio.command.WireFormat;
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTempTopic;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.Response;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteSequence;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.state.CommandVisitor;
 

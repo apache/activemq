@@ -173,7 +173,7 @@ for (property in properties) {
     		out << """
     		{
         		byte data[] = ${generator.createByteArray(propertyName)};
-        		info.${property.setter.simpleName}(new org.activeio.ByteSequence(data,0,data.length));
+        		info.${property.setter.simpleName}(new org.apache.activeio.packet.ByteSequence(data,0,data.length));
     		}
     		""";
         break;

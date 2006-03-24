@@ -16,17 +16,11 @@
  */
 package org.apache.activemq.command;
 
-import org.activeio.ByteSequence;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.SessionId;
-
 import java.io.IOException;
 
 import junit.framework.Test;
+
+import org.apache.activeio.packet.ByteSequence;
 
 public class MessageSendTest extends DataStructureTestSupport {
 

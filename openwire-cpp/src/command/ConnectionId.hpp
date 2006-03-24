@@ -18,7 +18,7 @@
 #define ConnectionId_hpp_
 
 #include <string>
-#include "command/AbstractCommand.hpp"
+#include "command/BaseDataStructure.hpp"
     
 
 #include "util/ifr/ap.hpp"
@@ -46,7 +46,7 @@ namespace apache
  *         activemq-core module
  *
  */
-class ConnectionId : public AbstractCommand
+class ConnectionId : public BaseDataStructure
 {
 private:
     p<string> value ;

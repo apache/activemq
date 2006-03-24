@@ -18,7 +18,7 @@
 #define ConsumerId_hpp_
 
 #include <string>
-#include "command/AbstractCommand.hpp"
+#include "command/BaseDataStructure.hpp"
     
 
 #include "util/ifr/ap.hpp"
@@ -46,7 +46,7 @@ namespace apache
  *         activemq-core module
  *
  */
-class ConsumerId : public AbstractCommand
+class ConsumerId : public BaseDataStructure
 {
 private:
     p<string> connectionId ;

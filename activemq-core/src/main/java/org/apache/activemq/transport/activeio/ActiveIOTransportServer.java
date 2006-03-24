@@ -21,12 +21,12 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
-import org.activeio.AcceptListener;
-import org.activeio.AsyncChannelServer;
-import org.activeio.Channel;
-import org.activeio.ChannelFactory;
-import org.activeio.command.WireFormat;
-import org.activeio.command.WireFormatFactory;
+import org.apache.activeio.AcceptListener;
+import org.apache.activeio.Channel;
+import org.apache.activeio.ChannelFactory;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormatFactory;
+import org.apache.activeio.packet.async.AsyncChannelServer;
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
@@ -83,7 +83,7 @@ public class ActiveIOTransportServer implements TransportServer {
     }
 
     public void stop() throws Exception {
-        server.stop(stopTimeout);
+        server.stop();
         server.dispose();
     }
 

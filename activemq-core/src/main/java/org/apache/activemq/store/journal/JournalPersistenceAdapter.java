@@ -21,11 +21,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.activeio.command.WireFormat;
-import org.activeio.journal.InvalidRecordLocationException;
-import org.activeio.journal.Journal;
-import org.activeio.journal.JournalEventListener;
-import org.activeio.journal.RecordLocation;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.journal.InvalidRecordLocationException;
+import org.apache.activeio.journal.Journal;
+import org.apache.activeio.journal.JournalEventListener;
+import org.apache.activeio.journal.RecordLocation;
+import org.apache.activeio.packet.Packet;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -418,7 +419,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      */
     public DataStructure readCommand(RecordLocation location) throws IOException {
         try {
-            org.activeio.Packet data = journal.read(location);
+            Packet data = journal.read(location);
             return (DataStructure) wireFormat.unmarshal(data);
         }
         catch (InvalidRecordLocationException e) {
@@ -448,7 +449,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
         // While we have records in the journal.
         while ((pos = journal.getNextRecordLocation(pos)) != null) {
-            org.activeio.Packet data = journal.read(pos);
+            Packet data = journal.read(pos);
             DataStructure c = (DataStructure) wireFormat.unmarshal(data);
 
             if (c instanceof Message ) {

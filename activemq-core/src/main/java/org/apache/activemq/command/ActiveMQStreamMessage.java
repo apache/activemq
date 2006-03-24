@@ -17,19 +17,6 @@
 
 package org.apache.activemq.command;
 
-import javax.jms.JMSException;
-import javax.jms.MessageEOFException;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageNotReadableException;
-import javax.jms.MessageNotWriteableException;
-import javax.jms.StreamMessage;
-
-import org.activeio.ByteArrayInputStream;
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.ByteSequence;
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.util.JMSExceptionSupport;
-
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -39,6 +26,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+
+import javax.jms.JMSException;
+import javax.jms.MessageEOFException;
+import javax.jms.MessageFormatException;
+import javax.jms.MessageNotReadableException;
+import javax.jms.MessageNotWriteableException;
+import javax.jms.StreamMessage;
+
+import org.apache.activeio.packet.ByteSequence;
+import org.apache.activeio.util.ByteArrayInputStream;
+import org.apache.activeio.util.ByteArrayOutputStream;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * A <CODE>StreamMessage</CODE> object is used to send a stream of primitive

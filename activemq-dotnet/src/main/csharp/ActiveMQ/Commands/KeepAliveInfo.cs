@@ -29,20 +29,20 @@ using ActiveMQ.Commands;
 
 namespace ActiveMQ.Commands
 {
-    /// <summary>
+	/// <summary>
     ///  The ActiveMQ KeepAliveInfo Command
-    /// </summary>
-    public class KeepAliveInfo : BaseCommand, Command
+	/// </summary>
+    public class KeepAliveInfo : BaseDataStructure, Command
     {
         public const byte ID_KeepAliveInfo = 10;
-                
+    			
 
-        public override string ToString() {
+		public override string ToString() {
             return GetType().Name + "["
                 + " ]";
 
-        }
-    
+		}
+	
 
 
         public override byte GetDataStructureType() {

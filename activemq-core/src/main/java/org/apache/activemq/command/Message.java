@@ -23,10 +23,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.activeio.ByteArrayInputStream;
-import org.activeio.ByteArrayOutputStream;
-import org.activeio.ByteSequence;
-import org.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.packet.ByteSequence;
+import org.apache.activeio.util.ByteArrayInputStream;
+import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.MessageReference;

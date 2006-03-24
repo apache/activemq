@@ -19,8 +19,9 @@ package org.apache.activemq.transport.activeio;
 import java.io.IOException;
 import java.net.SocketException;
 
-import org.activeio.command.AsyncCommandChannel;
-import org.activeio.net.SocketMetadata;
+import org.apache.activeio.command.AsyncCommandChannel;
+import org.apache.activeio.command.CommandListener;
+import org.apache.activeio.stream.sync.socket.SocketMetadata;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.WireFormatInfo;
@@ -50,7 +51,7 @@ public class ActiveIOTransport implements Transport {
 
     public ActiveIOTransport(AsyncCommandChannel commandChannel) {
         this.commandChannel = commandChannel;
-        this.commandChannel.setCommandListener(new org.activeio.command.CommandListener() {
+        this.commandChannel.setCommandListener(new CommandListener() {
             public void onCommand(Object command) {
                 if (command.getClass() == WireFormatInfo.class) {
                     WireFormatInfo info = (WireFormatInfo) command;
@@ -112,7 +113,7 @@ public class ActiveIOTransport implements Transport {
     }
 
     public void stop() throws Exception {
-        commandChannel.stop(stopTimeout);
+        commandChannel.stop();
         commandChannel.dispose();
     }
 

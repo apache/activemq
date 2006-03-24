@@ -94,8 +94,8 @@
     </dependency>
 
     <dependency>
-      <groupId>activeio</groupId>
-      <artifactId>activeio</artifactId>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
       <version>${activeio_version}</version>
       <properties>
         <rar.bundle>true</rar.bundle>

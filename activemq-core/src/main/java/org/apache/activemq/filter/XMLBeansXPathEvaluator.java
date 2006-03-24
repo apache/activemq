@@ -21,7 +21,7 @@ import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 
-import org.activeio.ByteArrayInputStream;
+import org.apache.activeio.util.ByteArrayInputStream;
 import org.apache.activemq.command.Message;
 import org.apache.xmlbeans.XmlObject;
 
