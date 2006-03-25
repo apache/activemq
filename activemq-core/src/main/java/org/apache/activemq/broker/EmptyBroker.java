@@ -24,6 +24,7 @@ import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
@@ -192,4 +193,11 @@ public class EmptyBroker implements Broker{
         return null;
     }
 
+    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+    }
+
+    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{        
+    }
+    
+   
 }

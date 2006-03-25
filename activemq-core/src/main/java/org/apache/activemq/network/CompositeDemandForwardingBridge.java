@@ -99,5 +99,9 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
         return new NetworkBridgeFilter(getFromBrokerId(info), networkTTL);
     }
+    
+    protected BrokerId[] getRemoteBrokerPath(){
+        return remoteBrokerPath;
+    }
 
 }

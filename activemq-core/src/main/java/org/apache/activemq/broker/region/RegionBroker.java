@@ -29,6 +29,7 @@ import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
@@ -182,8 +183,10 @@ public class RegionBroker implements Broker {
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        if( destinations.contains(destination) )
+        if( destinations.contains(destination) ){
+            System.err.println(brokerService.getBrokerName() + " SPLATYTTTT!!!!");
             throw new JMSException("Destination already exists: "+destination);
+        }
         
         Destination answer = null;
         switch(destination.getDestinationType()) {
@@ -229,6 +232,16 @@ public class RegionBroker implements Broker {
         }
         
         destinations.remove(destination);
+    }
+    
+    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+        addDestination(context,info.getDestination());
+        
+    }
+
+    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+        removeDestination(context,info.getDestination(), info.getTimeout());
+        
     }
 
     public ActiveMQDestination[] getDestinations() throws Exception {

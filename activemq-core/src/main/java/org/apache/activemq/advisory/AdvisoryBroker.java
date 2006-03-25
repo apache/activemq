@@ -136,7 +136,8 @@ public class AdvisoryBroker extends BrokerFilter {
     }
     
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        Destination answer = next.addDestination(context, destination);        
+        Destination answer = next.addDestination(context, destination);  
+      
         ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
         DestinationInfo info = new DestinationInfo(context.getConnectionId(), DestinationInfo.ADD_OPERATION_TYPE, destination);
         fireAdvisory(context, topic, info);        
@@ -152,6 +153,21 @@ public class AdvisoryBroker extends BrokerFilter {
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             fireAdvisory(context, topic, info);
         }
+    }
+    
+    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+        ActiveMQDestination destination =  info.getDestination();
+        next.addDestinationInfo(context, info);  
+        
+        ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
+        fireAdvisory(context, topic, info);        
+        destinations.put(destination, info);    
+    }
+
+    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+        next.removeDestinationInfo(context, info);
+        ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(info.getDestination());
+        fireAdvisory(context, topic, info);        
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
