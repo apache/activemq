@@ -24,6 +24,7 @@ import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
@@ -202,6 +203,16 @@ public class MutableBrokerFilter implements Broker {
     
     public Set getDurableDestinations(){
         return getNext().getDurableDestinations();
+    }
+
+    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+        getNext().addDestinationInfo(context, info);
+        
+    }
+
+    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+        getNext().removeDestinationInfo(context, info);
+        
     }
 
 }

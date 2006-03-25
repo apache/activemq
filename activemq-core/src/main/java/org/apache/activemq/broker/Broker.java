@@ -18,11 +18,13 @@ package org.apache.activemq.broker;
 
 import java.util.Set;
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
@@ -213,5 +215,23 @@ public interface Broker extends Region, Service {
      * @return a Set of all durable destinations
      */
     public Set getDurableDestinations();
+    
+    /**
+     * Add and process a DestinationInfo object
+     * @param context
+     * @param info
+     * @throws Exception
+     */
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
+    
+    
+    /**
+     * Remove and process a DestinationInfo object
+     * @param context
+     * @param info
+     * @throws Exception
+     */
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
+
     
 }

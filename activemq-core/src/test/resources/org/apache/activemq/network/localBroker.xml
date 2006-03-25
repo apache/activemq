@@ -23,7 +23,7 @@
     </transportConnectors>
 
     <networkConnectors>
-      <networkConnector uri="static://(tcp://localhost:61617)">
+      <networkConnector uri="static:failover:(tcp://localhost:61617)">
          dynamicOnly = false
          conduitSubscriptions = true
          decreaseNetworkConsumerPriority = false

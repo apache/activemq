@@ -16,10 +16,16 @@ package org.apache.activemq.network;
 import java.net.URI;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.TopicRequestor;
+import javax.jms.TopicSession;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -40,6 +46,37 @@ public class SimpleNetworkTest extends TestCase{
     protected ActiveMQTopic included;
     protected ActiveMQTopic excluded;
     protected String consumerName="durableSubs";
+    
+    
+    public void testRequestReply() throws Exception{
+        final MessageProducer remoteProducer=remoteSession.createProducer(null);
+        MessageConsumer remoteConsumer=remoteSession.createConsumer(included);
+        remoteConsumer.setMessageListener(new MessageListener(){
+            public void onMessage(Message msg){
+                try{
+                    TextMessage textMsg=(TextMessage) msg;
+                    String payload="REPLY: "+textMsg.getText();
+                    Destination replyTo;
+                    replyTo=msg.getJMSReplyTo();
+                    textMsg.clearBody();
+                    textMsg.setText(payload);
+                    remoteProducer.send(replyTo,textMsg);
+                }catch(JMSException e){
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        });
+        
+        TopicRequestor requestor=new TopicRequestor((TopicSession) localSession,included);
+        Thread.sleep(2000);//alow for consumer infos to perculate arround
+        for (int i =0;i < MESSAGE_COUNT; i++){
+            TextMessage msg = localSession.createTextMessage("test msg: " +i);
+            TextMessage result = (TextMessage) requestor.request(msg);
+            assertNotNull(result);
+            System.out.println(result.getText());
+        }
+    }
 
     public void testFiltering() throws Exception{
         MessageConsumer includedConsumer=remoteSession.createConsumer(included);
@@ -93,6 +130,8 @@ public class SimpleNetworkTest extends TestCase{
             assertNotNull(remoteConsumer.receive(500));
         }
     }
+    
+    
 
     protected void setUp() throws Exception{
         super.setUp();
@@ -114,16 +153,19 @@ public class SimpleNetworkTest extends TestCase{
     }
 
     protected void doSetUp() throws Exception{
-        Resource resource=new ClassPathResource(getLocalBrokerURI());
+        Resource resource=new ClassPathResource(getRemoteBrokerURI());
         BrokerFactoryBean factory=new BrokerFactoryBean(resource);
         factory.afterPropertiesSet();
-        localBroker=factory.getBroker();
-        resource=new ClassPathResource(getRemoteBrokerURI());
+        remoteBroker=factory.getBroker();
+        remoteBroker.start();
+        
+        resource=new ClassPathResource(getLocalBrokerURI());
         factory=new BrokerFactoryBean(resource);
         factory.afterPropertiesSet();
-        remoteBroker=factory.getBroker();
+        localBroker=factory.getBroker();
+        
         localBroker.start();
-        remoteBroker.start();
+        
         URI localURI=localBroker.getVmConnectorURI();
         ActiveMQConnectionFactory fac=new ActiveMQConnectionFactory(localURI);
         localConnection=fac.createConnection();

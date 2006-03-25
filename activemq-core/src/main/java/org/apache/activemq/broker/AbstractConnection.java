@@ -139,24 +139,24 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         this.processDispatch(connector.getBrokerInfo());
     }
 
-    public void stop() throws Exception {
-        if( disposed) 
+    public void stop() throws Exception{
+        if(disposed)
             return;
-        
         disposed=true;
         //
         // Remove all logical connection associated with this connection
         // from the broker.
-        ArrayList l = new ArrayList(connectionStates.keySet());
-        for (Iterator iter = l.iterator(); iter.hasNext();) {
-            ConnectionId connectionId = (ConnectionId) iter.next();
-            try {
-                processRemoveConnection(connectionId);
-            } catch (Throwable ignore) {
+        if(!broker.isStopped()){
+            ArrayList l=new ArrayList(connectionStates.keySet());
+            for(Iterator iter=l.iterator();iter.hasNext();){
+                ConnectionId connectionId=(ConnectionId) iter.next();
+                try{
+                    processRemoveConnection(connectionId);
+                }catch(Throwable ignore){}
             }
-        }
-        if (brokerInfo != null){
-            broker.removeBroker(this, brokerInfo);
+            if(brokerInfo!=null){
+                broker.removeBroker(this,brokerInfo);
+            }
         }
     }
     
@@ -364,7 +364,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
     public Response processAddDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = lookupConnectionState(info.getConnectionId());
-        broker.addDestination(cs.getContext(), info.getDestination());
+        broker.addDestinationInfo(cs.getContext(), info);
         if( info.getDestination().isTemporary() ) {
             cs.addTempDestination(info.getDestination());
         }
@@ -373,7 +373,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
     public Response processRemoveDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = lookupConnectionState(info.getConnectionId());
-        broker.removeDestination(cs.getContext(), info.getDestination(), info.getTimeout());
+        broker.removeDestinationInfo(cs.getContext(), info);
         if( info.getDestination().isTemporary() ) {
             cs.removeTempDestination(info.getDestination());
         }

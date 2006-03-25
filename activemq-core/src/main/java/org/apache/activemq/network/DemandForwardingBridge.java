@@ -60,7 +60,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
     }
 
     protected void addRemoteBrokerToBrokerPath(ConsumerInfo info) {
-        info.setBrokerPath(appendToBrokerPath(info.getBrokerPath(),remoteBrokerPath));
+        info.setBrokerPath(appendToBrokerPath(info.getBrokerPath(),getRemoteBrokerPath()));
     }
 
     protected void serviceLocalBrokerInfo(Command command) throws InterruptedException {
@@ -79,5 +79,9 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
     
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
         return new NetworkBridgeFilter(remoteBrokerPath[0], networkTTL);
+    }
+    
+    protected BrokerId[] getRemoteBrokerPath(){
+        return remoteBrokerPath;
     }
 }
