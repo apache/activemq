@@ -110,8 +110,7 @@
   <goal name="build" prereqs="default"/>
   <goal name="default" prereqs="init">
     <j:set var="goal" value="default"/>
-    <!--<attainGoal name="multiproject:goal"/>-->
-    <attainGoal name="test"/> 
+    <attainGoal name="multiproject:goal"/>
   </goal>
 
   <goal name="assembly:goal" prereqs="init">
