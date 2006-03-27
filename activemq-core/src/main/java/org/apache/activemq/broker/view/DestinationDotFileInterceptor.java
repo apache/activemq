@@ -36,43 +36,30 @@ import java.util.Iterator;
  * 
  * @version $Revision: $
  */
-public class DestinationDotFileInterceptor extends BrokerFilter {
+public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
 
-    private static final Log log = LogFactory.getLog(DestinationDotFileInterceptor.class);
     protected static final String ID_SEPARATOR = "_";
     
-    private String file;
 
     public DestinationDotFileInterceptor(Broker next, String file) {
-        super(next);
+        super(next, file);
+        
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         Destination answer = super.addDestination(context, destination);
-        generateDestinationGraph();
+        generateFile();
         return answer;
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
             throws Exception {
         super.removeDestination(context, destination, timeout);
-        generateDestinationGraph();
+        generateFile();
     }
 
-    protected void generateDestinationGraph() throws Exception {
-        if (log.isDebugEnabled()) {
-            log.debug("Creating destination DOT file at: " + file);
-        }
-        PrintWriter writer = new PrintWriter(new FileWriter(file));
-        try {
-            generateDestinationGraph(writer);
-        }
-        finally {
-            writer.close();
-        }
-    }
 
-    protected void generateDestinationGraph(PrintWriter writer) throws Exception {
+    protected void generateFile(PrintWriter writer) throws Exception {
         ActiveMQDestination[] destinations = getDestinations();
 
         // lets split into a tree
