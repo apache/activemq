@@ -25,18 +25,14 @@
     <mailing-list rdf:resource="http://incubator.apache.org/activemq/Mailing+Lists" />
     <download-page rdf:resource="http://incubator.apache.org/activemq/Download" />
     <programming-language>Java</programming-language>
+    <programming-language>C</programming-language>
     <category rdf:resource="http://projects.apache.org/category/network-server" />
+    <category rdf:resource="http://projects.apache.org/category/network-client" />
     <maintainer>
       <foaf:Person>
         <foaf:name>Hiram Chirino</foaf:name>
           <foaf:mbox rdf:resource="mailto:chirino@apache.org"/>
       </foaf:Person>
     </maintainer>
-    <asfext:standard>
-      <asfext:title>JMS 1.1</asfext:title>
-      <asfext:body>JCP</asfext:body>
-      <asfext:id></asfext:id>
-      <asfext:url rdf:resource="http://java.sun.com/products/jms/docs.html"/>
-    </asfext:standard>
   </Project>
 </rdf:RDF>
