@@ -17,6 +17,7 @@
 package org.apache.activemq.filter;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +51,13 @@ public class DestinationMapNode {
         return (DestinationMapNode) childNodes.get(path);
     }
 
+    /**
+     * Returns the child nodes
+     */
+    public Collection getChildren() {
+        return childNodes.values();
+    }
+    
     public int getChildCount() {
         return childNodes.size();
     }
