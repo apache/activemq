@@ -113,6 +113,15 @@ public class DestinationMap {
         return queueRootNode.getChildCount();
     }
 
+    public DestinationMapNode getQueueRootNode() {
+        return queueRootNode;
+    }
+
+    public DestinationMapNode getTopicRootNode() {
+        return topicRootNode;
+    }
+
+    
     // Implementation methods
     // -------------------------------------------------------------------------
 
