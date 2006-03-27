@@ -36,18 +36,10 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
     private Log log = LogFactory.getLog(getClass().getName());
 
     private String brokerName;
-    private final URI brokerUri;
+    private String brokerUri;
     private BrokerService brokerService;
 
     public BrokerServiceGBeanImpl() {
-        brokerName = null;
-        brokerUri=null;
-    }
-	
-    public BrokerServiceGBeanImpl(String brokerName, URI brokerUri) {
-        assert brokerName != null;
-        this.brokerName = brokerName;
-        this.brokerUri=brokerUri;
     }
 
     public synchronized BrokerService getBrokerContainer() {
@@ -69,7 +61,7 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
 
     protected BrokerService createContainer() throws Exception {
         if( brokerUri!=null ) {
-            BrokerService answer = BrokerFactory.createBroker(brokerUri);
+            BrokerService answer = BrokerFactory.createBroker(new URI(brokerUri));
             brokerName = answer.getBrokerName();
             return answer;
         } else {
@@ -104,9 +96,9 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
     static {
         GBeanInfoBuilder infoFactory = new GBeanInfoBuilder("ActiveMQ Message Broker", BrokerServiceGBeanImpl.class, "JMSServer");
         infoFactory.addAttribute("brokerName", String.class, true);
-        infoFactory.addAttribute("brokerUri", URI.class, true);
+        infoFactory.addAttribute("brokerUri", String.class, true);
         infoFactory.addInterface(BrokerServiceGBean.class);
-        infoFactory.setConstructor(new String[]{"brokerName, brokerUri"});
+        // infoFactory.setConstructor(new String[]{"brokerName, brokerUri"});
         GBEAN_INFO = infoFactory.getBeanInfo();
     }
 
@@ -121,8 +113,16 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
 		return brokerName;
 	}
 
-    public URI getBrokerUri() {
+    public String getBrokerUri() {
         return brokerUri;
+    }
+
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
+    }
+
+    public void setBrokerUri(String brokerUri) {
+        this.brokerUri = brokerUri;
     }
 
 	
