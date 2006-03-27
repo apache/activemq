@@ -44,7 +44,6 @@ import java.util.Set;
 public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMBean {
     
     private final AuthorizationMap authorizationMap;
-    private boolean filterReads = true;
 
     public AuthorizationBroker(Broker next, AuthorizationMap authorizationMap) {
         super(next);
@@ -97,10 +96,16 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             throw new SecurityException("User "+subject.getUserName()+" is not authorized to read from: "+info.getDestination());
         subject.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());
         
-        // Should we install a additional predicate on the consumer?
-        // This adds a little more overhead, but is more secure.
-        if( filterReads ) {
-            
+        /* 
+         * Need to think about this a little more.  We could do per message security checking
+         * to implement finer grained security checking. For example a user can only see messages
+         * with price>1000 .  Perhaps this should just be another additional broker filter that installs 
+         * this type of feature.
+         * 
+         * If we did want to do that, then we would install a predicate.  We should be careful since
+         * there may be an existing predicate already assigned and the consumer info may be sent to a remote 
+         * broker, so it also needs to support being marshaled.
+         * 
             info.setAdditionalPredicate(new BooleanExpression() {
                 public boolean matches(MessageEvaluationContext message) throws JMSException {
                     if( !subject.getAuthorizedReadDests().contains(message.getDestination()) ) {
@@ -115,8 +120,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
                     return matches(message) ? Boolean.TRUE : Boolean.FALSE;
                 }
             });
-            
-        }
+        */
         
         return super.addConsumer(context, info);
     }
@@ -190,13 +194,4 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public void removeUserRole(String user, String role) {
     }
 
-    // Properties
-    // -------------------------------------------------------------------------
-    public boolean isFilterReads() {
-        return filterReads;
-    }
-
-    public void setFilterReads(boolean filterReads) {
-        this.filterReads = filterReads;
-    }
 }
