@@ -296,7 +296,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     public void doRemoveMessage(TransactionContext c, long seq) throws SQLException, IOException {
 
-        PreparedStatement s = c.getAddMessageStatement();
+        PreparedStatement s = c.getRemovedMessageStatement();
         try {
             if( s == null ) {
                 s = c.getConnection().prepareStatement(statements.getRemoveMessageStatment());
