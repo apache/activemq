@@ -24,6 +24,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapNode;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -36,18 +38,13 @@ import java.util.Iterator;
  */
 public class DestinationDotFileInterceptor extends BrokerFilter {
 
+    private static final Log log = LogFactory.getLog(DestinationDotFileInterceptor.class);
     protected static final String ID_SEPARATOR = "_";
     
-    private String file = "ActiveMQDestinations.dot";
+    private String file;
 
     public DestinationDotFileInterceptor(Broker next, String file) {
         super(next);
-    }
-
-    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        Subscription answer = super.addConsumer(context, info);
-        //generateDestinationGraph();
-        return answer;
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
@@ -63,7 +60,9 @@ public class DestinationDotFileInterceptor extends BrokerFilter {
     }
 
     protected void generateDestinationGraph() throws Exception {
-        System.out.println("Autogenerating file: " + file);
+        if (log.isDebugEnabled()) {
+            log.debug("Creating destination DOT file at: " + file);
+        }
         PrintWriter writer = new PrintWriter(new FileWriter(file));
         try {
             generateDestinationGraph(writer);
