@@ -94,7 +94,10 @@
             </description>
             <config-property-name>BrokerXmlConfig</config-property-name>
             <config-property-type>java.lang.String</config-property-type>
+            <config-property-value></config-property-value>
+            <!--
             <config-property-value>xbean:broker-config.xml</config-property-value>
+            -->
         </config-property>
 
         <outbound-resourceadapter>
