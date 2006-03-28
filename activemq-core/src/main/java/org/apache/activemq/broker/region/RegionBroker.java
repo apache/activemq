@@ -71,6 +71,7 @@ public class RegionBroker implements Broker {
     private final Region tempTopicRegion;
     private BrokerService brokerService;
     private boolean stopped = false;
+    private boolean keepDurableSubsActive=false;
     
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     
@@ -125,6 +126,7 @@ public class RegionBroker implements Broker {
     
     
     public void start() throws Exception {
+        ((TopicRegion)topicRegion).setKeepDurableSubsActive(keepDurableSubsActive);
         queueRegion.start();
         topicRegion.start();
         tempQueueRegion.start();
@@ -477,6 +479,14 @@ public class RegionBroker implements Broker {
         ss.stop(topicRegion);
         ss.stop(tempQueueRegion);
         ss.stop(tempTopicRegion);
+    }
+
+    public boolean isKeepDurableSubsActive() {
+        return keepDurableSubsActive;
+    }
+
+    public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
+        this.keepDurableSubsActive = keepDurableSubsActive;
     }
 
 

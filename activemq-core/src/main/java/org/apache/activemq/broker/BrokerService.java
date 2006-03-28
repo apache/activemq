@@ -116,6 +116,8 @@ public class BrokerService implements Service {
     private AtomicBoolean started = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
 
+    private boolean keepDurableSubsActive;
+
     /**
      * Adds a new transport connector for the given bind address
      *
@@ -908,6 +910,7 @@ public class BrokerService implements Service {
         else {
 			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter());
         }
+        regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
 		regionBroker.setBrokerName(getBrokerName());
 		return regionBroker;
 	}
@@ -1120,5 +1123,13 @@ public class BrokerService implements Service {
      */
     public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure){
         this.shutdownOnMasterFailure=shutdownOnMasterFailure;
+    }
+
+    public boolean isKeepDurableSubsActive() {
+        return keepDurableSubsActive;
+    }
+
+    public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
+        this.keepDurableSubsActive = keepDurableSubsActive;
     }
 }

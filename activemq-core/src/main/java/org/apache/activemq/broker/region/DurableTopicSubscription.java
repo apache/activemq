@@ -36,10 +36,12 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     private final ConcurrentHashMap redeliveredMessages = new ConcurrentHashMap();
     private final ConcurrentHashMap destinations = new ConcurrentHashMap();
     private final SubscriptionKey subscriptionKey;
+    private final boolean keepDurableSubsActive;
     private boolean active=false;
     
-    public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+    public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive) throws InvalidSelectorException {
         super(broker,context, info);
+        this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
     }
     
@@ -57,9 +59,12 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     synchronized public void add(ConnectionContext context, Destination destination) throws Exception {
         super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
-        if( active ) {
+        if( active || keepDurableSubsActive ) {
             Topic topic = (Topic) destination;            
             topic.activate(context, this);
+        }
+        if( !isFull() ) {
+            dispatchMatched();
         }
     }
    
@@ -68,21 +73,25 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             this.active = true;
             this.context = context;
             this.info = info;
-            for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
-                Topic topic = (Topic) iter.next();
-                topic.activate(context, this);
+            if( !keepDurableSubsActive ) {
+                for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                    Topic topic = (Topic) iter.next();
+                    topic.activate(context, this);
+                }
             }
-            if( !isFull() ) {                            
+            if( !isFull() ) {
                 dispatchMatched();
             }
         }
     }
 
-    synchronized public void deactivate() throws Exception {        
+    synchronized public void deactivate(boolean keepDurableSubsActive) throws Exception {        
         active=false;
-        for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
-            Topic topic = (Topic) iter.next();
-            topic.deactivate(context, this);
+        if( !keepDurableSubsActive ) {
+            for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                Topic topic = (Topic) iter.next();
+                topic.deactivate(context, this);
+            }
         }
         for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
 
@@ -115,7 +124,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     }
 
     synchronized public void add(MessageReference node) throws Exception {
-        if( !active ) {
+        if( !active && !keepDurableSubsActive ) {
             return;
         }
         node = new IndirectMessageReference(node.getRegionDestination(), (Message) node);
@@ -123,14 +132,14 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         node.decrementReferenceCount();
     }
     
-    public int getPendingQueueSize(){
-        if (active){
+    public int getPendingQueueSize() {
+        if( active || keepDurableSubsActive ) {
             return super.getPendingQueueSize();
         }
         //TODO: need to get from store
         return 0;
     }
-    
+   
     public void setSelector(String selector) throws InvalidSelectorException {
         throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
     }
