@@ -16,30 +16,32 @@
  */
 package org.apache.activemq.broker.region;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.Iterator;
+import java.util.Set;
 
-import org.apache.activemq.broker.Broker;
+import javax.jms.InvalidDestinationException;
+import javax.jms.JMSException;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-
-import java.util.Iterator;
-import java.util.Set;
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 
@@ -47,9 +49,10 @@ import java.util.Set;
  */
 public class TopicRegion extends AbstractRegion {
     private static final Log log = LogFactory.getLog(TopicRegion.class);
-    
     protected final ConcurrentHashMap durableSubscriptions = new ConcurrentHashMap();
-   
+    private final LongSequenceGenerator recoveredDurableSubIdGenerator = new LongSequenceGenerator();
+    private final SessionId recoveredDurableSubSessionId = new SessionId(new ConnectionId("OFFLINE"), recoveredDurableSubIdGenerator.getNextSequenceId()); 
+    private boolean keepDurableSubsActive=false;
 
     public TopicRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
             PersistenceAdapter persistenceAdapter) {
@@ -116,7 +119,7 @@ public class TopicRegion extends AbstractRegion {
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if (sub != null) {
-                sub.deactivate();
+                sub.deactivate(keepDurableSubsActive);
             }
 
         }
@@ -166,22 +169,30 @@ public class TopicRegion extends AbstractRegion {
                 
                 // A single durable sub may be subscribing to multiple topics.  so it might exist already.
                 DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
-                if( sub == null ) {
-                    sub = (DurableTopicSubscription) createSubscription(context, createInactiveConsumerInfo(info));
+                ConsumerInfo consumerInfo = createInactiveConsumerInfo(info);
+                if( sub == null ) { 
+                    sub = (DurableTopicSubscription) createSubscription(context, consumerInfo );
                 }
-                topic.addInactiveSubscription(context, sub);
+                
+                subscriptions.put(consumerInfo.getConsumerId(), sub);
+                topic.addSubscription(context, sub);
             }            
         }
         
         return topic;
     }
     
-    private static ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
+    private ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
         ConsumerInfo rc = new ConsumerInfo();
         rc.setSelector(info.getSelector());
         rc.setSubcriptionName(info.getSubcriptionName());
         rc.setDestination(info.getDestination());
+        rc.setConsumerId(createConsumerId());
         return rc;
+    }
+
+    private ConsumerId createConsumerId() {
+        return new ConsumerId(recoveredDurableSubSessionId,recoveredDurableSubIdGenerator.getNextSequenceId());
     }
 
     protected void configureTopic(Topic topic, ActiveMQDestination destination) {
@@ -198,7 +209,7 @@ public class TopicRegion extends AbstractRegion {
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if (sub == null) {
-                sub = new DurableTopicSubscription(broker,context, info);
+                sub = new DurableTopicSubscription(broker,context, info, keepDurableSubsActive);
                 durableSubscriptions.put(key, sub);
             }
             else {
@@ -239,6 +250,14 @@ public class TopicRegion extends AbstractRegion {
                 iter.remove();
         }
         return inactiveDestinations;
+    }
+
+    public boolean isKeepDurableSubsActive() {
+        return keepDurableSubsActive;
+    }
+
+    public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
+        this.keepDurableSubsActive = keepDurableSubsActive;
     }
 
 }

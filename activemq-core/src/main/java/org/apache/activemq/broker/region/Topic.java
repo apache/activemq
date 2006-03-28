@@ -127,13 +127,7 @@ public class Topic implements Destination {
         }
         sub.remove(context, this);
     }
-    
-    public void addInactiveSubscription(ConnectionContext context, DurableTopicSubscription sub) throws Exception {
-        sub.add(context, this);        
-        destinationStatistics.getConsumers().increment();
-        durableSubcribers.put(sub.getSubscriptionKey(), sub);
-    }
-   
+       
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
         if (store != null) {
             store.deleteSubscription(key.clientId, key.subscriptionName);
