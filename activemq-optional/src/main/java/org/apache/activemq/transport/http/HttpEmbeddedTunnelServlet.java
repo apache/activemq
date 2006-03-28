@@ -32,14 +32,24 @@ import java.net.URI;
 public class HttpEmbeddedTunnelServlet extends HttpTunnelServlet {
     private static final long serialVersionUID = -3705734740251302361L;
     
-    private BrokerService broker;
-    private HttpTransportServer transportConnector;
+    protected BrokerService broker;
+    protected HttpTransportServer transportConnector;
 
     public synchronized void init() throws ServletException {
         // lets initialize the ActiveMQ broker
         try {
             if (broker == null) {
                 broker = createBroker();
+
+                // Add the servlet connector
+                String url = getConnectorURL();
+                transportConnector = new HttpTransportServer(new URI(url));
+                broker.addConnector(transportConnector);
+
+                String brokerURL = getServletContext().getInitParameter("org.apache.activemq.brokerURL");
+                if (brokerURL != null) {
+                    log("Listening for internal communication on: " + brokerURL);
+                }
             }
             broker.start();
         }
@@ -59,14 +69,6 @@ public class HttpEmbeddedTunnelServlet extends HttpTunnelServlet {
      */
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
-        String url = getConnectorURL();
-        transportConnector = new HttpTransportServer(new URI(url));
-        answer.addConnector(transportConnector);
-
-        String brokerURL = getServletContext().getInitParameter("org.apache.activemq.brokerURL");
-        if (brokerURL != null) {
-            log("Listening for internal communication on: " + brokerURL);
-        }
         return answer;
     }
 
