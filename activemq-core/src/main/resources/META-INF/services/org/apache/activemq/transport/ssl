@@ -1,1 +1,1 @@
-class=org.apache.activemq.transport.activeio.ActiveIOTransportFactory
+class=org.apache.activemq.transport.tcp.SslTransportFactory

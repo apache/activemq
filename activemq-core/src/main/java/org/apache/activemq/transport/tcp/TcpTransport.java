@@ -38,6 +38,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.net.SocketFactory;
+
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
  * 
@@ -76,24 +78,25 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws IOException
      * @throws UnknownHostException
      */
-    public TcpTransport(WireFormat wireFormat, URI remoteLocation) throws UnknownHostException, IOException {
+    public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation) throws UnknownHostException, IOException {
         this(wireFormat);
-        this.socket = createSocket(remoteLocation);
+        this.socket = createSocket(socketFactory, remoteLocation);
     }
 
     /**
      * Connect to a remote Node - e.g. a Broker
      * 
      * @param wireFormat
+     * @param socketFactory 
      * @param remoteLocation
      * @param localLocation -
      *            e.g. local InetAddress and local port
      * @throws IOException
      * @throws UnknownHostException
      */
-    public TcpTransport(WireFormat wireFormat, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
+    public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         this(wireFormat);
-        this.socket = createSocket(remoteLocation, localLocation);
+        this.socket = createSocket(socketFactory, remoteLocation, localLocation);
     }
 
     /**
@@ -229,10 +232,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws UnknownHostException
      * @throws IOException
      */
-    protected Socket createSocket(URI remoteLocation) throws UnknownHostException, IOException {
+    protected Socket createSocket(SocketFactory socketFactory, URI remoteLocation) throws UnknownHostException, IOException {
         String host = resolveHostName(remoteLocation.getHost());
         socketAddress = new InetSocketAddress(host, remoteLocation.getPort());
-        Socket sock = new Socket();
+        Socket sock = socketFactory.createSocket();
         return sock;
     }
 
@@ -246,11 +249,11 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws IOException
      * @throws UnknownHostException
      */
-    protected Socket createSocket(URI remoteLocation, URI localLocation) throws IOException, UnknownHostException {
+    protected Socket createSocket(SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws IOException, UnknownHostException {
         String host = resolveHostName(remoteLocation.getHost());
         SocketAddress sockAddress = new InetSocketAddress(host, remoteLocation.getPort());
         SocketAddress localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
-        Socket sock = new Socket();
+        Socket sock = socketFactory.createSocket();
         initialiseSocket(sock);
         sock.bind(localAddress);
         sock.connect(sockAddress);

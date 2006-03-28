@@ -29,6 +29,8 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
 
+import javax.net.SocketFactory;
+
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
@@ -146,7 +148,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         // 
         // Manually create a client transport so that it does not send KeepAlive packets.
         // this should simulate a client hang.
-        clientTransport = new TcpTransport(new OpenWireFormat(), new URI("tcp://localhost:61616"));
+        clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:61616"));
         clientTransport.setTransportListener(new TransportListener() {
             public void onCommand(Command command) {
                 clientReceiveCount.incrementAndGet();
