@@ -79,7 +79,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
                 broker = BrokerFactory.createBroker(new URI(brokerXmlConfig));
                 broker.start();
             } catch (Throwable e) {
-                throw new ResourceAdapterInternalException("Failed to startup an embedded broker: "+e, e);
+                throw new ResourceAdapterInternalException("Failed to startup an embedded broker: "+brokerXmlConfig+", due to: "+e, e);
             }
         }
     }
