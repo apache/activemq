@@ -48,7 +48,8 @@ public class TcpTransportFactory extends TransportFactory {
         try {
             Map options = new HashMap(URISupport.parseParamters(location));
 
-            TcpTransportServer server = new TcpTransportServer(location);
+            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
+            TcpTransportServer server = new TcpTransportServer(location, serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
 
@@ -99,20 +100,22 @@ public class TcpTransportFactory extends TransportFactory {
         URI localLocation=null;
         String path=location.getPath();
         // see if the path is a local URI location
-        if(path!=null&&path.length()>0){
-            int localPortIndex=path.indexOf(':');
-            try{
-                Integer.parseInt(path.substring((localPortIndex+1),path.length()));
-                String localString=location.getScheme()+ ":/" + path;
-                localLocation=new URI(localString);
-            }catch(Exception e){
-                log.warn("path isn't a valid local location for TcpTransport to use",e);
+        if (path != null && path.length() > 0) {
+            int localPortIndex = path.indexOf(':');
+            try {
+                Integer.parseInt(path.substring((localPortIndex + 1), path.length()));
+                String localString = location.getScheme() + ":/" + path;
+                localLocation = new URI(localString);
+            }
+            catch (Exception e) {
+                log.warn("path isn't a valid local location for TcpTransport to use", e);
             }
         }
-        if(localLocation!=null){
-            return new TcpTransport(wf,location,localLocation);
+        SocketFactory socketFactory = createSocketFactory();
+        if (localLocation != null) {
+            return new TcpTransport(wf, socketFactory, location, localLocation);
         }
-        return new TcpTransport(wf,location);
+        return new TcpTransport(wf, socketFactory, location);
     }
 
     protected ServerSocketFactory createServerSocketFactory() {

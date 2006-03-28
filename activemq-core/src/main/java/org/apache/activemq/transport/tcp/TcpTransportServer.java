@@ -38,6 +38,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.net.ServerSocketFactory;
+
 /**
  * A TCP based implementation of {@link TransportServer}
  * 
@@ -54,16 +56,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     private int minmumWireFormatVersion;
     private boolean trace;
     
-    /**
-     * Constructor
-     * 
-     * @param location
-     * @throws IOException
-     * @throws URISyntaxException
-     */
-    public TcpTransportServer(URI location) throws IOException, URISyntaxException {
+    public TcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
-        serverSocket = createServerSocket(location);
+        serverSocket = createServerSocket(location, serverSocketFactory);
         serverSocket.setSoTimeout(2000);
         updatePhysicalUri(location);
     }
@@ -194,16 +189,16 @@ public class TcpTransportServer extends TransportServerThreadSupport {
      * @throws UnknownHostException
      * @throws IOException
      */
-    protected ServerSocket createServerSocket(URI bind) throws UnknownHostException, IOException {
+    protected ServerSocket createServerSocket(URI bind, ServerSocketFactory factory) throws UnknownHostException, IOException {
         ServerSocket answer = null;
         String host = bind.getHost();
         host = (host == null || host.length() == 0) ? "localhost" : host;
         InetAddress addr = InetAddress.getByName(host);
         if (host.trim().equals("localhost") || addr.equals(InetAddress.getLocalHost())) {
-            answer = new ServerSocket(bind.getPort(), backlog);
+            answer = factory.createServerSocket(bind.getPort(), backlog);
         }
         else {
-            answer = new ServerSocket(bind.getPort(), backlog, addr);
+            answer = factory.createServerSocket(bind.getPort(), backlog, addr);
         }
         return answer;
     }
