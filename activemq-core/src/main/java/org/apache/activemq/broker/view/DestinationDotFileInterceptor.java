@@ -16,18 +16,12 @@
 package org.apache.activemq.broker.view;
 
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapNode;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Iterator;
@@ -39,11 +33,9 @@ import java.util.Iterator;
 public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
 
     protected static final String ID_SEPARATOR = "_";
-    
 
     public DestinationDotFileInterceptor(Broker next, String file) {
         super(next, file);
-        
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {

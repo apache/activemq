@@ -16,14 +16,17 @@
  */
 package org.apache.activemq.test;
 
-import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.view.DestinationDotFileInterceptor;
+import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
 import org.apache.activemq.broker.view.DestinationDotFilePlugin;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.demo.DefaultQueueSender;
 
-import java.net.URI;
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 /**
  * A helper class which can be handy for running a broker in your IDE from the
@@ -42,18 +45,29 @@ public class Main {
             brokerURI = args[0];
         }
         try {
-            //BrokerService broker = BrokerFactory.createBroker(new URI(brokerURI));
+            // TODO - this seems to break interceptors for some reason
+            // BrokerService broker = BrokerFactory.createBroker(new
+            // URI(brokerURI));
             BrokerService broker = new BrokerService();
             broker.setPersistent(false);
             broker.setUseJmx(true);
-            broker.setPlugins(new BrokerPlugin[] { new DestinationDotFilePlugin() });
+            broker.setPlugins(new BrokerPlugin[] { /*new DestinationDotFilePlugin(), */ new ConnectionDotFilePlugin() });
             broker.addConnector("tcp://localhost:61616");
             broker.addConnector("stomp://localhost:61613");
             broker.start();
-            
+
+            // lets create a dummy couple of consumers
+            Connection connection = new ActiveMQConnectionFactory().createConnection();
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer1 = session.createConsumer(new ActiveMQQueue("Orders.IBM"));
+            MessageConsumer consumer2 = session.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 100");
+            Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer3 = session2.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 200");
+
             // lets publish some messages so that there is some stuff to browse
-            DefaultQueueSender.main(new String[] {"Prices.Equity.IBM"});
-            DefaultQueueSender.main(new String[] {"Prices.Equity.MSFT"});
+            DefaultQueueSender.main(new String[] { "Prices.Equity.IBM" });
+            DefaultQueueSender.main(new String[] { "Prices.Equity.MSFT" });
         }
         catch (Exception e) {
             System.out.println("Failed: " + e);

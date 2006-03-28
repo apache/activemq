@@ -917,7 +917,7 @@ public class BrokerService implements Service {
      *
      * @throws IOException
      */
-    protected Broker addInterceptors(Broker broker) throws IOException {
+    protected Broker addInterceptors(Broker broker) throws Exception {
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         broker = new AdvisoryBroker(broker);
         broker = new CompositeDestinationBroker(broker);
