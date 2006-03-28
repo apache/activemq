@@ -25,6 +25,8 @@ import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapNode;
@@ -47,9 +49,15 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     protected static final String ID_SEPARATOR = "_";
 
     private final boolean redrawOnRemove;
+    private boolean clearProducerCacheAfterRender = false;
     private String domain = "org.apache.activemq";
     private BrokerViewMBean brokerView;
     private MBeanServer mbeanServer;
+
+    // until we have some MBeans for producers, lets do it all ourselves
+    private Map producers = new HashMap();
+    private Map producerDestinations = new HashMap();
+    private Object lock = new Object();
 
     public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove)
             throws MalformedObjectNameException {
@@ -70,6 +78,10 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.addProducer(context, info);
+        ProducerId producerId = info.getProducerId();
+        synchronized (lock) {
+            producers.put(producerId, info);
+        }
         generateFile();
     }
 
@@ -82,8 +94,27 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.removeProducer(context, info);
+        ProducerId producerId = info.getProducerId();
         if (redrawOnRemove) {
+            synchronized (lock) {
+                producerDestinations.remove(producerId);
+                producers.remove(producerId);
+            }
             generateFile();
+        }
+    }
+
+    public void send(ConnectionContext context, Message messageSend) throws Exception {
+        super.send(context, messageSend);
+        ProducerId producerId = messageSend.getProducerId();
+        ActiveMQDestination destination = messageSend.getDestination();
+        synchronized (lock) {
+            Set destinations = (Set) producerDestinations.get(producerId);
+            if (destinations == null) {
+                destinations = new HashSet();
+            }
+            producerDestinations.put(producerId, destinations);
+            destinations.add(destination);
         }
     }
 
@@ -91,51 +122,90 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
         writer.println("digraph \"ActiveMQ Connections\" {");
         writer.println();
+        writer.println("label=\"ActiveMQ Broker: " + brokerView.getBrokerId() + "\"];");
+        writer.println();
         writer.println("node [style = \"rounded,filled\", fillcolor = yellow, fontname=\"Helvetica-Oblique\"];");
         writer.println();
 
-        writer.println("broker [fillcolor = deepskyblue, label=\"ActiveMQ Broker\\n" + brokerView.getBrokerId() + "\"];");
-        writer.println();
-
         Map clients = new HashMap();
-        Map destinations = new HashMap();
-        printSubscribers(writer, clients, destinations, "queue_", brokerView.getQueueSubscribers());
-        writer.println();
-        
-        printSubscribers(writer, clients, destinations, "topic_", brokerView.getTopicSubscribers());
+        Map queues = new HashMap();
+        Map topics = new HashMap();
+
+        printSubscribers(writer, clients, queues, "queue_", brokerView.getQueueSubscribers());
         writer.println();
 
-        // lets print the broker links
-        for (Iterator iter = clients.keySet().iterator(); iter.hasNext();) {
-            String clientId = (String) iter.next();
-            writer.print(clientId);
-            writer.println(" -> broker");
-        }
+        printSubscribers(writer, clients, topics, "topic_", brokerView.getTopicSubscribers());
         writer.println();
-        
+
+        printProducers(writer, clients, queues, topics);
+        writer.println();
+
         writeLabels(writer, "green", "Client: ", clients);
         writer.println();
 
-        writeLabels(writer, "red", "Queue: ", destinations);
+        writeLabels(writer, "red", "Queue: ", queues);
+        writeLabels(writer, "blue", "Topic: ", topics);
         writer.println("}");
-    }
 
-    protected void writeLabels(PrintWriter writer, String color, String prefix, Map map) {
-        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String id = (String) entry.getKey();
-            String label = (String) entry.getValue();
-
-            writer.print(id);
-            writer.print(" [ fillcolor = ");
-            writer.print(color);
-            writer.print(", label = \"");
-            writer.print(prefix);
-            writer.print(label);
-            writer.println("\"];");
+        if (clearProducerCacheAfterRender) {
+            producerDestinations.clear();
         }
     }
 
+    protected void printProducers(PrintWriter writer, Map clients, Map queues, Map topics) {
+        for (Iterator iter = producerDestinations.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            ProducerId producerId = (ProducerId) entry.getKey();
+            Set destinationSet = (Set) entry.getValue();
+            printProducers(writer, clients, queues, topics, producerId, destinationSet);
+        }
+    }
+
+    protected void printProducers(PrintWriter writer, Map clients, Map queues, Map topics, ProducerId producerId, Set destinationSet) {
+        for (Iterator iter = destinationSet.iterator(); iter.hasNext();) {
+            ActiveMQDestination destination = (ActiveMQDestination) iter.next();
+
+            // TODO use clientId one day
+            String clientId = producerId.getConnectionId();
+            String safeClientId = asID(clientId);
+            clients.put(safeClientId, clientId);
+
+            String physicalName = destination.getPhysicalName();
+            String safeDestinationId = asID(physicalName);
+            if (destination.isTopic()) {
+                safeDestinationId = "topic_" + safeDestinationId;
+                topics.put(safeDestinationId, physicalName);
+            }
+            else {
+                safeDestinationId = "queue_" + safeDestinationId;
+                queues.put(safeDestinationId, physicalName);
+            }
+
+            String safeProducerId = asID(producerId.toString());
+            
+            // lets write out the links
+
+            writer.print(safeClientId);
+            writer.print(" -> ");
+            writer.print(safeProducerId);
+            writer.println(";");
+
+            writer.print(safeProducerId);
+            writer.print(" -> ");
+            writer.print(safeDestinationId);
+            writer.println(";");
+
+            // now lets write out the label
+            writer.print(safeProducerId);
+            writer.print(" [label = \"");
+            String label = "Producer: " + producerId.getSessionId() + "-" + producerId.getValue();
+            writer.print(label);
+            writer.println("\"];");
+
+        }
+    }
+
+    
     protected void printSubscribers(PrintWriter writer, Map clients, Map destinations, String type,
             ObjectName[] subscribers) {
         for (int i = 0; i < subscribers.length; i++) {
@@ -144,22 +214,21 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
                     mbeanServer, name, SubscriptionViewMBean.class, true);
 
             String clientId = subscriber.getClientId();
-            String destination = subscriber.getDestinationName();
-            String selector = subscriber.getSelector();
-
             String safeClientId = asID(clientId);
             clients.put(safeClientId, clientId);
-
+            
+            String destination = subscriber.getDestinationName();
             String safeDestinationId = type + asID(destination);
             destinations.put(safeDestinationId, destination);
+            
+            String selector = subscriber.getSelector();
 
             // lets write out the links
-
             String subscriberId = safeClientId + "_" + subscriber.getSessionId() + "_" + subscriber.getSubcriptionId();
 
-            writer.print(safeClientId);
-            writer.print(" -> ");
             writer.print(subscriberId);
+            writer.print(" -> ");
+            writer.print(safeClientId);
             writer.println(";");
 
             writer.print(safeDestinationId);
@@ -174,6 +243,22 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             if (selector != null && selector.length() > 0) {
                 label = label + "\\nSelector: " + selector;
             }
+            writer.print(label);
+            writer.println("\"];");
+        }
+    }
+
+    protected void writeLabels(PrintWriter writer, String color, String prefix, Map map) {
+        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String id = (String) entry.getKey();
+            String label = (String) entry.getValue();
+
+            writer.print(id);
+            writer.print(" [ fillcolor = ");
+            writer.print(color);
+            writer.print(", label = \"");
+            writer.print(prefix);
             writer.print(label);
             writer.println("\"];");
         }
