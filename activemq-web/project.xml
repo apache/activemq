@@ -74,6 +74,9 @@
         <groupId>org.apache.derby</groupId>
         <artifactId>derby</artifactId>
         <version>${derby_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
     </dependency>
 
     <!-- For Spring servlet -->
@@ -91,6 +94,41 @@
       <groupId>${pom.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
       <version>${activeio_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <!-- Rome RSS Reader -->
+    <dependency>
+      <id>rome</id>
+      <version>${rome_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <id>jdom</id>
+      <version>${jdom_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>${xstream_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>xmlpull</groupId>
+      <artifactId>xmlpull</artifactId>
+      <version>${xmlpull_version}</version>
     </dependency>
 
     <!-- optional used for in-web container testing -->

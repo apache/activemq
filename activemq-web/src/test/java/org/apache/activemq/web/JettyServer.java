@@ -17,6 +17,8 @@
 
 package org.apache.activemq.web;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.demo.DefaultQueueSender;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.Server;
@@ -39,6 +41,18 @@ public class JettyServer {
     public static final String WEBAPP_CTX = "/";
 
     public static void main(String[] args) throws Exception {
+        // lets create a broker
+        BrokerService broker = new BrokerService();
+        broker.setPersistent(false);
+        broker.setUseJmx(true);
+        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("stomp://localhost:61613");
+        broker.start();
+        
+        // lets publish some messages so that there is some stuff to browse
+        DefaultQueueSender.main(new String[] {"FOO.BAR"});
+        
+        // now lets start the web server        
         int port = PORT;
         if (args.length > 0) {
             String text = args[0];
