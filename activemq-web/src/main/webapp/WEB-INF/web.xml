@@ -53,6 +53,12 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <!-- the queue browse servlet -->
+    <servlet>
+        <servlet-name>QueueBrowseServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.QueueBrowseServlet</servlet-class>
+    </servlet>
+
     <!-- servlets for the portfolio demo -->
     <servlet>
         <servlet-name>PortfolioPublishServlet</servlet-name>
@@ -63,6 +69,11 @@
     <servlet-mapping>
         <servlet-name>MessageListenerServlet</servlet-name>
         <url-pattern>/amq/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>QueueBrowseServlet</servlet-name>
+        <url-pattern>/queueBrowse/*</url-pattern>
     </servlet-mapping>
     
     <servlet-mapping>

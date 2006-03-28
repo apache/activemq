@@ -185,11 +185,30 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
         else
         {
+            // lets assume a simple POST of a message
+            /*
             response.setContentType("text/xml");
             response.setHeader("Cache-Control", "no-cache");
             response.getWriter().print("<ajax-response></ajax-response>");
+            */
+            
+            try {
+                Destination destination=getDestination(client, request);
+                String body = getPostedMessageBody(request);
+                TextMessage message = client.getSession().createTextMessage(body );
+                client.send(destination, message);
+                if (log.isDebugEnabled()) {
+                    log.debug("Sent to destination: " + destination + " body: " + body);
+                }
+                
+                response.setContentType("text");
+                response.setHeader("Cache-Control", "no-cache");
+                response.getWriter().print(message.getJMSMessageID());
+            }
+            catch (JMSException e) {
+                throw new ServletException(e);
+            }
         }
-        // System.err.println("==");
     }
 
     /**
