@@ -18,13 +18,18 @@ package org.apache.activemq.gbean;
 
 import java.net.URI;
 
+import javax.sql.DataSource;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.geronimo.gbean.GBeanInfo;
 import org.apache.geronimo.gbean.GBeanInfoBuilder;
 import org.apache.geronimo.gbean.GBeanLifecycle;
+import org.apache.geronimo.system.serverinfo.ServerInfo;
+
 
 /**
  * Default implementation of the ActiveMQ Message Server
@@ -38,10 +43,13 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
     private String brokerName;
     private String brokerUri;
     private BrokerService brokerService;
+    private ServerInfo serverInfo;
+    private String dataDirectory;
+    private DataSourceReference dataSource;
 
     public BrokerServiceGBeanImpl() {
     }
-
+    
     public synchronized BrokerService getBrokerContainer() {
         return brokerService;
     }
@@ -52,8 +60,11 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
         	try {
     	        if (brokerService == null) {
     	            brokerService = createContainer();
-    	            brokerService.start();
     	        }
+                DefaultPersistenceAdapterFactory persistenceFactory = brokerService.getPersistenceFactory();
+                persistenceFactory.setDataDirectory(serverInfo.resolve(dataDirectory));
+                persistenceFactory.setDataSource((DataSource) dataSource.$getResource());
+                brokerService.start();
         	} finally {
             	Thread.currentThread().setContextClassLoader(old);
         	}
@@ -95,8 +106,11 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
 
     static {
         GBeanInfoBuilder infoFactory = new GBeanInfoBuilder("ActiveMQ Message Broker", BrokerServiceGBeanImpl.class, "JMSServer");
+        infoFactory.addReference("serverInfo", ServerInfo.class);
         infoFactory.addAttribute("brokerName", String.class, true);
         infoFactory.addAttribute("brokerUri", String.class, true);
+        infoFactory.addAttribute("dataDirectory", String.class, true);
+        infoFactory.addReference("dataSource", DataSourceReference.class);
         infoFactory.addInterface(BrokerServiceGBean.class);
         // infoFactory.setConstructor(new String[]{"brokerName, brokerUri"});
         GBEAN_INFO = infoFactory.getBeanInfo();
@@ -123,6 +137,30 @@ public class BrokerServiceGBeanImpl implements GBeanLifecycle, BrokerServiceGBea
 
     public void setBrokerUri(String brokerUri) {
         this.brokerUri = brokerUri;
+    }
+
+    public ServerInfo getServerInfo() {
+        return serverInfo;
+    }
+
+    public void setServerInfo(ServerInfo serverInfo) {
+        this.serverInfo = serverInfo;
+    }
+
+    public String getDataDirectory() {
+        return dataDirectory;
+    }
+
+    public void setDataDirectory(String dataDir) {
+        this.dataDirectory = dataDir;
+    }
+
+    public DataSourceReference getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(DataSourceReference dataSource) {
+        this.dataSource = dataSource;
     }
 
 	
