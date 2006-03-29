@@ -542,6 +542,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         try {
+            log.debug("Executing SQL: "+statements.getDeleteOldMessagesStatement());
             s = c.getConnection().prepareStatement(statements.getDeleteOldMessagesStatement());
             s.setLong(1, System.currentTimeMillis());
             int i = s.executeUpdate();
