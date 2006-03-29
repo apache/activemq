@@ -35,43 +35,45 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.Topic;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionActivationListener;
+import javax.servlet.http.HttpSessionBindingEvent;
+import javax.servlet.http.HttpSessionBindingListener;
 import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.Semaphore;
 
 /**
  * Represents a messaging client used from inside a web container
  * typically stored inside a HttpSession
+ * 
+ * TODO controls to prevent DOS attacks with users requesting many consumers 
+ * TODO configure consumers with small prefetch.
  *
  * @version $Revision: 1.1.1.1 $
  */
-public class WebClient implements HttpSessionActivationListener, Externalizable {
+public class WebClient implements HttpSessionActivationListener, HttpSessionBindingListener, Externalizable {
     public static final String webClientAttribute = "org.apache.activemq.webclient";
     public static final String connectionFactoryAttribute = "org.apache.activemq.connectionFactory";
-    public static final String queueConsumersAttribute = "org.apache.activemq.queueConsumers";
     public static final String brokerUrlInitParam = "org.apache.activemq.brokerURL";
 
     private static final Log log = LogFactory.getLog(WebClient.class);
 
     private static transient ConnectionFactory factory;
-    private static transient Map queueConsumers;
-
-    private transient ServletContext context;
+    
+    
+    private transient Map consumers = new HashMap();
     private transient ActiveMQConnection connection;
     private transient ActiveMQSession session;
     private transient MessageProducer producer;
-    private transient Map topicConsumers = new ConcurrentHashMap();
     private int deliveryMode = DeliveryMode.NON_PERSISTENT;
 
     private final Semaphore semaphore = new Semaphore(1);
@@ -86,24 +88,14 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
 
 
     public static void initContext(ServletContext context) {
-        factory = initConnectionFactory(context);
-        if (factory == null) {
-            log.warn("No ConnectionFactory available in the ServletContext for: " + connectionFactoryAttribute);
-            factory = new ActiveMQConnectionFactory("vm://localhost");
-            context.setAttribute(connectionFactoryAttribute, factory);
-        }
-        queueConsumers = initQueueConsumers(context);
+        initConnectionFactory(context);
     }
 
     /**
-     * Only called by serialization
      */
     public WebClient() {
-    }
-
-    public WebClient(ServletContext context) {
-        this.context = context;
-        initContext(context);
+        if (factory==null)
+            throw new IllegalStateException("initContext(ServletContext) not called");
     }
 
     
@@ -117,28 +109,80 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
     }
 
 
-    public void start() throws JMSException {
+    public synchronized void closeConsumers() 
+    {
+        for (Iterator it = consumers.values().iterator(); it.hasNext();) {
+            MessageConsumer consumer = (MessageConsumer) it.next();
+            it.remove();
+            try{
+                consumer.setMessageListener(null);
+                if (consumer instanceof MessageAvailableConsumer)
+                    ((MessageAvailableConsumer)consumer).setAvailableListener(null);
+                consumer.close();
+            }
+            catch(JMSException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void stop() throws JMSException {
-        System.out.println("Closing the WebClient!!! " + this);
-        
+    public synchronized void close() {
         try {
-            connection.close();
+            closeConsumers();
+            if (connection!=null)
+                connection.close();
+        } catch (JMSException e) {
+            throw new RuntimeException(e);
         }
         finally {
             producer = null;
             session = null;
             connection = null;
-            topicConsumers.clear();
+            if (consumers!=null)
+                consumers.clear();
+            consumers=null;
         }
+    }
+    
+    public boolean isClosed()
+    {
+        return consumers==null;
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
+        
+        if (consumers!=null)
+        {
+            out.write(consumers.size());
+            Iterator i=consumers.keySet().iterator();
+            while(i.hasNext())
+                out.writeObject(i.next().toString());
+        }
+        else
+            out.write(-1);
+            
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        topicConsumers = new HashMap();
+        int size = in.readInt();
+        if (size >=0) {
+            consumers = new HashMap();
+            for (int i=0;i<size;i++) {
+                String  destinationName = in.readObject().toString(); 
+                
+                try{
+                    Destination destination = destinationName.startsWith("topic://")
+                    ?(Destination)getSession().createTopic(destinationName)
+                    :(Destination)getSession().createQueue(destinationName);
+                    consumers.put(destination,getConsumer(destination, true));
+                }
+                catch (JMSException e)
+                {
+                    e.printStackTrace(); // TODO better handling?
+                }
+            }
+        }
     }
 
     public void send(Destination destination, Message message) throws JMSException {
@@ -167,103 +211,75 @@ public class WebClient implements HttpSessionActivationListener, Externalizable 
         return connection;
     }
 
-    public void sessionWillPassivate(HttpSessionEvent event) {
-        try {
-            stop();
-        }
-        catch (JMSException e) {
-            log.warn("Could not close connection: " + e, e);
-        }
-    }
-
-    public void sessionDidActivate(HttpSessionEvent event) {
-        // lets update the connection factory from the servlet context
-        context = event.getSession().getServletContext();
-        initContext(context);
-    }
-
-    public static Map initQueueConsumers(ServletContext context) {
-        Map answer = (Map) context.getAttribute(queueConsumersAttribute);
-        if (answer == null) {
-            answer = new HashMap();
-            context.setAttribute(queueConsumersAttribute, answer);
-        }
-        return answer;
-    }
-
-
-    public static ConnectionFactory initConnectionFactory(ServletContext servletContext) {
-        ConnectionFactory connectionFactory = (ConnectionFactory) servletContext.getAttribute(connectionFactoryAttribute);
-        if (connectionFactory == null) {
-            String brokerURL = (String) servletContext.getInitParameter(brokerUrlInitParam);
-
+    public static synchronized void initConnectionFactory(ServletContext servletContext) {
+        if (factory==null)
+            factory = (ConnectionFactory) servletContext.getAttribute(connectionFactoryAttribute);
+        if (factory == null) {
+            String brokerURL = servletContext.getInitParameter(brokerUrlInitParam);
+            
             servletContext.log("Value of: " + brokerUrlInitParam + " is: " + brokerURL);
-
+            
             if (brokerURL == null) {
                 brokerURL = "vm://localhost";
             }
-
-
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerURL);
-            connectionFactory = factory;
-            servletContext.setAttribute(connectionFactoryAttribute, connectionFactory);
+            
+            ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(brokerURL);
+            factory = amqfactory;
+           
+            servletContext.setAttribute(connectionFactoryAttribute, factory);
         }
-        return connectionFactory;
     }
 
     public synchronized MessageConsumer getConsumer(Destination destination) throws JMSException {
-        if (destination instanceof Topic) {
-            MessageConsumer consumer = (MessageConsumer) topicConsumers.get(destination);
-            if (consumer == null) {
-                consumer = getSession().createConsumer(destination);
-                topicConsumers.put(destination, consumer);
-            }
-            return consumer;
+        return getConsumer(destination,true);
+    }
+
+    public synchronized MessageConsumer getConsumer(Destination destination, boolean create) throws JMSException {
+        
+        MessageConsumer consumer = (MessageConsumer) consumers.get(destination);
+        if (create && consumer == null) {
+            consumer = getSession().createConsumer(destination);
+            consumers.put(destination, consumer);
         }
-        else {
-            synchronized (queueConsumers) {
-                SessionConsumerPair pair = (SessionConsumerPair) queueConsumers.get(destination);
-                if (pair == null) {
-                    pair = createSessionConsumerPair(destination);
-                    queueConsumers.put(destination, pair);
-                }
-                return pair.consumer;
-            }
+        return consumer;
+    }
+
+    public synchronized void closeConsumer(Destination destination) throws JMSException {
+        MessageConsumer consumer = (MessageConsumer) consumers.get(destination);
+        if (consumer != null) {
+            consumers.remove(destination);
+            consumer.setMessageListener(null);
+            if (consumer instanceof MessageAvailableConsumer)
+                ((MessageAvailableConsumer)consumer).setAvailableListener(null);
+            consumer.close();
         }
     }
     
     public synchronized List getConsumers()
     {
-        ArrayList list = new ArrayList(topicConsumers.size()+queueConsumers.size());
-        
-        // TODO check this double synchronization on queue but not on topics
-        synchronized (queueConsumers) {
-            for (Iterator it = queueConsumers.values().iterator(); it.hasNext();) {
-                SessionConsumerPair pair = (SessionConsumerPair) it.next();
-                list.add(pair.consumer);
-            }
-        }
-        list.addAll(topicConsumers.values());
-        return list;
+        return new ArrayList(consumers.values());
     }
 
     protected ActiveMQSession createSession() throws JMSException {
         return (ActiveMQSession) getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
-    protected SessionConsumerPair createSessionConsumerPair(Destination destination) throws JMSException {
-        SessionConsumerPair answer = new SessionConsumerPair();
-        answer.session = createSession();
-        answer.consumer = answer.session.createConsumer(destination);
-        return answer;
-    }
-
-    protected static class SessionConsumerPair {
-        public Session session;
-        public MessageConsumer consumer;
-    }
 
     public Semaphore getSemaphore() {
         return semaphore;
+    }
+
+    public void sessionWillPassivate(HttpSessionEvent event) {
+        close();
+    }
+
+    public void sessionDidActivate(HttpSessionEvent event) {
+    }
+
+    public void valueBound(HttpSessionBindingEvent event) {
+    }
+
+    public void valueUnbound(HttpSessionBindingEvent event) {
+        close();
     }
 }

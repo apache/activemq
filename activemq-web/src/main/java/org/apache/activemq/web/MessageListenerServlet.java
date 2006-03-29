@@ -55,6 +55,14 @@ import org.mortbay.util.ajax.ContinuationSupport;
  * specify a readTimeout parameter to determine how long the servlet should
  * block for.
  * 
+ * The servlet can be configured with the following init parameters:<dl>
+ * <dt>defaultReadTimeout</dt><dd>The default time in ms to wait for messages. May be overridden by a request using the 'timeout' parameter</dd>
+ * <dt>maximumReadTimeout</dt><dd>The maximum value a request may specify for the 'timeout' parameter</dd>
+ * <dt>maximumMessages</dt><dd>maximum messages to send per response</dd>
+ * <dt></dt><dd></dd>
+ * </dl>
+ *  
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 public class MessageListenerServlet extends MessageServletSupport {
@@ -132,6 +140,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                     {
                         Listener listener = getListener(request);
                         Map consumerIdMap = getConsumerIdMap(request);
+                        client.closeConsumer(destination); // drop any existing consumer.
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
                         
                         consumer.setAvailableListener(listener);
@@ -145,9 +154,9 @@ public class MessageListenerServlet extends MessageServletSupport {
                         Map consumerIdMap = getConsumerIdMap(request);
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
                         
-                        // TODO should we destroy consumer on unsubscribe?
                         consumer.setAvailableListener(null);
                         consumerIdMap.remove(consumer);
+                        client.closeConsumer(destination);
                         if (log.isDebugEnabled()) {
                             log.debug("Unsubscribed: "+consumer);
                         }
@@ -228,7 +237,6 @@ public class MessageListenerServlet extends MessageServletSupport {
         catch (JMSException e) {
             throw new ServletException("JMS problem: " + e, e);
         }
-        // System.err.println("--");
     }
 
     /**
@@ -251,11 +259,12 @@ public class MessageListenerServlet extends MessageServletSupport {
             log.debug("doMessage timeout="+timeout);
         }
         
-        Continuation continuation = null;
-        Message message = null;
-
+        Continuation continuation = ContinuationSupport.getContinuation(request, client);
         Listener listener = getListener(request);
+        if (listener!=null && continuation!=null && !continuation.isPending())
+            listener.access();
 
+        Message message = null;
         synchronized (client) {
 
             List consumers = client.getConsumers();
@@ -278,8 +287,6 @@ public class MessageListenerServlet extends MessageServletSupport {
             // messages
 
             if (message == null) {
-                continuation = ContinuationSupport.getContinuation(request, client);
-
                 // register this continuation with our listener.
                 listener.setContinuation(continuation);
 
@@ -287,6 +294,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                 // request here).
                 continuation.suspend(timeout);
             }
+            listener.setContinuation(null);
 
             // prepare the responds
             response.setContentType("text/xml");
@@ -318,7 +326,6 @@ public class MessageListenerServlet extends MessageServletSupport {
 
                 // Look for any available messages
                 message = consumer.receiveNoWait();
-                // System.err.println("received "+message+" from "+consumer);
                 while (message != null && messages < maximumMessages) {
                     String id = (String) consumerIdMap.get(consumer);
                     writer.print("<response id='");
@@ -333,6 +340,7 @@ public class MessageListenerServlet extends MessageServletSupport {
 
             // Add poll message
             // writer.println("<response type='object' id='amqPoll'><ok/></response>");
+            
             writer.print("</ajax-response>");
 
             writer.flush();
@@ -405,15 +413,18 @@ public class MessageListenerServlet extends MessageServletSupport {
      */
     private class Listener implements MessageAvailableListener {
         WebClient client;
-
+        long lastAccess;
         Continuation continuation;
-
-        List queue = new LinkedList();
 
         Listener(WebClient client) {
             this.client = client;
         }
 
+        public void access()
+        {
+            lastAccess=System.currentTimeMillis();
+        }
+        
         public void setContinuation(Continuation continuation) {
             synchronized (client) {
                 this.continuation = continuation;
@@ -427,21 +438,13 @@ public class MessageListenerServlet extends MessageServletSupport {
                 }
                 if (continuation != null)
                     continuation.resume();
+                else if (System.currentTimeMillis()-lastAccess>2*maximumReadTimeout)
+                {
+                    client.closeConsumers();
+                }
                 continuation = null;
             }
         }
 
-    }
-
-    private static void dump(Map map)
-    {
-        Iterator iter=map.entrySet().iterator();
-        while(iter.hasNext())
-        {
-            Map.Entry entry=(Map.Entry)iter.next();
-            String k=(String)entry.getKey();
-            String[] v=(String[])entry.getValue();
-            System.err.println(k+":"+(v==null?"[]":Arrays.asList(v).toString()));
-        }
     }
 }

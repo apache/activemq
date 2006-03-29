@@ -38,12 +38,6 @@
         <description>Whether we should include an embedded broker or not</description>
     </context-param>
 
-    <!-- connection manager -->
-    <listener>
-        <listener-class>org.apache.activemq.web.ConnectionManager</listener-class>
-    </listener>
-
-
     <!-- servlet mappings -->
     
     <!-- the subscription REST servlet -->
