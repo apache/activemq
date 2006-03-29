@@ -112,6 +112,9 @@ class Send implements StompCommand {
             msg.setPersistent(asBool(persistent));
         }
         
+        // No need to carry the content length in the JMS headers.
+        headers.remove(Stomp.Headers.CONTENT_LENGTH);
+        
         // now the general headers
         msg.setProperties(headers);
 

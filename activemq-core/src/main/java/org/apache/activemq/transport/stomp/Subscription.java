@@ -81,6 +81,7 @@ public class Subscription {
             ActiveMQBytesMessage msg = (ActiveMQBytesMessage)m;
             byte[] data = new byte[(int)msg.getBodyLength()]; 
             msg.readBytes(data);
+            builder.addHeader(Stomp.Headers.CONTENT_LENGTH, data.length);
             builder.setBody(data);
         }
         
