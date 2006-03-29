@@ -79,7 +79,8 @@ public class Subscription {
             builder.setBody(((ActiveMQTextMessage)m).getText().getBytes("UTF-8"));
         } else if( m.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE ) {
             ActiveMQBytesMessage msg = (ActiveMQBytesMessage)m;
-            byte[] data = msg.getContent().getData();
+            byte[] data = new byte[(int)msg.getBodyLength()]; 
+            msg.readBytes(data);
             builder.setBody(data);
         }
         
