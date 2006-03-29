@@ -177,44 +177,37 @@
     <delete dir="${maven.repo.local}/activemq"/>
   </goal>
   
-  <goal name="test:ignore-failures" prereqs="init">
-    <maven:reactor basedir="." goals="test" includes="${maven.multiproject.includes}" ignoreFailures="true"/>
-    
-    <j:if test="${!failedProjects.isEmpty()}">
-        <ant:echo> </ant:echo>
-        <ant:echo>There are test failures in the following modules:</ant:echo>
-        <j:forEach var="failedProj" items="${failedProjects}">
-            <ant:echo>  ${failedProj} </ant:echo>
-        </j:forEach>
-        <fail message="There are test failures."/>
-    </j:if>
-    
-  </goal>
-<!--
   <goal name="test" prereqs="init">
     <j:set var="goal" value="test"/>
     <attainGoal name="multiproject:goal"/>
   </goal>
--->
 
-  <goal name="test:no-ignore-failures" prereqs="init">
-    <j:set var="goal" value="test"/>
-    <attainGoal name="multiproject:goal"/>
-  </goal>
-
-  <goal name="test" prereqs="">
-    <j:if test="${ignoreTest == 'true'}">
-    	<!--<ant:echo>IGNORE TEST</ant:echo>-->
-       <attainGoal name="test:ignore-failures"/>
+  <preGoal name="continuum:default">
+    <j:set var="generateBuildReports" value="${buildreport.generate}"/>
+    <j:if test="${generateBuildReports == 'true'}">
+      <attainGoal name="build-failure-report:init-report"/>
     </j:if>
-    <j:if test="${ignoreTest == 'false' || ignoreTest == null}">
-    	<!--<ant:echo>DO NOT IGNORE TEST</ant:echo>-->
-       <attainGoal name="test:no-ignore-failures"/>
-    </j:if>
+  </preGoal>
+  
+  <goal name="continuum:default" prereqs="init">
+    <j:choose>
+      <j:when test="${ignoreTestFailures==true}">
+        <maven:reactor basedir="." goals="default" includes="${maven.multiproject.includes}" ignoreFailures="true"/>
+        <j:if test="${!failedProjects.isEmpty()}">
+          <ant:echo> </ant:echo>
+          <ant:echo>There are test failures in the following modules:</ant:echo>
+          <j:forEach var="failedProj" items="${failedProjects}">
+            <ant:echo>  ${failedProj} </ant:echo>
+          </j:forEach>
+          <fail message="There are test failures."/>
+        </j:if>
+      </j:when>
+      <j:otherwise>    
+        <maven:reactor basedir="." goals="default" includes="${maven.multiproject.includes}" ignoreFailures="false"/>
+      </j:otherwise>
+    </j:choose>
   </goal>
-  
-  
-  
+   
   <goal name="eclipse" prereqs="init">
     <j:set var="goal" value="eclipse"/>
     <attainGoal name="multiproject:goal"/>
