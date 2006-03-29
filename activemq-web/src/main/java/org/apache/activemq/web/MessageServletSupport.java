@@ -38,6 +38,11 @@ import java.util.Map;
  * there are various ways to map JMS operations to web requests
  * so we put most of the common behaviour in a reusable base class.
  *
+ * This servlet can be configured with the following init paramters <dl>
+ * <dt>topic</dt><dd>Set to 'true' if the servle should default to using topics rather than channels</dd>
+ * <dt>destination</dt><dd>The default destination to use if one is not specifiied</dd>
+ * <dt></dt><dd></dd>
+ * </dl>
  * @version $Revision: 1.1.1.1 $
  */
 public abstract class MessageServletSupport extends HttpServlet {
@@ -74,7 +79,7 @@ public abstract class MessageServletSupport extends HttpServlet {
     }
 
     protected WebClient createWebClient(HttpServletRequest request) {
-        return new WebClient(getServletContext());
+        return new WebClient();
     }
 
     public static boolean asBoolean(String param) {
@@ -99,7 +104,7 @@ public abstract class MessageServletSupport extends HttpServlet {
     protected WebClient getWebClient(HttpServletRequest request) {
         HttpSession session = request.getSession(true);
         WebClient client = WebClient.getWebClient(session);
-        if (client == null) {
+        if (client == null || client.isClosed()) {
             client = createWebClient(request);
             session.setAttribute(WebClient.webClientAttribute, client);
         }
