@@ -47,7 +47,7 @@
       <outputFileNameMapping>run.jar</outputFileNameMapping>
       <unpack>false</unpack>
       <includes>
-         <include>org.apache.activemq:activemq-console</include>
+         <include>incubator-activemq:activemq-console</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -55,13 +55,14 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>activeio:activeio</include>
-         <include>mx4j:mx4j</include>
-         <include>org.apache.activemq:activemq-core</include>
          <include>backport-util-concurrent:backport-util-concurrent</include>
          <include>commons-logging:commons-logging</include>
-         <include>geronimo-spec:geronimo-spec-jms</include>
-         <include>geronimo-spec:geronimo-spec-j2ee-management</include>
+         <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
+         <include>incubator-activemq:activemq-core</include>
+         <include>incubator-activemq:activeio-core</include>
+         <include>incubator-activemq:activemq-console</include>         
+         <include>mx4j:mx4j</include>         
+         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -70,22 +71,23 @@
       <scope>runtime</scope>
       <includes>
           <!-- <include>${pom.groupId}:activemq-ra</include> -->
+         <include>incubator-activemq:activemq-optional</include>
+         <include>activecluster:activecluster</include>
          <include>commons-beanutils:commons-beanutils</include>
          <include>commons-collections:commons-collections</include>
          <include>commons-httpclient:commons-httpclient</include>
-         <include>xstream:xstream</include>
-         <include>xmlpull:xmlpull</include>
-         <include>activecluster:activecluster</include>
-         <include>org.apache.xbean:xbean-spring</include>
-         <include>springframework:spring</include>
          <include>commons-dbcp:commons-dbcp</include>
          <include>commons-pool:commons-pool</include>
-         <include>org.apache.derby:derby</include>
-         <include>geronimo-spec:geronimo-spec-j2ee-connector</include>
-         <include>mx4j:mx4j-remote</include>
-         <include>geronimo-spec:geronimo-spec-j2ee-jacc</include>
+         <include>jetty:jetty</include>
          <include>log4j:log4j</include>
-         <include>activeio:activeio</include>
+         <include>mx4j:mx4j-remote</include>
+         <include>org.apache.derby:derby</include>
+         <include>org.apache.geronimo.specs:geronimo-j2ee-jacc_1.0_spec</include>
+         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
+         <include>org.apache.xbean:xbean-spring</include>
+         <include>springframework:spring</include>
+         <include>xstream:xstream</include>
+         <include>xmlpull:xmlpull</include>
       </includes>
     </dependencySet>
   </dependencySets>
