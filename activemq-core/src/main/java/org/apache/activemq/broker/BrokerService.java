@@ -440,7 +440,7 @@ public class BrokerService implements Service {
         if (broker == null) {
             log.info("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION + " JMS Message Broker ("
                     + getBrokerName() + ") is starting");
-            log.info("For help or more information please see: http://www.logicblaze.com");
+            log.info("For help or more information please see: http://incubator.apache.org/activemq/");
             broker = createBroker();
         }
         return broker;
