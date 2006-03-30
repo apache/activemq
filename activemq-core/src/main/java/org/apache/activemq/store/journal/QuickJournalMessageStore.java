@@ -31,6 +31,7 @@ import org.apache.activemq.command.JournalQueueAck;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -63,6 +64,8 @@ public class QuickJournalMessageStore implements MessageStore {
     
     protected RecordLocation lastLocation;
     protected HashSet inFlightTxLocations = new HashSet();
+
+    private UsageManager usageManager;
     
     public QuickJournalMessageStore(QuickJournalPersistenceAdapter adapter, MessageStore checkpointStore, ActiveMQDestination destination) {
         this.peristenceAdapter = adapter;
@@ -70,6 +73,11 @@ public class QuickJournalMessageStore implements MessageStore {
         this.longTermStore = checkpointStore;
         this.destination = destination;
         this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext());
+    }
+    
+    public void setUsageManager(UsageManager usageManager) {
+        this.usageManager = usageManager;
+        longTermStore.setUsageManager(usageManager);
     }
 
     /**
@@ -368,11 +376,15 @@ public class QuickJournalMessageStore implements MessageStore {
     }
 
     public void start() throws Exception {
+        if( this.usageManager != null )
+            this.usageManager.addUsageListener(peristenceAdapter);
         longTermStore.start();
     }
 
     public void stop() throws Exception {
         longTermStore.stop();
+        if( this.usageManager != null )
+            this.usageManager.removeUsageListener(peristenceAdapter);
     }
 
     /**

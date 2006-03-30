@@ -16,15 +16,14 @@
  */
 package org.apache.activemq.broker.policy;
 
+import java.util.Iterator;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TopicSubscriptionTest;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
 import org.apache.activemq.util.MessageIdList;
-
-import java.util.List;
-import java.util.Iterator;
 
 public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
 

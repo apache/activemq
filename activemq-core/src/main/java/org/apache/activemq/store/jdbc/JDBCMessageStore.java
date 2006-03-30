@@ -27,6 +27,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -196,4 +197,7 @@ public class JDBCMessageStore implements MessageStore {
         return destination;
     }
 
+    public void setUsageManager(UsageManager usageManager) {
+        // we can ignore since we don't buffer up messages.
+    }
 }

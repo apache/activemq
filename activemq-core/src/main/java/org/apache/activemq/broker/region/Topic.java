@@ -75,6 +75,13 @@ public class Topic implements Destination {
         this.store = store;
         this.usageManager = new UsageManager(memoryManager);
         this.usageManager.setLimit(Long.MAX_VALUE);
+        
+        // Let the store know what usage manager we are using so that he can flush messages to disk
+        // when usage gets high.
+        if( store!=null ) {
+            store.setUsageManager(usageManager);
+        }
+
         this.destinationStatistics.setParent(parentStats);
     }
 

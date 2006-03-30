@@ -43,7 +43,7 @@ public class UsageManager {
     private long usage;
     
     private int percentUsage;
-    private int percentUsageMinDelta=10;
+    private int percentUsageMinDelta=1;
     
     private final Object usageMutex = new Object();
     

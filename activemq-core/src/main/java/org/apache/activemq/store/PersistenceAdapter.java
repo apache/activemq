@@ -20,6 +20,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.memory.UsageManager;
 
 import java.io.IOException;
 import java.util.Set;
@@ -97,5 +98,11 @@ public interface PersistenceAdapter extends Service {
     
     public boolean isUseExternalMessageReferences();
     public void setUseExternalMessageReferences(boolean enable);
+    
+    /**
+     * @param usageManager The UsageManager that is controlling the broker's memory usage.
+     */
+    public void setUsageManager(UsageManager usageManager);
+
    
 }

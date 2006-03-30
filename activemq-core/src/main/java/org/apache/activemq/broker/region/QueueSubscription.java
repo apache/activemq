@@ -21,6 +21,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.transaction.Synchronization;
 
@@ -33,11 +34,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     public QueueSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         super(broker,context, info);
     }
-    
-    public void add(MessageReference node) throws Exception {
-        super.add(node);
-    }
-    
+        
     /**
      * In the queue case, mark the node as dropped and then a gc cycle will remove it from 
      * the queue.
@@ -138,4 +135,53 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         return info.isExclusive();
     }
 
+    /**
+     * Override so that the message ref count is > 0 only when the message is being dispatched
+     * to a client.  Keeping it at 0 when it is in the pending list allows the message to be swapped out
+     * to disk.
+     * 
+     * @return true if the message was dispatched.
+     */
+    protected boolean dispatch(MessageReference node) throws IOException {
+        boolean rc = false;
+        // This brings the message into memory if it was swapped out.
+        node.incrementReferenceCount();
+        try {
+            rc = super.dispatch(node);
+        } finally {
+            // If the message was dispatched, it could be getting dispatched async, so we
+            // can only drop the reference count when that completes @see onDispatch
+            if( !rc ) {
+                node.incrementReferenceCount();
+            }
+        }
+        return rc;
+    }
+
+    /**
+     * OK Message was transmitted, we can now drop the reference count.
+     * 
+     * @see org.apache.activemq.broker.region.PrefetchSubscription#onDispatch(org.apache.activemq.broker.region.MessageReference, org.apache.activemq.command.Message)
+     */
+    protected void onDispatch(MessageReference node, Message message) {
+        // Now that the message has been sent over the wire to the client, 
+        // we can let it get swapped out.
+        node.decrementReferenceCount();
+        super.onDispatch(node, message);
+    }
+    
+    /**
+     * Sending a message to the DQL will require us to increment the ref count so we can get at the content.
+     */
+    protected void sendToDLQ(ConnectionContext context, MessageReference node) throws IOException, Exception {
+        // This brings the message into memory if it was swapped out.
+        node.incrementReferenceCount();
+        try{
+            super.sendToDLQ(context, node);
+        } finally {
+            // This let's the message be swapped out of needed.
+            node.decrementReferenceCount();
+        }
+    }
+    
 }

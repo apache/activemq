@@ -28,6 +28,7 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
 import org.apache.activemq.kaha.StringMarshaller;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -149,5 +150,11 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
         }
         container.load();
         return container;
+    }
+
+    /**
+     * @param usageManager The UsageManager that is controlling the broker's memory usage.
+     */
+    public void setUsageManager(UsageManager usageManager) {
     }
 }

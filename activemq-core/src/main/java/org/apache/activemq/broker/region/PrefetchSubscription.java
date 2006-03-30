@@ -79,7 +79,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     try{
                         MessageDispatch md=createMessageDispatch(node,node.getMessage());
                         dispatched.addLast(node);
-                        node.decrementReferenceCount();
                     }catch(Exception e){
                         log.error("Problem processing MessageDispatchNotification: "+mdn,e);
                     }
@@ -166,22 +165,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     inAckRange=true;
                 }
                 if(inAckRange){
-                    // Send the message to the DLQ
-                    node.incrementReferenceCount();
-                    try{
-                        Message message=node.getMessage();
-                        if(message!=null){
-                            // The original destination and transaction id do not get filled when the message is first
-                            // sent,
-                            // it is only populated if the message is routed to another destination like the DLQ
-                            DeadLetterStrategy deadLetterStrategy=node.getRegionDestination().getDeadLetterStrategy();
-                            ActiveMQDestination deadLetterDestination=deadLetterStrategy.getDeadLetterQueueFor(message.getDestination());
-                            BrokerSupport.resend(context, message, deadLetterDestination);
-
-                        }
-                    }finally{
-                        node.decrementReferenceCount();
-                    }
+                    sendToDLQ(context, node);
                     iter.remove();
                     dequeueCounter++;
                     index++;
@@ -198,6 +182,26 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             throw new JMSException("Could not correlate acknowledgment with dispatched message: "+ack);
         }
         throw new JMSException("Invalid acknowledgment: "+ack);
+    }
+
+    /**
+     * @param context
+     * @param node
+     * @throws IOException
+     * @throws Exception
+     */
+    protected void sendToDLQ(final ConnectionContext context, final MessageReference node) throws IOException, Exception {
+        // Send the message to the DLQ
+        Message message=node.getMessage();
+        if(message!=null){
+            // The original destination and transaction id do not get filled when the message is first
+            // sent,
+            // it is only populated if the message is routed to another destination like the DLQ
+            DeadLetterStrategy deadLetterStrategy=node.getRegionDestination().getDeadLetterStrategy();
+            ActiveMQDestination deadLetterDestination=deadLetterStrategy.getDeadLetterQueueFor(message.getDestination());
+            BrokerSupport.resend(context, message, deadLetterDestination);
+
+        }
     }
 
     protected boolean isFull(){
@@ -240,11 +244,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         }
     }
 
-    private void dispatch(final MessageReference node) throws IOException{
-        node.incrementReferenceCount();
+    protected boolean dispatch(final MessageReference node) throws IOException{
         final Message message=node.getMessage();
         if(message==null){
-            return;
+            return false;
         }
         // Make sure we can dispatch a message.
         if(canDispatch(node)&&!isSlaveBroker()){
@@ -264,16 +267,14 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 context.getConnection().dispatchSync(md);
                 onDispatch(node,message);
             }
-            // The onDispatch() does the node.decrementReferenceCount();
-        }else{
-            // We were not allowed to dispatch that message (an other consumer grabbed it before we did)
-            node.decrementReferenceCount();
+            return true;
+        } else {
+            return false;
         }
     }
 
-    synchronized private void onDispatch(final MessageReference node,final Message message){
+    synchronized protected void onDispatch(final MessageReference node,final Message message){
         boolean wasFull=isFull();
-        node.decrementReferenceCount();
         if(node.getRegionDestination()!=null){
             node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
             context.getConnection().getStatistics().onMessageDequeue(message);

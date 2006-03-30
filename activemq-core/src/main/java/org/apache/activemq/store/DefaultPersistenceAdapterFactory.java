@@ -23,7 +23,6 @@ import javax.sql.DataSource;
 
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.active.JournalImpl;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
@@ -42,7 +41,6 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
     private int journalLogFileSize = 1024*1024*20;
     private int journalLogFiles = 2;
     private File dataDirectory;
-    private UsageManager memManager;
     private DataSource dataSource;
     private TaskRunnerFactory taskRunnerFactory;
     private Journal journal;
@@ -60,9 +58,9 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
         
         // Setup the Journal
         if( useQuickJournal ) {
-            return new QuickJournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getMemManager(), getTaskRunnerFactory());
+            return new QuickJournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
         }  else {
-            return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getMemManager(), getTaskRunnerFactory());
+            return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
         }
     }
 
@@ -91,17 +89,6 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
 
     public void setJournalLogFileSize(int journalLogFileSize) {
         this.journalLogFileSize = journalLogFileSize;
-    }
-
-    public UsageManager getMemManager() {
-        if( memManager==null ) {
-            memManager = new UsageManager();
-        }
-        return memManager;
-    }
-
-    public void setMemManager(UsageManager memManager) {
-        this.memManager = memManager;
     }
     
     public DataSource getDataSource() throws IOException {

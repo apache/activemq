@@ -23,6 +23,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.memory.UsageManager;
 
 /**
  * A simple proxy that delegates to another MessageStore.
@@ -70,5 +71,9 @@ public class ProxyMessageStore implements MessageStore {
 
     public String getMessageReference(MessageId identity) throws IOException {
         return delegate.getMessageReference(identity);
+    }
+
+    public void setUsageManager(UsageManager usageManager) {
+        delegate.setUsageManager(usageManager);
     }
 }

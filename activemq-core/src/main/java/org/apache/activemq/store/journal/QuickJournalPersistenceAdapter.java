@@ -81,13 +81,13 @@ public class QuickJournalPersistenceAdapter implements PersistenceAdapter, Journ
 
     private final Journal journal;
     private final PersistenceAdapter longTermPersistence;
-    final UsageManager usageManager;
 
     private final WireFormat wireFormat = new OpenWireFormat();
 
     private final ConcurrentHashMap queues = new ConcurrentHashMap();
     private final ConcurrentHashMap topics = new ConcurrentHashMap();
     
+    private UsageManager usageManager;
     private long checkpointInterval = 1000 * 60 * 5;
     private long lastCheckpointRequest = System.currentTimeMillis();
     private long lastCleanup = System.currentTimeMillis();
@@ -111,7 +111,7 @@ public class QuickJournalPersistenceAdapter implements PersistenceAdapter, Journ
         }
     };
     
-    public QuickJournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, UsageManager memManager, TaskRunnerFactory taskRunnerFactory) throws IOException {
+    public QuickJournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
 
         this.journal = journal;
         journal.setJournalEventListener(this);
@@ -123,7 +123,14 @@ public class QuickJournalPersistenceAdapter implements PersistenceAdapter, Journ
         });
 
         this.longTermPersistence = longTermPersistence;
-        this.usageManager = memManager;
+    }
+    
+    /**
+     * @param usageManager The UsageManager that is controlling the destination's memory usage.
+     */
+    public void setUsageManager(UsageManager usageManager) {
+        this.usageManager = usageManager;
+        longTermPersistence.setUsageManager(usageManager);
     }
 
     public Set getDestinations() {
@@ -216,6 +223,7 @@ public class QuickJournalPersistenceAdapter implements PersistenceAdapter, Journ
 
     public void stop() throws Exception {
         
+        this.usageManager.removeUsageListener(this);
         if( !started.compareAndSet(true, false) )
             return;
         

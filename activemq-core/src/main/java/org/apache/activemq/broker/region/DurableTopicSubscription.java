@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.broker.region;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.io.IOException;
+import java.util.Iterator;
+
+import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -26,10 +29,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.SubscriptionKey;
 
-import javax.jms.InvalidSelectorException;
-
-import java.io.IOException;
-import java.util.Iterator;
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 public class DurableTopicSubscription extends PrefetchSubscription {
     
@@ -103,14 +103,21 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             } else {
                 redeliveredMessages.put(node.getMessageId(), new Integer(1));
             }
-            
-            iter.remove();
+            if( keepDurableSubsActive ) {
+                pending.addFirst(node);
+            } else {
+                node.decrementReferenceCount();
+                iter.remove();
+            }
         }
-        for (Iterator iter = pending.iterator(); iter.hasNext();) {
-            MessageReference node = (MessageReference) iter.next();
-            // node.decrementTargetCount();
-            iter.remove();
-        }        
+        
+        if( !keepDurableSubsActive ) {
+            for (Iterator iter = pending.iterator(); iter.hasNext();) {
+                MessageReference node = (MessageReference) iter.next();
+                node.decrementReferenceCount();
+                iter.remove();
+            }
+        }
         prefetchExtension=0;
     }
 
@@ -127,9 +134,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         if( !active && !keepDurableSubsActive ) {
             return;
         }
-        node = new IndirectMessageReference(node.getRegionDestination(), (Message) node);
+        node.incrementReferenceCount();
         super.add(node);
-        node.decrementReferenceCount();
     }
     
     public int getPendingQueueSize() {
@@ -148,14 +154,10 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         return active;
     }
     
-    public synchronized void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
-        super.acknowledge(context, ack);
-    }
-
     protected void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
         node.getRegionDestination().acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
-        ((IndirectMessageReference)node).drop();
+        node.decrementReferenceCount();
     }
     
     public String getSubscriptionName() {
