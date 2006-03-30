@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
     Copyright 2005-2006 The Apache Software Foundation
    
@@ -14,13 +15,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<project>
+
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0">
+  
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>incubator-activemq</groupId>
     <artifactId>activemq</artifactId>
     <version>4.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-core</artifactId>
@@ -29,29 +36,21 @@
 
   <dependencies>
 
-    <!--
+    <!-- activemq related dependencies -->    
     <dependency>
-      <groupId>org.apache.activemq.activeio</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
-      <version>3.0-SNAPSHOT</version>
-    </dependency>
-    -->
-    <dependency>
-      <groupId>activeio</groupId>
-      <artifactId>activeio</artifactId>
-      <version>2.1</version>
     </dependency>
     <dependency>
-      <groupId>backport-util-concurrent</groupId>
-      <artifactId>backport-util-concurrent</artifactId>
-    </dependency>
- 
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
+      <groupId>incubator-activemq</groupId>
+      <artifactId>activemq-jaas</artifactId>
     </dependency>
     
-
+    <!-- =============================== -->
+    <!-- common dependencies -->
+    <!-- =============================== -->
+    
+    <!-- geronimo -->
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
@@ -68,16 +67,8 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>axion</groupId>
-      <artifactId>axion</artifactId>
-    </dependency>
+    
+    <!-- commons -->
     <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
@@ -87,20 +78,34 @@
       <artifactId>commons-primitives</artifactId>
     </dependency>
     <dependency>
-      <groupId>regexp</groupId>
-      <artifactId>regexp</artifactId>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>backport-util-concurrent</groupId>
+      <artifactId>backport-util-concurrent</artifactId>
+    </dependency> 
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>axion</groupId>
+      <artifactId>axion</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>regexp</groupId>
+      <artifactId>regexp</artifactId>
+    </dependency>    
     <dependency>
       <groupId>activemq</groupId>
       <artifactId>jmdns</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>incubator-activemq</groupId>
-      <artifactId>activemq-jaas</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>activemq</groupId>
       <artifactId>smack</artifactId>
@@ -109,7 +114,6 @@
       <groupId>activemq</groupId>
       <artifactId>smackx</artifactId>
     </dependency>
-
     <dependency>
       <groupId>xmlbeans</groupId>
       <artifactId>xbean</artifactId>
@@ -144,7 +148,6 @@
       <groupId>activesoap</groupId>
       <artifactId>jaxp-api</artifactId>
     </dependency>
-
     <dependency>
       <groupId>mx4j</groupId>
       <artifactId>mx4j</artifactId>
@@ -164,13 +167,7 @@
     <dependency>
       <groupId>mx4j</groupId>
       <artifactId>mx4j-impl</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>commons-pool</groupId>
-      <artifactId>commons-pool</artifactId>
-    </dependency>
-
+    </dependency>    
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>

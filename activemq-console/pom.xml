@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
     Copyright 2005-2006 The Apache Software Foundation
    
@@ -14,13 +15,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<project>
+
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0">
+  
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>incubator-activemq</groupId>
     <artifactId>activemq</artifactId>
     <version>4.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-console</artifactId>
@@ -28,11 +35,26 @@
   <description>ActiveMQ Management Console</description>
 
   <dependencies>
+    <!-- activemq related dependencies -->
     <dependency>
-      <groupId>incubator-activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core-test</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
+    </dependency>
+        
+    <!-- geronimo -->
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_1.1_spec</artifactId>
+    </dependency>
+        
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring</artifactId>
