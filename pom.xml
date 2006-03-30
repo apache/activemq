@@ -558,10 +558,17 @@
         <version>1.6.2</version>
       </dependency>
       
-      <!-- Reused Dependencies -->
-      
-      
-      
+      <!-- ACTIVEMQ-WEB Specific Dependencies -->
+      <dependency>
+        <groupId>rome</groupId> 
+        <artifactId>rome</artifactId>
+        <version>0.8</version>
+      </dependency>
+      <dependency>
+        <groupId>jdom</groupId> 
+        <artifactId>jdom</artifactId>
+        <version>1.0</version>
+      </dependency>
       
       <!-- ACTIVEMQ-CORE DEPENDENCIES -->
       <dependency>
@@ -570,10 +577,7 @@
         <version>2.1</version>
       </dependency>
       
-      
-      
-      
-      <!-- ActiveMQ-Jaas Dependencies -->
+      <!-- ACTIVEMQ-JAAS Dependencies -->
       <dependency>
         <groupId>directory</groupId>
         <artifactId>apacheds-core</artifactId>
