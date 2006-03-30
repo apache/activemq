@@ -102,17 +102,13 @@
   <build>
 
     <plugins>
-
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
-          <useFile>true</useFile>
-          <excludes>
-
-          </excludes>
+          <useFile>true</useFile>          
           <includes>
             <include>**/*Test.*</include>
           </includes>
@@ -129,8 +125,14 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>org.apache.activemq.console.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
       </plugin>
-
     </plugins>
   </build>
 
