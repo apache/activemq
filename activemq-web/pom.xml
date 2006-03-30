@@ -36,6 +36,7 @@
   <description>Web Connector for REST API and Streamlets support</description>
   
   <dependencies>
+  
     <!-- activemq -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -45,7 +46,8 @@
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core-test</artifactId>
     </dependency>
-   
+    
+    <!-- Optional used fo in-web container testing -->
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jsp_2.0_spec</artifactId>
@@ -56,14 +58,19 @@
         </exclusion>
       </exclusions>
     </dependency>
+        
     <dependency>
-      <groupId>org.apache.xbean</groupId>
-      <artifactId>xbean-spring</artifactId>
+      <groupId>jdom</groupId>
+      <artifactId>jdom</artifactId>
     </dependency>
+    
+    <!-- Rome RSS Reader -->
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring</artifactId>
+      <groupId>rome</groupId> 
+      <artifactId>rome</artifactId>
     </dependency>
+    
+    <!-- web container -->
     <dependency>
       <groupId>jetty</groupId>
       <artifactId>servlet-api</artifactId>
@@ -73,12 +80,36 @@
       <artifactId>jetty</artifactId>
     </dependency>
     
+    <!-- For Spring servlet -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring</artifactId>
+    </dependency>
+    
+    <!--  for custom XML parsing -->
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>xmlpull</groupId>
+      <artifactId>xmlpull</artifactId>
+    </dependency>    
+
+    <dependency>
+      <groupId>xstream</groupId>
+      <artifactId>xstream</artifactId>
+    </dependency>    
+    
     <!-- used for testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    
+    <!-- Derby SQL DB used for testing JDBC message store -->
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
