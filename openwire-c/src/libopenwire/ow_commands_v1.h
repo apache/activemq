@@ -653,6 +653,8 @@ ow_boolean ow_is_a_DataResponse(ow_DataStructure *object);
 typedef struct ow_KeepAliveInfo {
 
    ow_byte structType;
+   ow_int commandId;
+   ow_boolean responseRequired;
 
 } ow_KeepAliveInfo;
 ow_KeepAliveInfo *ow_KeepAliveInfo_create(apr_pool_t *pool);

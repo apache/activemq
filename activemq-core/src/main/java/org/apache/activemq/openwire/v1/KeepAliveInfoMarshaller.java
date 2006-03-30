@@ -37,7 +37,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class KeepAliveInfoMarshaller extends BaseDataStreamMarshaller {
+public class KeepAliveInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Return the type of Data Structure we marshal

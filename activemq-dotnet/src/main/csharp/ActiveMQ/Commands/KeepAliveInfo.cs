@@ -32,7 +32,7 @@ namespace ActiveMQ.Commands
 	/// <summary>
     ///  The ActiveMQ KeepAliveInfo Command
 	/// </summary>
-    public class KeepAliveInfo : BaseDataStructure, Command
+    public class KeepAliveInfo : BaseCommand
     {
         public const byte ID_KeepAliveInfo = 10;
     			

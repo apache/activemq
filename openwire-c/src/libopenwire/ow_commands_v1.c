@@ -2223,20 +2223,20 @@ ow_KeepAliveInfo *ow_KeepAliveInfo_create(apr_pool_t *pool)
 
 apr_status_t ow_marshal1_KeepAliveInfo(ow_bit_buffer *buffer, ow_KeepAliveInfo *object)
 {
-   ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
+   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
    
 	return APR_SUCCESS;
 }
 apr_status_t ow_marshal2_KeepAliveInfo(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_KeepAliveInfo *object)
 {
-   ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
+   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
    
 	return APR_SUCCESS;
 }
 
 apr_status_t ow_unmarshal_KeepAliveInfo(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_KeepAliveInfo *object, apr_pool_t *pool)
 {
-   ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
+   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
    
 	return APR_SUCCESS;
 }
@@ -2384,6 +2384,7 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
    case OW_DESTINATIONINFO_TYPE:
    case OW_SHUTDOWNINFO_TYPE:
    case OW_DATARESPONSE_TYPE:
+   case OW_KEEPALIVEINFO_TYPE:
    case OW_FLUSHCOMMAND_TYPE:
    case OW_MESSAGEDISPATCH_TYPE:
    case OW_ACTIVEMQMAPMESSAGE_TYPE:
