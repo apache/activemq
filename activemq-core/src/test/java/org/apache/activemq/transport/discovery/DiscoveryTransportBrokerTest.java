@@ -124,18 +124,22 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
     
     protected TransportConnector createConnector() throws Exception, IOException, URISyntaxException {
         TransportConnector x = super.createConnector();
-        x.setDiscoveryUri(new URI("multicast://default"));
+        x.setDiscoveryUri(new URI(getDiscoveryUri()));
         return x;
+    }
+
+    protected String getDiscoveryUri() {
+        return "multicast://default";
     }
     
     protected TransportConnector createRemoteConnector() throws Exception, IOException, URISyntaxException {
         TransportConnector x = super.createRemoteConnector();
-        x.setDiscoveryUri(new URI("multicast://default"));
+        x.setDiscoveryUri(new URI(getDiscoveryUri()));
         return x;
     }
         
     protected StubConnection createFailoverConnection() throws Exception {        
-        URI failoverURI = new URI("discovery:multicast://default");
+        URI failoverURI = new URI("discovery:" + getDiscoveryUri());
         Transport transport = TransportFactory.connect(failoverURI);
         StubConnection connection = new StubConnection(transport);
         connections.add(connection);
