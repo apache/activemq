@@ -19,10 +19,6 @@
                 </constructor-arg>
 
                 <constructor-arg index="2">
-                    <amq:usageManager/>
-                </constructor-arg>
-
-                <constructor-arg index="3">
                     <bean id="myTaskRunnerFactory" class="org.apache.activemq.thread.TaskRunnerFactory"/>
                 </constructor-arg>
             </amq:journalPersistenceAdapter>
