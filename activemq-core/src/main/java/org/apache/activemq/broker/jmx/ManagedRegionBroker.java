@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -33,6 +34,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -60,6 +62,7 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
 
@@ -160,11 +163,11 @@ public class ManagedRegionBroker extends RegionBroker{
         String name="";
         SubscriptionKey key=new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
         if(sub.getConsumerInfo().isDurable()){
-            name=key.toString();
+            name = key.toString();
+        } else {
+            name = sub.getConsumerInfo().getConsumerId().toString();
         }
-        if(sub.getConsumerInfo()!=null&&sub.getConsumerInfo().getConsumerId()!=null){
-            name+="."+sub.getConsumerInfo().getConsumerId();
-        }
+        
         try{
             ObjectName objectName=new ObjectName(brokerObjectName.getDomain()+":"+"BrokerName="+map.get("BrokerName")
                             +","+"Type=Subscription,"+"active=true,"+"name="+JMXSupport.encodeObjectNamePart(name)+"");

@@ -81,9 +81,14 @@ public class Queue implements Destination {
         this.destination = destination;
         this.usageManager = new UsageManager(memoryManager);
         this.usageManager.setLimit(Long.MAX_VALUE);
-        
         this.store = store;
 
+        // Let the store know what usage manager we are using so that he can flush messages to disk
+        // when usage gets high.
+        if( store!=null ) {
+            store.setUsageManager(usageManager);
+        }
+        
         destinationStatistics.setParent(parentStats);
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
 

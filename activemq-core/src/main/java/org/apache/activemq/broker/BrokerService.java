@@ -900,6 +900,7 @@ public class BrokerService implements Service {
     protected Broker createRegionBroker() throws Exception {
         // we must start the persistence adaptor before we can create the region
         // broker
+        getPersistenceAdapter().setUsageManager(getMemoryManager());
         getPersistenceAdapter().start();
 		RegionBroker regionBroker = null;
         if (isUseJmx()) {
@@ -947,7 +948,6 @@ public class BrokerService implements Service {
 
     protected DefaultPersistenceAdapterFactory createPersistenceFactory() {
         DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
-        factory.setMemManager(getMemoryManager());
         factory.setDataDirectory(getDataDirectory());
         factory.setTaskRunnerFactory(getTaskRunnerFactory());
         return factory;

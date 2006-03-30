@@ -171,10 +171,13 @@ public class TopicRegion extends AbstractRegion {
                 DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
                 ConsumerInfo consumerInfo = createInactiveConsumerInfo(info);
                 if( sub == null ) { 
-                    sub = (DurableTopicSubscription) createSubscription(context, consumerInfo );
+                    ConnectionContext c = new ConnectionContext();
+                    c.setBroker(context.getBroker());
+                    c.setClientId(key.getClientId());
+                    c.setConnectionId(consumerInfo.getConsumerId().getParentId().getParentId());
+                    sub = (DurableTopicSubscription) createSubscription(c, consumerInfo );
                 }
                 
-                subscriptions.put(consumerInfo.getConsumerId(), sub);
                 topic.addSubscription(context, sub);
             }            
         }

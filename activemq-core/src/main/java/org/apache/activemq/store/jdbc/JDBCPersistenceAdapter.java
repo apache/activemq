@@ -28,6 +28,7 @@ import org.apache.activeio.util.FactoryFinder;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -355,6 +356,12 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
 
     public void setStatements(Statements statements) {
         this.statements = statements;
+    }
+
+    /**
+     * @param usageManager The UsageManager that is controlling the destination's memory usage.
+     */
+    public void setUsageManager(UsageManager usageManager) {
     }
 
 }

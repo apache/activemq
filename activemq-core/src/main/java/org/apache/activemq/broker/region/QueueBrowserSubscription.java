@@ -24,10 +24,11 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
-public class QueueBrowserSubscription extends PrefetchSubscription {
+public class QueueBrowserSubscription extends QueueSubscription {
         
     boolean browseDone;
     
@@ -65,7 +66,15 @@ public class QueueBrowserSubscription extends PrefetchSubscription {
             return super.createMessageDispatch(node, message);
         }
     }
+    
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         return !browseDone && super.matches(node, context);
     }
+
+    /**
+     * Since we are a browser we don't really remove the message from the queue.
+     */
+    protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
+    }
+
 }
