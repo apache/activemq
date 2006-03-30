@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
+
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  xmlns="http://maven.apache.org/POM/4.0.0">
+  
   <modelVersion>4.0.0</modelVersion>
+  
   <groupId>incubator-activemq</groupId>
   <artifactId>activemq</artifactId>
   <version>4.0-SNAPSHOT</version>
@@ -52,6 +72,12 @@
       <name>maven-csharp</name>
       <url>http://maven-csharp.javaforge.com/repo</url>
     </repository>
+    <repository>
+      <id>apache-maven1-snapshot</id>
+      <name>Activemq Maven1 Repo</name>
+      <url>http://cvs.apache.org/repository</url>
+      <layout>legacy</layout>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -94,20 +120,22 @@
   </distributionManagement>
 
   <modules>
-
+    <module>activecluster</module>
+    <module>activemq-jaas</module>
     <module>activemq-core</module>
     <module>activemq-console</module>
     <module>activemq-ra</module>
-    <module>activemq-jaas</module>
+    <!-- module>activemq-web</module -->
     <module>activemq-optional</module>
-    <module>activemq-web</module>
-    <module>activemq-systest</module>
+    <module>activemq-gbean</module>
+    <module>activemq-gbean-management</module>
+    <!--module>activemq-systest</module -->
     <module>assembly</module>
 
 <!--
     <module>activeio</module>
 -->
-    <module>activecluster</module>
+    <!-- module>activecluster</module -->
 
   </modules> 
 
@@ -132,7 +160,62 @@
 
   <dependencyManagement>
     <dependencies>
-    
+      <!-- =============================== -->
+      <!-- ActiveMQ Dependencies -->
+      <!-- =============================== -->
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-core-test</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-jaas</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-gbean-management</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activecluster</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-console</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-optional</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-ra</artifactId>
+        <version>${pom.version}</version>
+        <type>rar</type>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-web</artifactId>
+        <version>${pom.version}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activeio-core</artifactId>
+        <version>3.0-SNAPSHOT</version>
+      </dependency>
+            
       <!-- =============================== -->
       <!-- Required dependencies -->
       <!-- =============================== -->
@@ -205,21 +288,19 @@
       </dependency>
       
       <!-- used to support optional transport configuration via URI query strings -->
-      <!--
+      
       <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>1.6.1</version>
       </dependency>
-      -->
       
       <dependency>
         <groupId>commons-collections</groupId>
         <artifactId>commons-collections</artifactId>
         <version>2.1</version>
-        <optional>true</optional>
       </dependency>
-      
+            
       <!-- Optional Spring Support -->
       <dependency>
         <groupId>org.springframework</groupId>
@@ -240,6 +321,12 @@
       <dependency>
         <groupId>org.apache.derby</groupId>
         <artifactId>derby</artifactId>
+        <version>10.1.1.0</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+      <groupId>org.apache.derby</groupId>
+        <artifactId>derbynet</artifactId>
         <version>10.1.1.0</version>
         <optional>true</optional>
       </dependency>
@@ -274,14 +361,15 @@
         <version>1.7.2.2</version>
         <optional>true</optional>
       </dependency>
+      -->
+      
       <dependency>
         <groupId>commons-dbcp</groupId>
         <artifactId>commons-dbcp</artifactId>
         <version>1.2</version>
         <optional>true</optional>
       </dependency>
-      -->
-
+      
       <dependency>
         <groupId>commons-pool</groupId>
         <artifactId>commons-pool</artifactId>
@@ -468,6 +556,85 @@
         <groupId>ant</groupId>
         <artifactId>ant</artifactId>
         <version>1.6.2</version>
+      </dependency>
+      
+      <!-- Reused Dependencies -->
+      
+      
+      
+      
+      <!-- ACTIVEMQ-CORE DEPENDENCIES -->
+      <dependency>
+        <groupId>activeio</groupId>
+        <artifactId>activeio</artifactId>
+        <version>2.1</version>
+      </dependency>
+      
+      
+      
+      
+      <!-- ActiveMQ-Jaas Dependencies -->
+      <dependency>
+        <groupId>directory</groupId>
+        <artifactId>apacheds-core</artifactId>
+        <version>0.9.2</version>
+      </dependency>      
+      <dependency>
+        <groupId>directory</groupId>
+        <artifactId>apacheds-shared</artifactId>
+        <version>0.9.2</version>
+      </dependency>
+      <dependency>
+        <groupId>directory-shared</groupId>
+        <artifactId>apache-ldapber-provider</artifactId>
+        <version>0.9.2</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-test</groupId>
+            <artifactId>commons-test</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>directory-shared</groupId>
+        <artifactId>ldap-common</artifactId>
+        <version>0.9.2</version>
+      </dependency>
+      <dependency>
+        <groupId>directory-asn1</groupId>
+        <artifactId>asn1-codec</artifactId>
+        <version>0.3.2</version>
+      </dependency>
+      <dependency>
+        <groupId>directory-asn1</groupId>
+        <artifactId>asn1-der</artifactId>
+        <version>0.3.2</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-test</groupId>
+            <artifactId>commons-test</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>directory-shared</groupId>
+        <artifactId>kerberos-common</artifactId>
+        <version>0.5</version>
+      </dependency>
+      <dependency>
+        <groupId>directory-network</groupId>
+        <artifactId>mina</artifactId>
+        <version>0.7.3</version>
+      </dependency>
+      <dependency>
+        <groupId>directory-protocols</groupId>
+        <artifactId>kerberos-protocol</artifactId>
+        <version>0.5</version>
+      </dependency>
+      <dependency>
+        <groupId>directory-protocols</groupId>
+        <artifactId>ldap-protocol</artifactId>
+        <version>0.9.2</version>
       </dependency>
 
     </dependencies>

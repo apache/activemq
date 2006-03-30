@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
     Copyright 2005-2006 The Apache Software Foundation
    
@@ -14,13 +15,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<project>
+
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0">
+  
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>incubator-activemq</groupId>
     <artifactId>activemq</artifactId>
     <version>4.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-web</artifactId>
@@ -29,14 +36,25 @@
   <description>Web Connector for REST API and Streamlets support</description>
   
   <dependencies>
+    <!-- activemq -->
     <dependency>
-      <groupId>incubator-activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core-test</artifactId>
+    </dependency>
+   
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jsp_2.0_spec</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-servlet_2.4_spec</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.xbean</groupId>
@@ -54,13 +72,18 @@
       <groupId>jetty</groupId>
       <artifactId>jetty</artifactId>
     </dependency>
-
+    
+    <!-- used for testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
     Copyright 2005-2006 The Apache Software Foundation
    
@@ -14,13 +15,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<project>
+
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0">
+  
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>incubator-activemq</groupId>
     <artifactId>activemq</artifactId>
     <version>4.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-assembly</artifactId>
@@ -29,44 +36,96 @@
   <description>Puts together the ActiveMQ distribution</description>
   
   <dependencies>
-  
+    
+    <!-- activemq -->
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core-test</artifactId>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-optional</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
       <type>rar</type>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
       <type>war</type>
-      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activecluster</artifactId>
+      <optional>true</optional>
+    </dependency>
+    
+    <!-- commons -->
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-dbcp</groupId>
+      <artifactId>commons-dbcp</artifactId>
+      <version>1.2</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
+      <optional>true</optional>
+    </dependency>
+    
+    <dependency>
+      <groupId>activesoap</groupId>
+      <artifactId>jaxp-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>activemq</groupId>
+      <artifactId>jmdns</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>xstream</groupId>
+      <artifactId>xstream</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>xmlpull</groupId>
+      <artifactId>xmlpull</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>mx4j</groupId>
+      <artifactId>mx4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>mx4j</groupId>
+      <artifactId>mx4j-remote</artifactId>
     </dependency>
 
     <dependency>
@@ -85,15 +144,23 @@
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jsp_2.0_spec</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-servlet_2.4_spec</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
-
+    
     <dependency>
-      <groupId>org.apache.xbean</groupId>
-      <artifactId>xbean-spring</artifactId>
+       <groupId>org.apache.xbean</groupId>
+       <artifactId>xbean-spring</artifactId>
+       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring</artifactId>
+      <optional>true</optional>
     </dependency>
     
     <dependency>
@@ -104,18 +171,45 @@
       <groupId>jetty</groupId>
       <artifactId>jetty</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbynet</artifactId>
+      <optional>true</optional>
+    </dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     
+    <!-- dependencies specific to this module -->
+    <dependency>
+      <groupId>jrms</groupId>
+      <artifactId>jrms</artifactId>
+      <version>1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xmlParserAPIs</artifactId>
+      <version>2.6.2</version>
+    </dependency>
+    
   </dependencies>
 
   <build>
+    
     <plugins>
-
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -149,7 +243,7 @@
               <descriptors>
                  <descriptor>src/main/descriptors/bin.xml</descriptor>
               </descriptors>
-              <finalName>activemq-${project.version}</finalName>
+              <finalName>activemq-${pom.version}</finalName>
               <appendAssemblyId>false</appendAssemblyId>
             </configuration>
           </execution>
@@ -163,7 +257,7 @@
               <descriptors>
                  <descriptor>src/main/descriptors/all-jar.xml</descriptor>
               </descriptors>
-              <finalName>activemq-full-${project.version}</finalName>
+              <finalName>activemq-full-${pom.version}</finalName>
               <appendAssemblyId>false</appendAssemblyId>
             </configuration>
           </execution>
