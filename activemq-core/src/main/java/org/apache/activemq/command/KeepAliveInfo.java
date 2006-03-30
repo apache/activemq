@@ -23,7 +23,7 @@ import org.apache.activemq.util.IntrospectionSupport;
  * @openwire:marshaller code="10"
  * @version $Revision$
  */
-public class KeepAliveInfo implements Command {
+public class KeepAliveInfo extends BaseCommand {
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.KEEP_ALIVE_INFO;
 
@@ -32,20 +32,6 @@ public class KeepAliveInfo implements Command {
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
-    }
-
-    public void setCommandId(int value) {
-    }
-
-    public int getCommandId() {
-        return 0;
-    }
-
-    public void setResponseRequired(boolean responseRequired) {
-    }
-
-    public boolean isResponseRequired() {
-        return false;
     }
 
     public boolean isResponse() {

@@ -35,7 +35,7 @@ import org.apache.activemq.command.*;
  *
  * @version $Revision$
  */
-public class KeepAliveInfoTest extends DataFileGeneratorTestSupport {
+public class KeepAliveInfoTest extends BaseCommandTestSupport {
 
 
     public static KeepAliveInfoTest SINGLETON = new KeepAliveInfoTest();

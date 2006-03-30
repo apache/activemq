@@ -34,7 +34,7 @@ namespace ActiveMQ.OpenWire.V1
   /// <summary>
   ///  Marshalling code for Open Wire Format for KeepAliveInfo
   /// </summary>
-  class KeepAliveInfoMarshaller : BaseDataStreamMarshaller
+  class KeepAliveInfoMarshaller : BaseCommandMarshaller
   {
 
 
