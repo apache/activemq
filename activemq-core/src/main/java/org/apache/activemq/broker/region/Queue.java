@@ -98,7 +98,9 @@ public class Queue implements Destination {
                 public void recoverMessage(Message message) {
                     message.setRegionDestination(Queue.this);
                     MessageReference reference = createMessageReference(message);
-                    messages.add(reference);
+                    synchronized (messages) {
+                        messages.add(reference);
+                    }
                     reference.decrementReferenceCount();
                     destinationStatistics.getMessages().increment();
                 }
@@ -326,8 +328,12 @@ public class Queue implements Destination {
     }
 
     public String toString() {
+        int size = 0;
+        synchronized (messages) {
+            size = message.size();
+        }
         return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size()
-                + ", memory=" + usageManager.getPercentUsage() + "%, size=" + messages.size() + ", in flight groups="
+                + ", memory=" + usageManager.getPercentUsage() + "%, size=" + size + ", in flight groups="
                 + messageGroupOwners;
     }
 
