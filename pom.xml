@@ -125,7 +125,7 @@
     <module>activemq-core</module>
     <module>activemq-console</module>
     <module>activemq-ra</module>
-    <!-- module>activemq-web</module -->
+    <module>activemq-web</module>
     <module>activemq-optional</module>
     <module>activemq-gbean</module>
     <module>activemq-gbean-management</module>
