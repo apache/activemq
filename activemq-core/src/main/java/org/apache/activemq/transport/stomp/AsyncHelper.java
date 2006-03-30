@@ -22,7 +22,8 @@ class AsyncHelper {
             try {
                 return helper.cycle();
             }
-            catch (InterruptedException e) { /* */
+            catch (InterruptedException e) { 
+                Thread.currentThread().interrupt();
             }
         }
     }
