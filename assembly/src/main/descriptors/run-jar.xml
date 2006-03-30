@@ -25,7 +25,7 @@
       <outputDirectory>/</outputDirectory>
       <unpack>true</unpack>
       <includes>
-         <include>org.apache.activemq:activemq-console</include>
+         <include>incubator-activemq:activemq-console</include>
       </includes>
     </dependencySet>
   </dependencySets>
