@@ -58,6 +58,8 @@ public class MasterConnector implements Service{
     private AtomicBoolean masterActive=new AtomicBoolean(false);
     private AtomicBoolean started=new AtomicBoolean(false);
     private final IdGenerator idGenerator=new IdGenerator();
+    private String userName;
+    private String password;
 
     ConnectionInfo connectionInfo;
     SessionInfo sessionInfo;
@@ -126,6 +128,8 @@ public class MasterConnector implements Service{
         connectionInfo=new ConnectionInfo();
         connectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
         connectionInfo.setClientId(idGenerator.generateId());
+        connectionInfo.setUserName(userName);
+        connectionInfo.setPassword(password);
         localBroker.oneway(connectionInfo);
         remoteBroker.oneway(connectionInfo);
 
@@ -240,10 +244,40 @@ public class MasterConnector implements Service{
     public void setRemoteURI(URI remoteURI){
         this.remoteURI=remoteURI;
     }
+    
+    /**
+     * @return Returns the password.
+     */
+    public String getPassword(){
+        return password;
+    }
+
+    /**
+     * @param password The password to set.
+     */
+    public void setPassword(String password){
+        this.password=password;
+    }
+
+    /**
+     * @return Returns the userName.
+     */
+    public String getUserName(){
+        return userName;
+    }
+
+    /**
+     * @param userName The userName to set.
+     */
+    public void setUserName(String userName){
+        this.userName=userName;
+    }
 
     private void shutDown(){
         masterActive.set(false);
         broker.masterFailed();
         ServiceSupport.dispose(this);
     }
+
+   
 }
