@@ -197,9 +197,10 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
                 ActiveMQMessage m = receive();
                 if( m!=null && m.getDataStructureType() == CommandTypes.ACTIVEMQ_BYTES_MESSAGE ) {
                     // First message.
+                    long producerSequenceId = m.getMessageId().getProducerSequenceId();
                     if( producerId == null ) {
                         // We have to start a stream at sequence id = 0
-                        if( m.getMessageId().getProducerSequenceId()!=0 ) {
+                        if( producerSequenceId!=0 ) {
                             continue;
                         }
                         nextSequenceId++;
@@ -209,8 +210,8 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
                         if( !m.getMessageId().getProducerId().equals(producerId) ) {
                             throw new IOException("Received an unexpected message: invalid producer: "+m);
                         }
-                        if( m.getMessageId().getProducerSequenceId()!=nextSequenceId++ ) {
-                            throw new IOException("Received an unexpected message: invalid sequence id: "+m);
+                        if( producerSequenceId!=nextSequenceId++ ) {
+                            throw new IOException("Received an unexpected message: expected ID: " + (nextSequenceId - 1)  +  " but was: " + producerSequenceId + " for message: "+m);
                         }
                     }
                     
