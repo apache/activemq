@@ -285,9 +285,17 @@ public class TransportConnector implements Connector {
         connections.remove(connection);
     }
 
-    public String getName() {
-        if( name == null ) {
-            name = server.getConnectURI().toString();
+    public String getName(){
+        if(name==null){
+            if(server!=null){
+                if(server.getConnectURI()!=null){
+                    name=server.getConnectURI().toString();
+                }else{
+                    name = server.getClass() + ":Not started";
+                }
+            }else{
+                name = "NOT_SET";
+            }
         }
         return name;
     }
