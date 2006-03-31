@@ -22,7 +22,6 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -32,7 +31,6 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
@@ -57,7 +55,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import javax.jms.TemporaryTopic;
 
 /**
  * A useful base class for implementing demand forwarding bridges.
@@ -77,6 +74,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected String localBrokerName;
     protected String remoteBrokerName;
     protected String localClientId;
+    protected String userName;
+    protected String password;
     protected int prefetchSize = 1000;
     protected boolean dispatchAsync;
     protected String destinationFilter = ">";
@@ -176,6 +175,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
             localClientId="NC_"+remoteBrokerName+"_inbound"+name;
             localConnectionInfo.setClientId(localClientId);
+            localConnectionInfo.setUserName(userName);
+            localConnectionInfo.setPassword(password);
             localBroker.oneway(localConnectionInfo);
 
             localSessionInfo=new SessionInfo(localConnectionInfo,1);
@@ -194,6 +195,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             remoteConnectionInfo=new ConnectionInfo();
             remoteConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
             remoteConnectionInfo.setClientId("NC_"+localBrokerName+"_outbound"+name);
+            remoteConnectionInfo.setUserName(userName);
+            remoteConnectionInfo.setPassword(password);
             remoteBroker.oneway(remoteConnectionInfo);
 
             BrokerInfo brokerInfo=new BrokerInfo();
@@ -214,13 +217,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                             +destinationFilter));
             demandConsumerInfo.setPrefetchSize(prefetchSize);
             remoteBroker.oneway(demandConsumerInfo);
-            
-            //we want infomation about Destinations as well
-            ConsumerInfo destinationInfo  = new ConsumerInfo(remoteSessionInfo,2);
-            destinationInfo.setDestination(AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC);
-            destinationInfo.setPrefetchSize(prefetchSize);
-            remoteBroker.oneway(destinationInfo);
-            
+
             startedLatch.countDown();
         }
     }
@@ -331,32 +328,6 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 if(log.isTraceEnabled())
                     log.trace("Ignoring sub " + info + " already subscribed to matching destination");
             }
-        }else if (data.getClass()==DestinationInfo.class){
-//          It's a destination info - we want to pass up
-            //infomation about temporary destinations 
-            DestinationInfo destInfo = (DestinationInfo) data;
-            BrokerId[] path=destInfo.getBrokerPath();
-            if((path!=null&&path.length>= networkTTL)){
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring Subscription " + destInfo + " restricted to " + networkTTL + " network hops only");
-                return;
-            }
-            if(contains(destInfo.getBrokerPath(),localBrokerPath[0])){
-                // Ignore this consumer as it's a consumer we locally sent to the broker.
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring sub " + destInfo + " already routed through this broker once");
-                return;
-            }
-            
-            destInfo.setConnectionId(localConnectionInfo.getConnectionId());
-            if (destInfo.getDestination() instanceof ActiveMQTempDestination){
-                //re-set connection id so comes from here
-                ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destInfo.getDestination();
-                tempDest.setConnectionId(localSessionInfo.getSessionId().getConnectionId());
-            }
-            destInfo.setBrokerPath(appendToBrokerPath(destInfo.getBrokerPath(),getRemoteBrokerPath()));
-            localBroker.oneway(destInfo);
-            
         }
         if(data.getClass()==RemoveInfo.class){
             ConsumerId id=(ConsumerId) ((RemoveInfo) data).getObjectId();
@@ -374,8 +345,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             localBroker.oneway(sub.getLocalInfo());
         }
     }
-    
-    
+
     protected void removeSubscription(DemandSubscription sub) throws IOException {
         if(sub!=null){
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
@@ -768,7 +738,21 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected abstract void addRemoteBrokerToBrokerPath(ConsumerInfo info) throws IOException;
 
     protected abstract void serviceRemoteBrokerInfo(Command command) throws IOException;
-    
-    protected abstract BrokerId[] getRemoteBrokerPath();
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
 
 }

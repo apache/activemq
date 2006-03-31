@@ -52,6 +52,8 @@ public abstract class NetworkConnector extends ServiceSupport {
     private String name = "bridge";
     private int prefetchSize = 1000;
     private boolean dispatchAsync = true;
+    private String userName;
+    private String password;
     protected ConnectionFilter connectionFilter;
 
     public NetworkConnector() {
@@ -237,6 +239,8 @@ public abstract class NetworkConnector extends ServiceSupport {
         result.setLocalBrokerName(getBrokerName());
         result.setName(getBrokerName());
         result.setNetworkTTL(getNetworkTTL());
+        result.setUserName(userName);
+        result.setPassword(password);
         result.setPrefetchSize(prefetchSize);
         result.setDispatchAsync(dispatchAsync);
         result.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
@@ -301,4 +305,20 @@ public abstract class NetworkConnector extends ServiceSupport {
     public void setConnectionFilter(ConnectionFilter connectionFilter) {
         this.connectionFilter = connectionFilter;
     }
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
 }
