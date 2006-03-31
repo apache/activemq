@@ -341,6 +341,9 @@
                 <!-- These are performance tests so take too long to run -->
                 <exclude>**/perf/*</exclude>
 
+                <!-- these tests don't always work when rendezvous can't work on the OSS -->
+                <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
+
                 <!-- This test currently fails -->
                 <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
                 
