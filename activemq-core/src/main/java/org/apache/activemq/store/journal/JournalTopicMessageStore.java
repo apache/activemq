@@ -68,7 +68,6 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
 
     public void addMessage(ConnectionContext context, Message message) throws IOException {
         super.addMessage(context, message);
-        this.peristenceAdapter.checkpoint(false, false);
     }
     
     /**
