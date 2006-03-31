@@ -286,6 +286,15 @@
             <lib>true</lib>
         </properties>
     </dependency>
+    
+    <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j-tools</artifactId>
+        <version>${mx4j_version}</version>
+        <properties>
+          <optional>true</optional>
+        </properties>
+    </dependency>
 
     <dependency>
         <groupId>mx4j</groupId>
