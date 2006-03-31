@@ -22,18 +22,26 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 /**
  * @version $Revision: 1.3 $
  */
-public class SimpleDurableTopicTest extends SimpleTopicTest{
-    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        PerfProducer pp=new PerfProducer(fac,dest);
-        pp.setDeliveryMode(DeliveryMode.PERSISTENT);
-        return pp;
+public class KahaDurableTopicTest extends SimpleDurableTopicTest {
+    
+    protected BrokerService createBroker() throws Exception{
+        Resource resource=new ClassPathResource( "org/apache/activemq/perf/kahaBroker.xml");
+        BrokerFactoryBean factory=new BrokerFactoryBean(resource);
+        factory.afterPropertiesSet();
+        BrokerService result=factory.getBroker();
+        result.start();
+        return result;
     }
 
-    protected PerfConsumer createConsumer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        return new PerfConsumer(fac,dest,"subs:"+number);
-    }
     
+
+    
+
 }
