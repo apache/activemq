@@ -34,6 +34,7 @@ public class PerfConsumer implements MessageListener{
     protected PerfRate rate=new PerfRate();
     public PerfConsumer(ConnectionFactory fac,Destination dest,String consumerName) throws JMSException{
         connection=fac.createConnection();
+        connection.setClientID(consumerName);
         Session s=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
         if(dest instanceof Topic&&consumerName!=null&&consumerName.length()>0){
             consumer=s.createDurableSubscriber((Topic) dest,consumerName);
