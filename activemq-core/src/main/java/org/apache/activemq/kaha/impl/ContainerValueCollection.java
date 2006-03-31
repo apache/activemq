@@ -66,7 +66,7 @@ class ContainerValueCollection extends ContainerCollectionSupport implements Col
     public Object[] toArray(Object[] result){
         List list=container.getItemList();
         synchronized(list){
-            if(result.length<list.size()){
+            if(result.length<=list.size()){
                 int count=0;
                 result=(Object[]) java.lang.reflect.Array.newInstance(result.getClass().getComponentType(),list.size());
                 for(Iterator i=list.iterator();i.hasNext();){
