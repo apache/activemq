@@ -323,6 +323,9 @@ public class BrokerService implements Service {
         }
     }
     
+    public boolean isStarted() {
+        return started.get();
+    }
     
     // Service interface
     // -------------------------------------------------------------------------
