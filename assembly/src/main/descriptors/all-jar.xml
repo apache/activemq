@@ -26,13 +26,15 @@
       <unpack>true</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>org.apache.activemq:activemq-core</include>
+         <include>incubator-activemq:activemq-console</include>
+         <include>incubator-activemq:activemq-core</include>
+         <include>incubator-activemq:activeio-core</include>
+         <include>incubator-activemq:activemq-optional</include>
          <include>backport-util-concurrent:backport-util-concurrent</include>
          <include>commons-logging:commons-logging</include>
-         <include>geronimo-spec:geronimo-spec-jms</include>
-         <include>geronimo-spec:geronimo-spec-j2ee-management</include>
-         <include>activeio:activeio</include>
-         <include>mx4j:mx4j</include>
+         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
+         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
+         <include>org.apache.derby:derby</include>
       </includes>
     </dependencySet>
   </dependencySets>
