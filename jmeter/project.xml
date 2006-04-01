@@ -311,8 +311,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-j2ee_1.4_spec</artifactId>
+            <groupId>geronimo-spec</groupId>
+            <artifactId>geronimo-spec-j2ee</artifactId>
             <version>${geronimo_spec_j2ee_version}</version>
             <properties>
 	        <jmeter.module>true</jmeter.module>
