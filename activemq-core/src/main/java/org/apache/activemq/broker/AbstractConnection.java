@@ -577,7 +577,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }       
     
     public boolean iterate() {
-        if( dispatchQueue.isEmpty() ) {
+        if( dispatchQueue.isEmpty() || broker.isStopped()) {
             return false;
         } else {
             Command command = (Command) dispatchQueue.remove(0);
