@@ -16,30 +16,25 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.test.JmsResourceProvider;
-import org.apache.activemq.test.TestSupport;
-
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.jms.MessageListener;
-
-import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.JmsResourceProvider;
+import org.apache.activemq.test.TestSupport;
 
 /**
  * @version $Revision: 1.9 $
@@ -63,8 +58,10 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     private List unackMessages = new ArrayList(messageCount);
     private List ackMessages = new ArrayList(messageCount);
     private boolean resendPhase = false;
+    protected int batchCount = 10;
+    protected int batchSize = 20;
 
-    private BrokerService broker;
+    protected BrokerService broker;
 
     public JmsTransactionTestSupport() {
         super();
@@ -116,8 +113,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
      * @throws Exception
      */
     public void testSendReceiveTransactedBatches() throws Exception {
-        int batchCount = 10;
-        int batchSize = 20;
+       
         TextMessage message = session.createTextMessage("Batch Message");
 
         for (int j = 0; j < batchCount; j++) {
