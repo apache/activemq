@@ -64,7 +64,9 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         }else{
             synchronized(pending){
                 if( pending.isEmpty() )
-                    log.info("Prefetch limit.");
+                    if (log.isDebugEnabled()){
+                        log.debug("Prefetch limit.");
+                    }
                 pending.addLast(node);
             }
         }
