@@ -20,6 +20,7 @@ import junit.framework.Test;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.XARecoveryBrokerTest;
+import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 
 /**
  * Used to verify that recovery works correctly against 
@@ -39,13 +40,15 @@ public class QuickJournalXARecoveryBrokerTest extends XARecoveryBrokerTest {
     protected BrokerService createBroker() throws Exception {
         BrokerService service = new BrokerService();
         service.setDeleteAllMessagesOnStartup(true);
-        service.getPersistenceFactory().setUseQuickJournal(true);
+        DefaultPersistenceAdapterFactory factory = (DefaultPersistenceAdapterFactory) service.getPersistenceFactory();
+        factory.setUseQuickJournal(true);
         return service;
     }
     
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService service = new BrokerService();
-        service.getPersistenceFactory().setUseQuickJournal(true);
+        DefaultPersistenceAdapterFactory factory = (DefaultPersistenceAdapterFactory) service.getPersistenceFactory();
+        factory.setUseQuickJournal(true);
         return service;
     }
     
