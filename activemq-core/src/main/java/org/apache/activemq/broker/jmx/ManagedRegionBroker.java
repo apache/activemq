@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -34,7 +33,6 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -62,10 +60,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
-
 public class ManagedRegionBroker extends RegionBroker{
     private static final Log log=LogFactory.getLog(ManagedRegionBroker.class);
     private final MBeanServer mbeanServer;
@@ -163,11 +159,10 @@ public class ManagedRegionBroker extends RegionBroker{
         String name="";
         SubscriptionKey key=new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
         if(sub.getConsumerInfo().isDurable()){
-            name = key.toString();
-        } else {
-            name = sub.getConsumerInfo().getConsumerId().toString();
+            name=key.toString();
+        }else{
+            name=sub.getConsumerInfo().getConsumerId().toString();
         }
-        
         try{
             ObjectName objectName=new ObjectName(brokerObjectName.getDomain()+":"+"BrokerName="+map.get("BrokerName")
                             +","+"Type=Subscription,"+"active=true,"+"name="+JMXSupport.encodeObjectNamePart(name)+"");
@@ -224,8 +219,9 @@ public class ManagedRegionBroker extends RegionBroker{
         queues.remove(key);
         temporaryQueues.remove(key);
         temporaryTopics.remove(key);
-        registeredMBeans.remove(key);
-        mbeanServer.unregisterMBean(key);
+        if(registeredMBeans.remove(key)){
+            mbeanServer.unregisterMBean(key);
+        }
     }
 
     protected void registerSubscription(ObjectName key,ConsumerInfo info,SubscriptionKey subscriptionKey,
@@ -269,8 +265,9 @@ public class ManagedRegionBroker extends RegionBroker{
         inactiveDurableTopicSubscribers.remove(key);
         temporaryQueueSubscribers.remove(key);
         temporaryTopicSubscribers.remove(key);
-        registeredMBeans.remove(key);
-        mbeanServer.unregisterMBean(key);
+        if(registeredMBeans.remove(key)){
+            mbeanServer.unregisterMBean(key);
+        }
         DurableSubscriptionView view=(DurableSubscriptionView) durableTopicSubscribers.remove(key);
         if(view!=null){
             // need to put this back in the inactive list
