@@ -55,6 +55,7 @@ import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.PersistenceAdapterFactory;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
@@ -96,7 +97,7 @@ public class BrokerService implements Service {
     private TaskRunnerFactory taskRunnerFactory;
     private UsageManager memoryManager;
     private PersistenceAdapter persistenceAdapter;
-    private DefaultPersistenceAdapterFactory persistenceFactory;
+    private PersistenceAdapterFactory persistenceFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private List transportConnectors = new CopyOnWriteArrayList();
     private List networkConnectors = new CopyOnWriteArrayList();
@@ -460,7 +461,7 @@ public class BrokerService implements Service {
         this.brokerName = brokerName;
     }
 
-    public DefaultPersistenceAdapterFactory getPersistenceFactory() {
+    public PersistenceAdapterFactory getPersistenceFactory() {
         if (persistenceFactory == null) {
             persistenceFactory = createPersistenceFactory();
         }
@@ -486,7 +487,7 @@ public class BrokerService implements Service {
         this.dataDirectory = dataDirectory;
     }
 
-    public void setPersistenceFactory(DefaultPersistenceAdapterFactory persistenceFactory) {
+    public void setPersistenceFactory(PersistenceAdapterFactory persistenceFactory) {
         this.persistenceFactory = persistenceFactory;
     }
 
