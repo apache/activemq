@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    <a href="http://activemq.org">ActiveMQ: The Open Source Message Fabric</a>
+
+    Copyright 2004-2005 Hiram Chirino
+    Copyright 2004-2005 Protique Ltd
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE project>
+<project>
+
+  <pomVersion>3</pomVersion>
+
+  <!-- ============== -->
+  <!-- Identification -->
+  <!-- ============== -->
+
+  <name>ActiveMQ</name>
+  <id>activemq</id>
+  <groupId>incubator-activemq</groupId>
+  <currentVersion>4.0-RC2</currentVersion>
+
+  <organization>
+    <name>Apache Software Foundation</name>
+    <url>http://geronimo.apache.org</url>
+    <logo>http://geronimo.apache.org/images/geronimo-logo.png</logo>
+  </organization>
+
+  <inceptionYear>2004</inceptionYear>
+  <logo>http://geronimo.apache.org/images/geronimo-logo.png</logo>
+  <description>ActiveMQ is an open source message broker and JMS 1.1 provider</description>
+  <shortDescription>ActiveMQ is a message broker and a JMS 1.1 provider</shortDescription>
+  <url>http://geronimo.apache.org.apache.activemq</url>
+  <issueTrackingUrl>https://jira.logicblaze.com/jira/browse/AMQ</issueTrackingUrl>
+  <gumpRepositoryId>activemq</gumpRepositoryId>
+
+  <!-- Used for artifact deployment -->
+  <siteAddress>geronimo.apache.org</siteAddress>
+  <siteDirectory>/www/incubator.apache.org/activemq</siteDirectory>
+
+  <!-- SCM Information-->
+  <repository>
+    <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
+    <developerConnection>scm:subversion:https://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk</url>
+  </repository>
+  <branches>
+    <branch>
+      <tag>trunk</tag>
+    </branch>
+  </branches>
+  <versions>
+    <version>
+      <id>4.0-SNAPSHOT</id>
+      <name>4.0-SNAPSHOT</name>
+      <tag>trunk</tag>
+    </version>
+  </versions>
+  <branches>
+  </branches>
+
+  <mailingLists>
+    <mailingList>
+      <name>ActiveMQ Developer List</name>
+      <subscribe>dev-subscribe@activemq.codehaus.org</subscribe>
+      <unsubscribe>dev-unsubscribe@activemq.codehaus.org</unsubscribe>
+      <archive>http://www.nabble.com/ActiveMQ---Dev-f2355.html</archive>
+    </mailingList>
+    <mailingList>
+      <name>ActiveMQ User List</name>
+      <subscribe>activemq-users-subscribe@geronimo.apache.org</subscribe>
+      <unsubscribe>activemq-users-unsubscribe@geronimo.apache.org</unsubscribe>
+      <archive>http://www.nabble.com/ActiveMQ---User-f2356.html</archive>
+    </mailingList>
+    <mailingList>
+      <name>ActiveMQ SCM List</name>
+      <subscribe>activemq-commits-subscribe@geronimo.apache.org</subscribe>
+      <unsubscribe>activemq-commits-unsubscribe@geronimo.apache.org</unsubscribe>
+      <archive>http://mail-archives.apache.org/mod_mbox/geronimo-activemq-commits/</archive>
+    </mailingList>
+  </mailingLists>
+
+  <package>org.apache.activemq</package>
+  <packageGroups>
+    <packageGroup>
+      <title>Core JMS Client API</title>
+      <packages>org.apache.activemq:org.apache.activemq.message</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>JMS Broker and Container</title>
+      <packages>org.apache.activemq.broker:org.apache.activemq.broker.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>JCA Managed Connections, Resource Adapters and Management Statistics</title>
+      <packages>org.apache.activemq.ra:org.apache.activemq.management</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>JNDI support</title>
+      <packages>org.apache.activemq.jndi</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Message filter and router</title>
+      <packages>org.apache.activemq.filter:org.apache.activemq.filter.*:org.apache.activemq.selector</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Web Connector for REST API and Streamlets support</title>
+      <packages>org.apache.activemq.web</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Web Service and Apache Axis support</title>
+      <packages>org.apache.activemq.axis</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Spring support</title>
+      <packages>org.apache.activemq.spring</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Geronimo / GBean support</title>
+      <packages>org.apache.activemq.gbean</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Security strategies and implementations</title>
+      <packages>org.apache.activemq.security</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Transport and WireFormat strategies and implementations</title>
+      <packages>org.apache.activemq.transport:org.apache.activemq.transport.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Message persistence strategies and implementations</title>
+      <packages>org.apache.activemq.store:org.apache.activemq.store.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Journal strategies, implementations and adapters</title>
+      <packages>org.apache.activemq.journal:org.apache.activemq.journal.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Core router services</title>
+      <packages>org.apache.activemq.service:org.apache.activemq.service.*</packages>
+    </packageGroup>
+    <packageGroup>
+      <title>Utilities</title>
+      <packages>org.apache.activemq.capacity:org.apache.activemq.io.util:org.apache.activemq.util</packages>
+    </packageGroup>
+  </packageGroups>
+
+  <developers>
+    <developer>
+      <name>James Strachan</name>
+      <id>jstrachan</id>
+      <email>jstrachan@protique.com</email>
+      <organization>Protique</organization>
+    </developer>
+    <developer>
+      <name>Hiram Chirino</name>
+      <id>chirino</id>
+      <email>hiram@protique.com</email>
+      <organization>Protique</organization>
+    </developer>
+    <developer>
+      <name>Geir Magnusson Jr.</name>
+      <id>geir</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Joe Walnes</name>
+      <id>joe</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>David Jencks</name>
+      <id>djencks</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Dain Sundstrom</name>
+      <id>dain</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Alan D. Cabrera</name>
+      <id>maguro</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Aaron Mulder</name>
+      <id>ammulder</id>
+      <email>ammulder@alumni.princeton.edu</email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Michael Gaffney</name>
+      <id>mgaffney</id>
+      <email>mike@gaffney.cc</email>
+      <organization>Panacya Inc.</organization>
+    </developer>
+    <developer>
+      <name>Dennis Cook</name>
+      <id>dcook</id>
+      <email>dj_cook@yahoo.com</email>
+    </developer>
+    <developer>
+      <name>Darwin Flores</name>
+      <id>dflores</id>
+      <email>dflores@logicblaze.com</email>
+    </developer>
+    <developer>
+      <name>Fritz Oconer</name>
+      <id>foconer</id>
+      <email>foconer@logicblaze.com</email>
+    </developer>
+    <developer>
+      <name>Jonas Lim</name>
+      <id>jlim</id>
+      <email>jlim@logicblaze.com</email>
+    </developer>
+    <developer>
+      <name>Joseph Gapuz</name>
+      <id>jgapuz</id>
+      <email>jgapuz@logicblaze.com</email>
+    </developer>
+    <developer>
+      <name>Merwin Yap</name>
+      <id>myap</id>
+      <email>myap@logicblaze.com</email>
+    </developer>
+    <developer>
+      <name>Patrick Villacorta</name>
+      <id>pvillacorta</id>
+      <email>pvillacorta@logicblaze.com</email>
+    </developer>
+  </developers>
+
+
+  <contributors>
+    <contributor>
+      <name>Charles Anthony</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Brian Guan</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Niklas Gustavsson</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Mike Perham</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Oliver Belikan</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Paul Smith</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Ross Mason</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Thomas Heller</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Peter Henning</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Mats Henricson</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Leo Pechersky</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Li Ma</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Mark Bucayan</name>
+      <email></email>
+    </contributor>
+    <contributor>
+      <name>Neil Clayton</name>
+      <email></email>
+    </contributor>
+  </contributors>
+
+
+  <!-- ==================================== -->
+  <!-- Dependencies Used by all the Modules -->
+  <!-- ==================================== -->
+  <dependencies>
+
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <url>http://jakarta.apache.org/commons/logging/</url>
+      <version>${commons_logging_version}</version>
+      <properties>
+        <lib>true</lib>
+        <activemq.module>true</activemq.module>
+        <rar.bundle>true</rar.bundle>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_1.1_spec</artifactId>
+      <version>${geronimo_spec_jms_version}</version>
+      <properties>
+        <activemq.module>true</activemq.module>
+        <rar.bundle>false</rar.bundle>
+        <lib>true</lib>
+        <war.bundle>true</war.bundle>
+        <!--  <eclipse.dependency>true</eclipse.dependency> -->
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
+      <version>${geronimo_spec_jta_version}</version>
+      <properties>
+        <lib>false</lib>
+        <rar.bundle>false</rar.bundle>
+        <war.bundle>false</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
+      <version>${geronimo_spec_j2ee_management_version}</version>
+      <properties>
+        <activemq.module>true</activemq.module>
+        <lib>true</lib>
+        <rar.bundle>true</rar.bundle>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
+      <version>${geronimo_spec_j2ee_jacc_version}</version>
+      <properties>
+        <rar.bundle>false</rar.bundle>
+        <optional>true</optional>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>backport-util-concurrent</groupId>
+      <artifactId>backport-util-concurrent</artifactId>
+      <version>2.1</version>
+      <properties>
+        <lib>true</lib>
+        <activemq.module>true</activemq.module>
+        <rar.bundle>true</rar.bundle>
+        <war.bundle>true</war.bundle>
+      </properties>      
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>${log4j_version}</version>
+      <properties>
+        <optional>true</optional>
+        <rar.bundle>true</rar.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit_version}</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+
+    <integrationUnitTestSourceDirectory/>
+    <aspectSourceDirectory/>
+
+    <unitTest>
+      <resources>
+        <resource>
+          <directory>src/test/resources</directory>
+          <includes>
+            <include>**/*</include>
+          </includes>
+          <excludes>
+            <exclude>**/.*</exclude>
+          </excludes>
+        </resource>
+      </resources>
+      <includes>
+        <include>**/*Test.*</include>
+      </includes>
+    </unitTest>
+
+    <resources>
+      <resource>
+        <directory>src/conf</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+        <excludes>
+          <exclude>**/.*</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${basedir}/target/xmlbeans</directory>
+        <includes>
+          <include>schema/**/*.xsb</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+
+  <reports>
+    <!--
+     |
+     | These should all be completely self contained. You should be able
+     | to generate each of them individually without needing the final
+     | xdoc transformation.
+     |
+     | Each report plugin with it's POM and plugin.jelly logic should
+     | contain everything needed to produced the report.
+     |
+    -->
+    <report>maven-jdepend-plugin</report>
+    <!--
+    <report>maven-clover-plugin</report>
+    -->
+    <!-- re-enable when we can get the warnings down to less than a few Mb!
+    <report>maven-checkstyle-plugin</report>
+    <report>maven-simian-plugin</report>
+    <report>maven-faq-plugin</report>
+    -->
+    <!--
+    <report>maven-changes-plugin</report>
+    <report>maven-changelog-plugin</report>
+    <report>maven-file-activity-plugin</report>
+    <report>maven-developer-activity-plugin</report>
+    <report>maven-tasklist-plugin</report>
+    -->
+    <report>maven-javadoc-plugin</report>
+    <report>maven-jxr-plugin</report>
+    <report>maven-junit-report-plugin</report>
+    <report>maven-pmd-plugin</report>
+
+  </reports>
+
+</project>

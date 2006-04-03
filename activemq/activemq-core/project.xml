@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../etc/project.xml</extend>
+
+    <name>ActiveMQ :: Core</name>
+    <artifactId>activemq-core</artifactId>
+
+    <description>ActiveMQ is an open source message broker and JMS 1.1 provider</description>
+    <shortDescription>ActiveMQ JMS Message Broker</shortDescription>
+
+    <package>org.apache.activemq</package>
+    <packageGroups>
+        <packageGroup>
+            <title>Core JMS Client API</title>
+            <packages>org.apache.activemq:org.apache.activemq.message</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>JMS Broker and Region implementations</title>
+            <packages>org.apache.activemq.broker:org.apache.activemq.broker.*</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Management Statistics</title>
+            <packages>org.apache.activemq.management</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>JNDI support</title>
+            <packages>org.apache.activemq.jndi</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Message filter and router</title>
+            <packages>org.apache.activemq.filter:org.apache.activemq.filter.*:org.apache.activemq.selector</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Security strategies and implementations</title>
+            <packages>org.apache.activemq.security</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Transport, Discovery and WireFormat strategies and implementations</title>
+            <packages>org.apache.activemq.transport:org.apache.activemq.transport.*</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>OpenWire support</title>
+            <packages>org.apache.activemq.command:org.apache.activemq.openwire:org.apache.activemq.openwire.*</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Support for Networks</title>
+            <packages>org.apache.activemq.network:org.apache.activemq.network.*</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Message persistence strategies and implementations</title>
+            <packages>org.apache.activemq.store:org.apache.activemq.store.*</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Core router services</title>
+            <packages>org.apache.activemq.service:org.apache.activemq.service.*</packages>
+        </packageGroup>
+        <packageGroup>
+            <title>Utilities</title>
+            <packages>org.apache.activemq.capacity:org.apache.activemq.io.util:org.apache.activemq.util</packages>
+        </packageGroup>
+    </packageGroups>
+    <!-- ============ -->
+    <!-- Dependencies -->
+    <!-- ============ -->
+    <dependencies>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activemq-jaas</artifactId>
+            <version>${pom.currentVersion}</version>
+            <properties>
+                <rar.bundle>true</rar.bundle>
+            </properties>
+        </dependency>
+        
+        <!-- used to support optional transport configuration via URI query strings -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${commons_beanutils_version}</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+                <rar.bundle>true</rar.bundle>
+            </properties>
+        </dependency>
+        <!-- parser for selectors -->
+        <dependency>
+            <groupId>javacc</groupId>
+            <artifactId>javacc</artifactId>
+            <version>${javacc_version}</version>
+            <jar>JavaCC.zip</jar>
+        </dependency>
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>jmdns</artifactId>
+            <version>${jmdns_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activeio-core</artifactId>
+            <version>${activeio_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jmock</groupId>
+            <artifactId>jmock</artifactId>
+            <version>${jmock_version}</version>
+            <url>http://jmock.codehaus.org/</url>
+        </dependency>
+        <dependency>
+            <groupId>jmock</groupId>
+            <artifactId>jmock-cglib</artifactId>
+            <version>${jmock_cglib_version}</version>
+            <url>http://jmock.codehaus.org/</url>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-full</artifactId>
+            <version>${cglib_full_version}</version>
+            <url>http://cglib.sourceforge.net/</url>
+        </dependency>
+        <!-- Derby SQL DB used for testing JDBC message store -->
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>${derby_version}</version>
+        </dependency>
+
+        <!-- For Journal -->
+        <dependency>
+            <groupId>howl</groupId>
+            <artifactId>howl-logger</artifactId>
+            <version>${howl_logger_version}</version>
+            <url>http://forge.objectweb.org/projects/howl</url>
+        </dependency>
+        <!-- For Spring -->
+        <dependency>
+            <groupId>springframework</groupId>
+            <artifactId>spring</artifactId>
+            <version>${spring_version}</version>
+            <url>http://www.springframework.org</url>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <!--  for custom XML parsing -->
+        <dependency>
+            <groupId>org.apache.xbean</groupId>
+            <artifactId>xbean-spring</artifactId>
+            <version>2.2</version>
+            <url>http://www.xbean.org</url>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
+            <groupId>xmlbeans</groupId>
+            <artifactId>xbean</artifactId>
+            <version>2.0.0-beta1</version>
+        </dependency>
+        <dependency>
+            <groupId>xmlbeans</groupId>
+            <artifactId>xmlpublic</artifactId>
+            <version>2.0.0-beta1</version>
+        </dependency>
+        <dependency>
+            <groupId>xmlbeans</groupId>
+            <artifactId>xbean_xpath</artifactId>
+            <version>2.0.0-beta1</version>
+        </dependency>
+        <dependency>
+            <groupId>stax</groupId>
+            <artifactId>stax-api</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>stax</groupId>
+            <artifactId>stax</artifactId>
+            <version>1.1.1-dev</version>
+        </dependency>
+        <dependency>
+            <groupId>activesoap</groupId>
+            <artifactId>jaxp-api</artifactId>
+            <version>1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>qdox</groupId>
+            <artifactId>qdox</artifactId>
+            <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>smack</artifactId>
+            <version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>smackx</artifactId>
+            <version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j</artifactId>
+            <version>${mx4j_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-jmx</artifactId>
+            <version>${mx4j_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-remote</artifactId>
+            <version>${mx4j_remote_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-tools</artifactId>
+            <version>${mx4j_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-impl</artifactId>
+            <version>${mx4j_version}</version>
+        </dependency>
+
+        <!--  gram libraries  -->
+        <dependency>
+            <groupId>groovy</groupId>
+            <artifactId>gram</artifactId>
+            <version>1.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>1.0-jsr-04</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>annogen</groupId>
+            <artifactId>annogen</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>${ant_version}</version>
+        </dependency>
+        
+        <!-- Axion SQL DB used for testing JDBC message store -->
+        <dependency>
+            <groupId>axion</groupId>
+            <artifactId>axion</artifactId>
+            <version>${axion_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-primitives</groupId>
+            <artifactId>commons-primitives</artifactId>
+            <version>${commons_primitives_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>regexp</groupId>
+            <artifactId>regexp</artifactId>
+            <version>${regexp_version}</version>
+        </dependency>
+        <!-- HSQL SQL DB used for testing JDBC message store -->
+        <dependency>
+            <groupId>hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>${hsqldb_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>${commons_dbcp_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+            <version>${commons_pool_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons_collections_version}</version>
+        </dependency>
+
+        <!-- JAAS Login Modules -->
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activemq-jaas</artifactId>
+            <version>${pom.currentVersion}</version>
+        </dependency>
+                
+    </dependencies>
+
+    <build>
+        <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+        <unitTest>
+            <resources>
+                <resource>
+                    <directory>src/test/resources</directory>
+                    <includes>
+                        <include>**/*.properties</include>
+                        <include>**/*.xml</include>
+                    </includes>
+                    <filtering>false</filtering>
+                </resource>
+            </resources>
+            <includes>
+                <include>**/*Test.*</include>
+            </includes>
+            <excludes>
+                <!-- These tests run too slow to execute as part of the unit tests -->
+                <exclude>**/DefaultStoreBrokerTest.*</exclude>
+                <exclude>**/TcpTransportBrokerTest.*</exclude>
+                <exclude>**/activeio/*</exclude>
+                
+                <!-- These are performance tests so take too long to run -->
+                <exclude>**/perf/*</exclude>
+
+                <!-- these tests don't always work when rendezvous can't work on the OSS -->
+                <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
+
+                <!-- This test currently fails -->
+                <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
+                
+                <!-- https://issues.apache.org/activemq/browse/AMQ-522 -->
+                <exclude>**/ProxyConnectorTest.*</exclude>
+
+                <!-- https://issues.apache.org/activemq/browse/AMQ-594 -->
+                <exclude>**/SimpleNetworkTest.*</exclude>
+                
+                <!-- https://issues.apache.org/activemq/browse/AMQ-583 -->
+                <exclude>**/DiscoveryTransportBrokerTest.*</exclude>
+                
+                <!-- https://issues.apache.org/activemq/browse/AMQ-610 -->
+                <exclude>**/FanoutTransportBrokerTest.*</exclude>
+                
+                <!-- https://issues.apache.org/activemq/browse/AMQ-626 -->
+                <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
+                <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
+                <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
+                
+                <!-- https://issues.apache.org/activemq/browse/AMQ-667 -->
+                <exclude>**/SslTransportBrokerTest.*</exclude>
+                
+                
+                <!-- TODO FIX ME ASAP -->
+                <exclude>**/MulticastNetworkTest.*</exclude>
+                <exclude>**/UnreliableUdpTransportTest.*</exclude>
+                <exclude>**/MulticastTransportTest.*</exclude>
+                <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
+
+                <exclude>**/UnreliableUdpTransportTest.*</exclude>
+                <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
+            </excludes>
+        </unitTest>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>target/generated</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+    </build>
+    
+    <developers>
+        <developer>
+            <name>James Strachan</name>
+            <id>jstrachan</id>
+            <email>jstrachan@logicblaze.com</email>
+        </developer>
+        <developer>
+            <name>Hiram Chirino</name>
+            <id>chirino</id>
+            <email>hiram@logicblaze.com</email>
+        </developer>
+        <developer>
+            <name>Rob Davies</name>
+            <id>Rob</id>
+            <email>rajdavies@gmail.com</email>
+        </developer>
+        <developer>
+            <name>Jonas Lim</name>
+            <id>jlim</id>
+            <email>jlim@exist.com</email>
+        </developer>
+        <developer>
+            <name>Frederick Oconer</name>
+            <id>foconer</id>
+            <email>foconer@exist.com</email>
+        </developer>
+        <developer>
+            <name>Joseph Gapuz</name>
+            <id>jgapuz</id>
+            <email>jgapuz@exist.com</email>
+        </developer>
+        <developer>
+            <name>Patrick Villacorta</name>
+            <id>pvillacorta</id>
+            <email>pvillacorta@exist.com</email>
+        </developer>
+        <developer>
+            <name>Darwin Flores</name>
+            <id>dflores</id>
+            <email>dflores@exist.com</email>
+        </developer>
+        <developer>
+            <name>Merwin Yap</name>
+            <id>myap</id>
+            <email>myap@exist.com</email>
+        </developer>
+        <developer>
+            <name>Adrian Co</name>
+            <id>aco</id>
+            <email>aco@exist.com</email>
+        </developer>
+        <developer>
+            <name>Dennis Cook</name>
+            <id>dcook</id>
+            <email>dj_cook@yahoo.com</email>
+        </developer>
+        <developer>
+            <name>Dag Liodden</name>
+            <id>daggerrz</id>
+            <email>dag.liodden@giantleap.no</email>
+        </developer>
+        <developer>
+            <name>Peter Brooke</name>
+            <id>pbrooke</id>
+        </developer>  
+        <developer>
+            <name>Ramzi Saba</name>
+            <id>rsaba</id>
+            <email>rsaba@optaros.com</email>
+        </developer>
+        <developer>
+            <name>Brian McCallister</name>
+            <id>brianm</id>
+            <email>brianm@apache.org</email>
+        </developer>              
+    </developers>
+    
+    <reports>
+      <report>maven-javadoc-plugin</report>
+      <report>maven-junit-report-plugin</report>
+    </reports>
+    
+    <repository>
+       <connection>scm:svn:svn://svn.activemq.org/activemq/scm/branches/activemq-4-0/activemq</connection>
+       <developerConnection>scm:svn:svn://svn.activemq.org/activemq/branches/activemq-4-0/activemq</developerConnection>
+       <url>https://svn.activemq.org/activemq/branches/activemq-4-0/activemq/</url>
+    </repository>  
+</project>
+

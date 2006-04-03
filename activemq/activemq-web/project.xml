@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE project>
+<project>
+  <pomVersion>3</pomVersion>
+  <extend>${basedir}/../etc/project.xml</extend>
+
+  <name>ActiveMQ :: Web</name>
+  <id>activemq-web</id>
+  <description>
+    Web Connector for REST API and Streamlets support
+  </description>
+  <shortDescription>
+    Web Connector for REST API and Streamlets support
+  </shortDescription>
+
+  <package>org.apache.activemq.web</package>
+  <packageGroups>
+    <packageGroup>
+      <title>Web Connector for REST API and Streamlets support</title>
+      <packages>org.apache.activemq.web</packages>
+    </packageGroup>
+  </packageGroups>
+
+
+  <!-- ============ -->
+  <!-- Dependencies -->
+  <!-- ============ -->
+  <dependencies>
+
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${pom.currentVersion}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+        <eclipse.dependency>truex</eclipse.dependency>
+      </properties>
+    </dependency>
+
+    <dependency><!-- Used for unit tests -->
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core-test</artifactId>
+      <version>${pom.currentVersion}</version>
+    </dependency>
+
+    <!--  for custom XML parsing -->
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+      <version>${xbean_spring_version}</version>
+      <url>http://www.gbean.org</url>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <!-- Derby SQL DB used for testing JDBC message store -->
+    <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derby</artifactId>
+        <version>${derby_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <!-- For Spring servlet -->
+    <dependency>
+      <id>springframework</id>
+      <artifactId>spring</artifactId>
+      <version>${spring_version}</version>
+      <url>http://www.springframework.org</url>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
+      <version>${activeio_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <!-- Rome RSS Reader -->
+    <dependency>
+      <id>rome</id>
+      <version>${rome_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <id>jdom</id>
+      <version>${jdom_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>${xstream_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>xmlpull</groupId>
+      <artifactId>xmlpull</artifactId>
+      <version>${xmlpull_version}</version>
+    </dependency>
+
+    <!-- optional used for in-web container testing -->
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jsp_2.0_spec</artifactId>
+      <version>${geronimo_spec_jsp_version}</version>
+      <properties>
+        <war.bundle>false</war.bundle>
+        <!-- <eclipse.dependency>true</eclipse.dependency> -->
+      </properties>
+    </dependency>
+
+
+
+    <!-- web container -->
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>${servlet_api_version}</version>
+      <properties>
+        <war.bundle>false</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty</artifactId>
+      <version>${jetty_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+  </dependencies>
+
+    <build>
+        <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+        <unitTest>
+            <resources>
+                <resource>
+                    <directory>src/test/resources</directory>
+                    <includes>
+                        <include>**/*.properties</include>
+                        <include>**/*.xml</include>
+                    </includes>
+                    <filtering>false</filtering>
+                </resource>
+            </resources>
+            <includes>
+                <include>**/*Test.*</include>
+            </includes>
+            <excludes>
+            </excludes>
+        </unitTest>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>target/generated</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+    </build>
+ 
+</project>

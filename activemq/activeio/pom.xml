@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>incubator-activemq</groupId>
+    <artifactId>activemq</artifactId>
+    <version>4.0-RC2</version>
+  </parent>
+
+  <groupId>incubator-activemq</groupId>
+  <artifactId>activeio</artifactId>
+  <version>3.0-beta1</version>
+  <packaging>pom</packaging>
+  <name>ActiveIO</name>
+
+  <modules>
+      <module>activeio-core</module>
+      <module>activeio-oneport-jetty</module>
+<!--
+      <module>activeio-aio</module>
+      <module>activeio-oneport-openorb</module>
+-->
+      <module>activeio-jxta</module>
+  </modules>
+
+</project>
