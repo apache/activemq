@@ -86,7 +86,7 @@ public class LoadTester extends JmsTestSupport {
         MessageConsumer consumer = session.createConsumer(destination);
         for( int i=0; i < PRODUCE_COUNT; i++) {
             printer.increment();
-            assertNotNull("Getting message: "+i,consumer.receive(5000));
+            assertNotNull("Getting message: "+i,consumer.receive(20000));
         }
         end1 = System.currentTimeMillis();
         System.out.println("Consumed messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));

@@ -17,7 +17,7 @@
 <beans xmlns="http://activemq.org/config/1.0">
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="broker" persistent="true" useShutdownHook="false">
+  <broker brokerName="broker" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>
     </transportConnectors>
