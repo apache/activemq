@@ -117,7 +117,9 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
 
     public void start() throws Exception{}
 
-    public void stop() throws Exception{}
+    public void stop() throws Exception{
+        store.close();
+    }
 
     public long getLastMessageBrokerSequenceId() throws IOException{
         return 0;
