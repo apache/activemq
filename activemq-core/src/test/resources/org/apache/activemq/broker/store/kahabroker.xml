@@ -17,13 +17,13 @@
 <beans xmlns="http://activemq.org/config/1.0">
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="master" persistent="false" useJmx="false" deleteAllMessagesOnStartup="true">
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:62001"/>
+  <broker brokerName="broker" persistent="false" useJmx="false">
+     <transportConnectors>
+      <transportConnector uri="tcp://localhost:0"/>
     </transportConnectors>
 
     <persistenceAdapter>
-      <kahaPersistentAdaptor dir = "activemq-data/master"/>
+      <kahaPersistentAdaptor dir = "activemq-data/storetest"/>
     </persistenceAdapter>
   </broker>
 
