@@ -228,7 +228,7 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     }
 
     public String getType() {
-        return group+"."+TYPE_SUFFIX;
+        return "_" + group+"."+TYPE_SUFFIX;
     }
 
     public void setBrokerName(String brokerName) {
