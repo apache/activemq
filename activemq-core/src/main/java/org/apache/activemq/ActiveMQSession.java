@@ -1544,7 +1544,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @return true - if there are unconsumed messages.
      */
     public boolean hasUncomsumedMessages() {
-        return !executor.isEmpty();
+        return executor.hasUncomsumedMessages();
     }
 
     /**
