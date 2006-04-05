@@ -61,7 +61,7 @@ public class ActiveMQSessionExecutor implements Task {
     }
 
     private void wakeup() {
-        if( !dispatchedBySessionPool && !messageQueue.isClosed() && messageQueue.isRunning() && !messageQueue.isEmpty() ) {
+        if( !dispatchedBySessionPool && hasUncomsumedMessages() ) {
             try {
                 taskRunner.wakeup();
             } catch (InterruptedException e) {
@@ -75,8 +75,8 @@ public class ActiveMQSessionExecutor implements Task {
         wakeup();
     }
 
-    boolean hasUncomsumedMessages() {
-        return !messageQueue.isEmpty();
+    public boolean hasUncomsumedMessages() {
+        return !messageQueue.isClosed() && messageQueue.isRunning() && !messageQueue.isEmpty();
     }
 
     /**
