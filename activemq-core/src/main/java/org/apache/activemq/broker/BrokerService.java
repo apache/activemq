@@ -46,6 +46,7 @@ import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.ProxyConnectorView;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.ConnectionFilter;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
@@ -118,6 +119,8 @@ public class BrokerService implements Service {
     private BrokerPlugin[] plugins;
 
     private boolean keepDurableSubsActive;
+
+    private BrokerId brokerId;
 
     /**
      * Adds a new transport connector for the given bind address
@@ -364,8 +367,8 @@ public class BrokerService implements Service {
             
             startAllConnectors();
             
-
-            log.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ") started");
+            brokerId = broker.getBrokerId();
+            log.info("ActiveMQ JMS Message Broker (" + getBrokerName()+", "+brokerId+") started");
         }
         catch (Exception e) {
             log.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
@@ -377,7 +380,7 @@ public class BrokerService implements Service {
         if (! started.compareAndSet(true, false)) {
             return;
         }
-        log.info("ActiveMQ Message Broker (" + getBrokerName() + ") is shutting down");
+        log.info("ActiveMQ Message Broker (" + getBrokerName()+", "+brokerId+") is shutting down");
         BrokerRegistry.getInstance().unbind(getBrokerName());
         
         removeShutdownHook();
@@ -433,7 +436,7 @@ public class BrokerService implements Service {
             stopper.stop(getManagementContext());
         }
 
-        log.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ") stopped: "+broker);
+        log.info("ActiveMQ JMS Message Broker (" + getBrokerName()+", "+brokerId+") stopped");
 
         stopper.throwFirstException();
     }
