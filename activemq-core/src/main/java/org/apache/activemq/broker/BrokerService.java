@@ -18,6 +18,7 @@ package org.apache.activemq.broker;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -79,10 +80,12 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  *
  * @version $Revision: 1.1 $
  */
-public class BrokerService implements Service {
+public class BrokerService implements Service, Serializable {
+
     public static final String DEFAULT_PORT = "61616";
 
     private static final Log log = LogFactory.getLog(BrokerService.class);
+    private static final long serialVersionUID = 7353129142305630237L;
 
     private boolean useJmx = true;
     private boolean persistent = true;
@@ -106,7 +109,7 @@ public class BrokerService implements Service {
     private List registeredMBeanNames = new CopyOnWriteArrayList();
     private List jmsConnectors = new CopyOnWriteArrayList();
     private MasterConnector masterConnector;
-    private Thread shutdownHook;
+    private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
     private String[] proxyConnectorURIs;
