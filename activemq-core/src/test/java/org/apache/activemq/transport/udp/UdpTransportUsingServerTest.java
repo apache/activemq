@@ -30,7 +30,7 @@ import java.net.URI;
  */
 public class UdpTransportUsingServerTest extends UdpTestSupport {
 
-    protected int consumerPort = 8830;
+    protected int consumerPort = 9123;
     protected String producerURI = "udp://localhost:" + consumerPort;
     protected String serverURI = producerURI;
 
