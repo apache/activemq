@@ -773,16 +773,10 @@ public class BrokerService implements Service, Serializable {
         
     }
 
-    protected void registerConnectorMBean(TransportConnector connector) throws IOException, URISyntaxException {
+    protected void registerConnectorMBean(TransportConnector connector, ObjectName objectName) throws IOException, URISyntaxException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         ConnectorViewMBean view = new ConnectorView(connector);
         try {
-        	ObjectName objectName = new ObjectName(
-            		managementContext.getJmxDomainName()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=Connector,"+
-            		"ConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
-            		);
             mbeanServer.registerMBean(view, objectName);
             registeredMBeanNames.add(objectName);
         }
@@ -1088,8 +1082,16 @@ public class BrokerService implements Service, Serializable {
         }
         
         if (isUseJmx()) {
-            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), getBrokerObjectName());
-            registerConnectorMBean(connector);
+            
+            ObjectName objectName = new ObjectName(
+                    managementContext.getJmxDomainName()+":"+
+                    "BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+                    "Type=Connector,"+
+                    "ConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
+                    );
+            
+            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), objectName);
+            registerConnectorMBean(connector, objectName);
         }        
         connector.start();
     }

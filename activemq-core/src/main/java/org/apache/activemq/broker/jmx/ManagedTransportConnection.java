@@ -117,8 +117,9 @@ public class ManagedTransportConnection extends TransportConnection {
         try {
             return new ObjectName(
             		connectorName.getDomain()+":"+
-            		"BrokerName="+map.get("BrokerName")+","+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart((String) map.get("BrokerName"))+","+
             		"Type=Connection,"+
+                    "ConnectorName="+JMXSupport.encodeObjectNamePart((String) map.get("ConnectorName"))+","+
             		"Connection="+JMXSupport.encodeObjectNamePart(connectionId)
             		);
         }
