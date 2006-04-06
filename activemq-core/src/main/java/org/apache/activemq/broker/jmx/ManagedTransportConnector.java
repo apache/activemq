@@ -36,9 +36,10 @@ import java.net.URISyntaxException;
  */
 public class ManagedTransportConnector extends TransportConnector {
 
+    static long nextConnectionId = 1;
+    
     private final MBeanServer mbeanServer;
     private final ObjectName connectorName;
-    long nextConnectionId = 1;
 
     public ManagedTransportConnector(MBeanServer mbeanServer, ObjectName connectorName, Broker next, TransportServer server) {
         super(next, server);
@@ -51,13 +52,12 @@ public class ManagedTransportConnector extends TransportConnector {
     }
 
     protected Connection createConnection(Transport transport) throws IOException {
-
-        final String connectionId;
-        synchronized (this) {
-            connectionId = "" + (nextConnectionId++);
-        }
-
+        String connectionId = "" + getNextConnectionId();
         return new ManagedTransportConnection(this, transport, getBroker(), getTaskRunnerFactory(), mbeanServer, connectorName, connectionId);
+    }
+
+    protected static synchronized long getNextConnectionId() {
+        return nextConnectionId;
     }
 
 }
