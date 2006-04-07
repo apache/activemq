@@ -37,4 +37,9 @@ public interface MessageEvictionStrategy {
      */
     MessageReference evictMessage(LinkedList messages) throws IOException;
 
+    /**
+     * REturns the high water mark on which we will eagerly evict expired messages from RAM
+     */
+    int getEvictExpiredMessagesHighWatermark();
+
 }

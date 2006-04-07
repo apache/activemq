@@ -72,18 +72,44 @@ public class TopicSubscription extends AbstractSubscription{
                 synchronized(matchedListMutex){
                     matched.addLast(node);
                     // NOTE - be careful about the slaveBroker!
-                    if(maximumPendingMessages>0){
+                    if (maximumPendingMessages > 0) {
+                        
+                        // calculate the high water mark from which point we will eagerly evict expired messages
+                        int max = messageEvictionStrategy.getEvictExpiredMessagesHighWatermark();
+                        if (maximumPendingMessages > 0 && maximumPendingMessages < max) {
+                            max = maximumPendingMessages;
+                        }
+                        if (!matched.isEmpty() && matched.size() > max) {
+                            removeExpiredMessages(matched);
+                        }
+
                         // lets discard old messages as we are a slow consumer
-                        while(!matched.isEmpty()&&matched.size()>maximumPendingMessages){
-                            MessageReference oldMessage=messageEvictionStrategy.evictMessage(matched);
+                        while (!matched.isEmpty() && matched.size() > maximumPendingMessages) {
+                            MessageReference oldMessage = messageEvictionStrategy.evictMessage(matched);
                             oldMessage.decrementReferenceCount();
                             discarded++;
-                            if (log.isDebugEnabled()){
+                            if (log.isDebugEnabled()) {
                                 log.debug("Discarding message " + oldMessage);
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Discard any expired messages from the matched list. Called from a synchronized block.
+     * @throws IOException 
+     */
+    protected void removeExpiredMessages(LinkedList messages) throws IOException {
+        for(Iterator i=matched.iterator();i.hasNext();){
+            MessageReference node=(MessageReference) i.next();
+            if (node.isExpired()) {
+                i.remove();
+                dispatched.incrementAndGet();
+                node.decrementReferenceCount();
+                break;
             }
         }
     }
