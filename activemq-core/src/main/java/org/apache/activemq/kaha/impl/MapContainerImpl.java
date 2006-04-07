@@ -46,9 +46,9 @@ public class MapContainerImpl implements MapContainer{
     protected final Object mutex=new Object();
     protected boolean closed=false;
 
-    protected MapContainerImpl(Object id,StoreImpl rfs,LocatableItem root) throws IOException{
+    protected MapContainerImpl(Object id,StoreImpl si,LocatableItem root) throws IOException{
         this.id=id;
-        this.store=rfs;
+        this.store=si;
         this.root=root;
     }
 
