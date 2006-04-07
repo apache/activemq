@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 final class FreeSpaceManager{
     private static final Log log = LogFactory.getLog(FreeSpaceManager.class);
     static final int ROOT_SIZE=64;
-    static final int RESIZE_INCREMENT=4096*1024;
+    static final int RESIZE_INCREMENT=20*1024*1024;
     private Map map=new HashMap();
     private Map prevMap=new HashMap();
     private FreeSpaceTree tree=new FreeSpaceTree();
