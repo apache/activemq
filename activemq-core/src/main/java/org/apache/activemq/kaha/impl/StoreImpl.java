@@ -65,9 +65,10 @@ public class StoreImpl implements Store{
      * 
      * @see org.apache.activemq.kaha.Store#close()
      */
-    public void close() throws IOException{
+    public void close() {
         synchronized(mutex){
             if(!closed){
+                try {
                 for(Iterator i=mapContainers.values().iterator();i.hasNext();){
                     MapContainerImpl container=(MapContainerImpl) i.next();
                     container.close();
@@ -79,6 +80,9 @@ public class StoreImpl implements Store{
                 force();
                 dataFile.close();
                 closed=true;
+                }catch(IOException e){
+                    log.debug("Failed to close the store cleanly",e);
+                }
             }
         }
     }
