@@ -110,6 +110,7 @@ public class VMTransportFactory extends TransportFactory{
                 if(server==null){
                     server=(VMTransportServer) bind(location,true);
                     TransportConnector connector=new TransportConnector(broker.getBroker(),server);
+                    connector.setUri(location);
                     connector.setTaskRunnerFactory( broker.getTaskRunnerFactory() );
                     connector.start();
                     connectors.put(host,connector);

@@ -78,7 +78,7 @@ public class ReliableTransport extends ResponseCorrelator {
     }
 
     public Response request(Command command) throws IOException {
-        FutureResponse response = asyncRequest(command);
+        FutureResponse response = asyncRequest(command, null);
         while (true) {
             Response result = response.getResult(requestTimeout);
             if (result != null) {
@@ -89,7 +89,7 @@ public class ReliableTransport extends ResponseCorrelator {
     }
 
     public Response request(Command command, int timeout) throws IOException {
-        FutureResponse response = asyncRequest(command);
+        FutureResponse response = asyncRequest(command, null);
         while (timeout > 0) {
             int time = timeout;
             if (timeout > requestTimeout) {

@@ -37,7 +37,7 @@ public class BadConnectionTest extends TestCase {
 
     public void testConnectingToUnavailableServer() throws Exception {
         try {
-            transport.asyncRequest(new ActiveMQMessage());
+            transport.asyncRequest(new ActiveMQMessage(), null);
             fail("This should never succeed");
         }
         catch (IOException e) {

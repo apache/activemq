@@ -33,9 +33,9 @@ public class MutexTransport extends TransportFilter {
         super(next);
     }
 
-    public FutureResponse asyncRequest(Command command) throws IOException {
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
         synchronized(writeMutex) {
-            return next.asyncRequest(command);
+            return next.asyncRequest(command, null);
         }
     }
 

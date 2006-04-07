@@ -22,6 +22,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
@@ -95,8 +96,8 @@ public class MockTransport extends DefaultTransportListener implements Transport
         next.oneway(command);
     }
 
-    synchronized public FutureResponse asyncRequest(Command command) throws IOException {
-        return next.asyncRequest(command);
+    synchronized public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+        return next.asyncRequest(command, null);
     }
 
     synchronized public Response request(Command command) throws IOException {

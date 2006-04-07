@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.logging.Log;
@@ -79,7 +80,7 @@ public class VMTransport implements Transport{
         }
     }
 
-    public FutureResponse asyncRequest(Command command) throws IOException{
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException{
         throw new AssertionError("Unsupported Method");
     }
 
