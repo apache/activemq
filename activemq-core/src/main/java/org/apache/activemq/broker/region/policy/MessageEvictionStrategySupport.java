@@ -16,21 +16,25 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import org.apache.activemq.broker.region.MessageReference;
-
-import java.util.LinkedList;
-
 /**
- * An eviction strategy which evicts the oldest message first (which is the
- * default).
- * 
- * @org.apache.xbean.XBean
+ * A useful base class for implementation inheritence.
  * 
  * @version $Revision$
  */
-public class OldestMessageEvictionStrategy extends MessageEvictionStrategySupport  {
+public abstract class MessageEvictionStrategySupport implements MessageEvictionStrategy {
 
-    public MessageReference evictMessage(LinkedList messages) {
-        return (MessageReference) messages.removeFirst();
+    private int evictExpiredMessagesHighWatermark = 1000;
+
+    public int getEvictExpiredMessagesHighWatermark() {
+        return evictExpiredMessagesHighWatermark;
     }
+
+    /**
+     * Sets the high water mark on which we will eagerly evict expired messages from RAM
+     */
+    public void setEvictExpiredMessagesHighWatermark(int evictExpiredMessagesHighWaterMark) {
+        this.evictExpiredMessagesHighWatermark = evictExpiredMessagesHighWaterMark;
+    }
+    
+    
 }

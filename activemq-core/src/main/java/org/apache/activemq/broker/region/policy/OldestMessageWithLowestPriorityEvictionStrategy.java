@@ -29,7 +29,7 @@ import java.util.LinkedList;
  * 
  * @version $Revision$messageEvictionStrategy
  */
-public class OldestMessageWithLowestPriorityEvictionStrategy implements MessageEvictionStrategy {
+public class OldestMessageWithLowestPriorityEvictionStrategy extends MessageEvictionStrategySupport {
 
     public MessageReference evictMessage(LinkedList messages) throws IOException {
         byte lowestPriority = Byte.MAX_VALUE;

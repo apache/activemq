@@ -47,5 +47,11 @@ public interface MessageReference {
     public int decrementReferenceCount();
     public ConsumerId getTargetConsumerId();
     public int getSize();
+    public long getExpiration();
+    
+    /**
+     * Returns true if this message is expired
+     */
+    public boolean isExpired();
     
 }

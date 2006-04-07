@@ -59,6 +59,8 @@ public class IndirectMessageReference implements MessageReference {
     private int referenceCount;
     /** the size of the message **/
     private int cachedSize = 0;
+    /** the expiration time of the message */
+    private long expiration;
     
     /**
      * Only used by the END_OF_BROWSE_MARKER singleton
@@ -71,6 +73,7 @@ public class IndirectMessageReference implements MessageReference {
         this.groupID = null;
         this.groupSequence = 0;
         this.targetConsumerId=null;
+        this.expiration = message.getExpiration();
         this.cachedSize = message != null ? message.getSize() : 0;
     }
 
@@ -82,6 +85,7 @@ public class IndirectMessageReference implements MessageReference {
         this.groupID = message.getGroupID();
         this.groupSequence = message.getGroupSequence();
         this.targetConsumerId=message.getTargetConsumerId();
+        this.expiration = message.getExpiration();
         
         this.referenceCount=1;
         message.incrementReferenceCount();     
@@ -205,6 +209,18 @@ public class IndirectMessageReference implements MessageReference {
 
     public ConsumerId getTargetConsumerId() {
         return targetConsumerId;
+    }
+
+    public long getExpiration() {
+        return expiration;
+    }
+
+    public boolean isExpired() {
+        long expireTime = getExpiration();
+        if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
+            return true;
+        }
+        return false;
     }
 
     public int getSize(){
