@@ -16,10 +16,12 @@
  */
 package org.apache.activemq.broker.store;
 
+import java.io.File;
 import junit.framework.Test;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.XARecoveryBrokerTest;
+import org.apache.activemq.store.kahadaptor.KahaPersistentAdaptor;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
@@ -39,17 +41,18 @@ public class KahaXARecoveryBrokerTest extends XARecoveryBrokerTest {
     }
 
     protected BrokerService createBroker() throws Exception {
-        BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/store/kahabroker.xml"));
-        brokerFactory.afterPropertiesSet();
-        BrokerService broker =  brokerFactory.getBroker();
+        BrokerService broker = createRestartedBroker();
         broker.setDeleteAllMessagesOnStartup(true);
         return broker;
     }
     
     protected BrokerService createRestartedBroker() throws Exception {
-        BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/store/kahabroker.xml"));
-        brokerFactory.afterPropertiesSet();
-        return brokerFactory.getBroker();
+        BrokerService broker = new BrokerService();
+       
+        KahaPersistentAdaptor adaptor = new KahaPersistentAdaptor(new File("activemq-data/storetest"));
+        broker.setPersistenceAdapter(adaptor);
+        broker.addConnector("tcp://localhost:0");
+        return broker;
     }
     
 }

@@ -16,7 +16,6 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -55,7 +54,6 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
         int subscriberCount=subscriberAcks.size();
         if(subscriberCount>0){
-            super.addMessage(context,message);
             String id=message.getMessageId().toString();
             ackContainer.put(id,new AtomicInteger(subscriberCount));
             for(Iterator i=subscriberAcks.keySet().iterator();i.hasNext();){
@@ -63,6 +61,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                 ListContainer container=store.getListContainer(key);
                 container.add(id);
             }
+            super.addMessage(context,message);
         }
     }
 
@@ -79,7 +78,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                     ackContainer.put(id,count);
                 }else{
                     // no more references to message messageContainer so remove it
-                    container.remove(id);
+                    super.removeMessage(messageId);
                 }
             }
         }

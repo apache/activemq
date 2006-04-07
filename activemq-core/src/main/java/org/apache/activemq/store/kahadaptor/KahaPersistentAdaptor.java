@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -34,8 +33,6 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.activemq.store.memory.MemoryTransactionStore;
-
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 /**
  * @org.apache.xbean.XBean
@@ -43,20 +40,21 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  * @version $Revision: 1.4 $
  */
 public class KahaPersistentAdaptor implements PersistenceAdapter{
-    MemoryTransactionStore transactionStore;
+    static final String PREPARED_TRANSACTIONS_NAME="PreparedTransactions";
+    KahaTransactionStore transactionStore;
     ConcurrentHashMap topics=new ConcurrentHashMap();
     ConcurrentHashMap queues=new ConcurrentHashMap();
+    ConcurrentHashMap messageStores=new ConcurrentHashMap();
     private boolean useExternalMessageReferences;
-    private WireFormat wireFormat = new OpenWireFormat();
+    private OpenWireFormat wireFormat=new OpenWireFormat();
     Store store;
 
     public KahaPersistentAdaptor(File dir) throws IOException{
-        if (!dir.exists()){
+        if(!dir.exists()){
             dir.mkdirs();
         }
-        String name = dir.getAbsolutePath() + File.separator + "kaha.db";
+        String name=dir.getAbsolutePath()+File.separator+"kaha.db";
         store=StoreFactory.open(name,"rw");
-        
     }
 
     public Set getDestinations(){
@@ -74,6 +72,7 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
         MessageStore rc=(MessageStore) queues.get(destination);
         if(rc==null){
             rc=new KahaMessageStore(getMapContainer(destination),destination);
+            messageStores.put(destination, rc);
             if(transactionStore!=null){
                 rc=transactionStore.proxy(rc);
             }
@@ -92,17 +91,28 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
             ackContainer.setValueMarshaller(new AtomicIntegerMarshaller());
             ackContainer.load();
             rc=new KahaTopicMessageStore(store,messageContainer,ackContainer,subsContainer,destination);
+            messageStores.put(destination, rc);
             if(transactionStore!=null){
                 rc=transactionStore.proxy(rc);
             }
             topics.put(destination,rc);
+            
         }
         return rc;
     }
 
+    protected MessageStore retrieveMessageStore(Object id){
+        MessageStore result =  (MessageStore) messageStores.get(id);
+        return result;
+    }
+
     public TransactionStore createTransactionStore() throws IOException{
         if(transactionStore==null){
-            transactionStore=new MemoryTransactionStore();
+            MapContainer container=store.getMapContainer(PREPARED_TRANSACTIONS_NAME);
+            container.setKeyMarshaller(new CommandMarshaller(wireFormat));
+            container.setValueMarshaller(new TransactionMarshaller(wireFormat));
+            container.load();
+            transactionStore=new KahaTransactionStore(this,container);
         }
         return transactionStore;
     }
@@ -155,8 +165,8 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
     }
 
     /**
-     * @param usageManager The UsageManager that is controlling the broker's memory usage.
+     * @param usageManager
+     *            The UsageManager that is controlling the broker's memory usage.
      */
-    public void setUsageManager(UsageManager usageManager) {
-    }
+    public void setUsageManager(UsageManager usageManager){}
 }
