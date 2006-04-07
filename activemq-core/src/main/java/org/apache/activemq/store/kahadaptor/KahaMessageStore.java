@@ -38,6 +38,10 @@ public class KahaMessageStore implements MessageStore{
         this.messageContainer=container;
         this.destination=destination;
     }
+    
+    public Object getId(){
+        return messageContainer.getId();
+    }
 
     public void addMessage(ConnectionContext context,Message message) throws IOException{
         messageContainer.put(message.getMessageId().toString(),message);
