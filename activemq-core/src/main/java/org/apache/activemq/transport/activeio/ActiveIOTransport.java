@@ -27,6 +27,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 
@@ -96,7 +97,7 @@ public class ActiveIOTransport implements Transport {
         commandChannel.writeCommand(command);
     }
 
-    public FutureResponse asyncRequest(Command command) throws IOException {
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 

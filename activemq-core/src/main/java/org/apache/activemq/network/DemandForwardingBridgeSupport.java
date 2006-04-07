@@ -45,6 +45,8 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.DefaultTransportListener;
+import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
@@ -376,26 +378,47 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             try{
                 if(command.isMessageDispatch()){
                     waitStarted();
-                    MessageDispatch md=(MessageDispatch) command;
+                    final MessageDispatch md=(MessageDispatch) command;
                     DemandSubscription sub=(DemandSubscription) subscriptionMapByLocalId.get(md.getConsumerId());
                     if(sub!=null){
                         Message message= configureMessage(md);
                         if(trace)
                             log.trace("bridging "+localBrokerName+" -> "+remoteBrokerName+": "+message);
-                        if(!message.isPersistent()||!sub.getRemoteInfo().isDurable()){
+                        
+                        
+                        if( !message.isResponseRequired() ) {
+                            
+                            // If the message was originally sent using async send, we will preserve that QOS
+                            // by bridging it using an async send (small chance of message loss).
                             remoteBroker.oneway(message);
-                        }else{
-                            Response response=remoteBroker.request(message);
-                            if(response.isException()){
-                                ExceptionResponse er=(ExceptionResponse) response;
-                                serviceLocalException(er.getException());
-                            }
+                            localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+                            
+                        } else {
+                            
+                            // The message was not sent using async send, so we should only ack the local 
+                            // broker when we get confirmation that the remote broker has received the message.
+                            ResponseCallback callback = new ResponseCallback() {
+                                public void onCompletion(FutureResponse future) {
+                                    try {
+                                        Response response = future.getResult();
+                                        if(response.isException()){
+                                            ExceptionResponse er=(ExceptionResponse) response;
+                                            serviceLocalException(er.getException());
+                                        } else {
+                                            localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+                                        }
+                                    } catch (IOException e) {
+                                        serviceLocalException(e);
+                                    }
+                                }
+                            };
+
+                            remoteBroker.asyncRequest(message, callback);
                         }
                         
                       // Ack on every message since we don't know if the broker is blocked due to memory
                       // usage and is waiting for an Ack to un-block him. 
-                      localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
-
+                       
                       // Acking a range is more efficient, but also more prone to locking up a server
                       // Perhaps doing something like the following should be policy based.
 //                        int dispatched = sub.incrementDispatched();

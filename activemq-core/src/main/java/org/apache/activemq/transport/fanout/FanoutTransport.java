@@ -33,6 +33,7 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
@@ -411,7 +412,7 @@ public class FanoutTransport implements CompositeTransport {
         return true;
     }
 
-    public FutureResponse asyncRequest(Command command) throws IOException {
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 

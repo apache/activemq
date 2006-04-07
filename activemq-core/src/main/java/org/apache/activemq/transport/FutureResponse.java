@@ -16,62 +16,47 @@
  */
 package org.apache.activemq.transport;
 
-import edu.emory.mathcs.backport.java.util.concurrent.Callable;
-import edu.emory.mathcs.backport.java.util.concurrent.ExecutionException;
-import edu.emory.mathcs.backport.java.util.concurrent.FutureTask;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeoutException;
-
-import org.apache.activemq.command.Response;
-import org.apache.activemq.util.IOExceptionSupport;
-
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
-public class FutureResponse extends FutureTask {
+import org.apache.activemq.command.Response;
+
+import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+
+public class FutureResponse {
+           
+    private final ResponseCallback responseCallback;
+    private final ArrayBlockingQueue responseSlot = new ArrayBlockingQueue(1);
     
-    private static final Callable EMPTY_CALLABLE = new Callable() {
-        public Object call() throws Exception {
-            return null;
-        }};
-    
-    public FutureResponse() {
-        super(EMPTY_CALLABLE);
+    public FutureResponse(ResponseCallback responseCallback) {
+        this.responseCallback = responseCallback;
     }
 
-    public synchronized Response getResult() throws IOException {
+    public Response getResult() throws IOException {
         try {
-            return (Response) super.get();
+            return (Response) responseSlot.take();
         } catch (InterruptedException e) {
             throw new InterruptedIOException("Interrupted.");
-        } catch (ExecutionException e) {
-            Throwable target = e.getCause();
-            if( target instanceof IOException ) {
-                throw (IOException)target;
-            } else {
-                throw IOExceptionSupport.create(target);
-            }
         }
     }
     
-    public synchronized Response getResult(int timeout) throws IOException {
+    public Response getResult(int timeout) throws IOException {
         try {
-            return (Response) super.get(timeout,TimeUnit.MILLISECONDS);
+            return (Response) responseSlot.poll(timeout,TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throw new InterruptedIOException("Interrupted.");
-        } catch (ExecutionException e) {
-            Throwable target = e.getCause();
-            if( target instanceof IOException ) {
-                throw (IOException)target;
-            } else {
-                throw IOExceptionSupport.create(target);
-            }
-        }catch(TimeoutException e){
-            return null;
         }
     }
     
-    public synchronized void set(Object result) {
-        super.set(result);
+    public void set(Response result) throws InterruptedIOException {
+        try {
+            responseSlot.put(result);
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException("Interrupted.");
+        }
+        if( responseCallback !=null ) {
+            responseCallback.onCompletion(this);
+        }        
     }
 }

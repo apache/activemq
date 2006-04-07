@@ -17,6 +17,7 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
@@ -55,34 +56,38 @@ public class ResponseCorrelator extends TransportFilter {
         next.oneway(command);
     }
 
-    public FutureResponse asyncRequest(Command command) throws IOException {
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(true);
-        FutureResponse future = new FutureResponse();
+        FutureResponse future = new FutureResponse(responseCallback);
         requestMap.put(new Integer(command.getCommandId()), future);
         next.oneway(command);
         return future;
     }
     
     public Response request(Command command) throws IOException { 
-        FutureResponse response = asyncRequest(command);
+        FutureResponse response = asyncRequest(command, null);
         return response.getResult();
     }
     
     public Response request(Command command,int timeout) throws IOException {
-        FutureResponse response = asyncRequest(command);
+        FutureResponse response = asyncRequest(command, null);
         return response.getResult(timeout);
     }
     
     public void onCommand(Command command) {
         boolean debug = log.isDebugEnabled();
         if( command.isResponse() ) {
-            Response response = (Response) command;
-            FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
-            if( future!=null ) {
-                future.set(response);
-            } else {
-                if( debug ) log.debug("Received unexpected response for command id: "+response.getCorrelationId());
+            try {
+                Response response = (Response) command;
+                FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
+                if( future!=null ) {
+                    future.set(response);
+                } else {
+                    if( debug ) log.debug("Received unexpected response for command id: "+response.getCorrelationId());
+                }
+            } catch (InterruptedIOException e) {
+                onException(e);
             }
         } else {
             getTransportListener().onCommand(command);

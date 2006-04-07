@@ -39,12 +39,15 @@ public interface Transport extends Service {
 
     /**
      * An asynchronous request response where the Receipt will be returned
-     * in the future
+     * in the future.  If responseCallback is not null, then it will be called
+     * when the response has been completed.
+     * 
      * @param command 
+     * @param responseCallback TODO
      * @return the FutureResponse
      * @throws IOException 
      */
-    public FutureResponse asyncRequest(Command command) throws IOException;
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException;
     
     /**
      * A synchronous request response

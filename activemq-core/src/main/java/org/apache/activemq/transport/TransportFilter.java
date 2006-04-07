@@ -86,8 +86,8 @@ public class TransportFilter extends DefaultTransportListener implements Transpo
         next.oneway(command);
     }
 
-    public FutureResponse asyncRequest(Command command) throws IOException {
-        return next.asyncRequest(command);
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+        return next.asyncRequest(command, null);
     }
 
     public Response request(Command command) throws IOException {

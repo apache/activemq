@@ -24,13 +24,17 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
+import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
@@ -199,14 +203,14 @@ public class ForwardingBridge implements Bridge {
         }
     }
 
-    protected void serviceLocalException(IOException error) {
+    protected void serviceLocalException(Throwable error) {
         System.out.println("Unexpected local exception: "+error);
         error.printStackTrace();
     }    
     protected void serviceLocalCommand(Command command) {
         try {
             if( command.isMessageDispatch() ) {
-                MessageDispatch md = (MessageDispatch) command;
+                final MessageDispatch md = (MessageDispatch) command;
                 Message message = md.getMessage();
                 message.setProducerId(producerInfo.getProducerId());
                 message.setDestination( md.getDestination() );
@@ -216,11 +220,40 @@ public class ForwardingBridge implements Bridge {
                 message.setTransactionId(null);
                 message.evictMarshlledForm();
 
-                remoteBroker.oneway( message );
                 
+                if( !message.isResponseRequired() ) {
+                    
+                    // If the message was originally sent using async send, we will preserve that QOS
+                    // by bridging it using an async send (small chance of message loss).
+                    remoteBroker.oneway(message);
+                    localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+                    
+                } else {
+                    
+                    // The message was not sent using async send, so we should only ack the local 
+                    // broker when we get confirmation that the remote broker has received the message.
+                    ResponseCallback callback = new ResponseCallback() {
+                        public void onCompletion(FutureResponse future) {
+                            try {
+                                Response response = future.getResult();
+                                if(response.isException()){
+                                    ExceptionResponse er=(ExceptionResponse) response;
+                                    serviceLocalException(er.getException());
+                                } else {
+                                    localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+                                }
+                            } catch (IOException e) {
+                                serviceLocalException(e);
+                            }
+                        }
+                    };
+
+                    remoteBroker.asyncRequest(message, callback);
+                }
+                
+                                
                 // Ack on every message since we don't know if the broker is blocked due to memory
                 // usage and is waiting for an Ack to un-block him. 
-                localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
 
                 // Acking a range is more efficient, but also more prone to locking up a server
                 // Perhaps doing something like the following should be policy based.
