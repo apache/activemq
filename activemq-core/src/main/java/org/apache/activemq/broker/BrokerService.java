@@ -120,8 +120,7 @@ public class BrokerService implements Service, Serializable {
     private PolicyMap destinationPolicy;
     private AtomicBoolean started = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
-
-    private boolean keepDurableSubsActive;
+    private boolean keepDurableSubsActive=true;
 
     private BrokerId brokerId;
 
