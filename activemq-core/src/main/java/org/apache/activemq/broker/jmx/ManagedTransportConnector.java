@@ -57,7 +57,7 @@ public class ManagedTransportConnector extends TransportConnector {
     }
 
     protected static synchronized long getNextConnectionId() {
-        return nextConnectionId;
+        return nextConnectionId++;
     }
 
 }

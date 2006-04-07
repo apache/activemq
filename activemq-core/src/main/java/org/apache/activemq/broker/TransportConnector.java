@@ -149,6 +149,12 @@ public class TransportConnector implements Connector {
     }
 
     public URI getUri() {
+        if( uri == null ) {
+            try {
+                uri = getConnectUri();
+            } catch (Throwable e) {
+            }
+        }
         return uri;
     }
 
@@ -265,10 +271,9 @@ public class TransportConnector implements Connector {
 
     public URI getConnectUri() throws IOException, URISyntaxException {
         if( connectUri==null ) {
-            if( getServer().getConnectURI()==null ) {
-                throw new IllegalStateException("The transportConnector has not been started.");
+            if( server !=null ) {
+                connectUri = server.getConnectURI();
             }
-            connectUri = getServer().getConnectURI();
         }
         return connectUri;
     }
@@ -286,16 +291,8 @@ public class TransportConnector implements Connector {
     }
 
     public String getName(){
-        if(name==null){
-            if(server!=null){
-                if(server.getConnectURI()!=null){
-                    name=server.getConnectURI().toString();
-                }else{
-                    name = server.getClass() + ":Not started";
-                }
-            }else{
-                name = "NOT_SET";
-            }
+        if( name==null ){
+            name = getUri().toString();
         }
         return name;
     }
