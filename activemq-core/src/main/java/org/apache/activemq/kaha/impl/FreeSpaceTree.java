@@ -49,10 +49,6 @@ class FreeSpaceTree{
         Item retrieved=(Item) tree.get(sizeKey);
         if(retrieved==item){
             Object foo=tree.remove(sizeKey);
-            if(foo!=retrieved){
-                Thread.dumpStack();
-                System.exit(0);
-            }
             result=true;
             reconfigureTree(sizeKey);
         }else{
