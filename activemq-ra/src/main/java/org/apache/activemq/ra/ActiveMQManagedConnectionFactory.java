@@ -99,6 +99,9 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
      */
     public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo info) throws ResourceException {
         try {
+            if( info == null ) {
+                info = this.info;
+            }
             ActiveMQConnectionRequestInfo amqInfo = (ActiveMQConnectionRequestInfo) info;
             return new ActiveMQManagedConnection(subject, adapter.makeConnection(amqInfo), amqInfo);
         }
