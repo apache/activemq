@@ -153,6 +153,7 @@ public class AdvisoryBroker extends BrokerFilter {
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             fireAdvisory(context, topic, info);
         }
+        next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), timeout); 
     }
     
     public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
@@ -167,7 +168,7 @@ public class AdvisoryBroker extends BrokerFilter {
     public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
         next.removeDestinationInfo(context, info);
         ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(info.getDestination());
-        fireAdvisory(context, topic, info);        
+        fireAdvisory(context, topic, info);
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
