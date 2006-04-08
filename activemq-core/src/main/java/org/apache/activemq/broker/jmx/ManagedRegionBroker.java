@@ -186,7 +186,7 @@ public class ManagedRegionBroker extends RegionBroker{
     }
 
     public void unregisterSubscription(Subscription sub){
-        ObjectName name=(ObjectName) subscriptionMap.get(sub);
+        ObjectName name=(ObjectName) subscriptionMap.remove(sub);
         if(name!=null){
             try{
                 unregisterSubscription(name);
@@ -331,7 +331,7 @@ public class ManagedRegionBroker extends RegionBroker{
             try{
                 c[i]=OpenTypeSupport.convert((Message) messages.get(i));
             }catch(Throwable e){
-                e.printStackTrace();
+                log.error("failed to browse : " + view,e);
             }
         }
         return c;
