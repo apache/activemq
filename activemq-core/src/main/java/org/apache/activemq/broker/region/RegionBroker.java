@@ -186,7 +186,6 @@ public class RegionBroker implements Broker {
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         if( destinations.contains(destination) ){
-            System.err.println(brokerService.getBrokerName() + " SPLATYTTTT!!!!");
             throw new JMSException("Destination already exists: "+destination);
         }
         
