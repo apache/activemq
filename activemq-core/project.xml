@@ -348,8 +348,9 @@
                 <!-- This test currently fails -->
                 <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
                 
-                <!-- This test currently fails -->
+                <!-- Kaha in flux - removing tests -->
                 <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
+                <exclude>**/KahaRecoveryBrokerTest.*</exclude>
                 
                 <!-- https://issues.apache.org/activemq/browse/AMQ-522 -->
                 <exclude>**/ProxyConnectorTest.*</exclude>

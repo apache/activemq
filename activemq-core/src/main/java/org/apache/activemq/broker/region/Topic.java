@@ -58,7 +58,7 @@ public class Topic implements Destination {
     protected final ActiveMQDestination destination;
     protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
     protected final Valve dispatchValve = new Valve(true);
-    protected final TopicMessageStore store;
+    protected final TopicMessageStore store;//this could be NULL! (If an advsiory)
     protected final UsageManager usageManager;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
@@ -72,7 +72,7 @@ public class Topic implements Destination {
             TaskRunnerFactory taskFactory) {
 
         this.destination = destination;
-        this.store = store;
+        this.store = store; //this could be NULL! (If an advsiory)
         this.usageManager = new UsageManager(memoryManager);
         this.usageManager.setLimit(Long.MAX_VALUE);
         
@@ -287,7 +287,7 @@ public class Topic implements Destination {
     }
 
     public Message loadMessage(MessageId messageId) throws IOException {
-        return store.getMessage(messageId);
+        return store != null ? store.getMessage(messageId) : null;
     }
 
     public void start() throws Exception {
@@ -301,19 +301,21 @@ public class Topic implements Destination {
     public Message[] browse(){
         final Set result=new CopyOnWriteArraySet();
         try{
-            store.recover(new MessageRecoveryListener(){
-                public void recoverMessage(Message message) throws Exception{
-                    result.add(message);
-                }
+            if(store!=null){
+                store.recover(new MessageRecoveryListener(){
+                    public void recoverMessage(Message message) throws Exception{
+                        result.add(message);
+                    }
 
-                public void recoverMessageReference(String messageReference) throws Exception{}
+                    public void recoverMessageReference(String messageReference) throws Exception{}
 
-                public void finished(){}
-            });
-            Message[] msgs=subscriptionRecoveryPolicy.browse(getActiveMQDestination());
-            if(msgs!=null){
-                for(int i=0;i<msgs.length;i++){
-                    result.add(msgs[i]);
+                    public void finished(){}
+                });
+                Message[] msgs=subscriptionRecoveryPolicy.browse(getActiveMQDestination());
+                if(msgs!=null){
+                    for(int i=0;i<msgs.length;i++){
+                        result.add(msgs[i]);
+                    }
                 }
             }
         }catch(Throwable e){
