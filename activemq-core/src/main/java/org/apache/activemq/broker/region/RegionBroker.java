@@ -211,28 +211,27 @@ public class RegionBroker implements Broker {
         return answer;
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        if( !destinations.contains(destination) )
-            throw new JMSException("Destination does not exist: "+destination);
-        
-        switch(destination.getDestinationType()) {
-        case ActiveMQDestination.QUEUE_TYPE:
-            queueRegion.removeDestination(context, destination, timeout);
-            break;
-        case ActiveMQDestination.TOPIC_TYPE:
-            topicRegion.removeDestination(context, destination, timeout);
-            break;
-        case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            tempQueueRegion.removeDestination(context, destination, timeout);
-            break;
-        case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            tempTopicRegion.removeDestination(context, destination, timeout);
-            break;
-        default:
-            throw createUnknownDestinationTypeException(destination);
+    public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout)
+                    throws Exception{
+        if(destinations.contains(destination)){
+            switch(destination.getDestinationType()){
+            case ActiveMQDestination.QUEUE_TYPE:
+                queueRegion.removeDestination(context,destination,timeout);
+                break;
+            case ActiveMQDestination.TOPIC_TYPE:
+                topicRegion.removeDestination(context,destination,timeout);
+                break;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                tempQueueRegion.removeDestination(context,destination,timeout);
+                break;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                tempTopicRegion.removeDestination(context,destination,timeout);
+                break;
+            default:
+                throw createUnknownDestinationTypeException(destination);
+            }
+            destinations.remove(destination);
         }
-        
-        destinations.remove(destination);
     }
     
     public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
