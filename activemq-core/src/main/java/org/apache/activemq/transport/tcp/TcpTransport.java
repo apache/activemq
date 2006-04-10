@@ -49,8 +49,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private static final Log log = LogFactory.getLog(TcpTransport.class);
 
     private int connectionTimeout = 30000;
-    private int soTimeout = 10000;
-    private int socketBufferSize = 64 * 1024;
+    private int soTimeout = 0;
+    private int socketBufferSize = 128 * 1024;
     private Socket socket;
     private DataOutputStream dataOut;
     private DataInputStream dataIn;
@@ -309,9 +309,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void initializeStreams() throws IOException {
-        TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), 4096);
+        TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), 8*1024);
         this.dataIn = new DataInputStream(buffIn);
-        TcpBufferedOutputStream buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), 8192);
+        TcpBufferedOutputStream buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), 16*1024);
         this.dataOut = new DataOutputStream(buffOut);
     }
 
