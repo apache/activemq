@@ -32,15 +32,14 @@ public class JMSDurableTopicRedeliverTest extends JmsTopicRedeliverTest {
         durable = true;
         super.setUp();
     }
-
-
+    
     /**
      * Sends and consumes the messages.
      *
      * @throws Exception
      */
     public void testRedeliverNewSession() throws Exception {
-        String text = "TEST";
+        String text = "TEST: "+System.currentTimeMillis();
         Message sendMessage = session.createTextMessage(text);
 
         if (verbose) {
@@ -74,6 +73,6 @@ public class JMSDurableTopicRedeliverTest extends JmsTopicRedeliverTest {
 
         consumeSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         consumer = createConsumer();
-        assertNull(consumer.receiveNoWait());
+        assertNull(consumer.receive(1000));
     }
 }

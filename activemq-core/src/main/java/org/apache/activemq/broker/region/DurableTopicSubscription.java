@@ -107,8 +107,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                 pending.addFirst(node);
             } else {
                 node.decrementReferenceCount();
-                iter.remove();
             }
+            iter.remove();
         }
         
         if( !keepDurableSubsActive ) {
