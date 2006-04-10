@@ -69,11 +69,7 @@
     </dependency>
     
     <dependency>
-      <groupId>jetty</groupId>
-      <artifactId>servlet-api</artifactId>
-    </dependency>    
-    <dependency>
-      <groupId>jetty</groupId>
+      <groupId>org.mortbay.jetty</groupId>
       <artifactId>jetty</artifactId>
     </dependency>
     

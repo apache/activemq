@@ -20,10 +20,7 @@ package org.apache.activemq.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +40,6 @@ import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mortbay.jetty.RetryRequest;
 import org.mortbay.util.ajax.Continuation;
 import org.mortbay.util.ajax.ContinuationSupport;
 
@@ -56,7 +52,8 @@ import org.mortbay.util.ajax.ContinuationSupport;
  * block for.
  * 
  * The servlet can be configured with the following init parameters:<dl>
- * <dt>defaultReadTimeout</dt><dd>The default time in ms to wait for messages. May be overridden by a request using the 'timeout' parameter</dd>
+ * <dt>defaultReadTimeout</dt><dd>The default time in ms to wait for messages. 
+ * May be overridden by a request using the 'timeout' parameter</dd>
  * <dt>maximumReadTimeout</dt><dd>The maximum value a request may specify for the 'timeout' parameter</dd>
  * <dt>maximumMessages</dt><dd>maximum messages to send per response</dd>
  * <dt></dt><dd></dd>
@@ -75,7 +72,7 @@ public class MessageListenerServlet extends MessageServletSupport {
     private long maximumReadTimeout = 25000;
 
     private int maximumMessages = 100;
-
+    
     public void init() throws ServletException {
         ServletConfig servletConfig = getServletConfig();
         String name = servletConfig.getInitParameter("defaultReadTimeout");
@@ -105,6 +102,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         // lets turn the HTTP post into a JMS Message
         
         WebClient client = getWebClient(request);
+        String message_ids="";
         
         synchronized (client) {
             
@@ -166,10 +164,10 @@ public class MessageListenerServlet extends MessageServletSupport {
                         TextMessage message = client.getSession().createTextMessage(messages[i]);
                         // TODO sent message parameters
                         client.send(destination, message);
+                        message_ids+=message.getJMSMessageID()+"\n";
                         if (log.isDebugEnabled()) {
                             log.debug("Sent "+messages[i]+" to "+destination);
                         }
-                        // TODO return message ID.
                     }
                     else
                         log.warn("unknown type "+type);
@@ -185,6 +183,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         {
             try
             {
+                // TODO return message IDs
                 doMessages(client,request,response);
             }
             catch (JMSException e) 
@@ -192,31 +191,30 @@ public class MessageListenerServlet extends MessageServletSupport {
                 throw new ServletException("JMS problem: " + e, e);
             }
         }
-        else
+        else 
         {
-            // lets assume a simple POST of a message
-            /*
-            response.setContentType("text/xml");
-            response.setHeader("Cache-Control", "no-cache");
-            response.getWriter().print("<ajax-response></ajax-response>");
-            */
-            
-            try {
-                Destination destination=getDestination(client, request);
-                String body = getPostedMessageBody(request);
-                TextMessage message = client.getSession().createTextMessage(body );
-                client.send(destination, message);
-                if (log.isDebugEnabled()) {
-                    log.debug("Sent to destination: " + destination + " body: " + body);
+            // handle simple POST of a message
+            if (request.getContentLength()!=0 && 
+               (request.getContentType()==null || !request.getContentType().toLowerCase().startsWith("application/x-www-form-urlencoded")))
+            {
+                try {
+                    Destination destination=getDestination(client, request);
+                    String body = getPostedMessageBody(request);
+                    TextMessage message = client.getSession().createTextMessage(body );
+                    client.send(destination, message);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Sent to destination: " + destination + " body: " + body);
+                    }
+                    message_ids+=message.getJMSMessageID()+"\n";
                 }
-                
-                response.setContentType("text");
-                response.setHeader("Cache-Control", "no-cache");
-                response.getWriter().print(message.getJMSMessageID());
+                catch (JMSException e) {
+                    throw new ServletException(e);
+                }
             }
-            catch (JMSException e) {
-                throw new ServletException(e);
-            }
+            
+            response.setContentType("text/plain");
+            response.setHeader("Cache-Control", "no-cache");
+            response.getWriter().print(message_ids);
         }
     }
 
@@ -225,19 +223,19 @@ public class MessageListenerServlet extends MessageServletSupport {
      * from a queue
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
         try {
             WebClient client = getWebClient(request);
             if (log.isDebugEnabled()) {
                 log.debug("GET client="+client+" session="+request.getSession().getId()+" uri="+request.getRequestURI()+" query="+request.getQueryString());
             }
-
+            
             doMessages(client, request, response);
         }
         catch (JMSException e) {
             throw new ServletException("JMS problem: " + e, e);
         }
     }
+
 
     /**
      * Reads a message from a destination up to some specific timeout period

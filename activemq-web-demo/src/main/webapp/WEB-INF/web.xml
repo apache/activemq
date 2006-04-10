@@ -42,8 +42,8 @@
     
     <!-- the subscription REST servlet -->
     <servlet>
-        <servlet-name>MessageListenerServlet</servlet-name>
-        <servlet-class>org.apache.activemq.web.MessageListenerServlet</servlet-class>
+        <servlet-name>AjaxServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.AjaxServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -61,7 +61,7 @@
     </servlet>
     
     <servlet-mapping>
-        <servlet-name>MessageListenerServlet</servlet-name>
+        <servlet-name>AjaxServlet</servlet-name>
         <url-pattern>/amq/*</url-pattern>
     </servlet-mapping>
     

@@ -126,6 +126,7 @@
     <module>activemq-console</module>
     <module>activemq-ra</module>
     <module>activemq-web</module>
+    <module>activemq-web-demo</module>
     <module>activemq-optional</module>
     <module>activemq-gbean</module>
     <module>activemq-gbean-management</module>
@@ -176,6 +177,16 @@
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-jaas</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-web</artifactId>
+        <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-web-demo</artifactId>
         <version>${pom.version}</version>
       </dependency>
       <dependency>
@@ -492,15 +503,21 @@
       </dependency>
 
       <dependency>
-        <groupId>jetty</groupId>
-        <artifactId>servlet-api</artifactId>
-        <version>2.5-6.0.0beta6</version>
+        <groupId>org.mortbay.jetty</groupId>
+        <artifactId>servlet-api-2.5</artifactId>
+        <version>6.0.0beta14</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.mortbay.jetty</groupId>
+        <artifactId>jetty-util</artifactId>
+        <version>6.0.0beta14</version>
       </dependency>
       
       <dependency>
-        <groupId>jetty</groupId>
+        <groupId>org.mortbay.jetty</groupId>
         <artifactId>jetty</artifactId>
-        <version>6.0.0beta6</version>
+        <version>6.0.0beta14</version>
       </dependency>
 
       <dependency>
@@ -699,13 +716,6 @@
         <configuration>
           <source>1.4</source>
           <target>1.4</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-eclipse-plugin</artifactId>
-        <configuration>
-          <outputDirectory>bin</outputDirectory>
         </configuration>
       </plugin>
       <plugin>
