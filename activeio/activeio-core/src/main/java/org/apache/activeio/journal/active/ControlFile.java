@@ -43,6 +43,7 @@ final public class ControlFile {
     private final RandomAccessFile file;
     private final FileChannel channel;
     private final ByteBufferPacket controlData;
+    private final static boolean brokenFileLock = "true".equals(System.getProperty("java.nio.channels.FileLock.broken", "false"));
 
     private long controlDataVersion=0;
     private FileLock lock;
@@ -71,10 +72,12 @@ final public class ControlFile {
                     throw new IOException("Journal is already opened by this application.");
                 }
 
-                lock = channel.tryLock();
-                if (lock == null) {
-                    set.remove(canonicalPath);
-                    throw new IOException("Journal is already opened by another application");
+                if( !brokenFileLock ) {
+                    lock = channel.tryLock();
+                    if (lock == null) {
+                        set.remove(canonicalPath);
+                        throw new IOException("Journal is already opened by another application");
+                    }
                 }
             }
         }
