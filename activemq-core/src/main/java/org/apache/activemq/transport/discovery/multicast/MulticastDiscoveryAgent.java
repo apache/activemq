@@ -73,6 +73,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent,Runnable{
     private long keepAliveInterval=DEFAULT_IDLE_TIME;
     private long lastAdvertizeTime=0;
     private AtomicBoolean started=new AtomicBoolean(false);
+    private boolean reportAdvertizeFailed=true;
     
     private final Executor executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue(), new ThreadFactory() {
         public Thread newThread(Runnable runable) {
@@ -296,7 +297,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent,Runnable{
     }
 
     private void doAdvertizeSelf(){
-        if(selfService!=null){
+        if(selfService!=null ){
             String payload=getType();
             payload+=started.get()?ALIVE:DEAD;
             payload+=DELIMITER+brokerName+DELIMITER;
@@ -305,8 +306,16 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent,Runnable{
                 byte[] data=payload.getBytes();
                 DatagramPacket packet=new DatagramPacket(data,0,data.length,sockAddress);
                 mcast.send(packet);
-            }catch(IOException e){
-                log.error("Failed to advertise our service: "+payload,e);
+            } catch(IOException e) {
+                // If a send fails, chances are all subsequent sends will fail too.. No need to keep reporting the
+                // same error over and over.
+                if( reportAdvertizeFailed ) {
+                    reportAdvertizeFailed=false;
+                    log.error("Failed to advertise our service: "+payload,e);
+                    if( "Operation not permitted".equals(e.getMessage()) ) {
+                        log.error("The 'Operation not permitted' error has been know to be caused by improper firewall/network setup.  Please make sure that the OS is properly configured to allow multicast traffic over: "+mcast.getLocalAddress());
+                    }
+                }
             }
         }
     }
