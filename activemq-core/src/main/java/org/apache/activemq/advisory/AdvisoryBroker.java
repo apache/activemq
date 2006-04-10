@@ -174,8 +174,14 @@ public class AdvisoryBroker extends BrokerFilter {
         next.removeDestinationInfo(context, info);
         ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(info.getDestination());
         fireAdvisory(context, topic, info);
-        next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), 0); 
-        next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), 0); 
+        try {
+            next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), 0);
+        } catch (Exception expectedIfDestinationDidNotExistYet) {
+        }
+        try {
+            next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), 0); 
+        } catch (Exception expectedIfDestinationDidNotExistYet) {
+        }
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
