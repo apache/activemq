@@ -22,6 +22,7 @@ import java.util.Set;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -154,7 +155,11 @@ public class TopicRegion extends AbstractRegion {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        TopicMessageStore store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
+        TopicMessageStore store = null;
+        if (!AdvisorySupport.isAdvisoryTopic(destination)){
+            store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
+        }
+        
         Topic topic = new Topic(destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
         configureTopic(topic, destination);
         

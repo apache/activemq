@@ -90,26 +90,25 @@ abstract public class AbstractRegion implements Region {
         }
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
-            throws Exception {
-        
-        // The destination cannot be removed if there are any active subscriptions 
-        for (Iterator iter = subscriptions.values().iterator(); iter.hasNext();) {
-            Subscription sub = (Subscription) iter.next();
-            if( sub.matches(destination) ) {
-                throw new JMSException("Destination still has an active subscription: "+ destination);
+    public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout)
+                    throws Exception{
+        // The destination cannot be removed if there are any active subscriptions
+        for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
+            Subscription sub=(Subscription) iter.next();
+            if(sub.matches(destination)){
+                throw new JMSException("Destination still has an active subscription: "+destination);
             }
         }
-
         log.debug("Removing destination: "+destination);
         synchronized(destinationsMutex){
             Destination dest=(Destination) destinations.remove(destination);
-            if(dest==null)
-                throw new IllegalArgumentException("The destination does not exist: "+destination);
-
-            destinationMap.removeAll(destination);
-            dest.dispose(context);
-            dest.stop();
+            if(dest!=null){
+                destinationMap.removeAll(destination);
+                dest.dispose(context);
+                dest.stop();
+            }else{
+                log.debug("Destination doesn't exist: " + dest);
+            }
         }
     }
 

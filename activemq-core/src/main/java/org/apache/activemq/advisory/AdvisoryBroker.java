@@ -62,6 +62,8 @@ public class AdvisoryBroker extends BrokerFilter {
         super(next);
         advisoryProducerId.setConnectionId(idGenerator.generateId());
     }
+    
+    
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         next.addConnection(context, info);
@@ -149,11 +151,14 @@ public class AdvisoryBroker extends BrokerFilter {
         next.removeDestination(context, destination, timeout);
         ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
         DestinationInfo info = (DestinationInfo) destinations.remove(destination);
-        if( info !=null ) {
+        if( info !=null && info.getDestination() != null && topic != null) {
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             fireAdvisory(context, topic, info);
+            next.removeDestination(context,topic,timeout);
+            next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), timeout); 
+            next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), timeout); 
         }
-        next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), timeout); 
+       
     }
     
     public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
