@@ -79,8 +79,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean copyMessageOnSend = true;
     private boolean useCompression = false;
     private boolean objectMessageSerializationDefered = false;
-    protected boolean asyncDispatch = true;
+    protected boolean asyncDispatch = false;
+    protected boolean alwaysSessionAsync=true;
     private boolean useAsyncSend = false;
+    private boolean optimizeAcknowledge = true;
     private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
 
@@ -233,6 +235,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setObjectMessageSerializationDefered(isObjectMessageSerializationDefered());
             connection.setAsyncDispatch(isAsyncDispatch());
             connection.setUseAsyncSend(isUseAsyncSend());
+            connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
+            connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
             
@@ -417,6 +421,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
         props.setProperty("userName", getUserName());
         props.setProperty("closeTimeout", Integer.toString(getCloseTimeout()));
+        props.setProperty("alwaysSessionAsync", Boolean.toString(isAlwaysSessionAsync()));
+        props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
+        
     }
 
     public boolean isOnSendPrepareMessageBody() {
@@ -463,5 +470,33 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setCloseTimeout(int closeTimeout){
         this.closeTimeout=closeTimeout;
+    }
+
+    /**
+     * @return Returns the alwaysSessionAsync.
+     */
+    public boolean isAlwaysSessionAsync(){
+        return alwaysSessionAsync;
+    }
+
+    /**
+     * @param alwaysSessionAsync The alwaysSessionAsync to set.
+     */
+    public void setAlwaysSessionAsync(boolean alwaysSessionAsync){
+        this.alwaysSessionAsync=alwaysSessionAsync;
+    }
+
+    /**
+     * @return Returns the optimizeAcknowledge.
+     */
+    public boolean isOptimizeAcknowledge(){
+        return optimizeAcknowledge;
+    }
+
+    /**
+     * @param optimizeAcknowledge The optimizeAcknowledge to set.
+     */
+    public void setOptimizeAcknowledge(boolean optimizeAcknowledge){
+        this.optimizeAcknowledge=optimizeAcknowledge;
     }
 }

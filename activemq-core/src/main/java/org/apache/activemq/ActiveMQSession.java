@@ -72,6 +72,7 @@ import org.apache.activemq.management.JMSSessionStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.thread.Scheduler;
+import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -196,24 +197,29 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     protected boolean closed;
     protected boolean asyncDispatch;
+    protected boolean sessionAsyncDispatch;
+    protected TaskRunner taskRunner;
 
     /**
      * Construct the Session
      * 
      * @param connection
+     * @param sessionId 
      * @param acknowledgeMode
      *            n.b if transacted - the acknowledgeMode ==
      *            Session.SESSION_TRANSACTED
+     * @param asyncDispatch 
+     * @param sessionAsyncDispatch 
      * @throws JMSException
      *             on internal error
      */
-    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch)
+    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch,boolean sessionAsyncDispatch)
             throws JMSException {
 
         this.connection = connection;
         this.acknowledgementMode = acknowledgeMode;
         this.asyncDispatch=asyncDispatch;
-        
+        this.sessionAsyncDispatch = sessionAsyncDispatch;
         this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getValue());
         setTransactionContext(new TransactionContext(connection));
         connection.addSession(this);
@@ -223,6 +229,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if( connection.isStarted() )
             start();
 
+    }
+    
+    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch)throws JMSException {
+        this(connection,sessionId,acknowledgeMode,asyncDispatch,true);
     }
 
     /**
@@ -1663,6 +1673,20 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public void setAsyncDispatch(boolean asyncDispatch) {
         this.asyncDispatch = asyncDispatch;
     }
+    
+    /**
+     * @return Returns the sessionAsyncDispatch.
+     */
+    public boolean isSessionAsyncDispatch(){
+        return sessionAsyncDispatch;
+    }
+
+    /**
+     * @param sessionAsyncDispatch The sessionAsyncDispatch to set.
+     */
+    public void setSessionAsyncDispatch(boolean sessionAsyncDispatch){
+        this.sessionAsyncDispatch=sessionAsyncDispatch;
+    }
 
 	public List getUnconsumedMessages() {
 		return executor.getUnconsumedMessages();
@@ -1683,5 +1707,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
         }
     }
+
+    
 
 }

@@ -52,7 +52,7 @@ public class ActiveMQSessionExecutor implements Task {
     
 
     void execute(MessageDispatch message) throws InterruptedException {
-        if (!session.isAsyncDispatch() && !dispatchedBySessionPool){
+        if (!session.isSessionAsyncDispatch() && !dispatchedBySessionPool){
             dispatch(message);
         }else {
             messageQueue.enqueue(message);
