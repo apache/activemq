@@ -1,0 +1,1180 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		53FD9DF509B7AC5F00553B02 /* SocketTransport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DDA09B7AB6800553B02 /* SocketTransport.cpp */; };
+		53FD9DF609B7AC5F00553B02 /* Endian.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DDE09B7AB6800553B02 /* Endian.cpp */; };
+		53FD9DF709B7AC5F00553B02 /* Guid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DE009B7AB6800553B02 /* Guid.cpp */; };
+		53FD9DF809B7AC5F00553B02 /* MapItemHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DE909B7AB6800553B02 /* MapItemHolder.cpp */; };
+		53FD9DF909B7AC5F00553B02 /* AbstractCommandMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D5C09B7AB6800553B02 /* AbstractCommandMarshaller.cpp */; };
+		53FD9DFA09B7AC5F00553B02 /* ActiveMQBytesMessageMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D5E09B7AB6800553B02 /* ActiveMQBytesMessageMarshaller.cpp */; };
+		53FD9DFB09B7AC5F00553B02 /* ActiveMQDestinationMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6009B7AB6800553B02 /* ActiveMQDestinationMarshaller.cpp */; };
+		53FD9DFC09B7AC5F00553B02 /* ActiveMQMapMessageMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6209B7AB6800553B02 /* ActiveMQMapMessageMarshaller.cpp */; };
+		53FD9DFD09B7AC5F00553B02 /* ActiveMQMessageMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6409B7AB6800553B02 /* ActiveMQMessageMarshaller.cpp */; };
+		53FD9DFE09B7AC5F00553B02 /* ActiveMQObjectMessageMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6609B7AB6800553B02 /* ActiveMQObjectMessageMarshaller.cpp */; };
+		53FD9DFF09B7AC5F00553B02 /* ActiveMQQueueMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6809B7AB6800553B02 /* ActiveMQQueueMarshaller.cpp */; };
+		53FD9E0009B7AC5F00553B02 /* ActiveMQStreamMessageMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6A09B7AB6800553B02 /* ActiveMQStreamMessageMarshaller.cpp */; };
+		53FD9E0109B7AC5F00553B02 /* ActiveMQTempDestinationMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6C09B7AB6800553B02 /* ActiveMQTempDestinationMarshaller.cpp */; };
+		53FD9E0209B7AC5F00553B02 /* ActiveMQTempQueueMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D6E09B7AB6800553B02 /* ActiveMQTempQueueMarshaller.cpp */; };
+		53FD9E0309B7AC5F00553B02 /* ActiveMQTempTopicMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7009B7AB6800553B02 /* ActiveMQTempTopicMarshaller.cpp */; };
+		53FD9E0409B7AC5F00553B02 /* ActiveMQTextMessageMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7209B7AB6800553B02 /* ActiveMQTextMessageMarshaller.cpp */; };
+		53FD9E0509B7AC5F00553B02 /* ActiveMQTopicMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7409B7AB6800553B02 /* ActiveMQTopicMarshaller.cpp */; };
+		53FD9E0609B7AC5F00553B02 /* BaseCommandMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7609B7AB6800553B02 /* BaseCommandMarshaller.cpp */; };
+		53FD9E0709B7AC5F00553B02 /* BrokerIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7809B7AB6800553B02 /* BrokerIdMarshaller.cpp */; };
+		53FD9E0809B7AC5F00553B02 /* BrokerInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7A09B7AB6800553B02 /* BrokerInfoMarshaller.cpp */; };
+		53FD9E0909B7AC5F00553B02 /* CommandMarshallerRegistry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7C09B7AB6800553B02 /* CommandMarshallerRegistry.cpp */; };
+		53FD9E0A09B7AC5F00553B02 /* ConnectionErrorMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D7E09B7AB6800553B02 /* ConnectionErrorMarshaller.cpp */; };
+		53FD9E0B09B7AC5F00553B02 /* ConnectionIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8009B7AB6800553B02 /* ConnectionIdMarshaller.cpp */; };
+		53FD9E0C09B7AC5F00553B02 /* ConnectionInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8209B7AB6800553B02 /* ConnectionInfoMarshaller.cpp */; };
+		53FD9E0D09B7AC5F00553B02 /* ConsumerIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8409B7AB6800553B02 /* ConsumerIdMarshaller.cpp */; };
+		53FD9E0E09B7AC5F00553B02 /* ConsumerInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8609B7AB6800553B02 /* ConsumerInfoMarshaller.cpp */; };
+		53FD9E0F09B7AC5F00553B02 /* ControlCommandMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8809B7AB6800553B02 /* ControlCommandMarshaller.cpp */; };
+		53FD9E1009B7AC5F00553B02 /* DataArrayResponseMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8A09B7AB6800553B02 /* DataArrayResponseMarshaller.cpp */; };
+		53FD9E1109B7AC5F00553B02 /* DataResponseMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8C09B7AB6800553B02 /* DataResponseMarshaller.cpp */; };
+		53FD9E1209B7AC5F00553B02 /* DestinationInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D8E09B7AB6800553B02 /* DestinationInfoMarshaller.cpp */; };
+		53FD9E1309B7AC5F00553B02 /* DiscoveryEventMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9009B7AB6800553B02 /* DiscoveryEventMarshaller.cpp */; };
+		53FD9E1409B7AC5F00553B02 /* ExceptionResponseMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9209B7AB6800553B02 /* ExceptionResponseMarshaller.cpp */; };
+		53FD9E1509B7AC5F00553B02 /* FlushCommandMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9409B7AB6800553B02 /* FlushCommandMarshaller.cpp */; };
+		53FD9E1609B7AC5F00553B02 /* IntegerResponseMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9609B7AB6800553B02 /* IntegerResponseMarshaller.cpp */; };
+		53FD9E1709B7AC5F00553B02 /* JournalQueueAckMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9809B7AB6800553B02 /* JournalQueueAckMarshaller.cpp */; };
+		53FD9E1809B7AC5F00553B02 /* JournalTopicAckMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9A09B7AB6800553B02 /* JournalTopicAckMarshaller.cpp */; };
+		53FD9E1909B7AC5F00553B02 /* JournalTraceMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9C09B7AB6800553B02 /* JournalTraceMarshaller.cpp */; };
+		53FD9E1A09B7AC5F00553B02 /* JournalTransactionMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D9E09B7AB6800553B02 /* JournalTransactionMarshaller.cpp */; };
+		53FD9E1B09B7AC5F00553B02 /* KeepAliveInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DA009B7AB6800553B02 /* KeepAliveInfoMarshaller.cpp */; };
+		53FD9E1C09B7AC5F00553B02 /* LocalTransactionIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DA209B7AB6800553B02 /* LocalTransactionIdMarshaller.cpp */; };
+		53FD9E1D09B7AC5F00553B02 /* MarshallerFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DA409B7AB6800553B02 /* MarshallerFactory.cpp */; };
+		53FD9E1E09B7AC5F00553B02 /* MessageAckMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DA609B7AB6800553B02 /* MessageAckMarshaller.cpp */; };
+		53FD9E1F09B7AC5F00553B02 /* MessageDispatchMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DA809B7AB6800553B02 /* MessageDispatchMarshaller.cpp */; };
+		53FD9E2009B7AC5F00553B02 /* MessageDispatchNotificationMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DAA09B7AB6800553B02 /* MessageDispatchNotificationMarshaller.cpp */; };
+		53FD9E2109B7AC5F00553B02 /* MessageIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DAC09B7AB6800553B02 /* MessageIdMarshaller.cpp */; };
+		53FD9E2209B7AC5F00553B02 /* MessageMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DAE09B7AB6800553B02 /* MessageMarshaller.cpp */; };
+		53FD9E2309B7AC5F00553B02 /* ProducerIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DB009B7AB6800553B02 /* ProducerIdMarshaller.cpp */; };
+		53FD9E2409B7AC5F00553B02 /* ProducerInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DB209B7AB6800553B02 /* ProducerInfoMarshaller.cpp */; };
+		53FD9E2509B7AC5F00553B02 /* RemoveInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DB409B7AB6800553B02 /* RemoveInfoMarshaller.cpp */; };
+		53FD9E2609B7AC5F00553B02 /* RemoveSubscriptionInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DB609B7AB6800553B02 /* RemoveSubscriptionInfoMarshaller.cpp */; };
+		53FD9E2709B7AC5F00553B02 /* ResponseMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DB809B7AB6800553B02 /* ResponseMarshaller.cpp */; };
+		53FD9E2809B7AC5F00553B02 /* SessionIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DBA09B7AB6800553B02 /* SessionIdMarshaller.cpp */; };
+		53FD9E2909B7AC5F00553B02 /* SessionInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DBC09B7AB6800553B02 /* SessionInfoMarshaller.cpp */; };
+		53FD9E2A09B7AC5F00553B02 /* ShutdownInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DBE09B7AB6800553B02 /* ShutdownInfoMarshaller.cpp */; };
+		53FD9E2B09B7AC5F00553B02 /* SubscriptionInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DC009B7AB6800553B02 /* SubscriptionInfoMarshaller.cpp */; };
+		53FD9E2C09B7AC5F00553B02 /* TransactionIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DC209B7AB6800553B02 /* TransactionIdMarshaller.cpp */; };
+		53FD9E2D09B7AC5F00553B02 /* TransactionInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DC409B7AB6800553B02 /* TransactionInfoMarshaller.cpp */; };
+		53FD9E2E09B7AC5F00553B02 /* WireFormatInfoMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DC609B7AB6800553B02 /* WireFormatInfoMarshaller.cpp */; };
+		53FD9E2F09B7AC5F00553B02 /* XATransactionIdMarshaller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DC809B7AB6800553B02 /* XATransactionIdMarshaller.cpp */; };
+		53FD9E3009B7AC5F00553B02 /* BinaryReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D4A09B7AB6800553B02 /* BinaryReader.cpp */; };
+		53FD9E3109B7AC5F00553B02 /* BinaryWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D4C09B7AB6800553B02 /* BinaryWriter.cpp */; };
+		53FD9E3209B7AC5F00553B02 /* SocketBinaryReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D5109B7AB6800553B02 /* SocketBinaryReader.cpp */; };
+		53FD9E3309B7AC5F00553B02 /* SocketBinaryWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D5309B7AB6800553B02 /* SocketBinaryWriter.cpp */; };
+		53FD9E3409B7AC5F00553B02 /* AbstractCommand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CBE09B7AB6700553B02 /* AbstractCommand.cpp */; };
+		53FD9E3509B7AC5F00553B02 /* ActiveMQBytesMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CC009B7AB6700553B02 /* ActiveMQBytesMessage.cpp */; };
+		53FD9E3609B7AC5F00553B02 /* ActiveMQDestination.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CC209B7AB6700553B02 /* ActiveMQDestination.cpp */; };
+		53FD9E3709B7AC5F00553B02 /* ActiveMQMapMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CC409B7AB6700553B02 /* ActiveMQMapMessage.cpp */; };
+		53FD9E3809B7AC5F00553B02 /* ActiveMQMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CC609B7AB6700553B02 /* ActiveMQMessage.cpp */; };
+		53FD9E3909B7AC5F00553B02 /* ActiveMQObjectMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CC809B7AB6700553B02 /* ActiveMQObjectMessage.cpp */; };
+		53FD9E3A09B7AC5F00553B02 /* ActiveMQQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CCA09B7AB6700553B02 /* ActiveMQQueue.cpp */; };
+		53FD9E3B09B7AC5F00553B02 /* ActiveMQTempQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CCC09B7AB6700553B02 /* ActiveMQTempQueue.cpp */; };
+		53FD9E3C09B7AC5F00553B02 /* ActiveMQTempTopic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CCE09B7AB6700553B02 /* ActiveMQTempTopic.cpp */; };
+		53FD9E3D09B7AC5F00553B02 /* ActiveMQTextMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CD009B7AB6800553B02 /* ActiveMQTextMessage.cpp */; };
+		53FD9E3E09B7AC5F00553B02 /* ActiveMQTopic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CD209B7AB6800553B02 /* ActiveMQTopic.cpp */; };
+		53FD9E3F09B7AC5F00553B02 /* BaseCommand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CD409B7AB6800553B02 /* BaseCommand.cpp */; };
+		53FD9E4009B7AC5F00553B02 /* BrokerId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CD609B7AB6800553B02 /* BrokerId.cpp */; };
+		53FD9E4109B7AC5F00553B02 /* BrokerInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CD809B7AB6800553B02 /* BrokerInfo.cpp */; };
+		53FD9E4209B7AC5F00553B02 /* ConnectionError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CDA09B7AB6800553B02 /* ConnectionError.cpp */; };
+		53FD9E4309B7AC5F00553B02 /* ConnectionId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CDC09B7AB6800553B02 /* ConnectionId.cpp */; };
+		53FD9E4409B7AC5F00553B02 /* ConnectionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CDE09B7AB6800553B02 /* ConnectionInfo.cpp */; };
+		53FD9E4509B7AC5F00553B02 /* ConsumerId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CE009B7AB6800553B02 /* ConsumerId.cpp */; };
+		53FD9E4609B7AC5F00553B02 /* ConsumerInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CE209B7AB6800553B02 /* ConsumerInfo.cpp */; };
+		53FD9E4709B7AC5F00553B02 /* ControlCommand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CE409B7AB6800553B02 /* ControlCommand.cpp */; };
+		53FD9E4809B7AC5F00553B02 /* DataArrayResponse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CE609B7AB6800553B02 /* DataArrayResponse.cpp */; };
+		53FD9E4909B7AC5F00553B02 /* DataResponse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CE809B7AB6800553B02 /* DataResponse.cpp */; };
+		53FD9E4A09B7AC5F00553B02 /* DestinationInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CEA09B7AB6800553B02 /* DestinationInfo.cpp */; };
+		53FD9E4B09B7AC5F00553B02 /* DiscoveryEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CEC09B7AB6800553B02 /* DiscoveryEvent.cpp */; };
+		53FD9E4C09B7AC5F00553B02 /* ExceptionResponse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CEE09B7AB6800553B02 /* ExceptionResponse.cpp */; };
+		53FD9E4D09B7AC5F00553B02 /* FlushCommand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CF009B7AB6800553B02 /* FlushCommand.cpp */; };
+		53FD9E4E09B7AC5F00553B02 /* IntegerResponse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CF409B7AB6800553B02 /* IntegerResponse.cpp */; };
+		53FD9E4F09B7AC5F00553B02 /* JournalQueueAck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CF609B7AB6800553B02 /* JournalQueueAck.cpp */; };
+		53FD9E5009B7AC5F00553B02 /* JournalTopicAck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CF809B7AB6800553B02 /* JournalTopicAck.cpp */; };
+		53FD9E5109B7AC5F00553B02 /* JournalTrace.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CFA09B7AB6800553B02 /* JournalTrace.cpp */; };
+		53FD9E5209B7AC5F00553B02 /* JournalTransaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CFC09B7AB6800553B02 /* JournalTransaction.cpp */; };
+		53FD9E5309B7AC5F00553B02 /* KeepAliveInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CFE09B7AB6800553B02 /* KeepAliveInfo.cpp */; };
+		53FD9E5409B7AC5F00553B02 /* LocalTransactionId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0009B7AB6800553B02 /* LocalTransactionId.cpp */; };
+		53FD9E5509B7AC5F00553B02 /* Message.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0209B7AB6800553B02 /* Message.cpp */; };
+		53FD9E5609B7AC5F00553B02 /* MessageAck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0409B7AB6800553B02 /* MessageAck.cpp */; };
+		53FD9E5709B7AC5F00553B02 /* MessageDispatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0609B7AB6800553B02 /* MessageDispatch.cpp */; };
+		53FD9E5809B7AC5F00553B02 /* MessageDispatchNotification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0809B7AB6800553B02 /* MessageDispatchNotification.cpp */; };
+		53FD9E5909B7AC5F00553B02 /* MessageId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0A09B7AB6800553B02 /* MessageId.cpp */; };
+		53FD9E5A09B7AC5F00553B02 /* ProducerId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0C09B7AB6800553B02 /* ProducerId.cpp */; };
+		53FD9E5B09B7AC5F00553B02 /* ProducerInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D0E09B7AB6800553B02 /* ProducerInfo.cpp */; };
+		53FD9E5C09B7AC5F00553B02 /* RemoveInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1009B7AB6800553B02 /* RemoveInfo.cpp */; };
+		53FD9E5D09B7AC5F00553B02 /* RemoveSubscriptionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1209B7AB6800553B02 /* RemoveSubscriptionInfo.cpp */; };
+		53FD9E5E09B7AC5F00553B02 /* Response.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1409B7AB6800553B02 /* Response.cpp */; };
+		53FD9E5F09B7AC5F00553B02 /* SessionId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1609B7AB6800553B02 /* SessionId.cpp */; };
+		53FD9E6009B7AC5F00553B02 /* SessionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1809B7AB6800553B02 /* SessionInfo.cpp */; };
+		53FD9E6109B7AC5F00553B02 /* ShutdownInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1A09B7AB6800553B02 /* ShutdownInfo.cpp */; };
+		53FD9E6209B7AC5F00553B02 /* SubscriptionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1C09B7AB6800553B02 /* SubscriptionInfo.cpp */; };
+		53FD9E6309B7AC5F00553B02 /* TransactionId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D1E09B7AB6800553B02 /* TransactionId.cpp */; };
+		53FD9E6409B7AC5F00553B02 /* TransactionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D2009B7AB6800553B02 /* TransactionInfo.cpp */; };
+		53FD9E6509B7AC5F00553B02 /* WireFormatInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D2209B7AB6800553B02 /* WireFormatInfo.cpp */; };
+		53FD9E6609B7AC5F00553B02 /* XATransactionId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D2409B7AB6800553B02 /* XATransactionId.cpp */; };
+		53FD9E6709B7AC5F00553B02 /* BrokerError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CB909B7AB6700553B02 /* BrokerError.cpp */; };
+		53FD9E6809B7AC5F00553B02 /* BrokerException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9CBB09B7AB6700553B02 /* BrokerException.cpp */; };
+		53FD9E6909B7AC5F00553B02 /* Connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D2609B7AB6800553B02 /* Connection.cpp */; };
+		53FD9E6A09B7AC5F00553B02 /* ConnectionClosedException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D2809B7AB6800553B02 /* ConnectionClosedException.cpp */; };
+		53FD9E6B09B7AC5F00553B02 /* ConnectionFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D2A09B7AB6800553B02 /* ConnectionFactory.cpp */; };
+		53FD9E6C09B7AC5F00553B02 /* ConsumerClosedException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D2C09B7AB6800553B02 /* ConsumerClosedException.cpp */; };
+		53FD9E6D09B7AC5F00553B02 /* DestinationFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D3D09B7AB6800553B02 /* DestinationFilter.cpp */; };
+		53FD9E6E09B7AC5F00553B02 /* FutureResponse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9D3F09B7AB6800553B02 /* FutureResponse.cpp */; };
+		53FD9E6F09B7AC5F00553B02 /* MessageConsumer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DCA09B7AB6800553B02 /* MessageConsumer.cpp */; };
+		53FD9E7009B7AC5F00553B02 /* MessageProducer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DD009B7AB6800553B02 /* MessageProducer.cpp */; };
+		53FD9E7109B7AC5F00553B02 /* OpenWireException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DD209B7AB6800553B02 /* OpenWireException.cpp */; };
+		53FD9E7209B7AC5F00553B02 /* Session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DD409B7AB6800553B02 /* Session.cpp */; };
+		53FD9E7309B7AC5F00553B02 /* TraceException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53FD9DD609B7AB6800553B02 /* TraceException.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+		014CEA520018CE5811CA2923 /* Development */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		014CEA530018CE5811CA2923 /* Deployment */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+/* End PBXBuildStyle section */
+
+/* Begin PBXFileReference section */
+		53FD9CB909B7AB6700553B02 /* BrokerError.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BrokerError.cpp; sourceTree = "<group>"; };
+		53FD9CBA09B7AB6700553B02 /* BrokerError.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BrokerError.hpp; sourceTree = "<group>"; };
+		53FD9CBB09B7AB6700553B02 /* BrokerException.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BrokerException.cpp; sourceTree = "<group>"; };
+		53FD9CBC09B7AB6700553B02 /* BrokerException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BrokerException.hpp; sourceTree = "<group>"; };
+		53FD9CBE09B7AB6700553B02 /* AbstractCommand.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = AbstractCommand.cpp; sourceTree = "<group>"; };
+		53FD9CBF09B7AB6700553B02 /* AbstractCommand.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = AbstractCommand.hpp; sourceTree = "<group>"; };
+		53FD9CC009B7AB6700553B02 /* ActiveMQBytesMessage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQBytesMessage.cpp; sourceTree = "<group>"; };
+		53FD9CC109B7AB6700553B02 /* ActiveMQBytesMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQBytesMessage.hpp; sourceTree = "<group>"; };
+		53FD9CC209B7AB6700553B02 /* ActiveMQDestination.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQDestination.cpp; sourceTree = "<group>"; };
+		53FD9CC309B7AB6700553B02 /* ActiveMQDestination.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQDestination.hpp; sourceTree = "<group>"; };
+		53FD9CC409B7AB6700553B02 /* ActiveMQMapMessage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQMapMessage.cpp; sourceTree = "<group>"; };
+		53FD9CC509B7AB6700553B02 /* ActiveMQMapMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQMapMessage.hpp; sourceTree = "<group>"; };
+		53FD9CC609B7AB6700553B02 /* ActiveMQMessage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQMessage.cpp; sourceTree = "<group>"; };
+		53FD9CC709B7AB6700553B02 /* ActiveMQMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQMessage.hpp; sourceTree = "<group>"; };
+		53FD9CC809B7AB6700553B02 /* ActiveMQObjectMessage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQObjectMessage.cpp; sourceTree = "<group>"; };
+		53FD9CC909B7AB6700553B02 /* ActiveMQObjectMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQObjectMessage.hpp; sourceTree = "<group>"; };
+		53FD9CCA09B7AB6700553B02 /* ActiveMQQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQQueue.cpp; sourceTree = "<group>"; };
+		53FD9CCB09B7AB6700553B02 /* ActiveMQQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQQueue.hpp; sourceTree = "<group>"; };
+		53FD9CCC09B7AB6700553B02 /* ActiveMQTempQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTempQueue.cpp; sourceTree = "<group>"; };
+		53FD9CCD09B7AB6700553B02 /* ActiveMQTempQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTempQueue.hpp; sourceTree = "<group>"; };
+		53FD9CCE09B7AB6700553B02 /* ActiveMQTempTopic.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTempTopic.cpp; sourceTree = "<group>"; };
+		53FD9CCF09B7AB6700553B02 /* ActiveMQTempTopic.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTempTopic.hpp; sourceTree = "<group>"; };
+		53FD9CD009B7AB6800553B02 /* ActiveMQTextMessage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTextMessage.cpp; sourceTree = "<group>"; };
+		53FD9CD109B7AB6800553B02 /* ActiveMQTextMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTextMessage.hpp; sourceTree = "<group>"; };
+		53FD9CD209B7AB6800553B02 /* ActiveMQTopic.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTopic.cpp; sourceTree = "<group>"; };
+		53FD9CD309B7AB6800553B02 /* ActiveMQTopic.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTopic.hpp; sourceTree = "<group>"; };
+		53FD9CD409B7AB6800553B02 /* BaseCommand.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BaseCommand.cpp; sourceTree = "<group>"; };
+		53FD9CD509B7AB6800553B02 /* BaseCommand.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BaseCommand.hpp; sourceTree = "<group>"; };
+		53FD9CD609B7AB6800553B02 /* BrokerId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BrokerId.cpp; sourceTree = "<group>"; };
+		53FD9CD709B7AB6800553B02 /* BrokerId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BrokerId.hpp; sourceTree = "<group>"; };
+		53FD9CD809B7AB6800553B02 /* BrokerInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BrokerInfo.cpp; sourceTree = "<group>"; };
+		53FD9CD909B7AB6800553B02 /* BrokerInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BrokerInfo.hpp; sourceTree = "<group>"; };
+		53FD9CDA09B7AB6800553B02 /* ConnectionError.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionError.cpp; sourceTree = "<group>"; };
+		53FD9CDB09B7AB6800553B02 /* ConnectionError.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionError.hpp; sourceTree = "<group>"; };
+		53FD9CDC09B7AB6800553B02 /* ConnectionId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionId.cpp; sourceTree = "<group>"; };
+		53FD9CDD09B7AB6800553B02 /* ConnectionId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionId.hpp; sourceTree = "<group>"; };
+		53FD9CDE09B7AB6800553B02 /* ConnectionInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionInfo.cpp; sourceTree = "<group>"; };
+		53FD9CDF09B7AB6800553B02 /* ConnectionInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionInfo.hpp; sourceTree = "<group>"; };
+		53FD9CE009B7AB6800553B02 /* ConsumerId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConsumerId.cpp; sourceTree = "<group>"; };
+		53FD9CE109B7AB6800553B02 /* ConsumerId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConsumerId.hpp; sourceTree = "<group>"; };
+		53FD9CE209B7AB6800553B02 /* ConsumerInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConsumerInfo.cpp; sourceTree = "<group>"; };
+		53FD9CE309B7AB6800553B02 /* ConsumerInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConsumerInfo.hpp; sourceTree = "<group>"; };
+		53FD9CE409B7AB6800553B02 /* ControlCommand.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ControlCommand.cpp; sourceTree = "<group>"; };
+		53FD9CE509B7AB6800553B02 /* ControlCommand.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ControlCommand.hpp; sourceTree = "<group>"; };
+		53FD9CE609B7AB6800553B02 /* DataArrayResponse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DataArrayResponse.cpp; sourceTree = "<group>"; };
+		53FD9CE709B7AB6800553B02 /* DataArrayResponse.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DataArrayResponse.hpp; sourceTree = "<group>"; };
+		53FD9CE809B7AB6800553B02 /* DataResponse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DataResponse.cpp; sourceTree = "<group>"; };
+		53FD9CE909B7AB6800553B02 /* DataResponse.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DataResponse.hpp; sourceTree = "<group>"; };
+		53FD9CEA09B7AB6800553B02 /* DestinationInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DestinationInfo.cpp; sourceTree = "<group>"; };
+		53FD9CEB09B7AB6800553B02 /* DestinationInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DestinationInfo.hpp; sourceTree = "<group>"; };
+		53FD9CEC09B7AB6800553B02 /* DiscoveryEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DiscoveryEvent.cpp; sourceTree = "<group>"; };
+		53FD9CED09B7AB6800553B02 /* DiscoveryEvent.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DiscoveryEvent.hpp; sourceTree = "<group>"; };
+		53FD9CEE09B7AB6800553B02 /* ExceptionResponse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionResponse.cpp; sourceTree = "<group>"; };
+		53FD9CEF09B7AB6800553B02 /* ExceptionResponse.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ExceptionResponse.hpp; sourceTree = "<group>"; };
+		53FD9CF009B7AB6800553B02 /* FlushCommand.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = FlushCommand.cpp; sourceTree = "<group>"; };
+		53FD9CF109B7AB6800553B02 /* FlushCommand.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = FlushCommand.hpp; sourceTree = "<group>"; };
+		53FD9CF209B7AB6800553B02 /* ICommand.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ICommand.hpp; sourceTree = "<group>"; };
+		53FD9CF309B7AB6800553B02 /* IDataStructure.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IDataStructure.hpp; sourceTree = "<group>"; };
+		53FD9CF409B7AB6800553B02 /* IntegerResponse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = IntegerResponse.cpp; sourceTree = "<group>"; };
+		53FD9CF509B7AB6800553B02 /* IntegerResponse.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IntegerResponse.hpp; sourceTree = "<group>"; };
+		53FD9CF609B7AB6800553B02 /* JournalQueueAck.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalQueueAck.cpp; sourceTree = "<group>"; };
+		53FD9CF709B7AB6800553B02 /* JournalQueueAck.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalQueueAck.hpp; sourceTree = "<group>"; };
+		53FD9CF809B7AB6800553B02 /* JournalTopicAck.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalTopicAck.cpp; sourceTree = "<group>"; };
+		53FD9CF909B7AB6800553B02 /* JournalTopicAck.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalTopicAck.hpp; sourceTree = "<group>"; };
+		53FD9CFA09B7AB6800553B02 /* JournalTrace.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalTrace.cpp; sourceTree = "<group>"; };
+		53FD9CFB09B7AB6800553B02 /* JournalTrace.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalTrace.hpp; sourceTree = "<group>"; };
+		53FD9CFC09B7AB6800553B02 /* JournalTransaction.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalTransaction.cpp; sourceTree = "<group>"; };
+		53FD9CFD09B7AB6800553B02 /* JournalTransaction.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalTransaction.hpp; sourceTree = "<group>"; };
+		53FD9CFE09B7AB6800553B02 /* KeepAliveInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = KeepAliveInfo.cpp; sourceTree = "<group>"; };
+		53FD9CFF09B7AB6800553B02 /* KeepAliveInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = KeepAliveInfo.hpp; sourceTree = "<group>"; };
+		53FD9D0009B7AB6800553B02 /* LocalTransactionId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = LocalTransactionId.cpp; sourceTree = "<group>"; };
+		53FD9D0109B7AB6800553B02 /* LocalTransactionId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = LocalTransactionId.hpp; sourceTree = "<group>"; };
+		53FD9D0209B7AB6800553B02 /* Message.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Message.cpp; sourceTree = "<group>"; };
+		53FD9D0309B7AB6800553B02 /* Message.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Message.hpp; sourceTree = "<group>"; };
+		53FD9D0409B7AB6800553B02 /* MessageAck.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageAck.cpp; sourceTree = "<group>"; };
+		53FD9D0509B7AB6800553B02 /* MessageAck.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageAck.hpp; sourceTree = "<group>"; };
+		53FD9D0609B7AB6800553B02 /* MessageDispatch.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageDispatch.cpp; sourceTree = "<group>"; };
+		53FD9D0709B7AB6800553B02 /* MessageDispatch.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageDispatch.hpp; sourceTree = "<group>"; };
+		53FD9D0809B7AB6800553B02 /* MessageDispatchNotification.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageDispatchNotification.cpp; sourceTree = "<group>"; };
+		53FD9D0909B7AB6800553B02 /* MessageDispatchNotification.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageDispatchNotification.hpp; sourceTree = "<group>"; };
+		53FD9D0A09B7AB6800553B02 /* MessageId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageId.cpp; sourceTree = "<group>"; };
+		53FD9D0B09B7AB6800553B02 /* MessageId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageId.hpp; sourceTree = "<group>"; };
+		53FD9D0C09B7AB6800553B02 /* ProducerId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ProducerId.cpp; sourceTree = "<group>"; };
+		53FD9D0D09B7AB6800553B02 /* ProducerId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ProducerId.hpp; sourceTree = "<group>"; };
+		53FD9D0E09B7AB6800553B02 /* ProducerInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ProducerInfo.cpp; sourceTree = "<group>"; };
+		53FD9D0F09B7AB6800553B02 /* ProducerInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ProducerInfo.hpp; sourceTree = "<group>"; };
+		53FD9D1009B7AB6800553B02 /* RemoveInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RemoveInfo.cpp; sourceTree = "<group>"; };
+		53FD9D1109B7AB6800553B02 /* RemoveInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RemoveInfo.hpp; sourceTree = "<group>"; };
+		53FD9D1209B7AB6800553B02 /* RemoveSubscriptionInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RemoveSubscriptionInfo.cpp; sourceTree = "<group>"; };
+		53FD9D1309B7AB6800553B02 /* RemoveSubscriptionInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RemoveSubscriptionInfo.hpp; sourceTree = "<group>"; };
+		53FD9D1409B7AB6800553B02 /* Response.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Response.cpp; sourceTree = "<group>"; };
+		53FD9D1509B7AB6800553B02 /* Response.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Response.hpp; sourceTree = "<group>"; };
+		53FD9D1609B7AB6800553B02 /* SessionId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SessionId.cpp; sourceTree = "<group>"; };
+		53FD9D1709B7AB6800553B02 /* SessionId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SessionId.hpp; sourceTree = "<group>"; };
+		53FD9D1809B7AB6800553B02 /* SessionInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SessionInfo.cpp; sourceTree = "<group>"; };
+		53FD9D1909B7AB6800553B02 /* SessionInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SessionInfo.hpp; sourceTree = "<group>"; };
+		53FD9D1A09B7AB6800553B02 /* ShutdownInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ShutdownInfo.cpp; sourceTree = "<group>"; };
+		53FD9D1B09B7AB6800553B02 /* ShutdownInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ShutdownInfo.hpp; sourceTree = "<group>"; };
+		53FD9D1C09B7AB6800553B02 /* SubscriptionInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SubscriptionInfo.cpp; sourceTree = "<group>"; };
+		53FD9D1D09B7AB6800553B02 /* SubscriptionInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SubscriptionInfo.hpp; sourceTree = "<group>"; };
+		53FD9D1E09B7AB6800553B02 /* TransactionId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = TransactionId.cpp; sourceTree = "<group>"; };
+		53FD9D1F09B7AB6800553B02 /* TransactionId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = TransactionId.hpp; sourceTree = "<group>"; };
+		53FD9D2009B7AB6800553B02 /* TransactionInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = TransactionInfo.cpp; sourceTree = "<group>"; };
+		53FD9D2109B7AB6800553B02 /* TransactionInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = TransactionInfo.hpp; sourceTree = "<group>"; };
+		53FD9D2209B7AB6800553B02 /* WireFormatInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = WireFormatInfo.cpp; sourceTree = "<group>"; };
+		53FD9D2309B7AB6800553B02 /* WireFormatInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = WireFormatInfo.hpp; sourceTree = "<group>"; };
+		53FD9D2409B7AB6800553B02 /* XATransactionId.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = XATransactionId.cpp; sourceTree = "<group>"; };
+		53FD9D2509B7AB6800553B02 /* XATransactionId.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = XATransactionId.hpp; sourceTree = "<group>"; };
+		53FD9D2609B7AB6800553B02 /* Connection.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Connection.cpp; sourceTree = "<group>"; };
+		53FD9D2709B7AB6800553B02 /* Connection.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Connection.hpp; sourceTree = "<group>"; };
+		53FD9D2809B7AB6800553B02 /* ConnectionClosedException.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionClosedException.cpp; sourceTree = "<group>"; };
+		53FD9D2909B7AB6800553B02 /* ConnectionClosedException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionClosedException.hpp; sourceTree = "<group>"; };
+		53FD9D2A09B7AB6800553B02 /* ConnectionFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionFactory.cpp; sourceTree = "<group>"; };
+		53FD9D2B09B7AB6800553B02 /* ConnectionFactory.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionFactory.hpp; sourceTree = "<group>"; };
+		53FD9D2C09B7AB6800553B02 /* ConsumerClosedException.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConsumerClosedException.cpp; sourceTree = "<group>"; };
+		53FD9D2D09B7AB6800553B02 /* ConsumerClosedException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConsumerClosedException.hpp; sourceTree = "<group>"; };
+		53FD9D3D09B7AB6800553B02 /* DestinationFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DestinationFilter.cpp; sourceTree = "<group>"; };
+		53FD9D3E09B7AB6800553B02 /* DestinationFilter.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DestinationFilter.hpp; sourceTree = "<group>"; };
+		53FD9D3F09B7AB6800553B02 /* FutureResponse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = FutureResponse.cpp; sourceTree = "<group>"; };
+		53FD9D4009B7AB6800553B02 /* FutureResponse.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = FutureResponse.hpp; sourceTree = "<group>"; };
+		53FD9D4109B7AB6800553B02 /* IBytesMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IBytesMessage.hpp; sourceTree = "<group>"; };
+		53FD9D4209B7AB6800553B02 /* IConnection.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IConnection.hpp; sourceTree = "<group>"; };
+		53FD9D4309B7AB6800553B02 /* IConnectionFactory.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IConnectionFactory.hpp; sourceTree = "<group>"; };
+		53FD9D4409B7AB6800553B02 /* IDestination.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IDestination.hpp; sourceTree = "<group>"; };
+		53FD9D4509B7AB6800553B02 /* IllegalArgumentException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IllegalArgumentException.hpp; sourceTree = "<group>"; };
+		53FD9D4609B7AB6800553B02 /* IMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IMessage.hpp; sourceTree = "<group>"; };
+		53FD9D4709B7AB6800553B02 /* IMessageConsumer.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IMessageConsumer.hpp; sourceTree = "<group>"; };
+		53FD9D4809B7AB6800553B02 /* IMessageProducer.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IMessageProducer.hpp; sourceTree = "<group>"; };
+		53FD9D4A09B7AB6800553B02 /* BinaryReader.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BinaryReader.cpp; sourceTree = "<group>"; };
+		53FD9D4B09B7AB6800553B02 /* BinaryReader.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BinaryReader.hpp; sourceTree = "<group>"; };
+		53FD9D4C09B7AB6800553B02 /* BinaryWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BinaryWriter.cpp; sourceTree = "<group>"; };
+		53FD9D4D09B7AB6800553B02 /* BinaryWriter.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BinaryWriter.hpp; sourceTree = "<group>"; };
+		53FD9D4E09B7AB6800553B02 /* IOException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IOException.hpp; sourceTree = "<group>"; };
+		53FD9D4F09B7AB6800553B02 /* IReader.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IReader.hpp; sourceTree = "<group>"; };
+		53FD9D5009B7AB6800553B02 /* IWriter.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IWriter.hpp; sourceTree = "<group>"; };
+		53FD9D5109B7AB6800553B02 /* SocketBinaryReader.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SocketBinaryReader.cpp; sourceTree = "<group>"; };
+		53FD9D5209B7AB6800553B02 /* SocketBinaryReader.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SocketBinaryReader.hpp; sourceTree = "<group>"; };
+		53FD9D5309B7AB6800553B02 /* SocketBinaryWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SocketBinaryWriter.cpp; sourceTree = "<group>"; };
+		53FD9D5409B7AB6800553B02 /* SocketBinaryWriter.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SocketBinaryWriter.hpp; sourceTree = "<group>"; };
+		53FD9D5509B7AB6800553B02 /* IQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IQueue.hpp; sourceTree = "<group>"; };
+		53FD9D5609B7AB6800553B02 /* ISession.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ISession.hpp; sourceTree = "<group>"; };
+		53FD9D5709B7AB6800553B02 /* ITemporaryQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ITemporaryQueue.hpp; sourceTree = "<group>"; };
+		53FD9D5809B7AB6800553B02 /* ITemporaryTopic.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ITemporaryTopic.hpp; sourceTree = "<group>"; };
+		53FD9D5909B7AB6800553B02 /* ITextMessage.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ITextMessage.hpp; sourceTree = "<group>"; };
+		53FD9D5A09B7AB6800553B02 /* ITopic.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ITopic.hpp; sourceTree = "<group>"; };
+		53FD9D5C09B7AB6800553B02 /* AbstractCommandMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = AbstractCommandMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D5D09B7AB6800553B02 /* AbstractCommandMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = AbstractCommandMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D5E09B7AB6800553B02 /* ActiveMQBytesMessageMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQBytesMessageMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D5F09B7AB6800553B02 /* ActiveMQBytesMessageMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQBytesMessageMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6009B7AB6800553B02 /* ActiveMQDestinationMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQDestinationMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6109B7AB6800553B02 /* ActiveMQDestinationMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQDestinationMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6209B7AB6800553B02 /* ActiveMQMapMessageMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQMapMessageMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6309B7AB6800553B02 /* ActiveMQMapMessageMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQMapMessageMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6409B7AB6800553B02 /* ActiveMQMessageMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQMessageMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6509B7AB6800553B02 /* ActiveMQMessageMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQMessageMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6609B7AB6800553B02 /* ActiveMQObjectMessageMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQObjectMessageMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6709B7AB6800553B02 /* ActiveMQObjectMessageMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQObjectMessageMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6809B7AB6800553B02 /* ActiveMQQueueMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQQueueMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6909B7AB6800553B02 /* ActiveMQQueueMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQQueueMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6A09B7AB6800553B02 /* ActiveMQStreamMessageMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQStreamMessageMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6B09B7AB6800553B02 /* ActiveMQStreamMessageMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQStreamMessageMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6C09B7AB6800553B02 /* ActiveMQTempDestinationMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTempDestinationMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6D09B7AB6800553B02 /* ActiveMQTempDestinationMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTempDestinationMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D6E09B7AB6800553B02 /* ActiveMQTempQueueMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTempQueueMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D6F09B7AB6800553B02 /* ActiveMQTempQueueMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTempQueueMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D7009B7AB6800553B02 /* ActiveMQTempTopicMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTempTopicMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D7109B7AB6800553B02 /* ActiveMQTempTopicMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTempTopicMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D7209B7AB6800553B02 /* ActiveMQTextMessageMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTextMessageMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D7309B7AB6800553B02 /* ActiveMQTextMessageMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTextMessageMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D7409B7AB6800553B02 /* ActiveMQTopicMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ActiveMQTopicMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D7509B7AB6800553B02 /* ActiveMQTopicMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ActiveMQTopicMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D7609B7AB6800553B02 /* BaseCommandMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BaseCommandMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D7709B7AB6800553B02 /* BaseCommandMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BaseCommandMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D7809B7AB6800553B02 /* BrokerIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BrokerIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D7909B7AB6800553B02 /* BrokerIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BrokerIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D7A09B7AB6800553B02 /* BrokerInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = BrokerInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D7B09B7AB6800553B02 /* BrokerInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = BrokerInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D7C09B7AB6800553B02 /* CommandMarshallerRegistry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = CommandMarshallerRegistry.cpp; sourceTree = "<group>"; };
+		53FD9D7D09B7AB6800553B02 /* CommandMarshallerRegistry.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = CommandMarshallerRegistry.hpp; sourceTree = "<group>"; };
+		53FD9D7E09B7AB6800553B02 /* ConnectionErrorMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionErrorMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D7F09B7AB6800553B02 /* ConnectionErrorMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionErrorMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8009B7AB6800553B02 /* ConnectionIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8109B7AB6800553B02 /* ConnectionIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8209B7AB6800553B02 /* ConnectionInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectionInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8309B7AB6800553B02 /* ConnectionInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConnectionInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8409B7AB6800553B02 /* ConsumerIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConsumerIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8509B7AB6800553B02 /* ConsumerIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConsumerIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8609B7AB6800553B02 /* ConsumerInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ConsumerInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8709B7AB6800553B02 /* ConsumerInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConsumerInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8809B7AB6800553B02 /* ControlCommandMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ControlCommandMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8909B7AB6800553B02 /* ControlCommandMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ControlCommandMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8A09B7AB6800553B02 /* DataArrayResponseMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DataArrayResponseMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8B09B7AB6800553B02 /* DataArrayResponseMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DataArrayResponseMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8C09B7AB6800553B02 /* DataResponseMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DataResponseMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8D09B7AB6800553B02 /* DataResponseMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DataResponseMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D8E09B7AB6800553B02 /* DestinationInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DestinationInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D8F09B7AB6800553B02 /* DestinationInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DestinationInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9009B7AB6800553B02 /* DiscoveryEventMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DiscoveryEventMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9109B7AB6800553B02 /* DiscoveryEventMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DiscoveryEventMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9209B7AB6800553B02 /* ExceptionResponseMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionResponseMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9309B7AB6800553B02 /* ExceptionResponseMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ExceptionResponseMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9409B7AB6800553B02 /* FlushCommandMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = FlushCommandMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9509B7AB6800553B02 /* FlushCommandMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = FlushCommandMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9609B7AB6800553B02 /* IntegerResponseMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = IntegerResponseMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9709B7AB6800553B02 /* IntegerResponseMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = IntegerResponseMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9809B7AB6800553B02 /* JournalQueueAckMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalQueueAckMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9909B7AB6800553B02 /* JournalQueueAckMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalQueueAckMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9A09B7AB6800553B02 /* JournalTopicAckMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalTopicAckMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9B09B7AB6800553B02 /* JournalTopicAckMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalTopicAckMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9C09B7AB6800553B02 /* JournalTraceMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalTraceMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9D09B7AB6800553B02 /* JournalTraceMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalTraceMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9D9E09B7AB6800553B02 /* JournalTransactionMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JournalTransactionMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9D9F09B7AB6800553B02 /* JournalTransactionMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = JournalTransactionMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DA009B7AB6800553B02 /* KeepAliveInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = KeepAliveInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DA109B7AB6800553B02 /* KeepAliveInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = KeepAliveInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DA209B7AB6800553B02 /* LocalTransactionIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = LocalTransactionIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DA309B7AB6800553B02 /* LocalTransactionIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = LocalTransactionIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DA409B7AB6800553B02 /* MarshallerFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MarshallerFactory.cpp; sourceTree = "<group>"; };
+		53FD9DA509B7AB6800553B02 /* MarshallerFactory.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MarshallerFactory.hpp; sourceTree = "<group>"; };
+		53FD9DA609B7AB6800553B02 /* MessageAckMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageAckMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DA709B7AB6800553B02 /* MessageAckMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageAckMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DA809B7AB6800553B02 /* MessageDispatchMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageDispatchMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DA909B7AB6800553B02 /* MessageDispatchMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageDispatchMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DAA09B7AB6800553B02 /* MessageDispatchNotificationMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageDispatchNotificationMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DAB09B7AB6800553B02 /* MessageDispatchNotificationMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageDispatchNotificationMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DAC09B7AB6800553B02 /* MessageIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DAD09B7AB6800553B02 /* MessageIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DAE09B7AB6800553B02 /* MessageMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DAF09B7AB6800553B02 /* MessageMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DB009B7AB6800553B02 /* ProducerIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ProducerIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DB109B7AB6800553B02 /* ProducerIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ProducerIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DB209B7AB6800553B02 /* ProducerInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ProducerInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DB309B7AB6800553B02 /* ProducerInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ProducerInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DB409B7AB6800553B02 /* RemoveInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RemoveInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DB509B7AB6800553B02 /* RemoveInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RemoveInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DB609B7AB6800553B02 /* RemoveSubscriptionInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RemoveSubscriptionInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DB709B7AB6800553B02 /* RemoveSubscriptionInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RemoveSubscriptionInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DB809B7AB6800553B02 /* ResponseMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ResponseMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DB909B7AB6800553B02 /* ResponseMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ResponseMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DBA09B7AB6800553B02 /* SessionIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SessionIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DBB09B7AB6800553B02 /* SessionIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SessionIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DBC09B7AB6800553B02 /* SessionInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SessionInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DBD09B7AB6800553B02 /* SessionInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SessionInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DBE09B7AB6800553B02 /* ShutdownInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ShutdownInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DBF09B7AB6800553B02 /* ShutdownInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ShutdownInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DC009B7AB6800553B02 /* SubscriptionInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SubscriptionInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DC109B7AB6800553B02 /* SubscriptionInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SubscriptionInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DC209B7AB6800553B02 /* TransactionIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = TransactionIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DC309B7AB6800553B02 /* TransactionIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = TransactionIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DC409B7AB6800553B02 /* TransactionInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = TransactionInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DC509B7AB6800553B02 /* TransactionInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = TransactionInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DC609B7AB6800553B02 /* WireFormatInfoMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = WireFormatInfoMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DC709B7AB6800553B02 /* WireFormatInfoMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = WireFormatInfoMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DC809B7AB6800553B02 /* XATransactionIdMarshaller.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = XATransactionIdMarshaller.cpp; sourceTree = "<group>"; };
+		53FD9DC909B7AB6800553B02 /* XATransactionIdMarshaller.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = XATransactionIdMarshaller.hpp; sourceTree = "<group>"; };
+		53FD9DCA09B7AB6800553B02 /* MessageConsumer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageConsumer.cpp; sourceTree = "<group>"; };
+		53FD9DCB09B7AB6800553B02 /* MessageConsumer.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageConsumer.hpp; sourceTree = "<group>"; };
+		53FD9DCC09B7AB6800553B02 /* MessageEOFException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageEOFException.hpp; sourceTree = "<group>"; };
+		53FD9DCD09B7AB6800553B02 /* MessageFormatException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageFormatException.hpp; sourceTree = "<group>"; };
+		53FD9DCE09B7AB6800553B02 /* MessageNotReadableException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageNotReadableException.hpp; sourceTree = "<group>"; };
+		53FD9DCF09B7AB6800553B02 /* MessageNotWritableException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageNotWritableException.hpp; sourceTree = "<group>"; };
+		53FD9DD009B7AB6800553B02 /* MessageProducer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MessageProducer.cpp; sourceTree = "<group>"; };
+		53FD9DD109B7AB6800553B02 /* MessageProducer.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MessageProducer.hpp; sourceTree = "<group>"; };
+		53FD9DD209B7AB6800553B02 /* OpenWireException.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = OpenWireException.cpp; sourceTree = "<group>"; };
+		53FD9DD309B7AB6800553B02 /* OpenWireException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = OpenWireException.hpp; sourceTree = "<group>"; };
+		53FD9DD409B7AB6800553B02 /* Session.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Session.cpp; sourceTree = "<group>"; };
+		53FD9DD509B7AB6800553B02 /* Session.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Session.hpp; sourceTree = "<group>"; };
+		53FD9DD609B7AB6800553B02 /* TraceException.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = TraceException.cpp; sourceTree = "<group>"; };
+		53FD9DD709B7AB6800553B02 /* TraceException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = TraceException.hpp; sourceTree = "<group>"; };
+		53FD9DD909B7AB6800553B02 /* ITransport.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ITransport.hpp; sourceTree = "<group>"; };
+		53FD9DDA09B7AB6800553B02 /* SocketTransport.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SocketTransport.cpp; sourceTree = "<group>"; };
+		53FD9DDB09B7AB6800553B02 /* SocketTransport.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SocketTransport.hpp; sourceTree = "<group>"; };
+		53FD9DDD09B7AB6800553B02 /* ConversionException.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ConversionException.hpp; sourceTree = "<group>"; };
+		53FD9DDE09B7AB6800553B02 /* Endian.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Endian.cpp; sourceTree = "<group>"; };
+		53FD9DDF09B7AB6800553B02 /* Endian.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Endian.hpp; sourceTree = "<group>"; };
+		53FD9DE009B7AB6800553B02 /* Guid.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Guid.cpp; sourceTree = "<group>"; };
+		53FD9DE109B7AB6800553B02 /* Guid.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Guid.hpp; sourceTree = "<group>"; };
+		53FD9DE309B7AB6800553B02 /* ap.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ap.hpp; sourceTree = "<group>"; };
+		53FD9DE409B7AB6800553B02 /* atomic.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = atomic.hpp; sourceTree = "<group>"; };
+		53FD9DE509B7AB6800553B02 /* namespace.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = namespace.hpp; sourceTree = "<group>"; };
+		53FD9DE609B7AB6800553B02 /* p.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = p.hpp; sourceTree = "<group>"; };
+		53FD9DE709B7AB6800553B02 /* platform.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = platform.hpp; sourceTree = "<group>"; };
+		53FD9DE909B7AB6800553B02 /* MapItemHolder.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = MapItemHolder.cpp; sourceTree = "<group>"; };
+		53FD9DEA09B7AB6800553B02 /* MapItemHolder.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = MapItemHolder.hpp; sourceTree = "<group>"; };
+		53FD9DEB09B7AB6800553B02 /* SimpleMutex.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = SimpleMutex.hpp; sourceTree = "<group>"; };
+		53FD9DF009B7AC1000553B02 /* openwire-cpp.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "openwire-cpp.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		53FD9DEE09B7AC1000553B02 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* amqc */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9CB309B7AB6700553B02 /* src */,
+				53FD9DF009B7AC1000553B02 /* openwire-cpp.dylib */,
+			);
+			name = amqc;
+			sourceTree = "<group>";
+		};
+		53FD9CB309B7AB6700553B02 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9DD809B7AB6800553B02 /* transport */,
+				53FD9DDC09B7AB6800553B02 /* util */,
+				53FD9D5B09B7AB6800553B02 /* marshal */,
+				53FD9D4909B7AB6800553B02 /* io */,
+				53FD9CBD09B7AB6700553B02 /* command */,
+				53FD9CB909B7AB6700553B02 /* BrokerError.cpp */,
+				53FD9CBA09B7AB6700553B02 /* BrokerError.hpp */,
+				53FD9CBB09B7AB6700553B02 /* BrokerException.cpp */,
+				53FD9CBC09B7AB6700553B02 /* BrokerException.hpp */,
+				53FD9D2609B7AB6800553B02 /* Connection.cpp */,
+				53FD9D2709B7AB6800553B02 /* Connection.hpp */,
+				53FD9D2809B7AB6800553B02 /* ConnectionClosedException.cpp */,
+				53FD9D2909B7AB6800553B02 /* ConnectionClosedException.hpp */,
+				53FD9D2A09B7AB6800553B02 /* ConnectionFactory.cpp */,
+				53FD9D2B09B7AB6800553B02 /* ConnectionFactory.hpp */,
+				53FD9D2C09B7AB6800553B02 /* ConsumerClosedException.cpp */,
+				53FD9D2D09B7AB6800553B02 /* ConsumerClosedException.hpp */,
+				53FD9D3D09B7AB6800553B02 /* DestinationFilter.cpp */,
+				53FD9D3E09B7AB6800553B02 /* DestinationFilter.hpp */,
+				53FD9D3F09B7AB6800553B02 /* FutureResponse.cpp */,
+				53FD9D4009B7AB6800553B02 /* FutureResponse.hpp */,
+				53FD9D4109B7AB6800553B02 /* IBytesMessage.hpp */,
+				53FD9D4209B7AB6800553B02 /* IConnection.hpp */,
+				53FD9D4309B7AB6800553B02 /* IConnectionFactory.hpp */,
+				53FD9D4409B7AB6800553B02 /* IDestination.hpp */,
+				53FD9D4509B7AB6800553B02 /* IllegalArgumentException.hpp */,
+				53FD9D4609B7AB6800553B02 /* IMessage.hpp */,
+				53FD9D4709B7AB6800553B02 /* IMessageConsumer.hpp */,
+				53FD9D4809B7AB6800553B02 /* IMessageProducer.hpp */,
+				53FD9D5509B7AB6800553B02 /* IQueue.hpp */,
+				53FD9D5609B7AB6800553B02 /* ISession.hpp */,
+				53FD9D5709B7AB6800553B02 /* ITemporaryQueue.hpp */,
+				53FD9D5809B7AB6800553B02 /* ITemporaryTopic.hpp */,
+				53FD9D5909B7AB6800553B02 /* ITextMessage.hpp */,
+				53FD9D5A09B7AB6800553B02 /* ITopic.hpp */,
+				53FD9DCA09B7AB6800553B02 /* MessageConsumer.cpp */,
+				53FD9DCB09B7AB6800553B02 /* MessageConsumer.hpp */,
+				53FD9DCC09B7AB6800553B02 /* MessageEOFException.hpp */,
+				53FD9DCD09B7AB6800553B02 /* MessageFormatException.hpp */,
+				53FD9DCE09B7AB6800553B02 /* MessageNotReadableException.hpp */,
+				53FD9DCF09B7AB6800553B02 /* MessageNotWritableException.hpp */,
+				53FD9DD009B7AB6800553B02 /* MessageProducer.cpp */,
+				53FD9DD109B7AB6800553B02 /* MessageProducer.hpp */,
+				53FD9DD209B7AB6800553B02 /* OpenWireException.cpp */,
+				53FD9DD309B7AB6800553B02 /* OpenWireException.hpp */,
+				53FD9DD409B7AB6800553B02 /* Session.cpp */,
+				53FD9DD509B7AB6800553B02 /* Session.hpp */,
+				53FD9DD609B7AB6800553B02 /* TraceException.cpp */,
+				53FD9DD709B7AB6800553B02 /* TraceException.hpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		53FD9CBD09B7AB6700553B02 /* command */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9CBE09B7AB6700553B02 /* AbstractCommand.cpp */,
+				53FD9CBF09B7AB6700553B02 /* AbstractCommand.hpp */,
+				53FD9CC009B7AB6700553B02 /* ActiveMQBytesMessage.cpp */,
+				53FD9CC109B7AB6700553B02 /* ActiveMQBytesMessage.hpp */,
+				53FD9CC209B7AB6700553B02 /* ActiveMQDestination.cpp */,
+				53FD9CC309B7AB6700553B02 /* ActiveMQDestination.hpp */,
+				53FD9CC409B7AB6700553B02 /* ActiveMQMapMessage.cpp */,
+				53FD9CC509B7AB6700553B02 /* ActiveMQMapMessage.hpp */,
+				53FD9CC609B7AB6700553B02 /* ActiveMQMessage.cpp */,
+				53FD9CC709B7AB6700553B02 /* ActiveMQMessage.hpp */,
+				53FD9CC809B7AB6700553B02 /* ActiveMQObjectMessage.cpp */,
+				53FD9CC909B7AB6700553B02 /* ActiveMQObjectMessage.hpp */,
+				53FD9CCA09B7AB6700553B02 /* ActiveMQQueue.cpp */,
+				53FD9CCB09B7AB6700553B02 /* ActiveMQQueue.hpp */,
+				53FD9CCC09B7AB6700553B02 /* ActiveMQTempQueue.cpp */,
+				53FD9CCD09B7AB6700553B02 /* ActiveMQTempQueue.hpp */,
+				53FD9CCE09B7AB6700553B02 /* ActiveMQTempTopic.cpp */,
+				53FD9CCF09B7AB6700553B02 /* ActiveMQTempTopic.hpp */,
+				53FD9CD009B7AB6800553B02 /* ActiveMQTextMessage.cpp */,
+				53FD9CD109B7AB6800553B02 /* ActiveMQTextMessage.hpp */,
+				53FD9CD209B7AB6800553B02 /* ActiveMQTopic.cpp */,
+				53FD9CD309B7AB6800553B02 /* ActiveMQTopic.hpp */,
+				53FD9CD409B7AB6800553B02 /* BaseCommand.cpp */,
+				53FD9CD509B7AB6800553B02 /* BaseCommand.hpp */,
+				53FD9CD609B7AB6800553B02 /* BrokerId.cpp */,
+				53FD9CD709B7AB6800553B02 /* BrokerId.hpp */,
+				53FD9CD809B7AB6800553B02 /* BrokerInfo.cpp */,
+				53FD9CD909B7AB6800553B02 /* BrokerInfo.hpp */,
+				53FD9CDA09B7AB6800553B02 /* ConnectionError.cpp */,
+				53FD9CDB09B7AB6800553B02 /* ConnectionError.hpp */,
+				53FD9CDC09B7AB6800553B02 /* ConnectionId.cpp */,
+				53FD9CDD09B7AB6800553B02 /* ConnectionId.hpp */,
+				53FD9CDE09B7AB6800553B02 /* ConnectionInfo.cpp */,
+				53FD9CDF09B7AB6800553B02 /* ConnectionInfo.hpp */,
+				53FD9CE009B7AB6800553B02 /* ConsumerId.cpp */,
+				53FD9CE109B7AB6800553B02 /* ConsumerId.hpp */,
+				53FD9CE209B7AB6800553B02 /* ConsumerInfo.cpp */,
+				53FD9CE309B7AB6800553B02 /* ConsumerInfo.hpp */,
+				53FD9CE409B7AB6800553B02 /* ControlCommand.cpp */,
+				53FD9CE509B7AB6800553B02 /* ControlCommand.hpp */,
+				53FD9CE609B7AB6800553B02 /* DataArrayResponse.cpp */,
+				53FD9CE709B7AB6800553B02 /* DataArrayResponse.hpp */,
+				53FD9CE809B7AB6800553B02 /* DataResponse.cpp */,
+				53FD9CE909B7AB6800553B02 /* DataResponse.hpp */,
+				53FD9CEA09B7AB6800553B02 /* DestinationInfo.cpp */,
+				53FD9CEB09B7AB6800553B02 /* DestinationInfo.hpp */,
+				53FD9CEC09B7AB6800553B02 /* DiscoveryEvent.cpp */,
+				53FD9CED09B7AB6800553B02 /* DiscoveryEvent.hpp */,
+				53FD9CEE09B7AB6800553B02 /* ExceptionResponse.cpp */,
+				53FD9CEF09B7AB6800553B02 /* ExceptionResponse.hpp */,
+				53FD9CF009B7AB6800553B02 /* FlushCommand.cpp */,
+				53FD9CF109B7AB6800553B02 /* FlushCommand.hpp */,
+				53FD9CF209B7AB6800553B02 /* ICommand.hpp */,
+				53FD9CF309B7AB6800553B02 /* IDataStructure.hpp */,
+				53FD9CF409B7AB6800553B02 /* IntegerResponse.cpp */,
+				53FD9CF509B7AB6800553B02 /* IntegerResponse.hpp */,
+				53FD9CF609B7AB6800553B02 /* JournalQueueAck.cpp */,
+				53FD9CF709B7AB6800553B02 /* JournalQueueAck.hpp */,
+				53FD9CF809B7AB6800553B02 /* JournalTopicAck.cpp */,
+				53FD9CF909B7AB6800553B02 /* JournalTopicAck.hpp */,
+				53FD9CFA09B7AB6800553B02 /* JournalTrace.cpp */,
+				53FD9CFB09B7AB6800553B02 /* JournalTrace.hpp */,
+				53FD9CFC09B7AB6800553B02 /* JournalTransaction.cpp */,
+				53FD9CFD09B7AB6800553B02 /* JournalTransaction.hpp */,
+				53FD9CFE09B7AB6800553B02 /* KeepAliveInfo.cpp */,
+				53FD9CFF09B7AB6800553B02 /* KeepAliveInfo.hpp */,
+				53FD9D0009B7AB6800553B02 /* LocalTransactionId.cpp */,
+				53FD9D0109B7AB6800553B02 /* LocalTransactionId.hpp */,
+				53FD9D0209B7AB6800553B02 /* Message.cpp */,
+				53FD9D0309B7AB6800553B02 /* Message.hpp */,
+				53FD9D0409B7AB6800553B02 /* MessageAck.cpp */,
+				53FD9D0509B7AB6800553B02 /* MessageAck.hpp */,
+				53FD9D0609B7AB6800553B02 /* MessageDispatch.cpp */,
+				53FD9D0709B7AB6800553B02 /* MessageDispatch.hpp */,
+				53FD9D0809B7AB6800553B02 /* MessageDispatchNotification.cpp */,
+				53FD9D0909B7AB6800553B02 /* MessageDispatchNotification.hpp */,
+				53FD9D0A09B7AB6800553B02 /* MessageId.cpp */,
+				53FD9D0B09B7AB6800553B02 /* MessageId.hpp */,
+				53FD9D0C09B7AB6800553B02 /* ProducerId.cpp */,
+				53FD9D0D09B7AB6800553B02 /* ProducerId.hpp */,
+				53FD9D0E09B7AB6800553B02 /* ProducerInfo.cpp */,
+				53FD9D0F09B7AB6800553B02 /* ProducerInfo.hpp */,
+				53FD9D1009B7AB6800553B02 /* RemoveInfo.cpp */,
+				53FD9D1109B7AB6800553B02 /* RemoveInfo.hpp */,
+				53FD9D1209B7AB6800553B02 /* RemoveSubscriptionInfo.cpp */,
+				53FD9D1309B7AB6800553B02 /* RemoveSubscriptionInfo.hpp */,
+				53FD9D1409B7AB6800553B02 /* Response.cpp */,
+				53FD9D1509B7AB6800553B02 /* Response.hpp */,
+				53FD9D1609B7AB6800553B02 /* SessionId.cpp */,
+				53FD9D1709B7AB6800553B02 /* SessionId.hpp */,
+				53FD9D1809B7AB6800553B02 /* SessionInfo.cpp */,
+				53FD9D1909B7AB6800553B02 /* SessionInfo.hpp */,
+				53FD9D1A09B7AB6800553B02 /* ShutdownInfo.cpp */,
+				53FD9D1B09B7AB6800553B02 /* ShutdownInfo.hpp */,
+				53FD9D1C09B7AB6800553B02 /* SubscriptionInfo.cpp */,
+				53FD9D1D09B7AB6800553B02 /* SubscriptionInfo.hpp */,
+				53FD9D1E09B7AB6800553B02 /* TransactionId.cpp */,
+				53FD9D1F09B7AB6800553B02 /* TransactionId.hpp */,
+				53FD9D2009B7AB6800553B02 /* TransactionInfo.cpp */,
+				53FD9D2109B7AB6800553B02 /* TransactionInfo.hpp */,
+				53FD9D2209B7AB6800553B02 /* WireFormatInfo.cpp */,
+				53FD9D2309B7AB6800553B02 /* WireFormatInfo.hpp */,
+				53FD9D2409B7AB6800553B02 /* XATransactionId.cpp */,
+				53FD9D2509B7AB6800553B02 /* XATransactionId.hpp */,
+			);
+			path = command;
+			sourceTree = "<group>";
+		};
+		53FD9D4909B7AB6800553B02 /* io */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9D4A09B7AB6800553B02 /* BinaryReader.cpp */,
+				53FD9D4B09B7AB6800553B02 /* BinaryReader.hpp */,
+				53FD9D4C09B7AB6800553B02 /* BinaryWriter.cpp */,
+				53FD9D4D09B7AB6800553B02 /* BinaryWriter.hpp */,
+				53FD9D4E09B7AB6800553B02 /* IOException.hpp */,
+				53FD9D4F09B7AB6800553B02 /* IReader.hpp */,
+				53FD9D5009B7AB6800553B02 /* IWriter.hpp */,
+				53FD9D5109B7AB6800553B02 /* SocketBinaryReader.cpp */,
+				53FD9D5209B7AB6800553B02 /* SocketBinaryReader.hpp */,
+				53FD9D5309B7AB6800553B02 /* SocketBinaryWriter.cpp */,
+				53FD9D5409B7AB6800553B02 /* SocketBinaryWriter.hpp */,
+			);
+			path = io;
+			sourceTree = "<group>";
+		};
+		53FD9D5B09B7AB6800553B02 /* marshal */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9D5C09B7AB6800553B02 /* AbstractCommandMarshaller.cpp */,
+				53FD9D5D09B7AB6800553B02 /* AbstractCommandMarshaller.hpp */,
+				53FD9D5E09B7AB6800553B02 /* ActiveMQBytesMessageMarshaller.cpp */,
+				53FD9D5F09B7AB6800553B02 /* ActiveMQBytesMessageMarshaller.hpp */,
+				53FD9D6009B7AB6800553B02 /* ActiveMQDestinationMarshaller.cpp */,
+				53FD9D6109B7AB6800553B02 /* ActiveMQDestinationMarshaller.hpp */,
+				53FD9D6209B7AB6800553B02 /* ActiveMQMapMessageMarshaller.cpp */,
+				53FD9D6309B7AB6800553B02 /* ActiveMQMapMessageMarshaller.hpp */,
+				53FD9D6409B7AB6800553B02 /* ActiveMQMessageMarshaller.cpp */,
+				53FD9D6509B7AB6800553B02 /* ActiveMQMessageMarshaller.hpp */,
+				53FD9D6609B7AB6800553B02 /* ActiveMQObjectMessageMarshaller.cpp */,
+				53FD9D6709B7AB6800553B02 /* ActiveMQObjectMessageMarshaller.hpp */,
+				53FD9D6809B7AB6800553B02 /* ActiveMQQueueMarshaller.cpp */,
+				53FD9D6909B7AB6800553B02 /* ActiveMQQueueMarshaller.hpp */,
+				53FD9D6A09B7AB6800553B02 /* ActiveMQStreamMessageMarshaller.cpp */,
+				53FD9D6B09B7AB6800553B02 /* ActiveMQStreamMessageMarshaller.hpp */,
+				53FD9D6C09B7AB6800553B02 /* ActiveMQTempDestinationMarshaller.cpp */,
+				53FD9D6D09B7AB6800553B02 /* ActiveMQTempDestinationMarshaller.hpp */,
+				53FD9D6E09B7AB6800553B02 /* ActiveMQTempQueueMarshaller.cpp */,
+				53FD9D6F09B7AB6800553B02 /* ActiveMQTempQueueMarshaller.hpp */,
+				53FD9D7009B7AB6800553B02 /* ActiveMQTempTopicMarshaller.cpp */,
+				53FD9D7109B7AB6800553B02 /* ActiveMQTempTopicMarshaller.hpp */,
+				53FD9D7209B7AB6800553B02 /* ActiveMQTextMessageMarshaller.cpp */,
+				53FD9D7309B7AB6800553B02 /* ActiveMQTextMessageMarshaller.hpp */,
+				53FD9D7409B7AB6800553B02 /* ActiveMQTopicMarshaller.cpp */,
+				53FD9D7509B7AB6800553B02 /* ActiveMQTopicMarshaller.hpp */,
+				53FD9D7609B7AB6800553B02 /* BaseCommandMarshaller.cpp */,
+				53FD9D7709B7AB6800553B02 /* BaseCommandMarshaller.hpp */,
+				53FD9D7809B7AB6800553B02 /* BrokerIdMarshaller.cpp */,
+				53FD9D7909B7AB6800553B02 /* BrokerIdMarshaller.hpp */,
+				53FD9D7A09B7AB6800553B02 /* BrokerInfoMarshaller.cpp */,
+				53FD9D7B09B7AB6800553B02 /* BrokerInfoMarshaller.hpp */,
+				53FD9D7C09B7AB6800553B02 /* CommandMarshallerRegistry.cpp */,
+				53FD9D7D09B7AB6800553B02 /* CommandMarshallerRegistry.hpp */,
+				53FD9D7E09B7AB6800553B02 /* ConnectionErrorMarshaller.cpp */,
+				53FD9D7F09B7AB6800553B02 /* ConnectionErrorMarshaller.hpp */,
+				53FD9D8009B7AB6800553B02 /* ConnectionIdMarshaller.cpp */,
+				53FD9D8109B7AB6800553B02 /* ConnectionIdMarshaller.hpp */,
+				53FD9D8209B7AB6800553B02 /* ConnectionInfoMarshaller.cpp */,
+				53FD9D8309B7AB6800553B02 /* ConnectionInfoMarshaller.hpp */,
+				53FD9D8409B7AB6800553B02 /* ConsumerIdMarshaller.cpp */,
+				53FD9D8509B7AB6800553B02 /* ConsumerIdMarshaller.hpp */,
+				53FD9D8609B7AB6800553B02 /* ConsumerInfoMarshaller.cpp */,
+				53FD9D8709B7AB6800553B02 /* ConsumerInfoMarshaller.hpp */,
+				53FD9D8809B7AB6800553B02 /* ControlCommandMarshaller.cpp */,
+				53FD9D8909B7AB6800553B02 /* ControlCommandMarshaller.hpp */,
+				53FD9D8A09B7AB6800553B02 /* DataArrayResponseMarshaller.cpp */,
+				53FD9D8B09B7AB6800553B02 /* DataArrayResponseMarshaller.hpp */,
+				53FD9D8C09B7AB6800553B02 /* DataResponseMarshaller.cpp */,
+				53FD9D8D09B7AB6800553B02 /* DataResponseMarshaller.hpp */,
+				53FD9D8E09B7AB6800553B02 /* DestinationInfoMarshaller.cpp */,
+				53FD9D8F09B7AB6800553B02 /* DestinationInfoMarshaller.hpp */,
+				53FD9D9009B7AB6800553B02 /* DiscoveryEventMarshaller.cpp */,
+				53FD9D9109B7AB6800553B02 /* DiscoveryEventMarshaller.hpp */,
+				53FD9D9209B7AB6800553B02 /* ExceptionResponseMarshaller.cpp */,
+				53FD9D9309B7AB6800553B02 /* ExceptionResponseMarshaller.hpp */,
+				53FD9D9409B7AB6800553B02 /* FlushCommandMarshaller.cpp */,
+				53FD9D9509B7AB6800553B02 /* FlushCommandMarshaller.hpp */,
+				53FD9D9609B7AB6800553B02 /* IntegerResponseMarshaller.cpp */,
+				53FD9D9709B7AB6800553B02 /* IntegerResponseMarshaller.hpp */,
+				53FD9D9809B7AB6800553B02 /* JournalQueueAckMarshaller.cpp */,
+				53FD9D9909B7AB6800553B02 /* JournalQueueAckMarshaller.hpp */,
+				53FD9D9A09B7AB6800553B02 /* JournalTopicAckMarshaller.cpp */,
+				53FD9D9B09B7AB6800553B02 /* JournalTopicAckMarshaller.hpp */,
+				53FD9D9C09B7AB6800553B02 /* JournalTraceMarshaller.cpp */,
+				53FD9D9D09B7AB6800553B02 /* JournalTraceMarshaller.hpp */,
+				53FD9D9E09B7AB6800553B02 /* JournalTransactionMarshaller.cpp */,
+				53FD9D9F09B7AB6800553B02 /* JournalTransactionMarshaller.hpp */,
+				53FD9DA009B7AB6800553B02 /* KeepAliveInfoMarshaller.cpp */,
+				53FD9DA109B7AB6800553B02 /* KeepAliveInfoMarshaller.hpp */,
+				53FD9DA209B7AB6800553B02 /* LocalTransactionIdMarshaller.cpp */,
+				53FD9DA309B7AB6800553B02 /* LocalTransactionIdMarshaller.hpp */,
+				53FD9DA409B7AB6800553B02 /* MarshallerFactory.cpp */,
+				53FD9DA509B7AB6800553B02 /* MarshallerFactory.hpp */,
+				53FD9DA609B7AB6800553B02 /* MessageAckMarshaller.cpp */,
+				53FD9DA709B7AB6800553B02 /* MessageAckMarshaller.hpp */,
+				53FD9DA809B7AB6800553B02 /* MessageDispatchMarshaller.cpp */,
+				53FD9DA909B7AB6800553B02 /* MessageDispatchMarshaller.hpp */,
+				53FD9DAA09B7AB6800553B02 /* MessageDispatchNotificationMarshaller.cpp */,
+				53FD9DAB09B7AB6800553B02 /* MessageDispatchNotificationMarshaller.hpp */,
+				53FD9DAC09B7AB6800553B02 /* MessageIdMarshaller.cpp */,
+				53FD9DAD09B7AB6800553B02 /* MessageIdMarshaller.hpp */,
+				53FD9DAE09B7AB6800553B02 /* MessageMarshaller.cpp */,
+				53FD9DAF09B7AB6800553B02 /* MessageMarshaller.hpp */,
+				53FD9DB009B7AB6800553B02 /* ProducerIdMarshaller.cpp */,
+				53FD9DB109B7AB6800553B02 /* ProducerIdMarshaller.hpp */,
+				53FD9DB209B7AB6800553B02 /* ProducerInfoMarshaller.cpp */,
+				53FD9DB309B7AB6800553B02 /* ProducerInfoMarshaller.hpp */,
+				53FD9DB409B7AB6800553B02 /* RemoveInfoMarshaller.cpp */,
+				53FD9DB509B7AB6800553B02 /* RemoveInfoMarshaller.hpp */,
+				53FD9DB609B7AB6800553B02 /* RemoveSubscriptionInfoMarshaller.cpp */,
+				53FD9DB709B7AB6800553B02 /* RemoveSubscriptionInfoMarshaller.hpp */,
+				53FD9DB809B7AB6800553B02 /* ResponseMarshaller.cpp */,
+				53FD9DB909B7AB6800553B02 /* ResponseMarshaller.hpp */,
+				53FD9DBA09B7AB6800553B02 /* SessionIdMarshaller.cpp */,
+				53FD9DBB09B7AB6800553B02 /* SessionIdMarshaller.hpp */,
+				53FD9DBC09B7AB6800553B02 /* SessionInfoMarshaller.cpp */,
+				53FD9DBD09B7AB6800553B02 /* SessionInfoMarshaller.hpp */,
+				53FD9DBE09B7AB6800553B02 /* ShutdownInfoMarshaller.cpp */,
+				53FD9DBF09B7AB6800553B02 /* ShutdownInfoMarshaller.hpp */,
+				53FD9DC009B7AB6800553B02 /* SubscriptionInfoMarshaller.cpp */,
+				53FD9DC109B7AB6800553B02 /* SubscriptionInfoMarshaller.hpp */,
+				53FD9DC209B7AB6800553B02 /* TransactionIdMarshaller.cpp */,
+				53FD9DC309B7AB6800553B02 /* TransactionIdMarshaller.hpp */,
+				53FD9DC409B7AB6800553B02 /* TransactionInfoMarshaller.cpp */,
+				53FD9DC509B7AB6800553B02 /* TransactionInfoMarshaller.hpp */,
+				53FD9DC609B7AB6800553B02 /* WireFormatInfoMarshaller.cpp */,
+				53FD9DC709B7AB6800553B02 /* WireFormatInfoMarshaller.hpp */,
+				53FD9DC809B7AB6800553B02 /* XATransactionIdMarshaller.cpp */,
+				53FD9DC909B7AB6800553B02 /* XATransactionIdMarshaller.hpp */,
+			);
+			path = marshal;
+			sourceTree = "<group>";
+		};
+		53FD9DD809B7AB6800553B02 /* transport */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9DD909B7AB6800553B02 /* ITransport.hpp */,
+				53FD9DDA09B7AB6800553B02 /* SocketTransport.cpp */,
+				53FD9DDB09B7AB6800553B02 /* SocketTransport.hpp */,
+			);
+			path = transport;
+			sourceTree = "<group>";
+		};
+		53FD9DDC09B7AB6800553B02 /* util */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9DDD09B7AB6800553B02 /* ConversionException.hpp */,
+				53FD9DDE09B7AB6800553B02 /* Endian.cpp */,
+				53FD9DDF09B7AB6800553B02 /* Endian.hpp */,
+				53FD9DE009B7AB6800553B02 /* Guid.cpp */,
+				53FD9DE109B7AB6800553B02 /* Guid.hpp */,
+				53FD9DE209B7AB6800553B02 /* ifr */,
+				53FD9DE909B7AB6800553B02 /* MapItemHolder.cpp */,
+				53FD9DEA09B7AB6800553B02 /* MapItemHolder.hpp */,
+				53FD9DEB09B7AB6800553B02 /* SimpleMutex.hpp */,
+			);
+			path = util;
+			sourceTree = "<group>";
+		};
+		53FD9DE209B7AB6800553B02 /* ifr */ = {
+			isa = PBXGroup;
+			children = (
+				53FD9DE309B7AB6800553B02 /* ap.hpp */,
+				53FD9DE409B7AB6800553B02 /* atomic.hpp */,
+				53FD9DE509B7AB6800553B02 /* namespace.hpp */,
+				53FD9DE609B7AB6800553B02 /* p.hpp */,
+				53FD9DE709B7AB6800553B02 /* platform.hpp */,
+				53FD9DE809B7AB6800553B02 /* v1 */,
+			);
+			path = ifr;
+			sourceTree = "<group>";
+		};
+		53FD9DE809B7AB6800553B02 /* v1 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = v1;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		53FD9DEC09B7AC1000553B02 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		53FD9DEF09B7AC1000553B02 /* openwire-cpp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 53FD9DF109B7AC2F00553B02 /* Build configuration list for PBXNativeTarget "openwire-cpp" */;
+			buildPhases = (
+				53FD9DEC09B7AC1000553B02 /* Headers */,
+				53FD9DED09B7AC1000553B02 /* Sources */,
+				53FD9DEE09B7AC1000553B02 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = "openwire-cpp";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			dependencies = (
+			);
+			name = "openwire-cpp";
+			productName = "openwire-cpp";
+			productReference = 53FD9DF009B7AC1000553B02 /* openwire-cpp.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 53D4A41D08A8931000CAE09B /* Build configuration list for PBXProject "openwire-cpp" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				014CEA520018CE5811CA2923 /* Development */,
+				014CEA530018CE5811CA2923 /* Deployment */,
+			);
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* amqc */;
+			productRefGroup = 08FB7794FE84155DC02AAC07 /* amqc */;
+			projectDirPath = "";
+			targets = (
+				53FD9DEF09B7AC1000553B02 /* openwire-cpp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		53FD9DED09B7AC1000553B02 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53FD9DF509B7AC5F00553B02 /* SocketTransport.cpp in Sources */,
+				53FD9DF609B7AC5F00553B02 /* Endian.cpp in Sources */,
+				53FD9DF709B7AC5F00553B02 /* Guid.cpp in Sources */,
+				53FD9DF809B7AC5F00553B02 /* MapItemHolder.cpp in Sources */,
+				53FD9DF909B7AC5F00553B02 /* AbstractCommandMarshaller.cpp in Sources */,
+				53FD9DFA09B7AC5F00553B02 /* ActiveMQBytesMessageMarshaller.cpp in Sources */,
+				53FD9DFB09B7AC5F00553B02 /* ActiveMQDestinationMarshaller.cpp in Sources */,
+				53FD9DFC09B7AC5F00553B02 /* ActiveMQMapMessageMarshaller.cpp in Sources */,
+				53FD9DFD09B7AC5F00553B02 /* ActiveMQMessageMarshaller.cpp in Sources */,
+				53FD9DFE09B7AC5F00553B02 /* ActiveMQObjectMessageMarshaller.cpp in Sources */,
+				53FD9DFF09B7AC5F00553B02 /* ActiveMQQueueMarshaller.cpp in Sources */,
+				53FD9E0009B7AC5F00553B02 /* ActiveMQStreamMessageMarshaller.cpp in Sources */,
+				53FD9E0109B7AC5F00553B02 /* ActiveMQTempDestinationMarshaller.cpp in Sources */,
+				53FD9E0209B7AC5F00553B02 /* ActiveMQTempQueueMarshaller.cpp in Sources */,
+				53FD9E0309B7AC5F00553B02 /* ActiveMQTempTopicMarshaller.cpp in Sources */,
+				53FD9E0409B7AC5F00553B02 /* ActiveMQTextMessageMarshaller.cpp in Sources */,
+				53FD9E0509B7AC5F00553B02 /* ActiveMQTopicMarshaller.cpp in Sources */,
+				53FD9E0609B7AC5F00553B02 /* BaseCommandMarshaller.cpp in Sources */,
+				53FD9E0709B7AC5F00553B02 /* BrokerIdMarshaller.cpp in Sources */,
+				53FD9E0809B7AC5F00553B02 /* BrokerInfoMarshaller.cpp in Sources */,
+				53FD9E0909B7AC5F00553B02 /* CommandMarshallerRegistry.cpp in Sources */,
+				53FD9E0A09B7AC5F00553B02 /* ConnectionErrorMarshaller.cpp in Sources */,
+				53FD9E0B09B7AC5F00553B02 /* ConnectionIdMarshaller.cpp in Sources */,
+				53FD9E0C09B7AC5F00553B02 /* ConnectionInfoMarshaller.cpp in Sources */,
+				53FD9E0D09B7AC5F00553B02 /* ConsumerIdMarshaller.cpp in Sources */,
+				53FD9E0E09B7AC5F00553B02 /* ConsumerInfoMarshaller.cpp in Sources */,
+				53FD9E0F09B7AC5F00553B02 /* ControlCommandMarshaller.cpp in Sources */,
+				53FD9E1009B7AC5F00553B02 /* DataArrayResponseMarshaller.cpp in Sources */,
+				53FD9E1109B7AC5F00553B02 /* DataResponseMarshaller.cpp in Sources */,
+				53FD9E1209B7AC5F00553B02 /* DestinationInfoMarshaller.cpp in Sources */,
+				53FD9E1309B7AC5F00553B02 /* DiscoveryEventMarshaller.cpp in Sources */,
+				53FD9E1409B7AC5F00553B02 /* ExceptionResponseMarshaller.cpp in Sources */,
+				53FD9E1509B7AC5F00553B02 /* FlushCommandMarshaller.cpp in Sources */,
+				53FD9E1609B7AC5F00553B02 /* IntegerResponseMarshaller.cpp in Sources */,
+				53FD9E1709B7AC5F00553B02 /* JournalQueueAckMarshaller.cpp in Sources */,
+				53FD9E1809B7AC5F00553B02 /* JournalTopicAckMarshaller.cpp in Sources */,
+				53FD9E1909B7AC5F00553B02 /* JournalTraceMarshaller.cpp in Sources */,
+				53FD9E1A09B7AC5F00553B02 /* JournalTransactionMarshaller.cpp in Sources */,
+				53FD9E1B09B7AC5F00553B02 /* KeepAliveInfoMarshaller.cpp in Sources */,
+				53FD9E1C09B7AC5F00553B02 /* LocalTransactionIdMarshaller.cpp in Sources */,
+				53FD9E1D09B7AC5F00553B02 /* MarshallerFactory.cpp in Sources */,
+				53FD9E1E09B7AC5F00553B02 /* MessageAckMarshaller.cpp in Sources */,
+				53FD9E1F09B7AC5F00553B02 /* MessageDispatchMarshaller.cpp in Sources */,
+				53FD9E2009B7AC5F00553B02 /* MessageDispatchNotificationMarshaller.cpp in Sources */,
+				53FD9E2109B7AC5F00553B02 /* MessageIdMarshaller.cpp in Sources */,
+				53FD9E2209B7AC5F00553B02 /* MessageMarshaller.cpp in Sources */,
+				53FD9E2309B7AC5F00553B02 /* ProducerIdMarshaller.cpp in Sources */,
+				53FD9E2409B7AC5F00553B02 /* ProducerInfoMarshaller.cpp in Sources */,
+				53FD9E2509B7AC5F00553B02 /* RemoveInfoMarshaller.cpp in Sources */,
+				53FD9E2609B7AC5F00553B02 /* RemoveSubscriptionInfoMarshaller.cpp in Sources */,
+				53FD9E2709B7AC5F00553B02 /* ResponseMarshaller.cpp in Sources */,
+				53FD9E2809B7AC5F00553B02 /* SessionIdMarshaller.cpp in Sources */,
+				53FD9E2909B7AC5F00553B02 /* SessionInfoMarshaller.cpp in Sources */,
+				53FD9E2A09B7AC5F00553B02 /* ShutdownInfoMarshaller.cpp in Sources */,
+				53FD9E2B09B7AC5F00553B02 /* SubscriptionInfoMarshaller.cpp in Sources */,
+				53FD9E2C09B7AC5F00553B02 /* TransactionIdMarshaller.cpp in Sources */,
+				53FD9E2D09B7AC5F00553B02 /* TransactionInfoMarshaller.cpp in Sources */,
+				53FD9E2E09B7AC5F00553B02 /* WireFormatInfoMarshaller.cpp in Sources */,
+				53FD9E2F09B7AC5F00553B02 /* XATransactionIdMarshaller.cpp in Sources */,
+				53FD9E3009B7AC5F00553B02 /* BinaryReader.cpp in Sources */,
+				53FD9E3109B7AC5F00553B02 /* BinaryWriter.cpp in Sources */,
+				53FD9E3209B7AC5F00553B02 /* SocketBinaryReader.cpp in Sources */,
+				53FD9E3309B7AC5F00553B02 /* SocketBinaryWriter.cpp in Sources */,
+				53FD9E3409B7AC5F00553B02 /* AbstractCommand.cpp in Sources */,
+				53FD9E3509B7AC5F00553B02 /* ActiveMQBytesMessage.cpp in Sources */,
+				53FD9E3609B7AC5F00553B02 /* ActiveMQDestination.cpp in Sources */,
+				53FD9E3709B7AC5F00553B02 /* ActiveMQMapMessage.cpp in Sources */,
+				53FD9E3809B7AC5F00553B02 /* ActiveMQMessage.cpp in Sources */,
+				53FD9E3909B7AC5F00553B02 /* ActiveMQObjectMessage.cpp in Sources */,
+				53FD9E3A09B7AC5F00553B02 /* ActiveMQQueue.cpp in Sources */,
+				53FD9E3B09B7AC5F00553B02 /* ActiveMQTempQueue.cpp in Sources */,
+				53FD9E3C09B7AC5F00553B02 /* ActiveMQTempTopic.cpp in Sources */,
+				53FD9E3D09B7AC5F00553B02 /* ActiveMQTextMessage.cpp in Sources */,
+				53FD9E3E09B7AC5F00553B02 /* ActiveMQTopic.cpp in Sources */,
+				53FD9E3F09B7AC5F00553B02 /* BaseCommand.cpp in Sources */,
+				53FD9E4009B7AC5F00553B02 /* BrokerId.cpp in Sources */,
+				53FD9E4109B7AC5F00553B02 /* BrokerInfo.cpp in Sources */,
+				53FD9E4209B7AC5F00553B02 /* ConnectionError.cpp in Sources */,
+				53FD9E4309B7AC5F00553B02 /* ConnectionId.cpp in Sources */,
+				53FD9E4409B7AC5F00553B02 /* ConnectionInfo.cpp in Sources */,
+				53FD9E4509B7AC5F00553B02 /* ConsumerId.cpp in Sources */,
+				53FD9E4609B7AC5F00553B02 /* ConsumerInfo.cpp in Sources */,
+				53FD9E4709B7AC5F00553B02 /* ControlCommand.cpp in Sources */,
+				53FD9E4809B7AC5F00553B02 /* DataArrayResponse.cpp in Sources */,
+				53FD9E4909B7AC5F00553B02 /* DataResponse.cpp in Sources */,
+				53FD9E4A09B7AC5F00553B02 /* DestinationInfo.cpp in Sources */,
+				53FD9E4B09B7AC5F00553B02 /* DiscoveryEvent.cpp in Sources */,
+				53FD9E4C09B7AC5F00553B02 /* ExceptionResponse.cpp in Sources */,
+				53FD9E4D09B7AC5F00553B02 /* FlushCommand.cpp in Sources */,
+				53FD9E4E09B7AC5F00553B02 /* IntegerResponse.cpp in Sources */,
+				53FD9E4F09B7AC5F00553B02 /* JournalQueueAck.cpp in Sources */,
+				53FD9E5009B7AC5F00553B02 /* JournalTopicAck.cpp in Sources */,
+				53FD9E5109B7AC5F00553B02 /* JournalTrace.cpp in Sources */,
+				53FD9E5209B7AC5F00553B02 /* JournalTransaction.cpp in Sources */,
+				53FD9E5309B7AC5F00553B02 /* KeepAliveInfo.cpp in Sources */,
+				53FD9E5409B7AC5F00553B02 /* LocalTransactionId.cpp in Sources */,
+				53FD9E5509B7AC5F00553B02 /* Message.cpp in Sources */,
+				53FD9E5609B7AC5F00553B02 /* MessageAck.cpp in Sources */,
+				53FD9E5709B7AC5F00553B02 /* MessageDispatch.cpp in Sources */,
+				53FD9E5809B7AC5F00553B02 /* MessageDispatchNotification.cpp in Sources */,
+				53FD9E5909B7AC5F00553B02 /* MessageId.cpp in Sources */,
+				53FD9E5A09B7AC5F00553B02 /* ProducerId.cpp in Sources */,
+				53FD9E5B09B7AC5F00553B02 /* ProducerInfo.cpp in Sources */,
+				53FD9E5C09B7AC5F00553B02 /* RemoveInfo.cpp in Sources */,
+				53FD9E5D09B7AC5F00553B02 /* RemoveSubscriptionInfo.cpp in Sources */,
+				53FD9E5E09B7AC5F00553B02 /* Response.cpp in Sources */,
+				53FD9E5F09B7AC5F00553B02 /* SessionId.cpp in Sources */,
+				53FD9E6009B7AC5F00553B02 /* SessionInfo.cpp in Sources */,
+				53FD9E6109B7AC5F00553B02 /* ShutdownInfo.cpp in Sources */,
+				53FD9E6209B7AC5F00553B02 /* SubscriptionInfo.cpp in Sources */,
+				53FD9E6309B7AC5F00553B02 /* TransactionId.cpp in Sources */,
+				53FD9E6409B7AC5F00553B02 /* TransactionInfo.cpp in Sources */,
+				53FD9E6509B7AC5F00553B02 /* WireFormatInfo.cpp in Sources */,
+				53FD9E6609B7AC5F00553B02 /* XATransactionId.cpp in Sources */,
+				53FD9E6709B7AC5F00553B02 /* BrokerError.cpp in Sources */,
+				53FD9E6809B7AC5F00553B02 /* BrokerException.cpp in Sources */,
+				53FD9E6909B7AC5F00553B02 /* Connection.cpp in Sources */,
+				53FD9E6A09B7AC5F00553B02 /* ConnectionClosedException.cpp in Sources */,
+				53FD9E6B09B7AC5F00553B02 /* ConnectionFactory.cpp in Sources */,
+				53FD9E6C09B7AC5F00553B02 /* ConsumerClosedException.cpp in Sources */,
+				53FD9E6D09B7AC5F00553B02 /* DestinationFilter.cpp in Sources */,
+				53FD9E6E09B7AC5F00553B02 /* FutureResponse.cpp in Sources */,
+				53FD9E6F09B7AC5F00553B02 /* MessageConsumer.cpp in Sources */,
+				53FD9E7009B7AC5F00553B02 /* MessageProducer.cpp in Sources */,
+				53FD9E7109B7AC5F00553B02 /* OpenWireException.cpp in Sources */,
+				53FD9E7209B7AC5F00553B02 /* Session.cpp in Sources */,
+				53FD9E7309B7AC5F00553B02 /* TraceException.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		53D4A41E08A8931000CAE09B /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				HEADER_SEARCH_PATHS = "/usr/local/apr/include/apr-1";
+				LIBRARY_SEARCH_PATHS = /usr/local/apr/lib;
+			};
+			name = Development;
+		};
+		53D4A41F08A8931000CAE09B /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				HEADER_SEARCH_PATHS = "/usr/local/apr/include/apr-1";
+				LIBRARY_SEARCH_PATHS = /usr/local/apr/lib;
+			};
+			name = Deployment;
+		};
+		53D4A42008A8931000CAE09B /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				HEADER_SEARCH_PATHS = "/usr/local/apr/include/apr-1";
+				LIBRARY_SEARCH_PATHS = /usr/local/apr/lib;
+			};
+			name = Default;
+		};
+		53FD9DF209B7AC2F00553B02 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = (
+					"/usr/local/apr/include/apr-1",
+					src,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = "openwire-cpp";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Development;
+		};
+		53FD9DF309B7AC2F00553B02 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				COPY_PHASE_STRIP = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = (
+					"/usr/local/apr/include/apr-1",
+					src,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = "openwire-cpp";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Deployment;
+		};
+		53FD9DF409B7AC2F00553B02 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = (
+					"/usr/local/apr/include/apr-1",
+					src,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = "openwire-cpp";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Default;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		53D4A41D08A8931000CAE09B /* Build configuration list for PBXProject "openwire-cpp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53D4A41E08A8931000CAE09B /* Development */,
+				53D4A41F08A8931000CAE09B /* Deployment */,
+				53D4A42008A8931000CAE09B /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		53FD9DF109B7AC2F00553B02 /* Build configuration list for PBXNativeTarget "openwire-cpp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53FD9DF209B7AC2F00553B02 /* Development */,
+				53FD9DF309B7AC2F00553B02 /* Deployment */,
+				53FD9DF409B7AC2F00553B02 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

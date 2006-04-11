@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE project>
+<project>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../../etc/project.xml</extend>
+    
+    <name>ActiveMQ :: Integration Tests :: Client</name>
+    <id>activemq-itest-client</id>
+    <shortDescription>ActiveMQ is a JMS 1.1 implementation designed for easy deployment in Geronimo</shortDescription>
+    <description>
+        ActiveMQ is an open source JMS 1.1 implementation designed for easy deployment in Geronimo
+    </description>
+
+    <package>org.activemq.itests</package>
+    <packageGroups>
+        <packageGroup>
+            <title>Integration Tests</title>
+            <packages>org.activemq.itest.*</packages>
+        </packageGroup>
+    </packageGroups>
+
+    <dependencies>
+
+       <!-- Used for preprocessing the deployment descriptors -->
+       <dependency>
+            <groupId>commons-jelly</groupId>
+            <artifactId>commons-jelly-tags-velocity</artifactId>
+            <version>${commons_jelly_tags_velocity_version}</version>
+       </dependency>
+       <dependency>
+            <groupId> velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>${velocity_version}</version>
+       </dependency>
+
+       <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-ejb_2.1_spec</artifactId>
+            <version>${geronimo_spec_ejb_version}</version>
+       </dependency>
+        <dependency>
+             <groupId>activemq</groupId>
+             <artifactId>activemq</artifactId>
+             <version>${pom.currentVersion}</version>
+             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>activemq-itest-ear</artifactId>
+            <version>${pom.currentVersion}</version>
+            <type>ear</type>
+        </dependency>
+        <dependency>
+            <groupId>activemq</groupId>
+            <artifactId>activemq-itest-ejb</artifactId>
+            <version>${pom.currentVersion}</version>
+            <type>ejb</type>
+        </dependency>
+
+        <!-- plugins used -->
+        <dependency>
+             <groupId>geronimo</groupId>
+             <artifactId>geronimo-deployment-plugin</artifactId>
+             <version>${geronimo_deployment_plugin_version}</version>
+             <type>plugin</type>
+        </dependency>
+        <dependency>
+            <groupId>maven-itest-plugin</groupId>
+            <artifactId>maven-itest-plugin</artifactId>
+            <version>${maven_itest_plugin_version}</version>
+            <type>plugin</type>
+        </dependency>
+
+        <!-- for openejb jndi class to look up the ejbs-->
+        <dependency>
+            <groupId>openejb</groupId>
+            <artifactId>openejb-core</artifactId>
+            <version>${openejb_core_version}</version>
+            <properties>
+                <module>true</module>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>geronimo</groupId>
+            <artifactId>geronimo-security</artifactId>
+            <version>${geronimo_security_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-full</artifactId>
+            <version>${cglib_full_version}</version>
+            <url>http://cglib.sf.net</url>
+        </dependency>
+
+    </dependencies>
+
+</project>
