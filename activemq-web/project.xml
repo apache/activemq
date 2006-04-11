@@ -153,9 +153,19 @@
         <war.bundle>false</war.bundle>
       </properties>
     </dependency>
+
     <dependency>
       <groupId>jetty</groupId>
       <artifactId>jetty</artifactId>
+      <version>${jetty_version}</version>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty-util</artifactId>
       <version>${jetty_version}</version>
       <properties>
         <war.bundle>true</war.bundle>
