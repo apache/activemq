@@ -128,7 +128,7 @@
     </ant:copy>
     -->
 
-    <ant:copy todir="${maven.dist.bin.assembly.dir}" file="${maven.repo.local}/${pom.groupId}/jars/activemq-${pom.currentVersion}.jar"/>
+    <ant:copy todir="${maven.dist.bin.assembly.dir}" file="${maven.repo.local}/${pom.groupId}/jars/${pom.artifactId}-${pom.currentVersion}.jar"/>
 
     <!-- Copy  the runtime dependencies into lib and create a classpath for the server.jar file -->
     <j:set var="libDir" value="${maven.dist.bin.assembly.dir}/lib"/>
