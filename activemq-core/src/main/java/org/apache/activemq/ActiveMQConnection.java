@@ -116,8 +116,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean copyMessageOnSend = true;
     private boolean useCompression = false;
     private boolean objectMessageSerializationDefered = false;
-    protected boolean asyncDispatch = true;
+    protected boolean asyncDispatch = false;
+    protected boolean alwaysSessionAsync=true;
     private boolean useAsyncSend = false;
+    private boolean optimizeAcknowledge = true;
     private boolean useRetroactiveConsumer;
     private int closeTimeout = 15000;
     
@@ -247,15 +249,18 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @see Session#DUPS_OK_ACKNOWLEDGE
      * @since 1.1
      */
-    public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
+    public Session createSession(boolean transacted,int acknowledgeMode) throws JMSException{
         checkClosedOrFailed();
         ensureConnectionInfoSent();
-        return new ActiveMQSession(this, getNextSessionId(), (transacted ? Session.SESSION_TRANSACTED
-                : (acknowledgeMode == Session.SESSION_TRANSACTED ? Session.AUTO_ACKNOWLEDGE : acknowledgeMode)), asyncDispatch);
+        boolean doSessionAsync=alwaysSessionAsync||sessions.size()>0||transacted
+                        ||acknowledgeMode==Session.CLIENT_ACKNOWLEDGE;
+        return new ActiveMQSession(this,getNextSessionId(),(transacted?Session.SESSION_TRANSACTED
+                        :(acknowledgeMode==Session.SESSION_TRANSACTED?Session.AUTO_ACKNOWLEDGE:acknowledgeMode)),
+                        asyncDispatch,alwaysSessionAsync);
     }
 
     /**
-     * @return
+     * @return sessionId
      */
     protected SessionId getNextSessionId() {
         return new SessionId(info.getConnectionId(), sessionIdGenerator.getNextSequenceId());
@@ -1325,6 +1330,37 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
         this.redeliveryPolicy = redeliveryPolicy;
     }
+    
+    /**
+     * @return Returns the alwaysSessionAsync.
+     */
+    public boolean isAlwaysSessionAsync(){
+        return alwaysSessionAsync;
+    }
+
+
+    /**
+     * @param alwaysSessionAsync The alwaysSessionAsync to set.
+     */
+    public void setAlwaysSessionAsync(boolean alwaysSessionAsync){
+        this.alwaysSessionAsync=alwaysSessionAsync;
+    }
+
+    /**
+     * @return Returns the optimizeAcknowledge.
+     */
+    public boolean isOptimizeAcknowledge(){
+        return optimizeAcknowledge;
+    }
+
+
+    /**
+     * @param optimizeAcknowledge The optimizeAcknowledge to set.
+     */
+    public void setOptimizeAcknowledge(boolean optimizeAcknowledge){
+        this.optimizeAcknowledge=optimizeAcknowledge;
+    }
+
 
     private void waitForBrokerInfo() throws JMSException {
         try {
@@ -1516,7 +1552,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public void setAsyncDispatch(boolean asyncDispatch) {
-        this.asyncDispatch = asyncDispatch;
+        //this.asyncDispatch = asyncDispatch;
     }
 
     public boolean isObjectMessageSerializationDefered() {
@@ -1702,4 +1738,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public String toString() {
         return "ActiveMQConnection {id="+info.getConnectionId()+",clientId="+info.getClientId()+",started="+started.get()+"}";
     }
+
+
+    
 }

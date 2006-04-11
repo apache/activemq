@@ -100,7 +100,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private int additionalWindowSize = 0;
     private int rollbackCounter = 0;
     private long redeliveryDelay = 0;
-
+    private int ackCounter = 0;
     private MessageListener messageListener;
     private JMSConsumerStatsImpl stats;
 
@@ -111,6 +111,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private MessageAvailableListener availableListener;
 
     private RedeliveryPolicy redeliveryPolicy;
+    private boolean optimizeAcknowledge;
 
     /**
      * Create a MessageConsumer
@@ -188,7 +189,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             this.session.removeConsumer(this);
             throw e;
         }
-
+        this.optimizeAcknowledge=session.connection.isOptimizeAcknowledge()&&!info.isDurable()
+                        &&!info.getDestination().isQueue()
+                        &&session.isAutoAcknowledge();
         if (session.connection.isStarted())
             start();
     }
@@ -540,27 +543,36 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             deliveredMessages.addFirst(md);
     }
 
-    private void afterMessageIsConsumed(MessageDispatch md, boolean messageExpired) throws JMSException {
-        if (unconsumedMessages.isClosed())
+    private void afterMessageIsConsumed(MessageDispatch md,boolean messageExpired) throws JMSException{
+        if(unconsumedMessages.isClosed())
             return;
-
-        if (messageExpired) {
-            ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
-        } else {
+        if(messageExpired){
+            ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
+        }else{
             stats.onMessage();
-            if (session.isTransacted()) {
-                ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
-            } else if (session.isAutoAcknowledge()) {
-                if (!deliveredMessages.isEmpty()) {
-                    MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
-                    session.asyncSendPacket(ack);
-                    deliveredMessages.clear();
+            if(session.isTransacted()){
+                ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
+            }else if(session.isAutoAcknowledge()){
+                if(!deliveredMessages.isEmpty()){
+                    if(this.optimizeAcknowledge){
+                        ackCounter++;
+                        if(ackCounter>=(info.getPrefetchSize()*.75)){
+                            MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,ackCounter);
+                            session.asyncSendPacket(ack);
+                            ackCounter=0;
+                            deliveredMessages.clear();
+                        }
+                    }else{
+                        MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
+                        session.asyncSendPacket(ack);
+                        deliveredMessages.clear();
+                    }
                 }
-            } else if (session.isDupsOkAcknowledge()) {
-                ackLater(md, MessageAck.STANDARD_ACK_TYPE);
-            } else if (session.isClientAcknowledge()) {
-                ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
-            } else {
+            }else if(session.isDupsOkAcknowledge()){
+                ackLater(md,MessageAck.STANDARD_ACK_TYPE);
+            }else if(session.isClientAcknowledge()){
+                ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
+            }else{
                 throw new IllegalStateException("Invalid session state.");
             }
         }
@@ -645,63 +657,59 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         redeliveryDelay = 0;
     }
 
-    public void rollback() throws JMSException {
-        synchronized (unconsumedMessages.getMutex()) {
-            if (deliveredMessages.isEmpty())
+    public void rollback() throws JMSException{
+        synchronized(unconsumedMessages.getMutex()){
+            if(optimizeAcknowledge){
+               
+                // remove messages read but not acked at the broker yet through optimizeAcknowledge  
+                for(int i=0;(i<deliveredMessages.size())&&(i<ackCounter);i++){
+                    deliveredMessages.removeLast();
+                }
+            }
+            if(deliveredMessages.isEmpty())
                 return;
-
             rollbackCounter++;
-            if (rollbackCounter > redeliveryPolicy.getMaximumRedeliveries()) {
-                
+            if(rollbackCounter>redeliveryPolicy.getMaximumRedeliveries()){
                 // We need to NACK the messages so that they get sent to the
                 // DLQ.
-
                 // Acknowledge the last message.
-                MessageDispatch lastMd = (MessageDispatch) deliveredMessages.get(0);
-                MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
+                MessageDispatch lastMd=(MessageDispatch) deliveredMessages.get(0);
+                MessageAck ack=new MessageAck(lastMd,MessageAck.POSION_ACK_TYPE,deliveredMessages.size());
                 session.asyncSendPacket(ack);
-
                 // Adjust the window size.
-                additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
-                rollbackCounter = 0;
-                redeliveryDelay = 0;
-                
-            } else {
-
+                additionalWindowSize=Math.max(0,additionalWindowSize-deliveredMessages.size());
+                rollbackCounter=0;
+                redeliveryDelay=0;
+            }else{
                 // stop the delivery of messages.
                 unconsumedMessages.stop();
-
                 // Start up the delivery again a little later.
-                if (redeliveryDelay == 0) {
-                    redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
-                } else {
-                    if (redeliveryPolicy.isUseExponentialBackOff())
-                        redeliveryDelay *= redeliveryPolicy.getBackOffMultiplier();
+                if(redeliveryDelay==0){
+                    redeliveryDelay=redeliveryPolicy.getInitialRedeliveryDelay();
+                }else{
+                    if(redeliveryPolicy.isUseExponentialBackOff())
+                        redeliveryDelay*=redeliveryPolicy.getBackOffMultiplier();
                 }
-
-                Scheduler.executeAfterDelay(new Runnable() {
-                    public void run() {
-                        try {
-                            if (started.get())
+                Scheduler.executeAfterDelay(new Runnable(){
+                    public void run(){
+                        try{
+                            if(started.get())
                                 start();
-                        } catch (JMSException e) {
+                        }catch(JMSException e){
                             session.connection.onAsyncException(e);
                         }
                     }
-                }, redeliveryDelay);
-                
-                for (Iterator iter = deliveredMessages.iterator(); iter.hasNext();) {
-                    MessageDispatch md = (MessageDispatch) iter.next();
+                },redeliveryDelay);
+                for(Iterator iter=deliveredMessages.iterator();iter.hasNext();){
+                    MessageDispatch md=(MessageDispatch) iter.next();
                     md.getMessage().onMessageRolledBack();
                     unconsumedMessages.enqueueFirst(md);
                 }
             }
-
-            deliveredCounter -= deliveredMessages.size();
+            deliveredCounter-=deliveredMessages.size();
             deliveredMessages.clear();
         }
-
-        if (messageListener != null) {
+        if(messageListener!=null){
             session.redispatch(unconsumedMessages);
         }
     }
