@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.network.jms;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
@@ -37,6 +39,20 @@ public class SimpleJmsMessageConvertor implements  JmsMesageConvertor {
      */
     public Message convert(Message message) throws JMSException{
         return message;
+    }
+    
+    public Message convert(Message message, Destination replyTo) throws JMSException{
+    	Message msg = convert(message);
+    	if(replyTo != null) {
+    		msg.setJMSReplyTo(replyTo);
+		}else{
+			msg.setJMSReplyTo(null);
+		}
+		return msg;
+    }
+    
+    public void setConnection(Connection connection){
+    	//do nothing
     }
     
    

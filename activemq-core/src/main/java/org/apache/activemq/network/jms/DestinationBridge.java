@@ -34,7 +34,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-abstract class DestinationBridge implements Service,MessageListener{
+public abstract class DestinationBridge implements Service,MessageListener{
     private static final Log log=LogFactory.getLog(DestinationBridge.class);
     protected MessageConsumer consumer;
     protected AtomicBoolean started=new AtomicBoolean(false);
@@ -93,32 +93,35 @@ abstract class DestinationBridge implements Service,MessageListener{
     public void stop() throws Exception{
         started.set(false);
     }
-
+    
     public void onMessage(Message message){
-        if(started.get()&&message!=null){
-            try{
-                if(doHandleReplyTo){
-                    Destination replyTo=message.getJMSReplyTo();
-                    if(replyTo!=null){
-                        replyTo=processReplyToDestination(replyTo);
-                        message.setJMSReplyTo(replyTo);
-                    }
-                }else {
-                    message.setJMSReplyTo(null);
-                }
-                Message converted=jmsMessageConvertor.convert(message);
-                sendMessage(converted);
-                message.acknowledge();
-            }catch(JMSException e){
-                log.error("failed to forward message: "+message,e);
-                try{
-                    stop();
-                }catch(Exception e1){
-                    log.warn("Failed to stop cleanly",e1);
-                }
-            }
-        }
+    	if(started.get()&&message!=null){
+    		try{
+    			Message converted;
+    			if(doHandleReplyTo){
+    				Destination replyTo = message.getJMSReplyTo();
+    				if(replyTo != null){
+    					converted = jmsMessageConvertor.convert(message, processReplyToDestination(replyTo));
+    				} else {
+    					converted = jmsMessageConvertor.convert(message);
+    				}
+    			} else {
+    				message.setJMSReplyTo(null);
+    				converted = jmsMessageConvertor.convert(message);
+    			}				
+    			sendMessage(converted);
+    			message.acknowledge();
+    		}catch(JMSException e){
+    			log.error("failed to forward message: "+message,e);
+    			try{
+    				stop();
+    			}catch(Exception e1){
+    				log.warn("Failed to stop cleanly",e1);
+    			}
+    		}
+    	}
     }
+
     
     /**
      * @return Returns the doHandleReplyTo.
