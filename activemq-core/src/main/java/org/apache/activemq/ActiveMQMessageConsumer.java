@@ -189,8 +189,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             this.session.removeConsumer(this);
             throw e;
         }
-        this.optimizeAcknowledge=session.connection.isOptimizeAcknowledge()&&session.isAutoAcknowledge();
-        if (session.connection.isStarted())
+        this.optimizeAcknowledge=session.connection.isOptimizeAcknowledge()&&session.isAutoAcknowledge()
+                        &&!info.isDurable()&&!info.getDestination().isQueue();
+        if(session.connection.isStarted())
             start();
     }
 
@@ -506,6 +507,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             dispose();
             this.session.syncSendPacket(info.createRemoveCommand());
         }
+    }
+    
+    public void clearMessagesInProgress(){
+        unconsumedMessages.clear();
     }
 
     public void dispose() throws JMSException {
