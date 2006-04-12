@@ -189,9 +189,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             this.session.removeConsumer(this);
             throw e;
         }
-        this.optimizeAcknowledge=session.connection.isOptimizeAcknowledge()&&!info.isDurable()
-                        &&!info.getDestination().isQueue()
-                        &&session.isAutoAcknowledge();
+        this.optimizeAcknowledge=session.connection.isOptimizeAcknowledge()&&session.isAutoAcknowledge();
         if (session.connection.isStarted())
             start();
     }
