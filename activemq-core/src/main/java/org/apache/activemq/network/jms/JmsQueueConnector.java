@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.network.jms;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -28,6 +25,9 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.naming.NamingException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * A Bridge to other JMS Queue providers
  * 
@@ -44,11 +44,7 @@ public class JmsQueueConnector extends JmsConnector{
     private QueueConnection outboundQueueConnection;
     private QueueConnection localQueueConnection;
     private InboundQueueBridge[] inboundQueueBridges;
-    private OutboundQueueBridge[] outboundQueueBridges;
-    
-   
-   
-   
+    private OutboundQueueBridge[] outboundQueueBridges;   
 
     public boolean init(){
         boolean result=super.init();
@@ -56,6 +52,8 @@ public class JmsQueueConnector extends JmsConnector{
             try{
                 initializeForeignQueueConnection();
                 initializeLocalQueueConnection();
+                initializeInboundJmsMessageConvertor();
+                initializeOutboundJmsMessageConvertor();
                 initializeInboundQueueBridges();
                 initializeOutboundQueueBridges();
             }catch(Exception e){
@@ -249,6 +247,14 @@ public class JmsQueueConnector extends JmsConnector{
         }
         localQueueConnection.start();
     }
+    
+    protected void initializeInboundJmsMessageConvertor(){
+    	inboundMessageConvertor.setConnection(localQueueConnection);
+    }
+    
+    protected void initializeOutboundJmsMessageConvertor(){
+    	outboundMessageConvertor.setConnection(outboundQueueConnection);
+    }
 
     protected void initializeInboundQueueBridges() throws JMSException{
         if(inboundQueueBridges!=null){
@@ -287,7 +293,6 @@ public class JmsQueueConnector extends JmsConnector{
                 bridge.setProducerQueue(foreignQueue);
                 bridge.setProducerConnection(outboundQueueConnection);
                 bridge.setConsumerConnection(localQueueConnection);
-                bridge.setDoHandleReplyTo(false);
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
@@ -299,38 +304,71 @@ public class JmsQueueConnector extends JmsConnector{
         }
     }
     
-    protected Destination createReplyToBridge(Destination destination, Connection consumerConnection, Connection producerConnection){
-        Queue queue = (Queue)destination;
-        OutboundQueueBridge bridge = (OutboundQueueBridge) replyToBridges.get(queue);
-        if (bridge == null){
-            bridge = new OutboundQueueBridge(){
-                //we only handle replyTo destinations - inbound
-                protected Destination processReplyToDestination (Destination destination){
-                    return null;
-                }
-            };
-            try{
-                QueueSession localSession = localQueueConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
-                Queue localQueue = localSession.createTemporaryQueue();
-                localSession.close();
-                bridge.setConsumerQueue(localQueue);
-                bridge.setProducerQueue(queue);
-                bridge.setProducerConnection(outboundQueueConnection);
-                bridge.setConsumerConnection(localQueueConnection);
-                bridge.setDoHandleReplyTo(false);
-                if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
-                }
-                bridge.setJmsConnector(this);
-                bridge.start();
-                log.info("Created replyTo bridge for " + queue);
-            }catch(Exception e){
-               log.error("Failed to create replyTo bridge for queue: " + queue,e);
-               return null;
-            }
-            replyToBridges.put(queue, bridge);
-        }
-        return bridge.getConsumerQueue();
+    protected Destination createReplyToBridge(Destination destination, Connection replyToProducerConnection, Connection replyToConsumerConnection){        
+    	Queue replyToProducerQueue =(Queue)destination;
+    	boolean isInbound = replyToProducerConnection.equals(localQueueConnection);
+    	
+    	if(isInbound){
+    		InboundQueueBridge bridge = (InboundQueueBridge) replyToBridges.get(replyToProducerQueue);
+    		if (bridge == null){
+    			bridge = new InboundQueueBridge(){
+    				protected Destination processReplyToDestination (Destination destination){
+    					return null;
+    				}
+    			};
+    			try{
+    				QueueSession replyToConsumerSession = ((QueueConnection)replyToConsumerConnection).createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
+    				Queue replyToConsumerQueue = replyToConsumerSession.createTemporaryQueue();
+    				replyToConsumerSession.close();
+    				bridge.setConsumerQueue(replyToConsumerQueue);
+    				bridge.setProducerQueue(replyToProducerQueue);
+    				bridge.setProducerConnection((QueueConnection)replyToProducerConnection);
+    				bridge.setConsumerConnection((QueueConnection)replyToConsumerConnection);
+    				bridge.setDoHandleReplyTo(false);
+    				if(bridge.getJmsMessageConvertor()==null){
+    					bridge.setJmsMessageConvertor(getInboundMessageConvertor());
+    				}
+    				bridge.setJmsConnector(this);
+    				bridge.start();
+    				log.info("Created replyTo bridge for " + replyToProducerQueue);
+    			}catch(Exception e){
+    				log.error("Failed to create replyTo bridge for queue: " + replyToProducerQueue, e);
+    				return null;
+    			}
+    			replyToBridges.put(replyToProducerQueue, bridge);
+    		}
+    		return bridge.getConsumerQueue();
+    	}else{
+    		OutboundQueueBridge bridge = (OutboundQueueBridge) replyToBridges.get(replyToProducerQueue);
+    		if (bridge == null){
+    			bridge = new OutboundQueueBridge(){
+    				protected Destination processReplyToDestination (Destination destination){
+    					return null;
+    				}
+    			};
+    			try{
+    				QueueSession replyToConsumerSession = ((QueueConnection)replyToConsumerConnection).createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
+    				Queue replyToConsumerQueue = replyToConsumerSession.createTemporaryQueue();
+    				replyToConsumerSession.close();
+    				bridge.setConsumerQueue(replyToConsumerQueue);
+    				bridge.setProducerQueue(replyToProducerQueue);
+    				bridge.setProducerConnection((QueueConnection)replyToProducerConnection);
+    				bridge.setConsumerConnection((QueueConnection)replyToConsumerConnection);
+    				bridge.setDoHandleReplyTo(false);
+    				if(bridge.getJmsMessageConvertor()==null){
+    					bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
+    				}
+    				bridge.setJmsConnector(this);
+    				bridge.start();
+    				log.info("Created replyTo bridge for " + replyToProducerQueue);
+    			}catch(Exception e){
+    				log.error("Failed to create replyTo bridge for queue: " + replyToProducerQueue, e);
+    				return null;
+    			}
+    			replyToBridges.put(replyToProducerQueue, bridge);
+    		}
+    		return bridge.getConsumerQueue();
+    	}		
     }
     
     protected Queue createActiveMQQueue(QueueSession session,String queueName) throws JMSException{

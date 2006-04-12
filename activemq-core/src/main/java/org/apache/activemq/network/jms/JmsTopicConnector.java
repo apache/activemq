@@ -25,6 +25,7 @@ import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicSession;
 import javax.naming.NamingException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,16 +47,14 @@ public class JmsTopicConnector extends JmsConnector{
     private InboundTopicBridge[] inboundTopicBridges;
     private OutboundTopicBridge[] outboundTopicBridges;
     
-   
-   
-   
-
     public boolean init(){
         boolean result=super.init();
         if(result){
             try{
                 initializeForeignTopicConnection();
                 initializeLocalTopicConnection();
+                initializeInboundJmsMessageConvertor();
+                initializeOutboundJmsMessageConvertor();
                 initializeInboundTopicBridges();
                 initializeOutboundTopicBridges();
             }catch(Exception e){
@@ -250,6 +249,14 @@ public class JmsTopicConnector extends JmsConnector{
         }
         localTopicConnection.start();
     }
+    
+    protected void initializeInboundJmsMessageConvertor(){
+    	inboundMessageConvertor.setConnection(localTopicConnection);
+    }
+    
+    protected void initializeOutboundJmsMessageConvertor(){
+    	outboundMessageConvertor.setConnection(outboundTopicConnection);
+    }
 
     protected void initializeInboundTopicBridges() throws JMSException{
         if(inboundTopicBridges!=null){
@@ -288,7 +295,6 @@ public class JmsTopicConnector extends JmsConnector{
                 bridge.setProducerTopic(foreignTopic);
                 bridge.setProducerConnection(outboundTopicConnection);
                 bridge.setConsumerConnection(localTopicConnection);
-                bridge.setDoHandleReplyTo(false);
                 if(bridge.getJmsMessageConvertor()==null){
                     bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
@@ -300,39 +306,71 @@ public class JmsTopicConnector extends JmsConnector{
         }
     }
     
-    protected  Destination createReplyToBridge(Destination destination, Connection consumerConnection, Connection producerConnection){
-        Topic topic =(Topic)destination;
-        
-        OutboundTopicBridge bridge = (OutboundTopicBridge) replyToBridges.get(topic);
-        if (bridge == null){
-            bridge = new OutboundTopicBridge(){
-                //we only handle replyTo destinations - inbound
-                protected Destination processReplyToDestination (Destination destination){
-                    return null;
-                }
-            };
-            try{
-                TopicSession localSession = localTopicConnection.createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
-                Topic localTopic = localSession.createTemporaryTopic();
-                localSession.close();
-                bridge.setConsumerTopic(localTopic);
-                bridge.setProducerTopic(topic);
-                bridge.setProducerConnection(outboundTopicConnection);
-                bridge.setConsumerConnection(localTopicConnection);
-                bridge.setDoHandleReplyTo(false);
-                if(bridge.getJmsMessageConvertor()==null){
-                    bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
-                }
-                bridge.setJmsConnector(this);
-                bridge.start();
-                log.info("Created replyTo bridge for " + topic);
-            }catch(Exception e){
-               log.error("Failed to create replyTo bridge for topic: " + topic,e);
-               return null;
-            }
-            replyToBridges.put(topic, bridge);
-        }
-        return bridge.getConsumerTopic();
+    protected  Destination createReplyToBridge(Destination destination, Connection replyToProducerConnection, Connection replyToConsumerConnection){
+    	Topic replyToProducerTopic =(Topic)destination;
+    	boolean isInbound = replyToProducerConnection.equals(localTopicConnection);
+    	
+    	if(isInbound){
+    		InboundTopicBridge bridge = (InboundTopicBridge) replyToBridges.get(replyToProducerTopic);
+    		if (bridge == null){
+    			bridge = new InboundTopicBridge(){
+    				protected Destination processReplyToDestination (Destination destination){
+    					return null;
+    				}
+    			};
+    			try{
+    				TopicSession replyToConsumerSession = ((TopicConnection)replyToConsumerConnection).createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
+    				Topic replyToConsumerTopic = replyToConsumerSession.createTemporaryTopic();
+    				replyToConsumerSession.close();
+    				bridge.setConsumerTopic(replyToConsumerTopic);
+    				bridge.setProducerTopic(replyToProducerTopic);
+    				bridge.setProducerConnection((TopicConnection)replyToProducerConnection);
+    				bridge.setConsumerConnection((TopicConnection)replyToConsumerConnection);
+    				bridge.setDoHandleReplyTo(false);
+    				if(bridge.getJmsMessageConvertor()==null){
+    					bridge.setJmsMessageConvertor(getInboundMessageConvertor());
+    				}
+    				bridge.setJmsConnector(this);
+    				bridge.start();
+    				log.info("Created replyTo bridge for " + replyToProducerTopic);
+    			}catch(Exception e){
+    				log.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
+    				return null;
+    			}
+    			replyToBridges.put(replyToProducerTopic, bridge);
+    		}
+    		return bridge.getConsumerTopic();
+    	}else{
+    		OutboundTopicBridge bridge = (OutboundTopicBridge) replyToBridges.get(replyToProducerTopic);
+    		if (bridge == null){
+    			bridge = new OutboundTopicBridge(){
+    				protected Destination processReplyToDestination (Destination destination){
+    					return null;
+    				}
+    			};
+    			try{
+    				TopicSession replyToConsumerSession = ((TopicConnection)replyToConsumerConnection).createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
+    				Topic replyToConsumerTopic = replyToConsumerSession.createTemporaryTopic();
+    				replyToConsumerSession.close();
+    				bridge.setConsumerTopic(replyToConsumerTopic);
+    				bridge.setProducerTopic(replyToProducerTopic);
+    				bridge.setProducerConnection((TopicConnection)replyToProducerConnection);
+    				bridge.setConsumerConnection((TopicConnection)replyToConsumerConnection);
+    				bridge.setDoHandleReplyTo(false);
+    				if(bridge.getJmsMessageConvertor()==null){
+    					bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
+    				}
+    				bridge.setJmsConnector(this);
+    				bridge.start();
+    				log.info("Created replyTo bridge for " + replyToProducerTopic);
+    			}catch(Exception e){
+    				log.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
+    				return null;
+    			}
+    			replyToBridges.put(replyToProducerTopic, bridge);
+    		}
+    		return bridge.getConsumerTopic();
+    	}		
     }
     
     protected Topic createActiveMQTopic(TopicSession session,String topicName) throws JMSException{
