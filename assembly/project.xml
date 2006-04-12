@@ -153,6 +153,14 @@
         <optional>true</optional>
       </properties>
     </dependency>
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <version>${jetty_version}</version>
+      <properties>
+        <optional>true</optional>
+      </properties>
+    </dependency>
 
     <dependency>
       <groupId>jrms</groupId>
