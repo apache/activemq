@@ -28,6 +28,7 @@ import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
@@ -85,6 +86,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     protected BrokerInfo brokerInfo;
     private ConnectionStatistics statistics = new ConnectionStatistics();
     private boolean inServiceException=false;
+    private boolean manageable;
 
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
     
@@ -495,9 +497,17 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         context.setUserName(info.getUserName());
         context.setConnectionId(info.getConnectionId());
         context.setWireFormatInfo(wireFormatInfo);
+        this.manageable = info.isManageable();
         connectionStates.put(info.getConnectionId(), new ConnectionState(info, context));
+       
         
         broker.addConnection(context, info);
+        if (info.isManageable() && broker.isFaultTolerantConfiguration()){
+            //send ConnectionCommand
+            ConnectionControl command = new ConnectionControl();
+            command.setFaultTolerant(broker.isFaultTolerantConfiguration());
+            dispatchAsync(command);
+        }
         return null;
     }
     
@@ -632,6 +642,10 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
     public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
         this.messageAuthorizationPolicy = messageAuthorizationPolicy;
+    }
+    
+    public boolean isManageable(){
+        return manageable;
     }
 
     
