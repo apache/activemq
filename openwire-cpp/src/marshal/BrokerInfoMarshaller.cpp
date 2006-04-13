@@ -72,6 +72,8 @@ void BrokerInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, Binar
         }
         info.setBrokerName(tightUnmarshalString(dataIn, bs));
         info.setSlaveBroker(bs.readBoolean());
+        info.setMasterBroker(bs.readBoolean());
+        info.setFaultTolerantConfiguration(bs.readBoolean());
 
 }
 
@@ -88,6 +90,8 @@ int BrokerInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, Boolea
     rc += marshalObjectArray(wireFormat, info.getPeerBrokerInfos(), bs);
     rc += writeString(info.getBrokerName(), bs);
     bs.writeBoolean(info.isSlaveBroker());
+    bs.writeBoolean(info.isMasterBroker());
+    bs.writeBoolean(info.isFaultTolerantConfiguration());
 
     return rc + 0;
 }
@@ -103,6 +107,8 @@ void BrokerInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, Binar
     writeString(info.getBrokerURL(), dataOut, bs);
     marshalObjectArray(wireFormat, info.getPeerBrokerInfos(), dataOut, bs);
     writeString(info.getBrokerName(), dataOut, bs);
+    bs.readBoolean();
+    bs.readBoolean();
     bs.readBoolean();
 
 }

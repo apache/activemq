@@ -68,6 +68,7 @@ private:
     ap<BrokerId> brokerPath ;
     p<BooleanExpression> additionalPredicate ;
     bool networkSubscription ;
+    bool optimizedAcknowledge ;
 
 public:
     const static int TYPE = 5;
@@ -122,6 +123,9 @@ public:
 
     virtual bool getNetworkSubscription() ;
     virtual void setNetworkSubscription(bool networkSubscription) ;
+
+    virtual bool getOptimizedAcknowledge() ;
+    virtual void setOptimizedAcknowledge(bool optimizedAcknowledge) ;
 
 
 } ;

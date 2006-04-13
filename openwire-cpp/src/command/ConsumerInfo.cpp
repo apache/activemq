@@ -45,6 +45,7 @@ ConsumerInfo::ConsumerInfo()
     this->brokerPath = 0 ;
     this->additionalPredicate = 0 ;
     this->networkSubscription = 0 ;
+    this->optimizedAcknowledge = 0 ;
 }
 
 ConsumerInfo::~ConsumerInfo()
@@ -214,4 +215,15 @@ bool ConsumerInfo::getNetworkSubscription()
 void ConsumerInfo::setNetworkSubscription(bool networkSubscription)
 {
     this->networkSubscription = networkSubscription ;
+}
+
+        
+bool ConsumerInfo::getOptimizedAcknowledge()
+{
+    return optimizedAcknowledge ;
+}
+
+void ConsumerInfo::setOptimizedAcknowledge(bool optimizedAcknowledge)
+{
+    this->optimizedAcknowledge = optimizedAcknowledge ;
 }

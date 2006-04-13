@@ -56,6 +56,8 @@ private:
     ap<BrokerInfo> peerBrokerInfos ;
     p<string> brokerName ;
     bool slaveBroker ;
+    bool masterBroker ;
+    bool faultTolerantConfiguration ;
 
 public:
     const static int TYPE = 2;
@@ -80,6 +82,12 @@ public:
 
     virtual bool getSlaveBroker() ;
     virtual void setSlaveBroker(bool slaveBroker) ;
+
+    virtual bool getMasterBroker() ;
+    virtual void setMasterBroker(bool masterBroker) ;
+
+    virtual bool getFaultTolerantConfiguration() ;
+    virtual void setFaultTolerantConfiguration(bool faultTolerantConfiguration) ;
 
 
 } ;

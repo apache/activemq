@@ -67,8 +67,10 @@
 #include "marshal/DestinationInfoMarshaller.hpp"
 #include "marshal/ShutdownInfoMarshaller.hpp"
 #include "marshal/DataResponseMarshaller.hpp"
+#include "marshal/ConnectionControlMarshaller.hpp"
 #include "marshal/KeepAliveInfoMarshaller.hpp"
 #include "marshal/FlushCommandMarshaller.hpp"
+#include "marshal/ConsumerControlMarshaller.hpp"
 #include "marshal/JournalTopicAckMarshaller.hpp"
 #include "marshal/BrokerIdMarshaller.hpp"
 #include "marshal/MessageDispatchMarshaller.hpp"
@@ -126,8 +128,10 @@ void MarshallerFactory::configure(ProtocolFormat& format)
     format.addMarshaller(new DestinationInfoMarshaller());
     format.addMarshaller(new ShutdownInfoMarshaller());
     format.addMarshaller(new DataResponseMarshaller());
+    format.addMarshaller(new ConnectionControlMarshaller());
     format.addMarshaller(new KeepAliveInfoMarshaller());
     format.addMarshaller(new FlushCommandMarshaller());
+    format.addMarshaller(new ConsumerControlMarshaller());
     format.addMarshaller(new JournalTopicAckMarshaller());
     format.addMarshaller(new BrokerIdMarshaller());
     format.addMarshaller(new MessageDispatchMarshaller());
