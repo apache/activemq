@@ -35,6 +35,8 @@ BrokerInfo::BrokerInfo()
     this->peerBrokerInfos = 0 ;
     this->brokerName = 0 ;
     this->slaveBroker = 0 ;
+    this->masterBroker = 0 ;
+    this->faultTolerantConfiguration = 0 ;
 }
 
 BrokerInfo::~BrokerInfo()
@@ -94,4 +96,26 @@ bool BrokerInfo::getSlaveBroker()
 void BrokerInfo::setSlaveBroker(bool slaveBroker)
 {
     this->slaveBroker = slaveBroker ;
+}
+
+        
+bool BrokerInfo::getMasterBroker()
+{
+    return masterBroker ;
+}
+
+void BrokerInfo::setMasterBroker(bool masterBroker)
+{
+    this->masterBroker = masterBroker ;
+}
+
+        
+bool BrokerInfo::getFaultTolerantConfiguration()
+{
+    return faultTolerantConfiguration ;
+}
+
+void BrokerInfo::setFaultTolerantConfiguration(bool faultTolerantConfiguration)
+{
+    this->faultTolerantConfiguration = faultTolerantConfiguration ;
 }

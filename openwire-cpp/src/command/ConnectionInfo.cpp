@@ -35,6 +35,8 @@ ConnectionInfo::ConnectionInfo()
     this->password = 0 ;
     this->userName = 0 ;
     this->brokerPath = 0 ;
+    this->brokerMasterConnector = 0 ;
+    this->manageable = 0 ;
 }
 
 ConnectionInfo::~ConnectionInfo()
@@ -94,4 +96,26 @@ ap<BrokerId> ConnectionInfo::getBrokerPath()
 void ConnectionInfo::setBrokerPath(ap<BrokerId> brokerPath)
 {
     this->brokerPath = brokerPath ;
+}
+
+        
+bool ConnectionInfo::getBrokerMasterConnector()
+{
+    return brokerMasterConnector ;
+}
+
+void ConnectionInfo::setBrokerMasterConnector(bool brokerMasterConnector)
+{
+    this->brokerMasterConnector = brokerMasterConnector ;
+}
+
+        
+bool ConnectionInfo::getManageable()
+{
+    return manageable ;
+}
+
+void ConnectionInfo::setManageable(bool manageable)
+{
+    this->manageable = manageable ;
 }

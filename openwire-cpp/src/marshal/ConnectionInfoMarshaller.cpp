@@ -72,6 +72,8 @@ void ConnectionInfoMarshaller::unmarshal(ProtocolFormat& wireFormat, Object o, B
         else {
             info.setBrokerPath(null);
         }
+        info.setBrokerMasterConnector(bs.readBoolean());
+        info.setManageable(bs.readBoolean());
 
 }
 
@@ -88,6 +90,8 @@ int ConnectionInfoMarshaller::marshal1(ProtocolFormat& wireFormat, Object& o, Bo
     rc += writeString(info.getPassword(), bs);
     rc += writeString(info.getUserName(), bs);
     rc += marshalObjectArray(wireFormat, info.getBrokerPath(), bs);
+    bs.writeBoolean(info.isBrokerMasterConnector());
+    bs.writeBoolean(info.isManageable());
 
     return rc + 0;
 }
@@ -104,5 +108,7 @@ void ConnectionInfoMarshaller::marshal2(ProtocolFormat& wireFormat, Object& o, B
     writeString(info.getPassword(), dataOut, bs);
     writeString(info.getUserName(), dataOut, bs);
     marshalObjectArray(wireFormat, info.getBrokerPath(), dataOut, bs);
+    bs.readBoolean();
+    bs.readBoolean();
 
 }

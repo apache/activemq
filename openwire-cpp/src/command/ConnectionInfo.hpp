@@ -56,6 +56,8 @@ private:
     p<string> password ;
     p<string> userName ;
     ap<BrokerId> brokerPath ;
+    bool brokerMasterConnector ;
+    bool manageable ;
 
 public:
     const static int TYPE = 3;
@@ -80,6 +82,12 @@ public:
 
     virtual ap<BrokerId> getBrokerPath() ;
     virtual void setBrokerPath(ap<BrokerId> brokerPath) ;
+
+    virtual bool getBrokerMasterConnector() ;
+    virtual void setBrokerMasterConnector(bool brokerMasterConnector) ;
+
+    virtual bool getManageable() ;
+    virtual void setManageable(bool manageable) ;
 
 
 } ;
