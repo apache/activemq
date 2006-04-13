@@ -62,6 +62,8 @@ public class ConnectionInfoTest extends BaseCommandTestSupport {
 	            }
 	            info.setBrokerPath(value);
             }
+        info.setBrokerMasterConnector(true);
+        info.setManageable(false);
 
             }
         }

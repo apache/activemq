@@ -18,11 +18,13 @@ package org.apache.activemq.broker.ft;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.InsertableMutableBrokerFilter;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
@@ -67,11 +69,26 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      */
     public void startProcessing(){
         started.set(true);
+        try{
+            Connection[] connections=getClients();
+            ConnectionControl command=new ConnectionControl();
+            command.setFaultTolerant(true);
+            if(connections!=null){
+                for(int i=0;i<connections.length;i++){
+                    if(connections[i].isActive()&&connections[i].isManageable()){
+                        connections[i].dispatchAsync(command);
+                    }
+                }
+            }
+        }catch(Exception e){
+            log.error("Failed to get Connections",e);
+        }
     }
 
     /**
      * stop the broker
-     * @throws Exception 
+     * 
+     * @throws Exception
      */
     public void stop() throws Exception{
         super.stop();
@@ -301,6 +318,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
         sendToSlave(ack);
         super.acknowledge(context, ack);
        
+    }
+    
+    public boolean isFaultTolerantConfiguration(){
+        return true;
     }
     
 

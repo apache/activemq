@@ -78,7 +78,7 @@ public class FailoverTransport implements CompositeTransport {
     private long reconnectDelay = initialReconnectDelay;
     private Exception connectionFailure;
 
-    private final TransportListener myTransportListener = new DefaultTransportListener() {
+    private final TransportListener myTransportListener = new TransportListener() {
         public void onCommand(Command command) {
             if (command == null) {
                 return;
@@ -111,6 +111,18 @@ public class FailoverTransport implements CompositeTransport {
             }
             catch (InterruptedException e) {
                 transportListener.onException(new InterruptedIOException());
+            }
+        }
+        
+        public void transportInterupted(){
+            if (transportListener != null){
+                transportListener.transportInterupted();
+            }
+        }
+
+        public void transportResumed(){
+            if(transportListener != null){
+                transportListener.transportResumed();
             }
         }
     };
@@ -147,9 +159,11 @@ public class FailoverTransport implements CompositeTransport {
                                     Transport t = TransportFactory.compositeConnect(uri);
                                     t.setTransportListener(myTransportListener);
                                     t.start();
+                                    
                                     if (started) {
                                         restoreTransport(t);
                                     }
+                                    
                                     log.debug("Connection established");
                                     reconnectDelay = initialReconnectDelay;
                                     connectedTransportURI = uri;
@@ -159,6 +173,7 @@ public class FailoverTransport implements CompositeTransport {
                                     if (transportListener != null){
                                         transportListener.transportResumed();
                                     }
+                                   
                                     return false;
                                 }
                                 catch (Exception e) {

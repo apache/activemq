@@ -91,6 +91,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         }
         info.setAdditionalPredicate((org.apache.activemq.filter.BooleanExpression) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setNetworkSubscription(bs.readBoolean());
+        info.setOptimizedAcknowledge(bs.readBoolean());
 
     }
 
@@ -115,6 +116,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getAdditionalPredicate(), bs);
         bs.writeBoolean(info.isNetworkSubscription());
+        bs.writeBoolean(info.isOptimizedAcknowledge());
 
         return rc + 9;
     }
@@ -144,6 +146,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         dataOut.writeByte(info.getPriority());
         tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
         tightMarshalNestedObject2(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut, bs);
+        bs.readBoolean();
         bs.readBoolean();
 
     }
@@ -185,6 +188,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         }
         info.setAdditionalPredicate((org.apache.activemq.filter.BooleanExpression) looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setNetworkSubscription(dataIn.readBoolean());
+        info.setOptimizedAcknowledge(dataIn.readBoolean());
 
     }
 
@@ -212,6 +216,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
         looseMarshalNestedObject(wireFormat, (DataStructure)info.getAdditionalPredicate(), dataOut);
         dataOut.writeBoolean(info.isNetworkSubscription());
+        dataOut.writeBoolean(info.isOptimizedAcknowledge());
 
     }
 }

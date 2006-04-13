@@ -47,6 +47,8 @@ public interface CommandTypes {
     byte  CONTROL_COMMAND                   = 14;
     byte  FLUSH_COMMAND                     = 15;
     byte  CONNECTION_ERROR                  = 16;
+    byte CONSUMER_CONTROL                   = 17;
+    byte CONNECTION_CONTROL                 = 18;
     
     ///////////////////////////////////////////////////
     //
@@ -124,6 +126,11 @@ public interface CommandTypes {
     byte  BOOLEAN_TYPE                      = 78;
     byte  BYTE_ARRAY_TYPE                   = 79;
     
+   
+    
+   
+    
+    
     ///////////////////////////////////////////////////
     //
     // Broker to Broker command objects
@@ -132,6 +139,7 @@ public interface CommandTypes {
     
     byte  MESSAGE_DISPATCH_NOTIFICATION     = 90;
     byte  NETWORK_BRIDGE_FILTER             = 91;
+    
     
     ///////////////////////////////////////////////////
     //
@@ -153,6 +161,9 @@ public interface CommandTypes {
     byte  PRODUCER_ID                       = 123;
     byte  BROKER_ID                         = 124;
     
+    
+    
+   
    
 
 

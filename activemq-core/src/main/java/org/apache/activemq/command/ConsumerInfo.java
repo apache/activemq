@@ -48,6 +48,7 @@ public class ConsumerInfo extends BaseCommand {
     protected boolean retroactive;
     protected byte priority;
     protected BrokerId[] brokerPath;
+    protected boolean optimizedAcknowledge;
     
     protected BooleanExpression additionalPredicate;
     protected transient boolean networkSubscription; //this subscription originated from a network connection
@@ -304,6 +305,21 @@ public class ConsumerInfo extends BaseCommand {
      */
     public void setNetworkSubscription(boolean networkSubscription){
         this.networkSubscription=networkSubscription;
+    }
+
+    /**
+     *  @openwire:property version=1
+     * @return Returns the optimizedAcknowledge.
+     */
+    public boolean isOptimizedAcknowledge(){
+        return optimizedAcknowledge;
+    }
+
+    /**
+     * @param optimizedAcknowledge The optimizedAcknowledge to set.
+     */
+    public void setOptimizedAcknowledge(boolean optimizedAcknowledge){
+        this.optimizedAcknowledge=optimizedAcknowledge;
     }
 
 }

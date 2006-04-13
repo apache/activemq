@@ -62,6 +62,8 @@ public class BrokerInfoTest extends BaseCommandTestSupport {
             }
         info.setBrokerName("BrokerName:4");
         info.setSlaveBroker(true);
+        info.setMasterBroker(false);
+        info.setFaultTolerantConfiguration(true);
 
             }
         }
