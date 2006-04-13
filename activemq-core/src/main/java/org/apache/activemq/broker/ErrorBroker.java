@@ -200,6 +200,10 @@ public class ErrorBroker implements Broker {
         throw new IllegalStateException(this.message);
         
     }
+
+    public boolean isFaultTolerantConfiguration(){
+        throw new IllegalStateException(this.message);
+    }
     
    
 }

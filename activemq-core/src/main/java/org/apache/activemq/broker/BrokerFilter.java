@@ -205,4 +205,9 @@ public class BrokerFilter implements Broker {
         
     }
 
+
+    public boolean isFaultTolerantConfiguration(){
+        return next.isFaultTolerantConfiguration();
+    }
+
 }

@@ -470,6 +470,10 @@ public class RegionBroker implements Broker {
     public Set getDurableDestinations(){
         return adaptor != null ? adaptor.getDestinations() : Collections.EMPTY_SET;
     }
+    
+    public boolean isFaultTolerantConfiguration(){
+        return false;
+    }
 
 
     protected void doStop(ServiceStopper ss) {
@@ -486,6 +490,8 @@ public class RegionBroker implements Broker {
     public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
         this.keepDurableSubsActive = keepDurableSubsActive;
     }
+
+    
 
 
 }

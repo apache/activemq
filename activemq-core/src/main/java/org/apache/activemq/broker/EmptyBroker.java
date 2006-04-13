@@ -198,6 +198,10 @@ public class EmptyBroker implements Broker{
 
     public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{        
     }
+
+    public boolean isFaultTolerantConfiguration(){
+        return false;
+    }
     
    
 }

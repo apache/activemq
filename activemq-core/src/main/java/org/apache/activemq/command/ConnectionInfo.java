@@ -33,6 +33,8 @@ public class ConnectionInfo extends BaseCommand {
     protected String userName;
     protected String password;
     protected BrokerId[] brokerPath;
+    protected boolean brokerMasterConnector;
+    protected boolean manageable;
     
     public ConnectionInfo() {        
     }    
@@ -43,6 +45,16 @@ public class ConnectionInfo extends BaseCommand {
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
+    
+    public void copy(ConnectionInfo copy) {
+        super.copy(copy);
+        copy.clientId = clientId;
+        copy.userName = userName;
+        copy.password = password;
+        copy.brokerPath = brokerPath;
+        copy.brokerMasterConnector = brokerMasterConnector;
+        copy.manageable = manageable;
+    } 
 
     /**
      * @openwire:property version=1 cache=true
@@ -104,6 +116,30 @@ public class ConnectionInfo extends BaseCommand {
     
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processAddConnection( this );
+    }
+    /**
+     * @openwire:property version=1
+     */
+    public boolean isBrokerMasterConnector(){
+        return brokerMasterConnector;
+    }
+    /**
+     * @param brokerMasterConnector The brokerMasterConnector to set.
+     */
+    public void setBrokerMasterConnector(boolean slaveBroker){
+        this.brokerMasterConnector=slaveBroker;
+    }
+    /**
+     * @openwire:property version=1
+     */
+    public boolean isManageable(){
+        return manageable;
+    }
+    /**
+     * @param manageable The manageable to set.
+     */
+    public void setManageable(boolean manageable){
+        this.manageable=manageable;
     }
 
 }

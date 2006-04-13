@@ -81,6 +81,8 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         }
         info.setBrokerName(tightUnmarshalString(dataIn, bs));
         info.setSlaveBroker(bs.readBoolean());
+        info.setMasterBroker(bs.readBoolean());
+        info.setFaultTolerantConfiguration(bs.readBoolean());
 
     }
 
@@ -98,6 +100,8 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalObjectArray1(wireFormat, info.getPeerBrokerInfos(), bs);
         rc += tightMarshalString1(info.getBrokerName(), bs);
         bs.writeBoolean(info.isSlaveBroker());
+        bs.writeBoolean(info.isMasterBroker());
+        bs.writeBoolean(info.isFaultTolerantConfiguration());
 
         return rc + 0;
     }
@@ -117,6 +121,8 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         tightMarshalString2(info.getBrokerURL(), dataOut, bs);
         tightMarshalObjectArray2(wireFormat, info.getPeerBrokerInfos(), dataOut, bs);
         tightMarshalString2(info.getBrokerName(), dataOut, bs);
+        bs.readBoolean();
+        bs.readBoolean();
         bs.readBoolean();
 
     }
@@ -148,6 +154,8 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         }
         info.setBrokerName(looseUnmarshalString(dataIn));
         info.setSlaveBroker(dataIn.readBoolean());
+        info.setMasterBroker(dataIn.readBoolean());
+        info.setFaultTolerantConfiguration(dataIn.readBoolean());
 
     }
 
@@ -165,6 +173,8 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         looseMarshalObjectArray(wireFormat, info.getPeerBrokerInfos(), dataOut);
         looseMarshalString(info.getBrokerName(), dataOut);
         dataOut.writeBoolean(info.isSlaveBroker());
+        dataOut.writeBoolean(info.isMasterBroker());
+        dataOut.writeBoolean(info.isFaultTolerantConfiguration());
 
     }
 }

@@ -131,6 +131,9 @@ public class MasterConnector implements Service{
         connectionInfo.setUserName(userName);
         connectionInfo.setPassword(password);
         localBroker.oneway(connectionInfo);
+        ConnectionInfo remoteInfo=new ConnectionInfo();
+        connectionInfo.copy(remoteInfo);
+        remoteInfo.setBrokerMasterConnector(true);
         remoteBroker.oneway(connectionInfo);
 
         sessionInfo=new SessionInfo(connectionInfo,1);

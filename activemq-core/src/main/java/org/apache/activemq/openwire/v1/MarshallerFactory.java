@@ -81,8 +81,10 @@ public class MarshallerFactory {
         add(new DestinationInfoMarshaller());
         add(new ShutdownInfoMarshaller());
         add(new DataResponseMarshaller());
+        add(new ConnectionControlMarshaller());
         add(new KeepAliveInfoMarshaller());
         add(new FlushCommandMarshaller());
+        add(new ConsumerControlMarshaller());
         add(new JournalTopicAckMarshaller());
         add(new BrokerIdMarshaller());
         add(new MessageDispatchMarshaller());

@@ -111,8 +111,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private MessageAvailableListener availableListener;
 
     private RedeliveryPolicy redeliveryPolicy;
-    private boolean optimizeAcknowledge;
-
+    private AtomicBoolean optimizeAcknowledge = new AtomicBoolean();
+   
     /**
      * Create a MessageConsumer
      * 
@@ -182,6 +182,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.stats = new JMSConsumerStatsImpl(session.getSessionStats(), dest);
+        this.optimizeAcknowledge.set(session.connection.isOptimizeAcknowledge()&&session.isAutoAcknowledge()
+                        &&!info.isBrowser());
+        this.info.setOptimizedAcknowledge(this.optimizeAcknowledge.get());
         try {
             this.session.addConsumer(this);
             this.session.syncSendPacket(info);
@@ -189,8 +192,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             this.session.removeConsumer(this);
             throw e;
         }
-        this.optimizeAcknowledge=session.connection.isOptimizeAcknowledge()&&session.isAutoAcknowledge()
-                        &&!info.isDurable()&&!info.getDestination().isQueue();
+        
         if(session.connection.isStarted())
             start();
     }
@@ -509,8 +511,26 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
     
-    public void clearMessagesInProgress(){
+    void clearMessagesInProgress(){
         unconsumedMessages.clear();
+    }
+    
+    void deliverAcks(){
+        synchronized(optimizeAcknowledge){
+            if(this.optimizeAcknowledge.get()){
+                if(!deliveredMessages.isEmpty()){
+                    MessageDispatch md=(MessageDispatch) deliveredMessages.getFirst();
+                    MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
+                    try{
+                        session.asyncSendPacket(ack);
+                    }catch(JMSException e){
+                        log.error("Failed to delivered acknowledgements",e);
+                    }
+                    deliveredMessages.clear();
+                    ackCounter=0;
+                }
+            }
+        }
     }
 
     public void dispose() throws JMSException {
@@ -518,6 +538,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now. (session may still
             // commit/rollback the acks).
+            deliverAcks();//only processes optimized acknowledgements
             if ((session.isTransacted() || session.isDupsOkAcknowledge())) {
                 acknowledge();
             }
@@ -539,6 +560,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     protected void checkMessageListener() throws JMSException {
         session.checkMessageListener();
     }
+    
+    protected void setOptimizeAcknowledge(boolean value){
+        synchronized(optimizeAcknowledge){
+            deliverAcks();
+            optimizeAcknowledge.set(value);
+        }
+    }
+    
+    protected void setPrefetchSize(int prefetch){
+        deliverAcks();
+        this.info.setPrefetchSize(prefetch);
+    }
 
     private void beforeMessageIsConsumed(MessageDispatch md) {
         md.setDeliverySequenceId(session.getNextDeliveryId());
@@ -557,18 +590,20 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
             }else if(session.isAutoAcknowledge()){
                 if(!deliveredMessages.isEmpty()){
-                    if(this.optimizeAcknowledge){
-                        ackCounter++;
-                        if(ackCounter>=(info.getPrefetchSize()*.75)){
-                            MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,ackCounter);
+                    synchronized(optimizeAcknowledge){
+                        if(this.optimizeAcknowledge.get()){
+                            ackCounter++;
+                            if(ackCounter>=(info.getPrefetchSize()*.75)){
+                                MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,ackCounter);
+                                session.asyncSendPacket(ack);
+                                ackCounter=0;
+                                deliveredMessages.clear();
+                            }
+                        }else{
+                            MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
                             session.asyncSendPacket(ack);
-                            ackCounter=0;
                             deliveredMessages.clear();
                         }
-                    }else{
-                        MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                        session.asyncSendPacket(ack);
-                        deliveredMessages.clear();
                     }
                 }
             }else if(session.isDupsOkAcknowledge()){
@@ -662,11 +697,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public void rollback() throws JMSException{
         synchronized(unconsumedMessages.getMutex()){
-            if(optimizeAcknowledge){
-               
-                // remove messages read but not acked at the broker yet through optimizeAcknowledge  
-                for(int i=0;(i<deliveredMessages.size())&&(i<ackCounter);i++){
-                    deliveredMessages.removeLast();
+            synchronized(optimizeAcknowledge){
+                if(optimizeAcknowledge.get()){
+                    // remove messages read but not acked at the broker yet through optimizeAcknowledge
+                    for(int i=0;(i<deliveredMessages.size())&&(i<ackCounter);i++){
+                        deliveredMessages.removeLast();
+                    }
                 }
             }
             if(deliveredMessages.isEmpty())

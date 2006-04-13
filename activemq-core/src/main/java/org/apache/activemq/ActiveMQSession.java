@@ -517,6 +517,21 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             connection.asyncSendPacket(info.createRemoveCommand());
         }
     }
+    
+    void clearMessagesInProgress(){
+        executor.clearMessagesInProgress();
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
+            consumer.clearMessagesInProgress();
+        }
+    }
+    
+    void deliverAcks(){
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
+            consumer.deliverAcks();
+        }
+    }
 
     synchronized public void dispose() throws JMSException {
         if (!closed) {
@@ -1704,6 +1719,38 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) i.next();
             if( consumer.getMessageListener()!=null ) {
                 throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
+            }
+        }
+    }
+    
+    protected void setOptimizeAcknowledge(boolean value){
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            c.setOptimizeAcknowledge(value);
+        }
+    }
+    
+    protected void setPrefetchSize(ConsumerId id,int prefetch){
+        for(Iterator iter=consumers.iterator();iter.hasNext();){
+            ActiveMQMessageConsumer c=(ActiveMQMessageConsumer) iter.next();
+            if(c.getConsumerId().equals(id)){
+                c.setPrefetchSize(prefetch);
+                break;
+            }
+        }
+    }
+    
+    protected void close(ConsumerId id){
+        for(Iterator iter=consumers.iterator();iter.hasNext();){
+            ActiveMQMessageConsumer c=(ActiveMQMessageConsumer) iter.next();
+            if(c.getConsumerId().equals(id)){
+                try{
+                    c.close();
+                }catch(JMSException e){
+                    log.warn("Exception closing consumer",e);
+                }
+                log.warn("Closed consumer on Command");
+                break;
             }
         }
     }

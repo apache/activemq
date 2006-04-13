@@ -90,5 +90,10 @@ public interface Connection extends Service {
      * Returns the statistics for this connection
      */
     public ConnectionStatistics getStatistics();
+    
+    /**
+     * @return true if the Connection will process control commands
+     */
+    public boolean isManageable();
 
 }

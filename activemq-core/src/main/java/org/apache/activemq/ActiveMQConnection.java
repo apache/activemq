@@ -51,9 +51,11 @@ import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ControlCommand;
@@ -74,6 +76,7 @@ import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -163,6 +166,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected ActiveMQConnection(Transport transport, JMSStatsImpl factoryStats)
             throws Exception {
         this.info = new ConnectionInfo(new ConnectionId(connectionIdGenerator.generateId()));
+        this.info.setManageable(true);
         this.connectionSessionId = new SessionId(info.getConnectionId(), -1);
         
         this.transport = transport;
@@ -1206,8 +1210,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         // broker without having to do an RPC to the broker.
         
         ConsumerId consumerId = new ConsumerId(new SessionId(info.getConnectionId(), -1),consumerIdGenerator.getNextSequenceId());
-        advisoryConsumer = new AdvisoryConsumer(this, consumerId);
-        
+        advisoryConsumer = new AdvisoryConsumer(this, consumerId);        
     }
 
     /**
@@ -1407,12 +1410,17 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             } else if ( command.isBrokerInfo() ) {
                 this.brokerInfo = (BrokerInfo)command;
                 brokerInfoReceived.countDown();
+                this.optimizeAcknowledge &= !this.brokerInfo.isFaultTolerantConfiguration();
             }
             else if (command instanceof ControlCommand) {
                 onControlCommand((ControlCommand) command);
             }
             else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
                 onAsyncException(((ConnectionError)command).getException());
+            }else if (command instanceof ConnectionControl){
+                onConnectionControl((ConnectionControl) command);
+            }else if (command instanceof ConsumerControl){
+                onConsumerControl((ConsumerControl) command);
             }
         }
         for (Iterator iter = transportListeners.iterator(); iter.hasNext();) {
@@ -1451,6 +1459,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
     
     public void transportInterupted() {
+        for (Iterator i = this.sessions.iterator(); i.hasNext();) {
+            ActiveMQSession s = (ActiveMQSession) i.next();
+            s.clearMessagesInProgress();
+        }
         for (Iterator iter = transportListeners.iterator(); iter.hasNext();) {
             TransportListener listener = (TransportListener) iter.next();
             listener.transportInterupted();
@@ -1461,6 +1473,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         for (Iterator iter = transportListeners.iterator(); iter.hasNext();) {
             TransportListener listener = (TransportListener) iter.next();
             listener.transportResumed();
+        }
+        for (Iterator i = this.sessions.iterator(); i.hasNext();) {
+            ActiveMQSession s = (ActiveMQSession) i.next();
+            s.deliverAcks();
         }
     }
 
@@ -1713,6 +1729,30 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             if (text.equals("shutdown")) {
                 log.info("JVM told to shutdown");
                 System.exit(0);
+            }
+        }
+    }
+    
+    protected void onConnectionControl(ConnectionControl command){
+        if (command.isFaultTolerant()){
+            this.optimizeAcknowledge = false;
+            for(Iterator i=this.sessions.iterator();i.hasNext();){
+                ActiveMQSession s=(ActiveMQSession) i.next();
+                s.setOptimizeAcknowledge(false);
+            }
+        }
+    }
+    
+    protected void onConsumerControl(ConsumerControl command){
+        if(command.isClose()){
+            for(Iterator i=this.sessions.iterator();i.hasNext();){
+                ActiveMQSession s=(ActiveMQSession) i.next();
+                s.close(command.getConsumerId());
+            }
+        }else{
+            for(Iterator i=this.sessions.iterator();i.hasNext();){
+                ActiveMQSession s=(ActiveMQSession) i.next();
+                s.setPrefetchSize(command.getConsumerId(),command.getPrefetch());
             }
         }
     }

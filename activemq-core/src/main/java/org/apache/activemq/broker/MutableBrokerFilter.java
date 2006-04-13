@@ -215,4 +215,8 @@ public class MutableBrokerFilter implements Broker {
         
     }
 
+    public boolean isFaultTolerantConfiguration(){
+       return getNext().isFaultTolerantConfiguration();
+    }
+
 }

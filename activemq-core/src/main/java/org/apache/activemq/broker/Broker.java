@@ -234,4 +234,8 @@ public interface Broker extends Region, Service {
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
 
     
+    /**
+     * @return true if fault tolerant
+     */
+    public boolean isFaultTolerantConfiguration();
 }
