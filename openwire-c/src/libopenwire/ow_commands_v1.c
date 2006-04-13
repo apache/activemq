@@ -366,6 +366,8 @@ apr_status_t ow_marshal1_ConnectionInfo(ow_bit_buffer *buffer, ow_ConnectionInfo
    ow_marshal1_string(buffer, object->password);
    ow_marshal1_string(buffer, object->userName);
    SUCCESS_CHECK(ow_marshal1_DataStructure_array(buffer, object->brokerPath));
+   ow_bit_buffer_append(buffer, object->brokerMasterConnector);
+   ow_bit_buffer_append(buffer, object->manageable);
    
 	return APR_SUCCESS;
 }
@@ -377,6 +379,8 @@ apr_status_t ow_marshal2_ConnectionInfo(ow_byte_buffer *buffer, ow_bit_buffer *b
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->password));
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->userName));
    SUCCESS_CHECK(ow_marshal2_DataStructure_array(buffer, bitbuffer, object->brokerPath));
+   ow_bit_buffer_read(bitbuffer);
+   ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -389,6 +393,8 @@ apr_status_t ow_unmarshal_ConnectionInfo(ow_byte_array *buffer, ow_bit_buffer *b
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->password, pool));
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->userName, pool));
    SUCCESS_CHECK(ow_unmarshal_DataStructure_array(buffer, bitbuffer, &object->brokerPath, pool));
+   object->brokerMasterConnector = ow_bit_buffer_read(bitbuffer);
+   object->manageable = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -1172,6 +1178,7 @@ apr_status_t ow_marshal1_ConsumerInfo(ow_bit_buffer *buffer, ow_ConsumerInfo *ob
    SUCCESS_CHECK(ow_marshal1_DataStructure_array(buffer, object->brokerPath));
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->additionalPredicate));
    ow_bit_buffer_append(buffer, object->networkSubscription);
+   ow_bit_buffer_append(buffer, object->optimizedAcknowledge);
    
 	return APR_SUCCESS;
 }
@@ -1192,6 +1199,7 @@ apr_status_t ow_marshal2_ConsumerInfo(ow_byte_buffer *buffer, ow_bit_buffer *bit
    SUCCESS_CHECK(ow_byte_buffer_append_byte(buffer, object->priority));
    SUCCESS_CHECK(ow_marshal2_DataStructure_array(buffer, bitbuffer, object->brokerPath));
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->additionalPredicate));
+   ow_bit_buffer_read(bitbuffer);
    ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
@@ -1215,6 +1223,7 @@ apr_status_t ow_unmarshal_ConsumerInfo(ow_byte_array *buffer, ow_bit_buffer *bit
    SUCCESS_CHECK(ow_unmarshal_DataStructure_array(buffer, bitbuffer, &object->brokerPath, pool));
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->additionalPredicate, pool));
    object->networkSubscription = ow_bit_buffer_read(bitbuffer);
+   object->optimizedAcknowledge = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -2028,6 +2037,8 @@ apr_status_t ow_marshal1_BrokerInfo(ow_bit_buffer *buffer, ow_BrokerInfo *object
    SUCCESS_CHECK(ow_marshal1_DataStructure_array(buffer, object->peerBrokerInfos));
    ow_marshal1_string(buffer, object->brokerName);
    ow_bit_buffer_append(buffer, object->slaveBroker);
+   ow_bit_buffer_append(buffer, object->masterBroker);
+   ow_bit_buffer_append(buffer, object->faultTolerantConfiguration);
    
 	return APR_SUCCESS;
 }
@@ -2038,6 +2049,8 @@ apr_status_t ow_marshal2_BrokerInfo(ow_byte_buffer *buffer, ow_bit_buffer *bitbu
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->brokerURL));
    SUCCESS_CHECK(ow_marshal2_DataStructure_array(buffer, bitbuffer, object->peerBrokerInfos));
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->brokerName));
+   ow_bit_buffer_read(bitbuffer);
+   ow_bit_buffer_read(bitbuffer);
    ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
@@ -2051,6 +2064,8 @@ apr_status_t ow_unmarshal_BrokerInfo(ow_byte_array *buffer, ow_bit_buffer *bitbu
    SUCCESS_CHECK(ow_unmarshal_DataStructure_array(buffer, bitbuffer, &object->peerBrokerInfos, pool));
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->brokerName, pool));
    object->slaveBroker = ow_bit_buffer_read(bitbuffer);
+   object->masterBroker = ow_bit_buffer_read(bitbuffer);
+   object->faultTolerantConfiguration = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -2195,6 +2210,63 @@ apr_status_t ow_unmarshal_DataResponse(ow_byte_array *buffer, ow_bit_buffer *bit
 {
    ow_unmarshal_Response(buffer, bitbuffer, (ow_Response*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->data, pool));
+   
+	return APR_SUCCESS;
+}
+
+ow_boolean ow_is_a_ConnectionControl(ow_DataStructure *object) {
+   if( object == 0 )
+      return 0;
+      
+   switch(object->structType) {
+   case OW_CONNECTIONCONTROL_TYPE:
+      return 1;
+   }
+   return 0;
+}
+
+
+ow_ConnectionControl *ow_ConnectionControl_create(apr_pool_t *pool) 
+{
+   ow_ConnectionControl *value = apr_pcalloc(pool,sizeof(ow_ConnectionControl));
+   if( value!=0 ) {
+      ((ow_DataStructure*)value)->structType = OW_CONNECTIONCONTROL_TYPE;
+   }
+   return value;
+}
+
+
+apr_status_t ow_marshal1_ConnectionControl(ow_bit_buffer *buffer, ow_ConnectionControl *object)
+{
+   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
+   ow_bit_buffer_append(buffer, object->close);
+   ow_bit_buffer_append(buffer, object->exit);
+   ow_bit_buffer_append(buffer, object->faultTolerant);
+   ow_bit_buffer_append(buffer, object->resume);
+   ow_bit_buffer_append(buffer, object->suspend);
+   
+	return APR_SUCCESS;
+}
+apr_status_t ow_marshal2_ConnectionControl(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_ConnectionControl *object)
+{
+   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   ow_bit_buffer_read(bitbuffer);
+   ow_bit_buffer_read(bitbuffer);
+   ow_bit_buffer_read(bitbuffer);
+   ow_bit_buffer_read(bitbuffer);
+   ow_bit_buffer_read(bitbuffer);
+   
+	return APR_SUCCESS;
+}
+
+apr_status_t ow_unmarshal_ConnectionControl(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_ConnectionControl *object, apr_pool_t *pool)
+{
+   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   object->close = ow_bit_buffer_read(bitbuffer);
+   object->exit = ow_bit_buffer_read(bitbuffer);
+   object->faultTolerant = ow_bit_buffer_read(bitbuffer);
+   object->resume = ow_bit_buffer_read(bitbuffer);
+   object->suspend = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }
@@ -2384,8 +2456,10 @@ ow_boolean ow_is_a_BaseCommand(ow_DataStructure *object) {
    case OW_DESTINATIONINFO_TYPE:
    case OW_SHUTDOWNINFO_TYPE:
    case OW_DATARESPONSE_TYPE:
+   case OW_CONNECTIONCONTROL_TYPE:
    case OW_KEEPALIVEINFO_TYPE:
    case OW_FLUSHCOMMAND_TYPE:
+   case OW_CONSUMERCONTROL_TYPE:
    case OW_MESSAGEDISPATCH_TYPE:
    case OW_ACTIVEMQMAPMESSAGE_TYPE:
    case OW_ACTIVEMQMESSAGE_TYPE:
@@ -2461,6 +2535,57 @@ apr_status_t ow_marshal2_FlushCommand(ow_byte_buffer *buffer, ow_bit_buffer *bit
 apr_status_t ow_unmarshal_FlushCommand(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_FlushCommand *object, apr_pool_t *pool)
 {
    ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   
+	return APR_SUCCESS;
+}
+
+ow_boolean ow_is_a_ConsumerControl(ow_DataStructure *object) {
+   if( object == 0 )
+      return 0;
+      
+   switch(object->structType) {
+   case OW_CONSUMERCONTROL_TYPE:
+      return 1;
+   }
+   return 0;
+}
+
+
+ow_ConsumerControl *ow_ConsumerControl_create(apr_pool_t *pool) 
+{
+   ow_ConsumerControl *value = apr_pcalloc(pool,sizeof(ow_ConsumerControl));
+   if( value!=0 ) {
+      ((ow_DataStructure*)value)->structType = OW_CONSUMERCONTROL_TYPE;
+   }
+   return value;
+}
+
+
+apr_status_t ow_marshal1_ConsumerControl(ow_bit_buffer *buffer, ow_ConsumerControl *object)
+{
+   ow_marshal1_BaseCommand(buffer, (ow_BaseCommand*)object);
+   ow_bit_buffer_append(buffer, object->close);
+   SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->consumerId));
+   
+   
+	return APR_SUCCESS;
+}
+apr_status_t ow_marshal2_ConsumerControl(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer, ow_ConsumerControl *object)
+{
+   ow_marshal2_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object);   
+   ow_bit_buffer_read(bitbuffer);
+   SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->consumerId));
+   SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->prefetch));
+   
+	return APR_SUCCESS;
+}
+
+apr_status_t ow_unmarshal_ConsumerControl(ow_byte_array *buffer, ow_bit_buffer *bitbuffer, ow_ConsumerControl *object, apr_pool_t *pool)
+{
+   ow_unmarshal_BaseCommand(buffer, bitbuffer, (ow_BaseCommand*)object, pool);   
+   object->close = ow_bit_buffer_read(bitbuffer);
+   SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->consumerId, pool));
+   SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->prefetch));
    
 	return APR_SUCCESS;
 }
@@ -2849,8 +2974,10 @@ ow_DataStructure *ow_create_object(ow_byte type, apr_pool_t *pool)
       case OW_DESTINATIONINFO_TYPE: return (ow_DataStructure *)ow_DestinationInfo_create(pool);
       case OW_SHUTDOWNINFO_TYPE: return (ow_DataStructure *)ow_ShutdownInfo_create(pool);
       case OW_DATARESPONSE_TYPE: return (ow_DataStructure *)ow_DataResponse_create(pool);
+      case OW_CONNECTIONCONTROL_TYPE: return (ow_DataStructure *)ow_ConnectionControl_create(pool);
       case OW_KEEPALIVEINFO_TYPE: return (ow_DataStructure *)ow_KeepAliveInfo_create(pool);
       case OW_FLUSHCOMMAND_TYPE: return (ow_DataStructure *)ow_FlushCommand_create(pool);
+      case OW_CONSUMERCONTROL_TYPE: return (ow_DataStructure *)ow_ConsumerControl_create(pool);
       case OW_JOURNALTOPICACK_TYPE: return (ow_DataStructure *)ow_JournalTopicAck_create(pool);
       case OW_BROKERID_TYPE: return (ow_DataStructure *)ow_BrokerId_create(pool);
       case OW_MESSAGEDISPATCH_TYPE: return (ow_DataStructure *)ow_MessageDispatch_create(pool);
@@ -2908,8 +3035,10 @@ apr_status_t ow_marshal1_object(ow_bit_buffer *buffer, ow_DataStructure *object)
       case OW_DESTINATIONINFO_TYPE: return ow_marshal1_DestinationInfo(buffer, (ow_DestinationInfo*)object);
       case OW_SHUTDOWNINFO_TYPE: return ow_marshal1_ShutdownInfo(buffer, (ow_ShutdownInfo*)object);
       case OW_DATARESPONSE_TYPE: return ow_marshal1_DataResponse(buffer, (ow_DataResponse*)object);
+      case OW_CONNECTIONCONTROL_TYPE: return ow_marshal1_ConnectionControl(buffer, (ow_ConnectionControl*)object);
       case OW_KEEPALIVEINFO_TYPE: return ow_marshal1_KeepAliveInfo(buffer, (ow_KeepAliveInfo*)object);
       case OW_FLUSHCOMMAND_TYPE: return ow_marshal1_FlushCommand(buffer, (ow_FlushCommand*)object);
+      case OW_CONSUMERCONTROL_TYPE: return ow_marshal1_ConsumerControl(buffer, (ow_ConsumerControl*)object);
       case OW_JOURNALTOPICACK_TYPE: return ow_marshal1_JournalTopicAck(buffer, (ow_JournalTopicAck*)object);
       case OW_BROKERID_TYPE: return ow_marshal1_BrokerId(buffer, (ow_BrokerId*)object);
       case OW_MESSAGEDISPATCH_TYPE: return ow_marshal1_MessageDispatch(buffer, (ow_MessageDispatch*)object);
@@ -2967,8 +3096,10 @@ apr_status_t ow_marshal2_object(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffer
       case OW_DESTINATIONINFO_TYPE: return ow_marshal2_DestinationInfo(buffer, bitbuffer, (ow_DestinationInfo*)object);
       case OW_SHUTDOWNINFO_TYPE: return ow_marshal2_ShutdownInfo(buffer, bitbuffer, (ow_ShutdownInfo*)object);
       case OW_DATARESPONSE_TYPE: return ow_marshal2_DataResponse(buffer, bitbuffer, (ow_DataResponse*)object);
+      case OW_CONNECTIONCONTROL_TYPE: return ow_marshal2_ConnectionControl(buffer, bitbuffer, (ow_ConnectionControl*)object);
       case OW_KEEPALIVEINFO_TYPE: return ow_marshal2_KeepAliveInfo(buffer, bitbuffer, (ow_KeepAliveInfo*)object);
       case OW_FLUSHCOMMAND_TYPE: return ow_marshal2_FlushCommand(buffer, bitbuffer, (ow_FlushCommand*)object);
+      case OW_CONSUMERCONTROL_TYPE: return ow_marshal2_ConsumerControl(buffer, bitbuffer, (ow_ConsumerControl*)object);
       case OW_JOURNALTOPICACK_TYPE: return ow_marshal2_JournalTopicAck(buffer, bitbuffer, (ow_JournalTopicAck*)object);
       case OW_BROKERID_TYPE: return ow_marshal2_BrokerId(buffer, bitbuffer, (ow_BrokerId*)object);
       case OW_MESSAGEDISPATCH_TYPE: return ow_marshal2_MessageDispatch(buffer, bitbuffer, (ow_MessageDispatch*)object);
@@ -3026,8 +3157,10 @@ apr_status_t ow_unmarshal_object(ow_byte_array *buffer, ow_bit_buffer *bitbuffer
       case OW_DESTINATIONINFO_TYPE: return ow_unmarshal_DestinationInfo(buffer, bitbuffer, (ow_DestinationInfo*)object, pool);
       case OW_SHUTDOWNINFO_TYPE: return ow_unmarshal_ShutdownInfo(buffer, bitbuffer, (ow_ShutdownInfo*)object, pool);
       case OW_DATARESPONSE_TYPE: return ow_unmarshal_DataResponse(buffer, bitbuffer, (ow_DataResponse*)object, pool);
+      case OW_CONNECTIONCONTROL_TYPE: return ow_unmarshal_ConnectionControl(buffer, bitbuffer, (ow_ConnectionControl*)object, pool);
       case OW_KEEPALIVEINFO_TYPE: return ow_unmarshal_KeepAliveInfo(buffer, bitbuffer, (ow_KeepAliveInfo*)object, pool);
       case OW_FLUSHCOMMAND_TYPE: return ow_unmarshal_FlushCommand(buffer, bitbuffer, (ow_FlushCommand*)object, pool);
+      case OW_CONSUMERCONTROL_TYPE: return ow_unmarshal_ConsumerControl(buffer, bitbuffer, (ow_ConsumerControl*)object, pool);
       case OW_JOURNALTOPICACK_TYPE: return ow_unmarshal_JournalTopicAck(buffer, bitbuffer, (ow_JournalTopicAck*)object, pool);
       case OW_BROKERID_TYPE: return ow_unmarshal_BrokerId(buffer, bitbuffer, (ow_BrokerId*)object, pool);
       case OW_MESSAGEDISPATCH_TYPE: return ow_unmarshal_MessageDispatch(buffer, bitbuffer, (ow_MessageDispatch*)object, pool);
