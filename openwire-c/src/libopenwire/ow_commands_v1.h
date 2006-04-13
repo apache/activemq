@@ -142,6 +142,8 @@ typedef struct ow_ConnectionInfo {
    ow_string *password;
    ow_string *userName;
    ow_DataStructure_array *brokerPath;
+   ow_boolean brokerMasterConnector;
+   ow_boolean manageable;
 
 } ow_ConnectionInfo;
 ow_ConnectionInfo *ow_ConnectionInfo_create(apr_pool_t *pool);
@@ -369,6 +371,7 @@ typedef struct ow_ConsumerInfo {
    ow_DataStructure_array *brokerPath;
    struct ow_BooleanExpression *additionalPredicate;
    ow_boolean networkSubscription;
+   ow_boolean optimizedAcknowledge;
 
 } ow_ConsumerInfo;
 ow_ConsumerInfo *ow_ConsumerInfo_create(apr_pool_t *pool);
@@ -608,6 +611,8 @@ typedef struct ow_BrokerInfo {
    ow_DataStructure_array *peerBrokerInfos;
    ow_string *brokerName;
    ow_boolean slaveBroker;
+   ow_boolean masterBroker;
+   ow_boolean faultTolerantConfiguration;
 
 } ow_BrokerInfo;
 ow_BrokerInfo *ow_BrokerInfo_create(apr_pool_t *pool);
@@ -649,6 +654,21 @@ typedef struct ow_DataResponse {
 } ow_DataResponse;
 ow_DataResponse *ow_DataResponse_create(apr_pool_t *pool);
 ow_boolean ow_is_a_DataResponse(ow_DataStructure *object);
+
+typedef struct ow_ConnectionControl {
+
+   ow_byte structType;
+   ow_int commandId;
+   ow_boolean responseRequired;
+   ow_boolean close;
+   ow_boolean exit;
+   ow_boolean faultTolerant;
+   ow_boolean resume;
+   ow_boolean suspend;
+
+} ow_ConnectionControl;
+ow_ConnectionControl *ow_ConnectionControl_create(apr_pool_t *pool);
+ow_boolean ow_is_a_ConnectionControl(ow_DataStructure *object);
 
 typedef struct ow_KeepAliveInfo {
 
@@ -714,6 +734,19 @@ typedef struct ow_FlushCommand {
 } ow_FlushCommand;
 ow_FlushCommand *ow_FlushCommand_create(apr_pool_t *pool);
 ow_boolean ow_is_a_FlushCommand(ow_DataStructure *object);
+
+typedef struct ow_ConsumerControl {
+
+   ow_byte structType;
+   ow_int commandId;
+   ow_boolean responseRequired;
+   ow_boolean close;
+   struct ow_ConsumerId *consumerId;
+   ow_int prefetch;
+
+} ow_ConsumerControl;
+ow_ConsumerControl *ow_ConsumerControl_create(apr_pool_t *pool);
+ow_boolean ow_is_a_ConsumerControl(ow_DataStructure *object);
 
 typedef struct ow_JournalTopicAck {
 
