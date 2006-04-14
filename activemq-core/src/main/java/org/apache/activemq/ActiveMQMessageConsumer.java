@@ -46,6 +46,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import edu.emory.mathcs.backport.java.util.concurrent.*;
 
 /**
  * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
@@ -111,7 +112,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private MessageAvailableListener availableListener;
 
     private RedeliveryPolicy redeliveryPolicy;
-    private AtomicBoolean optimizeAcknowledge = new AtomicBoolean();
+    private boolean optimizeAcknowledge;
+    private AtomicBoolean deliveryingAcknowledgements = new AtomicBoolean();
+    private ExecutorService executorService = null;
    
     /**
      * Create a MessageConsumer
@@ -160,6 +163,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info = new ConsumerInfo(consumerId);
         this.info.setSubcriptionName(name);
         this.info.setPrefetchSize(prefetch);
+        this.info.setCurrentPrefetchSize(prefetch);
         this.info.setMaximumPendingMessageLimit(maximumPendingMessageCount);
         this.info.setNoLocal(noLocal);
         this.info.setDispatchAsync(dispatchAsync);
@@ -182,9 +186,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.stats = new JMSConsumerStatsImpl(session.getSessionStats(), dest);
-        this.optimizeAcknowledge.set(session.connection.isOptimizeAcknowledge()&&session.isAutoAcknowledge()
-                        &&!info.isBrowser());
-        this.info.setOptimizedAcknowledge(this.optimizeAcknowledge.get());
+        this.optimizeAcknowledge=session.connection.isOptimizeAcknowledge()&&session.isAutoAcknowledge()
+                        &&!info.isBrowser();
+        this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         try {
             this.session.addConsumer(this);
             this.session.syncSendPacket(info);
@@ -516,19 +520,34 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
     
     void deliverAcks(){
-        synchronized(optimizeAcknowledge){
-            if(this.optimizeAcknowledge.get()){
+        MessageAck ack=null;
+        if(deliveryingAcknowledgements.compareAndSet(false,true)){
+            if(this.optimizeAcknowledge){
                 if(!deliveredMessages.isEmpty()){
                     MessageDispatch md=(MessageDispatch) deliveredMessages.getFirst();
-                    MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                    try{
-                        session.asyncSendPacket(ack);
-                    }catch(JMSException e){
-                        log.error("Failed to delivered acknowledgements",e);
-                    }
+                    ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
                     deliveredMessages.clear();
                     ackCounter=0;
                 }
+            }
+            if(ack!=null){
+                final MessageAck ackToSend=ack;
+                if(executorService==null){
+                    executorService=Executors.newSingleThreadExecutor();
+                }
+                executorService.submit(new Runnable(){
+                    public void run(){
+                        try{
+                            session.asyncSendPacket(ackToSend);
+                        }catch(JMSException e){
+                            log.error("Failed to delivered acknowledgements",e);
+                        }finally{
+                            deliveryingAcknowledgements.set(false);
+                        }
+                    }
+                });
+            }else{
+                deliveryingAcknowledgements.set(false);
             }
         }
     }
@@ -539,6 +558,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             // Ack any delivered messages now. (session may still
             // commit/rollback the acks).
             deliverAcks();//only processes optimized acknowledgements
+            if (executorService!=null){
+                executorService.shutdown();
+            }
             if ((session.isTransacted() || session.isDupsOkAcknowledge())) {
                 acknowledge();
             }
@@ -562,15 +584,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
     
     protected void setOptimizeAcknowledge(boolean value){
-        synchronized(optimizeAcknowledge){
+        if (optimizeAcknowledge && !value){
             deliverAcks();
-            optimizeAcknowledge.set(value);
         }
+        optimizeAcknowledge=value;
     }
     
     protected void setPrefetchSize(int prefetch){
         deliverAcks();
-        this.info.setPrefetchSize(prefetch);
+        this.info.setCurrentPrefetchSize(prefetch);
     }
 
     private void beforeMessageIsConsumed(MessageDispatch md) {
@@ -590,20 +612,21 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
             }else if(session.isAutoAcknowledge()){
                 if(!deliveredMessages.isEmpty()){
-                    synchronized(optimizeAcknowledge){
-                        if(this.optimizeAcknowledge.get()){
+                    if(optimizeAcknowledge){
+                        if(deliveryingAcknowledgements.compareAndSet(false,true)){
                             ackCounter++;
-                            if(ackCounter>=(info.getPrefetchSize()*.75)){
-                                MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,ackCounter);
+                            if(ackCounter>=(info.getCurrentPrefetchSize()*.75)){
+                                MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
                                 session.asyncSendPacket(ack);
                                 ackCounter=0;
                                 deliveredMessages.clear();
                             }
-                        }else{
-                            MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                            session.asyncSendPacket(ack);
-                            deliveredMessages.clear();
+                            deliveryingAcknowledgements.set(false);
                         }
+                    }else{
+                        MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
+                        session.asyncSendPacket(ack);
+                        deliveredMessages.clear();
                     }
                 }
             }else if(session.isDupsOkAcknowledge()){
@@ -697,12 +720,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public void rollback() throws JMSException{
         synchronized(unconsumedMessages.getMutex()){
-            synchronized(optimizeAcknowledge){
-                if(optimizeAcknowledge.get()){
-                    // remove messages read but not acked at the broker yet through optimizeAcknowledge
-                    for(int i=0;(i<deliveredMessages.size())&&(i<ackCounter);i++){
-                        deliveredMessages.removeLast();
-                    }
+            if(optimizeAcknowledge){
+                // remove messages read but not acked at the broker yet through optimizeAcknowledge
+                for(int i=0;(i<deliveredMessages.size())&&(i<ackCounter);i++){
+                    deliveredMessages.removeLast();
                 }
             }
             if(deliveredMessages.isEmpty())
