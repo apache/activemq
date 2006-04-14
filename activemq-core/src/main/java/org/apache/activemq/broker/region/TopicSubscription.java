@@ -26,6 +26,7 @@ import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -64,6 +65,7 @@ public class TopicSubscription extends AbstractSubscription{
         enqueueCounter++;
         node.incrementReferenceCount();
         if(!isFull()&&!isSlaveBroker()){
+            optimizePrefetch();
             // if maximumPendingMessages is set we will only discard messages which
             // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
             dispatch(node);
@@ -230,6 +232,51 @@ public class TopicSubscription extends AbstractSubscription{
 
     private boolean isFull(){
         return dispatched.get()-delivered.get()>=info.getPrefetchSize();
+    }
+    
+    /**
+     * @return true when 60% or more room is left for dispatching messages
+     */
+    public boolean isLowWaterMark(){
+        return (dispatched.get()-delivered.get()) <= (info.getPrefetchSize() *.4);
+    }
+    
+    /**
+     * @return true when 10% or less room is left for dispatching messages
+     */
+    public boolean isHighWaterMark(){
+        return (dispatched.get()-delivered.get()) >= (info.getPrefetchSize() *.9);
+    }
+    
+    /**
+     * inform the MessageConsumer on the client to change it's prefetch
+     * @param newPrefetch
+     */
+    public void updateConsumerPrefetch(int newPrefetch){
+        if (context != null && context.getConnection() != null && context.getConnection().isManageable()){
+            ConsumerControl cc = new ConsumerControl();
+            cc.setConsumerId(info.getConsumerId());
+            cc.setPrefetch(newPrefetch);
+            context.getConnection().dispatchAsync(cc);
+        }
+    }
+    
+    /**
+     * optimize message consumer prefetch if the consumer supports it
+     *
+     */
+    public void optimizePrefetch(){
+        if(info!=null&&info.isOptimizedAcknowledge()&&context!=null&&context.getConnection()!=null
+                        &&context.getConnection().isManageable()){
+            if(info.getCurrentPrefetchSize()!=info.getPrefetchSize() && isLowWaterMark()){
+                info.setCurrentPrefetchSize(info.getPrefetchSize());
+                updateConsumerPrefetch(info.getPrefetchSize());
+            }else if(info.getCurrentPrefetchSize()==info.getPrefetchSize() && isHighWaterMark()){
+                // want to purge any outstanding acks held by the consumer
+                info.setCurrentPrefetchSize(1);
+                updateConsumerPrefetch(1);
+            }
+        }
     }
 
     private void dispatchMatched() throws IOException{

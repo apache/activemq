@@ -49,6 +49,7 @@ public class ConsumerInfo extends BaseCommand {
     protected byte priority;
     protected BrokerId[] brokerPath;
     protected boolean optimizedAcknowledge;
+    protected transient int currentPrefetchSize;//used by the broker
     
     protected BooleanExpression additionalPredicate;
     protected transient boolean networkSubscription; //this subscription originated from a network connection
@@ -144,6 +145,7 @@ public class ConsumerInfo extends BaseCommand {
 
     public void setPrefetchSize(int prefetchSize) {
         this.prefetchSize = prefetchSize;
+        this.currentPrefetchSize = prefetchSize;
     }
 
     /**
@@ -320,6 +322,20 @@ public class ConsumerInfo extends BaseCommand {
      */
     public void setOptimizedAcknowledge(boolean optimizedAcknowledge){
         this.optimizedAcknowledge=optimizedAcknowledge;
+    }
+
+    /**
+     * @return Returns the currentPrefetchSize.
+     */
+    public int getCurrentPrefetchSize(){
+        return currentPrefetchSize;
+    }
+
+    /**
+     * @param currentPrefetchSize The currentPrefetchSize to set.
+     */
+    public void setCurrentPrefetchSize(int currentPrefetchSize){
+        this.currentPrefetchSize=currentPrefetchSize;
     }
 
 }

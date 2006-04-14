@@ -148,4 +148,26 @@ public interface Subscription {
      * Set when the subscription is registered in JMX
      */
     public void setObjectName(ObjectName objectName);
+    
+    /**
+     * @return true when 60% or more room is left for dispatching messages
+     */
+    public boolean isLowWaterMark();
+    
+    /**
+     * @return true when 10% or less room is left for dispatching messages
+     */
+    public boolean isHighWaterMark();
+    
+    /**
+     * inform the MessageConsumer on the client to change it's prefetch
+     * @param newPrefetch
+     */
+    public void updateConsumerPrefetch(int newPrefetch);
+    
+    /**
+     * optimize message consumer prefetch if the consumer supports it
+     *
+     */
+    public void optimizePrefetch();
 }
