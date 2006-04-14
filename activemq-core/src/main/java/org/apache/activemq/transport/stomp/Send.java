@@ -125,8 +125,9 @@ class Send implements StompCommand {
             msg.setTransactionId(tx_id);
         }
         
-        msg.onSend();
-        
+        msg.setReadOnlyBody(true);
+        msg.setReadOnlyProperties(true);
+
         return new CommandEnvelope(msg, headers);
     }
 
