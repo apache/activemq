@@ -124,7 +124,9 @@ class Send implements StompCommand {
                 throw new ProtocolException(headers.getProperty(Stomp.Headers.TRANSACTION) + " is an invalid transaction id");
             msg.setTransactionId(tx_id);
         }
-
+        
+        msg.onSend();
+        
         return new CommandEnvelope(msg, headers);
     }
 
