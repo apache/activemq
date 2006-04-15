@@ -125,6 +125,11 @@
       <artifactId>jetty</artifactId>
       <version>${jetty_version}</version>
     </dependency>
+    <dependency>
+      <groupId>jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <version>${jetty_version}</version>
+    </dependency>
 
     <dependency>
       <groupId>xstream</groupId>
