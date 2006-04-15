@@ -91,6 +91,7 @@ class Connect implements StompCommand {
                         buffer.append(Stomp.NEWLINE);
                         buffer.append(Stomp.NEWLINE);
                         buffer.append(Stomp.NULL);
+                        buffer.append(Stomp.NEWLINE);
                         out.writeBytes(buffer.toString());
                         return true;
                     }
