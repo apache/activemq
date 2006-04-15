@@ -20,12 +20,10 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>incubator-activemq</groupId>
-    <artifactId>activemq</artifactId>
+    <artifactId>activemq-parent</artifactId>
     <version>4.0-SNAPSHOT</version>
   </parent>
-  <groupId>org.apache.activemq.activecluster</groupId>
   <artifactId>activecluster</artifactId>
-  <version>1.3-SNAPSHOT</version>
   <name>ActiveCluster</name>
 
   <dependencies>

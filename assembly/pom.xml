@@ -25,12 +25,12 @@
 
   <parent>
     <groupId>incubator-activemq</groupId>
-    <artifactId>activemq</artifactId>
+    <artifactId>activemq-parent</artifactId>
     <version>4.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activemq-assembly</artifactId>
+  <artifactId>activemq</artifactId>
   <packaging>jar</packaging>
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
@@ -69,12 +69,18 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-web</artifactId>
+      <artifactId>activemq-web-demo</artifactId>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activecluster</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-ra</artifactId>
+      <type>rar</type>
       <optional>true</optional>
     </dependency>
     
@@ -224,6 +230,22 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>incubator-activemq</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>${pom.version}</version>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>createbundle</goal>
+            </goals>
+            <configuration>
+              <includes>activemq-core,activemq-console,activeio-core,activemq-optional,backport-util-concurrent,commons-logging,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,derby</includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.1-SNAPSHOT</version>
@@ -239,20 +261,6 @@
                  <descriptor>src/main/descriptors/bin.xml</descriptor>
               </descriptors>
               <finalName>activemq-${pom.version}</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-            </configuration>
-          </execution>
-          <execution>
-            <id>full</id>
-            <phase>package</phase>
-            <goals>
-              <goal>assembly</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                 <descriptor>src/main/descriptors/all-jar.xml</descriptor>
-              </descriptors>
-              <finalName>activemq-full-${pom.version}</finalName>
               <appendAssemblyId>false</appendAssemblyId>
             </configuration>
           </execution>
