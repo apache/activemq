@@ -24,7 +24,6 @@ import java.util.Properties;
 
 import javax.jms.JMSException;
 
-import org.apache.activeio.packet.ByteSequence;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -59,8 +58,7 @@ class Send implements StompCommand {
             byte nil = in.readByte();
             if (nil != 0)
                 throw new ProtocolException("content-length bytes were read and " + "there was no trailing null byte");
-            ByteSequence content = new ByteSequence(bytes, 0, bytes.length);
-            bm.setContent(content);
+            bm.writeBytes(bytes);
             msg = bm;
         }
         else {
@@ -125,9 +123,7 @@ class Send implements StompCommand {
             msg.setTransactionId(tx_id);
         }
         
-        msg.setReadOnlyBody(true);
-        msg.setReadOnlyProperties(true);
-
+        msg.onSend();
         return new CommandEnvelope(msg, headers);
     }
 
