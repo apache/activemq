@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 
 class FrameBuilder {
     private String command;
@@ -95,22 +96,23 @@ class FrameBuilder {
     byte[] toFrame() {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         try {
-            bout.write(command.getBytes());
-            bout.write(Stomp.NEWLINE.getBytes());
-            for (Iterator iterator = headers.keySet().iterator(); iterator.hasNext();) {
-                String key = (String) iterator.next();
-                String property = headers.getProperty(key);
+            bout.write(command.getBytes("UTF-8"));
+            bout.write(Stomp.NEWLINE.getBytes("UTF-8"));
+            for (Iterator iterator = headers.entrySet().iterator(); iterator.hasNext();) {
+                Map.Entry entry = (Entry) iterator.next();
+                String key = (String) entry.getKey();
+                String property = entry.getValue().toString();
                 if (property != null) {
-                    bout.write(key.getBytes());
-                    bout.write(Stomp.Headers.SEPERATOR.getBytes());
-                    bout.write(property.getBytes());
-                    bout.write(Stomp.NEWLINE.getBytes());
+                    bout.write(key.getBytes("UTF-8"));
+                    bout.write(Stomp.Headers.SEPERATOR.getBytes("UTF-8"));
+                    bout.write(property.getBytes("UTF-8"));
+                    bout.write(Stomp.NEWLINE.getBytes("UTF-8"));
                 }
             }
-            bout.write(Stomp.NEWLINE.getBytes());
+            bout.write(Stomp.NEWLINE.getBytes("UTF-8"));
             bout.write(body);
-            bout.write(Stomp.NULL.getBytes());
-            bout.write(Stomp.NEWLINE.getBytes());
+            bout.write(Stomp.NULL.getBytes("UTF-8"));
+            bout.write(Stomp.NEWLINE.getBytes("UTF-8"));
         }
         catch (IOException e) {
             throw new RuntimeException("World is caving in, we just got io error writing to" + "a byte array output stream we instantiated!");
