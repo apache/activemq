@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>incubator-activemq</groupId>
-    <artifactId>activemq</artifactId>
+    <artifactId>activemq-parent</artifactId>
     <version>4.0-SNAPSHOT</version>
   </parent>
   <groupId>org.apache.activemq.sandbox</groupId>

@@ -24,6 +24,7 @@
   <fileSets>
     <fileSet>
       <includes>
+        <include>STATUS*</include>
         <include>README*</include>
         <include>LICENSE*</include>
         <include>NOTICE*</include>
@@ -71,17 +72,19 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-          <!-- <include>${pom.groupId}:activemq-ra</include> -->
+         <include>incubator-activemq:activemq-ra</include>
          <include>incubator-activemq:activemq-optional</include>
-         <include>activecluster:activecluster</include>
+         <include>incubator-activemq:activecluster</include>
          <include>commons-beanutils:commons-beanutils</include>
          <include>commons-collections:commons-collections</include>
          <include>commons-httpclient:commons-httpclient</include>
          <include>commons-dbcp:commons-dbcp</include>
          <include>commons-pool:commons-pool</include>
-         <include>jetty:jetty</include>
+         <include>org.mortbay.jetty:jetty</include>
+         <include>org.mortbay.jetty:servlet-api-2.5</include>
          <include>log4j:log4j</include>
          <include>mx4j:mx4j-remote</include>
+         <include>mx4j:mx4j-tools</include>
          <include>org.apache.derby:derby</include>
          <include>org.apache.geronimo.specs:geronimo-j2ee-jacc_1.0_spec</include>
          <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
