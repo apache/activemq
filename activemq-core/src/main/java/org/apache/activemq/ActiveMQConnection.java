@@ -76,7 +76,6 @@ import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -89,7 +88,6 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
-import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingDeque;
 import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
@@ -178,7 +176,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             public Thread newThread(Runnable r) {
                 return new Thread(r, "Connection task");
             }});
-        asyncConnectionThread.allowCoreThreadTimeOut(true);
+        // Todo: see if we can allow the core threads to timeout.
+        // asyncConnectionThread.allowCoreThreadTimeOut(true);
         
         this.info = new ConnectionInfo(new ConnectionId(connectionIdGenerator.generateId()));
         this.info.setManageable(true);
@@ -1158,7 +1157,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
             try {
                 Response response = this.transport.request(command,timeout);
-                if (response.isException()) {
+                if (response!=null && response.isException()) {
                     ExceptionResponse er = (ExceptionResponse) response;
                     if (er.getException() instanceof JMSException)
                         throw (JMSException) er.getException();
