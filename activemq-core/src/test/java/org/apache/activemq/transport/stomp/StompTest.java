@@ -96,6 +96,8 @@ public class StompTest extends CombinationTestSupport {
             if( c < 0 ) {
                 throw new IOException("socket closed.");
             } else if( c == 0 ) {
+                c = is.read();
+                assertEquals("Expecting stomp frame to terminate with \0\n", c, '\n');
                 byte[] ba = inputBuffer.toByteArray();
                 inputBuffer.reset();
                 return new String(ba, "UTF-8");
