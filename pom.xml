@@ -126,6 +126,7 @@
     <module>activemq-core</module>
     <module>activemq-console</module>
     <module>activemq-ra</module>
+    <module>activemq-rar</module>
     <module>activemq-web</module>
     <module>activemq-web-demo</module>
     <module>activemq-optional</module>
@@ -216,6 +217,11 @@
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-ra</artifactId>
         <version>${pom.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${pom.groupId}</groupId>
+        <artifactId>activemq-rar</artifactId>
+        <version>${pom.version}</version>
         <type>rar</type>
       </dependency>
       <dependency>
@@ -249,6 +255,22 @@
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-jms_1.1_spec</artifactId>
         <version>1.0</version>
+        <!--
+        <exclusions>
+          <exclusion>
+            <groupId>mockobjects</groupId>
+            <artifactId>mockobjects-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>mockobjects</groupId>
+            <artifactId>mockobjects-jdk1.4-j2ee1.3</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+          </exclusion>
+        </exclusions>
+        -->
       </dependency>
 
       <dependency>
@@ -319,7 +341,7 @@
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring</artifactId>
-        <version>1.2.4</version>
+        <version>1.2.6</version>
         <optional>true</optional>
       </dependency>
       

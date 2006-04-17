@@ -32,7 +32,7 @@
 
   <artifactId>activemq-web-demo</artifactId>
   <packaging>war</packaging>
-  <name>ActiveMQ :: Web</name>
+  <name>ActiveMQ :: Web Demo</name>
   <description>Web Demo for REST API and Streamlets support</description>
 
   <build>

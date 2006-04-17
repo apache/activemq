@@ -60,11 +60,6 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-ra</artifactId>
-      <type>rar</type>
-    </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
     <dependency>
@@ -79,7 +74,7 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-ra</artifactId>
+      <artifactId>activemq-rar</artifactId>
       <type>rar</type>
       <optional>true</optional>
     </dependency>
