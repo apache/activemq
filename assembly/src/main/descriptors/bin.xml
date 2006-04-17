@@ -78,7 +78,7 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>incubator-activemq:activemq-ra</include>
+         <include>incubator-activemq:activemq-rar</include>
          <include>incubator-activemq:activemq-optional</include>
          <include>incubator-activemq:activecluster</include>
          <include>commons-beanutils:commons-beanutils</include>
