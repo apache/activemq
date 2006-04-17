@@ -45,8 +45,10 @@ import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
+import edu.emory.mathcs.backport.java.util.concurrent.Executors;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-import edu.emory.mathcs.backport.java.util.concurrent.*;
 
 /**
  * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
@@ -560,6 +562,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             deliverAcks();//only processes optimized acknowledgements
             if (executorService!=null){
                 executorService.shutdown();
+                try {
+                    executorService.awaitTermination(60, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
             if ((session.isTransacted() || session.isDupsOkAcknowledge())) {
                 acknowledge();
