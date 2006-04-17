@@ -28,6 +28,7 @@ import org.apache.activemq.transaction.Synchronization;
 import javax.jms.InvalidSelectorException;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class QueueSubscription extends PrefetchSubscription implements LockOwner {
     
@@ -184,4 +185,9 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         }
     }
     
+    /**
+     */
+    synchronized public void destroy() {        
+    }
+
 }

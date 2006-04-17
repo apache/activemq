@@ -180,9 +180,11 @@ abstract public class AbstractRegion implements Region {
         }
         
         destroySubscription(sub);
+        
     }
 
     protected void destroySubscription(Subscription sub) {        
+        sub.destroy();
     }
 
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {

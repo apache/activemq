@@ -181,5 +181,24 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     public SubscriptionKey getSubscriptionKey() {
         return subscriptionKey;
     }
+    
+    /**
+     * Release any references that we are holding.
+     */
+    synchronized public void destroy() {
+        
+        for (Iterator iter = pending.iterator(); iter.hasNext();) {
+            MessageReference node = (MessageReference) iter.next();
+            node.decrementReferenceCount();
+        }
+        pending.clear();
+        
+        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
+            MessageReference node = (MessageReference) iter.next();
+            node.decrementReferenceCount();
+        }
+        dispatched.clear();
+        
+    }
 
 }

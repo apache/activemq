@@ -53,7 +53,8 @@ public class TopicSubscription extends AbstractSubscription{
     private MessageEvictionStrategy messageEvictionStrategy = new OldestMessageEvictionStrategy();
     private int discarded = 0;
     private final Object matchedListMutex=new Object();
-    long enqueueCounter;
+    private final AtomicLong enqueueCounter = new AtomicLong(0);
+    private final AtomicLong dequeueCounter = new AtomicLong(0);
     
     public TopicSubscription(Broker broker,ConnectionContext context,ConsumerInfo info,UsageManager usageManager)
                     throws InvalidSelectorException{
@@ -62,8 +63,10 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     public void add(MessageReference node) throws InterruptedException,IOException{
-        enqueueCounter++;
+        
+        enqueueCounter.incrementAndGet();        
         node.incrementReferenceCount();
+        
         if(!isFull()&&!isSlaveBroker()){
             optimizePrefetch();
             // if maximumPendingMessages is set we will only discard messages which
@@ -131,6 +134,7 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     synchronized public void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception{
+        
         // Handle the standard acknowledgment case.
         boolean wasFull=isFull();
         if(ack.isStandardAck()||ack.isPoisonAck()){
@@ -138,11 +142,13 @@ public class TopicSubscription extends AbstractSubscription{
                 delivered.addAndGet(ack.getMessageCount());
                 context.getTransaction().addSynchronization(new Synchronization(){
                     public void afterCommit() throws Exception{
+                        dequeueCounter.addAndGet(ack.getMessageCount());
                         dispatched.addAndGet(-ack.getMessageCount());
                         delivered.set(Math.max(0,delivered.get()-ack.getMessageCount()));
                     }
                 });
             }else{
+                dequeueCounter.addAndGet(ack.getMessageCount());
                 dispatched.addAndGet(-ack.getMessageCount());
                 delivered.set(Math.max(0,delivered.get()-ack.getMessageCount()));
             }
@@ -178,13 +184,12 @@ public class TopicSubscription extends AbstractSubscription{
 	}
 
 	public long getEnqueueCounter() {
-		return enqueueCounter;
+		return enqueueCounter.get();
 	}
+    
     public long getDequeueCounter(){
-        return delivered.get();
+        return dequeueCounter.get();
     }
-
-
 
     /**
      * @return the number of messages discarded due to being a slow consumer
@@ -313,6 +318,16 @@ public class TopicSubscription extends AbstractSubscription{
     public String toString(){
         return "TopicSubscription:"+" consumer="+info.getConsumerId()+", destinations="+destinations.size()
                         +", dispatched="+getDispatchedQueueSize()+", delivered="+getDequeueCounter()+", matched="+matched()+", discarded="+discarded();
+    }
+
+    public void destroy() {
+        synchronized(matchedListMutex){
+            for (Iterator iter = matched.iterator(); iter.hasNext();) {
+                MessageReference node = (MessageReference) iter.next();
+                node.decrementReferenceCount();
+            }
+            matched.clear();
+        }
     }
 
 }
