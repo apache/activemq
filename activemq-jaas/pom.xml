@@ -63,56 +63,68 @@
     <dependency>
       <groupId>directory</groupId>
       <artifactId>apacheds-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>directory</groupId>
       <artifactId>apacheds-shared</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>directory-shared</groupId>
       <artifactId>apache-ldapber-provider</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>directory-shared</groupId>
       <artifactId>ldap-common</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>directory-asn1</groupId>
       <artifactId>asn1-codec</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>directory-asn1</groupId>
       <artifactId>asn1-der</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>directory-shared</groupId>
       <artifactId>kerberos-common</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>directory-network</groupId>
       <artifactId>mina</artifactId>
+      <scope>test</scope>
     </dependency>
     <!--
       <dependency>
       <groupId>org.apache.directory.server</groupId>
       <artifactId>apacheds-protocol-kerberos</artifactId>
       <version>0.7-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     -->
     <dependency>
       <groupId>directory-protocols</groupId>
       <artifactId>kerberos-protocol</artifactId>
+      <scope>test</scope>
     </dependency>
     <!--
     <dependency>
       <groupId>org.apache.directory.server</groupId>
       <artifactId>apacheds-protocol-ldap</artifactId>
       <version>1.0-RC1-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     -->
     <dependency>
       <groupId>directory-protocols</groupId>
       <artifactId>ldap-protocol</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
