@@ -93,7 +93,7 @@ public class Subscription {
         out.write(builder.toFrame());
     }
 
-    private void addMessageDispatch(MessageDispatch md) {
+    synchronized private void addMessageDispatch(MessageDispatch md) {
         dispatchedMessages.addLast(md);
     }
 
@@ -117,7 +117,7 @@ public class Subscription {
         return subscriptionId;
     }
 
-    public MessageAck createMessageAck(String message_id) {
+    synchronized public MessageAck createMessageAck(String message_id) {
         MessageAck ack = new MessageAck();
         ack.setDestination(consumerInfo.getDestination());
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
@@ -136,6 +136,7 @@ public class Subscription {
             count++;
             if( id.equals(message_id)  ) {
                 ack.setLastMessageId(md.getMessage().getMessageId());
+                break;
             }
         }
         ack.setMessageCount(count);
