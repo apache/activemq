@@ -170,4 +170,10 @@ public interface Subscription {
      *
      */
     public void optimizePrefetch();
+    
+    /**
+     * Called when the subscription is destroyed.
+     */
+    public void destroy();
+
 }

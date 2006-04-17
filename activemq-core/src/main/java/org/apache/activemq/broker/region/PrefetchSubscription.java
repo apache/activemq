@@ -372,5 +372,4 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     protected void acknowledge(ConnectionContext context,final MessageAck ack,final MessageReference node)
                     throws IOException{}
 
-
 }
