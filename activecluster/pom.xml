@@ -28,9 +28,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>incubator-activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>4.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.derby</groupId>

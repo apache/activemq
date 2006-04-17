@@ -192,6 +192,14 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
   </dependencies>
   
 </project>
