@@ -43,7 +43,9 @@ final public class ControlFile {
     private final RandomAccessFile file;
     private final FileChannel channel;
     private final ByteBufferPacket controlData;
+    
     private final static boolean brokenFileLock = "true".equals(System.getProperty("java.nio.channels.FileLock.broken", "false"));
+    private final static boolean disableLocking = "true".equals(System.getProperty("org.apache.activeio.journal.active.DisableLocking", "false"));
 
     private long controlDataVersion=0;
     private FileLock lock;
@@ -65,6 +67,8 @@ final public class ControlFile {
      * @throws IOException 
      */
     public void lock() throws IOException {
+        if( disableLocking )
+            return;
         Set set = getVmLockSet();
         synchronized (set) {
             if (lock == null) {
@@ -89,6 +93,9 @@ final public class ControlFile {
      * @throws IOException
      */
     public void unlock() throws IOException {
+        if( disableLocking )
+            return;
+        
         Set set = getVmLockSet();
         synchronized (set) {
             if (lock != null) {
