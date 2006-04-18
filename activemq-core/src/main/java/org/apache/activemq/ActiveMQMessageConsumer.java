@@ -602,10 +602,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info.setCurrentPrefetchSize(prefetch);
     }
 
-    private void beforeMessageIsConsumed(MessageDispatch md) {
+    private void beforeMessageIsConsumed(MessageDispatch md) throws JMSException {
         md.setDeliverySequenceId(session.getNextDeliveryId());
-        if (!session.isDupsOkAcknowledge())
+        if (!session.isDupsOkAcknowledge()) {
             deliveredMessages.addFirst(md);
+            if( session.isTransacted() ) {
+                ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
+            }
+        }
     }
 
     private void afterMessageIsConsumed(MessageDispatch md,boolean messageExpired) throws JMSException{
@@ -615,9 +619,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
         }else{
             stats.onMessage();
-            if(session.isTransacted()){
-                ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
-            }else if(session.isAutoAcknowledge()){
+            if( session.isTransacted() ) {
+            } else if(session.isAutoAcknowledge()) {
                 if(!deliveredMessages.isEmpty()){
                     if(optimizeAcknowledge){
                         if(deliveryingAcknowledgements.compareAndSet(false,true)){
@@ -636,11 +639,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         deliveredMessages.clear();
                     }
                 }
-            }else if(session.isDupsOkAcknowledge()){
+            } else if(session.isDupsOkAcknowledge()){
                 ackLater(md,MessageAck.STANDARD_ACK_TYPE);
-            }else if(session.isClientAcknowledge()){
+            } else if(session.isClientAcknowledge()){
                 ackLater(md,MessageAck.DELIVERED_ACK_TYPE);
-            }else{
+            } else{
                 throw new IllegalStateException("Invalid session state.");
             }
         }
