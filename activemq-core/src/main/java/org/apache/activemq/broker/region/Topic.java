@@ -272,7 +272,7 @@ public class Topic implements Destination {
     public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException {
         if (store != null && node.isPersistent()) {
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
-            store.acknowledge(context, dsub.getClientId(), dsub.getSubscriptionName(), ack.getLastMessageId());
+            store.acknowledge(context, dsub.getClientId(), dsub.getSubscriptionName(), node.getMessageId());
         }
     }
 
