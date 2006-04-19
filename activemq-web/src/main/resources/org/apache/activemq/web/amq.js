@@ -1,7 +1,7 @@
 
 // Technique borrowed from scriptaculous to do includes.
 
-var DefaultJS = {
+var _AMQ_INCLUDE = {
   Version: 'AMQ JS',
   script: function(libraryName) {
     document.write('<script type="text/javascript" src="'+libraryName+'"></script>');
@@ -21,6 +21,5 @@ var DefaultJS = {
   }
 }
 
-DefaultJS.load();
-
+_AMQ_INCLUDE.load();
 
