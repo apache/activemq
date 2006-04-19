@@ -51,15 +51,15 @@ var Behaviour = {
 	},
 	
 	apply : function(){
-		for (h=0;sheet=Behaviour.list[h];h++){
+		for (var h=0;sheet=Behaviour.list[h];h++){
 			for (selector in sheet){
 				list = document.getElementsBySelector(selector);
-				
+
 				if (!list){
 					continue;
 				}
 
-				for (i=0;element=list[i];i++){
+				for (var i=0;element=list[i];i++){
 					sheet[selector](element);
 				}
 			}
@@ -68,13 +68,14 @@ var Behaviour = {
 	
 	addLoadEvent : function(func){
 		var oldonload = window.onload;
-		
 		if (typeof window.onload != 'function') {
 			window.onload = func;
 		} else {
 			window.onload = function() {
 				oldonload();
-				func();
+				if(func != null) {
+				   func();
+				}
 			}
 		}
 	}
