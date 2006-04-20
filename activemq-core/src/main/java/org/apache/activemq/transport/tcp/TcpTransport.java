@@ -28,12 +28,14 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportThreadSupport;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,6 +61,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private boolean useLocalHost = true;
     private int minmumWireFormatVersion;
     private InetSocketAddress socketAddress;
+
+    private Map socketOptions;
 
     
     /**
@@ -322,5 +326,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (dataIn != null) {
             dataIn.close();
         }
+    }
+
+    public void setSocketOptions(Map socketOptions) {
+        IntrospectionSupport.setProperties(socket, socketOptions);
     }
 }

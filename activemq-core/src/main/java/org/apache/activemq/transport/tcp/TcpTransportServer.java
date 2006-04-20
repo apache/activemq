@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.activeio.command.WireFormat;
 import org.apache.activeio.command.WireFormatFactory;
@@ -55,6 +56,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     private long maxInactivityDuration = 30000;
     private int minmumWireFormatVersion;
     private boolean trace;
+    private Map transportOptions;
     
     public TcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
@@ -128,6 +130,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                         options.put("maxInactivityDuration", new Long(maxInactivityDuration));
                         options.put("minmumWireFormatVersion", new Integer(minmumWireFormatVersion));
                         options.put("trace", new Boolean(trace));
+                        options.putAll(transportOptions);
                         WireFormat format = wireFormatFactory.createWireFormat();
                         TcpTransport transport = new TcpTransport(format, socket);
                         Transport configuredTransport = transportFactory.configure(transport, format, options);
@@ -212,5 +215,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
 
     public InetSocketAddress getSocketAddress() {
         return (InetSocketAddress)serverSocket.getLocalSocketAddress();
+    }
+
+    public void setTransportOption(Map transportOptions) {
+        this.transportOptions = transportOptions;
     }
 }
