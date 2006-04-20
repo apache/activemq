@@ -1057,14 +1057,17 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             if the message selector is invalid.
      * @since 1.1
      */
-    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal)
-            throws JMSException {
+    public TopicSubscriber createDurableSubscriber(Topic topic,String name,String messageSelector,boolean noLocal)
+                    throws JMSException{
         checkClosed();
         connection.checkClientIDWasManuallySpecified();
-        ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
-        return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(topic), name, messageSelector, prefetchPolicy.getDurableTopicPrefetch(), 
-                prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
+        ActiveMQPrefetchPolicy prefetchPolicy=this.connection.getPrefetchPolicy();
+        int prefetch=isAutoAcknowledge()&&connection.isOptimizedMessageDispatch()?prefetchPolicy
+                        .getOptimizeDurableTopicPrefetch():prefetchPolicy.getDurableTopicPrefetch();
+        int maxPrendingLimit=prefetchPolicy.getMaximumPendingMessageLimit();
+        return new ActiveMQTopicSubscriber(this,getNextConsumerId(),ActiveMQMessageTransformation
+                        .transformDestination(topic),name,messageSelector,prefetch,maxPrendingLimit,noLocal,false,
+                        asyncDispatch);
     }
 
     /**

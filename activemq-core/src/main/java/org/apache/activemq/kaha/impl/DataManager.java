@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  */
 final class DataManager{
     private static final Log log=LogFactory.getLog(DataManager.class);
-    protected static long MAX_FILE_LENGTH=1024*1024*16;
+    protected static long MAX_FILE_LENGTH=1024*1024*32;
     private final File dir;
     private final String prefix;
     private StoreDataReader reader;

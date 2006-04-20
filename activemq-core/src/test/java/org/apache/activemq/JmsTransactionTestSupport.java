@@ -281,7 +281,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
             session.createTextMessage("Second Message")
         };
 
-        // lets consume any outstanding messages from previous test runs
+        // lets consume any outstanding messages from prev test runs
         while (consumer.receive(1000) != null) {
         }
         session.commit();
@@ -306,7 +306,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         assertEquals(outbound[1], message);
         session.rollback();
 
-        // Consume again.. the previous message should
+        // Consume again.. the prev message should
         // get redelivered.
         message = consumer.receive(5000);
         assertNotNull("Should have re-received the message again!", message);
@@ -329,7 +329,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
             session.createTextMessage("Second Message")
         };
 
-        // lets consume any outstanding messages from previous test runs
+        // lets consume any outstanding messages from prev test runs
         while (consumer.receive(1000) != null) {
         }
         session.commit();
@@ -351,7 +351,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         assertEquals(outbound[1], message);
         session.rollback();
 
-        // Consume again.. the previous message should
+        // Consume again.. the prev message should
         // get redelivered.
         message = consumer.receive(5000);
         assertNotNull("Should have re-received the first message again!", message);
@@ -445,7 +445,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
             session.createTextMessage("Second Message")
         };
 
-        // lets consume any outstanding messages from previous test runs
+        // lets consume any outstanding messages from prev test runs
         while (consumer.receiveNoWait() != null) {
         }
 
@@ -529,7 +529,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     protected void reconnect() throws JMSException {
         
         if (connection != null) {
-            // Close the previous connection.
+            // Close the prev connection.
             connection.close();
         }
         session = null;
@@ -562,6 +562,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         prefetchPolicy.setQueuePrefetch(1);
         prefetchPolicy.setTopicPrefetch(1);
         prefetchPolicy.setDurableTopicPrefetch(1);
+        prefetchPolicy.setOptimizeDurableTopicPrefetch(1);
     }
 
     public void testMessageListener() throws Exception {

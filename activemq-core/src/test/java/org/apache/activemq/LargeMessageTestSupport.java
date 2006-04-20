@@ -130,6 +130,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
         activeMQConnection.getPrefetchPolicy().setQueuePrefetch(prefetchValue);
         activeMQConnection.getPrefetchPolicy().setDurableTopicPrefetch(prefetchValue);
         activeMQConnection.getPrefetchPolicy().setQueueBrowserPrefetch(prefetchValue);
+        activeMQConnection.getPrefetchPolicy().setOptimizeDurableTopicPrefetch(prefetchValue);
     }
 
     public void tearDown() throws Exception {

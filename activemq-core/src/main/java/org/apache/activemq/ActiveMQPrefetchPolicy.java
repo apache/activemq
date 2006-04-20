@@ -32,6 +32,7 @@ public class ActiveMQPrefetchPolicy implements Serializable {
     private int queueBrowserPrefetch;
     private int topicPrefetch;
     private int durableTopicPrefetch;
+    private int optimizeDurableTopicPrefetch;
     private int inputStreamPrefetch;
     private int maximumPendingMessageLimit;
 
@@ -43,6 +44,7 @@ public class ActiveMQPrefetchPolicy implements Serializable {
         this.queueBrowserPrefetch = 500;
         this.topicPrefetch = MAX_PREFETCH_SIZE;
         this.durableTopicPrefetch = 100;
+        this.optimizeDurableTopicPrefetch=1000;
         this.inputStreamPrefetch = 100;
     }
 
@@ -102,6 +104,20 @@ public class ActiveMQPrefetchPolicy implements Serializable {
         this.topicPrefetch = getMaxPrefetchLimit(topicPrefetch);
     }
     
+    /**
+     * @return Returns the optimizeDurableTopicPrefetch.
+     */
+    public int getOptimizeDurableTopicPrefetch(){
+        return optimizeDurableTopicPrefetch;
+    }
+
+    /**
+     * @param optimizeDurableTopicPrefetch The optimizeDurableTopicPrefetch to set.
+     */
+    public void setOptimizeDurableTopicPrefetch(int optimizeAcknowledgePrefetch){
+        this.optimizeDurableTopicPrefetch=optimizeAcknowledgePrefetch;
+    }
+    
     public int getMaximumPendingMessageLimit() {
         return maximumPendingMessageLimit;
     }
@@ -129,6 +145,7 @@ public class ActiveMQPrefetchPolicy implements Serializable {
         this.queuePrefetch=i;
         this.topicPrefetch=i;
         this.inputStreamPrefetch=1;
+        this.optimizeDurableTopicPrefetch=i;
     }
 
     public int getInputStreamPrefetch() {
@@ -138,4 +155,6 @@ public class ActiveMQPrefetchPolicy implements Serializable {
     public void setInputStreamPrefetch(int inputStreamPrefetch) {
         this.inputStreamPrefetch = getMaxPrefetchLimit(inputStreamPrefetch);
     }
+
+    
 }

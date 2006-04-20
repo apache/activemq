@@ -625,7 +625,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if(optimizeAcknowledge){
                         if(deliveryingAcknowledgements.compareAndSet(false,true)){
                             ackCounter++;
-                            if(ackCounter>=(info.getCurrentPrefetchSize()*.50)){
+                            if(ackCounter>=(info.getCurrentPrefetchSize()*.65)){
                                 MessageAck ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
                                 session.asyncSendPacket(ack);
                                 ackCounter=0;
