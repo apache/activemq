@@ -32,24 +32,15 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-public class MapContainerImpl implements MapContainer{
+final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
     private static final Log log=LogFactory.getLog(MapContainerImpl.class);
-    protected StoreImpl store;
-    protected LocatableItem root;
-    protected Object id;
     protected Map map=new HashMap();
     protected Map valueToKeyMap=new HashMap();
-    protected LinkedList list=new LinkedList();
-    protected boolean loaded=false;
     protected Marshaller keyMarshaller=new ObjectMarshaller();
     protected Marshaller valueMarshaller=new ObjectMarshaller();
-    protected final Object mutex=new Object();
-    protected boolean closed=false;
 
-    protected MapContainerImpl(Object id,StoreImpl si,LocatableItem root) throws IOException{
-        this.id=id;
-        this.store=si;
-        this.root=root;
+    protected MapContainerImpl(Object id,IndexItem root,IndexManager indexManager,DataManager dataManager){
+        super(id,root,indexManager,dataManager);
     }
 
     /*
@@ -60,25 +51,24 @@ public class MapContainerImpl implements MapContainer{
     public void load(){
         checkClosed();
         if(!loaded){
-            loaded=true;
             synchronized(mutex){
-                try{
-                    long start=root.getNextItem();
-                    if(start!=Item.POSITION_NOT_SET){
-                        long nextItem=start;
+                if(!loaded){
+                    loaded=true;
+                    try{
+                        long nextItem=root.getNextItem();
                         while(nextItem!=Item.POSITION_NOT_SET){
-                            LocatableItem item=new LocatableItem();
-                            item.setOffset(nextItem);
-                            Object key=store.readItem(keyMarshaller,item);
+                            IndexItem item=indexManager.getIndex(nextItem);
+                            DataItem data=item.getKeyDataItem();
+                            Object key=dataManager.readItem(keyMarshaller,data);
                             map.put(key,item);
                             valueToKeyMap.put(item,key);
                             list.add(item);
                             nextItem=item.getNextItem();
                         }
+                    }catch(IOException e){
+                        log.error("Failed to load container "+getId(),e);
+                        throw new RuntimeStoreException(e);
                     }
-                }catch(IOException e){
-                    log.error("Failed to load container "+getId(),e);
-                    throw new RuntimeStoreException(e);
                 }
             }
         }
@@ -101,11 +91,6 @@ public class MapContainerImpl implements MapContainer{
         }
     }
 
-    public void close(){
-        unload();
-        closed=true;
-    }
-
     public void setKeyMarshaller(Marshaller keyMarshaller){
         checkClosed();
         this.keyMarshaller=keyMarshaller;
@@ -119,31 +104,10 @@ public class MapContainerImpl implements MapContainer{
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.activemq.kaha.MapContainer#isLoaded()
-     */
-    public boolean isLoaded(){
-        checkClosed();
-        return loaded;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.activemq.kaha.MapContainer#getId()
-     */
-    public Object getId(){
-        checkClosed();
-        return id;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see org.apache.activemq.kaha.MapContainer#size()
      */
     public int size(){
-        checkClosed();
-        checkLoaded();
+        load();
         return map.size();
     }
 
@@ -153,8 +117,7 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#isEmpty()
      */
     public boolean isEmpty(){
-        checkClosed();
-        checkLoaded();
+        load();
         return map.isEmpty();
     }
 
@@ -164,8 +127,7 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#containsKey(java.lang.Object)
      */
     public boolean containsKey(Object key){
-        checkClosed();
-        checkLoaded();
+        load();
         synchronized(mutex){
             return map.containsKey(key);
         }
@@ -177,12 +139,11 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#get(java.lang.Object)
      */
     public Object get(Object key){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
-        LocatableItem item=null;
+        IndexItem item=null;
         synchronized(mutex){
-            item=(LocatableItem) map.get(key);
+            item=(IndexItem) map.get(key);
         }
         if(item!=null){
             result=getValue(item);
@@ -196,18 +157,18 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#containsValue(java.lang.Object)
      */
     public boolean containsValue(Object o){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
         if(o!=null){
             synchronized(list){
-                for(Iterator i=list.iterator();i.hasNext();){
-                    LocatableItem item=(LocatableItem) i.next();
+                IndexItem item=list.getFirst();
+                while(item!=null){
                     Object value=getValue(item);
                     if(value!=null&&value.equals(o)){
                         result=true;
                         break;
                     }
+                    item=list.getNextEntry(item);
                 }
             }
         }
@@ -220,8 +181,7 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#putAll(java.util.Map)
      */
     public void putAll(Map t){
-        checkClosed();
-        checkLoaded();
+        load();
         if(t!=null){
             synchronized(mutex){
                 for(Iterator i=t.entrySet().iterator();i.hasNext();){
@@ -238,8 +198,7 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#keySet()
      */
     public Set keySet(){
-        checkClosed();
-        checkLoaded();
+        load();
         return new ContainerKeySet(this);
     }
 
@@ -249,8 +208,7 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#values()
      */
     public Collection values(){
-        checkClosed();
-        checkLoaded();
+        load();
         return new ContainerValueCollection(this);
     }
 
@@ -260,8 +218,7 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#entrySet()
      */
     public Set entrySet(){
-        checkClosed();
-        checkLoaded();
+        load();
         return new ContainerEntrySet(this);
     }
 
@@ -271,14 +228,13 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#put(java.lang.Object, java.lang.Object)
      */
     public Object put(Object key,Object value){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
         synchronized(mutex){
             if(map.containsKey(key)){
                 result=remove(key);
             }
-            LocatableItem item=write(key,value);
+            IndexItem item=write(key,value);
             map.put(key,item);
             valueToKeyMap.put(item,key);
             list.add(item);
@@ -292,36 +248,31 @@ public class MapContainerImpl implements MapContainer{
      * @see org.apache.activemq.kaha.MapContainer#remove(java.lang.Object)
      */
     public Object remove(Object key){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
         synchronized(mutex){
-            LocatableItem item=(LocatableItem) map.get(key);
+            IndexItem item=(IndexItem) map.get(key);
             if(item!=null){
                 map.remove(key);
                 valueToKeyMap.remove(item);
                 result=getValue(item);
-                int index=list.indexOf(item);
-                LocatableItem prev=index>0?(LocatableItem) list.get(index-1):root;
-                LocatableItem next=index<(list.size()-1)?(LocatableItem) list.get(index+1):null;
-                list.remove(index);
-                {
-                    delete(item,prev,next);
-                }
-                item=null;
+                IndexItem prev=list.getPrevEntry(item);
+                prev=prev!=null?prev:root;
+                IndexItem next=list.getNextEntry(item);
+                list.remove(item);
+                delete(item,prev,next);
             }
         }
         return result;
     }
 
     public boolean removeValue(Object o){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
         if(o!=null){
-            synchronized(list){
-                for(Iterator i=list.iterator();i.hasNext();){
-                    LocatableItem item=(LocatableItem) i.next();
+            synchronized(mutex){
+                IndexItem item=list.getFirst();
+                while(item!=null){
                     Object value=getValue(item);
                     if(value!=null&&value.equals(o)){
                         result=true;
@@ -332,13 +283,14 @@ public class MapContainerImpl implements MapContainer{
                         }
                         break;
                     }
+                    item=list.getNextEntry(item);
                 }
             }
         }
         return result;
     }
 
-    protected void remove(LocatableItem item){
+    protected void remove(IndexItem item){
         Object key=valueToKeyMap.get(item);
         if(key!=null){
             remove(key);
@@ -358,34 +310,7 @@ public class MapContainerImpl implements MapContainer{
                 map.clear();
                 valueToKeyMap.clear();
                 list.clear();// going to re-use this
-                try{
-                    long start=root.getNextItem();
-                    if(start!=Item.POSITION_NOT_SET){
-                        long nextItem=start;
-                        while(nextItem!=Item.POSITION_NOT_SET){
-                            LocatableItem item=new LocatableItem();
-                            item.setOffset(nextItem);
-                            list.add(item);
-                            nextItem=item.getNextItem();
-                        }
-                    }
-                    root.setNextItem(Item.POSITION_NOT_SET);
-                    store.updateItem(root);
-                    for(int i=0;i<list.size();i++){
-                        LocatableItem item=(LocatableItem) list.get(i);
-                        if(item.getReferenceItem()!=Item.POSITION_NOT_SET){
-                            Item value=new Item();
-                            value.setOffset(item.getReferenceItem());
-                            store.removeItem(value);
-                        }
-                       
-                        store.removeItem(item);
-                    }
-                    list.clear();
-                }catch(IOException e){
-                    log.error("Failed to clear MapContainer "+getId(),e);
-                    throw new RuntimeStoreException(e);
-                }
+                doClear();
             }
         }
     }
@@ -394,17 +319,16 @@ public class MapContainerImpl implements MapContainer{
         return new HashSet(map.keySet());
     }
 
-    protected LinkedList getItemList(){
+    protected IndexLinkedList getItemList(){
         return list;
     }
 
-    protected Object getValue(LocatableItem item){
+    protected Object getValue(IndexItem item){
         Object result=null;
-        if(item!=null&&item.getReferenceItem()!=Item.POSITION_NOT_SET){
-            Item rec=new Item();
-            rec.setOffset(item.getReferenceItem());
+        if(item!=null){
             try{
-                result=store.readItem(valueMarshaller,rec);
+                DataItem data=item.getValueDataItem();
+                result=dataManager.readItem(valueMarshaller,data);
             }catch(IOException e){
                 log.error("Failed to get value for "+item,e);
                 throw new RuntimeStoreException(e);
@@ -413,64 +337,29 @@ public class MapContainerImpl implements MapContainer{
         return result;
     }
 
-    protected LocatableItem write(Object key,Object value){
-        long pos=Item.POSITION_NOT_SET;
-        LocatableItem item=null;
+    protected IndexItem write(Object key,Object value){
+        IndexItem index=null;
         try{
-            if(value!=null){
-                Item valueItem=new Item();
-                pos=store.storeItem(valueMarshaller,value,valueItem);
+            if(key!=null){
+                index=indexManager.createNewIndex();
+                DataItem data=dataManager.storeItem(keyMarshaller,key);
+                index.setKeyData(data);
             }
-            LocatableItem last=list.isEmpty()?null:(LocatableItem) list.getLast();
+            if(value!=null){
+                DataItem data=dataManager.storeItem(valueMarshaller,value);
+                index.setValueData(data);
+            }
+            IndexItem last=list.isEmpty()?null:(IndexItem) list.getLast();
             last=last==null?root:last;
             long prev=last.getOffset();
-            long next=Item.POSITION_NOT_SET;
-            item=new LocatableItem(prev,next,pos);
-            next=store.storeItem(keyMarshaller,key,item);
-            if(last!=null){
-                last.setNextItem(next);
-                store.updateItem(last);
-            }
+            index.setPreviousItem(prev);
+            indexManager.updateIndex(index);
+            last.setNextItem(index.getOffset());
+            indexManager.updateIndex(last);
         }catch(IOException e){
-            e.printStackTrace();
             log.error("Failed to write "+key+" , "+value,e);
             throw new RuntimeStoreException(e);
         }
-        return item;
-    }
-
-    protected void delete(LocatableItem key,LocatableItem prev,LocatableItem next){
-        try{
-            prev=prev==null?root:prev;
-            if(next!=null){
-                prev.setNextItem(next.getOffset());
-                next.setPreviousItem(prev.getOffset());
-                store.updateItem(next);
-            }else{
-                prev.setNextItem(Item.POSITION_NOT_SET);
-            }
-            store.updateItem(prev);
-            if(key.getReferenceItem()!=Item.POSITION_NOT_SET){
-                Item value=new Item();
-                value.setOffset(key.getReferenceItem());
-                store.removeItem(value);
-            }
-            store.removeItem(key);
-        }catch(IOException e){
-            log.error("Failed to delete "+key,e);
-            throw new RuntimeStoreException(e);
-        }
-    }
-
-    protected final void checkClosed(){
-        if(closed){
-            throw new RuntimeStoreException("The store is closed");
-        }
-    }
-
-    protected final void checkLoaded(){
-        if(!loaded){
-            throw new RuntimeStoreException("The container is not loaded");
-        }
+        return index;
     }
 }

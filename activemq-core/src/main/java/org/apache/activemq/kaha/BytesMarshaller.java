@@ -13,8 +13,8 @@
  */
 package org.apache.activemq.kaha;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 /**
  * Implementation of a Marshaller for byte arrays
@@ -29,7 +29,7 @@ public class BytesMarshaller implements Marshaller{
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(Object object,DataOutputStream dataOut) throws IOException{
+    public void writePayload(Object object,DataOutput dataOut) throws IOException{
         byte[] data=(byte[]) object;
         dataOut.writeInt(data.length);
         dataOut.write(data);
@@ -42,7 +42,7 @@ public class BytesMarshaller implements Marshaller{
      * @return unmarshalled object
      * @throws IOException
      */
-    public Object readPayload(DataInputStream dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException{
         int size=dataIn.readInt();
         byte[] data=new byte[size];
         dataIn.readFully(data);

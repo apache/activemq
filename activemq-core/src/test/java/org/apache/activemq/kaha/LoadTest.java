@@ -16,7 +16,7 @@ package org.apache.activemq.kaha;
 import java.io.IOException;
 import java.io.PrintWriter;
 import junit.framework.TestCase;
-import org.apache.activemq.kaha.impl.StoreImpl;
+import org.apache.activemq.kaha.impl.KahaStore;
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 /**
  * Store test
@@ -27,7 +27,7 @@ public class LoadTest extends TestCase{
     static final int COUNT=10000;
     static final int NUM_LOADERS=2;
     protected String name="load.db";
-    protected StoreImpl store;
+    protected KahaStore store;
 
     /*
      * Test method for 'org.apache.activemq.kaha.Store.close()'
@@ -40,11 +40,10 @@ public class LoadTest extends TestCase{
             loader.start();
         }
         stop.await();
-        store.dumpFreeSpace(new PrintWriter(System.out));
     }
 
-    protected StoreImpl getStore() throws IOException{
-        return (StoreImpl) StoreFactory.open(name,"rw");
+    protected KahaStore getStore() throws IOException{
+        return (KahaStore) StoreFactory.open(name,"rw");
     }
 
     protected void setUp() throws Exception{

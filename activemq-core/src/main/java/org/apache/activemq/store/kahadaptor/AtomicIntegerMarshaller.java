@@ -18,8 +18,8 @@
 
 package org.apache.activemq.store.kahadaptor;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import org.apache.activemq.kaha.Marshaller;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
@@ -32,13 +32,13 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 public class AtomicIntegerMarshaller implements Marshaller{
    
 
-    public void writePayload(Object object,DataOutputStream dataOut) throws IOException{
+    public void writePayload(Object object,DataOutput dataOut) throws IOException{
        AtomicInteger ai = (AtomicInteger) object;
        dataOut.writeInt(ai.get());
        
     }
 
-    public Object readPayload(DataInputStream dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException{
         int value = dataIn.readInt();
         return new AtomicInteger(value);
     }

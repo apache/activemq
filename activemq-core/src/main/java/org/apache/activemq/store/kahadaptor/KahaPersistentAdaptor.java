@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -33,6 +32,8 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 /**
  * @org.apache.xbean.XBean
@@ -40,6 +41,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  * @version $Revision: 1.4 $
  */
 public class KahaPersistentAdaptor implements PersistenceAdapter{
+    private static final Log log=LogFactory.getLog(KahaPersistentAdaptor.class);
     static final String PREPARED_TRANSACTIONS_NAME="PreparedTransactions";
     KahaTransactionStore transactionStore;
     ConcurrentHashMap topics=new ConcurrentHashMap();
@@ -58,12 +60,17 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
     }
 
     public Set getDestinations(){
+        
         Set rc=new HashSet();
+        try {
         for(Iterator i=store.getMapContainerIds().iterator();i.hasNext();){
             Object obj=i.next();
             if(obj instanceof ActiveMQDestination){
                 rc.add(obj);
             }
+        }
+        }catch(IOException e){
+            log.error("Failed to get destinations " ,e);
         }
         return rc;
     }
@@ -89,7 +96,6 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
             MapContainer ackContainer=store.getMapContainer(destination.toString()+"-Acks");
             ackContainer.setKeyMarshaller(new StringMarshaller());
             ackContainer.setValueMarshaller(new AtomicIntegerMarshaller());
-            ackContainer.load();
             rc=new KahaTopicMessageStore(store,messageContainer,ackContainer,subsContainer,destination);
             messageStores.put(destination, rc);
             if(transactionStore!=null){
@@ -137,10 +143,7 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
 
     public void deleteAllMessages() throws IOException{
         if(store!=null){
-            store.clear();
-        }
-        if(transactionStore!=null){
-            transactionStore.delete();
+            store.delete();
         }
     }
 

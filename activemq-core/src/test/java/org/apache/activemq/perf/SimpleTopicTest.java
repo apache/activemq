@@ -34,7 +34,10 @@ import org.apache.commons.logging.LogFactory;
 public class SimpleTopicTest extends TestCase{
     private static final Log log=LogFactory.getLog(SimpleTopicTest.class);
     protected BrokerService broker;
-    protected String bindAddress="tcp://localhost:61616";
+    protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true";
+    //protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=false";
+    //protected String bindAddress="vm://localhost?marshal=true";
+    //protected String bindAddress="vm://localhost";
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String DESTINATION_NAME=getClass().toString();
@@ -42,7 +45,7 @@ public class SimpleTopicTest extends TestCase{
     protected int NUMBER_OF_PRODUCERS=1;
     protected BytesMessage payload;
     protected int PAYLOAD_SIZE=1024;
-    protected int MESSAGE_COUNT=1000000;
+    protected int MESSAGE_COUNT=100000;
     protected byte[] array=null;
     protected ConnectionFactory factory;
     protected Destination destination;
@@ -121,6 +124,7 @@ public class SimpleTopicTest extends TestCase{
     protected void configureBroker(BrokerService answer) throws Exception{
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
+        
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
@@ -133,7 +137,7 @@ public class SimpleTopicTest extends TestCase{
 
     public void testPerformance() throws JMSException{
         for(int i=0;i<MESSAGE_COUNT;i++){
-            if(i%5000==0){
+            if(i%10000==0){
                 dumpProducerRate();
                 dumpConsumerRate();
             }

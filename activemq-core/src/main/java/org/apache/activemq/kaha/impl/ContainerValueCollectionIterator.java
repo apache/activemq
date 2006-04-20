@@ -25,20 +25,21 @@ import java.util.Iterator;
 * @version $Revision: 1.2 $
 */
 public class ContainerValueCollectionIterator implements Iterator{
-    private MapContainerImpl container;
-    private Iterator  iter;
-    private LocatableItem currentItem;
-    ContainerValueCollectionIterator(MapContainerImpl container,Iterator iter){
+    protected BaseContainerImpl container;
+    protected IndexLinkedList list;
+    protected IndexItem currentItem;
+    ContainerValueCollectionIterator(BaseContainerImpl container,IndexLinkedList list,IndexItem start){
         this.container = container;
-        this.iter = iter;
+        this.list = list;
+        this.currentItem = start;
     }
     
     public boolean hasNext(){
-        return iter.hasNext();
+        return currentItem != null && list.getNextEntry(currentItem) != null;
     }
 
     public Object next(){
-        currentItem = (LocatableItem) iter.next();
+        currentItem = list.getNextEntry(currentItem);
         return container.getValue(currentItem);
     }
 

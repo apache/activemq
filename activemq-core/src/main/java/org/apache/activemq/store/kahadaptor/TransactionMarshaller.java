@@ -17,12 +17,11 @@
 
 package org.apache.activemq.store.kahadaptor;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.activeio.command.WireFormat;
 import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
@@ -41,7 +40,7 @@ public class TransactionMarshaller implements Marshaller{
       
     }
     
-    public void writePayload(Object object,DataOutputStream dataOut) throws IOException{
+    public void writePayload(Object object,DataOutput dataOut) throws IOException{
         KahaTransaction kt = (KahaTransaction) object;
         List list = kt.getList();
         dataOut.writeInt(list.size());
@@ -62,7 +61,7 @@ public class TransactionMarshaller implements Marshaller{
        }
 
    
-    public Object readPayload(DataInputStream dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException{
         KahaTransaction result = new KahaTransaction();
         List list = new ArrayList();
         result.setList(list);

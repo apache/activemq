@@ -21,7 +21,6 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StringMarshaller;
-import org.apache.activemq.kaha.impl.StoreImpl;
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 import junit.framework.TestCase;
 /**
