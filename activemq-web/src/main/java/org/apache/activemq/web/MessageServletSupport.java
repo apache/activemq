@@ -116,7 +116,7 @@ public abstract class MessageServletSupport extends HttpServlet {
 
     protected void appendParametersToMessage(HttpServletRequest request, TextMessage message) throws JMSException {
         Map parameters = new HashMap(request.getParameterMap());
-        String correlationID = (String) parameters.remove("JMSCorrelationID");
+        String correlationID = asString(parameters.remove("JMSCorrelationID"));
         if (correlationID != null) {
             message.setJMSCorrelationID(correlationID);
         }
@@ -132,7 +132,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         if (replyTo != null) {
             message.setJMSReplyTo(replyTo);
         }
-        String type = (String) parameters.remove("JMSType");
+        String type = (String) asString(parameters.remove("JMSType"));
         if (correlationID != null) {
             message.setJMSType(type);
         }
@@ -170,6 +170,10 @@ public abstract class MessageServletSupport extends HttpServlet {
             String text = (String) value;
             return ActiveMQDestination.createDestination(text, ActiveMQDestination.QUEUE_TYPE);
         }
+        if (value instanceof String[]) {
+            String text = ((String[]) value)[0];
+            return ActiveMQDestination.createDestination(text, ActiveMQDestination.QUEUE_TYPE);
+        }
         return null;
     }
 
@@ -179,6 +183,9 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
         if (value instanceof String) {
             return Integer.valueOf((String) value);
+        }
+        if (value instanceof String[]) {
+            return Integer.valueOf(((String[]) value)[0]);
         }
         return null;
     }
@@ -190,6 +197,21 @@ public abstract class MessageServletSupport extends HttpServlet {
         if (value instanceof String) {
             return Long.valueOf((String) value);
         }
+        if (value instanceof String[]) {
+            return Long.valueOf(((String[]) value)[0]);
+        }
+        return null;
+    }
+
+    protected String asString(Object value) {
+        if (value instanceof String[]) {
+            return ((String[])value)[0];
+        }
+
+        if (value != null) {
+            return value.toString();
+        }
+
         return null;
     }
 

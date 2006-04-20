@@ -162,7 +162,8 @@ public class MessageListenerServlet extends MessageServletSupport {
                     else if ("send".equals(type))
                     {
                         TextMessage message = client.getSession().createTextMessage(messages[i]);
-                        // TODO sent message parameters
+                        appendParametersToMessage(request, message);
+
                         client.send(destination, message);
                         message_ids+=message.getJMSMessageID()+"\n";
                         if (log.isDebugEnabled()) {
@@ -201,6 +202,8 @@ public class MessageListenerServlet extends MessageServletSupport {
                     Destination destination=getDestination(client, request);
                     String body = getPostedMessageBody(request);
                     TextMessage message = client.getSession().createTextMessage(body );
+                    appendParametersToMessage(request, message);
+
                     client.send(destination, message);
                     if (log.isDebugEnabled()) {
                         log.debug("Sent to destination: " + destination + " body: " + body);
