@@ -30,17 +30,21 @@ public abstract class BaseContainerImpl{
     protected IndexLinkedList list;
     protected IndexManager indexManager;
     protected DataManager dataManager;
-    protected Object id;
+    protected ContainerId containerId;
     protected boolean loaded=false;
     protected boolean closed=false;
     protected final Object mutex=new Object();
 
-    protected BaseContainerImpl(Object id,IndexItem root,IndexManager indexManager,DataManager dataManager){
-        this.id=id;
+    protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager){
+        this.containerId=id;
         this.root=root;
         this.indexManager=indexManager;
         this.dataManager=dataManager;
         this.list=new IndexLinkedList(root);
+    }
+    
+    ContainerId getContainerId(){
+        return containerId;
     }
 
     public abstract void unload();
@@ -81,7 +85,7 @@ public abstract class BaseContainerImpl{
      */
     public final Object getId(){
         checkClosed();
-        return id;
+        return containerId.getKey();
     }
 
     protected final void expressDataInterest() throws IOException{
