@@ -78,7 +78,7 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
     public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException{
         MessageStore rc=(MessageStore) queues.get(destination);
         if(rc==null){
-            rc=new KahaMessageStore(getMapContainer(destination),destination);
+            rc=new KahaMessageStore(getMapContainer(destination,"queue-data"),destination);
             messageStores.put(destination, rc);
             if(transactionStore!=null){
                 rc=transactionStore.proxy(rc);
@@ -91,9 +91,9 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
     public synchronized TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException{
         TopicMessageStore rc=(TopicMessageStore) topics.get(destination);
         if(rc==null){
-            MapContainer messageContainer=getMapContainer(destination);
-            MapContainer subsContainer=getMapContainer(destination.toString()+"-Subscriptions");
-            MapContainer ackContainer=store.getMapContainer(destination.toString()+"-Acks");
+            MapContainer messageContainer=getMapContainer(destination,"topic-data");
+            MapContainer subsContainer=getMapContainer(destination.toString()+"-Subscriptions","topic-subs");
+            MapContainer ackContainer=store.getMapContainer(destination.toString(),"topic-acks");
             ackContainer.setKeyMarshaller(new StringMarshaller());
             ackContainer.setValueMarshaller(new AtomicIntegerMarshaller());
             rc=new KahaTopicMessageStore(store,messageContainer,ackContainer,subsContainer,destination);
@@ -114,7 +114,7 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
 
     public TransactionStore createTransactionStore() throws IOException{
         if(transactionStore==null){
-            MapContainer container=store.getMapContainer(PREPARED_TRANSACTIONS_NAME);
+            MapContainer container=store.getMapContainer(PREPARED_TRANSACTIONS_NAME,"transactions");
             container.setKeyMarshaller(new CommandMarshaller(wireFormat));
             container.setValueMarshaller(new TransactionMarshaller(wireFormat));
             container.load();
@@ -155,8 +155,8 @@ public class KahaPersistentAdaptor implements PersistenceAdapter{
         this.useExternalMessageReferences=useExternalMessageReferences;
     }
 
-    protected MapContainer getMapContainer(Object id) throws IOException{
-        MapContainer container=store.getMapContainer(id);
+    protected MapContainer getMapContainer(Object id,String containerName) throws IOException{
+        MapContainer container=store.getMapContainer(id,containerName);
         container.setKeyMarshaller(new StringMarshaller());
         if(useExternalMessageReferences){
             container.setValueMarshaller(new StringMarshaller());

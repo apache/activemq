@@ -59,7 +59,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
             ackContainer.put(id,new AtomicInteger(subscriberCount));
             for(Iterator i=subscriberAcks.keySet().iterator();i.hasNext();){
                 Object key=i.next();
-                ListContainer container=store.getListContainer(key);
+                ListContainer container=store.getListContainer(key,"durable-subs");
                 container.add(id);
             }
             super.addMessage(context,message);
@@ -163,7 +163,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     }
 
     protected void addSubscriberAckContainer(Object key) throws IOException{
-        ListContainer container=store.getListContainer(key);
+        ListContainer container=store.getListContainer(key,"topic-subs");
         Marshaller marshaller=new StringMarshaller();
         container.setMarshaller(marshaller);
         subscriberAcks.put(key,container);

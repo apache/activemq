@@ -65,6 +65,10 @@ final class DataManager{
             }
         }
     }
+    
+    public String getPrefix(){
+        return prefix;
+    }
 
     DataFile findSpaceForData(DataItem item) throws IOException{
         if(currentWriteFile==null||((currentWriteFile.getLength()+item.getSize())>MAX_FILE_LENGTH)){
@@ -168,7 +172,7 @@ final class DataManager{
             DataFile dataFile=(DataFile) purgeList.get(i);
             fileMap.remove(dataFile.getNumber());
             boolean result=dataFile.delete();
-            log.info("discarding data file "+dataFile+(result?"successful ":"failed"));
+            log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
         }
     }
 
@@ -183,6 +187,6 @@ final class DataManager{
     private void removeDataFile(DataFile dataFile) throws IOException{
         fileMap.remove(dataFile.getNumber());
         boolean result=dataFile.delete();
-        log.info("discarding data file "+dataFile+(result?"successful ":"failed"));
+        log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
     }
 }

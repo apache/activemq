@@ -39,7 +39,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
     protected Marshaller keyMarshaller=new ObjectMarshaller();
     protected Marshaller valueMarshaller=new ObjectMarshaller();
 
-    protected MapContainerImpl(Object id,IndexItem root,IndexManager indexManager,DataManager dataManager){
+    protected MapContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager){
         super(id,root,indexManager,dataManager);
     }
 

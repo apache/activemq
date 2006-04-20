@@ -34,7 +34,7 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
     private static final Log log=LogFactory.getLog(ListContainerImpl.class);
     protected Marshaller marshaller=new ObjectMarshaller();
 
-    protected ListContainerImpl(Object id,IndexItem root,IndexManager indexManager,DataManager dataManager)
+    protected ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager)
                     throws IOException{
         super(id,root,indexManager,dataManager);
     }
