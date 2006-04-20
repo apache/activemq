@@ -13,8 +13,8 @@
  */
 package org.apache.activemq.kaha;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 /**
  * Implementation of a Marshaller for Strings
@@ -29,7 +29,7 @@ public class StringMarshaller implements Marshaller{
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(Object object,DataOutputStream dataOut) throws IOException{
+    public void writePayload(Object object,DataOutput dataOut) throws IOException{
         dataOut.writeUTF(object.toString());
     }
 
@@ -40,7 +40,7 @@ public class StringMarshaller implements Marshaller{
      * @return unmarshalled object
      * @throws IOException
      */
-    public Object readPayload(DataInputStream dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException{
         return dataIn.readUTF();
     }
 }

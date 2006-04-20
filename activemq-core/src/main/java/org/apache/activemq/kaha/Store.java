@@ -41,8 +41,9 @@ public interface Store{
      * Checks if a MapContainer exists
      * @param id
      * @return new MapContainer
+     * @throws IOException 
      */
-    public boolean doesMapContainerExist(Object id);
+    public boolean doesMapContainerExist(Object id) throws IOException;
 
     /**
      * Get a MapContainer with the given id - the MapContainer is created if needed
@@ -62,15 +63,17 @@ public interface Store{
     /**
      * Get a Set of call MapContainer Ids
      * @return the set of ids
+     * @throws IOException 
      */
-    public Set getMapContainerIds();
+    public Set getMapContainerIds() throws IOException;
     
     /**
      * Checks if a ListContainer exists
      * @param id
      * @return new MapContainer
+     * @throws IOException 
      */
-    public boolean doesListContainerExist(Object id);
+    public boolean doesListContainerExist(Object id) throws IOException;
 
    /**
     * Get a ListContainer with the given id and creates it if it doesn't exist
@@ -90,8 +93,9 @@ public interface Store{
    /**
     * Get a Set of call ListContainer Ids
     * @return the set of ids
+ * @throws IOException 
     */
-   public Set getListContainerIds();
+   public Set getListContainerIds() throws IOException;
     
     
 }

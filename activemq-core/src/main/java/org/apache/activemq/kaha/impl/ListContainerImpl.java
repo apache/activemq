@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import org.apache.activemq.kaha.ListContainer;
@@ -31,20 +30,13 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-public class ListContainerImpl implements ListContainer{
-    private static final Log log=LogFactory.getLog(MapContainerImpl.class);
-    protected StoreImpl store;
-    protected LocatableItem root;
-    protected Object id;
-    protected LinkedList list=new LinkedList();
-    protected boolean loaded=false;
+final class ListContainerImpl extends BaseContainerImpl implements ListContainer{
+    private static final Log log=LogFactory.getLog(ListContainerImpl.class);
     protected Marshaller marshaller=new ObjectMarshaller();
-    protected boolean closed = false;
 
-    protected ListContainerImpl(Object id,StoreImpl rfs,LocatableItem root) throws IOException{
-        this.id=id;
-        this.store=rfs;
-        this.root=root;
+    protected ListContainerImpl(Object id,IndexItem root,IndexManager indexManager,DataManager dataManager)
+                    throws IOException{
+        super(id,root,indexManager,dataManager);
     }
 
     /*
@@ -55,21 +47,20 @@ public class ListContainerImpl implements ListContainer{
     public void load(){
         checkClosed();
         if(!loaded){
-            loaded=true;
-            long start=root.getNextItem();
-            if(start!=Item.POSITION_NOT_SET){
-                try{
-                    long nextItem=start;
-                    while(nextItem!=Item.POSITION_NOT_SET){
-                        LocatableItem item=new LocatableItem();
-                        item.setOffset(nextItem);
-                        store.readLocation(item);
-                        list.add(item);
-                        nextItem=item.getNextItem();
+            synchronized(mutex){
+                if(!loaded){
+                    loaded=true;
+                    try{
+                        long nextItem=root.getNextItem();
+                        while(nextItem!=Item.POSITION_NOT_SET){
+                            IndexItem item=indexManager.getIndex(nextItem);
+                            list.add(item);
+                            nextItem=item.getNextItem();
+                        }
+                    }catch(IOException e){
+                        log.error("Failed to load container "+getId(),e);
+                        throw new RuntimeStoreException(e);
                     }
-                }catch(IOException e){
-                    log.error("Failed to load container "+getId(),e);
-                    throw new RuntimeStoreException(e);
                 }
             }
         }
@@ -83,24 +74,9 @@ public class ListContainerImpl implements ListContainer{
     public void unload(){
         checkClosed();
         if(loaded){
-            loaded = false;
+            loaded=false;
             list.clear();
         }
-    }
-    
-    public void close(){
-        unload();
-        closed = true;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.activemq.kaha.ListContainer#isLoaded()
-     */
-    public boolean isLoaded(){
-        checkClosed();
-        return loaded;
     }
 
     /*
@@ -113,32 +89,22 @@ public class ListContainerImpl implements ListContainer{
         this.marshaller=marshaller;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.activemq.kaha.ListContainer#getId()
-     */
-    public Object getId(){
-        checkClosed();
-        return id;
-    }
-    
     public boolean equals(Object obj){
-        checkLoaded();
-        checkClosed();
-        boolean result = false;
-        if (obj != null && obj instanceof List){
-            List other = (List) obj;
-            synchronized(list){
-            result = other.size() == size();
-            if (result){
-                for (int i =0; i < list.size(); i++){
-                    Object o1 = other.get(i);
-                    Object o2 = get(i);
-                    result = o1 == o2 || (o1 != null && o2 != null && o1.equals(o2));
-                    if (!result) break;
+        load();
+        boolean result=false;
+        if(obj!=null&&obj instanceof List){
+            List other=(List) obj;
+            synchronized(mutex){
+                result=other.size()==size();
+                if(result){
+                    for(int i=0;i<list.size();i++){
+                        Object o1=other.get(i);
+                        Object o2=get(i);
+                        result=o1==o2||(o1!=null&&o2!=null&&o1.equals(o2));
+                        if(!result)
+                            break;
+                    }
                 }
-            }
             }
         }
         return result;
@@ -150,8 +116,7 @@ public class ListContainerImpl implements ListContainer{
      * @see org.apache.activemq.kaha.ListContainer#size()
      */
     public int size(){
-        checkClosed();
-        checkLoaded();
+        load();
         return list.size();
     }
 
@@ -161,10 +126,9 @@ public class ListContainerImpl implements ListContainer{
      * @see org.apache.activemq.kaha.ListContainer#addFirst(java.lang.Object)
      */
     public void addFirst(Object o){
-        checkClosed();
-        checkLoaded();
-        LocatableItem item=writeFirst(o);
-        synchronized(list){
+        load();
+        IndexItem item=writeFirst(o);
+        synchronized(mutex){
             list.addFirst(item);
         }
     }
@@ -175,10 +139,9 @@ public class ListContainerImpl implements ListContainer{
      * @see org.apache.activemq.kaha.ListContainer#addLast(java.lang.Object)
      */
     public void addLast(Object o){
-        checkClosed();
-        checkLoaded();
-        LocatableItem item=writeLast(o);
-        synchronized(list){
+        load();
+        IndexItem item=writeLast(o);
+        synchronized(mutex){
             list.addLast(item);
         }
     }
@@ -189,16 +152,15 @@ public class ListContainerImpl implements ListContainer{
      * @see org.apache.activemq.kaha.ListContainer#removeFirst()
      */
     public Object removeFirst(){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
-        synchronized(list){
-            LocatableItem item=(LocatableItem) list.getFirst();
+        synchronized(mutex){
+            IndexItem item=(IndexItem) list.getFirst();
             if(item!=null){
                 result=getValue(item);
                 int index=list.indexOf(item);
-                LocatableItem prev=index>0?(LocatableItem) list.get(index-1):root;
-                LocatableItem next=index<(list.size()-1)?(LocatableItem) list.get(index+1):null;
+                IndexItem prev=index>0?(IndexItem) list.get(index-1):root;
+                IndexItem next=index<(list.size()-1)?(IndexItem) list.get(index+1):null;
                 list.removeFirst();
                 delete(item,prev,next);
                 item=null;
@@ -213,16 +175,15 @@ public class ListContainerImpl implements ListContainer{
      * @see org.apache.activemq.kaha.ListContainer#removeLast()
      */
     public Object removeLast(){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
-        synchronized(list){
-            LocatableItem item=(LocatableItem) list.getLast();
+        synchronized(mutex){
+            IndexItem item=(IndexItem) list.getLast();
             if(item!=null){
                 result=getValue(item);
                 int index=list.indexOf(item);
-                LocatableItem prev=index>0?(LocatableItem) list.get(index-1):root;
-                LocatableItem next=null;
+                IndexItem prev=index>0?(IndexItem) list.get(index-1):root;
+                IndexItem next=null;
                 list.removeLast();
                 delete(item,prev,next);
                 item=null;
@@ -237,8 +198,7 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#isEmpty()
      */
     public boolean isEmpty(){
-        checkClosed();
-        checkLoaded();
+        load();
         return list.isEmpty();
     }
 
@@ -248,18 +208,18 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#contains(java.lang.Object)
      */
     public boolean contains(Object o){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
         if(o!=null){
-            synchronized(list){
-                for(Iterator i=list.iterator();i.hasNext();){
-                    LocatableItem item=(LocatableItem) i.next();
-                    Object value=getValue(item);
+            synchronized(mutex){
+                IndexItem next=list.getFirst();
+                while(next!=null){
+                    Object value=getValue(next);
                     if(value!=null&&value.equals(o)){
                         result=true;
                         break;
                     }
+                    next=list.getNextEntry(next);
                 }
             }
         }
@@ -272,8 +232,7 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#iterator()
      */
     public Iterator iterator(){
-        checkClosed();
-        checkLoaded();
+        load();
         return listIterator();
     }
 
@@ -283,14 +242,14 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#toArray()
      */
     public Object[] toArray(){
-        checkClosed();
-        checkLoaded();
+        load();
         List tmp=new ArrayList(list.size());
-        synchronized(list){
-            for(Iterator i=list.iterator();i.hasNext();){
-                LocatableItem item=(LocatableItem) i.next();
-                Object value=getValue(item);
+        synchronized(mutex){
+            IndexItem next=list.getFirst();
+            while(next!=null){
+                Object value=getValue(next);
                 tmp.add(value);
+                next=list.getNextEntry(next);
             }
         }
         return tmp.toArray();
@@ -302,14 +261,14 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#toArray(T[])
      */
     public Object[] toArray(Object[] a){
-        checkClosed();
-        checkLoaded();
+        load();
         List tmp=new ArrayList(list.size());
-        synchronized(list){
-            for(Iterator i=list.iterator();i.hasNext();){
-                LocatableItem item=(LocatableItem) i.next();
-                Object value=getValue(item);
+        synchronized(mutex){
+            IndexItem next=list.getFirst();
+            while(next!=null){
+                Object value=getValue(next);
                 tmp.add(value);
+                next=list.getNextEntry(next);
             }
         }
         return tmp.toArray(a);
@@ -321,8 +280,7 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#add(E)
      */
     public boolean add(Object o){
-        checkClosed();
-        checkLoaded();
+        load();
         addLast(o);
         return true;
     }
@@ -333,28 +291,28 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#remove(java.lang.Object)
      */
     public boolean remove(Object o){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
-        synchronized(list){
-            for(Iterator i=list.iterator();i.hasNext();){
-                LocatableItem item=(LocatableItem) i.next();
-                Object value = getValue(item);
-                if (value != null && value.equals(o)){
-                    remove(item);
+        synchronized(mutex){
+            IndexItem next=list.getFirst();
+            while(next!=null){
+                Object value=getValue(next);
+                if(value!=null&&value.equals(o)){
+                    remove(next);
+                    result=true;
                     break;
                 }
+                next=list.getNextEntry(next);
             }
-            
         }
         return result;
     }
 
-    protected void remove(LocatableItem item){
-        synchronized(list){
+    protected void remove(IndexItem item){
+        synchronized(mutex){
             int index=list.indexOf(item);
-            LocatableItem prev=index>0?(LocatableItem) list.get(index-1):root;
-            LocatableItem next=index<(list.size()-1)?(LocatableItem) list.get(index+1):null;
+            IndexItem prev=index>0?(IndexItem) list.get(index-1):root;
+            IndexItem next=index<(list.size()-1)?(IndexItem) list.get(index+1):null;
             list.remove(index);
             delete(item,prev,next);
         }
@@ -366,10 +324,9 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#containsAll(java.util.Collection)
      */
     public boolean containsAll(Collection c){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
-        synchronized(list){
+        synchronized(mutex){
             for(Iterator i=c.iterator();i.hasNext();){
                 Object obj=i.next();
                 if(!(result=contains(obj))){
@@ -387,14 +344,12 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#addAll(java.util.Collection)
      */
     public boolean addAll(Collection c){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
         for(Iterator i=c.iterator();i.hasNext();){
             add(i.next());
-            result=true;
         }
-        return result;
+        return true;
     }
 
     /*
@@ -403,8 +358,7 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#addAll(int, java.util.Collection)
      */
     public boolean addAll(int index,Collection c){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
         ListIterator e1=listIterator(index);
         Iterator e2=c.iterator();
@@ -421,8 +375,7 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#removeAll(java.util.Collection)
      */
     public boolean removeAll(Collection c){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=true;
         for(Iterator i=c.iterator();i.hasNext();){
             Object obj=i.next();
@@ -437,18 +390,17 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#retainAll(java.util.Collection)
      */
     public boolean retainAll(Collection c){
-        checkClosed();
-        checkLoaded();
+        load();
         List tmpList=new ArrayList();
-        synchronized(list){
-        for(Iterator i = list.iterator(); i.hasNext();){
-            LocatableItem item = (LocatableItem) i.next();
-            Object o = getValue(item);
-            
-            if(!c.contains(o)){
-                tmpList.add(o);
+        synchronized(mutex){
+            IndexItem next=list.getFirst();
+            while(next!=null){
+                Object o=getValue(next);
+                if(!c.contains(o)){
+                    tmpList.add(o);
+                }
+                next=list.getNextEntry(next);
             }
-        }
         }
         for(Iterator i=tmpList.iterator();i.hasNext();){
             remove(i.next());
@@ -463,30 +415,9 @@ public class ListContainerImpl implements ListContainer{
      */
     public void clear(){
         checkClosed();
-        synchronized(list){
+        synchronized(mutex){
             list.clear();
-            try {
-            long start=root.getNextItem();
-            if(start!=Item.POSITION_NOT_SET){
-                long nextItem=start;
-                while(nextItem!=Item.POSITION_NOT_SET){
-                    LocatableItem item=new LocatableItem();
-                    item.setOffset(nextItem);
-                    list.add(item);
-                    nextItem=item.getNextItem();
-                }
-            }
-            root.setNextItem(Item.POSITION_NOT_SET);
-            store.updateItem(root);
-            for(int i=0;i<list.size();i++){
-                LocatableItem item=(LocatableItem) list.get(i);
-                store.removeItem(item);
-            }
-            list.clear();
-            }catch(IOException e){
-                log.error("Failed to clear ListContainer "+getId(),e);
-                throw new RuntimeStoreException(e);
-            }
+            doClear();
         }
     }
 
@@ -496,10 +427,9 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#get(int)
      */
     public Object get(int index){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
-        LocatableItem item=(LocatableItem) list.get(index);
+        IndexItem item=(IndexItem) list.get(index);
         if(item!=null){
             result=getValue(item);
         }
@@ -512,13 +442,12 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#set(int, E)
      */
     public Object set(int index,Object element){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
-        synchronized(list){
-            LocatableItem replace=list.isEmpty()?null:(LocatableItem) list.get(index);
-            LocatableItem prev=(list.isEmpty() || (index-1) < 0)?null:(LocatableItem) list.get(index-1);
-            LocatableItem next=(list.isEmpty() || (index+1) >= size())?null:(LocatableItem) list.get(index+1);
+        synchronized(mutex){
+            IndexItem replace=list.isEmpty()?null:(IndexItem) list.get(index);
+            IndexItem prev=(list.isEmpty()||(index-1)<0)?null:(IndexItem) list.get(index-1);
+            IndexItem next=(list.isEmpty()||(index+1)>=size())?null:(IndexItem) list.get(index+1);
             result=getValue(replace);
             list.remove(index);
             delete(replace,prev,next);
@@ -526,12 +455,12 @@ public class ListContainerImpl implements ListContainer{
         }
         return result;
     }
-    
-    protected LocatableItem internalSet(int index,Object element){
-        synchronized(list){
-            LocatableItem replace=list.isEmpty()?null:(LocatableItem) list.get(index);
-            LocatableItem prev=(list.isEmpty() || (index-1) < 0)?null:(LocatableItem) list.get(index-1);
-            LocatableItem next=(list.isEmpty() || (index+1) >= size())?null:(LocatableItem) list.get(index+1);
+
+    protected IndexItem internalSet(int index,Object element){
+        synchronized(mutex){
+            IndexItem replace=list.isEmpty()?null:(IndexItem) list.get(index);
+            IndexItem prev=(list.isEmpty()||(index-1)<0)?null:(IndexItem) list.get(index-1);
+            IndexItem next=(list.isEmpty()||(index+1)>=size())?null:(IndexItem) list.get(index+1);
             list.remove(index);
             delete(replace,prev,next);
             return internalAdd(index,element);
@@ -544,26 +473,25 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#add(int, E)
      */
     public void add(int index,Object element){
-        checkClosed();
-        checkLoaded();
-        synchronized(list){
-            LocatableItem item=insert(index,element);
+        load();
+        synchronized(mutex){
+            IndexItem item=insert(index,element);
             list.add(index,item);
         }
     }
-    
-    protected LocatableItem internalAdd(int index,Object element){
-        synchronized(list){
-            LocatableItem item=insert(index,element);
+
+    protected IndexItem internalAdd(int index,Object element){
+        synchronized(mutex){
+            IndexItem item=insert(index,element);
             list.add(index,item);
             return item;
         }
     }
-    
-    protected LocatableItem internalGet(int index){
-        synchronized(list){
-            if (index >= 0 && index < list.size()){
-                return (LocatableItem) list.get(index);
+
+    protected IndexItem internalGet(int index){
+        synchronized(mutex){
+            if(index>=0&&index<list.size()){
+                return list.get(index);
             }
         }
         return null;
@@ -575,17 +503,17 @@ public class ListContainerImpl implements ListContainer{
      * @see org.apache.activemq.kaha.ListContainer#doRemove(int)
      */
     public boolean doRemove(int index){
-        checkClosed();
-        checkLoaded();
+        load();
         boolean result=false;
-        synchronized(list){
-            LocatableItem item=(LocatableItem) list.get(index);
+        synchronized(mutex){
+            IndexItem item=list.get(index);
             if(item!=null){
-                LocatableItem prev=index>0?(LocatableItem) list.get(index-1):root;
-                LocatableItem next=index<(list.size()-1)?(LocatableItem) list.get(index+1):null;
+                result=true;
+                IndexItem prev=list.getPrevEntry(item);
+                prev=prev!=null?prev:root;
+                IndexItem next=list.getNextEntry(prev);
                 list.remove(index);
                 delete(item,prev,next);
-                result=true;
             }
         }
         return result;
@@ -597,15 +525,15 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#remove(int)
      */
     public Object remove(int index){
-        checkClosed();
-        checkLoaded();
+        load();
         Object result=null;
-        synchronized(list){
-            LocatableItem item=(LocatableItem) list.get(index);
+        synchronized(mutex){
+            IndexItem item=list.get(index);
             if(item!=null){
                 result=getValue(item);
-                LocatableItem prev=index>0?(LocatableItem) list.get(index-1):root;
-                LocatableItem next=index<(list.size()-1)?(LocatableItem) list.get(index+1):null;
+                IndexItem prev=list.getPrevEntry(item);
+                prev=prev!=null?prev:root;
+                IndexItem next=list.getNextEntry(prev);
                 list.remove(index);
                 delete(item,prev,next);
             }
@@ -619,19 +547,20 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#indexOf(java.lang.Object)
      */
     public int indexOf(Object o){
-        checkClosed();
-        checkLoaded();
+        load();
         int result=-1;
         if(o!=null){
-            synchronized(list){
+            synchronized(mutex){
                 int count=0;
-                for(Iterator i=list.iterator();i.hasNext();count++){
-                    LocatableItem item=(LocatableItem) i.next();
-                    Object value=getValue(item);
+                IndexItem next=list.getFirst();
+                while(next!=null){
+                    Object value=getValue(next);
                     if(value!=null&&value.equals(o)){
                         result=count;
                         break;
                     }
+                    count++;
+                    next=list.getNextEntry(next);
                 }
             }
         }
@@ -644,19 +573,20 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#lastIndexOf(java.lang.Object)
      */
     public int lastIndexOf(Object o){
-        checkClosed();
-        checkLoaded();
+        load();
         int result=-1;
         if(o!=null){
-            synchronized(list){
+            synchronized(mutex){
                 int count=list.size()-1;
-                for(ListIterator i=list.listIterator();i.hasPrevious();count--){
-                    LocatableItem item=(LocatableItem) i.previous();
-                    Object value=getValue(item);
+                IndexItem next=list.getLast();
+                while(next!=null){
+                    Object value=getValue(next);
                     if(value!=null&&value.equals(o)){
                         result=count;
                         break;
                     }
+                    count--;
+                    next=list.getPrevEntry(next);
                 }
             }
         }
@@ -669,10 +599,8 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#listIterator()
      */
     public ListIterator listIterator(){
-        checkClosed();
-        checkLoaded();
-        ListIterator iter = ((List) list.clone()).listIterator();
-        return new ContainerListIterator(this,iter);
+        load();
+        return new ContainerListIterator(this,list,list.getRoot());
     }
 
     /*
@@ -681,11 +609,15 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#listIterator(int)
      */
     public ListIterator listIterator(int index){
-        checkClosed();
-        checkLoaded();
-        List result = (List) list.clone();
-        ListIterator iter = result.listIterator(index);
-        return new ContainerListIterator(this,iter);
+        load();
+        IndexItem start=list.get(index);
+        if(start!=null){
+            start=list.getPrevEntry(start);
+        }
+        if(start==null){
+            start=root;
+        }
+        return new ContainerListIterator(this,list,start);
     }
 
     /*
@@ -694,129 +626,119 @@ public class ListContainerImpl implements ListContainer{
      * @see java.util.List#subList(int, int)
      */
     public List subList(int fromIndex,int toIndex){
-        checkClosed();
-        checkLoaded();
-        List tmp = list.subList(fromIndex, toIndex);
-        LinkedList result = new LinkedList();
-        for (Iterator i = tmp.iterator(); i.hasNext();){
-            LocatableItem item = (LocatableItem) i.next();
-            result.add(getValue(item));
+        load();
+        List result=new ArrayList();
+        int count=fromIndex;
+        IndexItem next=list.get(fromIndex);
+        while(next!=null&&count++<toIndex){
+            result.add(getValue(next));
+            next=list.getNextEntry(next);
         }
         return result;
     }
 
-    protected LocatableItem writeLast(Object value){
-        long pos=Item.POSITION_NOT_SET;
-        LocatableItem item=null;
+    protected IndexItem writeLast(Object value){
+        IndexItem index=null;
         try{
-            LocatableItem last=list.isEmpty()?null:(LocatableItem) list.getLast();
-            last=last==null?root:last;
-            long prev=last.getOffset();
-            long next=Item.POSITION_NOT_SET;
-            item=new LocatableItem(prev,next,pos);
-            next=store.storeItem(marshaller,value,item);
-            if(last!=null){
-                last.setNextItem(next);
-                store.updateItem(last);
+            if(value!=null){
+                DataItem data=dataManager.storeItem(marshaller,value);
+                index=indexManager.createNewIndex();
+                index.setValueData(data);
+                IndexItem prev=list.getLast();
+                prev=prev!=null?prev:root;
+                IndexItem next=list.getNextEntry(prev);
+                prev.setNextItem(index.getOffset());
+                index.setPreviousItem(prev.getOffset());
+                indexManager.updateIndex(prev);
+                if(next!=null){
+                    next.setPreviousItem(index.getOffset());
+                    index.setNextItem(next.getOffset());
+                    indexManager.updateIndex(next);
+                }
+                indexManager.updateIndex(index);
             }
         }catch(IOException e){
             log.error("Failed to write "+value,e);
             throw new RuntimeStoreException(e);
         }
-        return item;
+        return index;
     }
 
-    protected LocatableItem writeFirst(Object value){
-        long pos=Item.POSITION_NOT_SET;
-        LocatableItem item=null;
+    protected IndexItem writeFirst(Object value){
+        IndexItem index=null;
         try{
-            LocatableItem next=list.isEmpty()?null:(LocatableItem) list.getFirst();
-            LocatableItem last=root;
-            long prevPos=last.getOffset();
-            long nextPos=next!=null?next.getOffset():Item.POSITION_NOT_SET;
-            item=new LocatableItem(prevPos,nextPos,pos);
-            nextPos=store.storeItem(marshaller,value,item);
-            if(last!=null){
-                last.setNextItem(nextPos);
-                store.updateItem(last);
-            }
-            if(next!=null){
-                next.setPreviousItem(nextPos);
-                store.updateItem(next);
+            if(value!=null){
+                DataItem data=dataManager.storeItem(marshaller,value);
+                index=indexManager.createNewIndex();
+                index.setValueData(data);
+                IndexItem prev=root;
+                IndexItem next=list.getNextEntry(prev);
+                prev.setNextItem(index.getOffset());
+                index.setPreviousItem(prev.getOffset());
+                indexManager.updateIndex(prev);
+                if(next!=null){
+                    next.setPreviousItem(index.getOffset());
+                    index.setNextItem(next.getOffset());
+                    indexManager.updateIndex(next);
+                }
+                indexManager.updateIndex(index);
             }
         }catch(IOException e){
             log.error("Failed to write "+value,e);
             throw new RuntimeStoreException(e);
         }
-        return item;
+        return index;
     }
 
-    protected LocatableItem insert(int insertPos,Object value){
+    protected IndexItem insert(int insertPos,Object value){
         long pos=Item.POSITION_NOT_SET;
-        LocatableItem item=null;
+        IndexItem index=null;
         try{
-            int lastPos=insertPos-1;
-            LocatableItem prev=(list.isEmpty() || (insertPos-1) < 0)?null:(LocatableItem) list.get(lastPos);
-            LocatableItem next=(list.isEmpty() || (insertPos+1) >= size())?null:(LocatableItem) list.get(insertPos+1);
-            prev=prev==null?root:prev;
-            long prevPos=prev.getOffset();
-            long nextPos=next!=null?next.getOffset():Item.POSITION_NOT_SET;
-            item=new LocatableItem(prevPos,nextPos,pos);
-            nextPos=store.storeItem(marshaller,value,item);
-            if(prev!=null){
-                prev.setNextItem(nextPos);
-                store.updateItem(prev);
-            }
-            if(next!=null){
-                next.setPreviousItem(nextPos);
-                store.updateItem(next);
+            if(value!=null){
+                DataItem data=dataManager.storeItem(marshaller,value);
+                index=indexManager.createNewIndex();
+                index.setValueData(data);
+                IndexItem prev=null;
+                IndexItem next=null;
+                if(insertPos<=0){
+                    prev=root;
+                    next=list.getNextEntry(root);
+                }else if(insertPos>=list.size()){
+                    prev=list.getLast();
+                    next=null;
+                }else{
+                    prev=list.get(insertPos);
+                    prev=prev!=null?prev:root;
+                    next=list.getNextEntry(prev);
+                }
+                prev.setNextItem(index.getOffset());
+                index.setPreviousItem(prev.getOffset());
+                indexManager.updateIndex(prev);
+                if(next!=null){
+                    next.setPreviousItem(index.getOffset());
+                    index.setNextItem(next.getOffset());
+                    indexManager.updateIndex(next);
+                }
+                indexManager.updateIndex(index);
             }
         }catch(IOException e){
             log.error("Failed to insert "+value,e);
             throw new RuntimeStoreException(e);
         }
-        return item;
+        return index;
     }
 
-    protected Object getValue(LocatableItem item){
+    protected Object getValue(IndexItem item){
         Object result=null;
         if(item!=null){
             try{
-                result=store.readItem(marshaller,item);
+                DataItem data=item.getValueDataItem();
+                result=dataManager.readItem(marshaller,data);
             }catch(IOException e){
                 log.error("Failed to get value for "+item,e);
                 throw new RuntimeStoreException(e);
             }
         }
         return result;
-    }
-
-    protected void delete(LocatableItem item,LocatableItem prev,LocatableItem next){
-        try{
-            prev=prev==null?root:prev;
-            if(next!=null){
-                prev.setNextItem(next.getOffset());
-                next.setPreviousItem(prev.getOffset());
-                store.updateItem(next);
-            }else{
-                prev.setNextItem(Item.POSITION_NOT_SET);
-            }
-            store.updateItem(prev);
-            store.removeItem(item);
-        }catch(IOException e){
-            log.error("Failed to delete "+item,e);
-            throw new RuntimeStoreException(e);
-        }
-    }
-    
-    protected final void checkClosed(){
-        if (closed){
-            throw new RuntimeStoreException("The store is closed");
-        }
-    }
-    protected final void checkLoaded(){
-        if (!loaded){
-            throw new RuntimeStoreException("The container is not loaded");
-        }
     }
 }

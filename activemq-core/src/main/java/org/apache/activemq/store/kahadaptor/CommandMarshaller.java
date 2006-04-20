@@ -17,10 +17,9 @@
 
 package org.apache.activemq.store.kahadaptor;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
-
 import org.apache.activeio.command.WireFormat;
 import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
@@ -38,7 +37,7 @@ public class CommandMarshaller implements Marshaller{
       
     }
     
-    public void writePayload(Object object,DataOutputStream dataOut) throws IOException{
+    public void writePayload(Object object,DataOutput dataOut) throws IOException{
         Packet packet = wireFormat.marshal(object);
         byte[] data = packet.sliceAsBytes();
         dataOut.writeInt(data.length);
@@ -46,7 +45,7 @@ public class CommandMarshaller implements Marshaller{
     }
 
    
-    public Object readPayload(DataInputStream dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException{
         int size=dataIn.readInt();
         byte[] data=new byte[size];
         dataIn.readFully(data);

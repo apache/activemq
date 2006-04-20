@@ -23,6 +23,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
+import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StringMarshaller;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -71,7 +72,8 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         String id=messageId.toString();
         ListContainer container=(ListContainer) subscriberAcks.get(subcriberId);
         if(container!=null){
-            container.remove(id);
+            //container.remove(id);
+            container.removeFirst();
             AtomicInteger count=(AtomicInteger) ackContainer.remove(id);
             if(count!=null){
                 if(count.decrementAndGet()>0){
@@ -96,7 +98,11 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         info.setSelector(selector);
         info.setSubcriptionName(subscriptionName);
         String key=getSubscriptionKey(clientId,subscriptionName);
-        subscriberContainer.put(key,info);
+        // if already exists - won't add it again as it causes data files
+        // to hang around
+        if(!subscriberContainer.containsKey(key)){
+            subscriberContainer.put(key,info);
+        }
         addSubscriberAckContainer(key);
     }
 
@@ -122,15 +128,19 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                     throws Exception{
         String key=getSubscriptionKey(clientId,subscriptionName);
         ListContainer list=(ListContainer) subscriberAcks.get(key);
-        for(Iterator i=list.iterator();i.hasNext();){
-            Object msg=messageContainer.get(i.next());
-            if(msg!=null){
-                if(msg.getClass()==String.class){
-                    listener.recoverMessageReference((String) msg);
-                }else{
-                    listener.recoverMessage((Message) msg);
+        if(list!=null){
+            for(Iterator i=list.iterator();i.hasNext();){
+                Object msg=messageContainer.get(i.next());
+                if(msg!=null){
+                    if(msg.getClass()==String.class){
+                        listener.recoverMessageReference((String) msg);
+                    }else{
+                        listener.recoverMessage((Message) msg);
+                    }
                 }
+                listener.finished();
             }
+        }else{
             listener.finished();
         }
     }
@@ -154,8 +164,8 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
 
     protected void addSubscriberAckContainer(Object key) throws IOException{
         ListContainer container=store.getListContainer(key);
-        container.setMarshaller(new StringMarshaller());
-        container.load();
+        Marshaller marshaller=new StringMarshaller();
+        container.setMarshaller(marshaller);
         subscriberAcks.put(key,container);
     }
 }

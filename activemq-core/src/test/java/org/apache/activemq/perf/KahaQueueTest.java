@@ -17,33 +17,22 @@
 package org.apache.activemq.perf;
 
 import java.io.File;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Session;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistentAdaptor;
 /**
  * @version $Revision: 1.3 $
  */
-public class KahaDurableTopicTest extends SimpleDurableTopicTest {
+public class KahaQueueTest extends SimpleQueueTest{
     
-    /*
-    protected BrokerService createBroker() throws Exception{
-        Resource resource=new ClassPathResource( "org/apache/activemq/perf/kahaBroker.xml");
-        BrokerFactoryBean factory=new BrokerFactoryBean(resource);
-        factory.afterPropertiesSet();
-        BrokerService result=factory.getBroker();
-        result.start();
-        return result;
-    }
-    */
-    
+        
     protected void configureBroker(BrokerService answer) throws Exception{
         KahaPersistentAdaptor adaptor = new KahaPersistentAdaptor(new File("activemq-data/perfTest"));
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
     }
-
-    
-
-    
 
 }

@@ -15,7 +15,8 @@ package org.apache.activemq.kaha;
 
 import java.io.File;
 import java.io.IOException;
-import org.apache.activemq.kaha.impl.StoreImpl;
+import org.apache.activemq.kaha.impl.KahaStore;
+
 /**
  * Factory for creating stores
  * 
@@ -32,16 +33,17 @@ public class StoreFactory{
      * @throws IOException
      */
     public static Store open(String name,String mode) throws IOException{
-        return new StoreImpl(name,mode);
+        return new KahaStore(name,mode);
     }
     
     /**
      * Delete a database
      * @param name of the database
      * @return true if successful
+     * @throws IOException 
      */
-    public static boolean delete(String name){
-        File file = new File(name);
-        return file.delete();
+    public static boolean delete(String name) throws IOException{
+        KahaStore store = new KahaStore(name,"rw");
+        return store.delete();
     }
 }

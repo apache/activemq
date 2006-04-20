@@ -42,37 +42,41 @@ class ContainerValueCollection extends ContainerCollectionSupport implements Col
 
     
     public Iterator iterator(){
-        LinkedList list=container.getItemList();
-        list = (LinkedList) list.clone();
-        return new ContainerValueCollectionIterator(container,list.iterator());
+        IndexLinkedList list=container.getItemList();
+        return new ContainerValueCollectionIterator(container,list,list.getRoot());
     }
 
    
     public Object[] toArray(){
         Object[] result = null;
-        List list = container.getItemList();
+        IndexLinkedList list = container.getItemList();
         synchronized(list){
             result = new Object[list.size()];
+            IndexItem item = list.getFirst();
             int count = 0;
-            for(Iterator i=list.iterator();i.hasNext();){
-                LocatableItem item=(LocatableItem) i.next();
-                Object value=container.getValue(item);
+            while (item != null){
+                Object value=container.getValue(item);  
                 result[count++] = value;
+                
+                item = list.getNextEntry(item);
             }
+           
+            
         }
         return result;
     }
 
     public Object[] toArray(Object[] result){
-        List list=container.getItemList();
+        IndexLinkedList list=container.getItemList();
         synchronized(list){
             if(result.length<=list.size()){
-                int count=0;
-                result=(Object[]) java.lang.reflect.Array.newInstance(result.getClass().getComponentType(),list.size());
-                for(Iterator i=list.iterator();i.hasNext();){
-                    LocatableItem item=(LocatableItem) i.next();
-                    Object value=container.getValue(item);
-                    result[count++]=value;
+                IndexItem item = list.getFirst();
+                int count = 0;
+                while (item != null){
+                    Object value=container.getValue(item);  
+                    result[count++] = value;
+                    
+                    item = list.getNextEntry(item);
                 }
             }
         }

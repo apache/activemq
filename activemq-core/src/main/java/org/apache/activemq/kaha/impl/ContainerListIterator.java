@@ -1,54 +1,42 @@
 /**
- * 
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 package org.apache.activemq.kaha.impl;
 
 import java.util.ListIterator;
-/**
- * @author rajdavies
- * 
- */
-public class ContainerListIterator implements ListIterator{
-    private ListContainerImpl container;
-    private ListIterator iterator;
-    private LocatableItem current;
 
-    protected ContainerListIterator(ListContainerImpl container,ListIterator iterator){
-        this.container=container;
-        this.iterator=iterator;
-        this.current = container.internalGet(0);
+/** 
+* @version $Revision: 1.2 $
+*/
+public class ContainerListIterator extends ContainerValueCollectionIterator implements ListIterator{
+    
+   
+
+    protected ContainerListIterator(ListContainerImpl container,IndexLinkedList list,IndexItem start){
+       super(container,list,start);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#hasNext()
-     */
-    public boolean hasNext(){
-        return iterator.hasNext();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#next()
-     */
-    public Object next(){
-        Object result=null;
-        current=(LocatableItem) iterator.next();
-        if(current!=null){
-            result=container.getValue(current);
-        }
-        return result;
-    }
-
+   
     /*
      * (non-Javadoc)
      * 
      * @see java.util.ListIterator#hasPrevious()
      */
     public boolean hasPrevious(){
-        return iterator.hasPrevious();
+        return list.getPrevEntry(currentItem) != null;
     }
 
     /*
@@ -57,12 +45,8 @@ public class ContainerListIterator implements ListIterator{
      * @see java.util.ListIterator#previous()
      */
     public Object previous(){
-        Object result=null;
-        current=(LocatableItem) iterator.previous();
-        if(current!=null){
-            result=container.getValue(current);
-        }
-        return result;
+        currentItem = list.getPrevEntry(currentItem);
+        return currentItem != null ? container.getValue(currentItem) : null;
     }
 
     /*
@@ -71,7 +55,16 @@ public class ContainerListIterator implements ListIterator{
      * @see java.util.ListIterator#nextIndex()
      */
     public int nextIndex(){
-        return iterator.nextIndex();
+        int result = -1;
+        if (currentItem != null){
+            IndexItem next = list.getNextEntry(currentItem);
+            if (next != null){
+                result = container.getInternalList().indexOf(next);
+            }
+        }
+        
+        
+        return result;
     }
 
     /*
@@ -80,29 +73,27 @@ public class ContainerListIterator implements ListIterator{
      * @see java.util.ListIterator#previousIndex()
      */
     public int previousIndex(){
-        return iterator.previousIndex();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#remove()
-     */
-    public void remove(){
-        iterator.remove();
-        if(current!=null){
-            container.remove(current);
+        int result = -1;
+        if (currentItem != null){
+            IndexItem prev = list.getPrevEntry(currentItem);
+            if (prev != null){
+                result = container.getInternalList().indexOf(prev);
+            }
         }
+        
+        
+        return result;
     }
 
+    
     /*
      * (non-Javadoc)
      * 
      * @see java.util.ListIterator#set(E)
      */
     public void set(Object o){
-        LocatableItem item=container.internalSet(previousIndex()+1,o);
-        iterator.set(item);
+        IndexItem item=((ListContainerImpl) container).internalSet(previousIndex()+1,o);
+        currentItem=item;
     }
 
     /*
@@ -111,7 +102,7 @@ public class ContainerListIterator implements ListIterator{
      * @see java.util.ListIterator#add(E)
      */
     public void add(Object o){
-        LocatableItem item=container.internalAdd(previousIndex()+1,o);
-        iterator.set(item);
+        IndexItem item=((ListContainerImpl) container).internalSet(previousIndex()+1,o);
+        currentItem=item;
     }
 }

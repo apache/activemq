@@ -11,17 +11,21 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.activemq.kaha.impl;
+package org.apache.activemq.perf;
 
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Session;
 /**
- * A a wrapper for a data in the store
- * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
-public interface Item{
-    static final long POSITION_NOT_SET=-1;
-    static final short MAGIC=31317;
-    static final int ACTIVE=22;
-    static final int FREE=33;
-    static final int LOCATION_SIZE=24;
+public class TemporaryTopicMemoryAllocationTest extends MemoryAllocationTest{
+    public TemporaryTopicMemoryAllocationTest(){
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+    protected Destination getDestination(Session session) throws JMSException{
+        return session.createTemporaryTopic();
+    }
 }

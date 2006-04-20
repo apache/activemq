@@ -15,8 +15,8 @@ package org.apache.activemq.kaha;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -33,7 +33,7 @@ public class ObjectMarshaller implements Marshaller{
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(Object object,DataOutputStream dataOut) throws IOException{
+    public void writePayload(Object object,DataOutput dataOut) throws IOException{
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         ObjectOutputStream objectOut=new ObjectOutputStream(bytesOut);
         objectOut.writeObject(object);
@@ -50,7 +50,7 @@ public class ObjectMarshaller implements Marshaller{
      * @return unmarshalled object
      * @throws IOException
      */
-    public Object readPayload(DataInputStream dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException{
         int size = dataIn.readInt();
         byte[] data = new byte[size];
         dataIn.readFully(data);
