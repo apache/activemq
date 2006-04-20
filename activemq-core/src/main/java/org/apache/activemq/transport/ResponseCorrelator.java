@@ -18,8 +18,12 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
@@ -92,6 +96,28 @@ public class ResponseCorrelator extends TransportFilter {
         } else {
             getTransportListener().onCommand(command);
         }
+    }
+    
+    /**
+     * If an async exception occurs, then assume no responses will arrive for any of
+     * current requests.  Lets let them know of the problem.
+     */
+    public void onException(IOException error) {
+        
+        // Copy and Clear the request Map
+        ArrayList requests = new ArrayList(requestMap.values());
+        requestMap.clear();
+        
+        for (Iterator iter = requests.iterator(); iter.hasNext();) {
+            try {
+                FutureResponse fr = (FutureResponse) iter.next();
+                fr.set(new ExceptionResponse(error));
+            } catch (InterruptedIOException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        super.onException(error);
     }
     
     public IntSequenceGenerator getSequenceGenerator() {
