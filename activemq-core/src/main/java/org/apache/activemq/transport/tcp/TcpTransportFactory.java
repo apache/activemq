@@ -52,7 +52,9 @@ public class TcpTransportFactory extends TransportFactory {
             TcpTransportServer server = new TcpTransportServer(location, serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
-
+            Map transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            server.setTransportOption(transportOptions);
+            
             return server;
         }
         catch (URISyntaxException e) {
@@ -63,6 +65,9 @@ public class TcpTransportFactory extends TransportFactory {
     public Transport configure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
         TcpTransport tcpTransport = (TcpTransport) transport;
+        Map socketOptions = IntrospectionSupport.extractProperties(options, "socket.");        
+        tcpTransport.setSocketOptions(socketOptions);
+
         if (tcpTransport.isTrace()) {
             transport = new TransportLogger(transport);
         }
@@ -82,6 +87,9 @@ public class TcpTransportFactory extends TransportFactory {
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
         TcpTransport tcpTransport = (TcpTransport) transport;
+        Map socketOptions = IntrospectionSupport.extractProperties(options, "socket.");        
+        tcpTransport.setSocketOptions(socketOptions);
+
         if (tcpTransport.isTrace()) {
             transport = new TransportLogger(transport);
         }
