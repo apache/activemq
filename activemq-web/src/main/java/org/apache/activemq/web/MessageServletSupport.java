@@ -17,6 +17,7 @@
 
 package org.apache.activemq.web;
 
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
@@ -30,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -113,7 +115,29 @@ public abstract class MessageServletSupport extends HttpServlet {
 
 
     protected void appendParametersToMessage(HttpServletRequest request, TextMessage message) throws JMSException {
-        for (Iterator iter = request.getParameterMap().entrySet().iterator(); iter.hasNext();) {
+        Map parameters = new HashMap(request.getParameterMap());
+        String correlationID = (String) parameters.remove("JMSCorrelationID");
+        if (correlationID != null) {
+            message.setJMSCorrelationID(correlationID);
+        }
+        Long expiration = asLong(parameters.remove("JMSExpiration"));
+        if (expiration != null) {
+            message.setJMSExpiration(expiration.longValue());
+        }
+        Integer priority = asInteger(parameters.remove("JMSPriority"));
+        if (expiration != null) {
+            message.setJMSPriority(priority.intValue());
+        }
+        Destination replyTo = asDestination(parameters.remove("JMSReplyTo"));
+        if (replyTo != null) {
+            message.setJMSReplyTo(replyTo);
+        }
+        String type = (String) parameters.remove("JMSType");
+        if (correlationID != null) {
+            message.setJMSType(type);
+        }
+
+        for (Iterator iter = parameters.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry) iter.next();
             String name = (String) entry.getKey();
             if (!destinationParameter.equals(name) && !topicParameter.equals(name) && !bodyParameter.equals(name)) {
@@ -136,6 +160,37 @@ public abstract class MessageServletSupport extends HttpServlet {
                 }
             }
         }
+    }
+
+    protected Destination asDestination(Object value) {
+        if (value instanceof Destination) {
+            return (Destination) value;
+        }
+        if (value instanceof String) {
+            String text = (String) value;
+            return ActiveMQDestination.createDestination(text, ActiveMQDestination.QUEUE_TYPE);
+        }
+        return null;
+    }
+
+    protected Integer asInteger(Object value) {
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+        if (value instanceof String) {
+            return Integer.valueOf((String) value);
+        }
+        return null;
+    }
+
+    protected Long asLong(Object value) {
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+        if (value instanceof String) {
+            return Long.valueOf((String) value);
+        }
+        return null;
     }
 
     /**
