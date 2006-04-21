@@ -22,56 +22,74 @@
     xmlns:artifact="artifact"
     >
     
-    <goal name="rebuild">
-            <attainGoal name="clean"/>
-            <attainGoal name="default"/>
-    </goal>
+    <goal name="default">
+        <attainGoal name="clean"/>
+        <attainGoal name="dist:build-bin"/>
+    </goal>    
     
-    
-    <postGoal name="jar:jar">
-        <move file="target\${maven.final.name}.jar" todir="${jmeter.home}\lib\ext"  overwrite="true"/>
+    <goal
+        name="dist:prepare-bin-filesystem"
+        prereqs="jar:install"
+        description="Builds the binary distribution file system.">
+        
+        <!--
+          This is the directory where everything is copied to so that it can
+          be archived.
+        -->
 
+        <ant:delete dir="${maven.dist.bin.assembly.dir}"/>
+        <ant:mkdir dir="${maven.dist.bin.assembly.dir}"/>
+        <ant:mkdir dir="${maven.build.dir}/unjar"/>
+        
+        <ant:echo>
+        ${maven.dist.bin.assembly.dir}
+        +-------------------------------------------------------+
+        | C R E A T I N G J M E T E R B I N A R Y D I S T R I B U T I O N |
+        +-------------------------------------------------------+
+        </ant:echo>
+        
+        <copy file="target\${maven.final.name}.jar" todir="${maven.dist.bin.assembly.dir}\lib\ext"  overwrite="true"/>
+        
         <!-- copy JMeter TestPlans -->
-        <copy todir="${jmeter.home}\bin\testfiles" overwrite="true">
+        <copy todir="${maven.dist.bin.assembly.dir}\bin\testfiles" overwrite="true">
             <fileset dir="resource\TestPlans"/>
         </copy>
-
-
-        <!-- jmeter bin files -->
-        <copy file="resource\jmeter" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\jmeter-server" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\jmeter.bat" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\jmeter-n.bat" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\jmeter-server.bat" todir="${jmeter.home}\bin"  overwrite="true"/>
-        <copy file="resource\jmeter-t.bat" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\jmeterw.bat" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\BeanShellAssertion.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\BeanShellFunction.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\BeanShellSampler.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\BeanShellSampler.bshrc" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\log4j.conf" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\users.dtd" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\jmeter.properties" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\jmetertest.properties" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\saveservice.properties" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\upgrade.properties" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\logkit.xml" todir="${jmeter.home}\bin" overwrite="true"/>
-        <copy file="resource\users.xml" todir="${jmeter.home}\bin" overwrite="true"/>
         
-        <copy file="resource\jar_usage.txt" todir="${jmeter.home}\lib" overwrite="true"/>
-        <copy file="resource\LICENSE(jdom).txt" todir="${jmeter.home}\lib" overwrite="true"/>
-        <copy file="resource\LICENSE(jtidy).txt" todir="${jmeter.home}\lib" overwrite="true"/>
-        <copy file="resource\LICENSE(XPP3).txt" todir="${jmeter.home}\lib" overwrite="true"/>
-        <copy file="resource\LICENSE(XStream).txt" todir="${jmeter.home}\lib" overwrite="true"/>
-
-
-    <j:set var="binDir" value="${jmeter.home}/bin"/>
-    <j:set var="libDir" value="${jmeter.home}/lib"/>
-    <j:set var="extDir" value="${jmeter.home}/lib/ext"/>
-    <ant:mkdir dir="${libDir}"/>
-    <ant:mkdir dir="${extDir}"/>
-
-    <j:forEach var="artifact" items="${pom.artifacts}">
+        <!-- jmeter bin files -->
+        <copy file="resource\jmeter" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\jmeter-server" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\jmeter.bat" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\jmeter-n.bat" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\jmeter-server.bat" todir="${maven.dist.bin.assembly.dir}\bin"  overwrite="true"/>
+        <copy file="resource\jmeter-t.bat" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\jmeterw.bat" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellAssertion.bshrc" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellFunction.bshrc" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellSampler.bshrc" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\BeanShellSampler.bshrc" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\log4j.conf" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\users.dtd" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\jmeter.properties" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\jmetertest.properties" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\saveservice.properties" todir="${maven.dist.bin.assembly.dire}\bin" overwrite="true"/>
+        <copy file="resource\upgrade.properties" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\logkit.xml" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        <copy file="resource\users.xml" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
+        
+        <copy file="resource\jar_usage.txt" todir="${maven.dist.bin.assembly.dir}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(jdom).txt" todir="${maven.dist.bin.assembly.dir}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(jtidy).txt" todir="${maven.dist.bin.assembly.dir}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(XPP3).txt" todir="${maven.dist.bin.assembly.dir}\lib" overwrite="true"/>
+        <copy file="resource\LICENSE(XStream).txt" todir="${maven.dist.bin.assembly.dir}\lib" overwrite="true"/>
+        
+        <j:set var="binDir" value="${maven.dist.bin.assembly.dir}/bin"/>
+        <j:set var="libDir" value="${maven.dist.bin.assembly.dir}/lib"/>
+        <j:set var="extDir" value="${maven.dist.bin.assembly.dir}/lib/ext"/>
+        
+        <ant:mkdir dir="${libDir}"/>
+        <ant:mkdir dir="${extDir}"/>
+        
+        <j:forEach var="artifact" items="${pom.artifacts}">
 	        <j:set var="dependency" value="${artifact.dependency}"/>
 	        <echo>${artifact.path}</echo>
 	        <j:if test="${dependency.getProperty('bin') == 'true'}">
@@ -80,9 +98,9 @@
 	               <j:set var="classpath" value="${classpath} ../bin/${artifact.name}"/>
 	            </j:if>
 	        </j:if>
-    </j:forEach>
+        </j:forEach>
         
-    <j:forEach var="artifact" items="${pom.artifacts}">
+        <j:forEach var="artifact" items="${pom.artifacts}">
 	        <j:set var="dependency" value="${artifact.dependency}"/>
 	        <echo>${artifact.path}</echo>
 	        <j:if test="${dependency.getProperty('lib') == 'true'}">
@@ -91,9 +109,9 @@
 	               <j:set var="classpath" value="${classpath} ../lib/${artifact.name}"/>
 	            </j:if>
 	        </j:if>
-    </j:forEach>
+        </j:forEach>
 
-    <j:forEach var="artifact" items="${pom.artifacts}">
+        <j:forEach var="artifact" items="${pom.artifacts}">
 	        <j:set var="dependency" value="${artifact.dependency}"/>
 	        <echo>${artifact.path}</echo>
 	        <j:if test="${dependency.getProperty('ext') == 'true'}">
@@ -102,18 +120,6 @@
 	               <j:set var="classpath" value="${classpath} ../lib/ext/${artifact.name}"/>
 	            </j:if>
 	        </j:if>
-    </j:forEach>
-                
-        <ant:zip zipfile="${jmeter.home}\..\${activemq.jmeter.distribution.name}-${pom.currentVersion}.zip" basedir="${jmeter.home}\"></ant:zip>        
-                
-    </postGoal>
-
-    <goal name="clean">
-        <ant:echo>+-----------------------------------------------------+</ant:echo>
-        <ant:echo>| Cleaning: ${basedir}\target </ant:echo>
-        <ant:echo>+-----------------------------------------------------+</ant:echo>
-        <delete dir="${basedir}/target"/>
+        </j:forEach>
     </goal>
-
-
 </project>
