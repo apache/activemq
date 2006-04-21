@@ -71,7 +71,7 @@
         <copy file="resource\users.dtd" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
         <copy file="resource\jmeter.properties" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
         <copy file="resource\jmetertest.properties" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
-        <copy file="resource\saveservice.properties" todir="${maven.dist.bin.assembly.dire}\bin" overwrite="true"/>
+        <copy file="resource\saveservice.properties" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
         <copy file="resource\upgrade.properties" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
         <copy file="resource\logkit.xml" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
         <copy file="resource\users.xml" todir="${maven.dist.bin.assembly.dir}\bin" overwrite="true"/>
