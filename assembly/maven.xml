@@ -171,7 +171,7 @@
 
     <ant:echo message="${project.root}"/>
     <ant:copy todir="${maven.dist.bin.assembly.dir}">
-       <fileset dir="${project.root}" includes="*.txt,STATUS"/>
+       <fileset dir="${project.root}" includes="*.txt,STATUS,NOTICE"/>
     </ant:copy>
 
     <!-- Copy documentation -->
