@@ -17,21 +17,12 @@
 <project>
     <pomVersion>3</pomVersion>
     <extend>${basedir}/../etc/project.xml</extend>
-
     <name>ActiveMQ :: Jmeter</name>
-    <id>JMeter_sampler</id>
+    <artifactId>activemq-jmeter</artifactId>
     <shortDescription>ActiveMQ JMeter</shortDescription>
     <description>ActiveMQ Jmeter creates an ActiveMQ sampler for Jmeter</description>
 
-<!--    <package>org.apache.activemq</package>
-
-    <build>
-        <sourceDirectory>src/java</sourceDirectory>
-        <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
-    </build>
--->
     <dependencies>
-
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>activemq-core</artifactId>
@@ -41,7 +32,6 @@
 	        <lib>true</lib>
             </properties>
         </dependency>
-
         <dependency>
             <groupId>jorphan</groupId>
             <artifactId>jorphan</artifactId>
@@ -51,7 +41,6 @@
 	    	<lib>true</lib>
             </properties>
         </dependency>
-
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>activeio-core</artifactId>
