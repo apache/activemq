@@ -104,6 +104,7 @@ final class DataManager{
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
             DataFile dataFile=(DataFile) i.next();
             dataFile.force();
+            dataFile.close();
         }
         fileMap.clear();
     }
