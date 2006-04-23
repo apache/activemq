@@ -26,8 +26,16 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 Transport* StompTransportFactory::createTransport( const char* brokerUrl ){
     
-    brokerHost = "127.0.0.1";
-    brokerPort = 61626;
+    string temp = brokerUrl;
+    unsigned int ix = temp.find( ':' );
+    if( ix == string::npos ){
+        throw new ActiveMQException( "StompTransportFactory::createTransport - no port provided in url" );
+    }
+    
+    brokerHost = temp.substr(0,ix);
+    
+    sscanf(brokerUrl+ix+1, "%d", &brokerPort );
+    
     return new StompTransport( brokerHost.c_str(), brokerPort, "", "" );
 }
 

@@ -48,7 +48,7 @@ ActiveMQConnectionFactory::ActiveMQConnectionFactory( const char* userName,
 	this->userName = userName;
 	this->password = password;
 
-    brokerUrl = brokerUrl;
+    this->brokerUrl = brokerUrl;
     
     transportFactory = new activemq::transport::stomp::StompTransportFactory();
 }
