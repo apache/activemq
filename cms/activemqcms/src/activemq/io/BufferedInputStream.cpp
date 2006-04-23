@@ -86,41 +86,39 @@ char BufferedInputStream::read() throw (ActiveMQException){
 ////////////////////////////////////////////////////////////////////////////////
 int BufferedInputStream::read( char* buffer, 
 	const int bufferSize ) throw (ActiveMQException){
-		
-	int totalRead = 0;
 	
-	// Get the number of bytes that can be copied directly from
-	// the buffer.
-	int bytesToCopy = min( tail-head, bufferSize );
-	
-	// Copy the data to the output buffer.	
-	memcpy( buffer, this->buffer+head, bytesToCopy );
-	
-	// Increment the total bytes read.
-	totalRead += bytesToCopy;
-	
-	// Increment the head position.  If the buffer is now empty,
-	// reset the positions.
-	head += bytesToCopy;
-	if( head == tail ){
-		head = tail = 0;
-	}
-	
-	// If we still haven't filled the output buffer, read a buffer's
+	// If we still haven't filled the output buffer AND there is data
+	// on the input stream to be read, read a buffer's
 	// worth from the stream.
-	if( bytesToCopy < bufferSize ){
-		
-		// Buffer as much data as we can.
-		bufferData();
+	int totalRead = 0;
+	while( totalRead < bufferSize ){		
 		
 		// Get the remaining bytes to copy.
-		bytesToCopy = min( tail-head, (bufferSize-bytesToCopy) );
+		int bytesToCopy = min( tail-head, (bufferSize-totalRead) );
 		
 		// Copy the data to the output buffer.	
 		memcpy( buffer+totalRead, this->buffer+head, bytesToCopy );
 		
 		// Increment the total bytes read.
 		totalRead += bytesToCopy;
+		
+		// Increment the head position.  If the buffer is now empty,
+		// reset the positions and buffer more data.
+		head += bytesToCopy;
+		if( head == tail ){
+			
+			// Reset the buffer indicies.
+			head = tail = 0;
+			
+			// If there is no more data currently available on the 
+			// input stream, stop the loop.
+			if( stream->available() == 0 ){
+				break;
+			}
+			
+			// Buffer as much data as we can.
+			bufferData();
+		}				
 	}
 	
 	// Return the total number of bytes read.

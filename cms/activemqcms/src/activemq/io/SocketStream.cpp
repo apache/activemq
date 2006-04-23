@@ -74,30 +74,84 @@ char SocketStream::read() throw (ActiveMQException){
 
 ////////////////////////////////////////////////////////////////////////////////
 int SocketStream::read( char* buffer, const int bufferSize ) throw (ActiveMQException){
-	
-	int len = recv( socket->getHandle(), buffer, bufferSize, 0 );
-	if( len < 0 ){
-        socket->close();
-		char buf[500];
-		strerror_r( errno, buf, 500 );
-		throw IOException( string("stomp::io::SocketStream::read(char*,int) - ") + buf );
-	}
-	
-    /*printf("SocketStream:read():");
-    for( int ix=0; ix<len; ++ix ){
-        if( buffer[ix] > 20 )
-            printf("%c", buffer[ix] );
-        else
-            printf("[%d]", buffer[ix] );
-    }
-    printf("\n");*/
     
-	return len;
+    int bytesAvailable = available();
+    
+    while( true ){
+        
+        int len = ::recv(socket->getHandle(), (char*)buffer, bufferSize, 0);
+        
+        // Check for typical error conditions.
+        if( len < 0 ){
+                        
+            #if defined(unix) && !defined(__CYGWIN__)
+            
+                // If the socket was temporarily unavailable - just try again.
+                if( errno == EAGAIN ){
+                    continue;
+                }
+                
+                // Create the error string.
+                char* errorString = ::strerror(errno);
+                
+            #else
+            
+                // If the socket was temporarily unavailable - just try again.
+                int errorCode = ::WSAGetLastError();
+                if( errorCode == WSAEWOULDBLOCK ){
+                    continue;
+                }
+                
+                // Create the error string.
+                static const int errorStringSize = 512;
+                char errorString[errorStringSize];
+                memset( errorString, 0, errorStringSize );
+                FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                  0,
+                  errorCode,
+                  0,
+                  errorString,
+                  errorStringSize - 1,
+                  NULL);
+                  
+            #endif
+            
+            // Otherwise, this was a bad error - throw an exception.
+            throw IOException( string("stomp::io::SocketStream::write(char) - ") + errorString );
+        }
+        
+        // No error, but no data - check for a broken socket.
+        if( len == 0 ){
+            
+            // If the poll showed data, but we failed to read any,
+            // the socket is broken.
+            if( bytesAvailable > 0 ){
+                throw IOException( "activemq::io::SocketInputStream::read - The connection is broken" );
+            }
+            
+            // Socket is not broken, just had no data.
+            return 0;
+        }
+        
+        #ifdef SOCKET_IO_DEBUG
+            printf("SocketStream:read(), numbytes:%d -", len);
+            for( int ix=0; ix<len; ++ix ){
+                if( buffer[ix] > 20 )
+                    printf("%c", buffer[ix] );
+                else
+                    printf("[%d]", buffer[ix] );
+            }
+            printf("\n");
+        #endif
+    
+        // Data was read successfully - return the bytes read.
+        return len;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void SocketStream::write( const char c ) throw (ActiveMQException){
-	
+	    
 	/*if( c > 20 ){
 		printf("%c", c );
 	}
@@ -109,29 +163,41 @@ void SocketStream::write( const char c ) throw (ActiveMQException){
 		char buf[500];
 		strerror_r( errno, buf, 500 );
 		throw IOException( string("stomp::io::SocketStream::write(char) - ") + buf );
-	}
+	}    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void SocketStream::write( const char* buffer, const int len ) 
 	throw (ActiveMQException)
 {
-	/*for( int ix=0; ix<len; ++ix ){
-		char c = buffer[ix];
-		if( c > 20 ){
-			printf("%c", c );
-		}
-		else printf("[%d]", c );
-	}*/
+    #ifdef SOCKET_IO_DEBUG
+        printf("SocketStream:write(), numbytes:%d -", len);
+    	for( int ix=0; ix<len; ++ix ){
+    		char c = buffer[ix];
+    		if( c > 20 ){
+    			printf("%c", c );
+    		}
+    		else printf("[%d]", c );
+    	}
+        printf("\n" );
+    #endif
 	
 	int remaining = len;
 	while( remaining > 0 ) {
       	
-      	int length = send( socket->getHandle(), buffer, remaining, MSG_NOSIGNAL );      	
+        int flags = 0;
+        #if defined(OSX)
+            flags = SO_NOSIGPIPE;
+        #elif defined( unix )
+            flags = MSG_NOSIGNAL;
+        #endif
+        
+      	int length = send( socket->getHandle(), buffer, remaining, flags );      	
       	if( length < 0 ){
             socket->close();
       		char buf[500];
 			strerror_r( errno, buf, 500 );
+            printf("exception in write\n" );
 			throw IOException( string("stomp::io::SocketStream::write(char*,int) - ") + buf );
       	}
       	

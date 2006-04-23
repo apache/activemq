@@ -66,21 +66,29 @@ void BufferedOutputStream::close() throw(cms::CMSException){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void BufferedOutputStream::flush() throw (ActiveMQException){
+void BufferedOutputStream::emptyBuffer() throw (ActiveMQException){
 	
 	if( head != tail ){
 		stream->write( buffer+head, tail-head );
 	}
 	head = tail = 0;
+}
+		
+////////////////////////////////////////////////////////////////////////////////
+void BufferedOutputStream::flush() throw (ActiveMQException){
 	
+	// Empty the contents of the buffer to the output stream.
+	emptyBuffer();
+	
+	// Flush the output stream.
 	stream->flush();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void BufferedOutputStream::write( const char c ) throw (ActiveMQException){
 	
-	if( tail == bufferSize-1 ){
-		flush();
+	if( tail >= bufferSize ){
+		emptyBuffer();
 	}
 	
 	buffer[tail++] = c;	
@@ -89,13 +97,14 @@ void BufferedOutputStream::write( const char c ) throw (ActiveMQException){
 ////////////////////////////////////////////////////////////////////////////////		
 void BufferedOutputStream::write( const char* buffer, const int len ) 
 	throw (ActiveMQException)
-{
-	
-	int pos = 0;
-	
+{		
 	// Iterate until all the data is written.
-	while( pos < len ){
+	for( int pos=0; pos < len; ){
 		
+		if( tail >= bufferSize ){
+			emptyBuffer();
+		}
+	
 		// Get the number of bytes left to write.
 		int bytesToWrite = min( bufferSize-tail, len-pos );
 		
@@ -106,12 +115,7 @@ void BufferedOutputStream::write( const char* buffer, const int len )
 		tail += bytesToWrite;
 		
 		// Decrease the number of bytes to write.
-		pos += bytesToWrite;
-		
-		// If we don't have enough space in the buffer, flush it.
-		if( bytesToWrite < len || tail >= bufferSize ){
-			flush();
-		}		
+		pos += bytesToWrite;	
 	}	
 }
 

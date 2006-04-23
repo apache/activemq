@@ -63,6 +63,22 @@ int StompIO::readStompHeaderLine( char* buf, const int bufLen ) throw (ActiveMQE
 ////////////////////////////////////////////////////////////////////////////////
 int StompIO::readStompBodyLine( char* buf, const int bufLen ) throw (ActiveMQException){
 	
+    int content_length = 0;
+   
+   // Check for the content-length header.  This is optional - if not provided
+   // we stop when we encounter a \0\n.
+   const StompFrame::HeaderInfo* headerInfo = frame.getHeaderInfo(StompFrame::HEADER_CONTENTLENGTH);
+   if( headerInfo != NULL )
+   {
+      const char* lengthProperty = headerInfo->value;
+      char* stopped_string = NULL;
+
+      content_length = strtoul(
+         lengthProperty, 
+         &stopped_string, 
+         10);
+   }
+   
 	int pos = 0;
 	
 	while( pos < bufLen ){
@@ -72,12 +88,12 @@ int StompIO::readStompBodyLine( char* buf, const int bufLen ) throw (ActiveMQExc
 		
   		// Increment the position pointer.
   		pos++;
-  		
-  		// If we've reached the end of the body - return.
-  		if( (buf[pos-1]=='\0' && pos==1) ||
-  			(pos >= 2 && buf[pos-2]=='\0' && buf[pos-1] == '\n') ){	 				  			
-  			return pos;
-  		}
+        
+        // Are we at the end of the frame?  The end frame pattern is \0\n
+        bool foundFrameEndPattern = (pos >= 2 && buf[pos-2]=='\0' && buf[pos-1] == '\n'); 
+        if( (pos > content_length) && foundFrameEndPattern ){                             
+            return pos;
+        }
 	}
 	
 	// Reading is not complete.
@@ -220,6 +236,7 @@ void StompIO::writeStompFrame( StompFrame& frame ) throw( ActiveMQException ){
     	write( body, frame.getBodyLength() );
    	}
    	write( '\0' );
+   	write( '\n' );
    	
    	// Flush the stream.
    	flush();
