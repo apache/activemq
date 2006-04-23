@@ -42,6 +42,11 @@ namespace io{
 	
 		void init( OutputStream* stream, const int bufSize );
 		
+		/**
+       	 * Writes the contents of the buffer to the output stream.
+       	 */
+      	void emptyBuffer() throw (ActiveMQException);
+        
 	private:
 	
 		OutputStream* stream;
