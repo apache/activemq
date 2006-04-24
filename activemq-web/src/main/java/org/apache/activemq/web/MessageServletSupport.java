@@ -115,7 +115,11 @@ public abstract class MessageServletSupport extends HttpServlet {
 
 
     protected void appendParametersToMessage(HttpServletRequest request, TextMessage message) throws JMSException {
-        Map parameters = new HashMap(request.getParameterMap());
+        Map parameterMap = request.getParameterMap();
+        if (parameterMap == null) {
+            return;
+        }
+        Map parameters = new HashMap(parameterMap);
         String correlationID = asString(parameters.remove("JMSCorrelationID"));
         if (correlationID != null) {
             message.setJMSCorrelationID(correlationID);
@@ -160,6 +164,7 @@ public abstract class MessageServletSupport extends HttpServlet {
                 }
             }
         }
+        
     }
 
     protected Destination asDestination(Object value) {
