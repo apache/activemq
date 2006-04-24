@@ -183,6 +183,8 @@ public class KahaStore implements Store{
     }
 
     protected synchronized void initialize() throws IOException{
+    	if( closed )
+    		throw new IOException("Store has been closed.");
         if(!initialized){
             initialized=true;
             directory=new File(name);
