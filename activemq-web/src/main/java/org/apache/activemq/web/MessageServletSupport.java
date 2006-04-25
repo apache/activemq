@@ -52,8 +52,11 @@ public abstract class MessageServletSupport extends HttpServlet {
     private boolean defaultTopicFlag = true;
     private Destination defaultDestination;
     private String destinationParameter = "destination";
-    private String topicParameter = "topic";
+    private String typeParameter = "type";
     private String bodyParameter = "body";
+    private boolean defaultMessagePersistent = true;
+    private int defaultMessagePriority = 5;
+    private long defaultMessageTimeToLive = 0;
 
 
     public void init(ServletConfig servletConfig) throws ServletException {
@@ -144,7 +147,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         for (Iterator iter = parameters.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry) iter.next();
             String name = (String) entry.getKey();
-            if (!destinationParameter.equals(name) && !topicParameter.equals(name) && !bodyParameter.equals(name)) {
+            if (!destinationParameter.equals(name) && !typeParameter.equals(name) && !bodyParameter.equals(name)) {
                 Object value = entry.getValue();
                 if (value instanceof Object[]) {
                     Object[] array = (Object[]) value;
@@ -164,7 +167,26 @@ public abstract class MessageServletSupport extends HttpServlet {
                 }
             }
         }
-        
+    }
+
+    protected long getSendTimeToLive(HttpServletRequest request) {
+        String text = request.getParameter("JMSTimeToLive");
+        if (text != null) {
+            return asLong(text);
+        }
+        return defaultMessageTimeToLive;
+    }
+
+    protected int getSendPriority(HttpServletRequest request) {
+        String text = request.getParameter("JMSPriority");
+        if (text != null) {
+            return asInt(text);
+        }
+        return defaultMessagePriority;
+    }
+
+    protected boolean isSendPersistent(HttpServletRequest request) {
+        return defaultMessagePersistent;
     }
 
     protected Destination asDestination(Object value) {
@@ -206,6 +228,14 @@ public abstract class MessageServletSupport extends HttpServlet {
             return Long.valueOf(((String[]) value)[0]);
         }
         return null;
+    }
+
+    protected long asLong(String name) {
+        return Long.parseLong(name);
+    }
+    
+    protected int asInt(String name) {
+        return Integer.parseInt(name);
     }
 
     protected String asString(Object value) {
@@ -291,16 +321,11 @@ public abstract class MessageServletSupport extends HttpServlet {
      * @return true if the current request is for a topic destination, else false if its for a queue
      */
     protected boolean isTopic(HttpServletRequest request) {
-        boolean aTopic = defaultTopicFlag;
-        String aTopicText = request.getParameter(topicParameter);
-        if (aTopicText != null) {
-            aTopic = asBoolean(aTopicText);
+        String typeText = request.getParameter(typeParameter);
+        if (typeText == null) {
+            return defaultTopicFlag;
         }
-        return aTopic;
-    }
-
-    protected long asLong(String name) {
-        return Long.parseLong(name);
+        return typeText.equalsIgnoreCase("topic");
     }
 
     /**

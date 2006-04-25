@@ -52,12 +52,12 @@ import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.Semaphore;
 
 /**
- * Represents a messaging client used from inside a web container
- * typically stored inside a HttpSession
+ * Represents a messaging client used from inside a web container typically
+ * stored inside a HttpSession
  * 
- * TODO controls to prevent DOS attacks with users requesting many consumers 
+ * TODO controls to prevent DOS attacks with users requesting many consumers
  * TODO configure consumers with small prefetch.
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 public class WebClient implements HttpSessionActivationListener, HttpSessionBindingListener, Externalizable {
@@ -68,8 +68,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     private static final Log log = LogFactory.getLog(WebClient.class);
 
     private static transient ConnectionFactory factory;
-    
-    
+
     private transient Map consumers = new HashMap();
     private transient ActiveMQConnection connection;
     private transient ActiveMQSession session;
@@ -78,14 +77,13 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     private final Semaphore semaphore = new Semaphore(1);
 
-
     /**
-     * @return the web client for the current HTTP session or null if there is not a web client created yet
+     * @return the web client for the current HTTP session or null if there is
+     *         not a web client created yet
      */
     public static WebClient getWebClient(HttpSession session) {
         return (WebClient) session.getAttribute(webClientAttribute);
     }
-
 
     public static void initContext(ServletContext context) {
         initConnectionFactory(context);
@@ -94,34 +92,29 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     /**
      */
     public WebClient() {
-        if (factory==null)
+        if (factory == null)
             throw new IllegalStateException("initContext(ServletContext) not called");
     }
 
-    
     public int getDeliveryMode() {
         return deliveryMode;
     }
-
 
     public void setDeliveryMode(int deliveryMode) {
         this.deliveryMode = deliveryMode;
     }
 
-
-    public synchronized void closeConsumers() 
-    {
+    public synchronized void closeConsumers() {
         for (Iterator it = consumers.values().iterator(); it.hasNext();) {
             MessageConsumer consumer = (MessageConsumer) it.next();
             it.remove();
-            try{
+            try {
                 consumer.setMessageListener(null);
                 if (consumer instanceof MessageAvailableConsumer)
-                    ((MessageAvailableConsumer)consumer).setAvailableListener(null);
+                    ((MessageAvailableConsumer) consumer).setAvailableListener(null);
                 consumer.close();
             }
-            catch(JMSException e)
-            {
+            catch (JMSException e) {
                 e.printStackTrace();
             }
         }
@@ -130,55 +123,51 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     public synchronized void close() {
         try {
             closeConsumers();
-            if (connection!=null)
+            if (connection != null)
                 connection.close();
-        } catch (JMSException e) {
+        }
+        catch (JMSException e) {
             throw new RuntimeException(e);
         }
         finally {
             producer = null;
             session = null;
             connection = null;
-            if (consumers!=null)
+            if (consumers != null)
                 consumers.clear();
-            consumers=null;
+            consumers = null;
         }
     }
-    
-    public boolean isClosed()
-    {
-        return consumers==null;
+
+    public boolean isClosed() {
+        return consumers == null;
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
-        
-        if (consumers!=null)
-        {
+        if (consumers != null) {
             out.write(consumers.size());
-            Iterator i=consumers.keySet().iterator();
-            while(i.hasNext())
+            Iterator i = consumers.keySet().iterator();
+            while (i.hasNext())
                 out.writeObject(i.next().toString());
         }
         else
             out.write(-1);
-            
+
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         int size = in.readInt();
-        if (size >=0) {
+        if (size >= 0) {
             consumers = new HashMap();
-            for (int i=0;i<size;i++) {
-                String  destinationName = in.readObject().toString(); 
-                
-                try{
-                    Destination destination = destinationName.startsWith("topic://")
-                    ?(Destination)getSession().createTopic(destinationName)
-                    :(Destination)getSession().createQueue(destinationName);
-                    consumers.put(destination,getConsumer(destination, true));
+            for (int i = 0; i < size; i++) {
+                String destinationName = in.readObject().toString();
+
+                try {
+                    Destination destination = destinationName.startsWith("topic://") ? (Destination) getSession().createTopic(destinationName)
+                            : (Destination) getSession().createQueue(destinationName);
+                    consumers.put(destination, getConsumer(destination, true));
                 }
-                catch (JMSException e)
-                {
+                catch (JMSException e) {
                     e.printStackTrace(); // TODO better handling?
                 }
             }
@@ -186,11 +175,15 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     public void send(Destination destination, Message message) throws JMSException {
-        if (producer == null) {
-            producer = getSession().createProducer(null);
-            producer.setDeliveryMode(deliveryMode );
+        getProducer().send(destination, message);
+        if (log.isDebugEnabled()) {
+            log.debug("Sent! to destination: " + destination + " message: " + message);
         }
-        producer.send(destination, message);
+    }
+
+    public void send(Destination destination, Message message, boolean persistent, int priority, int timeToLive) throws JMSException {
+        int deliveryMode = persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT;
+        getProducer().send(destination, message, deliveryMode, priority, timeToLive);
         if (log.isDebugEnabled()) {
             log.debug("Sent! to destination: " + destination + " message: " + message);
         }
@@ -212,30 +205,41 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     public static synchronized void initConnectionFactory(ServletContext servletContext) {
-        if (factory==null)
+        if (factory == null)
             factory = (ConnectionFactory) servletContext.getAttribute(connectionFactoryAttribute);
         if (factory == null) {
             String brokerURL = servletContext.getInitParameter(brokerUrlInitParam);
-            
+
             servletContext.log("Value of: " + brokerUrlInitParam + " is: " + brokerURL);
-            
+
             if (brokerURL == null) {
                 brokerURL = "vm://localhost";
             }
-            
+
             ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(brokerURL);
             factory = amqfactory;
-           
+
             servletContext.setAttribute(connectionFactoryAttribute, factory);
         }
     }
 
+    public synchronized MessageProducer getProducer() throws JMSException {
+        if (producer == null) {
+            producer = getSession().createProducer(null);
+            producer.setDeliveryMode(deliveryMode);
+        }
+        return producer;
+    }
+
+    public void setProducer(MessageProducer producer) {
+        this.producer = producer;
+    }
+
     public synchronized MessageConsumer getConsumer(Destination destination) throws JMSException {
-        return getConsumer(destination,true);
+        return getConsumer(destination, true);
     }
 
     public synchronized MessageConsumer getConsumer(Destination destination, boolean create) throws JMSException {
-        
         MessageConsumer consumer = (MessageConsumer) consumers.get(destination);
         if (create && consumer == null) {
             consumer = getSession().createConsumer(destination);
@@ -250,20 +254,18 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
             consumers.remove(destination);
             consumer.setMessageListener(null);
             if (consumer instanceof MessageAvailableConsumer)
-                ((MessageAvailableConsumer)consumer).setAvailableListener(null);
+                ((MessageAvailableConsumer) consumer).setAvailableListener(null);
             consumer.close();
         }
     }
-    
-    public synchronized List getConsumers()
-    {
+
+    public synchronized List getConsumers() {
         return new ArrayList(consumers.values());
     }
 
     protected ActiveMQSession createSession() throws JMSException {
         return (ActiveMQSession) getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
-
 
     public Semaphore getSemaphore() {
         return semaphore;
