@@ -29,6 +29,10 @@
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 
+  <prerequisites>
+    <maven>2.0.4</maven>
+  </prerequisites>
+
   <ciManagement>
     <system>continuum</system>
     <url>http://ci.gbuild.org/continuum</url>
