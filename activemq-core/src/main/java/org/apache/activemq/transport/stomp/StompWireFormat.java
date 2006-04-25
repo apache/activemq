@@ -100,17 +100,27 @@ public class StompWireFormat implements WireFormat {
                 return pendingReadCommands.poll(0, TimeUnit.MILLISECONDS);
             }
         });
+        
         if (pending != null) {
             return pending;
         }
 
         try {
             Command command = commandParser.parse(in);
+            addToPendingReadCommands(command);          
+            
+            command = (Command) AsyncHelper.tryUntilNotInterrupted(new AsyncHelper.HelperWithReturn() {
+                public Object cycle() throws InterruptedException {
+                    return pendingReadCommands.poll(0, TimeUnit.MILLISECONDS);
+                }
+            });
+            
             if( !connected ) {
                 if( command.getDataStructureType() != ConnectionInfo.DATA_STRUCTURE_TYPE )
                     throw new IOException("Not yet connected.");
             }
             return command;
+
         }
         catch (ProtocolException e) {
             sendError(e.getMessage());
