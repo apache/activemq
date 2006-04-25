@@ -47,9 +47,9 @@ namespace concurrent{
 	    pthread_mutexattr_t attributes;
 	    pthread_mutexattr_init( &attributes );
 
-            #ifdef __USE_UNIX98
+       #if defined(__USE_UNIX98) || defined(__APPLE__)
 	        pthread_mutexattr_settype( &attributes, PTHREAD_MUTEX_RECURSIVE );
-            #endif
+       #endif
 
 	    // Initialize the mutex.
 	    pthread_mutex_init( &mutex, &attributes );
