@@ -47,6 +47,12 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <servlet>
+        <servlet-name>MessageServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
     <!-- the queue browse servlet -->
     <servlet>
         <servlet-name>QueueBrowseServlet</servlet-name>
@@ -63,6 +69,11 @@
     <servlet-mapping>
         <servlet-name>AjaxServlet</servlet-name>
         <url-pattern>/amq/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>MessageServlet</servlet-name>
+        <url-pattern>/message/*</url-pattern>
     </servlet-mapping>
     
     <servlet-mapping>
