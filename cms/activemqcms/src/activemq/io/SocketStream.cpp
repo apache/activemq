@@ -27,6 +27,14 @@
 using namespace activemq::io;
 using namespace std;
 
+#if defined(__APPLE__)
+#define SOCKET_NOSIGNAL SO_NOSIGPIPE
+#elif defined( unix )
+#define SOCKET_NOSIGNAL MSG_NOSIGNAL
+#else
+#define SOCKET_NOSIGNAL 0
+#endif
+
 extern int errno;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +92,7 @@ int SocketStream::read( char* buffer, const int bufferSize ) throw (ActiveMQExce
         // Check for typical error conditions.
         if( len < 0 ){
                         
-            #if defined(unix) && !defined(__CYGWIN__)
+            #if ( defined(unix) || defined(__APPLE__) ) && !defined(__CYGWIN__)
             
                 // If the socket was temporarily unavailable - just try again.
                 if( errno == EAGAIN ){
@@ -156,8 +164,8 @@ void SocketStream::write( const char c ) throw (ActiveMQException){
 		printf("%c", c );
 	}
 	else printf("[%d]", c );*/
-	
-	int success = send( socket->getHandle(), &c, sizeof(c), MSG_NOSIGNAL );
+	   
+	int success = send( socket->getHandle(), &c, sizeof(c), SOCKET_NOSIGNAL );
 	if( success < 0 ){
         socket->close();
 		char buf[500];
@@ -184,15 +192,8 @@ void SocketStream::write( const char* buffer, const int len )
 	
 	int remaining = len;
 	while( remaining > 0 ) {
-      	
-        int flags = 0;
-        #if defined(OSX)
-            flags = SO_NOSIGPIPE;
-        #elif defined( unix )
-            flags = MSG_NOSIGNAL;
-        #endif
-        
-      	int length = send( socket->getHandle(), buffer, remaining, flags );      	
+      	        
+      	int length = send( socket->getHandle(), buffer, remaining, SOCKET_NOSIGNAL );      	
       	if( length < 0 ){
             socket->close();
       		char buf[500];
