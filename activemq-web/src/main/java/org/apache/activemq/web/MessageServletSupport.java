@@ -199,6 +199,9 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
         if (value instanceof String[]) {
             String text = ((String[]) value)[0];
+            if (text == null) {
+                return null;
+            }
             return ActiveMQDestination.createDestination(text, ActiveMQDestination.QUEUE_TYPE);
         }
         return null;
