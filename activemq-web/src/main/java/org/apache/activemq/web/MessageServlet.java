@@ -95,6 +95,9 @@ public class MessageServlet extends MessageServletSupport {
 
             TextMessage message = client.getSession().createTextMessage(text);
             appendParametersToMessage(request, message);
+            boolean persistent = isSendPersistent(request);
+            int priority = getSendPriority(request);
+            long timeToLive = getSendTimeToLive(request);
             client.send(destination, message);
 
             // lets return a unique URI for reliable messaging
