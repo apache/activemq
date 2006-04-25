@@ -35,7 +35,6 @@ import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
 import org.apache.activemq.broker.jmx.BrokerView;
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.FTConnectorView;
@@ -96,6 +95,7 @@ public class BrokerService implements Service, Serializable {
     private String brokerName = "localhost";
     private File dataDirectory;
     private Broker broker;
+    private BrokerView adminView;
     private ManagementContext managementContext;
     private ObjectName brokerObjectName;
     private TaskRunnerFactory taskRunnerFactory;
@@ -121,7 +121,6 @@ public class BrokerService implements Service, Serializable {
     private AtomicBoolean started = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
     private boolean keepDurableSubsActive=true;
-
     private BrokerId brokerId;
 
     /**
@@ -426,13 +425,15 @@ public class BrokerService implements Service, Serializable {
 
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext();) {
-                ObjectName name = (ObjectName) iter.next();
-                try {
-                    mbeanServer.unregisterMBean(name);
-                }
-                catch (Exception e) {
-                    stopper.onException(mbeanServer, e);
+            if (mbeanServer != null) {
+                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext();) {
+                    ObjectName name = (ObjectName) iter.next();
+                    try {
+                        mbeanServer.unregisterMBean(name);
+                    }
+                    catch (Exception e) {
+                        stopper.onException(mbeanServer, e);
+                    }
                 }
             }
             stopper.stop(getManagementContext());
@@ -445,6 +446,10 @@ public class BrokerService implements Service, Serializable {
 
     // Properties
     // -------------------------------------------------------------------------
+    
+    /**
+     * Returns the message broker
+     */
     public Broker getBroker() throws Exception {
         if (broker == null) {
             log.info("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION + " JMS Message Broker ("
@@ -453,6 +458,24 @@ public class BrokerService implements Service, Serializable {
             broker = createBroker();
         }
         return broker;
+    }
+
+    
+    /**
+     * Returns the administration view of the broker; used to create and destroy resources such as queues and topics.
+     * 
+     * Note this method returns null if JMX is disabled.
+     */
+    public BrokerView getAdminView() throws Exception {
+        if (adminView == null) {
+            // force lazy creation
+            getBroker();
+        }
+        return adminView;
+    }
+
+    public void setAdminView(BrokerView adminView) {
+        this.adminView = adminView;
     }
 
     public String getBrokerName() {
@@ -774,84 +797,82 @@ public class BrokerService implements Service, Serializable {
 
     protected void registerConnectorMBean(TransportConnector connector, ObjectName objectName) throws IOException, URISyntaxException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-        ConnectorViewMBean view = new ConnectorView(connector);
-        try {
-            mbeanServer.registerMBean(view, objectName);
-            registeredMBeanNames.add(objectName);
-        }
-        catch (Throwable e) {
-            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+        if (mbeanServer != null) {
+            ConnectorViewMBean view = new ConnectorView(connector);
+            try {
+                mbeanServer.registerMBean(view, objectName);
+                registeredMBeanNames.add(objectName);
+            }
+            catch (Throwable e) {
+                throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+            }
         }
     }
 
     protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-        NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
-        try {
-        	ObjectName objectName = new ObjectName(
-            		managementContext.getJmxDomainName()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=NetworkConnector,"+
-                    "NetworkConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
-            		);
-            mbeanServer.registerMBean(view, objectName);
-            registeredMBeanNames.add(objectName);
-        }
-        catch (Throwable e) {
-            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+        if (mbeanServer != null) {
+            NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
+            try {
+                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
+                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=NetworkConnector," + "NetworkConnectorName="
+                        + JMXSupport.encodeObjectNamePart(connector.getName()));
+                mbeanServer.registerMBean(view, objectName);
+                registeredMBeanNames.add(objectName);
+            }
+            catch (Throwable e) {
+                throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+            }
         }
     }
 
     protected void registerProxyConnectorMBean(ProxyConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-        ProxyConnectorView view = new ProxyConnectorView(connector);
-        try {
-        	ObjectName objectName = new ObjectName(
-            		managementContext.getJmxDomainName()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=ProxyConnector,"+
-                    "ProxyConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
-            		);
-            mbeanServer.registerMBean(view, objectName);
-            registeredMBeanNames.add(objectName);
-        }
-        catch (Throwable e) {
-            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+        if (mbeanServer != null) {
+            ProxyConnectorView view = new ProxyConnectorView(connector);
+            try {
+                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
+                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=ProxyConnector," + "ProxyConnectorName="
+                        + JMXSupport.encodeObjectNamePart(connector.getName()));
+                mbeanServer.registerMBean(view, objectName);
+                registeredMBeanNames.add(objectName);
+            }
+            catch (Throwable e) {
+                throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+            }
         }
     }
-    
+
     protected void registerFTConnectorMBean(MasterConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-        FTConnectorView view = new FTConnectorView(connector);
-        try {
-        	ObjectName objectName = new ObjectName(
-            		managementContext.getJmxDomainName()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=MasterConnector"
-            		);
-            mbeanServer.registerMBean(view, objectName);
-            registeredMBeanNames.add(objectName);
-        }
-        catch (Throwable e) {
-            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+        if (mbeanServer != null) {
+            FTConnectorView view = new FTConnectorView(connector);
+            try {
+                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
+                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=MasterConnector");
+                mbeanServer.registerMBean(view, objectName);
+                registeredMBeanNames.add(objectName);
+            }
+            catch (Throwable e) {
+                throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+            }
         }
     }
-    
+
     protected void registerJmsConnectorMBean(JmsConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-        JmsConnectorView view = new JmsConnectorView(connector);
-        try {
-        	ObjectName objectName = new ObjectName(
-            		managementContext.getJmxDomainName()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=JmsConnector,"+
-                    "JmsConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
-            		);
-            mbeanServer.registerMBean(view, objectName);
-            registeredMBeanNames.add(objectName);
-        }
-        catch (Throwable e) {
-            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+        if (mbeanServer != null) {
+            JmsConnectorView view = new JmsConnectorView(connector);
+            try {
+                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
+                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=JmsConnector," + "JmsConnectorName="
+                        + JMXSupport.encodeObjectNamePart(connector.getName()));
+                mbeanServer.registerMBean(view, objectName);
+                registeredMBeanNames.add(objectName);
+            }
+            catch (Throwable e) {
+                throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+            }
         }
     }
     
@@ -882,11 +903,13 @@ public class BrokerService implements Service, Serializable {
         if (isUseJmx()) {
             ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
             managedBroker.setContextBroker(broker);
-            BrokerViewMBean view = new BrokerView(this, managedBroker);
+            adminView = new BrokerView(this, managedBroker);
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            ObjectName objectName = getBrokerObjectName();
-            mbeanServer.registerMBean(view, objectName);
-            registeredMBeanNames.add(objectName);
+            if (mbeanServer != null) {
+                ObjectName objectName = getBrokerObjectName();
+                mbeanServer.registerMBean(adminView, objectName);
+                registeredMBeanNames.add(objectName);
+            }
         }
         
 
@@ -908,8 +931,8 @@ public class BrokerService implements Service, Serializable {
 		RegionBroker regionBroker = null;
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            regionBroker = new ManagedRegionBroker(this,mbeanServer, getBrokerObjectName(),
-                    getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter());
+            regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getMemoryManager(),
+                    getPersistenceAdapter());
         }
         else {
 			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter());
@@ -1068,7 +1091,7 @@ public class BrokerService implements Service, Serializable {
                 JmsConnector connector = (JmsConnector) iter.next();
                 connector.start();
             }
-            }
+        }
     }
 
     protected void startTransportConnector(TransportConnector connector) throws Exception {
