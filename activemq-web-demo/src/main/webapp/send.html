@@ -8,9 +8,17 @@
 <body>
 <h1>Send a JMS Message</h1>
 
-<form action="amq/FOO/BAR?topic=false" method="post">
+<form action="message/FOO/BAR" method="post">
   <p>
-    <label for="body">Message body: </label>
+    <label for="destination">Destination name</label>
+    <input type="text" name="destination"/>
+  </p>
+  <p>
+    <label for="type">Destination Type: </label>
+    <select name="type">
+      <option selected value="queue">Queue</option>
+      <option type" value="topic">Topic</option>
+   </select>
   </p>
   <p>
     <textarea name="body" rows="30" cols="80">
