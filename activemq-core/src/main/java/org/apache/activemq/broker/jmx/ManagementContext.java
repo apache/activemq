@@ -14,6 +14,8 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.rmi.registry.LocateRegistry;
 import java.util.List;
@@ -27,6 +29,7 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 import org.apache.activemq.Service;
+import org.apache.activemq.util.ClassLoading;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +52,7 @@ public class ManagementContext implements Service{
     private boolean createMBeanServer=true;
     private boolean locallyCreateMBeanServer=false;
     private boolean createConnector=true;
+    private boolean findTigerMbeanServer=false;
     private int connectorPort=1099;
     private String connectorPath="/jmxrmi";
     private AtomicBoolean started=new AtomicBoolean(false);
@@ -186,6 +190,17 @@ public class ManagementContext implements Service{
         this.createMBeanServer=enableJMX;
     }
 
+    public boolean isFindTigerMbeanServer() {
+        return findTigerMbeanServer;
+    }
+
+    /**
+     * Enables/disables the searching for the Java 5 platform MBeanServer
+     */
+    public void setFindTigerMbeanServer(boolean findTigerMbeanServer) {
+        this.findTigerMbeanServer = findTigerMbeanServer;
+    }
+
     /**
      * Formulate and return the MBean ObjectName of a custom control MBean
      * 
@@ -261,11 +276,16 @@ public class ManagementContext implements Service{
         // create the mbean server
         try{
             if(useMBeanServer){
-                // lets piggy back on another MBeanServer -
-                // we could be in an appserver!
-                List list=MBeanServerFactory.findMBeanServer(null);
-                if(list!=null&&list.size()>0){
-                    result=(MBeanServer) list.get(0);
+                if (findTigerMbeanServer) {
+                    result = findTigerMBeanServer();
+                }
+                if (result == null) {
+                    // lets piggy back on another MBeanServer -
+                    // we could be in an appserver!
+                    List list=MBeanServerFactory.findMBeanServer(null);
+                    if(list!=null&&list.size()>0){
+                        result=(MBeanServer) list.get(0);
+                    }
                 }
             }
             if(result==null&&createMBeanServer){
@@ -278,6 +298,49 @@ public class ManagementContext implements Service{
             log.error("Failed to initialize MBeanServer",e);
         }
         return result;
+    }
+
+    public static MBeanServer findTigerMBeanServer() {
+        String name = "java.lang.management.ManagementFactory";
+        Class type = loadClass(name, ManagementContext.class.getClassLoader());
+        if (type != null) {
+            try {
+                Method method = type.getMethod("getPlatformMBeanServer", new Class[0]);
+                if (method != null) {
+                    Object answer = method.invoke(null, new Object[0]);
+                    if (answer instanceof MBeanServer) {
+                        return (MBeanServer) answer;
+                    }
+                    else {
+                        log.warn("Could not cast: " + answer + " into an MBeanServer. There must be some classloader strangeness in town");
+                    }
+                }
+                else {
+                    log.warn("Method getPlatformMBeanServer() does not appear visible on type: " + type.getName());
+                }
+            }
+            catch (Exception e) {
+                log.warn("Failed to call getPlatformMBeanServer() due to: " + e, e);
+            }
+        }
+        else {
+            log.trace("Class not found: " + name + " so probably running on Java 1.4");
+        }
+        return null;
+    }
+
+    private static Class loadClass(String name, ClassLoader loader) {
+        try {
+            return loader.loadClass(name);
+        }
+        catch (ClassNotFoundException e) {
+            try {
+                return Thread.currentThread().getContextClassLoader().loadClass(name);
+            }
+            catch (ClassNotFoundException e1) {
+                return null;
+            }
+        }
     }
 
     /**

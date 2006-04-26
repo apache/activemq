@@ -25,6 +25,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
+import java.util.Map;
+
 /**
  * A Region is used to implement the different QOS options available to 
  * a broker.  A Broker is composed of multiple message processing Regions that
@@ -56,6 +58,14 @@ public interface Region extends Service {
      * @throws Exception TODO
      */
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception;
+
+    /**
+     * Returns a copy of the current destinations available in the region
+     * 
+     * @return a copy of the regions currently active at the time of the call with the key the destination and the value the Destination.
+     */
+    public Map getDestinationMap();
+    
 
     /**
      * Adds a consumer.

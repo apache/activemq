@@ -25,6 +25,11 @@ import javax.management.openmbean.TabularData;
 
 public interface DestinationViewMBean {
     
+    /**
+     * Returns the name of this destination
+     */
+    public String getName();
+    
 	/**
 	 * Resets the managment counters.
 	 */

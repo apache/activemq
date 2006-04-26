@@ -339,6 +339,10 @@ public class Topic implements Destination {
         return destination;
     }
 
+    public String getDestination() {
+        return destination.getPhysicalName();
+    }
+    
     public DispatchPolicy getDispatchPolicy() {
         return dispatchPolicy;
     }
