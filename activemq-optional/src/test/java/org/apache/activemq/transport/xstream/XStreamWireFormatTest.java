@@ -31,8 +31,8 @@ public class XStreamWireFormatTest extends MessageTest {
         super.assertBeanMarshalls(original);
 
         String xml = getXStreamWireFormat().toString((Command) original);
-        System.out.println(original.getClass().getName() + " as XML is:");
-        System.out.println(xml);
+        log.info(original.getClass().getName() + " as XML is:");
+        log.info(xml);
     }
 
     protected XStreamWireFormat getXStreamWireFormat() {

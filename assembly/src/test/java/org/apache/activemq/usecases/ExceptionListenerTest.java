@@ -71,7 +71,7 @@ public class ExceptionListenerTest extends TestCase implements ExceptionListener
             producer.send(session.createTextMessage("This will never get anywhere"));
         }
         catch (JMSException e) {
-            System.out.println("Caught: " + e);
+            log.info("Caught: " + e);
         }
 
         try {

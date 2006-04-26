@@ -73,7 +73,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         closeConsumer();
 
-        System.out.println("Now lets create the consumer again and because we didn't ack, we should get it again");
+        log.info("Now lets create the consumer again and because we didn't ack, we should get it again");
         makeConsumer();
 
         message = consumer.receive(RECEIVE_TIMEOUT);
@@ -82,7 +82,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         closeConsumer();
 
-        System.out.println("Now lets create the consumer again and because we didn't ack, we should get it again");
+        log.info("Now lets create the consumer again and because we didn't ack, we should get it again");
         makeConsumer();
 
         message = consumer.receive(2000);
@@ -90,7 +90,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         closeConsumer();
 
-        System.out.println("Lets publish one more message now");
+        log.info("Lets publish one more message now");
         publish();
 
         makeConsumer();
@@ -147,7 +147,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     protected void makeConsumer() throws Exception {
         String durableName = getName();
         String clientID = getSubject();
-        System.out.println("Creating a durable subscribe for clientID: " + clientID + " and durable name: " + durableName);
+        log.info("Creating a durable subscribe for clientID: " + clientID + " and durable name: " + durableName);
         createSession(clientID);
         consumer = createConsumer(durableName);
     }

@@ -16,19 +16,9 @@
  */
 
 package org.apache.activemq.transport;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.transport.discovery.rendezvous.RendezvousDiscoveryAgent;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -41,17 +31,25 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
 import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class TopicClusterTest extends TestCase implements MessageListener {
-    protected Log log = LogFactory.getLog(getClass());
+    protected final static Log log = LogFactory.getLog(TopicClusterTest.class);
     protected Destination destination;
     protected boolean topic = true;
     protected AtomicInteger receivedMessageCount = new AtomicInteger(0);
@@ -85,7 +83,7 @@ public class TopicClusterTest extends TestCase implements MessageListener {
                 consumer.setMessageListener(this);
 
             }
-            System.out.println("Sleeping to ensure cluster is fully connected");
+            log.info("Sleeping to ensure cluster is fully connected");
             Thread.sleep(5000);
         } finally {
             System.setProperty("activemq.store.dir", root);
@@ -147,7 +145,7 @@ public class TopicClusterTest extends TestCase implements MessageListener {
      * @param msg
      */
     public void onMessage(Message msg) {
-        //System.out.println("GOT: " + msg);
+        //log.info("GOT: " + msg);
         receivedMessageCount.incrementAndGet();
         synchronized (receivedMessageCount) {
             if (receivedMessageCount.get() >= expectedReceiveCount()) {

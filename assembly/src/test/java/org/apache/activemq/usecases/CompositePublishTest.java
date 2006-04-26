@@ -51,18 +51,18 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         receiveConnection = createConnection();
         receiveConnection.start();
 
-        System.out.println("Created sendConnection: " + sendConnection);
-        System.out.println("Created receiveConnection: " + receiveConnection);
+        log.info("Created sendConnection: " + sendConnection);
+        log.info("Created receiveConnection: " + receiveConnection);
 
         session = sendConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         receiveSession = receiveConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        System.out.println("Created sendSession: " + session);
-        System.out.println("Created receiveSession: " + receiveSession);
+        log.info("Created sendSession: " + session);
+        log.info("Created receiveSession: " + receiveSession);
 
         producer = session.createProducer(null);
 
-        System.out.println("Created producer: " + producer);
+        log.info("Created producer: " + producer);
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
@@ -73,8 +73,8 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        System.out.println("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
-        System.out.println("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
+        log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
+        log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
 
         Destination[] destinations = getDestinations();
         consumers = new MessageConsumer[destinations.length];
@@ -87,7 +87,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         }
 
 
-        System.out.println("Started connections");
+        log.info("Started connections");
     }
 
     protected MessageListener createMessageListener(int i, final List messageList) {
@@ -120,7 +120,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         waitForMessagesToBeDelivered();
 
         for (int i = 0, size = messageLists.length; i < size; i++) {
-            System.out.println("Message list: " + i + " contains: " + messageLists[i].size() + " message(s)");
+            log.info("Message list: " + i + " contains: " + messageLists[i].size() + " message(s)");
         }
 
         for (int i = 0, size = messageLists.length; i < size; i++) {

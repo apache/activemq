@@ -43,6 +43,8 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.transport.activeio.ActiveIOTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -52,6 +54,9 @@ import org.springframework.core.io.Resource;
  * @version $Revision: 1.2 $
  */
 public class ConfigTest extends TestCase {
+    
+    private static final Log log = LogFactory.getLog(ConfigTest.class);
+    
     protected static final String JOURNAL_ROOT = "target/test-data/";
     protected static final String DERBY_ROOT = "target/test-data/";
     protected static final String CONF_ROOT = "src/sample-conf/";
@@ -99,7 +104,7 @@ public class ConfigTest extends TestCase {
             System.out.print("Checking persistence adapter factory settings... ");
             JournalPersistenceAdapter pa = (JournalPersistenceAdapter) broker.getPersistenceAdapter();
             
-            System.out.println("Success");
+            log.info("Success");
         } finally {
             if (broker != null) {
                 broker.stop();
@@ -128,7 +133,7 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have created a DefaultWireFormat",
                     ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof DefaultWireFormat);
 
-            System.out.println("Success");
+            log.info("Success");
         } finally {
             if (broker != null) {
                 broker.stop();
@@ -149,7 +154,7 @@ public class ConfigTest extends TestCase {
         // Create broker from resource
         System.out.print("Creating broker... ");
         broker = createBroker("org/apache/activemq/config/example.xml");
-        System.out.println("Success");
+        log.info("Success");
 
         try {
             // Check broker configuration
@@ -161,12 +166,12 @@ public class ConfigTest extends TestCase {
             assertEquals("Broker Config Error (persistent)", false, broker.isPersistent());
             assertEquals("Broker Config Error (useShutdownHook)", false, broker.isUseShutdownHook());
             assertEquals("Broker Config Error (deleteAllMessagesOnStartup)", true, broker.isDeleteAllMessagesOnStartup());
-            System.out.println("Success");
+            log.info("Success");
 
             // Check specific vm transport
             System.out.print("Checking vm connector... ");
             assertEquals("Should have a specific VM Connector", "vm://javacoola", broker.getVmConnectorURI().toString());
-            System.out.println("Success");
+            log.info("Success");
 
             // Check transport connectors list
             System.out.print("Checking transport connectors... ");
@@ -188,13 +193,13 @@ public class ConfigTest extends TestCase {
             assertEquals("WireFormat Config Error (stackTraceEnabled)", false, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isStackTraceEnabled());
             assertEquals("WireFormat Config Error (tcpNoDelayEnabled)", true, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isTcpNoDelayEnabled());
             assertEquals("WireFormat Config Error (cacheEnabled)", false, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isCacheEnabled());
-            System.out.println("Success");
+            log.info("Success");
 
             // Check network connectors
             System.out.print("Checking network connectors... ");
             List networkConnectors = broker.getNetworkConnectors();
             assertEquals("Should have a single network connector", 1, networkConnectors.size());
-            System.out.println("Success");
+            log.info("Success");
 
             // Check dispatch policy configuration
             System.out.print("Checking dispatch policies... ");
@@ -210,7 +215,7 @@ public class ConfigTest extends TestCase {
             dest = new ActiveMQTopic("Topic.StrictOrderDispatch");
             assertTrue("Should have a strict order dispatch policy for " + dest.getTopicName(),
                     broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof StrictOrderDispatchPolicy);
-            System.out.println("Success");
+            log.info("Success");
 
             // Check subscription policy configuration
             System.out.print("Checking subscription recovery policies... ");
@@ -241,7 +246,7 @@ public class ConfigTest extends TestCase {
                     subsPolicy instanceof TimedSubscriptionRecoveryPolicy);
             assertEquals("TimedSubsPolicy Config Error (recoverDuration)", 25000,
                     ((TimedSubscriptionRecoveryPolicy)subsPolicy).getRecoverDuration());
-            System.out.println("Success");
+            log.info("Success");
 
             // Check usage manager
             System.out.print("Checking memory manager configurations... ");
@@ -249,9 +254,9 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have a memory manager", memMgr != null);
             assertEquals("UsageManager Config Error (limit)", 200000, memMgr.getLimit());
             assertEquals("UsageManager Config Error (percentUsageMinDelta)", 20, memMgr.getPercentUsageMinDelta());
-            System.out.println("Success");
+            log.info("Success");
 
-            System.out.println("Success");
+            log.info("Success");
         } finally {
             if (broker != null) {
                 broker.stop();
@@ -278,7 +283,7 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have created a journal persistence adapter", adapter instanceof JournalPersistenceAdapter);
             assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
 
-            System.out.println("Success");
+            log.info("Success");
         } finally {
             if (broker != null) {
                 broker.stop();
@@ -310,7 +315,7 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have not created a derby directory at " + derbyFile.getAbsolutePath(), !derbyFile.exists());
             assertTrue("Should have not created a journal directory at " + journalFile.getAbsolutePath(), !journalFile.exists());
 
-            System.out.println("Success");
+            log.info("Success");
         } finally {
             if (broker != null) {
                 broker.stop();

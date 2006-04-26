@@ -19,6 +19,8 @@ package org.apache.activemq.usecases;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.*;
 import java.util.List;
@@ -29,6 +31,8 @@ import java.io.File;
 
 public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCase implements MessageListener {
 
+    private static final Log log = LogFactory.getLog(PublishOnQueueConsumedMessageInTransactionTest.class);
+    
     private Session producerSession;
     private Session consumerSession;
     private Destination queue;
@@ -89,12 +93,12 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
                 objectMessage = producerSession.createObjectMessage(data[i]);
                 producer.send(objectMessage);
                 producerSession.commit();
-                System.out.println("sending message :" + objectMessage);
+                log.info("sending message :" + objectMessage);
             }
         } catch (Exception e) {
             if (producerSession != null) {
                 producerSession.rollback();
-                System.out.println("rollback");
+                log.info("rollback");
                 producerSession.close();
             }
 
@@ -108,18 +112,18 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
             objectMessage = (ObjectMessage) m;
             consumeMessage(objectMessage,messages);
 
-            System.out.println("consumer received message :" + objectMessage);
+            log.info("consumer received message :" + objectMessage);
             consumerSession.commit();
 
         } catch (Exception e) {
             try {
                 consumerSession.rollback();
-                System.out.println("rolled back transaction");
+                log.info("rolled back transaction");
             } catch (JMSException e1) {
-                System.out.println(e1);
+                log.info(e1);
                 e1.printStackTrace();
             }
-            System.out.println(e);
+            log.info(e);
             e.printStackTrace();
         }
     }
