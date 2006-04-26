@@ -39,7 +39,7 @@ public class QueueBrowseQuery extends DestinationFacade implements DisposableBea
         super(brokerService);
         this.sessionPool = sessionPool;
         this.session = sessionPool.borrowSession();
-
+        setJMSDestinationType("query");
     }
 
     public void destroy() throws Exception {
