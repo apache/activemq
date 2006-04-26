@@ -45,8 +45,13 @@ public class DestinationView {
         this.destination=destination;
     }
 
+    
     public void gc(){
         destination.gc();
+    }
+
+    public String getName() {
+        return destination.getActiveMQDestination().getPhysicalName();
     }
 
     public void resetStatistics(){

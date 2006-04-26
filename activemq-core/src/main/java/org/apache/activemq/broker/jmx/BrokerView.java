@@ -38,6 +38,10 @@ public class BrokerView implements BrokerViewMBean {
 		this.broker = managedBroker;
     }
     
+    public ManagedRegionBroker getBroker() {
+        return broker;
+    }
+
     public String getBrokerId() {
         return broker.getBrokerId().toString();
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
@@ -47,6 +49,10 @@ public class ErrorBroker implements Broker {
         this.message=message;
     }
     
+    public Map getDestinationMap() {
+        return Collections.EMPTY_MAP;
+    }
+
     public Broker getAdaptor(Class type){
         if (type.isInstance(this)){
             return this;

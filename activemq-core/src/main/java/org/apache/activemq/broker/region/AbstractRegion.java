@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jms.JMSException;
@@ -109,6 +111,12 @@ abstract public class AbstractRegion implements Region {
             }else{
                 log.debug("Destination doesn't exist: " + dest);
             }
+        }
+    }
+    
+    public Map getDestinationMap() {
+        synchronized(destinationsMutex){
+            return new HashMap(destinations);
         }
     }
 

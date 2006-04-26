@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Map;
 import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
@@ -68,7 +69,11 @@ public class MutableBrokerFilter implements Broker {
             this.next=next;
         }
     }
-    
+        
+    public Map getDestinationMap() {
+        return getNext().getDestinationMap();
+    }
+
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         getNext().acknowledge(context, ack);
     }

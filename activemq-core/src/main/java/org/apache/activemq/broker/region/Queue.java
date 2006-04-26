@@ -349,6 +349,10 @@ public class Queue implements Destination {
         return destination;
     }
 
+    public String getDestination() {
+        return destination.getPhysicalName();
+    }
+    
     public UsageManager getUsageManager() {
         return usageManager;
     }

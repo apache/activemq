@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
@@ -54,6 +56,10 @@ public class EmptyBroker implements Broker{
             return this;
         }
         return null;
+    }
+
+    public Map getDestinationMap() {
+        return Collections.EMPTY_MAP;
     }
 
     public void addConnection(ConnectionContext context,ConnectionInfo info) throws Exception{

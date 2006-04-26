@@ -97,11 +97,33 @@ public class RegionBroker implements Broker {
         tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory);        
     }
     
+    public Map getDestinationMap() {
+        Map answer = getQueueRegion().getDestinationMap();
+        answer.putAll(getTopicRegion().getDestinationMap());
+        return answer;
+    }
+
     public Broker getAdaptor(Class type){
         if (type.isInstance(this)){
             return this;
         }
         return null;
+    }
+
+    public Region getQueueRegion() {
+        return queueRegion;
+    }
+
+    public Region getTempQueueRegion() {
+        return tempQueueRegion;
+    }
+
+    public Region getTempTopicRegion() {
+        return tempTopicRegion;
+    }
+
+    public Region getTopicRegion() {
+        return topicRegion;
     }
 
     protected Region createTempTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
