@@ -16,12 +16,14 @@
  */
 package org.apache.activemq.transport.udp;
 
+import java.net.URI;
+
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IntSequenceGenerator;
-
-import java.net.URI;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -29,11 +31,13 @@ import java.net.URI;
  */
 public class UdpTransportTest extends UdpTestSupport {
 
+    protected static final Log log = LogFactory.getLog(UdpTransportTest.class);
+
     protected int consumerPort = 9123;
     protected String producerURI = "udp://localhost:" + consumerPort;
 
     protected Transport createProducer() throws Exception {
-        System.out.println("Producer using URI: " + producerURI);
+        log.info("Producer using URI: " + producerURI);
         
         // we are not using the TransportFactory as this assumes that
         // UDP transports talk to a server using a WireFormat Negotiation step
@@ -46,7 +50,7 @@ public class UdpTransportTest extends UdpTestSupport {
     }
 
     protected Transport createConsumer() throws Exception {
-        System.out.println("Consumer on port: " + consumerPort);
+        log.info("Consumer on port: " + consumerPort);
         OpenWireFormat wireFormat = createWireFormat();
         UdpTransport transport = new UdpTransport(wireFormat, consumerPort);
         transport.setSequenceGenerator(new IntSequenceGenerator());

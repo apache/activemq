@@ -21,6 +21,8 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.*;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompWireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.JMSException;
 
@@ -33,6 +35,9 @@ import java.io.IOException;
 import junit.framework.TestCase;
 
 public class StompWireFormatTest extends TestCase {
+    
+    protected static final Log log = LogFactory.getLog(StompWireFormatTest.class);
+
     private StompWireFormat wire;
 
     public void setUp() throws Exception {
@@ -51,7 +56,7 @@ public class StompWireFormatTest extends TestCase {
         cr.setCorrelationId(ci.getCommandId());
 
         String response = writeCommand(cr);
-        System.out.println("Received: " + response);
+        log.info("Received: " + response);
 
         SessionInfo si = (SessionInfo) wire.readCommand(null);
         assertNotNull(si);
@@ -64,7 +69,7 @@ public class StompWireFormatTest extends TestCase {
         Response sr = new Response();
         sr.setCorrelationId(pi.getCommandId());
         response = writeCommand(sr);
-        System.out.println("Received: " + response);
+        log.info("Received: " + response);
         assertTrue("Response should start with CONNECTED: " + response, response.startsWith("CONNECTED"));
 
         // now lets test subscribe
@@ -77,7 +82,7 @@ public class StompWireFormatTest extends TestCase {
         cr = new Response();
         cr.setCorrelationId(consumerInfo.getCommandId());
         response = writeCommand(cr);
-        System.out.println("Received: " + response);
+        log.info("Received: " + response);
     }
 
     public void _testFakeServer() throws Exception {

@@ -16,12 +16,17 @@
  */
 package org.apache.activemq.transport.udp;
 
+import java.io.IOException;
+
+import javax.jms.MessageNotWriteableException;
+
+import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.WireFormatInfo;
@@ -29,18 +34,16 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
-
-import javax.jms.MessageNotWriteableException;
-
-import java.io.IOException;
-
-import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public abstract class UdpTestSupport extends TestCase implements TransportListener {
+
+    protected static final Log log = LogFactory.getLog(UdpTestSupport.class);
 
     protected Transport producer;
     protected Transport consumer;
@@ -61,7 +64,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         expected.setPrefetchSize(3456);
 
         try {
-            System.out.println("About to send: " + expected);
+            log.info("About to send: " + expected);
             producer.oneway(expected);
 
             Command received = assertCommandReceived();
@@ -72,7 +75,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             assertEquals("getPrefetchSize", expected.getPrefetchSize(), actual.getPrefetchSize());
         }
         catch (Exception e) {
-            System.out.println("Caught: " + e);
+            log.info("Caught: " + e);
             e.printStackTrace();
             fail("Failed to send to transport: " + e);
         }
@@ -100,7 +103,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         expected.setDestination(destination);
 
         try {
-            System.out.println("About to send message of type: " + expected.getClass());
+            log.info("About to send message of type: " + expected.getClass());
             producer.oneway(expected);
 
             // lets send a dummy command to ensure things don't block if we
@@ -118,10 +121,10 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             assertEquals("getDestination", expected.getDestination(), actual.getDestination());
             assertEquals("getText", expected.getText(), actual.getText());
 
-            System.out.println("Received text message with: " + actual.getText().length() + " character(s)");
+            log.info("Received text message with: " + actual.getText().length() + " character(s)");
         }
         catch (Exception e) {
-            System.out.println("Caught: " + e);
+            log.info("Caught: " + e);
             e.printStackTrace();
             fail("Failed to send to transport: " + e);
         }
@@ -166,11 +169,11 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         producer = createProducer();
         producer.setTransportListener(new TransportListener() {
             public void onCommand(Command command) {
-                System.out.println("Producer received: " + command);
+                log.info("Producer received: " + command);
             }
 
             public void onException(IOException error) {
-                System.out.println("Producer exception: " + error);
+                log.info("Producer exception: " + error);
                 error.printStackTrace();
             }
 
@@ -198,7 +201,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
     public void onCommand(Command command) {
         if (command instanceof WireFormatInfo) {
-            System.out.println("Got WireFormatInfo: " + command);
+            log.info("Got WireFormatInfo: " + command);
         }
         else {
             if (command.isResponseRequired()) {
@@ -207,11 +210,11 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
             }
             if (large) {
-                System.out.println("### Received command: " + command.getClass() + " with id: "
+                log.info("### Received command: " + command.getClass() + " with id: "
                         + command.getCommandId());
             }
             else {
-                System.out.println("### Received command: " + command);
+                log.info("### Received command: " + command);
             }
 
             synchronized (lock) {
@@ -219,7 +222,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
                     receivedCommand = command;
                 }
                 else {
-                    System.out.println("Ignoring superfluous command: " + command);
+                    log.info("Ignoring superfluous command: " + command);
                 }
                 lock.notifyAll();
             }
@@ -233,23 +236,23 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             consumer.oneway(response);
         }
         catch (IOException e) {
-            System.out.println("Caught: " + e);
+            log.info("Caught: " + e);
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
     public void onException(IOException error) {
-        System.out.println("### Received error: " + error);
+        log.info("### Received error: " + error);
         error.printStackTrace();
     }
 
     public void transportInterupted() {
-        System.out.println("### Transport interrupted");
+        log.info("### Transport interrupted");
     }
 
     public void transportResumed() {
-        System.out.println("### Transport resumed");
+        log.info("### Transport resumed");
     }
 
     protected Command assertCommandReceived() throws InterruptedException {

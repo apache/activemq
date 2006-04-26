@@ -16,29 +16,31 @@
  */
 package org.apache.activemq.network.jms;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Iterator;
-import javax.jms.*;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueConnection;
+import javax.jms.QueueRequestor;
+import javax.jms.QueueSession;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerRegistry;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerTestSupport;
-import org.apache.activemq.broker.StubConnection;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.QueueRegion;
-import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class QueueBridgeTest extends TestCase implements MessageListener {
     
+    protected static final Log log = LogFactory.getLog(QueueBridgeTest.class);
+
     protected static final int MESSAGE_COUNT = 10;
     protected AbstractApplicationContext context;
     protected QueueConnection localConnection;
@@ -79,7 +81,7 @@ public class QueueBridgeTest extends TestCase implements MessageListener {
             TextMessage msg = requestServerSession.createTextMessage("test msg: " +i);
             TextMessage result = (TextMessage) requestor.request(msg);
             assertNotNull(result);
-            System.out.println(result.getText());
+            log.info(result.getText());
         }
     }
     

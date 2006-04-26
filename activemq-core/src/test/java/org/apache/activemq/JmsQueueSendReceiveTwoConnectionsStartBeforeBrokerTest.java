@@ -34,7 +34,7 @@ public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends JmsQ
 
     public void startBroker() {
         // Initialize the broker
-        System.out.println("Lets wait: " + delayBeforeStartingBroker + " millis  before creating the broker");
+        log.info("Lets wait: " + delayBeforeStartingBroker + " millis  before creating the broker");
         try {
             Thread.sleep(delayBeforeStartingBroker);
         }
@@ -42,7 +42,7 @@ public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends JmsQ
             e.printStackTrace();
         }
         
-        System.out.println("Now starting the broker");
+        log.info("Now starting the broker");
         try {
             broker = new BrokerService();
             broker.setPersistent(false);
@@ -50,7 +50,7 @@ public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends JmsQ
             broker.start();
         }
         catch (Exception e) {
-            System.out.println("Caught: " + e);
+            log.info("Caught: " + e);
             errors.add(e);
         }
     }

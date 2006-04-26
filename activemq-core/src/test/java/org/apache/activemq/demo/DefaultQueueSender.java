@@ -69,8 +69,8 @@ public class DefaultQueueSender {
             idx += 2;
         }
         String queueName = args[idx];
-        System.out.println("Connecting to: " + uri);
-        System.out.println("Queue name is " + queueName);
+        log.info("Connecting to: " + uri);
+        log.info("Queue name is " + queueName);
 
         if (++idx < args.length) {
             text = args[idx];

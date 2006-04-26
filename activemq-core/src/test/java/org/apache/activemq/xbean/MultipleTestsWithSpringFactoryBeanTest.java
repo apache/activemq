@@ -16,15 +16,17 @@
  */
 package org.apache.activemq.xbean;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
 import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * 
@@ -32,6 +34,9 @@ import junit.framework.TestCase;
  * @version $Revision$
  */
 public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
+    
+    protected static final Log log = LogFactory.getLog(MultipleTestsWithSpringFactoryBeanTest.class);
+    
     protected AbstractApplicationContext context;
     protected BrokerService service;
     private Connection connection;
@@ -43,7 +48,7 @@ public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
     }
     
     protected void setUp() throws Exception {
-        System.out.println("### starting up the test case: " + getName());
+        log.info("### starting up the test case: " + getName());
         
         super.setUp();
         context = new ClassPathXmlApplicationContext("org/apache/activemq/xbean/spring2.xml");
@@ -54,7 +59,7 @@ public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
         
         connection = createConnectionFactory().createConnection();
         connection.start();
-        System.out.println("### started up the test case: " + getName());
+        log.info("### started up the test case: " + getName());
     }
 
     protected void tearDown() throws Exception {
@@ -65,8 +70,7 @@ public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
         context.close();
         super.tearDown();
         
-        System.out.println("### closed down the test case: " + getName());
-        System.out.println();
+        log.info("### closed down the test case: " + getName());
     }
 
     protected ConnectionFactory createConnectionFactory() {

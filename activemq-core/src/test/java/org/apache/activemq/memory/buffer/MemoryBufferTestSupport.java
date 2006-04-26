@@ -16,17 +16,18 @@
  */
 package org.apache.activemq.memory.buffer;
 
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.memory.buffer.MessageBuffer;
-import org.apache.activemq.memory.buffer.MessageQueue;
-
 import junit.framework.TestCase;
+
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  * @version $Revision: 1.1 $
  */
 public abstract class MemoryBufferTestSupport extends TestCase {
+    protected static final Log log = LogFactory.getLog(MemoryBufferTestSupport.class);
 
     protected abstract MessageBuffer createMessageBuffer();
 
@@ -44,15 +45,14 @@ public abstract class MemoryBufferTestSupport extends TestCase {
     }
 
     protected void dump() {
-        System.out.println("Dumping current state");
+        log.info("Dumping current state");
         dumpQueue(qA, "A");
         dumpQueue(qB, "B");
         dumpQueue(qC, "C");
-        System.out.println();
     }
 
     protected void dumpQueue(MessageQueue queue, String name) {
-        System.out.println("  " + name + " = " + queue.getList());
+        log.info("  " + name + " = " + queue.getList());
     }
 
     protected ActiveMQMessage createMessage(int size) throws Exception {

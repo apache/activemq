@@ -44,7 +44,7 @@ public class UnreliableUdpTransportTest extends UdpTransportTest {
     };
 
     protected Transport createProducer() throws Exception {
-        System.out.println("Producer using URI: " + producerURI);
+        log.info("Producer using URI: " + producerURI);
 
         OpenWireFormat wireFormat = createWireFormat();
         UnreliableUdpTransport transport = new UnreliableUdpTransport(wireFormat, new URI(producerURI));
@@ -58,7 +58,7 @@ public class UnreliableUdpTransportTest extends UdpTransportTest {
     }
 
     protected Transport createConsumer() throws Exception {
-        System.out.println("Consumer on port: " + consumerPort);
+        log.info("Consumer on port: " + consumerPort);
         OpenWireFormat wireFormat = createWireFormat();
         UdpTransport transport = new UdpTransport(wireFormat, consumerPort);
 

@@ -23,13 +23,20 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.3 $
  */
 public class MemoryAllocationTest extends TestCase{
+    
+    protected static final Log log = LogFactory.getLog(MemoryAllocationTest.class);
+
     protected static final int MESSAGE_COUNT=2000;
     protected BrokerService broker;
     protected String bindAddress="vm://localhost";
@@ -48,7 +55,7 @@ public class MemoryAllocationTest extends TestCase{
             mp.send(msg);
             session.close();
            releaseDestination(dest);
-            if (i%500==0)System.out.println("Iterator "+i);
+            if (i%500==0)log.info("Iterator "+i);
         }
         connection.close();
     }

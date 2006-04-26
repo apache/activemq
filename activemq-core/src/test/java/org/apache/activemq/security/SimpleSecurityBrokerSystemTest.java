@@ -56,7 +56,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
                 System.setProperty("java.security.auth.login.config", path);
             }
         }
-        System.out.println("Path to login config: " + path);
+        log.info("Path to login config: " + path);
     }
 
     public static Test suite() {

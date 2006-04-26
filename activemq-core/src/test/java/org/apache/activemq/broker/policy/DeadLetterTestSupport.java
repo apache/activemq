@@ -80,7 +80,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
 
     protected void makeConsumer() throws JMSException {
         Destination destination = getDestination();
-        System.out.println("Consuming from: " + destination);
+        log.info("Consuming from: " + destination);
         if (durableSubscriber) {
             consumer = session.createDurableSubscriber((Topic) destination, destination.toString());
         }
@@ -92,7 +92,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected void makeDlqConsumer() throws JMSException {
         dlqDestination = createDlqDestination();
 
-        System.out.println("Consuming from dead letter on: " + dlqDestination);
+        log.info("Consuming from dead letter on: " + dlqDestination);
         dlqConsumer = session.createConsumer(dlqDestination);
     }
 
@@ -102,7 +102,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         producer.setDeliveryMode(deliveryMode);
         producer.setTimeToLive(timeToLive);
 
-        System.out.println("Sending " + messageCount + " messages to: " + getDestination());
+        log.info("Sending " + messageCount + " messages to: " + getDestination());
         for (int i = 0; i < messageCount; i++) {
             Message message = createMessage(session, i);
             producer.send(message);
@@ -118,7 +118,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     }
 
     protected void assertMessage(Message message, int i) throws Exception {
-        System.out.println("Received message: " + message);
+        log.info("Received message: " + message);
         assertNotNull("No message received for index: " + i, message);
         assertTrue("Should be a TextMessage not: " + message, message instanceof TextMessage);
         TextMessage textMessage = (TextMessage) message;

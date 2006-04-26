@@ -17,12 +17,16 @@
 package org.apache.activemq;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.2 $
  */
 public class JmsQueueSendReceiveTwoConnectionsTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
+    protected static final Log log = LogFactory.getLog(JmsQueueSendReceiveTwoConnectionsTest.class);
+    
     /**
      * Set up the test with a queue and using two connections. 
      * 

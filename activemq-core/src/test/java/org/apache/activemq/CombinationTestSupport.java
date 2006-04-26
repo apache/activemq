@@ -32,6 +32,9 @@ import java.util.Map;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Poor mans way of getting JUnit to run a test case through a few different
  * combinations of options.
@@ -64,8 +67,7 @@ import junit.framework.TestSuite;
  */
 public class CombinationTestSupport extends AutoFailTestSupport {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(CombinationTestSupport.class);
+    protected static final Log log = LogFactory.getLog(CombinationTestSupport.class);
     
     private HashMap comboOptions = new HashMap();
     private boolean combosEvaluated;

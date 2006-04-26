@@ -68,7 +68,7 @@ public class LoadTester extends JmsTestSupport {
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-        System.out.println("Sending "+ PRODUCE_COUNT+" messages that are "+(MESSAGE_SIZE/1024.0)+"k large, for a total of "+(PRODUCE_COUNT*MESSAGE_SIZE/(1024.0*1024.0))+" megs of data.");
+        log.info("Sending "+ PRODUCE_COUNT+" messages that are "+(MESSAGE_SIZE/1024.0)+"k large, for a total of "+(PRODUCE_COUNT*MESSAGE_SIZE/(1024.0*1024.0))+" megs of data.");
         // Send a message to the broker.
         long start = System.currentTimeMillis();
         for( int i=0; i < PRODUCE_COUNT; i++) {
@@ -79,7 +79,7 @@ public class LoadTester extends JmsTestSupport {
         }
         long end1 = System.currentTimeMillis();
         
-        System.out.println("Produced messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
+        log.info("Produced messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
         
         printer = new ProgressPrinter(PRODUCE_COUNT, 10);
         start = System.currentTimeMillis();
@@ -89,7 +89,7 @@ public class LoadTester extends JmsTestSupport {
             assertNotNull("Getting message: "+i,consumer.receive(20000));
         }
         end1 = System.currentTimeMillis();
-        System.out.println("Consumed messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
+        log.info("Consumed messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
         
         
     }

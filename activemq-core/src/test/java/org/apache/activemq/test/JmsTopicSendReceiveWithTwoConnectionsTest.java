@@ -21,14 +21,15 @@ import javax.jms.DeliveryMode;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTestSupport {
     
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
+    protected static final Log log = LogFactory.getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
 
     protected Connection sendConnection;
     protected Connection receiveConnection;

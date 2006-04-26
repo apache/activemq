@@ -62,7 +62,7 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
             producer.send(message);
         }
         producer.close();
-        System.out.println("Sent: " + updateMessageCount + " update messages");
+        log.info("Sent: " + updateMessageCount + " update messages");
 
         listener.assertMessagesReceived(messageCount);
     }
@@ -92,7 +92,7 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
 
     protected BrokerService createBroker() throws Exception {
         String uri = getBrokerXml();
-        System.out.println("Loading broker configuration from the classpath with URI: " + uri);
+        log.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:"+uri));
     }
 

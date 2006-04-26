@@ -35,12 +35,12 @@ public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSuppo
     }
 
     protected void setUp() throws Exception {
-        System.out.println("### starting up the test case: " + getName());
+        log.info("### starting up the test case: " + getName());
 
         super.setUp();
         connection = connectionFactory.createConnection();
         connection.start();
-        System.out.println("### started up the test case: " + getName());
+        log.info("### started up the test case: " + getName());
     }
 
     protected void tearDown() throws Exception {
@@ -48,7 +48,6 @@ public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSuppo
 
         super.tearDown();
 
-        System.out.println("### closed down the test case: " + getName());
-        System.out.println();
+        log.info("### closed down the test case: " + getName());
     }
 }

@@ -16,22 +16,23 @@
  */
 package org.apache.activemq.transport.reliable;
 
-import edu.emory.mathcs.backport.java.util.Queue;
+import junit.framework.TestCase;
 
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.transport.StubTransport;
 import org.apache.activemq.transport.StubTransportListener;
-import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
-import org.apache.activemq.transport.reliable.ReliableTransport;
-import org.apache.activemq.transport.reliable.ReplayStrategy;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
+import edu.emory.mathcs.backport.java.util.Queue;
 
 /**
  * 
  * @version $Revision$
  */
 public class ReliableTransportTest extends TestCase {
+
+    protected static final Log log = LogFactory.getLog(ReliableTransportTest.class);
 
     protected ReliableTransport transport;
     protected StubTransportListener listener = new StubTransportListener();
@@ -50,7 +51,7 @@ public class ReliableTransportTest extends TestCase {
         transport.setExpectedCounter(value);
         
         for (int i = 0; i < 10; i++) {
-            System.out.println("command: " + i + " = " + value);
+            log.info("command: " + i + " = " + value);
             sequenceNumbers[i] = value++;
         }
         
@@ -119,7 +120,7 @@ public class ReliableTransportTest extends TestCase {
         else {
             assertTrue("Should have received an exception!", exceptions.size() > 0);
             Exception e = (Exception) exceptions.remove();
-            System.out.println("Caught expected response: " + e);
+            log.info("Caught expected response: " + e);
         }
     }
 

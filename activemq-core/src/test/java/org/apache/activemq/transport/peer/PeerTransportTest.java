@@ -77,7 +77,7 @@ public class PeerTransportTest extends TestCase {
             consumer.setMessageListener(messageIdList[i]);
         }
         
-        System.out.println("Waiting for cluster to be fully connected");
+        log.info("Waiting for cluster to be fully connected");
         
         // Each connection should see that NUMBER_IN_CLUSTER consumers get registered on the destination.
         ActiveMQDestination advisoryDest = AdvisorySupport.getConsumerAdvisoryTopic(destination);
@@ -99,7 +99,7 @@ public class PeerTransportTest extends TestCase {
             session.close();
         }
         
-        System.out.println("Cluster is online.");
+        log.info("Cluster is online.");
     }
 
     protected void tearDown() throws Exception {

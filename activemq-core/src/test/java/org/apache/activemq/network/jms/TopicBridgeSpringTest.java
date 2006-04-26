@@ -31,11 +31,15 @@ import javax.jms.TopicSession;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class TopicBridgeSpringTest extends TestCase implements MessageListener {
     
+    protected static final Log log = LogFactory.getLog(TopicBridgeSpringTest.class);
+
     protected static final int MESSAGE_COUNT = 10;
     protected AbstractApplicationContext context;
     protected TopicConnection localConnection;
@@ -79,10 +83,10 @@ public class TopicBridgeSpringTest extends TestCase implements MessageListener {
     public void testTopicRequestorOverBridge() throws JMSException{
         for (int i =0;i < MESSAGE_COUNT; i++){
             TextMessage msg = requestServerSession.createTextMessage("test msg: " +i);
-            System.out.println("Making request: " + msg);
+            log.info("Making request: " + msg);
             TextMessage result = (TextMessage) requestor.request(msg);
             assertNotNull(result);
-            System.out.println("Received result: " + result.getText());
+            log.info("Received result: " + result.getText());
         }
     }
     
@@ -94,7 +98,7 @@ public class TopicBridgeSpringTest extends TestCase implements MessageListener {
             replyTo=msg.getJMSReplyTo();
             textMsg.clearBody();
             textMsg.setText(payload);
-            System.out.println("Sending response: " + textMsg);
+            log.info("Sending response: " + textMsg);
             requestServerProducer.send(replyTo,textMsg);
         }catch(JMSException e){
             // TODO Auto-generated catch block

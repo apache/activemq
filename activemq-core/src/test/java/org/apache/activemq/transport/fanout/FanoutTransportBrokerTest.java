@@ -159,7 +159,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
         MockTransport mt = (MockTransport) connection3.getTransport().narrow(MockTransport.class);
         mt.install(new TransportFilter(mt.getNext()) {
             public void oneway(Command command) throws IOException {
-                System.out.println("Dropping: "+command);
+                log.info("Dropping: "+command);
                 // just eat it! to simulate a recent failure.
             }
         });
