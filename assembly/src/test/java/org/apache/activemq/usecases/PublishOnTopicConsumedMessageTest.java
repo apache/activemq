@@ -37,11 +37,11 @@ public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTw
             Message msgCopy = (Message)((org.apache.activemq.command.Message)message).copy();
             replyProducer.send(msgCopy);
 
-            //System.out.println("Sending reply: " + message);
+            //log.info("Sending reply: " + message);
             super.onMessage(message);
         }
         catch (JMSException e) {
-            System.out.println("Failed to send message: " + e);
+            log.info("Failed to send message: " + e);
             e.printStackTrace();
         }
     }
@@ -59,7 +59,7 @@ public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTw
         }
 
         replyProducer = receiveSession.createProducer(replyDestination);
-        System.out.println("Created replyProducer: " + replyProducer);
+        log.info("Created replyProducer: " + replyProducer);
 
     }
 }

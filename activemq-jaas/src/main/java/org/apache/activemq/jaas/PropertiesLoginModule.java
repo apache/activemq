@@ -69,7 +69,6 @@ public class PropertiesLoginModule implements LoginModule {
         } else {
             baseDir = new File(".");
         }
-        System.out.println("setting based dir="+baseDir);
 
         debug = "true".equalsIgnoreCase((String) options.get("debug"));
         usersFile = (String) options.get(USER_FILE)+"";

@@ -16,9 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
-import junit.framework.TestCase;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQQueue;
+import java.util.Date;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -29,7 +27,13 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.Date;
+
+import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 
@@ -38,6 +42,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
  * @version $Revision: 1.1.1.1 $
  */
 public final class TransactionTest extends TestCase {
+    
+    private static final Log log = LogFactory.getLog(TransactionTest.class);
 
     private volatile String receivedText;
 
@@ -70,20 +76,20 @@ public final class TransactionTest extends TestCase {
                     receivedText = tm.getText();
                     latch.countDown();
 
-                    System.out.println("consumer received message :" + receivedText);
+                    log.info("consumer received message :" + receivedText);
                     consumerSession.commit();
-                    System.out.println("committed transaction");
+                    log.info("committed transaction");
                 }
                 catch (JMSException e) {
                     try {
                         consumerSession.rollback();
-                        System.out.println("rolled back transaction");
+                        log.info("rolled back transaction");
                     }
                     catch (JMSException e1) {
-                        System.out.println(e1);
+                        log.info(e1);
                         e1.printStackTrace();
                     }
-                    System.out.println(e);
+                    log.info(e);
                     e.printStackTrace();
                 }
             }
@@ -96,16 +102,16 @@ public final class TransactionTest extends TestCase {
             tm = producerSession.createTextMessage();
             tm.setText("Hello, " + new Date());
             producer.send(tm);
-            System.out.println("producer sent message :" + tm.getText());
+            log.info("producer sent message :" + tm.getText());
         }
         catch (JMSException e) {
             e.printStackTrace();
         }
 
-        System.out.println("Waiting for latch");
+        log.info("Waiting for latch");
         latch.await();
 
-        System.out.println("test completed, destination=" + receivedText);
+        log.info("test completed, destination=" + receivedText);
     }
 
     protected void tearDown() throws Exception {

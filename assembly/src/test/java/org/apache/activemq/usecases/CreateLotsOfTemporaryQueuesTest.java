@@ -46,20 +46,20 @@ public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testCreateLotsOfTemporaryQueues() throws Exception {
-        System.out.println("Creating " + numberToCreate + " temporary queue(s)");
+        log.info("Creating " + numberToCreate + " temporary queue(s)");
 
         Connection connection = createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
         for (int i = 0; i < numberToCreate; i++) {
             if (i % 1000 == 0) {
-                System.out.println("attempt " + i);
+                log.info("attempt " + i);
             }
             TemporaryQueue temporaryQueue = session.createTemporaryQueue();
             temporaryQueue.delete();
             Thread.sleep(sleep );
         }
-        System.out.println("Created " + numberToCreate + " temporary queue(s)");
+        log.info("Created " + numberToCreate + " temporary queue(s)");
         connection.close();
     }
 

@@ -111,7 +111,7 @@ public class ReliableReconnectTest extends TestSupport {
                     for (int i = 0;i < firstBatch;i++) {
                         Message msg = consumer.receive(RECEIVE_TIMEOUT);
                         if (msg != null) {
-                            //System.out.println("GOT: " + msg);
+                            //log.info("GOT: " + msg);
                             messagesReceived.incrementAndGet();
                         }
                     }
@@ -122,7 +122,7 @@ public class ReliableReconnectTest extends TestSupport {
                     Thread.sleep(2000);
                     for (int i = firstBatch;i < MESSAGE_COUNT;i++) {
                         Message msg = consumer.receive(RECEIVE_TIMEOUT);
-                        //System.out.println("GOT: " + msg);
+                        //log.info("GOT: " + msg);
                         if (msg != null) {
                             messagesReceived.incrementAndGet();
                         }

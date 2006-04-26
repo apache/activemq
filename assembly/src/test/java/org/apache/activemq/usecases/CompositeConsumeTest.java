@@ -37,7 +37,7 @@ public class CompositeConsumeTest extends JmsTopicSendReceiveWithTwoConnectionsT
             Message message = session.createTextMessage(data[i]);
 
             if (verbose) {
-                System.out.println("About to send a message: " + message + " with text: " + data[i]);
+                log.info("About to send a message: " + message + " with text: " + data[i]);
             }
 
             producer.send(destinations[destIdx], message);

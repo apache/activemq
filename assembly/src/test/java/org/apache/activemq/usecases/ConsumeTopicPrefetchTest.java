@@ -47,7 +47,7 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
     protected void testWithMessageCount(int messageCount) throws JMSException {
         makeMessages(messageCount);
 
-        System.out.println("About to send and receive: " + messageCount + " on destination: " + destination
+        log.info("About to send and receive: " + messageCount + " on destination: " + destination
                 + " of type: " + destination.getClass().getName());
 
         for (int i = 0; i < messageCount; i++) {

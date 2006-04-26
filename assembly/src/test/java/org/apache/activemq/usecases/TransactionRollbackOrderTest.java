@@ -16,11 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
-import junit.framework.TestCase;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -31,8 +28,15 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.ArrayList;
-import java.util.List;
+
+import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
 
 
 /**
@@ -42,6 +46,7 @@ import java.util.List;
  * @version $Revision: 1.1 $
  */
 public final class TransactionRollbackOrderTest extends TestCase {
+    private static final Log log = LogFactory.getLog(TransactionRollbackOrderTest.class);
 
     private volatile String receivedText;
 
@@ -87,17 +92,17 @@ public final class TransactionRollbackOrderTest extends TestCase {
                         msgRedelivered.add(receivedText);
                     }
 
-                    System.out.println("consumer received message: " + receivedText + (tm.getJMSRedelivered() ? " ** Redelivered **" : ""));
+                    log.info("consumer received message: " + receivedText + (tm.getJMSRedelivered() ? " ** Redelivered **" : ""));
                     if (msgCount == 3) {
                         msgRolledBack.add(receivedText);
                         consumerSession.rollback();
-                        System.out.println("[msg: " + receivedText + "] ** rolled back **");
+                        log.info("[msg: " + receivedText + "] ** rolled back **");
                     }
                     else {
                         msgCommittedCount++;
                         msgCommitted.add(receivedText);
                         consumerSession.commit();
-                        System.out.println("[msg: " + receivedText + "] committed transaction ");
+                        log.info("[msg: " + receivedText + "] committed transaction ");
                     }
                     if (msgCommittedCount == NUM_MESSAGES) {
                         latch.countDown();
@@ -106,13 +111,13 @@ public final class TransactionRollbackOrderTest extends TestCase {
                 catch (JMSException e) {
                     try {
                         consumerSession.rollback();
-                        System.out.println("rolled back transaction");
+                        log.info("rolled back transaction");
                     }
                     catch (JMSException e1) {
-                        System.out.println(e1);
+                        log.info(e1);
                         e1.printStackTrace();
                     }
-                    System.out.println(e);
+                    log.info(e);
                     e.printStackTrace();
                 }
             }
@@ -126,21 +131,21 @@ public final class TransactionRollbackOrderTest extends TestCase {
                 tm.setText("Hello " + i);
                 msgSent.add(tm.getText());
                 producer.send(tm);
-                System.out.println("producer sent message: " + tm.getText());
+                log.info("producer sent message: " + tm.getText());
             }
         }
         catch (JMSException e) {
             e.printStackTrace();
         }
 
-        System.out.println("Waiting for latch");
+        log.info("Waiting for latch");
         latch.await();
 
         assertEquals(1, msgRolledBack.size());
         assertEquals(1, msgRedelivered.size());
 
-        System.out.println("msg RolledBack = " + msgRolledBack.get(0));
-        System.out.println("msg Redelivered = " + msgRedelivered.get(0));
+        log.info("msg RolledBack = " + msgRolledBack.get(0));
+        log.info("msg Redelivered = " + msgRedelivered.get(0));
 
         assertEquals(msgRolledBack.get(0), msgRedelivered.get(0));
 
@@ -153,7 +158,7 @@ public final class TransactionRollbackOrderTest extends TestCase {
 
     protected void tearDown() throws Exception {
         if (connection != null) {
-            System.out.println("Closing the connection");
+            log.info("Closing the connection");
             connection.close();
         }
         super.tearDown();

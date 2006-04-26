@@ -58,7 +58,7 @@ public class PublishOnTopicConsumerMessageUsingActivemqXMLTest extends PublishOn
         // Create broker from resource
         System.out.print("Creating broker... ");
         broker = createBroker("org/apache/activemq/usecases/activemq.xml");
-        System.out.println("Success");
+        log.info("Success");
         super.setUp();
 
     }
@@ -70,11 +70,11 @@ public class PublishOnTopicConsumerMessageUsingActivemqXMLTest extends PublishOn
      * @see junit.framework.TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
-         System.out.println("Closing Broker");
+         log.info("Closing Broker");
             if (broker != null) {
                broker.stop();
             }
-         System.out.println("Broker closed...");
+         log.info("Broker closed...");
 
 
     }
