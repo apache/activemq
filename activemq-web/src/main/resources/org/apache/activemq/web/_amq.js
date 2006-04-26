@@ -19,7 +19,7 @@ var amq =
 
   _messages:0,
   _messageQueue: '',
-  _queueMessages: false,
+  _queueMessages: 0,
 
   _messageHandler: function(request)
   {
@@ -51,7 +51,7 @@ var amq =
                 {
                   handler(child);
                 }
-                      }
+	      }
             }
           }
         }
@@ -63,9 +63,26 @@ var amq =
     }
   },
 
+  startBatch: function()
+  {
+    amq._queueMessages++;
+  },
+
+  endBatch: function()
+  {
+    amq._queueMessages--;
+    if (amq._queueMessages==0 && amq._messages>0)
+    {
+      var body = amq._messageQueue;
+      amq._messageQueue='';
+      amq._messages=0;
+      new Ajax.Request(amq.uri, { method: 'post', postBody: body});
+    }
+  },
+
   _pollHandler: function(request)
   {
-    amq._queueMessages=true;
+    amq._queueMessages++;
     try
     {
       amq._messageHandler(request);
@@ -77,19 +94,18 @@ var amq =
         alert(e);
     }
 
-    amq._queueMessages=false;
+    amq._queueMessages--;
 
-    if (amq._messages==0)
-    {
-      if (amq.poll)
-        new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler });
-    }
-    else
+    if (amq._queueMessages==0 && amq._messages>0)
     {
       var body = amq._messageQueue+'&poll='+amq.poll;
       amq._messageQueue='';
       amq._messages=0;
       new Ajax.Request(amq.uri, { method: 'post', onSuccess: amq._pollHandler, postBody: body });
+    }
+    else if (amq.poll)
+    {
+        new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler });
     }
   },
 
@@ -129,7 +145,7 @@ var amq =
 
   _sendMessage : function(destination,message,type)
   {
-    if (amq._queueMessages)
+    if (amq._queueMessages>0)
     {
       amq._messageQueue+=(amq._messages==0?'destination=':'&destination=')+destination+'&message='+message+'&type='+type;
       amq._messages++;
