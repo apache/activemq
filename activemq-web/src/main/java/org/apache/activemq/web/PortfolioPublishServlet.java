@@ -63,7 +63,7 @@ public class PortfolioPublishServlet extends MessageServletSupport {
             request.getSession().setAttribute("total",total);
             
             try {
-                WebClient client = getWebClient(request);
+                WebClient client = WebClient.getWebClient(request);
                 for (int i = 0; i < count; i++) {
                     sendMessage(client, stocks);
                 }

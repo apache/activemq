@@ -80,7 +80,7 @@ public class MessageServlet extends MessageServletSupport {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // lets turn the HTTP post into a JMS Message
         try {
-            WebClient client = getWebClient(request);
+            WebClient client = WebClient.getWebClient(request);
 
             String text = getPostedMessageBody(request);
 
@@ -137,7 +137,7 @@ public class MessageServlet extends MessageServletSupport {
 
         int messages = 0;
         try {
-            WebClient client = getWebClient(request);
+            WebClient client = WebClient.getWebClient(request);
             Destination destination = getDestination(client, request);
             if (destination==null)
                 throw new NoDestinationSuppliedException();
@@ -254,7 +254,7 @@ public class MessageServlet extends MessageServletSupport {
 
         int messages = 0;
         try {
-            WebClient client = getWebClient(request);
+            WebClient client = WebClient.getWebClient(request);
             Destination destination = getDestination(client, request);
             long timeout = getReadTimeout(request);
             boolean ajax = isRicoAjax(request);
