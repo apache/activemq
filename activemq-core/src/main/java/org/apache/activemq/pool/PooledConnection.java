@@ -40,6 +40,12 @@ import javax.jms.TopicSession;
  * {@link QueueConnection} which is pooled and on {@link #close()} will return
  * itself to the sessionPool.
  * 
+ * <b>NOTE</b> this implementation is only intended for use when sending
+ * messages.
+ * It does not deal with pooling of consumers; for that look at a library like 
+ * <a href="http://jencks.org/">Jencks</a> such as in
+ * <a href="http://jencks.org/Message+Driven+POJOs">this example</a>
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 public class PooledConnection implements TopicConnection, QueueConnection {
