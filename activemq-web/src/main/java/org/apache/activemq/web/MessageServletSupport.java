@@ -28,7 +28,6 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -58,7 +57,6 @@ public abstract class MessageServletSupport extends HttpServlet {
     private int defaultMessagePriority = 5;
     private long defaultMessageTimeToLive = 0;
 
-
     public void init(ServletConfig servletConfig) throws ServletException {
         super.init(servletConfig);
 
@@ -83,10 +81,6 @@ public abstract class MessageServletSupport extends HttpServlet {
         WebClient.initContext(getServletContext());
     }
 
-    protected WebClient createWebClient(HttpServletRequest request) {
-        return new WebClient();
-    }
-
     public static boolean asBoolean(String param) {
         return asBoolean(param, false);
     }
@@ -98,22 +92,6 @@ public abstract class MessageServletSupport extends HttpServlet {
         else {
             return param.equalsIgnoreCase("true");
         }
-    }
-
-    /**
-     * Helper method to get the client for the current session
-     *
-     * @param request is the current HTTP request
-     * @return the current client or a newly creates
-     */
-    protected WebClient getWebClient(HttpServletRequest request) {
-        HttpSession session = request.getSession(true);
-        WebClient client = WebClient.getWebClient(session);
-        if (client == null || client.isClosed()) {
-            client = createWebClient(request);
-            session.setAttribute(WebClient.webClientAttribute, client);
-        }
-        return client;
     }
 
 

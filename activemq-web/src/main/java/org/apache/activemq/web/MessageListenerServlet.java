@@ -101,7 +101,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         
         // lets turn the HTTP post into a JMS Message
         
-        WebClient client = getWebClient(request);
+        WebClient client = WebClient.getWebClient(request);
         String message_ids="";
         
         synchronized (client) {
@@ -227,7 +227,7 @@ public class MessageListenerServlet extends MessageServletSupport {
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            WebClient client = getWebClient(request);
+            WebClient client = WebClient.getWebClient(request);
             if (log.isDebugEnabled()) {
                 log.debug("GET client="+client+" session="+request.getSession().getId()+" uri="+request.getRequestURI()+" query="+request.getQueryString());
             }
@@ -371,7 +371,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         HttpSession session = request.getSession();
         Listener listener = (Listener) session.getAttribute("mls.listener");
         if (listener == null) {
-            listener = new Listener(getWebClient(request));
+            listener = new Listener(WebClient.getWebClient(request));
             session.setAttribute("mls.listener", listener);
         }
         return listener;

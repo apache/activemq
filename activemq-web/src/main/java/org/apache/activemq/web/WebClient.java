@@ -36,6 +36,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionActivationListener;
 import javax.servlet.http.HttpSessionBindingEvent;
@@ -77,6 +78,23 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     private final Semaphore semaphore = new Semaphore(1);
 
+
+    /**
+     * Helper method to get the client for the current session, lazily creating
+     * a client if there is none currently
+     *
+     * @param request is the current HTTP request
+     * @return the current client or a newly creates
+     */
+    public static WebClient getWebClient(HttpServletRequest request) {
+        HttpSession session = request.getSession(true);
+        WebClient client = getWebClient(session);
+        if (client == null || client.isClosed()) {
+            client = WebClient.createWebClient(request);
+            session.setAttribute(webClientAttribute, client);
+        }
+        return client;
+    }
     /**
      * @return the web client for the current HTTP session or null if there is
      *         not a web client created yet
@@ -89,8 +107,6 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
         initConnectionFactory(context);
     }
 
-    /**
-     */
     public WebClient() {
         if (factory == null)
             throw new IllegalStateException("initContext(ServletContext) not called");
@@ -284,4 +300,9 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     public void valueUnbound(HttpSessionBindingEvent event) {
         close();
     }
+
+    protected static WebClient createWebClient(HttpServletRequest request) {
+        return new WebClient();
+    }
+
 }
