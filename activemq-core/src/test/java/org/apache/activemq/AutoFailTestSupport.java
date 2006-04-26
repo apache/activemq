@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  */
 
 public class AutoFailTestSupport extends TestCase {
-     private static final Log log = LogFactory.getLog(AutoFailTestSupport.class);
+    protected static final Log log = LogFactory.getLog(AutoFailTestSupport.class);
 
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_ERROR   = 1;
@@ -83,7 +83,7 @@ public class AutoFailTestSupport extends TestCase {
         }, "AutoFailThread");
 
         if (verbose) {
-            System.out.println("Starting auto fail thread...");
+            log.info("Starting auto fail thread...");
         }
 
         log.info("Starting auto fail thread...");
@@ -99,7 +99,7 @@ public class AutoFailTestSupport extends TestCase {
             isTestSuccess.set(true);
 
             if (verbose) {
-                System.out.println("Stopping auto fail thread...");
+                log.info("Stopping auto fail thread...");
             }
 
             log.info("Stopping auto fail thread...");

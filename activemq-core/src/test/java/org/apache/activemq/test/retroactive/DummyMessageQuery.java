@@ -16,23 +16,27 @@
  */
 package org.apache.activemq.test.retroactive;
 
+import javax.jms.MessageListener;
+
 import org.apache.activemq.broker.region.policy.MessageQuery;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
-
-import javax.jms.MessageListener;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  * @version $Revision$
  */
 public class DummyMessageQuery implements MessageQuery {
+    
+    protected static final Log log = LogFactory.getLog(DummyMessageQuery.class);
 
     public static int messageCount = 10;
     
     public void execute(ActiveMQDestination destination, MessageListener listener) throws Exception {
-        System.out.println("Initial query is creating: " + messageCount + " messages");
+        log.info("Initial query is creating: " + messageCount + " messages");
         for (int i = 0; i < messageCount; i++) {
             ActiveMQTextMessage message = new ActiveMQTextMessage();
             message.setText("Initial message: " + i + " loaded from query");

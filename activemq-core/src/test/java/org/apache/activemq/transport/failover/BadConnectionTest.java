@@ -16,22 +16,26 @@
  */
 package org.apache.activemq.transport.failover;
 
+import java.io.IOException;
+import java.net.URI;
+
+import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
-
-import java.io.IOException;
-import java.net.URI;
-
-import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  * @version $Revision: 1.1 $
  */
 public class BadConnectionTest extends TestCase {
+    
+    protected static final Log log = LogFactory.getLog(BadConnectionTest.class);
 
     protected Transport transport;
 
@@ -41,7 +45,7 @@ public class BadConnectionTest extends TestCase {
             fail("This should never succeed");
         }
         catch (IOException e) {
-            System.out.println("Caught expected exception: " + e);
+            log.info("Caught expected exception: " + e);
             e.printStackTrace();
         }
     }

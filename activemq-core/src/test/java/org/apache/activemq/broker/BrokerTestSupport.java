@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -30,8 +28,6 @@ import javax.jms.DeliveryMode;
 import javax.jms.MessageNotWriteableException;
 
 import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -55,8 +51,11 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+
 public class BrokerTestSupport extends CombinationTestSupport {
-    private static final Log log = LogFactory.getLog(BrokerTestSupport.class);
+    
+    protected static final Log log = LogFactory.getLog(BrokerTestSupport.class);
     
     /**
      * Setting this to false makes the test run faster but they may be less accurate.
@@ -153,7 +152,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
             System.out.println(prompt+"> Press enter to continue: ");
             while( System.in.read()!='\n' ) {            
             }
-            log.info(prompt+"> Done.");
+            System.out.println(prompt+"> Done.");
         }
     }
 

@@ -66,7 +66,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         connection.start();
         
         String brokerName = connection.getBrokerName();
-        System.out.println("Got broker name: " + brokerName);
+        log.info("Got broker name: " + brokerName);
         
         assertNotNull("No broker name available!", brokerName);
         connection.close();
@@ -96,7 +96,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         URI connectURI = new URI(temp.getScheme(), temp.getUserInfo(), temp.getHost(), currentURI.getPort(), temp.getPath(), temp.getQuery(), temp.getFragment());
         
         
-        System.out.println("connection URI is: " + connectURI);
+        log.info("connection URI is: " + connectURI);
         
         // This should create the connection.
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectURI);

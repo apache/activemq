@@ -37,7 +37,7 @@ public class DeadLetterTest extends DeadLetterTestSupport {
 
         ActiveMQConnection amqConnection = (ActiveMQConnection) connection;
         rollbackCount = amqConnection.getRedeliveryPolicy().getMaximumRedeliveries() + 1;
-        System.out.println("Will redeliver messages: " + rollbackCount + " times");
+        log.info("Will redeliver messages: " + rollbackCount + " times");
 
         makeConsumer();
         makeDlqConsumer();
@@ -64,7 +64,7 @@ public class DeadLetterTest extends DeadLetterTestSupport {
 
             session.rollback();
         }
-        System.out.println("Rolled back: " + rollbackCount + " times");
+        log.info("Rolled back: " + rollbackCount + " times");
     }
 
     protected void setUp() throws Exception {

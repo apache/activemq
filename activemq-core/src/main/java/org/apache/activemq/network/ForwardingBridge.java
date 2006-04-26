@@ -177,8 +177,8 @@ public class ForwardingBridge implements Bridge {
     }
     
     protected void serviceRemoteException(IOException error) {
-        System.out.println("Unexpected remote exception: "+error);
-        error.printStackTrace();
+        log.info("Unexpected remote exception: "+error);
+        log.debug("Exception trace: ", error);
     }
     
     protected void serviceRemoteCommand(Command command) {
@@ -204,8 +204,8 @@ public class ForwardingBridge implements Bridge {
     }
 
     protected void serviceLocalException(Throwable error) {
-        System.out.println("Unexpected local exception: "+error);
-        error.printStackTrace();
+        log.info("Unexpected local exception: "+error);
+        log.debug("Exception trace: ", error);
     }    
     protected void serviceLocalCommand(Command command) {
         try {
@@ -283,7 +283,7 @@ public class ForwardingBridge implements Bridge {
                     }
                 }
             } else {
-                System.out.println("Unexpected local command: "+command);
+                log.debug("Unexpected local command: "+command);
             }
         } catch (IOException e) {
             serviceLocalException(e);

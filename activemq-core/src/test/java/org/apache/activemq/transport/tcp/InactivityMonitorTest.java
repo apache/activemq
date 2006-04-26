@@ -72,7 +72,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
             }
             public void onException(IOException error) {
                 if( !ignoreClientError.get() ) {
-                    System.out.println("Client transport error:");
+                    log.info("Client transport error:");
                     error.printStackTrace();
                     clientErrorCount.incrementAndGet();
                 }
@@ -113,7 +113,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     
     public void onAccept(Transport transport) {
         try {
-            System.out.println("["+getName()+"] Server Accepted a Connection");
+            log.info("["+getName()+"] Server Accepted a Connection");
             serverTransport = transport;
             serverTransport.setTransportListener(new TransportListener() {
                 public void onCommand(Command command) {
@@ -124,7 +124,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
                 }
                 public void onException(IOException error) {
                     if( !ignoreClientError.get() ) {
-                        System.out.println("Server transport error:");
+                        log.info("Server transport error:");
                         error.printStackTrace();
                         serverErrorCount.incrementAndGet();
                     }
@@ -158,7 +158,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
             }
             public void onException(IOException error) {
                 if( !ignoreClientError.get() ) {
-                    System.out.println("Client transport error:");
+                    log.info("Client transport error:");
                     error.printStackTrace();
                     clientErrorCount.incrementAndGet();
                 }
@@ -209,7 +209,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         addCombinationValues("serverRunOnCommand", new Object[] { new Runnable() {
                 public void run() {
                     try {
-                        System.out.println("Sleeping");
+                        log.info("Sleeping");
                         Thread.sleep(4000);
                     } catch (InterruptedException e) {
                     }

@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.filter;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import junit.framework.TestCase;
 
 /**
@@ -24,6 +27,7 @@ import junit.framework.TestCase;
  */
 public class BadDummyPolicyConfigTest extends TestCase {
 
+    protected static final Log log = LogFactory.getLog(BadDummyPolicyConfigTest.class);
     protected DummyPolicy policy = new DummyPolicy();
     
     public void testNoDestinationSpecified() throws Exception {
@@ -53,7 +57,7 @@ public class BadDummyPolicyConfigTest extends TestCase {
             entry.afterPropertiesSet();
         }
         catch (IllegalArgumentException e) {
-            System.out.println("Worked! Caught expected exception: " + e);
+            log.info("Worked! Caught expected exception: " + e);
         }
     }
 }

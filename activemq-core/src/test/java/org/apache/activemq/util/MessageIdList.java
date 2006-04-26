@@ -25,6 +25,9 @@ import javax.jms.MessageListener;
 
 import junit.framework.Assert;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A simple container of messages for performing testing and rendezvous style
  * code. You can use this class a {@link MessageListener} and then make
@@ -38,6 +41,9 @@ import junit.framework.Assert;
  * @version $Revision: 1.6 $
  */
 public class MessageIdList extends Assert implements MessageListener {
+    
+    protected static final Log log = LogFactory.getLog(MessageIdList.class);
+
     private List messageIds = new ArrayList();
     private Object semaphore;
     private boolean verbose;
@@ -98,7 +104,7 @@ public class MessageIdList extends Assert implements MessageListener {
                 semaphore.notifyAll();
             }
             if (verbose) {
-                System.out.println("Received message: " + message);
+                log.info("Received message: " + message);
             }
         } catch (JMSException e) {
             e.printStackTrace();
@@ -115,7 +121,7 @@ public class MessageIdList extends Assert implements MessageListener {
     }
 
     public void waitForMessagesToArrive(int messageCount) {
-        System.out.println("Waiting for " + messageCount + " message(s) to arrive");
+        log.info("Waiting for " + messageCount + " message(s) to arrive");
 
         long start = System.currentTimeMillis();
 
@@ -133,12 +139,12 @@ public class MessageIdList extends Assert implements MessageListener {
                 }
             }
             catch (InterruptedException e) {
-                System.out.println("Caught: " + e);
+                log.info("Caught: " + e);
             }
         }
         long end = System.currentTimeMillis() - start;
 
-        System.out.println("End of wait for " + end + " millis and received: " + getMessageCount() + " messages");
+        log.info("End of wait for " + end + " millis and received: " + getMessageCount() + " messages");
     }
 
     /**

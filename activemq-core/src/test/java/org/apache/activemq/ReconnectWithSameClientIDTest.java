@@ -45,7 +45,7 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
         }
         catch (InvalidClientIDException e) {
             connection2.close();
-            System.out.println("Caught expected: " + e);
+            log.info("Caught expected: " + e);
         }
         }
 

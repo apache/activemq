@@ -39,7 +39,7 @@ public class IndividualDeadLetterViaXmlTest extends DeadLetterTest {
 
     protected Destination createDlqDestination() {
         String queueName = "Test.DLQ." + getClass().getName() + "." + getName();
-        System.out.println("Using queue name: " + queueName);
+        log.info("Using queue name: " + queueName);
         return new ActiveMQQueue(queueName);
     }
 }

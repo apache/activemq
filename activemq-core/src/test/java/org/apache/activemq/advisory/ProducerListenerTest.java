@@ -118,7 +118,7 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
 
     protected Session createProducer() throws JMSException {
         final String consumerText = "Consumer: " + (++consumerCounter);
-        System.out.println("Creating consumer: " + consumerText + " on destination: " + destination);
+        log.info("Creating consumer: " + consumerText + " on destination: " + destination);
         
         Session answer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = answer.createProducer(destination);

@@ -16,13 +16,15 @@
  */
 package org.apache.activemq.transport.multicast;
 
+import java.net.URI;
+
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.UdpTransportTest;
 import org.apache.activemq.util.IntSequenceGenerator;
-
-import java.net.URI;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
@@ -30,11 +32,13 @@ import java.net.URI;
  */
 public class MulticastTransportTest extends UdpTransportTest {
     
+    protected static final Log log = LogFactory.getLog(MulticastTransportTest.class);
+
     private String multicastURI = "multicast://224.1.2.3:6255";
     
 
     protected Transport createProducer() throws Exception {
-        System.out.println("Producer using URI: " + multicastURI);
+        log.info("Producer using URI: " + multicastURI);
         
         // we are not using the TransportFactory as this assumes that
         // transports talk to a server using a WireFormat Negotiation step

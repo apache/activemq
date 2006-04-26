@@ -16,18 +16,19 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.pool.PooledConnectionFactory;
-import org.springframework.jms.core.JmsTemplate;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 
 import junit.framework.TestCase;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.pool.PooledConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.jms.core.JmsTemplate;
 
 /**
  * A useful base class which creates and closes an embedded broker
@@ -36,6 +37,8 @@ import junit.framework.TestCase;
  */
 public class EmbeddedBrokerTestSupport extends TestCase {
 
+    protected static final Log log = LogFactory.getLog(EmbeddedBrokerTestSupport.class);
+    
     protected BrokerService broker;
     //protected String bindAddress = "tcp://localhost:61616";
     protected String bindAddress = "vm://localhost";

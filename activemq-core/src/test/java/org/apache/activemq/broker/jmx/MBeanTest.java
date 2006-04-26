@@ -146,7 +146,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         assertNotNull("Should have created an mbean name for the durable subscriber!", name1);
         
-        System.out.println("Created durable subscriber with name: "  + name1);
+        log.info("Created durable subscriber with name: "  + name1);
         
         // now lets try destroy it
         broker.destroyDurableSubscriber(clientID, "subscriber1");
@@ -211,6 +211,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void echo(String text) {
-        System.out.println(text);
+        log.info(text);
     }
 }

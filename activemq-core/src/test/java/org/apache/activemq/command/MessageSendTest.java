@@ -70,6 +70,6 @@ public class MessageSendTest extends DataStructureTestSupport {
         }
         long end = System.currentTimeMillis();
 
-        System.out.println("marshaled/unmarshaled: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec");
+        log.info("marshaled/unmarshaled: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec");
     }
 }

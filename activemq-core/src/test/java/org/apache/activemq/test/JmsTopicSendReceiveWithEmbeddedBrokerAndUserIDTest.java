@@ -53,7 +53,7 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends
             Message message = (Message) iter.next();
             String userID = message.getStringProperty("JMSXUserID");
 
-            System.out.println("Received message with userID: " + userID);
+            log.info("Received message with userID: " + userID);
 
             assertEquals("JMSXUserID header", userName, userID);
         }

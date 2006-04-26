@@ -117,13 +117,13 @@ public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements C
 
     protected Session createConsumer() throws JMSException {
         final String consumerText = "Consumer: " + (++consumerCounter);
-        System.out.println("Creating consumer: " + consumerText + " on destination: " + destination);
+        log.info("Creating consumer: " + consumerText + " on destination: " + destination);
         
         Session answer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = answer.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message message) {
-                System.out.println("Received message by: " + consumerText + " message: " + message);
+                log.info("Received message by: " + consumerText + " message: " + message);
             }
         });
         return answer;

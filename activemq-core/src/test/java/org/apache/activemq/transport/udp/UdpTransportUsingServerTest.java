@@ -38,16 +38,16 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
         ConsumerInfo expected = new ConsumerInfo();
         expected.setSelector("Edam");
         expected.setResponseRequired(true);
-        System.out.println("About to send: " + expected);
+        log.info("About to send: " + expected);
         Response response = producer.request(expected, 2000);
 
-        System.out.println("Received: " + response);
+        log.info("Received: " + response);
         assertNotNull("Received a response", response);
         assertTrue("Should not be an exception", !response.isException());
     }
 
     protected Transport createProducer() throws Exception {
-        System.out.println("Producer using URI: " + producerURI);
+        log.info("Producer using URI: " + producerURI);
         URI uri = new URI(producerURI);
         return TransportFactory.connect(uri);
     }

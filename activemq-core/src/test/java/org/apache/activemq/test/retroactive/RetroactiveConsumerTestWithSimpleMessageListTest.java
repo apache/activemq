@@ -92,7 +92,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
 
     protected BrokerService createBroker() throws Exception {
         String uri = getBrokerXml();
-        System.out.println("Loading broker configuration from the classpath with URI: " + uri);
+        log.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:"+uri));
     }
 

@@ -103,7 +103,6 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
             }
             regexp.append("\\z"); // The end of the input
 
-            System.out.println("regexp: " + like + ": " + regexp);
             likePattern = Pattern.compile(regexp.toString(), Pattern.DOTALL);
         }
 

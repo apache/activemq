@@ -16,6 +16,14 @@
  */
 package org.apache.activemq.test;
 
+import java.lang.reflect.Array;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.TextMessage;
+
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -25,15 +33,6 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
-
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
 
 /**
  * Useful base class for unit test cases
@@ -41,7 +40,7 @@ import java.util.Arrays;
  * @version $Revision: 1.4 $
  */
 public class TestSupport extends TestCase {
-    protected Log log = LogFactory.getLog(getClass());
+    final static protected Log log = LogFactory.getLog(TestSupport.class);
     protected ActiveMQConnectionFactory connectionFactory;
     protected boolean topic = true;
 

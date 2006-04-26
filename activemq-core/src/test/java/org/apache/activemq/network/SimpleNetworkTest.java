@@ -14,6 +14,7 @@
 package org.apache.activemq.network;
 
 import java.net.URI;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -26,15 +27,22 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicRequestor;
 import javax.jms.TopicSession;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 public class SimpleNetworkTest extends TestCase{
+    
+    protected static final Log log = LogFactory.getLog(SimpleNetworkTest.class);
+
     protected static final int MESSAGE_COUNT=10;
     protected AbstractApplicationContext context;
     protected Connection localConnection;
@@ -74,7 +82,7 @@ public class SimpleNetworkTest extends TestCase{
             TextMessage msg = localSession.createTextMessage("test msg: " +i);
             TextMessage result = (TextMessage) requestor.request(msg);
             assertNotNull(result);
-            System.out.println(result.getText());
+            log.info(result.getText());
         }
     }
 

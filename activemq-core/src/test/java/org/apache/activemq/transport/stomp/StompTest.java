@@ -462,7 +462,7 @@ public class StompTest extends CombinationTestSupport {
 
         try {
             frame = receiveFrame(1000);
-            System.out.println("Received frame: " + frame);
+            log.info("Received frame: " + frame);
             fail("No message should have been received since subscription was removed");
         }catch (SocketTimeoutException e){
 
