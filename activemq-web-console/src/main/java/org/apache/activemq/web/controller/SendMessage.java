@@ -150,6 +150,14 @@ public class SendMessage extends DestinationFacade implements Controller {
         JMSMessageCount = copies;
     }
 
+    public String getJMSMessageCountHeader() {
+        return JMSMessageCountHeader;
+    }
+
+    public void setJMSMessageCountHeader(String messageCountHeader) {
+        JMSMessageCountHeader = messageCountHeader;
+    }
+
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Message createMessage(WebClient client, HttpServletRequest request) throws JMSException {

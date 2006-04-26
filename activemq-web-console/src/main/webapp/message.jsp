@@ -30,7 +30,7 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 				</thead>
 				<tbody>
 					<tr>
-						<td class="label">Message ID</td>
+						<td class="label" title="Unique Message ID for this message">Message ID</td>
 						<td>${row.JMSMessageID}</td>
 					</tr>
 					<tr>
@@ -38,8 +38,20 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 						<td>${row.JMSDestination}</td>
 					</tr>
 					<tr>
-						<td class="label">Correlation ID</td>
+						<td class="label" title="The ID used to correlate messages together in a conversation">Correlation ID</td>
 						<td>${row.JMSCorrelationID}</td>
+					</tr>
+					<tr>
+						<td class="label" title="Message Group Identifier">Group</td>
+						<td>${row.groupID}</td>
+					</tr>
+					<tr>
+						<td class="label" title="Message Group Sequence Number">Sequence</td>
+						<td>${row.groupSequence}</td>
+					</tr>
+					<tr>
+						<td class="label">Expiration</td>
+						<td>${row.JMSExpiration}</td>
 					</tr>
 					<tr>
 						<td class="label">Persistence</td>
