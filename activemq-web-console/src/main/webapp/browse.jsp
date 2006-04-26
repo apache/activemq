@@ -26,8 +26,8 @@
 ---%>
 <jms:forEachMessage queueBrowser="${requestContext.queueBrowser.browser}" var="row">
 <tr>
-<jms:body message="${row}" var="body"/>
-<td><a href="message.jsp?id=${row.JMSMessageID}" title="${body}">${row.JMSMessageID}</a></td>
+<td><a href="message.jsp?id=${row.JMSMessageID}&JMSDestination=${requestContext.queueBrowser.JMSDestination}" 
+    title="${row.properties}">${row.JMSMessageID}</a></td>
 <td>${row.JMSCorrelationID}</td>
 <td><jms:persistent message="${row}"/></td>
 <td>${row.JMSPriority}</td>

@@ -7,9 +7,8 @@ table {
   border-right: 1px solid #aaa;
   margin-bottom: 1em;
   
-width: 80%;
-margin: 1em auto;
-border-collapse: collapse;
+ margin: 1em auto;
+ border-collapse: collapse;
 }
 
 th {
@@ -19,13 +18,15 @@ th {
 	background-color: #cccccc;
 }
 
-tfoot td {
+tfoot {
 	border-top: 1px solid black;
 }
 
 td {
 	padding: 0.5em;
         border: 1px solid black;
+	
+	/** border-top: 1px solid black; */
 }
 
 	
@@ -46,4 +47,15 @@ th.numeric {
 /** forms using table layout */
 td.label {
 	background-color: #f3f3f3;
+}
+
+table.layout {
+  border-bottom: solid white;
+  border-right:  solid white;
+  margin-bottom: solid white;
+}
+
+td.layout {
+	border-top: 1px solid black;
+        border: solid white;
 }
