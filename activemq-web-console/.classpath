@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/main/webapp"/>
+	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry output="target/test-classes" kind="src" path="src/test/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="M2_REPO/mx4j/mx4j/2.1.1/mx4j-2.1.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mortbay/jetty/jetty/6.0.0beta14/jetty-6.0.0beta14.jar"/>
+	<classpathentry kind="var" path="M2_REPO/jdom/jdom/1.0/jdom-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-jms_1.1_spec/1.0/geronimo-jms_1.1_spec-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/xstream/xstream/1.1.2/xstream-1.1.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mortbay/jetty/jetty-util/6.0.0beta14/jetty-util-6.0.0beta14.jar"/>
+	<classpathentry kind="var" path="M2_REPO/ant/ant/1.6.2/ant-1.6.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/rome/rome/0.8/rome-0.8.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-jcl/1.0-rc5/slf4j-jcl-1.0-rc5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/xbean/xbean-spring/2.2/xbean-spring-2.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/incubator-activemq/activemq-jaas/4.0-SNAPSHOT/activemq-jaas-4.0-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/servlet/jstl/1.0/jstl-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/incubator-activemq/activeio-core/3.0-SNAPSHOT/activeio-core-3.0-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="M2_REPO/xmlpull/xmlpull/1.1.3.4d_b4_min/xmlpull-1.1.3.4d_b4_min.jar"/>
+	<classpathentry kind="var" path="M2_REPO/stax/stax-api/1.0/stax-api-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/1.2.6/spring-1.2.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/backport-util-concurrent/backport-util-concurrent/2.1/backport-util-concurrent-2.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-j2ee-management_1.0_spec/1.0/geronimo-j2ee-management_1.0_spec-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mortbay/jetty/servlet-api-2.5/6.0.0beta14/servlet-api-2.5-6.0.0beta14.jar"/>
+	<classpathentry kind="var" path="M2_REPO/junit/junit/3.8.1/junit-3.8.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-jta_1.0.1B_spec/1.0/geronimo-jta_1.0.1B_spec-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/taglibs/standard/1.1.2/standard-1.1.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-j2ee-jacc_1.0_spec/1.0/geronimo-j2ee-jacc_1.0_spec-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/derby/derby/10.1.1.0/derby-10.1.1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/opensymphony/sitemesh/2.2.1/sitemesh-2.2.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.3/commons-logging-1.0.3.jar"/>
+	<classpathentry kind="var" path="M2_REPO/qdox/qdox/1.5/qdox-1.5.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/activemq-core"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/activemq-web"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

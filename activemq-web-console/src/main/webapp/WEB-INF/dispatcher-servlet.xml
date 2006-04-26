@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+  <bean id="handlerMapping" class="org.apache.activemq.web.handler.BindingBeanNameUrlHandlerMapping" singleton="false">
+    <!--
+    <property name="uriToClassNames">
+      <props><prop key="/foo.action">org.apache.activemq.web.controller.Foo</prop></props>
+    </property>
+    -->
+  </bean>
+
+  <bean name="/createDestination.action" class="org.apache.activemq.web.controller.CreateDestination" autowire="constructor"  singleton="false"/>
+  <bean name="/deleteDestination.action" class="org.apache.activemq.web.controller.DeleteDestination" autowire="constructor"  singleton="false"/>
+  <bean name="/createSubscriber.action" class="org.apache.activemq.web.controller.CreateSubscriber" autowire="constructor"  singleton="false"/>
+  <bean name="/deleteSubscriber.action" class="org.apache.activemq.web.controller.DeleteSubscriber" autowire="constructor"  singleton="false"/>
+  <bean name="/sendMessage.action" class="org.apache.activemq.web.controller.SendMessage" autowire="constructor"  singleton="false"/>
+  
+  <!--
+    - This bean resolves specific types of exception to corresponding error views.
+    - The default behaviour of DispatcherServlet is to propagate all exceptions to the
+    - servlet container: This will happen here with all other types of exception.
+  -->
+  <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+    <property name="exceptionMappings">
+      <props><!-- <prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop> --></props>
+    </property>
+  </bean>
+
+  <!--
+    - This bean resolves default view names for controllers that do not explicitly
+    - specify a view name in their return ModelAndView (see ClinicController).
+    - This translator takes the request URL and extracts a view name from it: e.g.
+    - "/welcome.html" -> "welcome", plus configured "View" suffix -> "welcomeView".
+  -->
+  <!--
+    <bean id="viewNameTranslator" class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator">
+    <property name="suffix" value="View"/>
+    </bean>
+  -->
+</beans>
