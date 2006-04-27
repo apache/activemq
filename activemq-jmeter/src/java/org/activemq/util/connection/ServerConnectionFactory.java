@@ -40,6 +40,7 @@ import javax.naming.NamingException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jmeter.testelement.TestElement;
 import org.mr.api.jms.MantaQueueConnectionFactory;
 import org.mr.api.jms.MantaTopicConnectionFactory;
 
@@ -58,6 +59,7 @@ public class ServerConnectionFactory {
     public static final String JORAM_PASSWORD = JMeterUtils.getResString("joram_password");
     public static final String JORAM_NAMING_PORT = JMeterUtils.getResString("joram_naming_port");
     public static final String MANTARAY_SERVER = JMeterUtils.getResString("mantaray_server");
+    public static final String SWIFTMQ_SERVER = JMeterUtils.getResString("swiftmq_server");
 
     // For testing within IntelliJ running main()
     /*
@@ -70,12 +72,12 @@ public class ServerConnectionFactory {
     public static final String JORAM_CONNECTION_FACTORY = "!cf";
     public static final String JORAM_USERNAME = "root";
     public static final String JORAM_PASSWORD = "root";
-    public static final String JORAM_NAMING_PORT = "16400";
-    public static final String MANTARAY_SERVER = "Mantaray";
     */
 
     public static final String SONICMQ_TOPIC = "progress.message.jclient.TopicConnectionFactory";
     public static final String SONICMQ_QUEUE = "progress.message.jclient.QueueConnectionFactory";
+    public static final String SONICMQ_CONTEXT = "com.sonicsw.jndi.mfcontext.MFContextFactory";
+    public static final String SONICMQ_CONNECTION_FACTORY = "progress.message.jclient.ConnectionFactory";
     public static final String TIBCOMQ_TOPIC = "com.tibco.tibjms.TibjmsTopicConnectionFactory";
     public static final String TIBCOMQ_QUEUE = "com.tibco.tibjms.TibjmsQueueConnectionFactory";
     public static final String NAMING_CONTEXT = "org.jnp.interfaces.NamingContextFactory";
@@ -86,6 +88,9 @@ public class ServerConnectionFactory {
     public static final String JORAM_NAMING_CONTEXT = "fr.dyade.aaa.jndi2.client.NamingContextFactory";
     public static final String JORAM_TOPIC = "TopicConnectionFactory";
     public static final String JORAM_QUEUE = "QueueConnectionFactory";
+    public static final String SWIFTMQ_CONTEXT = "com.swiftmq.jndi.InitialContextFactoryImpl";
+    public static final String SWIFTMQ_CONNECTION_FACTORY = "com.swiftmq.jms.SwiftMQConnectionFactory";
+    public static final String SMQP = "com.swiftmq.jms.smqp";
     public static final String NAMING_HOST = "java.naming.factory.host";
     public static final String NAMING_PORT = "java.naming.factory.post";
 
@@ -116,14 +121,15 @@ public class ServerConnectionFactory {
      * @param url            - location of the broker.
      * @param mqServer       - type of broker that is running.
      * @param isTopic        - type of message domain.
-     * @param embeddedBroker - specified is the broker is embedded.
+     * @param isAsync        - specified if Send type is Asynchronous.
      * @return
      * @throws JMSException
      */
     public static Connection createConnectionFactory(String url,
                                                      String mqServer,
                                                      boolean isTopic,
-                                                     boolean embeddedBroker) throws JMSException {
+                                                     boolean isAsync) throws JMSException {
+
        if (SONICMQ_SERVER.equals(mqServer)) {
             //Creates a Connection object for a SONIC MQ server.
             if (isTopic) {
@@ -144,9 +150,7 @@ public class ServerConnectionFactory {
                 InitialContext context = getInitialContext(url, JBOSSMQ_SERVER);
                 ConnectionFactory factory = (ConnectionFactory) context.lookup("ConnectionFactory");
                 context.close();
-
                 return factory.createConnection();
-
             } catch (NamingException e) {
                 throw new JMSException("Error creating InitialContext ", e.toString());
             }
@@ -200,12 +204,37 @@ public class ServerConnectionFactory {
                 return factory.createQueueConnection();
 
             }
+        }else if (SWIFTMQ_SERVER.equals(mqServer)) {
+            //Creates a Connection object for a SwiftMQ server.
+            try {
+                Context ictx = getInitialContext(url, SWIFTMQ_SERVER);
+                if (isTopic){
+                    TopicConnectionFactory tcf = (TopicConnectionFactory) ictx.lookup("TopicConnectionFactory");
+//                    Topic topic = (Topic) ictx.lookup("testtopic");
+                    ictx.close();
+                    TopicConnection connection = tcf.createTopicConnection();
+                    return connection;
+                } else {
+                    QueueConnectionFactory qcf = (QueueConnectionFactory) ictx.lookup("QueueConnectionFactory");
+//                    Queue queue = (Queue) ictx.lookup("testqueue");
+                    ictx.close();
+                    QueueConnection connection = qcf.createQueueConnection();
+                    return connection;
+                }
+            } catch (NamingException e) {
+                throw new JMSException("Error creating InitialContext ", e.toString());
+            }
         } else {
             //Used to create a session from the default MQ server ActiveMQConnectionFactory.
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
             ActiveMQConnection c = (ActiveMQConnection) factory.createConnection();
-            factory.setUseAsyncSend(true);
-
+//            factory.setUseAsyncSend(true);
+            if(isAsync) {
+                factory.setUseAsyncSend(true);
+            } else {
+                factory.setUseAsyncSend(false);
+            }
+//System.out.println("ASYNC = " + factory.isUseAsyncSend());
             c.getPrefetchPolicy().setQueuePrefetch(1000);
             c.getPrefetchPolicy().setQueueBrowserPrefetch(1000);
             c.getPrefetchPolicy().setTopicPrefetch(1000);
@@ -279,7 +308,6 @@ public class ServerConnectionFactory {
                                         boolean isTransacted,
                                         String mqServer,
                                         boolean isTopic) throws JMSException {
-
         if (OPENJMS_SERVER.equals(mqServer) || MANTARAY_SERVER.equals(mqServer)) {
             if (isTransacted) {
                 if (isTopic) {
@@ -305,6 +333,15 @@ public class ServerConnectionFactory {
                     return ((Session) session);
 
                 }
+            }
+        } else if (SONICMQ_SERVER.equals(mqServer)) {
+            Session session = null;
+            if (isTransacted) {
+                session = connection.createSession(false, Session.SESSION_TRANSACTED);
+                return session;
+            } else {
+                session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                return session;
             }
         } else {
             // check when to use Transacted or Non-Transacted type.
@@ -349,24 +386,22 @@ public class ServerConnectionFactory {
         Constructor constructor;
         Class[] classParameter = {url.getClass()};
         Object[] constArgs = {url};
-
-        try {
+       try {
             classObject = Class.forName(connFactoryClass);
             constructor = classObject.getConstructor(classParameter);
             ConnectionFactory factory = (ConnectionFactory) constructor.newInstance(constArgs);
-
             return factory.createConnection();
 
         } catch (ClassNotFoundException e) {
             throw new JMSException("Unable to find class ", e.toString());
         } catch (NoSuchMethodException e) {
-            throw new JMSException("No such getConstructor(Class[] class) method found ", e.toString());
+           throw new JMSException("No such getConstructor(Class[] class) method found ", e.toString());
         } catch (InstantiationException e) {
-            throw new JMSException("Unable to instantiate class ", e.toString());
+           throw new JMSException("Unable to instantiate class ", e.toString());
         } catch (IllegalAccessException e) {
-            throw new JMSException("Unable to instantiate class ", e.toString());
+           throw new JMSException("Unable to instantiate class ", e.toString());
         } catch (InvocationTargetException e) {
-            throw new JMSException("Unable to instantiate class ", e.toString());
+           throw new JMSException("Unable to instantiate class ", e.toString());
         }
     }
 
@@ -382,7 +417,7 @@ public class ServerConnectionFactory {
         Properties properties = new Properties();
 
         if (JBOSSMQ_SERVER.equals(mqServer)) {
-            //Creates a Context oject for JBOSS MQ server
+            //Creates a Context object for JBOSS MQ server
             properties.put(Context.INITIAL_CONTEXT_FACTORY, NAMING_CONTEXT);
             properties.put(Context.URL_PKG_PREFIXES, JNP_INTERFACES);
             properties.put(Context.PROVIDER_URL, url);
@@ -398,6 +433,17 @@ public class ServerConnectionFactory {
             properties.put(Context.INITIAL_CONTEXT_FACTORY, JORAM_NAMING_CONTEXT);
             properties.put(NAMING_HOST, getHost(url));
             properties.put(NAMING_PORT, JORAM_NAMING_PORT);
+
+        } else if (SWIFTMQ_SERVER.equals(mqServer)) {
+            //Creates a Context object for SWIFTMQ server
+            properties.put(Context.INITIAL_CONTEXT_FACTORY, SWIFTMQ_CONTEXT);
+            properties.put(Context.URL_PKG_PREFIXES, SMQP);
+            properties.put(Context.PROVIDER_URL, url);
+
+        } else if (SONICMQ_SERVER.equals(mqServer)) {
+            //Creates a Context object for SONICMQ server
+            properties.put(Context.INITIAL_CONTEXT_FACTORY, SONICMQ_CONTEXT);
+            properties.put(Context.PROVIDER_URL, url);
 
         }
 

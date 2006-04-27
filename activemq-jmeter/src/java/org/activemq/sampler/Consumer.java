@@ -61,6 +61,7 @@ public class Consumer extends Sampler implements MessageListener {
 
     private int batchCounter = 0;
 
+    private static long ID = 0;
     static {
         log.info("Protocol Handler name=" + getClassname());
         log.info("Status prefix=" + STATUS_PREFIX);
@@ -131,15 +132,21 @@ public class Consumer extends Sampler implements MessageListener {
         Connection connection = ServerConnectionFactory.createConnectionFactory(this.getURL(),
                                                                                 this.getMQServer(),
                                                                                 this.getTopic(),
-                                                                                this.getEmbeddedBroker());
+                                                                                this.getAsyncSend());
 
         if (this.getDurable()) {
             if ((ServerConnectionFactory.JORAM_SERVER.equals(this.getMQServer())) ||
                 (ServerConnectionFactory.MANTARAY_SERVER.equals(this.getMQServer()))) {
                 //Id set by server
             } else {
-                IdGenerator idGenerator = new IdGenerator();
-                connection.setClientID(idGenerator.generateId());
+                if ((ServerConnectionFactory.SWIFTMQ_SERVER.equals(this.getMQServer()))) {
+                    ID += 1;
+                    String strId = String.valueOf(ID);
+                    connection.setClientID(strId);
+                } else {
+                    IdGenerator idGenerator = new IdGenerator();
+                    connection.setClientID(idGenerator.generateId());
+                }
             }
         }
 
@@ -187,6 +194,20 @@ public class Consumer extends Sampler implements MessageListener {
                 }
 
             } else {
+                Queue queue = ((QueueSession) session).createQueue(subject);
+                QueueReceiver receiver = ((QueueSession) session).createReceiver(queue);
+                consumer = (MessageConsumer) receiver;
+            }
+        } else if (ServerConnectionFactory.SWIFTMQ_SERVER.equals(this.getMQServer())) {
+            if (this.getTopic()) {
+                Topic topic = (Topic) destination;
+                if (this.getDurable()) {
+                    consumer = ((TopicSession) session).createDurableSubscriber(topic,"durableSubscriber");
+                } else {
+                    consumer = ((TopicSession) session).createSubscriber(topic);
+                }
+            } else {
+                subject = "testqueue@router1";
                 Queue queue = ((QueueSession) session).createQueue(subject);
                 QueueReceiver receiver = ((QueueSession) session).createReceiver(queue);
                 consumer = (MessageConsumer) receiver;
@@ -299,6 +320,8 @@ public class Consumer extends Sampler implements MessageListener {
                 cons.setMQServer(ServerConnectionFactory.JORAM_SERVER);
             } else if (mqServer.equalsIgnoreCase("MANTARAY")) {
                 cons.setMQServer(ServerConnectionFactory.MANTARAY_SERVER);
+            } else if (mqServer.equalsIgnoreCase("SWIFTMQ")) {
+                cons.setMQServer(ServerConnectionFactory.SWIFTMQ_SERVER);
             } else if (mqServer.equalsIgnoreCase("ACTIVEMQ")) {
                 //Run with the default broker
             } else {
@@ -309,6 +332,7 @@ public class Consumer extends Sampler implements MessageListener {
                 System.out.print("OPENJMS | ");
                 System.out.print("JORAM | ");
                 System.out.print("MANTARAY |");
+                System.out.print("SWIFTMQ |");
                 System.out.println("ACTIVEMQ ]");
                 return;
             }

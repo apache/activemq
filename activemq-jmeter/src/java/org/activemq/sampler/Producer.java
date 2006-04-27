@@ -156,10 +156,11 @@ public class Producer extends Sampler implements TestListener {
         connection = ServerConnectionFactory.createConnectionFactory(this.getURL(),
                                                                      this.getMQServer(),
                                                                      this.getTopic(),
-                                                                     this.getEmbeddedBroker());
+                                                                     this.getAsyncSend());
 
         if (this.getDurable()) {
             if ((ServerConnectionFactory.JORAM_SERVER.equals(this.getMQServer()))||
+                (ServerConnectionFactory.SWIFTMQ_SERVER.equals(this.getMQServer()))||
                 (ServerConnectionFactory.MANTARAY_SERVER.equals(this.getMQServer()))) {
                 //Id set be server
 
@@ -195,7 +196,13 @@ public class Producer extends Sampler implements TestListener {
             }
 
         } else {
+            if((ServerConnectionFactory.SWIFTMQ_SERVER.equals(this.getMQServer())) && !this.getTopic()){
+                Queue strQ = session.createQueue("testqueue@router1");
+                QueueSender queuePublisher = ((QueueSession)session).createSender(strQ);
+                publisher = queuePublisher;
+            } else {
             publisher = session.createProducer(destination);
+            }
         }
 
         long msgIntervalInMins = this.getMsgInterval();
@@ -438,6 +445,8 @@ public class Producer extends Sampler implements TestListener {
                 prod.setMQServer(ServerConnectionFactory.JORAM_SERVER);
             } else if (mqServer.equalsIgnoreCase("MANTARAY")) {
                 prod.setMQServer(ServerConnectionFactory.MANTARAY_SERVER);
+            } else if (mqServer.equalsIgnoreCase("SWIFTMQ")) {
+                prod.setMQServer(ServerConnectionFactory.SWIFTMQ_SERVER);
             } else if (mqServer.equalsIgnoreCase("ACTIVEMQ")) {
                 //Run with the default broker
             } else {
@@ -448,6 +457,7 @@ public class Producer extends Sampler implements TestListener {
                 System.out.print("OPENJMS | " );
                 System.out.print("JORAM |");
                 System.out.print("MANTARAY |");
+                System.out.print("SWIFTMQ |");
                 System.out.println("ACTIVEMQ ]");
             }
 
