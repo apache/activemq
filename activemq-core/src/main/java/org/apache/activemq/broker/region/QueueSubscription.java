@@ -153,7 +153,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
             // If the message was dispatched, it could be getting dispatched async, so we
             // can only drop the reference count when that completes @see onDispatch
             if( !rc ) {
-                node.incrementReferenceCount();
+                node.decrementReferenceCount();
             }
         }
         return rc;
