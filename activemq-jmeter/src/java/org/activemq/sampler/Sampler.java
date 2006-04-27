@@ -56,6 +56,7 @@ public class Sampler extends AbstractSampler {
     public static final String MSGINTERVAL = "Sampler.msginterval";
     public static final String TRANSACTED = "Sampler.transacted";
     public static final String BATCHSIZE = "Sampler.batchsize";
+    public static final String ASYNC_SEND = "Sampler.async_send";
     public static final String CONFIG_SUBJECT = "TOOL.DEFAULT.CONFIG";
     public static final String CONFIRM_SUBJECT = "TOOL.DEFAULT.CONFIRM";
     public static final String PUBLISH_MSG = "true";
@@ -435,6 +436,20 @@ public class Sampler extends AbstractSampler {
      */
     protected int getBatchSize() {
         return getPropertyAsInt(BATCHSIZE);
+    }
+
+    /**
+     * @return Returns whether to use Asynchronous Send.
+     */
+    protected boolean getAsyncSend() {
+        return getPropertyAsBoolean(ASYNC_SEND);
+    }
+
+    /**
+     * @param newAsyncSend - when to use Asynchronous Send.
+     */
+    protected void setAsyncSend(String newAsyncSend) {
+        this.setProperty(ASYNC_SEND, newAsyncSend);
     }
 
     /**

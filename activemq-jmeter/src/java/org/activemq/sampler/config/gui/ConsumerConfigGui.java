@@ -60,9 +60,12 @@ public class ConsumerConfigGui extends AbstractConfigGui {
     private static final String OPENJMS_SERVER = JMeterUtils.getResString("openjms_server");
     private static final String JORAM_SERVER = JMeterUtils.getResString("joram_server");
     private static final String MANTARAY_SERVER = JMeterUtils.getResString("mantaray_server");
+    private static final String SWIFTMQ_SERVER = JMeterUtils.getResString("swiftmq_server");
     private static final String TRANSACTED = "transacted";
     private static final String NONTRANSACTED = "nontransacted";
     private static final String BATCHSIZE = "batchsize";
+    private static final String ASYNC_SEND = "async_send";
+    private static final String NON_ASYNC_SEND = "non_async_send";
 
     private JTextField setURL;
     private JTextField setDuration;
@@ -78,6 +81,8 @@ public class ConsumerConfigGui extends AbstractConfigGui {
     private JRadioButton setTransacted;
     private JRadioButton setNonTransacted;
     private JTextField setBatchSize;
+    private JRadioButton setAsyncSend;
+    private JRadioButton setNonAsyncSend;
 
     private boolean displayName = true;
 
@@ -165,6 +170,19 @@ public class ConsumerConfigGui extends AbstractConfigGui {
                 setBatchSize.setText("");
             }
         }
+        if (element.getProperty(Consumer.ASYNC_SEND) == null) {
+            setAsyncSend.setSelected(true);
+            setNonAsyncSend.setSelected(false);
+
+        } else {
+            if (element.getPropertyAsBoolean(Consumer.ASYNC_SEND)) {
+                setAsyncSend.setSelected(true);
+                setNonAsyncSend.setSelected(false);
+            } else {
+                setAsyncSend.setSelected(false);
+                setNonAsyncSend.setSelected(true);
+            }
+        }
     }
 
     /**
@@ -197,6 +215,7 @@ public class ConsumerConfigGui extends AbstractConfigGui {
         element.setProperty(Consumer.MQSERVER, setMQServer.getSelectedItem().toString());
         element.setProperty(Consumer.TRANSACTED, JOrphanUtils.booleanToString(setTransacted.isSelected()));
         element.setProperty(Consumer.BATCHSIZE, setBatchSize.getText());
+        element.setProperty(Consumer.ASYNC_SEND, JOrphanUtils.booleanToString(setAsyncSend.isSelected()));
     }
 
     /**
@@ -398,7 +417,8 @@ public class ConsumerConfigGui extends AbstractConfigGui {
                               TIBCOMQ_SERVER,
                               OPENJMS_SERVER,
                               JORAM_SERVER,
-                              MANTARAY_SERVER};
+                              MANTARAY_SERVER,
+                              SWIFTMQ_SERVER};
 
         JLabel label = new JLabel(JMeterUtils.getResString("form_mq_servers"));
         setMQServer = new JComboBox(mqServers);
@@ -479,6 +499,57 @@ public class ConsumerConfigGui extends AbstractConfigGui {
     }
 
     /**
+     * Creates the Asynchronous Send Panel.
+     *
+     * @return asyncSendPanel
+     */
+    private JPanel createAsyncSendPanel() {
+        JLabel labelSendType = new JLabel(JMeterUtils.getResString("form_msg_send_type"));
+
+        //create Async Send Type
+        JLabel labelAsyncSend = new JLabel(JMeterUtils.getResString("form_async_send"));
+        setAsyncSend = new JRadioButton();
+        setAsyncSend.setName(ASYNC_SEND);
+        labelAsyncSend.setLabelFor(setAsyncSend);
+        setAsyncSend.setActionCommand(ASYNC_SEND);
+        setAsyncSend.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jRadioActionPerformedSendType(evt);
+            }
+        });
+        setAsyncSend.setSelected(true);
+
+        //create Non Async Send Type
+        JLabel labelNonAsyncSend = new JLabel(JMeterUtils.getResString("form_non_async_send"));
+        setNonAsyncSend = new JRadioButton();
+        setNonAsyncSend.setName(NON_ASYNC_SEND);
+        labelNonAsyncSend.setLabelFor(setNonAsyncSend);
+        setNonAsyncSend.setActionCommand(NON_ASYNC_SEND);
+        setNonAsyncSend.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jRadioActionPerformedSendType(evt);
+            }
+        });
+
+        setNonAsyncSend.setSelected(false);
+        FlowLayout flow = new FlowLayout(FlowLayout.LEFT);
+        flow.setHgap(0);
+        flow.setVgap(0);
+
+        JPanel sendTypePanel = new JPanel(flow);
+        sendTypePanel.add(labelSendType);
+        sendTypePanel.add(new JLabel("   "));
+        sendTypePanel.add(setAsyncSend);
+        sendTypePanel.add(labelAsyncSend);
+        sendTypePanel.add(new JLabel("   "));
+        sendTypePanel.add(setNonAsyncSend);
+        sendTypePanel.add(labelNonAsyncSend);
+        sendTypePanel.add(new JLabel("   "));
+
+        return sendTypePanel;
+    }
+
+    /**
      * Initializes the gui components.
      */
     private void init() {
@@ -499,6 +570,7 @@ public class ConsumerConfigGui extends AbstractConfigGui {
         mainPanel.add(createDurablePanel());
         mainPanel.add(createTopicPanel());
         mainPanel.add(createTransactedPanel());
+        mainPanel.add(createAsyncSendPanel());
         mainPanel.add(createMQServerPanel());
 
         add(mainPanel, BorderLayout.CENTER);
@@ -562,6 +634,20 @@ public class ConsumerConfigGui extends AbstractConfigGui {
             setNonTransacted.setSelected(true);
             setBatchSize.setEnabled(false);
             setBatchSize.setText("");
+        }
+    }
+    /**
+     * @param evt - event triggered.
+     */
+    private void jRadioActionPerformedSendType(ActionEvent evt) {
+        String evtActionCommand = evt.getActionCommand();
+
+        if (evtActionCommand.equals(ASYNC_SEND)) {
+            setAsyncSend.setSelected(true);
+            setNonAsyncSend.setSelected(false);
+        } else if (evtActionCommand.equals(NON_ASYNC_SEND)) {
+            setAsyncSend.setSelected(false);
+            setNonAsyncSend.setSelected(true);
         }
     }
 }

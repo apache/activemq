@@ -62,9 +62,12 @@ public class ProducerConfigGui extends AbstractConfigGui {
     private static final String OPENJMS_SERVER = JMeterUtils.getResString("openjms_server");
     private static final String JORAM_SERVER = JMeterUtils.getResString("joram_server");
     private static final String MANTARAY_SERVER = JMeterUtils.getResString("mantaray_server");
+    private static final String SWIFTMQ_SERVER = JMeterUtils.getResString("swiftmq_server");
     private static final String TRANSACTED = "transacted";
     private static final String NONTRANSACTED = "nontransacted";
     private static final String BATCHSIZE = "batchsize";
+    private static final String ASYNC_SEND = "async_send";
+    private static final String NON_ASYNC_SEND = "non_async_send";
 
     private JTextField setURL;
     private JTextField setDuration;
@@ -83,6 +86,8 @@ public class ProducerConfigGui extends AbstractConfigGui {
     private JRadioButton setTransacted;
     private JRadioButton setNonTransacted;
     private JTextField setBatchSize;
+    private JRadioButton setAsyncSend;
+    private JRadioButton setNonAsyncSend;
 
     private boolean displayName = true;
 
@@ -191,6 +196,21 @@ public class ProducerConfigGui extends AbstractConfigGui {
                 setBatchSize.setText("");
             }
         }
+
+        if (element.getProperty(Producer.ASYNC_SEND) == null) {
+            setAsyncSend.setSelected(true);
+            setNonAsyncSend.setSelected(false);
+
+        } else {
+            if (element.getPropertyAsBoolean(Producer.ASYNC_SEND)) {
+                setAsyncSend.setSelected(true);
+                setNonAsyncSend.setSelected(false);
+            } else {
+                setAsyncSend.setSelected(false);
+                setNonAsyncSend.setSelected(true);
+            }
+        }
+
     }
 
     /**
@@ -226,6 +246,7 @@ public class ProducerConfigGui extends AbstractConfigGui {
         element.setProperty(Producer.MQSERVER, setMQServer.getSelectedItem().toString());
         element.setProperty(Producer.TRANSACTED, JOrphanUtils.booleanToString(setTransacted.isSelected()));
         element.setProperty(Producer.BATCHSIZE, setBatchSize.getText());
+        element.setProperty(Producer.ASYNC_SEND, JOrphanUtils.booleanToString(setAsyncSend.isSelected()));
     }
 
     /**
@@ -523,7 +544,7 @@ public class ProducerConfigGui extends AbstractConfigGui {
         setNonTransacted.setActionCommand(NONTRANSACTED);
         setNonTransacted.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                jRadioActionPerformedTransaction(evt);
+               jRadioActionPerformedTransaction(evt);
             }
         });
 
@@ -541,18 +562,69 @@ public class ProducerConfigGui extends AbstractConfigGui {
 
         JPanel transactionPanel = new JPanel(flow);
         transactionPanel.add(labelTransactionType);
-        transactionPanel.add(new JLabel("   "));
+        transactionPanel.add(new JLabel("  "));
         transactionPanel.add(setNonTransacted);
         transactionPanel.add(labelNonTransacted);
-        transactionPanel.add(new JLabel("   "));
+        transactionPanel.add(new JLabel("  "));
         transactionPanel.add(setTransacted);
         transactionPanel.add(labelTransacted);
-        transactionPanel.add(new JLabel("   "));
+        transactionPanel.add(new JLabel("  "));
         transactionPanel.add(setBatchSize);
         transactionPanel.add(new JLabel("   "));
         transactionPanel.add(labelBatchSize);
 
         return transactionPanel;
+    }
+
+    /**
+     * Creates the Asynchronous Send Panel.
+     *
+     * @return asyncSendPanel
+     */
+    private JPanel createAsyncSendPanel() {
+        JLabel labelSendType = new JLabel(JMeterUtils.getResString("form_msg_send_type"));
+
+        //create Async Send Type
+        JLabel labelAsyncSend = new JLabel(JMeterUtils.getResString("form_async_send"));
+        setAsyncSend = new JRadioButton();
+        setAsyncSend.setName(ASYNC_SEND);
+        labelAsyncSend.setLabelFor(setAsyncSend);
+        setAsyncSend.setActionCommand(ASYNC_SEND);
+        setAsyncSend.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jRadioActionPerformedSendType(evt);
+            }
+        });
+        setAsyncSend.setSelected(true);
+
+        //create Non Async Send Type
+        JLabel labelNonAsyncSend = new JLabel(JMeterUtils.getResString("form_non_async_send"));
+        setNonAsyncSend = new JRadioButton();
+        setNonAsyncSend.setName(NON_ASYNC_SEND);
+        labelNonAsyncSend.setLabelFor(setNonAsyncSend);
+        setNonAsyncSend.setActionCommand(NON_ASYNC_SEND);
+        setNonAsyncSend.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jRadioActionPerformedSendType(evt);
+            }
+        });
+
+        setNonAsyncSend.setSelected(false);
+        FlowLayout flow = new FlowLayout(FlowLayout.LEFT);
+        flow.setHgap(0);
+        flow.setVgap(0);
+
+        JPanel sendTypePanel = new JPanel(flow);
+        sendTypePanel.add(labelSendType);
+        sendTypePanel.add(new JLabel("   "));
+        sendTypePanel.add(setAsyncSend);
+        sendTypePanel.add(labelAsyncSend);
+        sendTypePanel.add(new JLabel("   "));
+        sendTypePanel.add(setNonAsyncSend);
+        sendTypePanel.add(labelNonAsyncSend);
+        sendTypePanel.add(new JLabel("   "));
+
+        return sendTypePanel;
     }
 
     /**
@@ -567,7 +639,8 @@ public class ProducerConfigGui extends AbstractConfigGui {
                               TIBCOMQ_SERVER,
                               OPENJMS_SERVER,
                               JORAM_SERVER,
-                              MANTARAY_SERVER};
+                              MANTARAY_SERVER,
+                              SWIFTMQ_SERVER};
 
         JLabel label = new JLabel(JMeterUtils.getResString("form_mq_servers"));
         setMQServer = new JComboBox(mqServers);
@@ -610,6 +683,7 @@ public class ProducerConfigGui extends AbstractConfigGui {
         mainPanel.add(createDurablePanel());
         mainPanel.add(createTopicPanel());
         mainPanel.add(createTransactedPanel());
+        mainPanel.add(createAsyncSendPanel());
         mainPanel.add(createDefMsgIntervalPanel());
         mainPanel.add(createMQServerPanel());
 
@@ -684,6 +758,21 @@ public class ProducerConfigGui extends AbstractConfigGui {
             setNonTransacted.setSelected(true);
             setBatchSize.setEnabled(false);
             setBatchSize.setText("");
+        }
+    }
+
+    /**
+     * @param evt - event triggered.
+     */
+    private void jRadioActionPerformedSendType(ActionEvent evt) {
+        String evtActionCommand = evt.getActionCommand();
+
+        if (evtActionCommand.equals(ASYNC_SEND)) {
+            setAsyncSend.setSelected(true);
+            setNonAsyncSend.setSelected(false);
+        } else if (evtActionCommand.equals(NON_ASYNC_SEND)) {
+            setAsyncSend.setSelected(false);
+            setNonAsyncSend.setSelected(true);
         }
     }
 
