@@ -17,12 +17,8 @@
 package org.apache.activemq.broker.jmx;
 
 import javax.management.ObjectName;
+
 import org.apache.activemq.Service;
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 public interface BrokerViewMBean extends Service {
 

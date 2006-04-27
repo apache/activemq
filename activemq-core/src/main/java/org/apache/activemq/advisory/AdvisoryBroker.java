@@ -147,20 +147,6 @@ public class AdvisoryBroker extends BrokerFilter {
         return answer;
     }
     
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        next.removeDestination(context, destination, timeout);
-        ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
-        DestinationInfo info = (DestinationInfo) destinations.remove(destination);
-        if( info !=null && info.getDestination() != null && topic != null) {
-            info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
-            fireAdvisory(context, topic, info);
-            next.removeDestination(context,topic,timeout);
-            next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), timeout); 
-            next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), timeout); 
-        }
-       
-    }
-    
     public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
         ActiveMQDestination destination =  info.getDestination();
         next.addDestinationInfo(context, info);  
@@ -170,18 +156,45 @@ public class AdvisoryBroker extends BrokerFilter {
         destinations.put(destination, info);    
     }
 
-    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
-        next.removeDestinationInfo(context, info);
-        ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(info.getDestination());
-        fireAdvisory(context, topic, info);
-        try {
-            next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), 0);
-        } catch (Exception expectedIfDestinationDidNotExistYet) {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        next.removeDestination(context, destination, timeout);
+        DestinationInfo info = (DestinationInfo) destinations.remove(destination);
+        if( info !=null ) {
+            info.setDestination(destination);
+            info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
+            ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
+            fireAdvisory(context, topic, info);
+            try {
+                next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
+            } catch (Exception expectedIfDestinationDidNotExistYet) {
+            }
+            try {
+                next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
+            } catch (Exception expectedIfDestinationDidNotExistYet) {
+            }
         }
-        try {
-            next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), 0); 
-        } catch (Exception expectedIfDestinationDidNotExistYet) {
+       
+    }
+    
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception{
+        next.removeDestinationInfo(context, destInfo);
+        DestinationInfo info = (DestinationInfo) destinations.remove(destInfo.getDestination());
+
+        if( info !=null ) {
+            info.setDestination(destInfo.getDestination());
+            info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
+            ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destInfo.getDestination());
+            fireAdvisory(context, topic, info);
+            try {
+                next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
+            } catch (Exception expectedIfDestinationDidNotExistYet) {
+            }
+            try {
+                next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
+            } catch (Exception expectedIfDestinationDidNotExistYet) {
+            }
         }
+
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
