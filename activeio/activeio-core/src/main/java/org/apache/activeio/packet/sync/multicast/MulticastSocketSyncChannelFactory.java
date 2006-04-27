@@ -22,13 +22,14 @@ import java.net.MulticastSocket;
 import java.net.URI;
 
 import org.apache.activeio.packet.sync.SyncChannel;
+import org.apache.activeio.packet.sync.SyncChannelFactory;
 import org.apache.activeio.packet.sync.SyncChannelServer;
 
 
 /**
  * @version $Revision: $ $Date: $
  */
-public class MulticastSocketSyncChannelFactory {
+public class MulticastSocketSyncChannelFactory implements SyncChannelFactory {
 
     public SyncChannel openSyncChannel(URI groupURI) throws IOException {
         if (groupURI == null) throw new IllegalArgumentException("group URI cannot be null");
