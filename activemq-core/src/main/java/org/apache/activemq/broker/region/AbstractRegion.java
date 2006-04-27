@@ -23,7 +23,6 @@ import java.util.Set;
 
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -94,20 +93,41 @@ abstract public class AbstractRegion implements Region {
 
     public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout)
                     throws Exception{
-        // The destination cannot be removed if there are any active subscriptions
-        for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
-            Subscription sub=(Subscription) iter.next();
-            if(sub.matches(destination)){
-                throw new JMSException("Destination still has an active subscription: "+destination);
+        
+        // No timeout.. then try to shut down right way, fails if there are current subscribers.
+        if( timeout == 0 ) {
+            for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
+                Subscription sub=(Subscription) iter.next();
+                if(sub.matches(destination)){
+                    throw new JMSException("Destination still has an active subscription: "+destination);
+                }
             }
         }
+        
+        if( timeout > 0 ) {
+            // TODO: implement a way to notify the subscribers that we want to take the down 
+            // the destination and that they should un-subscribe..  Then wait up to timeout time before
+            // dropping the subscription.
+        
+        }
+
         log.debug("Removing destination: "+destination);
         synchronized(destinationsMutex){
             Destination dest=(Destination) destinations.remove(destination);
             if(dest!=null){
+                
+                // timeout<0 or we timed out, we now force any remaining subscriptions to un-subscribe.
+                for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
+                    Subscription sub=(Subscription) iter.next();
+                    if(sub.matches(destination)){
+                        dest.removeSubscription(context, sub);
+                    }
+                }
+                
                 destinationMap.removeAll(destination);
                 dest.dispose(context);
                 dest.stop();
+                
             }else{
                 log.debug("Destination doesn't exist: " + dest);
             }

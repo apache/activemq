@@ -1555,7 +1555,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setConnectionId(this.info.getConnectionId());
         info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
         info.setDestination(destination);
-        info.setTimeout(1000*5);
+        info.setTimeout(0);
         syncSendPacket(info);
     }
 
@@ -1590,7 +1590,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setConnectionId(this.info.getConnectionId());
         info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
         info.setDestination(destination);
-        info.setTimeout(1000*5);
+        info.setTimeout(0);
         syncSendPacket(info);
 
     }
