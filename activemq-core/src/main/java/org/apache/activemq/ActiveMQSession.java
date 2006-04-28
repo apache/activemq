@@ -535,6 +535,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     synchronized public void dispose() throws JMSException {
         if (!closed) {
+
+            executor.stop();
             
             for (Iterator iter = consumers.iterator(); iter.hasNext();) {
                 ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
@@ -559,6 +561,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             connection.removeSession(this);
             this.transactionContext=null;
             closed = true;
+            
         }
     }
 

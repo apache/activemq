@@ -37,43 +37,42 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 public class TaskRunnerFactory {
 
     private Executor executor;
-    private int maxIterationsPerRun = 1000;
+    private int maxIterationsPerRun;
+    private String name;
+    private int priority;
+    private boolean daemon;
 
     public TaskRunnerFactory() {
-        setExecutor(createDefaultExecutor("ActiveMQ Task", Thread.NORM_PRIORITY, true));
+        this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
+        
+        this.name = name;
+        this.priority = priority;
+        this.daemon = daemon;
         this.maxIterationsPerRun = maxIterationsPerRun;
-        setExecutor(createDefaultExecutor(name, priority, daemon));
+        
+        // If your OS/JVM combination has a good thread model, you may want to avoid 
+        // using a thread pool to run tasks and use a DedicatedTaskRunner instead.
+        if( "true".equals(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner")) ) {
+            executor = null;
+        } else {
+            executor = createDefaultExecutor();
+        }
+    
     }
 
-    public TaskRunnerFactory(Executor executor, int maxIterationsPerRun) {
-        this.executor = executor;
-        this.maxIterationsPerRun = maxIterationsPerRun;
-    }
-
-    public TaskRunner createTaskRunner(Task task) {
-        return new SimpleTaskRunner(executor, task, maxIterationsPerRun);
+    public TaskRunner createTaskRunner(Task task, String name) {
+        if( executor!=null ) {
+            return new PooledTaskRunner(executor, task, maxIterationsPerRun);
+        } else {
+            return new DedicatedTaskRunner(task, name, priority, daemon);
+        }
     }
     
-    public Executor getExecutor() {
-        return executor;
-    }
-
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
-    }
-
-    public int getMaxIterationsPerRun() {
-        return maxIterationsPerRun;
-    }
-
-    public void setMaxIterationsPerRun(int maxIterationsPerRun) {
-        this.maxIterationsPerRun = maxIterationsPerRun;
-    }
-
-    protected Executor createDefaultExecutor(final String name, final int priority, final boolean daemon) {
+    protected Executor createDefaultExecutor() {
+        
         ThreadPoolExecutor rc = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, name);
@@ -84,6 +83,7 @@ public class TaskRunnerFactory {
         });
         rc.allowCoreThreadTimeOut(true);
         return rc;
+            
     }
 
 }

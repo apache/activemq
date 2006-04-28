@@ -156,7 +156,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
      * @return pretty print of this
      */
     public String toString() {
-        return "TcpTransportServer@" + getLocation();
+        return ""+getLocation();
     }
 
     /**

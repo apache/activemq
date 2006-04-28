@@ -87,7 +87,6 @@ import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
-import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
@@ -97,8 +96,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 public class ActiveMQConnection implements Connection, TopicConnection, QueueConnection, StatsCapable, Closeable,  StreamConnection, TransportListener {
 
-    public static final TaskRunnerFactory SESSION_TASK_RUNNER = new TaskRunnerFactory("session Task",ThreadPriorities.INBOUND_CLIENT_SESSION,true,1000);
-    private final Executor asyncConnectionThread;
+    public static final TaskRunnerFactory SESSION_TASK_RUNNER = new TaskRunnerFactory("ActiveMQ Session Task",ThreadPriorities.INBOUND_CLIENT_SESSION,true,1000);
+    private final ThreadPoolExecutor asyncConnectionThread;
 
     private static final Log log = LogFactory.getLog(ActiveMQConnection.class);
     private static final IdGenerator connectionIdGenerator = new IdGenerator();
@@ -168,16 +167,17 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param password
      * @throws Exception 
      */
-    protected ActiveMQConnection(Transport transport, JMSStatsImpl factoryStats)
+    protected ActiveMQConnection(final Transport transport, JMSStatsImpl factoryStats)
             throws Exception {
        
-	// Configure a single threaded executor who's core thread can timeout if idle
+        // Configure a single threaded executor who's core thread can timeout if idle
         asyncConnectionThread = new ThreadPoolExecutor(1,1,5,TimeUnit.SECONDS, new LinkedBlockingQueue(), new ThreadFactory() {
             public Thread newThread(Runnable r) {
-                return new Thread(r, "Connection task");
+                Thread thread = new Thread(r, "AcitveMQ Connection Worker: "+transport);
+                thread.setDaemon(true);
+                return thread;
             }});
-        // Todo: see if we can allow the core threads to timeout.
-        // asyncConnectionThread.allowCoreThreadTimeOut(true);
+        asyncConnectionThread.allowCoreThreadTimeOut(true);
         
         this.info = new ConnectionInfo(new ConnectionId(connectionIdGenerator.generateId()));
         this.info.setManageable(true);

@@ -37,7 +37,7 @@ public class DefaultThreadPools {
         });
     }
     
-    private static final TaskRunnerFactory defaultTaskRunnerFactory = new TaskRunnerFactory(defaultPool,10);
+    private static final TaskRunnerFactory defaultTaskRunnerFactory = new TaskRunnerFactory();
     
     public static Executor getDefaultPool() {
         return defaultPool;

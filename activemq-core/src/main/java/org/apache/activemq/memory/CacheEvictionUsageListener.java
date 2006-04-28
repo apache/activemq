@@ -46,7 +46,7 @@ public class CacheEvictionUsageListener implements UsageListener {
             public boolean iterate() {
                 return evictMessages();
             }
-        });
+        }, "Cache Evictor: "+System.identityHashCode(this));
     }
     
     private boolean evictMessages() {

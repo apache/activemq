@@ -120,7 +120,7 @@ public class QuickJournalPersistenceAdapter implements PersistenceAdapter, Journ
             public boolean iterate() {
                 return doCheckpoint();
             }
-        });
+        }, "ActiveMQ Checkpoint Worker");
 
         this.longTermPersistence = longTermPersistence;
     }

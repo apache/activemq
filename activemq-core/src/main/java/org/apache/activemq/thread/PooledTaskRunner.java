@@ -22,7 +22,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.Executor;
  *
  * @version $Revision: 1.1 $
  */
-class SimpleTaskRunner implements TaskRunner {
+class PooledTaskRunner implements TaskRunner {
 
     private final int maxIterationsPerRun;
     private final Executor executor;
@@ -33,7 +33,7 @@ class SimpleTaskRunner implements TaskRunner {
     private boolean iterating;
     private Thread runningThread;
     
-    public SimpleTaskRunner(Executor executor, Task task, int maxIterationsPerRun) {
+    public PooledTaskRunner(Executor executor, Task task, int maxIterationsPerRun) {
         this.executor = executor;
         this.maxIterationsPerRun = maxIterationsPerRun;
         this.task = task;
