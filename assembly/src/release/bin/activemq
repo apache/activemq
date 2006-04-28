@@ -126,7 +126,7 @@ fi
 
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
-  ACTIVEMQ_OPTS="-Xmx512M -Dderby.system.home=../data -Dderby.storage.fileSyncTransactionLog=true"
+  ACTIVEMQ_OPTS="-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Dderby.system.home=../data -Dderby.storage.fileSyncTransactionLog=true"
 fi
 
 #SUNJMX="-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
