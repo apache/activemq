@@ -17,6 +17,8 @@
 
 <h2>Queues</h2>
 
+<a href="queueGraph.jsp">Queue Graph</a>
+
 <table id="queues" class="sortable autostripe">
 <thead>
 <tr>
