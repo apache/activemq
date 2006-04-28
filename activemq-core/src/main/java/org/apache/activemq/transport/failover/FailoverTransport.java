@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
+
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
@@ -30,7 +31,6 @@ import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
-import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
@@ -40,6 +40,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
@@ -214,7 +215,7 @@ public class FailoverTransport implements CompositeTransport {
                 return !disposed;
             }
 
-        });
+        }, "ActiveMQ Failover Worker: "+System.identityHashCode(this));
     }
 
     private void handleTransportFailure(IOException e) throws InterruptedException {
@@ -262,6 +263,7 @@ public class FailoverTransport implements CompositeTransport {
         synchronized(sleepMutex){
             sleepMutex.notifyAll();
         }
+        reconnectTask.shutdown();
     }
 
     public long getInitialReconnectDelay() {

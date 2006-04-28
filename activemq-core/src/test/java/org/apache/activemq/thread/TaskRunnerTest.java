@@ -32,6 +32,17 @@ public class TaskRunnerTest extends TestCase {
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
             .getLog(TaskRunnerTest.class);
 
+    
+    public void testWakeupPooled() throws InterruptedException, BrokenBarrierException {
+        System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "false");
+        doTestWakeup();
+    }
+    
+    public void testWakeupDedicated() throws InterruptedException, BrokenBarrierException {
+        System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "true");
+        doTestWakeup();
+    }
+    
     /**
      * Simulate multiple threads queuing work for the
      * TaskRunner.  The Task Runner dequeues the 
@@ -40,7 +51,7 @@ public class TaskRunnerTest extends TestCase {
      * @throws InterruptedException
      * @throws BrokenBarrierException 
      */
-    public void testWakeup() throws InterruptedException, BrokenBarrierException {
+    public void doTestWakeup() throws InterruptedException, BrokenBarrierException {
         
         final AtomicInteger iterations = new AtomicInteger(0);
         final AtomicInteger counter = new AtomicInteger(0);
@@ -64,7 +75,7 @@ public class TaskRunnerTest extends TestCase {
                     return true;
                 }
             }
-        });
+        }, "Thread Name");
         
         long start = System.currentTimeMillis();
         final int WORKER_COUNT=5;
@@ -96,6 +107,8 @@ public class TaskRunnerTest extends TestCase {
         log.info("Dequeues/s: "+(1000.0*ENQUEUE_COUNT/(end-start)));
         log.info("duration: "+((end-start)/1000.0));
         assertTrue(b);
+        
+        runner.shutdown();
     }
     
     

@@ -122,7 +122,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         }
         
         if( taskRunnerFactory != null ) {
-            taskRunner = taskRunnerFactory.createTaskRunner( this );
+            taskRunner = taskRunnerFactory.createTaskRunner( this, "ActiveMQ Connection Dispatcher: "+System.identityHashCode(this) );
         }
         else { 
             taskRunner = null;
@@ -145,6 +145,10 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if(disposed)
             return;
         disposed=true;
+        
+        if( taskRunner!=null )
+            taskRunner.shutdown();
+        
         //
         // Remove all logical connection associated with this connection
         // from the broker.

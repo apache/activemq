@@ -38,7 +38,7 @@ public abstract class TransportThreadSupport extends TransportSupport implements
     }
 
     protected void doStart() throws Exception {
-        runner = new Thread(this, toString());
+        runner = new Thread(this, "ActiveMQ Transport: "+toString());
         runner.setDaemon(daemon);
         runner.start();
     }

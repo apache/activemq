@@ -103,7 +103,7 @@ public class TransportStatusDetector implements Service,Runnable{
     }
     public void start() throws Exception{
         if(started.compareAndSet(false,true)){
-            runner=new Thread(this,"Transport Status Dector "+connector);
+            runner=new Thread(this,"ActiveMQ Transport Status Monitor: "+connector);
             runner.setDaemon(true);
             runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);
             runner.start();

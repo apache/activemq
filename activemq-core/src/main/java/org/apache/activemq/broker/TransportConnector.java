@@ -300,4 +300,7 @@ public class TransportConnector implements Connector {
         this.name = name;
     }
 
+    public String toString() {
+        return getName();
+    }
 }

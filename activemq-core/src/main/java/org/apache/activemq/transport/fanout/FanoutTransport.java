@@ -152,7 +152,7 @@ public class FanoutTransport implements CompositeTransport {
             public boolean iterate() {
                 return doConnect();
             }
-        });
+        }, "ActiveMQ Fanout Worker: "+System.identityHashCode(this));
     }
     
     /**
@@ -294,7 +294,6 @@ public class FanoutTransport implements CompositeTransport {
             log.debug("Stopped: "+this);
             ss.throwFirstException();
         }
-
         reconnectTask.shutdown();
     }
 

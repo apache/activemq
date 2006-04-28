@@ -120,7 +120,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             public boolean iterate() {
                 return doCheckpoint();
             }
-        });
+        }, "ActiveMQ Journal Checkpoint Worker");
 
         this.longTermPersistence = longTermPersistence;
     }
