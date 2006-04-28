@@ -101,4 +101,8 @@ public interface SubscriptionViewMBean{
      */
     long getDequeueCounter();
 
+    /**
+     * @return the prefetch that has been configured for this subscriber
+     */
+    public int getPrefetchSize();
 }
