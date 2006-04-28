@@ -50,6 +50,7 @@ public class ConsumerInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean optimizedAcknowledge;
     protected transient int currentPrefetchSize;//used by the broker
+    protected boolean noRangeAcks;  // if true, the consumer will not send range acks.
     
     protected BooleanExpression additionalPredicate;
     protected transient boolean networkSubscription; //this subscription originated from a network connection
@@ -336,6 +337,21 @@ public class ConsumerInfo extends BaseCommand {
      */
     public void setCurrentPrefetchSize(int currentPrefetchSize){
         this.currentPrefetchSize=currentPrefetchSize;
+    }
+
+    /**
+     * The broker may be able to optimize it's processing or provides better
+     * QOS if it knows the consumer will not be sending ranged acks.
+     * 
+     * @return true if the consumer will not send range acks.
+     * @openwire:property version=1
+     */
+    public boolean isNoRangeAcks() {
+        return noRangeAcks;
+    }
+
+    public void setNoRangeAcks(boolean noRangeAcks) {
+        this.noRangeAcks = noRangeAcks;
     }
 
 }

@@ -81,8 +81,10 @@ namespace ActiveMQ.OpenWire.V1
             format.addMarshaller(new DestinationInfoMarshaller());
             format.addMarshaller(new ShutdownInfoMarshaller());
             format.addMarshaller(new DataResponseMarshaller());
+            format.addMarshaller(new ConnectionControlMarshaller());
             format.addMarshaller(new KeepAliveInfoMarshaller());
             format.addMarshaller(new FlushCommandMarshaller());
+            format.addMarshaller(new ConsumerControlMarshaller());
             format.addMarshaller(new JournalTopicAckMarshaller());
             format.addMarshaller(new BrokerIdMarshaller());
             format.addMarshaller(new MessageDispatchMarshaller());

@@ -72,6 +72,8 @@ namespace ActiveMQ.OpenWire.V1
         }
         info.BrokerName = TightUnmarshalString(dataIn, bs);
         info.SlaveBroker = bs.ReadBoolean();
+        info.MasterBroker = bs.ReadBoolean();
+        info.FaultTolerantConfiguration = bs.ReadBoolean();
 
     }
 
@@ -87,6 +89,8 @@ namespace ActiveMQ.OpenWire.V1
         rc += TightMarshalObjectArray1(wireFormat, info.PeerBrokerInfos, bs);
         rc += TightMarshalString1(info.BrokerName, bs);
         bs.WriteBoolean(info.SlaveBroker);
+        bs.WriteBoolean(info.MasterBroker);
+        bs.WriteBoolean(info.FaultTolerantConfiguration);
 
         return rc + 0;
     }
@@ -102,6 +106,8 @@ namespace ActiveMQ.OpenWire.V1
         TightMarshalString2(info.BrokerURL, dataOut, bs);
         TightMarshalObjectArray2(wireFormat, info.PeerBrokerInfos, dataOut, bs);
         TightMarshalString2(info.BrokerName, dataOut, bs);
+        bs.ReadBoolean();
+        bs.ReadBoolean();
         bs.ReadBoolean();
 
     }
@@ -130,6 +136,8 @@ namespace ActiveMQ.OpenWire.V1
         }
         info.BrokerName = LooseUnmarshalString(dataIn);
         info.SlaveBroker = dataIn.ReadBoolean();
+        info.MasterBroker = dataIn.ReadBoolean();
+        info.FaultTolerantConfiguration = dataIn.ReadBoolean();
 
     }
 
@@ -146,6 +154,8 @@ namespace ActiveMQ.OpenWire.V1
         LooseMarshalObjectArray(wireFormat, info.PeerBrokerInfos, dataOut);
         LooseMarshalString(info.BrokerName, dataOut);
         dataOut.Write(info.SlaveBroker);
+        dataOut.Write(info.MasterBroker);
+        dataOut.Write(info.FaultTolerantConfiguration);
 
     }
     

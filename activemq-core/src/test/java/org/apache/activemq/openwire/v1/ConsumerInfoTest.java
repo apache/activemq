@@ -73,6 +73,7 @@ public class ConsumerInfoTest extends BaseCommandTestSupport {
         info.setAdditionalPredicate(createBooleanExpression("AdditionalPredicate:6"));
         info.setNetworkSubscription(false);
         info.setOptimizedAcknowledge(true);
+        info.setNoRangeAcks(false);
 
             }
         }

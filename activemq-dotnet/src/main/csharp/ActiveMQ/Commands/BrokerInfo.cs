@@ -41,6 +41,8 @@ namespace ActiveMQ.Commands
         BrokerInfo[] peerBrokerInfos;
         string brokerName;
         bool slaveBroker;
+        bool masterBroker;
+        bool faultTolerantConfiguration;
 
 		public override string ToString() {
             return GetType().Name + "["
@@ -49,6 +51,8 @@ namespace ActiveMQ.Commands
                 + " PeerBrokerInfos=" + PeerBrokerInfos
                 + " BrokerName=" + BrokerName
                 + " SlaveBroker=" + SlaveBroker
+                + " MasterBroker=" + MasterBroker
+                + " FaultTolerantConfiguration=" + FaultTolerantConfiguration
                 + " ]";
 
 		}
@@ -90,6 +94,18 @@ namespace ActiveMQ.Commands
         {
             get { return slaveBroker; }
             set { this.slaveBroker = value; }            
+        }
+
+        public bool MasterBroker
+        {
+            get { return masterBroker; }
+            set { this.masterBroker = value; }            
+        }
+
+        public bool FaultTolerantConfiguration
+        {
+            get { return faultTolerantConfiguration; }
+            set { this.faultTolerantConfiguration = value; }            
         }
 
     }

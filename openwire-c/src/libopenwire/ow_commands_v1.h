@@ -372,6 +372,7 @@ typedef struct ow_ConsumerInfo {
    struct ow_BooleanExpression *additionalPredicate;
    ow_boolean networkSubscription;
    ow_boolean optimizedAcknowledge;
+   ow_boolean noRangeAcks;
 
 } ow_ConsumerInfo;
 ow_ConsumerInfo *ow_ConsumerInfo_create(apr_pool_t *pool);

@@ -82,6 +82,8 @@ namespace ActiveMQ.OpenWire.V1
         }
         info.AdditionalPredicate = (BooleanExpression) TightUnmarshalNestedObject(wireFormat, dataIn, bs);
         info.NetworkSubscription = bs.ReadBoolean();
+        info.OptimizedAcknowledge = bs.ReadBoolean();
+        info.NoRangeAcks = bs.ReadBoolean();
 
     }
 
@@ -104,6 +106,8 @@ namespace ActiveMQ.OpenWire.V1
         rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
         rc += TightMarshalNestedObject1(wireFormat, (DataStructure)info.AdditionalPredicate, bs);
         bs.WriteBoolean(info.NetworkSubscription);
+        bs.WriteBoolean(info.OptimizedAcknowledge);
+        bs.WriteBoolean(info.NoRangeAcks);
 
         return rc + 9;
     }
@@ -129,6 +133,8 @@ namespace ActiveMQ.OpenWire.V1
         dataOut.Write(info.Priority);
         TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
         TightMarshalNestedObject2(wireFormat, (DataStructure)info.AdditionalPredicate, dataOut, bs);
+        bs.ReadBoolean();
+        bs.ReadBoolean();
         bs.ReadBoolean();
 
     }
@@ -167,6 +173,8 @@ namespace ActiveMQ.OpenWire.V1
         }
         info.AdditionalPredicate = (BooleanExpression) LooseUnmarshalNestedObject(wireFormat, dataIn);
         info.NetworkSubscription = dataIn.ReadBoolean();
+        info.OptimizedAcknowledge = dataIn.ReadBoolean();
+        info.NoRangeAcks = dataIn.ReadBoolean();
 
     }
 
@@ -193,6 +201,8 @@ namespace ActiveMQ.OpenWire.V1
         LooseMarshalObjectArray(wireFormat, info.BrokerPath, dataOut);
         LooseMarshalNestedObject(wireFormat, (DataStructure)info.AdditionalPredicate, dataOut);
         dataOut.Write(info.NetworkSubscription);
+        dataOut.Write(info.OptimizedAcknowledge);
+        dataOut.Write(info.NoRangeAcks);
 
     }
     
