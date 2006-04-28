@@ -788,7 +788,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         MessageListener listener = this.messageListener;
         try {
             if (!unconsumedMessages.isClosed()) {
-                if (listener != null && started.get()) {
+                if (listener != null && unconsumedMessages.isRunning() ) {
                     ActiveMQMessage message = createActiveMQMessage(md);
                     beforeMessageIsConsumed(md);
                     try {
