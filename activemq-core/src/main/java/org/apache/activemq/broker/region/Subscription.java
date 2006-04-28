@@ -176,4 +176,9 @@ public interface Subscription {
      */
     public void destroy();
 
+    /**
+     * @return the prefetch size that is configured for the subscription
+     */
+    int getPrefetchSize();
+
 }

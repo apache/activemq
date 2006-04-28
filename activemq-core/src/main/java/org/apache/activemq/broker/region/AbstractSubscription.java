@@ -150,4 +150,8 @@ abstract public class AbstractSubscription implements Subscription {
     public void setObjectName(ObjectName objectName) {
         this.objectName = objectName;
     }
+    
+    public int getPrefetchSize() {
+        return info.getPrefetchSize();
+    }
 }

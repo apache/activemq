@@ -210,4 +210,10 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return "SubscriptionView: " + getClientId()  + ":" +  getConnectionId();
     }
 
+    /**
+     */
+    public int getPrefetchSize() {
+        return subscription != null ? subscription.getPrefetchSize() : 0;
+    }
+
 }
