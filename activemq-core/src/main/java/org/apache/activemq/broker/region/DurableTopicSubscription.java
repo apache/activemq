@@ -63,9 +63,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             Topic topic = (Topic) destination;            
             topic.activate(context, this);
         }
-        if( !isFull() ) {
-            dispatchMatched();
-        }
+        dispatchMatched();
     }
    
     synchronized public void activate(ConnectionContext context, ConsumerInfo info) throws Exception {
@@ -79,9 +77,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                     topic.activate(context, this);
                 }
             }
-            if( !isFull() ) {
-                dispatchMatched();
-            }
+            dispatchMatched();
         }
     }
 
@@ -104,7 +100,9 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                 redeliveredMessages.put(node.getMessageId(), new Integer(1));
             }
             if( keepDurableSubsActive ) {
-                pending.addFirst(node);
+            	synchronized(pending) {
+            		pending.addFirst(node);
+            	}
             } else {
                 node.decrementReferenceCount();
             }
@@ -112,11 +110,13 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         }
         
         if( !keepDurableSubsActive ) {
-            for (Iterator iter = pending.iterator(); iter.hasNext();) {
-                MessageReference node = (MessageReference) iter.next();
-                node.decrementReferenceCount();
-                iter.remove();
-            }
+        	synchronized(pending) {
+	            for (Iterator iter = pending.iterator(); iter.hasNext();) {
+	                MessageReference node = (MessageReference) iter.next();
+	                node.decrementReferenceCount();
+	                iter.remove();
+	            }
+        	}
         }
         prefetchExtension=0;
     }
@@ -171,7 +171,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             ", destinations="+destinations.size()+
             ", dispatched="+dispatched.size()+
             ", delivered="+this.prefetchExtension+
-            ", pending="+this.pending.size();
+            ", pending="+getPendingQueueSize();
     }
 
     public String getClientId() {
@@ -186,13 +186,15 @@ public class DurableTopicSubscription extends PrefetchSubscription {
      * Release any references that we are holding.
      */
     synchronized public void destroy() {
-        
-        for (Iterator iter = pending.iterator(); iter.hasNext();) {
-            MessageReference node = (MessageReference) iter.next();
-            node.decrementReferenceCount();
-        }
-        pending.clear();
-        
+    	
+    	synchronized(pending) {
+	        for (Iterator iter = pending.iterator(); iter.hasNext();) {
+	            MessageReference node = (MessageReference) iter.next();
+	            node.decrementReferenceCount();
+	        }
+	        pending.clear();
+    	}
+    	
         for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
             MessageReference node = (MessageReference) iter.next();
             node.decrementReferenceCount();

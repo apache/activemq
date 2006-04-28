@@ -125,7 +125,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
             ", destinations="+destinations.size()+
             ", dispatched="+dispatched.size()+
             ", delivered="+this.prefetchExtension+
-            ", pending="+this.pending.size();
+            ", pending="+getPendingQueueSize();
     }
 
     public int getLockPriority() {

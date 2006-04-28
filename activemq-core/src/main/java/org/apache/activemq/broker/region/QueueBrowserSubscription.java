@@ -47,7 +47,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
             ", destinations="+destinations.size()+
             ", dispatched="+dispatched.size()+
             ", delivered="+this.prefetchExtension+
-            ", pending="+this.pending.size();
+            ", pending="+getPendingQueueSize();
     }
 
     public void browseDone() throws Exception {

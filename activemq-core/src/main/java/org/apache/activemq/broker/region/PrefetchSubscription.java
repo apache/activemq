@@ -94,7 +94,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
 
     synchronized public void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception{
         // Handle the standard acknowledgment case.
-        boolean wasFull=isFull();
         if(ack.isStandardAck()){
             // Acknowledge all dispatched messages up till the message id of the acknowledgment.
             int index=0;
@@ -129,9 +128,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                             prefetchExtension=Math.max(prefetchExtension,index+1);
                         else
                             prefetchExtension=Math.max(0,prefetchExtension-(index+1));
-                        if(wasFull&&!isFull()){
-                            dispatchMatched();
-                        }
+                        dispatchMatched();
                         return;
                     }else{
                         // System.out.println("no match: "+ack.getLastMessageId()+","+messageId);
@@ -147,9 +144,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 final MessageReference node=(MessageReference) iter.next();
                 if(ack.getLastMessageId().equals(node.getMessageId())){
                     prefetchExtension=Math.max(prefetchExtension,index+1);
-                    if(wasFull&&!isFull()){
-                        dispatchMatched();
-                    }
+                    dispatchMatched();
                     return;
                 }
             }
@@ -176,9 +171,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     acknowledge(context,ack,node);
                     if(ack.getLastMessageId().equals(messageId)){
                         prefetchExtension=Math.max(0,prefetchExtension-(index+1));
-                        if(wasFull&&!isFull()){
-                            dispatchMatched();
-                        }
+                        dispatchMatched();
                         return;
                     }
                 }
@@ -226,8 +219,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         return (dispatched.size()-prefetchExtension) >= (info.getPrefetchSize() *.9);
     }
     
-    synchronized public int getPendingQueueSize(){
-        return pending.size();
+    public int getPendingQueueSize(){
+    	synchronized(pending) {
+    		return pending.size();
+    	}
     }
     
     synchronized public int getDispatchedQueueSize(){
@@ -312,16 +307,13 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     }
 
     synchronized protected void onDispatch(final MessageReference node,final Message message){
-        boolean wasFull=isFull();
         if(node.getRegionDestination()!=null){
             node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
             context.getConnection().getStatistics().onMessageDequeue(message);
-            if(wasFull&&!isFull()){
-                try{
-                    dispatchMatched();
-                }catch(IOException e){
-                    context.getConnection().serviceException(e);
-                }
+            try{
+                dispatchMatched();
+            }catch(IOException e){
+                context.getConnection().serviceException(e);
             }
         }
     }
