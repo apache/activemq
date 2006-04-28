@@ -12,9 +12,11 @@
         @import url(<c:url value="/styles/sorttable.css"/>);
         @import url(<c:url value="/styles/deliciouslyblue.css"/>);
     </style>
-    <script type='text/javascript' src='<c:url value="/js/common.js"/>'/>
-    <script type='text/javascript' src='<c:url value="/js/css.js"/>'/>
-    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'/>
+	    <c:if test="${!disableJavaScript}">
+	    <script type='text/javascript' src='<c:url value="/js/common.js"/>'/>
+	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'/>
+	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'/>
+    </c:if>
         
 	<decorator:head />
 </head>
