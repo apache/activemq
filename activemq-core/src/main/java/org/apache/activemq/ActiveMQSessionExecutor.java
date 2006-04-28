@@ -147,7 +147,7 @@ public class ActiveMQSessionExecutor implements Task {
             return false;
         } else {
             dispatch(message);
-            return true;
+            return messageQueue.isRunning();
         }
     }
 

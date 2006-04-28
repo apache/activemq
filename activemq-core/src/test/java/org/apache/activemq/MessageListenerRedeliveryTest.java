@@ -35,7 +35,8 @@ import org.apache.commons.logging.LogFactory;
 
 public class MessageListenerRedeliveryTest extends TestCase {
 
-    private static final Log log = LogFactory.getLog(MessageListenerRedeliveryTest.class);
+    private Log log = LogFactory.getLog(getClass());
+
     private Connection connection;
 
     protected void setUp() throws Exception {
@@ -55,8 +56,8 @@ public class MessageListenerRedeliveryTest extends TestCase {
     protected RedeliveryPolicy getRedeliveryPolicy() {
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
         redeliveryPolicy.setInitialRedeliveryDelay(1000);
-        redeliveryPolicy.setBackOffMultiplier((short) 5);
-        redeliveryPolicy.setMaximumRedeliveries(10);
+        redeliveryPolicy.setMaximumRedeliveries(2);
+        redeliveryPolicy.setBackOffMultiplier((short) 2);
         redeliveryPolicy.setUseExponentialBackOff(true);
         return redeliveryPolicy;
     }
@@ -67,59 +68,34 @@ public class MessageListenerRedeliveryTest extends TestCase {
         return factory.createConnection();
     }
 
-    private class ConsumerMessageListenerTest implements MessageListener {
-        private ActiveMQMessageConsumer consumer;
-        public int counter = 0;
-
-        public ConsumerMessageListenerTest(ActiveMQMessageConsumer consumer) {
-            this.consumer = consumer;
-        }
-
-        public void onMessage(Message message) {
-            try {
-                log.info("Message: " + message);
-                counter++;
-                if (counter <= 2) {
-                    log.info("ROLLBACK");
-                    consumer.rollback();
-                } else {
-                    log.info("COMMIT");
-                    message.acknowledge();
-                    consumer.commit();
-                }
-            } catch (JMSException e) {
-                System.err.println("Error when rolling back transaction");
-            }
-        }
-    }
-
-    private class SessionMessageListenerTest implements MessageListener {
+    private class TestMessageListener implements MessageListener {
         private Session session;
+
         public int counter = 0;
 
-        public SessionMessageListenerTest(Session session) {
+        public TestMessageListener(Session session) {
             this.session = session;
         }
 
         public void onMessage(Message message) {
             try {
-                log.info("Message: " + message);
+                log.info("Message Received: " + message);
                 counter++;
-                if (counter < 2) {
-                    log.info("ROLLBACK");
+                if (counter <= 3) {
+                    log.info("Message Rollback.");
                     session.rollback();
                 } else {
-                    log.info("COMMIT");
+                    log.info("Message Commit.");
                     message.acknowledge();
                     session.commit();
                 }
             } catch (JMSException e) {
-                System.err.println("Error when rolling back transaction");
+                log.error("Error when rolling back transaction");
             }
         }
     }
 
-    public void testQueueRollbackMessageListener() throws JMSException {
+    public void testQueueRollbackConsumerListener() throws JMSException {
         connection.start();
 
         Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
@@ -134,25 +110,117 @@ public class MessageListenerRedeliveryTest extends TestCase {
         ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
         mc.setRedeliveryPolicy(getRedeliveryPolicy());
 
-        SessionMessageListenerTest listener = new SessionMessageListenerTest(session);
+        TestMessageListener listener = new TestMessageListener(session);
         consumer.setMessageListener(listener);
 
         try {
-            Thread.sleep(7000);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
 
         }
-        assertEquals(2, listener.counter);
+        // first try
+        assertEquals(1, listener.counter);
 
-        producer.send(createTextMessage(session));
-        session.commit();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+
+        }
+        // second try (redelivery after 1 sec)
+        assertEquals(2, listener.counter);
 
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
+
+        }
+        // third try (redelivery after 2 seconds) - it should give up after that
+        assertEquals(3, listener.counter);
+
+        // create new message
+        producer.send(createTextMessage(session));
+        session.commit();
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
             // ignore
         }
+        // it should be committed, so no redelivery
+        assertEquals(4, listener.counter);
+
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        // no redelivery, counter should still be 4
+        assertEquals(4, listener.counter);
+
+        session.close();
+    }
+
+    public void testQueueRollbackSessionListener() throws JMSException {
+        connection.start();
+
+        Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        Queue queue = session.createQueue("queue-" + getName());
+        MessageProducer producer = createProducer(session, queue);
+        Message message = createTextMessage(session);
+        producer.send(message);
+        session.commit();
+
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
+        mc.setRedeliveryPolicy(getRedeliveryPolicy());
+
+        TestMessageListener listener = new TestMessageListener(session);
+        consumer.setMessageListener(listener);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+
+        }
+        // first try
+        assertEquals(1, listener.counter);
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+
+        }
+        // second try (redelivery after 1 sec)
+        assertEquals(2, listener.counter);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+
+        }
+        // third try (redelivery after 2 seconds) - it should give up after that
         assertEquals(3, listener.counter);
+
+        // create new message
+        producer.send(createTextMessage(session));
+        session.commit();
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        // it should be committed, so no redelivery
+        assertEquals(4, listener.counter);
+
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        // no redelivery, counter should still be 4
+        assertEquals(4, listener.counter);
 
         session.close();
     }
