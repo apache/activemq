@@ -60,35 +60,31 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
 
     synchronized public void add(MessageReference node) throws Exception{
         enqueueCounter++;
-        if(!isFull()&&!isSlaveBroker()){
+        if(!isFull()){
             dispatch(node);
         }else{
             optimizePrefetch();
             synchronized(pending){
-                if( pending.isEmpty() )
-                    if (log.isDebugEnabled()){
-                        log.debug("Prefetch limit.");
-                    }
+                if( pending.isEmpty() ) {
+                    log.debug("Prefetch limit.");
+                }
                 pending.addLast(node);
             }
         }
     }
 
-    public void processMessageDispatchNotification(MessageDispatchNotification mdn){
+    synchronized public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
         synchronized(pending){
             for(Iterator i=pending.iterator();i.hasNext();){
                 MessageReference node=(MessageReference) i.next();
                 if(node.getMessageId().equals(mdn.getMessageId())){
                     i.remove();
-                    try{
-                        MessageDispatch md=createMessageDispatch(node,node.getMessage());
-                        dispatched.addLast(node);
-                    }catch(Exception e){
-                        log.error("Problem processing MessageDispatchNotification: "+mdn,e);
-                    }
-                    break;
+                    createMessageDispatch(node,node.getMessage());
+                    dispatched.addLast(node);
+                    return;
                 }
             }
+            throw new JMSException("Slave broker out of sync with master: Dispatched message ("+mdn.getMessageId()+") was not in the pending list: "+pending);
         }
     }
 
@@ -178,7 +174,12 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             }
             throw new JMSException("Could not correlate acknowledgment with dispatched message: "+ack);
         }
-        throw new JMSException("Invalid acknowledgment: "+ack);
+        
+        if( isSlaveBroker() ) {
+        	throw new JMSException("Slave broker out of sync with master: Acknowledgment ("+ack+") was not in the dispatch list: "+dispatched);
+        } else {
+        	throw new JMSException("Invalid acknowledgment: "+ack);
+        }
     }
 
     /**
@@ -201,8 +202,12 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         }
     }
 
+    /**
+     * Used to determine if the broker can dispatch to the consumer.
+     * @return
+     */
     protected boolean isFull(){
-        return dispatched.size()-prefetchExtension>=info.getPrefetchSize();
+        return isSlaveBroker() || dispatched.size()-prefetchExtension>=info.getPrefetchSize();
     }
     
     /**

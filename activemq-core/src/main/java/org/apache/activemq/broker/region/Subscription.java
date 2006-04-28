@@ -95,8 +95,9 @@ public interface Subscription {
     /**
      * Used by a Slave Broker to update dispatch infomation
      * @param mdn
+     * @throws Exception 
      */
-    void processMessageDispatchNotification(MessageDispatchNotification  mdn);
+    void processMessageDispatchNotification(MessageDispatchNotification  mdn) throws Exception;
     
     /**
      * @return true if the broker is currently in slave mode
