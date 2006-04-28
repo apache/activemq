@@ -51,6 +51,8 @@ namespace ActiveMQ.Commands
         BrokerId[] brokerPath;
         BooleanExpression additionalPredicate;
         bool networkSubscription;
+        bool optimizedAcknowledge;
+        bool noRangeAcks;
 
 		public override string ToString() {
             return GetType().Name + "["
@@ -69,6 +71,8 @@ namespace ActiveMQ.Commands
                 + " BrokerPath=" + BrokerPath
                 + " AdditionalPredicate=" + AdditionalPredicate
                 + " NetworkSubscription=" + NetworkSubscription
+                + " OptimizedAcknowledge=" + OptimizedAcknowledge
+                + " NoRangeAcks=" + NoRangeAcks
                 + " ]";
 
 		}
@@ -170,6 +174,18 @@ namespace ActiveMQ.Commands
         {
             get { return networkSubscription; }
             set { this.networkSubscription = value; }            
+        }
+
+        public bool OptimizedAcknowledge
+        {
+            get { return optimizedAcknowledge; }
+            set { this.optimizedAcknowledge = value; }            
+        }
+
+        public bool NoRangeAcks
+        {
+            get { return noRangeAcks; }
+            set { this.noRangeAcks = value; }            
         }
 
     }

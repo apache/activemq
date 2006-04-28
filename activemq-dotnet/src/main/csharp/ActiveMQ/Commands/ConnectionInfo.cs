@@ -41,6 +41,8 @@ namespace ActiveMQ.Commands
         string password;
         string userName;
         BrokerId[] brokerPath;
+        bool brokerMasterConnector;
+        bool manageable;
 
 		public override string ToString() {
             return GetType().Name + "["
@@ -49,6 +51,8 @@ namespace ActiveMQ.Commands
                 + " Password=" + Password
                 + " UserName=" + UserName
                 + " BrokerPath=" + BrokerPath
+                + " BrokerMasterConnector=" + BrokerMasterConnector
+                + " Manageable=" + Manageable
                 + " ]";
 
 		}
@@ -90,6 +94,18 @@ namespace ActiveMQ.Commands
         {
             get { return brokerPath; }
             set { this.brokerPath = value; }            
+        }
+
+        public bool BrokerMasterConnector
+        {
+            get { return brokerMasterConnector; }
+            set { this.brokerMasterConnector = value; }            
+        }
+
+        public bool Manageable
+        {
+            get { return manageable; }
+            set { this.manageable = value; }            
         }
 
     }

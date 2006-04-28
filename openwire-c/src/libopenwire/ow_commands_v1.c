@@ -1179,6 +1179,7 @@ apr_status_t ow_marshal1_ConsumerInfo(ow_bit_buffer *buffer, ow_ConsumerInfo *ob
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->additionalPredicate));
    ow_bit_buffer_append(buffer, object->networkSubscription);
    ow_bit_buffer_append(buffer, object->optimizedAcknowledge);
+   ow_bit_buffer_append(buffer, object->noRangeAcks);
    
 	return APR_SUCCESS;
 }
@@ -1199,6 +1200,7 @@ apr_status_t ow_marshal2_ConsumerInfo(ow_byte_buffer *buffer, ow_bit_buffer *bit
    SUCCESS_CHECK(ow_byte_buffer_append_byte(buffer, object->priority));
    SUCCESS_CHECK(ow_marshal2_DataStructure_array(buffer, bitbuffer, object->brokerPath));
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->additionalPredicate));
+   ow_bit_buffer_read(bitbuffer);
    ow_bit_buffer_read(bitbuffer);
    ow_bit_buffer_read(bitbuffer);
    
@@ -1224,6 +1226,7 @@ apr_status_t ow_unmarshal_ConsumerInfo(ow_byte_array *buffer, ow_bit_buffer *bit
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->additionalPredicate, pool));
    object->networkSubscription = ow_bit_buffer_read(bitbuffer);
    object->optimizedAcknowledge = ow_bit_buffer_read(bitbuffer);
+   object->noRangeAcks = ow_bit_buffer_read(bitbuffer);
    
 	return APR_SUCCESS;
 }

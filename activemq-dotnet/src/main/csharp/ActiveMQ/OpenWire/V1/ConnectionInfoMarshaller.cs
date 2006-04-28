@@ -72,6 +72,8 @@ namespace ActiveMQ.OpenWire.V1
         else {
             info.BrokerPath = null;
         }
+        info.BrokerMasterConnector = bs.ReadBoolean();
+        info.Manageable = bs.ReadBoolean();
 
     }
 
@@ -87,6 +89,8 @@ namespace ActiveMQ.OpenWire.V1
         rc += TightMarshalString1(info.Password, bs);
         rc += TightMarshalString1(info.UserName, bs);
         rc += TightMarshalObjectArray1(wireFormat, info.BrokerPath, bs);
+        bs.WriteBoolean(info.BrokerMasterConnector);
+        bs.WriteBoolean(info.Manageable);
 
         return rc + 0;
     }
@@ -103,6 +107,8 @@ namespace ActiveMQ.OpenWire.V1
         TightMarshalString2(info.Password, dataOut, bs);
         TightMarshalString2(info.UserName, dataOut, bs);
         TightMarshalObjectArray2(wireFormat, info.BrokerPath, dataOut, bs);
+        bs.ReadBoolean();
+        bs.ReadBoolean();
 
     }
 
@@ -130,6 +136,8 @@ namespace ActiveMQ.OpenWire.V1
         else {
             info.BrokerPath = null;
         }
+        info.BrokerMasterConnector = dataIn.ReadBoolean();
+        info.Manageable = dataIn.ReadBoolean();
 
     }
 
@@ -146,6 +154,8 @@ namespace ActiveMQ.OpenWire.V1
         LooseMarshalString(info.Password, dataOut);
         LooseMarshalString(info.UserName, dataOut);
         LooseMarshalObjectArray(wireFormat, info.BrokerPath, dataOut);
+        dataOut.Write(info.BrokerMasterConnector);
+        dataOut.Write(info.Manageable);
 
     }
     
