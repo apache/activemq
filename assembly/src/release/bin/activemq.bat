@@ -88,7 +88,7 @@ echo.
 
 :runAnt
 
-if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dderby.system.home="..\data" -Dderby.storage.fileSyncTransactionLog=true
+if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Dderby.system.home="..\data" -Dderby.storage.fileSyncTransactionLog=true
 
 set SUNJMX=
 REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
