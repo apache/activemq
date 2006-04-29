@@ -87,6 +87,10 @@ public class BrokerTestSupport extends CombinationTestSupport {
     
     protected void tearDown() throws Exception {
         broker.stop();
+        broker=null;    
+        regionBroker=null;    
+        persistenceAdapter=null;
+        memoryManager=null;
         super.tearDown();
     }
     
