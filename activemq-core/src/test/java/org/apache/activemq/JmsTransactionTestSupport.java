@@ -100,8 +100,12 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         log.info("Closing down connection");
 
         session.close();
+        session=null;
         connection.close();
+        connection=null;
         broker.stop();
+        broker=null;
+        
         log.info("Connection closed.");
     }
 

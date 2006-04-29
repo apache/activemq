@@ -55,6 +55,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
 
     protected void tearDown() throws Exception{
         slave.stop();
+        slave=null;
         super.tearDown();
     }
 
