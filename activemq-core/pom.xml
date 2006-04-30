@@ -36,26 +36,42 @@
 
   <dependencies>
 
-    <!-- activemq related dependencies -->    
+    <!-- =============================== -->
+    <!-- Required Dependencies -->
+    <!-- =============================== -->
+    <dependency>
+      <groupId>backport-util-concurrent</groupId>
+      <artifactId>backport-util-concurrent</artifactId>
+      <optional>false</optional>
+    </dependency>
+  
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <optional>false</optional>
+    </dependency>
+
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
+      <optional>false</optional>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_1.1_spec</artifactId>
+      <optional>false</optional>
+    </dependency>
+
+    <!-- =============================== -->
+    <!-- Optional Dependencies -->
+    <!-- =============================== -->
     <dependency>
       <groupId>incubator-activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
-    
-    <!-- =============================== -->
-    <!-- common dependencies -->
-    <!-- =============================== -->
-    
-    <!-- geronimo -->
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jms_1.1_spec</artifactId>
-    </dependency>
+ 
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
