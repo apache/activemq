@@ -124,7 +124,7 @@
   </distributionManagement>
 
   <modules>
-    <module>activeio</module>
+
     <module>activecluster</module>
     <module>activemq-jaas</module>
     <module>activemq-core</module>
@@ -252,7 +252,7 @@
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
       </dependency>
   
       <dependency>
@@ -321,6 +321,34 @@
         <artifactId>xbean-spring</artifactId>
         <version>2.2</version>
         <optional>true</optional>
+
+        <exclusions>
+          <exclusion>
+            <groupId>backport-util-concurrent</groupId>
+            <artifactId>backport-util-concurrent</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>ant</groupId>
+            <artifactId>ant</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>qdox</groupId>
+            <artifactId>qdox</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>stax</groupId>
+            <artifactId>stax-api</artifactId>
+          </exclusion>
+        </exclusions>
+
       </dependency>
  
       <!-- Used to configure the activemq logs -->
@@ -618,13 +646,6 @@
         <groupId>jdom</groupId> 
         <artifactId>jdom</artifactId>
         <version>1.0</version>
-      </dependency>
-      
-      <!-- ACTIVEMQ-CORE DEPENDENCIES -->
-      <dependency>
-        <groupId>activeio</groupId>
-        <artifactId>activeio</artifactId>
-        <version>2.1</version>
       </dependency>
       
       <!-- ACTIVEMQ-JAAS Dependencies -->

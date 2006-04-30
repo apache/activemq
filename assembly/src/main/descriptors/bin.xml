@@ -87,6 +87,7 @@
          <include>commons-dbcp:commons-dbcp</include>
          <include>commons-pool:commons-pool</include>
          <include>org.mortbay.jetty:jetty</include>
+         <include>org.mortbay.jetty:jetty-util</include>
          <include>org.mortbay.jetty:servlet-api-2.5</include>
          <include>log4j:log4j</include>
          <include>mx4j:mx4j-remote</include>
