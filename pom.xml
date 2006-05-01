@@ -321,7 +321,7 @@
         <artifactId>xbean-spring</artifactId>
         <version>2.2</version>
         <optional>true</optional>
-
+        <!--
         <exclusions>
           <exclusion>
             <groupId>backport-util-concurrent</groupId>
@@ -348,6 +348,7 @@
             <artifactId>stax-api</artifactId>
           </exclusion>
         </exclusions>
+        -->
 
       </dependency>
  
