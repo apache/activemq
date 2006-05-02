@@ -1207,7 +1207,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * 
      * @throws JMSException
      */
-    protected void ensureConnectionInfoSent() throws JMSException {
+    protected synchronized void ensureConnectionInfoSent() throws JMSException {
         // Can we skip sending the ConnectionInfo packet??
         if (isConnectionInfoSentToBroker || closed.get()) {
             return;
