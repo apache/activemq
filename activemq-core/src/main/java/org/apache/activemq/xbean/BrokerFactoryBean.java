@@ -79,7 +79,8 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
             broker = (XBeanBrokerService) context.getBean("broker");
         }
         catch (BeansException e) {
-            log.trace("No bean named broker available: " + e, e);
+            // ignore...
+            //log.trace("No bean named broker available: " + e, e);
         }
         if (broker == null) {
             // lets try find by type
