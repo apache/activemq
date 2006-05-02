@@ -13,25 +13,22 @@
 <body>
 
 <script>
-function drawGraph() {
-    var layout = new PlotKit.Layout("bar", {});
-    
-    layout.addDataset(
-    	"Queue Sizes", 
-        [ <c:forEach items="${requestContext.brokerQuery.queues}" var="row" varStatus="status"> [${status.count}, 
-${row.queueSize}], </c:forEach> ] );
-    layout.evaluate();
-    
 var options = {
    "IECanvasHTC": "<c:url value="/js/plotkit/iecanvas.htc"/>",
    "colorScheme": PlotKit.Base.palette(PlotKit.Base.baseColors()[0]),
    "padding": {left: 0, right: 0, top: 10, bottom: 30},
-   "xTicks": [
-         <c:forEach items="${requestContext.brokerQuery.queues}" var="row" varStatus="status">     {v:${status.count}, label:"${row.name}"},  </c:forEach>
-          ],
-   "drawYAxis": false
+   "xTicks": [<c:forEach items="${requestContext.brokerQuery.queues}" var="row" varStatus="status"
+         ><c:if 
+         test="${status.count > 1}">, </c:if>{v:${status.count}, label:"${row.name}"}</c:forEach>]
 };
 
+function drawGraph() {
+    var layout = new PlotKit.Layout("bar", options);
+    
+    layout.addDataset("sqrt",  [<c:forEach items="${requestContext.brokerQuery.queues}" var="row" varStatus="status"><c:if 
+         test="${status.count > 1}">, </c:if> [${status.count},  ${row.queueSize}] </c:forEach> ]);
+    layout.evaluate();
+    
     var canvas = MochiKit.DOM.getElement("graph");
     var plotter = new PlotKit.SweetCanvasRenderer(canvas, layout, options);
     plotter.render();
