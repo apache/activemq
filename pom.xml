@@ -237,7 +237,7 @@
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activeio-core</artifactId>
-        <version>3.0-SNAPSHOT</version>
+        <version>3.0-beta2</version>
       </dependency>
             
       <!-- =============================== -->
