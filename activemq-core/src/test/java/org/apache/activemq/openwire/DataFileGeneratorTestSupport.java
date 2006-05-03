@@ -56,9 +56,13 @@ import org.apache.activemq.openwire.v1.ActiveMQTextMessageTest;
 import org.apache.activemq.openwire.v1.BrokerInfoTest;
 import org.apache.activemq.openwire.v1.MessageAckTest;
 import org.apache.activemq.test.TestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
+    private static final Log log = LogFactory.getLog(DataFileGeneratorTestSupport.class);
+    
     protected static final Object[] EMPTY_ARGUMENTS = {};
     private static Throwable singletonException = new Exception("shared exception");
 
@@ -93,7 +97,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         DataOutputStream ds = new DataOutputStream(buffer);
         Object expected = createObject();
-        System.out.println("Created: " + expected);
+        log.info("Created: " + expected);
         openWireformat.marshal(expected, ds);
         ds.close();
 
@@ -102,7 +106,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         DataInputStream dis = new DataInputStream(in);
         Object actual = openWireformat.unmarshal(dis);
 
-        System.out.println("Parsed: " + actual);
+        log.info("Parsed: " + actual);
 
         assertBeansEqual("", new HashSet(), expected, actual);
     }
@@ -129,7 +133,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
                     actualValue = method.invoke(actual, EMPTY_ARGUMENTS);
                 }
                 catch (Exception e) {
-                    System.out.println("Failed to access property: " + name);
+                    log.info("Failed to access property: " + name);
                 }
                 assertPropertyValuesEqual(message + name, comparedObjects, expectedValue, actualValue);
             }

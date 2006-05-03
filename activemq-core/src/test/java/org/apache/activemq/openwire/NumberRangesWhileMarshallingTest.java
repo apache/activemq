@@ -17,6 +17,8 @@
 package org.apache.activemq.openwire;
 
 import org.apache.activemq.command.SessionId;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +34,8 @@ import junit.framework.TestCase;
  */
 public class NumberRangesWhileMarshallingTest extends TestCase {
 
+    private static final Log log = LogFactory.getLog(NumberRangesWhileMarshallingTest.class);
+    
     protected String connectionId = "Cheese";
     protected ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     protected DataOutputStream ds = new DataOutputStream(buffer);
@@ -97,7 +101,7 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
         for (int i = 0; i < numberValues.length; i++) {
             long value = numberValues[i];
             String expected = Long.toHexString(value);
-            System.out.println("Unmarshaling value: " + i + " = " + expected);
+            log.info("Unmarshaling value: " + i + " = " + expected);
             
             SessionId command = (SessionId) openWireformat.unmarshal(dis);
             assertEquals("connection ID in object: "+ i, connectionId, command.getConnectionId());
