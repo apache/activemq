@@ -62,23 +62,24 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
-public class ManagedRegionBroker extends RegionBroker{
-    private static final Log log=LogFactory.getLog(ManagedRegionBroker.class);
+
+public class ManagedRegionBroker extends RegionBroker {
+    private static final Log log = LogFactory.getLog(ManagedRegionBroker.class);
     private final MBeanServer mbeanServer;
     private final ObjectName brokerObjectName;
-    private final Map topics=new ConcurrentHashMap();
-    private final Map queues=new ConcurrentHashMap();
-    private final Map temporaryQueues=new ConcurrentHashMap();
-    private final Map temporaryTopics=new ConcurrentHashMap();
-    private final Map queueSubscribers=new ConcurrentHashMap();
-    private final Map topicSubscribers=new ConcurrentHashMap();
-    private final Map durableTopicSubscribers=new ConcurrentHashMap();
-    private final Map inactiveDurableTopicSubscribers=new ConcurrentHashMap();
-    private final Map temporaryQueueSubscribers=new ConcurrentHashMap();
-    private final Map temporaryTopicSubscribers=new ConcurrentHashMap();
-    private final Map subscriptionKeys=new ConcurrentHashMap();
-    private final Map subscriptionMap=new ConcurrentHashMap();
-    private final Set registeredMBeans=new CopyOnWriteArraySet();
+    private final Map topics = new ConcurrentHashMap();
+    private final Map queues = new ConcurrentHashMap();
+    private final Map temporaryQueues = new ConcurrentHashMap();
+    private final Map temporaryTopics = new ConcurrentHashMap();
+    private final Map queueSubscribers = new ConcurrentHashMap();
+    private final Map topicSubscribers = new ConcurrentHashMap();
+    private final Map durableTopicSubscribers = new ConcurrentHashMap();
+    private final Map inactiveDurableTopicSubscribers = new ConcurrentHashMap();
+    private final Map temporaryQueueSubscribers = new ConcurrentHashMap();
+    private final Map temporaryTopicSubscribers = new ConcurrentHashMap();
+    private final Map subscriptionKeys = new ConcurrentHashMap();
+    private final Map subscriptionMap = new ConcurrentHashMap();
+    private final Set registeredMBeans = new CopyOnWriteArraySet();
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
 
