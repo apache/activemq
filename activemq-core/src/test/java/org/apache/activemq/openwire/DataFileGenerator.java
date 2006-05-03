@@ -30,11 +30,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import junit.framework.Assert;
 
 abstract public class DataFileGenerator extends Assert {
 
+    private static final Log log = LogFactory.getLog(DataFileGenerator.class);
+    
     static final File moduleBaseDir;
     static final File controlDir;
     static final File classFileDir; 
@@ -65,7 +69,7 @@ abstract public class DataFileGenerator extends Assert {
      * @throws IllegalAccessException
      */
     public static ArrayList getAllDataFileGenerators() throws Exception{
-        System.out.println("Looking for generators in : "+classFileDir);
+        log.info("Looking for generators in : "+classFileDir);
         ArrayList l = new ArrayList();
         File[] files = classFileDir.listFiles();
         for (int i = 0; files!=null && i < files.length; i++) {
@@ -85,11 +89,10 @@ abstract public class DataFileGenerator extends Assert {
         for (Iterator iter = generators.iterator(); iter.hasNext();) {
             DataFileGenerator object = (DataFileGenerator) iter.next();
             try {
-                System.out.println("Processing: "+object.getClass());
+                log.info("Processing: "+object.getClass());
                 object.generateControlFile();
             } catch (Exception e) {
-                System.out.println("Error while processing: "+object.getClass());
-                e.printStackTrace(System.out);
+                log.error("Error while processing: "+object.getClass() + ". Reason: " + e, e);
             }
         }
     }
@@ -127,7 +130,7 @@ abstract public class DataFileGenerator extends Assert {
         ArrayList generators = getAllDataFileGenerators();
         for (Iterator iter = generators.iterator(); iter.hasNext();) {
             DataFileGenerator object = (DataFileGenerator) iter.next();
-            System.out.println("Processing: "+object.getClass());
+            log.info("Processing: "+object.getClass());
             object.assertControlFileIsEqual();
         }
     }
