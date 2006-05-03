@@ -243,6 +243,11 @@
             <!-- TODO FIX ME -->
             <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             <exclude>**/MulticastTransportTest.*</exclude>
+            
+            <exclude>**/MulticastNetworkTest.*</exclude>
+            <exclude>**/TransactedTopicMasterSlaveTest.*</exclude>
+            <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
+            <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
 
           </excludes>
         </configuration>
