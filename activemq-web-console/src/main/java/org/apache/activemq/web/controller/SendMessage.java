@@ -170,7 +170,7 @@ public class SendMessage extends DestinationFacade implements Controller {
 
     protected void appendHeaders(Message message, HttpServletRequest request) throws JMSException {
         message.setJMSCorrelationID(JMSCorrelationID);
-        if (JMSReplyTo != null) {
+        if (JMSReplyTo != null && JMSReplyTo.trim().length() > 0) {
             message.setJMSReplyTo(ActiveMQDestination.createDestination(JMSReplyTo, ActiveMQDestination.QUEUE_TYPE));
         }
         message.setJMSType(JMSType);
@@ -190,6 +190,15 @@ public class SendMessage extends DestinationFacade implements Controller {
                         }
                         else {
                             value = null;
+                        }
+                    }
+                    if (value instanceof String) {
+                        String text = value.toString().trim();
+                        if (text.length() == 0) {
+                            value = null;
+                        }
+                        else {
+                            value = text;
                         }
                     }
                     if (value != null) {
