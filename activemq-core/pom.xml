@@ -207,6 +207,7 @@
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
+          <argLine>-Xmx512M</argLine>
           <includes>
             <include>**/*Test.*</include>
           </includes>
@@ -245,10 +246,13 @@
             <exclude>**/MulticastTransportTest.*</exclude>
             
             <exclude>**/MulticastNetworkTest.*</exclude>
-            <exclude>**/TransactedTopicMasterSlaveTest.*</exclude>
+            <exclude>**/UnreliableUdpTransportTest.*</exclude>
             <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
+            <exclude>**/SslTransportBrokerTest.*</exclude>
+            
+            <!-- this one is a little flaky and can fail on some platforms randomly -->
             <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
-
+            <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
