@@ -20,7 +20,7 @@
     <format>jar</format>
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
-  <dependencySets>
+  <!-- dependencySets>
     <dependencySet>
       <outputDirectory>/</outputDirectory>
       <unpack>true</unpack>
@@ -28,5 +28,14 @@
          <include>incubator-activemq:activemq-console</include>
       </includes>
     </dependencySet>
-  </dependencySets>
+  </dependencySets -->
+  <fileSets>
+    <fileSet>
+      <directory>target/classes</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>org/apache/activemq/console/Main*.class</include>
+      </includes>
+    </fileSet>
+  </fileSets>
 </assembly>
