@@ -76,6 +76,8 @@ public class BrokerFacade {
     }
 
     // TODO - we should not have to use JMX to implement the following methods...
+    
+    /*
     public Collection getQueues() throws Exception {
         BrokerView broker = brokerService.getAdminView();
         if (broker == null) {
@@ -84,6 +86,15 @@ public class BrokerFacade {
         ObjectName[] queues = broker.getQueues();
         return getManagedObjects(queues, QueueViewMBean.class);
     }
+    */
+    public Collection getQueues() throws Exception {
+        ManagedRegionBroker broker = getManagedBroker();
+        if (broker == null) {
+            return new ArrayList();
+        }
+        return broker.getQueueRegion().getDestinationMap().values();
+    }
+
     
     public Collection getTopics() throws Exception {
         BrokerView broker = brokerService.getAdminView();
@@ -119,10 +130,6 @@ public class BrokerFacade {
     }
 
     /**
-     * public Collection getQueues() throws Exception { ManagedRegionBroker
-     * broker = getManagedBroker(); if (broker == null) { return new
-     * ArrayList(); } return
-     * broker.getQueueRegion().getDestinationMap().values(); }
      * 
      * 
      * public Collection getTopics() throws Exception { ManagedRegionBroker
