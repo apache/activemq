@@ -18,6 +18,7 @@ package org.activemq.util.connection;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Properties;
 
 import javax.jms.Connection;
@@ -41,8 +42,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.testelement.TestElement;
-import org.mr.api.jms.MantaQueueConnectionFactory;
-import org.mr.api.jms.MantaTopicConnectionFactory;
+//import org.mr.api.jms.MantaQueueConnectionFactory;
+//import org.mr.api.jms.MantaTopicConnectionFactory;
 
 /**
  * Provides static methods for creating Session and Destination objects.
@@ -60,6 +61,7 @@ public class ServerConnectionFactory {
     public static final String JORAM_NAMING_PORT = JMeterUtils.getResString("joram_naming_port");
     public static final String MANTARAY_SERVER = JMeterUtils.getResString("mantaray_server");
     public static final String SWIFTMQ_SERVER = JMeterUtils.getResString("swiftmq_server");
+    public static final String WEBSPHEREMQ_SERVER = JMeterUtils.getResString("webspheremq_server");
 
     // For testing within IntelliJ running main()
     /*
@@ -93,6 +95,11 @@ public class ServerConnectionFactory {
     public static final String SMQP = "com.swiftmq.jms.smqp";
     public static final String NAMING_HOST = "java.naming.factory.host";
     public static final String NAMING_PORT = "java.naming.factory.post";
+    //public static final String WEBSPHEREMQ_CONTEXT = "com.sun.jndi.ldap.LdapCtxFactory";
+    //public static final String WEBSPHEREMQ_CONTEXT = "com.sun.jndi.fscontext.RefFSContextFactory";
+    //public static final String WEBSPHEREMQ_CONTEXT = "com.ibm.ejs.ns.jndi.CNInitialContextFactory";
+    public static final String WEBSPHEREMQ_CONTEXT = "com.ibm.websphere.naming.WsnInitialContextFactory";
+    public static final String WEBSPHEREMQ_CONNECTION_FACTORY = "com.ibm.mq.jms.MQConnectionFactory";
 
     public static Topic topicContext;
 
@@ -129,7 +136,7 @@ public class ServerConnectionFactory {
                                                      String mqServer,
                                                      boolean isTopic,
                                                      boolean isAsync) throws JMSException {
-
+System.out.println("PARAM = " + url + "/" + mqServer + "/" + isTopic + "/" + isAsync);
        if (SONICMQ_SERVER.equals(mqServer)) {
             //Creates a Connection object for a SONIC MQ server.
             if (isTopic) {
@@ -192,14 +199,14 @@ public class ServerConnectionFactory {
         } else if (MANTARAY_SERVER.equals(mqServer)) {
             //Creates a Connection object for a Mantaray.
             System.setProperty("mantaHome",url);
-
+            ConnectionFactory cf = findMantaCF(isTopic);
             if (isTopic) {
-                TopicConnectionFactory factory = (TopicConnectionFactory) new MantaTopicConnectionFactory();
+                TopicConnectionFactory factory = (TopicConnectionFactory) cf;
 
                 return factory.createTopicConnection();
 
             } else {
-                QueueConnectionFactory factory = (QueueConnectionFactory) new MantaQueueConnectionFactory();
+                QueueConnectionFactory factory = (QueueConnectionFactory) cf;
 
                 return factory.createQueueConnection();
 
@@ -210,18 +217,39 @@ public class ServerConnectionFactory {
                 Context ictx = getInitialContext(url, SWIFTMQ_SERVER);
                 if (isTopic){
                     TopicConnectionFactory tcf = (TopicConnectionFactory) ictx.lookup("TopicConnectionFactory");
-//                    Topic topic = (Topic) ictx.lookup("testtopic");
                     ictx.close();
                     TopicConnection connection = tcf.createTopicConnection();
                     return connection;
                 } else {
                     QueueConnectionFactory qcf = (QueueConnectionFactory) ictx.lookup("QueueConnectionFactory");
-//                    Queue queue = (Queue) ictx.lookup("testqueue");
                     ictx.close();
                     QueueConnection connection = qcf.createQueueConnection();
                     return connection;
                 }
             } catch (NamingException e) {
+                throw new JMSException("Error creating InitialContext ", e.toString());
+            }
+        }else if (WEBSPHEREMQ_SERVER.equals(mqServer)) {
+            //Creates a Connection object for a SwiftMQ server.
+System.out.println("SERVER IS WEBSPHERE");
+            try {
+                Context ictx = getInitialContext(url, WEBSPHEREMQ_SERVER);
+System.out.println("CONTEXT = " + ictx);
+/*                if (isTopic){
+                    TopicConnectionFactory tcf = (TopicConnectionFactory) ictx.lookup("MQConnectionFactory");
+                    ictx.close();
+                    TopicConnection connection = tcf.createTopicConnection();
+System.out.println("CONN = " + connection);
+                    return connection;
+                } else {
+                    QueueConnectionFactory qcf = (QueueConnectionFactory) ictx.lookup("MQConnectionFactory");
+                    ictx.close();
+                    QueueConnection connection = qcf.createQueueConnection();
+                    return connection;
+                }  */
+                return null;//temp return val only
+            } catch (Exception e) { //orig is NamingException
+e.printStackTrace();
                 throw new JMSException("Error creating InitialContext ", e.toString());
             }
         } else {
@@ -445,11 +473,17 @@ public class ServerConnectionFactory {
             properties.put(Context.INITIAL_CONTEXT_FACTORY, SONICMQ_CONTEXT);
             properties.put(Context.PROVIDER_URL, url);
 
+        } else if (WEBSPHEREMQ_SERVER.equals(mqServer)) {
+            //Creates a Context object for WEBSPHEREMQ server
+            properties.put(Context.INITIAL_CONTEXT_FACTORY, WEBSPHEREMQ_CONTEXT);
+            properties.put(Context.PROVIDER_URL, url);
+System.out.println("PROPS = " + properties);
         }
 
         try {
             return new InitialContext(properties);
         } catch (NamingException e) {
+e.printStackTrace();
             throw new JMSException("Error creating InitialContext ", e.toString());
         }
     }
@@ -462,6 +496,38 @@ public class ServerConnectionFactory {
      */
     private static String getHost(String url) {
         return url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf(":"));
+    }
+
+    public static ConnectionFactory findMantaCF(boolean isTopic) {
+        String name = null;
+        if (isTopic) {
+            name = "org.mr.api.jms.MantaTopicConnectionFactory";
+        } else {
+            name = "org.mr.api.jms.MantaQueueConnectionFactory";
+        }
+        Class type = loadClass(name, ServerConnectionFactory.class.getClassLoader());
+System.out.println("SCF type = " + type);
+        if (type != null) {
+            Object obj = type;
+            return (ConnectionFactory) obj;
+        } else {
+            System.out.println("Connection Factory not found: " + name);
+        }
+        return null;
+    }
+
+    private static Class loadClass(String name, ClassLoader loader) {
+        try {
+            return loader.loadClass(name);
+        }
+        catch (ClassNotFoundException e) {
+            try {
+                return Thread.currentThread().getContextClassLoader().loadClass(name);
+            }
+            catch (ClassNotFoundException e1) {
+                return null;
+            }
+        }
     }
 
 }

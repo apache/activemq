@@ -482,7 +482,7 @@
 	    	<lib>true</lib>
             </properties>
         </dependency>
-        
+        <!--
         <dependency>
             <groupId>manta</groupId>
             <artifactId>manta</artifactId>
@@ -492,7 +492,7 @@
 	    	<lib>true</lib>
             </properties>
         </dependency> 
-                
+        -->
     </dependencies>
     
    <build>
