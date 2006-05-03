@@ -16,6 +16,9 @@ package org.apache.activemq;
 * limitations under the License.
 */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Random;
@@ -33,6 +36,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
  */
 public final class LargeStreamletTest extends TestCase {
 
+    private static final Log log = LogFactory.getLog(LargeStreamletTest.class);
+    
     private static final String BROKER_URL = "vm://localhost?broker.persistent=false";
 
     private static final int BUFFER_SIZE = 1 * 1024;
@@ -82,8 +87,7 @@ public final class LargeStreamletTest extends TestCase {
                             readerException  = e;
                             e.printStackTrace();
                         } finally {
-                            System.err
-                                    .println(totalRead + " total bytes read.");
+                            log.info(totalRead + " total bytes read.");
                         }
                     }
                 });
@@ -111,7 +115,7 @@ public final class LargeStreamletTest extends TestCase {
                             writerException = e;
                             e.printStackTrace();
                         } finally {
-                            System.err.println(totalWritten
+                            log.info(totalWritten
                                     + " total bytes written.");
                         }
                     }
