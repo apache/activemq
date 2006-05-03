@@ -391,7 +391,48 @@ public class Queue implements Destination {
     public void setMessageGroupHashBucketCount(int messageGroupHashBucketCount) {
         this.messageGroupHashBucketCount = messageGroupHashBucketCount;
     }
+    
+    public void resetStatistics() {
+        getDestinationStatistics().reset();
+    }
 
+    public String getName() {
+        return getActiveMQDestination().getPhysicalName();
+    }
+
+    public long getEnqueueCount() {
+        return getDestinationStatistics().getEnqueues().getCount();
+    }
+
+    public long getDequeueCount() {
+        return getDestinationStatistics().getDequeues().getCount();
+    }
+
+    public long getConsumerCount() {
+        return getDestinationStatistics().getConsumers().getCount();
+    }
+
+    public long getQueueSize() {
+        return getDestinationStatistics().getMessages().getCount();
+    }
+
+    public long getMessagesCached() {
+        return getDestinationStatistics().getMessagesCached().getCount();
+    }
+
+    public int getMemoryPercentageUsed() {
+        return getUsageManager().getPercentUsage();
+    }
+
+    public long getMemoryLimit() {
+        return getUsageManager().getLimit();
+    }
+
+    public void setMemoryLimit(long limit) {
+        getUsageManager().setLimit(limit);
+    }
+    
+    
     // Implementation methods
     // -------------------------------------------------------------------------
     private MessageReference createMessageReference(Message message) {
