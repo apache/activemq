@@ -24,7 +24,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import org.mr.MantaAgent;
+//import org.mr.MantaAgent;
 
 import javax.jms.Connection;
 import javax.jms.Session;
@@ -45,6 +45,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
+import java.lang.reflect.Method;
 
 public class Consumer extends Sampler implements MessageListener {
 
@@ -185,10 +186,11 @@ public class Consumer extends Sampler implements MessageListener {
         } else if (ServerConnectionFactory.MANTARAY_SERVER.equals(this.getMQServer())) {
             if (this.getTopic()) {
                 Topic topic = (Topic) destination;
-
+Class s = mantaAgent();
+System.out.println("CLASS = " + s);
                 if (this.getDurable()) {
-                    consumer = ((TopicSession) session).createDurableSubscriber(topic,
-                                   MantaAgent.getInstance().getAgentName());
+//                    consumer = ((TopicSession) session).createDurableSubscriber(topic,
+//                                   s.getInstance().getAgentName());
                 } else {
                     consumer = ((TopicSession) session).createSubscriber(topic);
                 }
@@ -224,6 +226,34 @@ public class Consumer extends Sampler implements MessageListener {
         consumer.setMessageListener(this);
         addResource(consumer);
     }
+
+    public static Class mantaAgent() {
+        String name = "org.mr.api.MantaAgent";
+
+        Class type = loadClass(name, ServerConnectionFactory.class.getClassLoader());
+System.out.println("cons TYPE = " + type);
+        if (type != null) {
+            return (Class) type;
+        } else {
+            System.out.println("Class not found: " + name);
+        }
+        return null;
+    }
+
+    private static Class loadClass(String name, ClassLoader loader) {
+        try {
+            return loader.loadClass(name);
+        }
+        catch (ClassNotFoundException e) {
+            try {
+                return Thread.currentThread().getContextClassLoader().loadClass(name);
+            }
+            catch (ClassNotFoundException e1) {
+                return null;
+            }
+        }
+    }
+
 
     /**
      *  Processes the received message.
