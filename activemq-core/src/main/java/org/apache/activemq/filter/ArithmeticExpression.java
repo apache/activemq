@@ -43,7 +43,6 @@ public abstract class ArithmeticExpression extends BinaryExpression {
                 if (lvalue instanceof String) {
                     String text = (String) lvalue;
                     String answer = text + rvalue;
-                    System.out.println("lvalue: " + lvalue + " rvalue: " + rvalue + " result: " + answer);
                     return answer;
                 }
                 else if (lvalue instanceof Number) {
