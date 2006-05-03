@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE project>
+<project>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../../etc/project.xml</extend>
+
+    <name>ActiveMQ :: Transport :: Jabber</name>
+    <id>activemq-transport-jabber</id>
+    <shortDescription>ActiveMQ Jabber Message Transport</shortDescription>
+    <description>ActiveMQ Jabber Message Transport</description>
+  
+    <package>org.activemq.transport.jabber</package>
+    <packageGroups>
+      <packageGroup>
+        <title>Jabber Message Transport</title>
+        <packages>org.activemq.transport.jabber</packages>
+      </packageGroup>
+    </packageGroups>
+  
+    <!-- ============ -->
+    <!-- Dependencies -->
+    <!-- ============ -->
+    <dependencies>
+    
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>${pom.currentVersion}</version>
+        <properties>
+          <eclipse.dependency>true</eclipse.dependency>
+        </properties>
+      </dependency>
+      <dependency> <!-- Used for unit tests -->
+        <groupId>activemq</groupId>
+        <artifactId>activemq-core-test</artifactId>
+        <version>${pom.currentVersion}</version>
+      </dependency>
+      
+    </dependencies>  
+
+</project>

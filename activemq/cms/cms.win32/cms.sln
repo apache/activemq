@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "activemqcms", "activemqcms\activemqcms.vcproj", "{8B83D5C0-1C54-48B0-9980-6E3546CF0CE5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cms", "cms\cms.vcproj", "{1C7470CC-B963-4ED3-BD25-EE19CB1B626B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcproj", "{919C9DC8-203D-4817-8AD2-E184DA4E3C7B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B83D5C0-1C54-48B0-9980-6E3546CF0CE5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8B83D5C0-1C54-48B0-9980-6E3546CF0CE5}.Debug|Win32.Build.0 = Debug|Win32
+		{8B83D5C0-1C54-48B0-9980-6E3546CF0CE5}.Release|Win32.ActiveCfg = Release|Win32
+		{8B83D5C0-1C54-48B0-9980-6E3546CF0CE5}.Release|Win32.Build.0 = Release|Win32
+		{1C7470CC-B963-4ED3-BD25-EE19CB1B626B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1C7470CC-B963-4ED3-BD25-EE19CB1B626B}.Debug|Win32.Build.0 = Debug|Win32
+		{1C7470CC-B963-4ED3-BD25-EE19CB1B626B}.Release|Win32.ActiveCfg = Release|Win32
+		{1C7470CC-B963-4ED3-BD25-EE19CB1B626B}.Release|Win32.Build.0 = Release|Win32
+		{919C9DC8-203D-4817-8AD2-E184DA4E3C7B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{919C9DC8-203D-4817-8AD2-E184DA4E3C7B}.Debug|Win32.Build.0 = Debug|Win32
+		{919C9DC8-203D-4817-8AD2-E184DA4E3C7B}.Release|Win32.ActiveCfg = Release|Win32
+		{919C9DC8-203D-4817-8AD2-E184DA4E3C7B}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

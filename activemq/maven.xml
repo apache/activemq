@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2005-2006 The Apache Software Foundation
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project default="default"
+  xmlns:j="jelly:core"
+  xmlns:u="jelly:util"
+  xmlns:ant="jelly:ant"
+  xmlns:modules="local:modules"
+  xmlns:maven="jelly:maven"
+  >
+
+  <!-- ======================= -->
+  <!-- The multi project goals -->
+  <!-- ======================= -->
+  <!--
+     | The main goals for multi project build are:
+     |
+     | default or build
+     |    Executes default build for all projects
+     |
+     | clean
+     |    Deletes the 'target' directory in all projects
+     |
+     | clean-repo
+     |    Deletes the local repository artifacts
+     |
+     | rebuild
+     |    Same as clean default
+     |
+     | rebuild-all
+     |    Same as clean clean-repo default
+     |
+     | In addition to the above we support a -Dmodules command line
+     | option which is a comma seperated list of module names (ie.
+     | common, core, ...)
+   -->
+  <j:set var="distDir" value="target/${pom.groupId}-${pom.currentVersion}"/>
+
+  <goal name="init">
+    <ant:fileScanner var="scanner">
+      <ant:fileset dir="${basedir}">
+        <u:tokenize var="includes" delim=",">${maven.multiproject.includes}</u:tokenize>
+        <j:forEach var="include" items="${includes}">
+          <ant:include name="${include}"/>
+        </j:forEach>
+        <u:tokenize var="excludes" delim=",">${maven.multiproject.excludes}</u:tokenize>
+        <j:forEach var="exclude" items="${excludes}">
+          <ant:exclude name="${exclude}"/>
+        </j:forEach>
+      </ant:fileset>
+    </ant:fileScanner>
+
+    <j:set var="maven.multiproject.includes" value=""/>
+    <j:set var="maven.multiproject.excludes" value=""/>
+    <j:set var="modules.directories" value=""/>
+
+    <u:tokenize var="moduleList" delim=",">${modules}</u:tokenize>
+    <j:set var="currentDir" value="${basedir}/"/>
+    <j:forEach var="file" items="${scanner.iterator()}">
+      <j:set var="directory" value="${file.parentFile.absolutePath}"/>
+      <j:set var="include" value="${file.absolutePath.substring(currentDir.length())}"/>
+      <j:if test="${moduleList.isEmpty() || moduleList.contains(file.parentFile.name)}">
+        <j:choose>
+          <j:when test="${context.getVariable('maven.multiproject.includes') == ''}">
+            <j:set var="modules.directories" value="${directory}"/>
+            <j:set var="maven.multiproject.includes" value="${include}"/>
+          </j:when>
+          <j:otherwise>
+            <j:set var="modules.directories" value="${modules.directories},${directory}"/>
+            <j:set var="maven.multiproject.includes" value="${maven.multiproject.includes},${include}"/>
+          </j:otherwise>
+        </j:choose>
+      </j:if>
+    </j:forEach>
+  </goal>
+
+  <!-- Build failure reports: initial file creation and data-->
+  <preGoal name="default">
+    <j:set var="generateBuildReports" value="${buildreport.generate}"/>
+    <j:if test="${generateBuildReports == 'true'}">
+      <attainGoal name="build-failure-report:init-report"/>
+    </j:if>
+  </preGoal>
+
+  <goal name="null" description="temp target for Continuum 1.0 alpha 2">
+    <attainGoal name="nightly-build"/>
+  </goal>
+
+  <goal name="rebuild" prereqs="clean,default"/>
+  <goal name="rebuild-all">
+    <attainGoal name="clean"/>
+    <attainGoal name="clean-repo"/>
+    <attainGoal name="default"/>
+  </goal>
+
+  <goal name="build" prereqs="default"/>
+  <goal name="default" prereqs="init">
+    <j:set var="goal" value="default"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="assembly:goal" prereqs="init">
+    <maven:reactor
+      basedir="."
+      includes="assembly/project.xml"
+      goals="${goal}"
+      ignoreFailures="false"
+      />
+  </goal>
+
+  <goal name="site:deploy" prereqs="init">
+    <j:set var="goal" value="site:deploy"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="dist:build" prereqs="init">
+    <j:set var="goal" value="dist:build"/>
+    <attainGoal name="assembly:goal"/>
+  </goal>
+
+  <goal name="dist:build-bin" prereqs="init">
+    <j:set var="goal" value="dist:build-bin"/>
+    <attainGoal name="assembly:goal"/>
+  </goal>
+
+  <goal name="dist:deploy" prereqs="init">
+    <j:set var="goal" value="dist:deploy"/>
+    <attainGoal name="assembly:goal"/>
+  </goal>
+  
+  <goal name="clean" prereqs="init">
+    <!-- should remove the base dir target and xdocs as well -->
+    <ant:delete dir="${basedir}/target"/>
+    <ant:delete dir="${basedir}/xdocs"/>
+    
+    <j:set var="goal" value="clean"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="clean-targets" prereqs="init">
+    <u:tokenize var="directories" delim=",">${modules.directories}</u:tokenize>
+    <ant:delete dir="${basedir}/target"/>
+    <j:forEach var="directory" items="${directories}">
+      <ant:echo>+----------------------------------------</ant:echo>
+      <ant:echo>| Cleaning: ${directory} </ant:echo>
+      <ant:echo>+----------------------------------------</ant:echo>
+      <ant:delete dir="${directory}/target"/>
+      <ant:delete quiet="false" failonerror="false">
+        <ant:fileset dir="${directory}">
+          <ant:include name="maven.log"/>
+          <ant:include name="velocity.log*"/>
+          <ant:include name="junit*.properties"/>
+        </ant:fileset>
+      </ant:delete>
+      <ant:echo></ant:echo>
+    </j:forEach>
+  </goal>
+
+  <goal name="clean-repo" prereqs="init">
+    <ant:echo>+----------------------------------------</ant:echo>
+    <ant:echo>| Cleaning: repo </ant:echo>
+    <ant:echo>+----------------------------------------</ant:echo>
+    <delete dir="${maven.repo.local}/activemq"/>
+  </goal>
+  
+  <goal name="test" prereqs="init">
+    <j:set var="goal" value="test"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <preGoal name="continuum:default">
+    <j:set var="generateBuildReports" value="${buildreport.generate}"/>
+    <j:if test="${generateBuildReports == 'true'}">
+      <attainGoal name="build-failure-report:init-report"/>
+    </j:if>
+  </preGoal>
+  
+  <goal name="continuum:default" prereqs="init">
+    <j:choose>
+      <j:when test="${ignoreTestFailures==true}">
+        <maven:reactor basedir="." goals="default" includes="${maven.multiproject.includes}" ignoreFailures="true"/>
+        <j:if test="${!failedProjects.isEmpty()}">
+          <ant:echo> </ant:echo>
+          <ant:echo>There are test failures in the following modules:</ant:echo>
+          <j:forEach var="failedProj" items="${failedProjects}">
+            <ant:echo>  ${failedProj} </ant:echo>
+          </j:forEach>
+          <fail message="There are test failures."/>
+        </j:if>
+      </j:when>
+      <j:otherwise>    
+        <maven:reactor basedir="." goals="default" includes="${maven.multiproject.includes}" ignoreFailures="false"/>
+      </j:otherwise>
+    </j:choose>
+  </goal>
+   
+  <goal name="eclipse" prereqs="init">
+    <j:set var="goal" value="eclipse"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="intellij" prereqs="idea"/>
+  <goal name="idea" prereqs="init">
+    <attainGoal name="idea:multiproject"/>
+  </goal>
+
+  <goal name="jar:deploy" prereqs="init">
+    <j:set var="goal" value="jar:deploy"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="jar:install" prereqs="init">
+    <j:set var="goal" value="jar:install"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="install">
+    <attainGoal name="multiproject:install"/>
+  </goal>
+
+  <goal name="activemq:site">
+    <attainGoal name="multiproject:site"/>
+  </goal>
+
+  <goal name="convert-snapshots-auto">
+    <j:set var="goal" value="convert-snapshots-auto"/>
+    <attainGoal name="multiproject:goal"/>
+  </goal>
+
+  <goal name="dc">
+    <attain>
+      <attainGoal name="clean"/>
+      <attainGoal name="multiproject:install"/>
+      <attainGoal name="multiproject:deploy"/>
+      <attainGoal name="dist:deploy"/>
+    </attain>
+  </goal>
+
+  <goal name="rebuild-dist-bin">
+    <attainGoal name="rebuild-all"/>
+    <attainGoal name="dist:build-bin"/>
+  </goal>
+
+  <goal name="rebuild-it-all">
+    <attainGoal name="rebuild-all"/>
+    <attainGoal name="dist:build-bin"/>
+    <attainGoal name="site"/>
+  </goal>
+  <goal name="temp-site">
+    <attainGoal name="init"/>
+    <attainGoal name="multiproject:create-nav"/>
+    <attainGoal name="multiproject:create-overview-page"/>
+    <attainGoal name="site"/>
+  </goal>
+
+
+  <goal name="nightly-build" description="create a snapshot build and deploys it to the website">
+
+    <echo>Cleaning the directory</echo>
+    <attainGoal name="clean"/>
+
+    <echo>Compiling the codes</echo>
+    <attainGoal name="default"/>
+
+    <echo>Building the bin and src bundle </echo>
+    <attainGoal name="dist:build"/>
+
+    <echo>Creating deploy "site" </echo>
+    <attainGoal name="site:deploy"/>
+
+  </goal>
+
+  <goal name="reports:site">
+      <attainGoal name="site"/>
+  </goal>
+
+
+</project>
+

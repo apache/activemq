@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant" xmlns:license="license" xmlns:util="jelly:util" xmlns:maven="jelly:maven" xmlns:artifact="artifact">
+
+  <goal name="default" prereqs="jar:install"/>
+
+  <postGoal name="clean">
+    <delete dir="${basedir}/activemq-data" />
+    <delete dir="${basedir}/foo" />
+  </postGoal>
+
+  <preGoal name="java:compile">
+    <attainGoal name="selector:generate" />
+  </preGoal>
+
+  <postGoal name="java:compile">
+    <attainGoal name="xbean:generate" />
+  </postGoal>
+
+  <postGoal name="test:compile">
+    <!-- Once the tests are compiled... install them -->
+    <ant:jar jarfile="${maven.build.dir}/${pom.artifactId}-test-${pom.currentVersion}.jar" basedir="${maven.test.dest}" index="${maven.jar.index}" compress="${maven.jar.compress}" excludes="${maven.jar.excludes}">
+
+      <j:if test="${maven.jar.manifest.available}">
+        <ant:setProperty name="manifest" value="${maven.jar.manifest}" />
+      </j:if>
+
+      <j:if test="${context.getVariable('maven.jar.includes') != null}">
+        <ant:setProperty name="includes" value="${maven.jar.includes}" />
+      </j:if>
+
+      <j:set var="licenseFileName">
+        <license:fileName />
+      </j:set>
+      <util:file name="${licenseFileName}" var="licenseFile" />
+      <ant:metainf dir="${licenseFile.canonicalFile.parent}">
+        <ant:include name="${licenseFile.canonicalFile.name}" />
+      </ant:metainf>
+    </ant:jar>
+
+    <mkdir dir="${maven.repo.local}/${pom.groupId}/jars" />
+    <echo>Copying ${maven.build.dir}/${pom.artifactId}-test-${pom.currentVersion}.jar to ${maven.repo.local}/${pom.groupId}/jars</echo>
+    <copy todir="${maven.repo.local}/${pom.groupId}/jars" file="${maven.build.dir}/${pom.artifactId}-test-${pom.currentVersion}.jar" />
+
+  </postGoal>
+
+  <goal name="selector:generate" description="Generates the ActiveMQ selector parser.">
+    <mkdir dir="${pom.build.sourceDirectory}/org/apache/activemq/selector" />
+    <javacc target="${basedir}/src/main/grammar/SelectorParser.jj" javacchome="${maven.repo.local}/javacc/jars" outputdirectory="${pom.build.sourceDirectory}/org/apache/activemq/selector" />
+  </goal>
+
+  <goal name="openwire:generate-control-data" description="Generates the openwire control data." prereqs="test:compile">
+
+    <path id="test.classpath">
+      <pathelement path="${maven.build.dest}" />
+      <pathelement path="${basedir}/target/classes" />
+      <pathelement path="${basedir}/target/test-classes" />
+      <path refid="maven.dependency.classpath" />
+    </path>
+
+    <java classname="org.apache.activemq.openwire.DataFileGenerator" fork="true">
+      <classpath refid="test.classpath" />
+    </java>
+
+  </goal>
+
+  <goal name="openwire:generate" description="Generates the openwire marshallers.">
+
+    <ant:mkdir dir="${basedir}/target/gram-classes" />
+    <ant:javac destdir="target/gram-classes" excludes="**/package.html" debug="${maven.compile.debug}" deprecation="${maven.compile.deprecation}" optimize="${maven.compile.optimize}">
+
+      <ant:classpath>
+        <ant:path refid="maven.dependency.classpath" />
+        <ant:pathelement path="target/gram-classes" />
+      </ant:classpath>
+
+      <ant:src path="src/gram/java" />
+
+      <j:if test="${context.getVariable('maven.compile.source') != null}">
+        <ant:setProperty name="source" value="${maven.compile.source}" />
+      </j:if>
+      <j:if test="${context.getVariable('maven.compile.target') != null}">
+        <ant:setProperty name="target" value="${maven.compile.target}" />
+      </j:if>
+      <j:if test="${context.getVariable('maven.compile.verbose') != null}">
+        <ant:setProperty name="verbose" value="${maven.compile.verbose}" />
+      </j:if>
+    </ant:javac>
+
+    <path id="openwire.classpath">
+      <pathelement path="${java.home}/lib/tools.jar" />
+      <pathelement path="target/gram-classes" />
+      <path refid="maven.dependency.classpath" />
+    </path>
+
+    <java classname="org.codehaus.gram.Gram" fork="true">
+      <classpath refid="openwire.classpath" />
+      <sysproperty key="openwire.version" value="${openwire.version}" />
+      <arg value="src/main/java" />
+      <arg value="src/gram/script/GenerateCppMarshallingClasses.groovy" />
+      <arg value="src/gram/script/GenerateCppMarshallingHeaders.groovy" />
+      <arg value="src/gram/script/GenerateJavaMarshalling.groovy" />
+      <arg value="src/gram/script/GenerateJavaTests.groovy" />
+      <arg value="src/gram/script/GenerateCSharpMarshalling.groovy" />
+      <arg value="src/gram/script/GenerateCSharpClasses.groovy" />
+      <arg value="src/gram/script/GenerateCppHeaders.groovy" />
+      <arg value="src/gram/script/GenerateCppClasses.groovy" />
+      <arg value="src/gram/script/GenerateCMarshalling.groovy" />
+    </java>
+
+  </goal>
+
+  <!-- START SNIPPET: xbean -->
+  <goal name="xbean:generate" description="Generates the XBean XSD, documentation and META-INF/services files.">
+    <ant:mkdir dir="${basedir}/target/generated"/>
+
+    <path id="test.classpath">
+      <pathelement path="${maven.build.dest}" />
+      <pathelement path="${basedir}/target/classes" />
+      <pathelement path="${basedir}/target/test-classes" />
+      <path refid="maven.dependency.classpath" />
+    </path>
+
+    <taskdef name="xsdGenerate" classname="org.apache.xbean.spring.generator.MappingGeneratorTask">
+      <classpath refid="test.classpath" />
+    </taskdef>
+    <ant:mkdir dir="${basedir}/target/generated"/>
+    <xsdGenerate destFile="${basedir}/target/activemq-${pom.currentVersion}.xsd" namespace="http://activemq.org/config/1.0"
+        classpathref="test.classpath" srcdir="${basedir}/src/main/java"  metaInfDir="${basedir}/target/generated/"/>
+        
+    <copy file="${basedir}/target/activemq-${pom.currentVersion}.xsd" todir="${basedir}/../xdocs"/>    
+    <copy file="${basedir}/target/activemq-${pom.currentVersion}.xsd.html" todir="${basedir}/../xdocs"/> 
+  </goal>
+  <!-- END SNIPPET: xbean -->
+
+  <goal name="setclasspath" prereqs="java:compile">
+    <path id="test.classpath">
+      <pathelement path="${maven.build.dest}" />
+      <pathelement path="${basedir}/target/classes" />
+      <pathelement path="${basedir}/target/test-classes" />
+      <path refid="maven.dependency.classpath" />
+    </path>
+  </goal>
+  
+  <!-- ================================================================== -->
+  <!-- GOALs for deploying resources -->
+  <!-- ================================================================== -->
+  
+  <!-- goal name="jar:deploy" 
+      description="Deploy the core and core test binaries" prereqs="test:compile">
+      
+      <artifact:deploy 
+        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}.jar"
+        type="jar"
+        project="${pom}"
+      />
+      
+      <artifact:deploy
+        artifact="${basedir}/target/${pom.artifactId}-test-${pom.currentVersion}.jar"
+        type="jar"
+        project="${pom}"
+      />
+  </goal -->
+  
+  <goal name="jar:deploy-javadoc" 
+      description="Deploys javadoc binary" prereqs="javadoc:install">
+        
+      <artifact:deploy
+        artifact="${basedir}/target/${pom.artifactId}-${pom.currentVersion}_javadoc.jar"
+        type="jar"
+        project="${pom}"
+      />
+  </goal>
+  
+  <goal name="xsd:deploy-xbean" 
+      description="Deploys xsd generated files" prereqs="xbean:generate">
+          
+      <artifact:deploy
+        artifact="${basedir}/target/activemq-${pom.currentVersion}.xsd"
+        type="distribution"
+        project="${pom}"
+      />
+
+      <artifact:deploy
+        artifact="${basedir}/target/activemq-${pom.currentVersion}.xsd.html"
+        type="distribution"
+        project="${pom}"
+      />      
+  </goal>
+
+</project>
