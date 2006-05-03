@@ -115,7 +115,7 @@ public class PeerTransportTest extends TestCase {
     }
 
     protected Connection createConnection(int i) throws JMSException {
-        System.err.println("creating connection ....");
+        log.info("creating connection ....");
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("peer://" + getClass().getName()+"/node"+i);
         return fac.createConnection();
     }
