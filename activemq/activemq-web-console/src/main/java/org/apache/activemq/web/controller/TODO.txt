@@ -1,0 +1,3 @@
+
+With a small amount of work to the controller, we should be able to delete these classes and instead
+just expose the methods of the facades directly
