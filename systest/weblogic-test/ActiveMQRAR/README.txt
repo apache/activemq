@@ -1,0 +1,1 @@
+Extract the activemq rar file to the connectorModule directory.
