@@ -46,46 +46,48 @@ public class DestinationView {
     }
 
     
-    public void gc(){
+    public void gc() {
         destination.gc();
     }
 
     public String getName() {
-        return destination.getActiveMQDestination().getPhysicalName();
+        return destination.getName();
     }
 
-    public void resetStatistics(){
-        destination.getDestinationStatistics().reset();
+    public void resetStatistics() {
+        destination.resetStatistics();
     }
 
-    public long getEnqueueCount(){
-        return destination.getDestinationStatistics().getEnqueues().getCount();
+    public long getEnqueueCount() {
+        return destination.getEnqueueCount();
     }
 
-    public long getDequeueCount(){
-        return destination.getDestinationStatistics().getDequeues().getCount();
+    public long getDequeueCount() {
+        return destination.getDequeueCount();
     }
 
-    public long getConsumerCount(){
-        return destination.getDestinationStatistics().getConsumers().getCount();
+    public long getConsumerCount() {
+        return destination.getConsumerCount();
     }
 
-    public long getQueueSize(){
-        return destination.getDestinationStatistics().getMessages().getCount();
+    public long getQueueSize() {
+        return destination.getQueueSize();
     }
 
-    public long getMessagesCached(){
-        return destination.getDestinationStatistics().getMessagesCached().getCount();
+    public long getMessagesCached() {
+        return destination.getMessagesCached();
     }
 
     public int getMemoryPercentageUsed() {
-        return destination.getUsageManager().getPercentUsage();
+        return destination.getMemoryPercentageUsed();
     }
+
     public long getMemoryLimit() {
-        return destination.getUsageManager().getLimit();
+        return destination.getMemoryLimit();
     }
+
     public void setMemoryLimit(long limit) {
-        destination.getUsageManager().setLimit(limit);
+        destination.setMemoryLimit(limit);
     }
 
     public CompositeData[] browse() throws OpenDataException{
