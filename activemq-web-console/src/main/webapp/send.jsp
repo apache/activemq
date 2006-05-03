@@ -104,6 +104,12 @@
 	</td>
 </tr>
 <tr>
+ <td colspan="4" align="center">
+     <input type="submit" value="Send"/>
+     <input type="reset"/>
+ </td>
+</tr>
+<tr>
 	<th colspan="4" class="label">
 	    <label for="text">Message body</label>
 	</th>
@@ -111,12 +117,6 @@
 <tr>
 	<td colspan="4">
 	    <textarea name="JMSText" rows="30" cols="80">Enter some text here for the message body...</textarea>
-	</td>
-</tr>
-<tr>
-	<td colspan="4" align="center">
-	    <input type="submit" value="Send"/>
-	    <input type="reset"/>
 	</td>
 </tr>
 </tbody>
