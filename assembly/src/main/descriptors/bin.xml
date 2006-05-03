@@ -44,19 +44,26 @@
       <directory>target</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
-        <include>*.jar</include>
+        <include>${pom.artifactId}-${pom.version}.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory>/bin</outputDirectory>
+      <includes>
+        <include>run.jar</include>
       </includes>
     </fileSet>
   </fileSets>
   <dependencySets>
-    <dependencySet>
+    <!-- dependencySet>
       <outputDirectory>/bin</outputDirectory>
       <outputFileNameMapping>run.jar</outputFileNameMapping>
       <unpack>false</unpack>
       <includes>
          <include>incubator-activemq:activemq-console</include>
       </includes>
-    </dependencySet>
+    </dependencySet -->
     <dependencySet>
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>

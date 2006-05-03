@@ -258,6 +258,25 @@
         <version>2.1-SNAPSHOT</version>
         <executions>
           <execution>
+            <id>run</id>
+            <phase>package</phase>
+            <goals>
+              <goal>assembly</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                 <descriptor>src/main/descriptors/run-jar.xml</descriptor>
+              </descriptors>
+              <finalName>run</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <archive>
+                <manifest>
+                  <mainClass>org.apache.activemq.console.Main</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
+          </execution>
+          <execution>
             <id>bin</id>
             <phase>package</phase>
             <goals>
@@ -265,15 +284,14 @@
             </goals>
             <configuration>
               <descriptors>
-                 <descriptor>src/main/descriptors/bin.xml</descriptor>
+                 <descriptor>src/main/descriptors/bin.xml</descriptor>  
               </descriptors>
-              <finalName>incubator-activemq-${pom.version}</finalName>
+              <finalName>${pom.artifactId}-${pom.version}</finalName>
               <appendAssemblyId>false</appendAssemblyId>
             </configuration>
           </execution>
         </executions>
       </plugin>
-
     </plugins>
   </build>
 
