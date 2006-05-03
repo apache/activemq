@@ -75,16 +75,16 @@ public class ProxyConnector implements Service {
     }
 
     public void stop() throws Exception {
-    	ServiceStopper ss = new ServiceStopper();
-        if( this.server!=null ) {
+        ServiceStopper ss = new ServiceStopper();
+        if (this.server != null) {
             ss.stop(this.server);
         }
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-    	   System.out.println("Connector stopped: Stopping proxy.");
-		   ss.stop((Service) iter.next());
-		}
+            log.info("Connector stopped: Stopping proxy.");
+            ss.stop((Service) iter.next());
+        }
         ss.throwFirstException();
-        log.info("Proxy Connector "+getName()+" Stopped");
+        log.info("Proxy Connector " + getName() + " Stopped");
     }
     
     // Properties
