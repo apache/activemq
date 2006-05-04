@@ -184,6 +184,29 @@
         </ant:fileset>
       </ant:copy>
     </j:if>       
+
+    <!-- Copy example modules -->
+    <u:file var="file" name="${project.root}/activemq-web-console"/>
+    <j:if test="${file.exists()}">
+      <ant:copy todir="${maven.dist.bin.assembly.dir}/example/activemq-web-console">
+        <ant:fileset dir="${file}">
+          <ant:include name="**"/>
+          <ant:exclude name="target"/>
+        </ant:fileset>
+      </ant:copy>
+    </j:if>
+
+    <!-- Copy example modules -->
+    <u:file var="file" name="${project.root}/activemq-web-demo"/>
+    <j:if test="${file.exists()}">
+      <ant:copy todir="${maven.dist.bin.assembly.dir}/example/activemq-web-demo">
+        <ant:fileset dir="${file}">
+          <ant:include name="**"/>
+          <ant:exclude name="target"/>
+        </ant:fileset>
+      </ant:copy>
+    </j:if>
+
   </goal>
 
   <goal
