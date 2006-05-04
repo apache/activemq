@@ -36,10 +36,6 @@ public class SessionPool implements PoolableObjectFactory {
     private SessionKey key;
     private ObjectPool sessionPool;
 
-    public SessionPool(ConnectionPool connectionPool, SessionKey key) {
-        this(connectionPool, key, new GenericObjectPool());
-    }
-
     public SessionPool(ConnectionPool connectionPool, SessionKey key, ObjectPool sessionPool) {
         this.connectionPool = connectionPool;
         this.key = key;
