@@ -285,7 +285,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
         mdn.setConsumerId(messageDispatch.getConsumerId());
         mdn.setDeliverySequenceId(messageDispatch.getDeliverySequenceId());
         mdn.setDestination(messageDispatch.getDestination());
-        mdn.setMessageId(messageDispatch.getMessage().getMessageId());
+        if( messageDispatch.getMessage() != null )
+            mdn.setMessageId(messageDispatch.getMessage().getMessageId());
         sendAsyncToSlave(mdn);
         super.processDispatch(messageDispatch);
     }
