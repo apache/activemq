@@ -43,10 +43,6 @@
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-gbean-management</artifactId>
     </dependency>
-    <dependency> <!-- Used for unit tests -->
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-core-test</artifactId>
-    </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activeio-core</artifactId>

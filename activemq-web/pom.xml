@@ -43,8 +43,9 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-core-test</artifactId>
+      <artifactId>activemq-core</artifactId>
       <scope>test</scope>
+      <type>test-jar</type>
     </dependency>
     
     <!-- web container -->

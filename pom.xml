@@ -178,8 +178,9 @@
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
-        <artifactId>activemq-core-test</artifactId>
+        <artifactId>activemq-core</artifactId>
         <version>${pom.version}</version>
+        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
