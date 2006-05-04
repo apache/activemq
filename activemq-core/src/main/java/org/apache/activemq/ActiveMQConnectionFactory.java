@@ -82,7 +82,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected boolean asyncDispatch = false;
     protected boolean alwaysSessionAsync=true;
     private boolean useAsyncSend = false;
-    private boolean optimizeAcknowledge = false;
+    private boolean optimizeAcknowledge = true;
     private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
 

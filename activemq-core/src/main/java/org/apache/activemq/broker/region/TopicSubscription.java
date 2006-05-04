@@ -271,6 +271,7 @@ public class TopicSubscription extends AbstractSubscription{
      *
      */
     public void optimizePrefetch(){
+    	/*
         if(info!=null&&info.isOptimizedAcknowledge()&&context!=null&&context.getConnection()!=null
                         &&context.getConnection().isManageable()){
             if(info.getCurrentPrefetchSize()!=info.getPrefetchSize() && isLowWaterMark()){
@@ -282,6 +283,7 @@ public class TopicSubscription extends AbstractSubscription{
                 updateConsumerPrefetch(1);
             }
         }
+        */
     }
 
     private void dispatchMatched() throws IOException{
