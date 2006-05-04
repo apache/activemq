@@ -20,6 +20,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.commons.pool.ObjectPoolFactory;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -37,14 +38,16 @@ public class ConnectionPool {
     private ActiveMQConnection connection;
     private Map cache;
     private AtomicBoolean started = new AtomicBoolean(false);
+    private ObjectPoolFactory poolFactory;
 
-    public ConnectionPool(ActiveMQConnection connection) {
-        this(connection, new HashMap());
+    public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory) {
+        this(connection, new HashMap(), poolFactory);
     }
 
-    public ConnectionPool(ActiveMQConnection connection, Map cache) {
+    public ConnectionPool(ActiveMQConnection connection, Map cache, ObjectPoolFactory poolFactory) {
         this.connection = connection;
         this.cache = cache;
+        this.poolFactory = poolFactory;
     }
 
     public void start() throws JMSException {
@@ -61,7 +64,7 @@ public class ConnectionPool {
         SessionKey key = new SessionKey(transacted, ackMode);
         SessionPool pool = (SessionPool) cache.get(key);
         if (pool == null) {
-            pool = new SessionPool(this, key);
+            pool = new SessionPool(this, key, poolFactory.createPool());
             cache.put(key, pool);
         }
         return pool.borrowSession();

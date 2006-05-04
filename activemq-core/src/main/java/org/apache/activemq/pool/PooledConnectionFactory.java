@@ -21,6 +21,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.pool.ObjectPoolFactory;
+import org.apache.commons.pool.impl.GenericObjectPoolFactory;
+import org.apache.commons.pool.impl.GenericObjectPool.Config;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -36,16 +39,17 @@ import java.util.Map;
  * href="http://activemq.org/Spring+Support">JmsTemplate</a>.
  * 
  * <b>NOTE</b> this implementation is only intended for use when sending
- * messages.
- * It does not deal with pooling of consumers; for that look at a library like 
- * <a href="http://jencks.org/">Jencks</a> such as in
- * <a href="http://jencks.org/Message+Driven+POJOs">this example</a>
+ * messages. It does not deal with pooling of consumers; for that look at a
+ * library like <a href="http://jencks.org/">Jencks</a> such as in <a
+ * href="http://jencks.org/Message+Driven+POJOs">this example</a>
  * 
  * @version $Revision: 1.1 $
  */
 public class PooledConnectionFactory implements ConnectionFactory, Service {
     private ActiveMQConnectionFactory connectionFactory;
     private Map cache = new HashMap();
+    private ObjectPoolFactory poolFactory;
+    private int maximumActive = 5000;
 
     public PooledConnectionFactory() {
         this(new ActiveMQConnectionFactory());
@@ -76,7 +80,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         ConnectionPool connection = (ConnectionPool) cache.get(key);
         if (connection == null) {
             ActiveMQConnection delegate = createConnection(key);
-            connection = new ConnectionPool(delegate);
+            connection = new ConnectionPool(delegate, getPoolFactory());
             cache.put(key, connection);
         }
         return new PooledConnection(connection);
@@ -115,5 +119,35 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
             }
         }
         stopper.throwFirstException();
+    }
+
+    public ObjectPoolFactory getPoolFactory() {
+        if (poolFactory == null) {
+            poolFactory = createPoolFactory();
+        }
+        return poolFactory;
+    }
+
+    /**
+     * Sets the object pool factory used to create individual session pools for
+     * each connection
+     */
+    public void setPoolFactory(ObjectPoolFactory poolFactory) {
+        this.poolFactory = poolFactory;
+    }
+
+    public int getMaximumActive() {
+        return maximumActive;
+    }
+
+    /**
+     * Sets the maximum number of active sessions per connection
+     */
+    public void setMaximumActive(int maximumActive) {
+        this.maximumActive = maximumActive;
+    }
+
+    protected ObjectPoolFactory createPoolFactory() {
+        return new GenericObjectPoolFactory(null, maximumActive);
     }
 }
