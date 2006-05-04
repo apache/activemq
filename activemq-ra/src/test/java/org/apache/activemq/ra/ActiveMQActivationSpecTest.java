@@ -197,14 +197,25 @@ public class ActiveMQActivationSpecTest extends TestCase {
 
 //----------- durable subscriber tests    
     public void testValidDurableSubscriber() {
+        activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
         activationSpec.setClientId("foobar");
         activationSpec.setSubscriptionName("foobar");
         assertActivationSpecValid();        
         assertTrue(activationSpec.isDurableSubscription());
     }
+
+    public void testDurableSubscriberWithQueueDestinationTypeFailure() {
+        activationSpec.setDestinationType(Queue.class.getName());
+        activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
+        activationSpec.setClientId("foobar");
+        activationSpec.setSubscriptionName("foobar");
+        PropertyDescriptor[] expected = {subscriptionDurabilityProperty};
+        assertActivationSpecInvalid(expected);
+    }
     
     public void testDurableSubscriberNoClientIdNoSubscriptionNameFailure() {
+        activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
         activationSpec.setClientId(null);
         assertNull(activationSpec.getClientId());
@@ -215,6 +226,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
     }    
     
     public void testDurableSubscriberEmptyClientIdEmptySubscriptionNameFailure() {
+        activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
         activationSpec.setClientId(EMPTY_STRING);
         assertNull(activationSpec.getClientId());

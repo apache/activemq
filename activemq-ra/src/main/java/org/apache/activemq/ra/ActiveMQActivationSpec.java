@@ -381,6 +381,13 @@ public class ActiveMQActivationSpec implements ActivationSpec, Serializable {
     }
 
     private boolean isValidSubscriptionDurability(List errorMessages) {
+        // subscriptionDurability only applies to Topics
+        if ( DURABLE_SUBSCRIPTION.equals(subscriptionDurability) &&
+             getDestinationType() != null && !Topic.class.getName().equals(getDestinationType())) {
+            errorMessages.add("subscriptionDurability cannot be set to: "+DURABLE_SUBSCRIPTION+" when destinationType is set to "+
+                Queue.class.getName()+" as it is only valid when destinationType is set to "+Topic.class.getName()+".");
+            return false;
+        }
         if (NON_DURABLE_SUBSCRIPTION.equals(subscriptionDurability) || DURABLE_SUBSCRIPTION.equals(subscriptionDurability))
             return true;
         errorMessages.add("subscriptionDurability must be set to: "+NON_DURABLE_SUBSCRIPTION+" or "+DURABLE_SUBSCRIPTION+".");
