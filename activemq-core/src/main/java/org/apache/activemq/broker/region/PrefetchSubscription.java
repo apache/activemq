@@ -251,6 +251,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      *
      */
     public void optimizePrefetch(){
+    	/*
         if(info!=null&&info.isOptimizedAcknowledge()&&context!=null&&context.getConnection()!=null
                         &&context.getConnection().isManageable()){
             if(info.getCurrentPrefetchSize()!=info.getPrefetchSize() && isLowWaterMark()){
@@ -262,6 +263,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 updateConsumerPrefetch(1);
             }
         }
+        */
     }
     
     
