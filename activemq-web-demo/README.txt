@@ -1,7 +1,12 @@
+Welcome to the Web Demo which shows how to use ActiveMQ with REST and Ajax services
 
-This web app demostrates the ability of the activemq-web jar.
-To run the webapp, the jetty plugin may be used:
+To run the console you must install a recent distro of Maven
+such as version 2.0.4 or later
+	
+		http://maven.apache.org/
 
-  mvn jetty6:run
+You can then run the ActiveMQ Web Console via the following command.
+
+	mvn jetty6:run
 
 
