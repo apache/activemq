@@ -25,7 +25,7 @@
   
   <groupId>incubator-activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>4.0-SNAPSHOT</version>
+  <version>4.0</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 
@@ -138,7 +138,9 @@
     <module>activemq-gbean-management</module>
     <!--module>activemq-systest</module -->
     <module>maven-bundle-plugin</module>
+    <!--
     <module>assembly</module>
+    -->
 
 <!--
     <module>activeio</module>
@@ -238,7 +240,7 @@
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activeio-core</artifactId>
-        <version>3.0-beta2</version>
+        <version>3.0-beta3</version>
       </dependency>
             
       <!-- =============================== -->
@@ -777,7 +779,7 @@
       </plugins>
     </pluginManagement>
     <plugins>
-      <!-- plugin>
+      <!--plugin>
         <artifactId>maven-one-plugin</artifactId>
         <executions> 
           <execution>
@@ -790,7 +792,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin -->
+      </plugin-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
