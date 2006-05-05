@@ -34,15 +34,20 @@ class CommandParser {
     }
 
     Command parse(DataInput in) throws IOException, JMSException {
-        String line;
-
+        String line = null;
+        
         // skip white space to next real line
-        try {
-            while ((line = in.readLine()).trim().length() == 0) {
+        while (true) {
+            line = in.readLine();
+            if (line == null) {
+                throw new IOException("connection was closed");
             }
-        }
-        catch (NullPointerException e) {
-            throw new IOException("connection was closed");
+            else {
+                line = line.trim();
+                if (line.length() > 0) {
+                    break;
+                }
+            }
         }
 
         // figure correct command and return it
