@@ -1,5 +1,0 @@
-// grant all users all permissions. This is only for test cases
-// and should be modified for deployment
-grant {
-	permission java.security.AllPermission;
-};
