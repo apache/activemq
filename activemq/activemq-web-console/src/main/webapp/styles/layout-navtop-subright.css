@@ -1,0 +1,34 @@
+/* A CSS Framework by Mike Stenhouse of Content with Style */
+ 
+/* NAV BAR AT THE TOP AND TWO COLUMNS OF CONTENT */
+    div#content {
+        position: relative;
+        width: 701px;
+        
+        margin: 0 auto 20px auto;
+        padding: 0;
+        
+        text-align: left;
+    }
+    div#main {
+        float: left;
+        width: 480px;
+        display: inline;
+    }
+    div#sub {
+        float: right;
+        width: 200px;
+        display: inline;
+    }
+    div#local {
+        display: none;
+    }
+    div#nav {
+        position: absolute;
+        top: -15px;
+        left: 0;
+        width: 100%;
+        
+        text-align: left;
+    }
+/* END CONTENT */

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project>
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>incubator-activemq</groupId>
+    <artifactId>activeio</artifactId>
+    <version>3.0-beta3</version>
+  </parent>
+
+  <artifactId>activeio-core</artifactId>
+  <name>ActiveIO :: Core</name>
+  <description>A high performance IO abstraction framework</description>
+  
+  <build>
+    <plugins>
+
+      <!-- generate the attached tests jar -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- Required Dependencies -->
+    <dependency>
+      <groupId>backport-util-concurrent</groupId>
+      <artifactId>backport-util-concurrent</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+    </dependency>
+
+    <!-- For HOWL integration -->
+    <dependency>
+      <groupId>howl</groupId>
+      <artifactId>howl-logger</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Used by xnet GBean code -->
+    <dependency>
+      <groupId>geronimo</groupId>
+      <artifactId>geronimo-kernel</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>geronimo</groupId>
+      <artifactId>geronimo-j2ee</artifactId>
+      <optional>true</optional>
+    </dependency>
+    
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>jdk1.4</id>
+      <activation>
+        <jdk>1.4</jdk>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
+
+</project>

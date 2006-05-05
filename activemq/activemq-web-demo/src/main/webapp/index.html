@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ActiveMQ Web Connector</title>
+  <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+
+<body>
+<h1>ActiveMQ Web Connector</h1>
+
+<p>
+This service allows you to send messages to the JMS network using a
+normal HTTP POST and to receive messages from a destination using a
+HTTP GET.
+</p>
+
+<h2>Market data example</h2>
+
+<p>
+<a href="portfolioPublish?count=1&refresh=2&stocks=IBMW&stocks=BEAS&stocks=MSFT&stocks=SUNW">Market data publisher</a> starts publishing
+some mock market data prices
+</p>
+
+<p>
+<a href="portfolio/portfolio.html">Porfolio</a> example shows how you could make an interactive trading portfolio which
+updates in real time as the market prices change
+</p>
+
+<h2>Chat example</h2>
+
+<p>
+<a href="chat.html">Chat room</a> example shows how you can use Streamlets and ActiveMQ to create a simple chat room
+</p>
+
+<h2>Simple Form based browser example</h2>
+
+<p>
+<a href="send.html">Send a message</a>
+</p>
+
+<p>
+<a href="message/FOO/BAR?timeout=10000&type=queue">Receive a message</a>
+</p>
+
+<h2>Queue browser example</h2>
+
+<ul>
+<li><a href="queueBrowse/FOO/BAR">Browse a queue</a></li>
+<li><a href="queueBrowse/FOO/BAR?view=xml">Browse a queue as XML</a></li>
+<li><a href="queueBrowse/FOO/BAR?view=rss&feedType=atom_1.0">Browse a queue as Atom</a></li>
+<li><a href="queueBrowse/FOO/BAR?view=rss&feedType=rss_1.0">Browse a queue as RSS 1.0</a></li>
+<li><a href="queueBrowse/FOO/BAR?view=rss&feedType=rss_2.0">Browse a queue as RSS 2.0</a></li>
+</ul>
+
+</body>
+</html>

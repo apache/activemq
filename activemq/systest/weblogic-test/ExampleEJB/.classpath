@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="ejbModule"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/BEA WebLogic v9.2 JRE"/>
+	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/com.bea.wlw.server.runtimeTarget/BEA WebLogic v9.2"/>
+	<classpathentry exported="true" kind="src" path="/ExampleEJBClient"/>
+	<classpathentry kind="src" path=".apt_src"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>
