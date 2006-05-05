@@ -1,8 +1,0 @@
-#Tue May 02 14:45:54 EDT 2006
--classpath=C\:\\bea\\jrockit90_150_04\\jre\\lib\\managementapi.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\rt.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\jsse.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\jce.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\charsets.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\ext\\dnsns.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\ext\\localedata.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\ext\\sunjce_provider.jar;C\:\\bea\\jrockit90_150_04\\jre\\lib\\ext\\sunpkcs11.jar;C\:\\bea\\weblogic92b\\server\\lib\\api.jar;C\:\\bea\\weblogic92b\\server\\lib\\weblogic.jar
--d=C\:\\bea\\user_projects\\w4WP_workspaces\\MySpace\\ExampleEJB\\build\\classes
--s=C\:\\bea\\user_projects\\w4WP_workspaces\\MySpace\\ExampleEJB\\.apt_src
--source=1.5
--sourcepath=C\:\\bea\\user_projects\\w4WP_workspaces\\MySpace\\ExampleEJB\\ejbModule;C\:\\bea\\user_projects\\w4WP_workspaces\\MySpace\\ExampleEJB\\.apt_src
--target=1.5
-eclipse.preferences.version=1
