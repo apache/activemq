@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Revision: 1.1 $ $Date: 2005/03/14 02:57:53 $ -->
+
+<project default="ear:install"
+    xmlns:ant="jelly:ant"
+    xmlns:velocity="jelly:velocity"
+    >
+
+    <goal name="default" prereqs="ear:install"/>
+
+    <preGoal name="ear:ear">
+        <ant:mkdir dir="${basedir}/target/app"/>
+        <velocity:merge
+            basedir="${basedir}/src/application/META-INF"
+            template="application.xml"
+            name="${basedir}/target/app/application.xml"/>
+    </preGoal>
+
+</project>

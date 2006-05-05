@@ -1,0 +1,1 @@
+AsyncChannelFactory.class=org.apache.activeio.packet.async.vmpipe.VMPipeAsyncChannelFactory

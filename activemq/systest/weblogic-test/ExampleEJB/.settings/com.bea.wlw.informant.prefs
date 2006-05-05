@@ -1,0 +1,5 @@
+#Tue May 02 14:45:54 EDT 2006
+eclipse.preferences.version=1
+informants/com.bea.wlw.ejb.core.entity=com.bea.wlw.ejb.core.informants.EJBEntityInformant,
+informants/com.bea.wlw.ejb.core.message=com.bea.wlw.ejb.core.informants.EJBMessageInformant,
+informants/com.bea.wlw.ejb.core.session=com.bea.wlw.ejb.core.informants.EJBSessionInformant,
