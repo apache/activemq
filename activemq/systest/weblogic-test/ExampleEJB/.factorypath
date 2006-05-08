@@ -1,4 +1,0 @@
-<factorypath>
-    <factorypathentry kind="PLUGIN" id="com.bea.wlw.ejb.apt" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="PLUGIN" id="com.bea.wlw.webservices.core" enabled="false" runInBatchMode="false"/>
-</factorypath>
