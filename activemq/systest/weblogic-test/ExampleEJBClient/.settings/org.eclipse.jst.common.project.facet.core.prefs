@@ -1,4 +1,0 @@
-#Tue May 02 14:45:53 EDT 2006
-classpath.helper/org.eclipse.jdt.launching.JRE_CONTAINER\:\:org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType\:\:BEA\ WebLogic\ v9.2\ JRE/owners=jst.java\:5.0
-classpath.helper/org.eclipse.jst.server.core.container\:\:com.bea.wlw.server.runtimeTarget\:\:BEA\ WebLogic\ v9.2/owners=jst.utility\:1.0
-eclipse.preferences.version=1
