@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectionStatistics;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -372,7 +371,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         ConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.addDestinationInfo(cs.getContext(), info);
         if( info.getDestination().isTemporary() ) {
-            cs.addTempDestination(info.getDestination());
+            cs.addTempDestination(info);
         }
         return null;
     }
@@ -532,11 +531,11 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         // Cascade the connection stop to temp destinations.
         for (Iterator iter = cs.getTempDesinations().iterator(); iter.hasNext();) {
-            ActiveMQDestination dest = (ActiveMQDestination) iter.next();
+            DestinationInfo di = (DestinationInfo) iter.next();
             try{
-                broker.removeDestination(cs.getContext(), dest, 0);
+                broker.removeDestination(cs.getContext(), di.getDestination(), 0);
             }catch(Throwable e){
-               serviceLog.warn("Failed to remove tmp destination " + dest,e);
+               serviceLog.warn("Failed to remove tmp destination " + di.getDestination(), e);
             }
             iter.remove();
         }
