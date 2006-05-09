@@ -64,8 +64,9 @@ import edu.emory.mathcs.backport.java.util.concurrent.Semaphore;
 public class WebClient implements HttpSessionActivationListener, HttpSessionBindingListener, Externalizable {
     public static final String webClientAttribute = "org.apache.activemq.webclient";
     public static final String connectionFactoryAttribute = "org.apache.activemq.connectionFactory";
-    public static final String connectionFactoryPrefetch = "org.apache.activemq.connectionFactory.prefetch";
-    public static final String connectionFactoryOptimizeAck = "org.apache.activemq.connectionFactory.optimizeAck";
+
+    public static final String connectionFactoryPrefetchParam = "org.apache.activemq.connectionFactory.prefetch";
+    public static final String connectionFactoryOptimizeAckParam = "org.apache.activemq.connectionFactory.optimizeAck";
     public static final String brokerUrlInitParam = "org.apache.activemq.brokerURL";
 
     private static final Log log = LogFactory.getLog(WebClient.class);
@@ -238,14 +239,14 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
             ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(brokerURL);
 
             // Set prefetch policy for factory
-            if (servletContext.getInitParameter(connectionFactoryPrefetch) != null) {
-                int prefetch = Integer.valueOf(servletContext.getInitParameter(connectionFactoryPrefetch)).intValue();
+            if (servletContext.getInitParameter(connectionFactoryPrefetchParam) != null) {
+                int prefetch = Integer.valueOf(servletContext.getInitParameter(connectionFactoryPrefetchParam)).intValue();
                 amqfactory.getPrefetchPolicy().setAll(prefetch);
             }
 
             // Set optimize acknowledge setting
-            if (servletContext.getInitParameter(connectionFactoryOptimizeAck) != null) {
-                boolean optimizeAck = Boolean.valueOf(servletContext.getInitParameter(connectionFactoryOptimizeAck)).booleanValue();
+            if (servletContext.getInitParameter(connectionFactoryOptimizeAckParam) != null) {
+                boolean optimizeAck = Boolean.valueOf(servletContext.getInitParameter(connectionFactoryOptimizeAckParam)).booleanValue();
                 amqfactory.setOptimizeAcknowledge(optimizeAck);
             }
 
