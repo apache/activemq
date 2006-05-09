@@ -130,7 +130,11 @@ public class PartialCommand implements Command {
     }
 
     public String toString() {
-        return "PartialCommand[id: " + commandId + " data: " + data.length + " byte(s)]";
+        int size = 0;
+        if (data != null) {
+            size = data.length;
+        }
+        return "PartialCommand[id: " + commandId + " data: " + size + " byte(s)]";
     }
     
     
