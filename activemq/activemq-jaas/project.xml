@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE project>
+
+<project>
+    <pomVersion>3</pomVersion>
+    <artifactId>activemq-jaas</artifactId>
+    <extend>${basedir}/../etc/project.xml</extend>
+    <name>ActiveMQ :: JAAS</name>
+    <id>activemq-jaas</id>
+    <description>ActiveMQ is an open source message broker and JMS 1.1 provider</description>
+    <shortDescription>ActiveMQ JAAS Login Modules</shortDescription>
+    <package>org.apache.activemq.jaas</package>
+    <packageGroups>
+        <packageGroup>
+            <title>Utilities</title>
+            <packages>org.apache.activemq.jaas.*</packages>
+        </packageGroup>
+    </packageGroups>
+
+    <!-- ============ -->
+    <!-- Dependencies -->
+    <!-- ============ -->
+    <dependencies>
+
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>activeio-core</artifactId>
+            <version>${activeio_version}</version>
+        </dependency>
+
+        <!-- Derby SQL DB used for testing JDBC message store -->
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>${derby_version}</version>
+        </dependency>
+        
+        <!-- Axion SQL DB used for testing JDBC message store -->
+        <dependency>
+            <groupId>axion</groupId>
+            <artifactId>axion</artifactId>
+            <version>${axion_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jdbm</groupId>
+            <artifactId>jdbm</artifactId>
+            <version>${jdbm_version}</version>
+            <url>http://jdbm.sourceforge.net</url>
+        </dependency>
+
+        <dependency>
+            <groupId>directory</groupId>
+            <artifactId>apacheds-core</artifactId>
+            <version>${apacheds_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory</groupId>
+            <artifactId>apacheds-shared</artifactId>
+            <version>${apacheds_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-asn1</groupId>
+            <artifactId>asn1-codec</artifactId>
+            <version>${asn1_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-shared</groupId>
+            <artifactId>apache-ldapber-provider</artifactId>
+            <version>${apacheds_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-asn1</groupId>
+            <artifactId>asn1-ber</artifactId>
+            <version>${asn1_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-asn1</groupId>
+            <artifactId>asn1-der</artifactId>
+            <version>${asn1_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jdbm</groupId>
+            <artifactId>jdbm</artifactId>
+            <version>${jdbm_version}</version>
+            <url>http://jdbm.sourceforge.net</url>
+        </dependency>
+
+        <dependency>
+            <groupId>regexp</groupId>
+            <artifactId>regexp</artifactId>
+            <version>${regexp_version}</version>
+            <url>http://jakarta.apache.org/regexp/index.html</url>
+        </dependency>
+
+        <dependency>
+            <groupId>oro</groupId>
+            <artifactId>oro</artifactId>
+            <version>${oro_version}</version>
+            <url>http://jakarta.apache.org/oro</url>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${commons_lang_version}</version>
+            <url>http://jakarta.apache.org/commons/lang/api</url>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons_collections_version}</version>
+            <url>http://jakarta.apache.org/commons/collections</url>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons_io_version}</version>
+            <url>http://jakarta.apache.org/commons/io</url>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-primitives</groupId>
+            <artifactId>commons-primitives</artifactId>
+            <version>${commons_primitives_version}</version>
+            <url>http://jakarta.apache.org/commons/primitives</url>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-shared</groupId>
+            <artifactId>ldap-common</artifactId>
+            <version>${apacheds_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-shared</groupId>
+            <artifactId>kerberos-common</artifactId>
+            <version>${kerberos_common_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-network</groupId>
+            <artifactId>mina</artifactId>
+            <version>${mina_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-protocols</groupId>
+            <artifactId>kerberos-protocol</artifactId>
+            <version>${kerberos_protocols_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>directory-protocols</groupId>
+            <artifactId>ldap-protocol</artifactId>
+            <version>${ldap_protocols_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>${antlr_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons_logging_version}</version>
+            <url>http://jakarta.apache.org/commons/logging</url>
+        </dependency>
+
+    </dependencies>
+    
+    <build>
+        <nagEmailAddress>dev@activemq.codehaus.org</nagEmailAddress>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
+        <unitTest>
+            <resources>
+                <resource>
+                    <directory>src/test/resources</directory>
+                    <includes>
+                        <include>**/*.properties</include>
+                        <include>**/*.xml</include>
+                    </includes>
+                    <filtering>false</filtering>
+                </resource>
+            </resources>
+            <includes>
+                <include>**/*Test.*</include>
+            </includes>
+            <excludes>
+            </excludes>
+        </unitTest>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+    </build>
+    
+    <developers>
+        <developer>
+            <name>Alan D. Cabrera</name>
+            <id>maguro</id>
+            <email>adc@toolazydogs.com</email>
+        </developer>
+    </developers>
+    
+    <reports>
+        <report>maven-developer-activity-plugin</report>
+    </reports>
+    
+    <repository>
+        <connection>scm:cvs:pserver:jlim@protique.exist.com:/cvs/activemq:activemq-4</connection>
+        <developerConnection>scm:cvs:pserver:jlim@protique.exist.com:/cvs/activemq:activemq-4</developerConnection>
+        <url>http://activemq.org</url>
+    </repository>
+</project>
+

@@ -1,0 +1,47 @@
+<project default="default" xmlns:j="jelly:core" xmlns:ant="jelly:ant" xmlns:maven="jelly:maven">
+
+  <goal name="default" prereqs="clean, test"/>
+
+  <goal name="wsdl:generate" prereqs="setclasspath">
+    <taskdef resource="axis-tasks.properties" classpathref="test.classpath"/>
+
+    <mkdir dir="${basedir}/target/generated/java"/>
+
+    <axis-wsdl2java
+      output="${basedir}/target/generated/java"
+      verbose="true"
+      noimports="false"
+      all="true"
+      serverSide="true"
+      testCase="true"
+      helperGen="true"
+      url="src/wsdl/eventing-binding.wsdl">
+      <mapping
+        namespace="http://schemas.xmlsoap.org/ws/2004/08/eventing"
+        package="org.activemq.ws.schema.eventing"/>
+      <mapping
+        namespace="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+        package="org.activemq.ws.schema.addressing"/>
+    </axis-wsdl2java>
+
+  </goal>
+
+  <goal name="setclasspath">
+    <!--
+        <j:if test="${empty(skip_compile)}">
+          <attainGoal name="test:compile"/>
+        </j:if>
+    -->
+    <path id="test.classpath">
+      <pathelement path="${maven.build.dest}"/>
+      <pathelement path="target/classes"/>
+      <pathelement path="target/test-classes"/>
+      <path refid="maven.dependency.classpath"/>
+    </path>
+    <!--
+    <taskdef name="javacc" classname="javacc" classpathref="test.classpath"/>
+    -->
+  </goal>
+
+
+</project>

@@ -1,0 +1,19 @@
+<web-app>
+  <!--
+      In order to be able to compatiable with Resin 2.1.x and 3.0.x,
+      both XML and XSLT have to be replaced.
+      If only xalan is included, Resin 2.1.x will fail but not 3.0.x.
+      Therefore the best way is to use the compatiable version of the
+      XML parser ans XSLT.
+       - Please refere to the following link for more detailed information.
+       - http://www.caucho.com/resin-3.0/xml/jaxp.xtp
+  -->
+  <!-- xml -->
+  <system-property javax.xml.parsers.DocumentBuilderFactory=
+               "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl"/>
+  <system-property javax.xml.parsers.SAXParserFactory=
+               "org.apache.xerces.jaxp.SAXParserFactoryImpl"/>
+  <!--  xslt -->
+  <system-property javax.xml.transform.TransformerFactory=
+               "org.apache.xalan.processor.TransformerFactoryImpl"/>
+</web-app>

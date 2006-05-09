@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE project>
+<project>
+    <pomVersion>3</pomVersion>
+    <extend>${basedir}/../../etc/project.xml</extend>
+
+    <name>ActiveMQ :: Transport :: JXTA</name>
+    <id>activemq-transport-jxta</id>
+    <shortDescription>ActiveMQ JXTA Message Transport</shortDescription>
+    <description>ActiveMQ JXTA Message Transport</description>
+  
+    <package>org.activemq.transport.jxta</package>
+    <packageGroups>
+      <packageGroup>
+        <title>JXTA Message Transport</title>
+        <packages>org.activemq.transport.jxta</packages>
+      </packageGroup>
+    </packageGroups>
+  
+    <!-- ============ -->
+    <!-- Dependencies -->
+    <!-- ============ -->
+    <dependencies>
+
+      <dependency>
+        <groupId>activemq</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>${pom.currentVersion}</version>
+        <properties>
+          <eclipse.dependency>true</eclipse.dependency>
+        </properties>
+      </dependency>
+      <dependency> <!-- Used for unit tests -->
+        <groupId>activemq</groupId>
+        <artifactId>activemq-core-test</artifactId>
+        <version>${pom.currentVersion}</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>p2psockets</groupId>
+        <artifactId>p2psockets-core</artifactId>
+        <version>${p2psockets_core_version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>jxta</groupId>
+        <artifactId>jxta</artifactId>
+        <version>${jxta_version}</version>
+      </dependency>
+      
+    </dependencies>  
+
+</project>

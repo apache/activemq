@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<configuration>
+  <proxy provider="org.exolab.jmscts.activemq.ActiveMQProvider" start="true" stop="true">
+    <property name="BrokerURL" type="java.lang.String" value="tcp://localhost:61616"/>
+  </proxy>
+</configuration>
