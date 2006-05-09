@@ -378,7 +378,7 @@ public class MessageListenerServlet extends MessageServletSupport {
     }
 
     protected Map getConsumerIdMap(HttpServletRequest request) {
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(true);
         Map map = (Map) session.getAttribute("mls.consumerIdMap");
         if (map == null) {
             map = new HashMap();
