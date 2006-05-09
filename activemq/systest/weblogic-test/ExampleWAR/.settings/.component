@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-modules id="moduleCoreId">
+<wb-module deploy-name="ExampleWAR">
+<wb-resource deploy-path="/" source-path="/WebContent"/>
+<wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+<dependent-module deploy-path="/" handle="module:/resource/ExampleEJB/ExampleEJB">
+<dependency-type>uses</dependency-type>
+</dependent-module>
+<dependent-module deploy-path="/" handle="module:/resource/ExampleEJBClient/ExampleEJBClient">
+<dependency-type>uses</dependency-type>
+</dependent-module>
+<property name="context-root" value="ExampleWAR"/>
+<property name="java-output-path" value="/build/classes/"/>
+</wb-module>
+</project-modules>
