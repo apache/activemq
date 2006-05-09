@@ -1,12 +1,11 @@
 
-var chatTopic = "topic://CHAT.DEMO";
-var chatMembership = "topic://CHAT.DEMO";
 
 
 var room = 
 {
   _last: "",
   _username: null,
+  _chatTopic: "topic://CHAT.DEMO",
   
   join: function()
   {
@@ -19,39 +18,35 @@ var room =
     {
        this._username=name;
        
-       $('join').className='hidden';
-       Behaviour.apply();
-       amq.addListener('chat',chatTopic,room._chat);
+       amq.addListener('chat',this._chatTopic,room._chat);
        $('join').className='hidden';
        $('joined').className='';
        $('phrase').focus();
        Behaviour.apply();
-       amq.sendMessage(chatMembership, "<message type='join' from='" + room._username + "'/>");
+       amq.sendMessage(this._chatTopic, "<message type='join' from='" + room._username + "'/>");
     }
   },
   
   leave: function()
   {
-       amq.removeListener('chat',chatTopic);
+       amq.removeListener('chat',this._chatTopic);
        // switch the input form
        $('join').className='';
        $('joined').className='hidden';
        $('username').focus();
        Behaviour.apply();
-       amq.sendMessage(chatMembership, "<message type='leave' from='" + room._username + "'/>");
+       amq.sendMessage(this._chatTopic, "<message type='leave' from='" + room._username + "'/>");
        room._username=null;
   },
   
-  chat: function()
+  chat: function(text)
   {
-    var text = $F('phrase');
-    $('phrase').value='';
     if (text != null && text.length>0 )
     {
         // TODO more encoding?
         text=text.replace('<','&lt;');
         text=text.replace('>','&gt;');
-        amq.sendMessage(chatTopic, "<message type='chat' from='" + room._username + "'>" + text + "</message>");
+        amq.sendMessage(this._chatTopic, "<message type='chat' from='" + room._username + "'>" + text + "</message>");
     }
   },
   
@@ -89,7 +84,7 @@ var room =
        {
           $('members').innerHTML="";
           if (room._username!=null) 
-	    amq.sendMessage(chatMembership, "<message type='ping' from='" + room._username + "'/>");
+	    amq.sendMessage(this._chatTopic, "<message type='ping' from='" + room._username + "'/>");
           chat.innerHTML += "<span class=\"alert\"><span class=\"from\">"+from+"&nbsp;</span><span class=\"text\">has joined the room!</span></span><br/>";
 	  break;
        }
@@ -98,7 +93,7 @@ var room =
        {
           $('members').innerHTML="";
           if (room._username!=null)
-            amq.sendMessage(chatMembership, "<message type='ping' from='" + room._username + "'/>");
+            amq.sendMessage(this._chatTopic, "<message type='ping' from='" + room._username + "'/>");
           chat.innerHTML += "<span class=\"alert\"><span class=\"from\">"+from+"&nbsp;</span><span class=\"text\">has left the room!</span></span><br/>";
 	  break;
        }
@@ -157,7 +152,9 @@ var chatBehaviours =
            
         if (keyc==13 || keyc==10)
         {
-          room.chat();
+          var text = $F('phrase');
+          $('phrase').value='';
+          room.chat(text);
 	  return false;
 	}
 	return true;
@@ -168,7 +165,9 @@ var chatBehaviours =
   {
     element.onclick = function(event)
     {
-      room.chat();
+      var text = $F('phrase');
+      $('phrase').value='';
+      room.chat(text);
     }
   },
   
