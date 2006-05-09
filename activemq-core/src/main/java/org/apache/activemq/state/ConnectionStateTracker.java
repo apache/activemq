@@ -147,7 +147,7 @@ public class ConnectionStateTracker implements CommandVisitor {
     public Response processAddDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
         if( info.getDestination().isTemporary() ) {
-            cs.addTempDestination(info.getDestination());
+            cs.addTempDestination(info);
         }
         return TRACKED_RESPONSE_MARKER;
     }

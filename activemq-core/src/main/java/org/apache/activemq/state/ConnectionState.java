@@ -20,11 +20,13 @@ package org.apache.activemq.state;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
 
@@ -46,12 +48,17 @@ public class ConnectionState {
         return info.toString();
     }
 
-    public void addTempDestination(ActiveMQDestination destination) {
-        tempDestinations.add(destination);
+    public void addTempDestination(DestinationInfo info) {
+        tempDestinations.add(info);
     }
 
     public void removeTempDestination(ActiveMQDestination destination) {
-        tempDestinations.remove(destination);
+        for (Iterator iter = tempDestinations.iterator(); iter.hasNext();) {
+            DestinationInfo di = (DestinationInfo) iter.next();
+            if( di.getDestination().equals(destination) ) {
+                iter.remove();
+            }
+        }
     }
 
     public void addSession(SessionInfo info) {

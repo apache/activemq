@@ -32,28 +32,38 @@ class HeaderParser {
      */
     Properties parse(BufferedReader in) throws IOException {
         Properties props = new Properties();
-        String line;
-        while (((line = in.readLine()).trim().length() > 0)) {
-            int seperator_index = line.indexOf(Stomp.Headers.SEPERATOR);
-            String name = line.substring(0, seperator_index).trim();
-            String value = line.substring(seperator_index + 1, line.length()).trim();
-            props.setProperty(name, value);
+        while (true) {
+            String line = in.readLine();
+            if (line != null && line.trim().length() > 0) {
+                int seperator_index = line.indexOf(Stomp.Headers.SEPERATOR);
+                String name = line.substring(0, seperator_index).trim();
+                String value = line.substring(seperator_index + 1, line.length()).trim();
+                props.setProperty(name, value);
+            }
+            else {
+                break;
+            }
         }
         return props;
     }
 
     Properties parse(DataInput in) throws IOException {
         Properties props = new Properties();
-        String line;
-        while (((line = in.readLine()).trim().length() > 0)) {
-            try {
-                int seperator_index = line.indexOf(Stomp.Headers.SEPERATOR);
-                String name = line.substring(0, seperator_index).trim();
-                String value = line.substring(seperator_index + 1, line.length()).trim();
-                props.setProperty(name, value);
+        while (true) {
+            String line = in.readLine();
+            if (line != null && line.trim().length() > 0) {
+                try {
+                    int seperator_index = line.indexOf(Stomp.Headers.SEPERATOR);
+                    String name = line.substring(0, seperator_index).trim();
+                    String value = line.substring(seperator_index + 1, line.length()).trim();
+                    props.setProperty(name, value);
+                }
+                catch (Exception e) {
+                    throw new ProtocolException("Unable to parser header line [" + line + "]");
+                }
             }
-            catch (Exception e) {
-                throw new ProtocolException("Unable to parser header line [" + line + "]");
+            else {
+                break;
             }
         }
         return props;
