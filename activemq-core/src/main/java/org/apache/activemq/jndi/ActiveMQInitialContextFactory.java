@@ -105,23 +105,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
             }
         });
 
-        return new ReadOnlyContext(environment, data);
-    }
-
-    private ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment)   throws URISyntaxException {
-        Hashtable temp = new Hashtable(environment);
-        String prefix = connectionPrefix+name+".";
-        for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String key = (String) entry.getKey();
-            if( key.startsWith(prefix) ) {
-                // Rename the key...
-                temp.remove(key);
-                key = key.substring(prefix.length());
-                temp.put(key, entry.getValue());
-            }
-        }
-        return createConnectionFactory(temp);
+        return createContext(environment, data);
     }
 
     // Properties
@@ -144,6 +128,27 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
     // Implementation methods
     //-------------------------------------------------------------------------
+
+    protected ReadOnlyContext createContext(Hashtable environment, Map data) {
+        return new ReadOnlyContext(environment, data);
+    }
+
+    protected ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment)   throws URISyntaxException {
+        Hashtable temp = new Hashtable(environment);
+        String prefix = connectionPrefix+name+".";
+        for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String key = (String) entry.getKey();
+            if( key.startsWith(prefix) ) {
+                // Rename the key...
+                temp.remove(key);
+                key = key.substring(prefix.length());
+                temp.put(key, entry.getValue());
+            }
+        }
+        return createConnectionFactory(temp);
+    }
+
     protected String[] getConnectionFactoryNames(Map environment) {
         String factoryNames = (String) environment.get("connectionFactoryNames");
         if (factoryNames != null) {
