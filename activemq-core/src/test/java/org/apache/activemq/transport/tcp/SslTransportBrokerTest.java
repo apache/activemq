@@ -36,7 +36,7 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
         System.setProperty("javax.net.ssl.keyStoreType", "jks");        
         //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");        
 
-        MAX_WAIT = 2000;
+        MAX_WAIT = 10000;
         super.setUp();
     }
 
