@@ -370,7 +370,7 @@
                 <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
                 
                 <!-- https://issues.apache.org/activemq/browse/AMQ-667 -->
-                <exclude>**/SslTransportBrokerTest.*</exclude>
+                <!--exclude>**/SslTransportBrokerTest.*</exclude-->
                 
                 
                 <!-- TODO FIX ME ASAP -->

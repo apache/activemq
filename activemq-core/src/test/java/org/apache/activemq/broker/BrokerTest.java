@@ -68,7 +68,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         destination = createDestinationInfo(connection, connectionInfo, destinationType);
         
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);        
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         consumerInfo.setPrefetchSize(1);
         connection.send(consumerInfo);
         
@@ -786,6 +786,7 @@ public class BrokerTest extends BrokerTestSupport {
         // setup the composite consumer.
         ActiveMQDestination compositeDestination = ActiveMQDestination.createDestination("A,B", destinationType);
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, compositeDestination);
+        consumerInfo1.setRetroactive(true);
         consumerInfo1.setPrefetchSize(100);
         connection1.send(consumerInfo1);
 
@@ -829,6 +830,7 @@ public class BrokerTest extends BrokerTestSupport {
         
         ActiveMQDestination destinationA = ActiveMQDestination.createDestination("A", destinationType);
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destinationA);
+        consumerInfo1.setRetroactive(true);
         consumerInfo1.setPrefetchSize(100);
         connection1.send(consumerInfo1);
 
@@ -841,6 +843,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         ActiveMQDestination destinationB = ActiveMQDestination.createDestination("B", destinationType);
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destinationB);
+        consumerInfo2.setRetroactive(true);
         consumerInfo2.setPrefetchSize(100);
         connection2.send(consumerInfo2);
 
@@ -1055,6 +1058,7 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.send(producerInfo1);
 
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
+        consumerInfo1.setRetroactive(true);
         consumerInfo1.setPrefetchSize(100);
         consumerInfo1.setNoLocal(true);
         connection1.send(consumerInfo1);
@@ -1069,6 +1073,7 @@ public class BrokerTest extends BrokerTestSupport {
         connection2.send(producerInfo2);
         
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
+        consumerInfo2.setRetroactive(true);
         consumerInfo2.setPrefetchSize(100);
         consumerInfo2.setNoLocal(true);        
         connection2.send(consumerInfo2);
@@ -1100,7 +1105,7 @@ public class BrokerTest extends BrokerTestSupport {
     }
 
     
-    public void setUpTopicDispatchIsBroadcast() {    
+    public void initCombosForTopicDispatchIsBroadcast() {
         addCombinationValues( "deliveryMode", new Object[]{ 
                 new Integer(DeliveryMode.NON_PERSISTENT), 
                 new Integer(DeliveryMode.PERSISTENT)} );
@@ -1120,6 +1125,7 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.send(producerInfo1);
 
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
+        consumerInfo1.setRetroactive(true);
         consumerInfo1.setPrefetchSize(100);
         connection1.send(consumerInfo1);
 
@@ -1128,6 +1134,7 @@ public class BrokerTest extends BrokerTestSupport {
         ConnectionInfo connectionInfo2 = createConnectionInfo();
         SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);        
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
+        consumerInfo2.setRetroactive(true);
         consumerInfo2.setPrefetchSize(100);
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
@@ -1535,7 +1542,7 @@ public class BrokerTest extends BrokerTestSupport {
         
         destination = createDestinationInfo(connection, connectionInfo, destinationType);
 
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);  
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         consumerInfo.setPrefetchSize(1);
         connection.send(consumerInfo);
         
@@ -1574,7 +1581,7 @@ public class BrokerTest extends BrokerTestSupport {
         
         destination = createDestinationInfo(connection, connectionInfo, destinationType);
         
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);        
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         consumerInfo.setPrefetchSize(2);
         connection.send(consumerInfo);
         
@@ -1616,7 +1623,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         destination = createDestinationInfo(connection, connectionInfo, destinationType);
         
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);        
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         consumerInfo.setPrefetchSize(1);
         connection.send(consumerInfo);
         
