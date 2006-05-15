@@ -15,8 +15,11 @@
  * limitations under the License.
  */
 #include "activemq/command/ActiveMQMapMessage.hpp"
+
 #include "ppr/io/ByteArrayOutputStream.hpp"
 #include "ppr/io/ByteArrayInputStream.hpp"
+#include "ppr/io/DataOutputStream.hpp"
+#include "ppr/io/DataInputStream.hpp"
 
 using namespace apache::activemq::command;
 
@@ -411,7 +414,7 @@ p<string> ActiveMQMapMessage::getString(const char* name) throw (MessageFormatEx
 /*
  * 
  */
-void ActiveMQMapMessage::setString(const char* name, p<string> value) throw (IllegalArgumentException)
+void ActiveMQMapMessage::setString(const char* name, const char* value) throw (IllegalArgumentException)
 {
     // Assert arguments
     if( name == NULL || strcmp(name, "") == 0 )
@@ -455,23 +458,24 @@ bool ActiveMQMapMessage::itemExists(const char* name)
 /*
  *
  */
-int ActiveMQMapMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw (IOException)
+int ActiveMQMapMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw (IOException)
 {
     int size = 0 ;
 
-    // Update message content
+    // Update message content during size lookup
     if( mode == IMarshaller::MARSHAL_SIZE )
     {
-        p<ByteArrayOutputStream> arrayWriter = new ByteArrayOutputStream() ;
+        p<ByteArrayOutputStream> bos = new ByteArrayOutputStream() ;
+        p<DataOutputStream>      dos = new DataOutputStream( bos ) ;
 
         // Marshal map into a byte array
-        marshaller->marshalMap(contentMap, mode, arrayWriter) ;
+        marshaller->marshalMap(contentMap, IMarshaller::MARSHAL_WRITE, dos) ;
 
         // Store map byte array in message content
-        this->content = arrayWriter->toArray() ;
+        this->content = bos->toArray() ;
     }
     // Note! Message content marshalling is done in super class
-    size += ActiveMQMessage::marshal(marshaller, mode, writer) ;
+    size += ActiveMQMessage::marshal(marshaller, mode, ostream) ;
 
     return size ;
 }
@@ -479,17 +483,18 @@ int ActiveMQMapMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputSt
 /*
  *
  */
-void ActiveMQMapMessage::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw (IOException)
+void ActiveMQMapMessage::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw (IOException)
 {
     // Note! Message content unmarshalling is done in super class
-    ActiveMQMessage::unmarshal(marshaller, mode, reader) ;
+    ActiveMQMessage::unmarshal(marshaller, mode, istream) ;
 
     // Extract map from message content
     if( mode == IMarshaller::MARSHAL_READ )
     {
-        p<ByteArrayInputStream> arrayReader = new ByteArrayInputStream( this->content ) ;
+        p<ByteArrayInputStream> bis = new ByteArrayInputStream( this->content ) ;
+        p<DataInputStream>      dis = new DataInputStream( bis ) ;
 
         // Unmarshal map into a map
-        contentMap = marshaller->unmarshalMap(mode, arrayReader) ;
+        contentMap = marshaller->unmarshalMap(mode, dis) ;
     }
 }

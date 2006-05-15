@@ -53,10 +53,16 @@ p<ITransport> TransportFactory::createTransport(p<Uri> location) throw (SocketEx
     socket = connect(location->host().c_str(), location->port()) ;
 
     // Create wire protocol depending on specified query parameter
-    if( uriString.find("protocol=openwire") != string::npos )
-        protocol = new OpenWireProtocol() ;
+    if( uriString.find("protocol=stomp") != string::npos )
+        throw IllegalArgumentException("The STOMP protocol is not yet implemented") ;
     else
-        throw IllegalArgumentException("Unknown or unspecified wire protocol") ;
+        protocol = new OpenWireProtocol() ;
+
+    // Configure character encoding depending on specified query parameter
+    if( uriString.find("encoding=none") != string::npos )
+        CharsetEncoderRegistry::DEFAULT = NULL ;
+    else
+        CharsetEncoderRegistry::DEFAULT = AsciiToUTF8Encoder::NAME ;
 
     // Create transport depending on specified URI scheme
     if( uriString.find("tcp://") != string::npos )

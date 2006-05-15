@@ -30,6 +30,8 @@
 #include "activemq/command/ActiveMQMessage.hpp"
 #include "ppr/io/ByteArrayInputStream.hpp"
 #include "ppr/io/ByteArrayOutputStream.hpp"
+#include "ppr/io/DataInputStream.hpp"
+#include "ppr/io/DataOutputStream.hpp"
 #include "ppr/io/EOFException.hpp"
 #include "ppr/util/Endian.hpp"
 #include "ppr/util/MapItemHolder.hpp"
@@ -53,9 +55,11 @@ namespace apache
 class ActiveMQBytesMessage : public ActiveMQMessage , public IBytesMessage
 {
 private:
-    p<ByteArrayInputStream>  in ;
-    p<ByteArrayOutputStream> out ;
-    bool  readMode ;
+    p<DataInputStream>       dis ;
+    p<DataOutputStream>      dos ;
+    p<ByteArrayInputStream>  bis ;
+    p<ByteArrayOutputStream> bos ;
+    bool                     readMode ;
 
     const static int INITIAL_SIZE = 256 ;
     const static int EXPAND_SIZE  = 128 ;
@@ -72,23 +76,23 @@ public:
 
     virtual void reset() ;
     virtual char readByte() throw (MessageNotReadableException, MessageEOFException) ;
-    virtual int readBytes(char* buffer, int index, int length) throw (MessageNotReadableException, MessageEOFException) ;
+    virtual int readBytes(char* buffer, int offset, int length) throw (MessageNotReadableException, MessageEOFException) ;
     virtual bool readBoolean() throw (MessageNotReadableException, MessageEOFException) ;
     virtual double readDouble() throw (MessageNotReadableException, MessageEOFException) ;
     virtual float readFloat() throw (MessageNotReadableException, MessageEOFException) ;
     virtual int readInt() throw (MessageNotReadableException, MessageEOFException) ;
     virtual long long readLong() throw (MessageNotReadableException, MessageEOFException) ;
     virtual short readShort() throw (MessageNotReadableException, MessageEOFException) ;
-    virtual p<string> readUTF() throw (MessageNotReadableException, MessageEOFException) ;
+    virtual p<string> readString() throw (MessageNotReadableException, MessageEOFException) ;
     virtual void writeBoolean(bool value) throw (MessageNotWritableException) ;
     virtual void writeByte(char value) throw (MessageNotWritableException) ;
-    virtual void writeBytes(char* value, int index, int length) throw (MessageNotWritableException) ;
+    virtual void writeBytes(char* value, int offset, int length) throw (MessageNotWritableException) ;
     virtual void writeDouble(double value) throw (MessageNotWritableException) ;
     virtual void writeFloat(float value) throw (MessageNotWritableException) ;
     virtual void writeInt(int value) throw (MessageNotWritableException) ;
     virtual void writeLong(long long value) throw (MessageNotWritableException) ;
     virtual void writeShort(short value) throw (MessageNotWritableException) ;
-    virtual void writeUTF(const char* value) throw (MessageNotWritableException) ;
+    virtual void writeString(const char* value) throw (MessageNotWritableException) ;
 
     virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw (IOException) ;
     virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw (IOException) ;

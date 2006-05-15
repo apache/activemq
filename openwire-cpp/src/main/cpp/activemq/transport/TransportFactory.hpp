@@ -32,6 +32,8 @@
 #include "activemq/transport/CorrelatorFilter.hpp"
 #include "activemq/transport/tcp/TcpTransport.hpp"
 #include "ppr/IllegalArgumentException.hpp"
+#include "ppr/io/encoding/CharsetEncoderRegistry.hpp"
+#include "ppr/io/encoding/AsciiToUTF8Encoder.hpp"
 #include "ppr/net/ISocket.hpp"
 #include "ppr/net/Socket.hpp"
 #include "ppr/net/SocketException.hpp"
@@ -50,6 +52,7 @@ namespace apache
       using namespace apache::activemq::protocol;
       using namespace apache::activemq::protocol::openwire;
       using namespace apache::activemq::transport::tcp;
+      using namespace apache::ppr::io::encoding;
       using namespace apache::ppr::net;
 
 /*

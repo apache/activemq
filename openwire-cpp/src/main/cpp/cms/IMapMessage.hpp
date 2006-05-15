@@ -23,6 +23,8 @@
 #endif
 
 #include "cms/IMessage.hpp"
+#include "cms/MessageFormatException.hpp"
+#include "ppr/IllegalArgumentException.hpp"
 #include "ppr/util/MapItemHolder.hpp"
 #include "ppr/util/ifr/p"
 
@@ -30,6 +32,7 @@ namespace apache
 {
   namespace cms
   {
+    using namespace apache::ppr;
     using namespace apache::ppr::util;
     using namespace ifr;
 
@@ -39,6 +42,24 @@ namespace apache
 struct IMapMessage : IMessage
 {
     virtual p<PropertyMap> getBody() = 0 ;
+    virtual bool getBoolean(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setBoolean(const char* name, bool value) throw (IllegalArgumentException) = 0 ;
+    virtual char getByte(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setByte(const char* name, char value) throw (IllegalArgumentException) = 0 ;
+    virtual array<char> getBytes(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setBytes(const char* name, array<char> value) throw (IllegalArgumentException) = 0 ;
+    virtual double getDouble(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setDouble(const char* name, double value) throw (IllegalArgumentException) = 0 ;
+    virtual float getFloat(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setFloat(const char* name, float value) throw (IllegalArgumentException) = 0 ;
+    virtual int getInt(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setInt(const char* name, int value) throw (IllegalArgumentException) = 0 ;
+    virtual long long getLong(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setLong(const char* name, long long value) throw (IllegalArgumentException) = 0 ;
+    virtual short getShort(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setShort(const char* name, short value) throw (IllegalArgumentException) = 0 ;
+    virtual p<string> getString(const char* name) throw (MessageFormatException, IllegalArgumentException) = 0 ;
+    virtual void setString(const char* name, const char* value) throw (IllegalArgumentException) = 0 ;
 } ;
 
 /* namespace */

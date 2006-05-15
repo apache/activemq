@@ -15,8 +15,11 @@
  * limitations under the License.
  */
 #include "activemq/command/ActiveMQMessage.hpp"
+
 #include "ppr/io/ByteArrayOutputStream.hpp"
 #include "ppr/io/ByteArrayInputStream.hpp"
+#include "ppr/io/DataOutputStream.hpp"
+#include "ppr/io/DataInputStream.hpp"
 
 using namespace apache::activemq::command;
 
@@ -320,23 +323,24 @@ void ActiveMQMessage::acknowledge()
 /*
  * 
  */
-int ActiveMQMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw(IOException)
+int ActiveMQMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw(IOException)
 {
     int size = 0 ;
 
     // Update message content if available
     if( mode == IMarshaller::MARSHAL_SIZE && this->properties != NULL )
     {
-        p<ByteArrayOutputStream> arrayWriter = new ByteArrayOutputStream() ;
+        p<ByteArrayOutputStream> bos = new ByteArrayOutputStream() ;
+        p<DataOutputStream>      dos = new DataOutputStream( bos ) ;
 
         // Marshal properties into a byte array
-        marshaller->marshalMap(properties, IMarshaller::MARSHAL_WRITE, arrayWriter) ;
+        marshaller->marshalMap(properties, IMarshaller::MARSHAL_WRITE, dos) ;
 
         // Store properties byte array in message content
-        this->marshalledProperties = arrayWriter->toArray() ;
+        this->marshalledProperties = bos->toArray() ;
     }
     // Note! Message propertys marshalling is done in super class
-    size += Message::marshal(marshaller, mode, writer) ;
+    size += Message::marshal(marshaller, mode, ostream) ;
 
     return size ;
 }
@@ -344,31 +348,21 @@ int ActiveMQMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStrea
 /*
  * 
  */
-void ActiveMQMessage::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw(IOException)
+void ActiveMQMessage::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw(IOException)
 {
     // Note! Message property unmarshalling is done in super class
-    Message::unmarshal(marshaller, mode, reader) ;
+    Message::unmarshal(marshaller, mode, istream) ;
 
     // Extract properties from message
     if( mode == IMarshaller::MARSHAL_READ )
     {
         if( this->marshalledProperties != NULL )
         {
-            p<ByteArrayInputStream> arrayReader = new ByteArrayInputStream( this->marshalledProperties ) ;
+            p<ByteArrayInputStream> bis = new ByteArrayInputStream( this->marshalledProperties ) ;
+            p<DataInputStream>      dis = new DataInputStream( bis ) ;
 
             // Unmarshal map into a map
-            properties = marshaller->unmarshalMap(mode, arrayReader) ;
+            properties = marshaller->unmarshalMap(mode, dis) ;
         }
     }
 }
-
-
-// Static methods ---------------------------------------------------
-
-/*
- * 
- */
-/*p<ActiveMQMessage> ActiveMQMessage::transform(p<IMessage> message)
-{
-    return p_cast<ActiveMQMessage> (message) ;
-}*/

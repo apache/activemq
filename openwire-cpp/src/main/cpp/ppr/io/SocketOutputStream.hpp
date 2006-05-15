@@ -17,7 +17,7 @@
 #ifndef Ppr_SocketOutputStream_hpp_
 #define Ppr_SocketOutputStream_hpp_
 
-#include "ppr/io/DataOutputStream.hpp"
+#include "ppr/io/IOutputStream.hpp"
 #include "ppr/net/ISocket.hpp"
 #include "ppr/net/SocketException.hpp"
 #include "ppr/util/ifr/p"
@@ -30,14 +30,13 @@ namespace apache
     {
       using namespace ifr ;
       using namespace apache::ppr::net ;
-      using namespace apache::ppr::util ;
 
 /*
  * SocketOutputStream writes primitive C++ data types to a
  * socket stream. It currently uses PPR sockets for
  * platform independency.
  */
-class SocketOutputStream : public DataOutputStream
+class SocketOutputStream : public IOutputStream
 {
 private:
     p<ISocket> socket ;
@@ -48,7 +47,7 @@ public:
 
     virtual void close() throw(IOException) ;
     virtual void flush() throw(IOException) ;
-    virtual int write(const char* buffer, int index, int size) throw(IOException) ;
+    virtual int write(const char* buffer, int offset, int length) throw(IOException) ;
 } ;
 
 /* namespace */

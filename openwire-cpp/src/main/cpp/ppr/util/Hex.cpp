@@ -47,6 +47,5 @@ p<string> Hex::toString(array<char> buffer)
         sprintf(&result[i*2], "%02x", (unsigned char) buffer[i]) ;
 
     hexStr = new string(result.c_array(), result.size() - 1) ;
-
     return hexStr ;
 }

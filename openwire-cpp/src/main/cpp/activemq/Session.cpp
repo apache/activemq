@@ -421,6 +421,11 @@ void Session::close()
         map<long long, p<MessageConsumer> >::iterator consumerIter ;
         map<long long, p<MessageProducer> >::iterator producerIter ;
 
+        // Shutdown dispatch thread
+        dispatchThread->interrupt() ;
+        dispatchThread->join() ;
+        dispatchThread = NULL ;
+
         // Iterate through all consumers and close them down
         for( consumerIter = consumers.begin() ;
              consumerIter != consumers.end() ;
@@ -438,12 +443,13 @@ void Session::close()
             producerIter->second->close() ;
             producerIter->second = NULL ;
         }
-        // De-register session from broker
+        // De-register session from broker/connection
         connection->disposeOf( sessionInfo->getSessionId() ) ;
 
         // Clean up
         connection = NULL ;
         closed     = true ;
+
     }
 }
 

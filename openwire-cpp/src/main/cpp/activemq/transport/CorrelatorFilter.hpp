@@ -48,11 +48,11 @@ public:
     CorrelatorFilter(p<ITransport> next) ;
     virtual ~CorrelatorFilter() {}
 
-	virtual void oneway(p<ICommand> command) ;
-	virtual p<FutureResponse> asyncRequest(p<ICommand> command) ;
-	virtual p<Response> request(p<ICommand> command) ;
+	virtual void oneway(p<BaseCommand> command) ;
+	virtual p<FutureResponse> asyncRequest(p<BaseCommand> command) ;
+	virtual p<Response> request(p<BaseCommand> command) ;
 
-    virtual void onCommand(p<ITransport> transport, p<ICommand> command) ;
+    virtual void onCommand(p<ITransport> transport, p<BaseCommand> command) ;
 
 protected:
     virtual int getNextCommandId() ;

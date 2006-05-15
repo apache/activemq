@@ -30,8 +30,8 @@ TcpTransport::TcpTransport(p<ISocket> socket, p<IProtocol> wireProtocol)
     // Initialize members
     this->socket     = socket ;
     this->protocol   = wireProtocol ;
-    this->reader     = NULL ;
-    this->writer     = NULL ;
+    this->istream    = NULL ;
+    this->ostream    = NULL ;
     this->listener   = NULL ;
     this->readThread = NULL ;
     this->started    = false ;
@@ -45,8 +45,8 @@ TcpTransport::~TcpTransport()
 {
     closed = true ;
     readThread->join() ;
-    reader->close() ;
-    socket->close() ;
+    istream->close() ;
+    ostream->close() ;
 }
 
 
@@ -85,8 +85,8 @@ void TcpTransport::start()
         started = true ;
 
         // Create the I/O streams
-        writer = new SocketOutputStream(socket) ;
-        reader = new SocketInputStream(socket) ;
+        ostream = new DataOutputStream( new BufferedOutputStream( new SocketOutputStream(socket) ) ) ;
+        istream = new DataInputStream( new BufferedInputStream( new SocketInputStream(socket) ) ) ;
         
         // Create and start the background read thread
         readThread = new ReadThread(this) ;
@@ -100,16 +100,16 @@ void TcpTransport::start()
 /*
  *
  */
-void TcpTransport::oneway(p<ICommand> command)
+void TcpTransport::oneway(p<BaseCommand> command)
 {
-    protocol->marshal(command, writer) ;
-    writer->flush() ;
+    protocol->marshal(command, ostream) ;
+    ostream->flush() ;
 }
 
 /*
  *
  */
-p<FutureResponse> TcpTransport::asyncRequest(p<ICommand> command)
+p<FutureResponse> TcpTransport::asyncRequest(p<BaseCommand> command)
 {
     throw InvalidOperationException("Use a CorrelatorFilter if you want to issue asynchrounous request calls.") ;
 }
@@ -117,7 +117,7 @@ p<FutureResponse> TcpTransport::asyncRequest(p<ICommand> command)
 /*
  *
  */
-p<Response> TcpTransport::request(p<ICommand> command)
+p<Response> TcpTransport::request(p<BaseCommand> command)
 {
     throw InvalidOperationException("Use a CorrelatorFilter if you want to issue request calls.") ;
 }
@@ -133,12 +133,12 @@ void TcpTransport::readLoop()
     // Continue loop until closed or aborted
     while( !closed )
     {
-        p<ICommand> command = NULL ;
+        p<BaseCommand> command = NULL ;
 
         try
         {
             // Read next command
-            command = p_cast<ICommand> (protocol->unmarshal(reader)) ;
+            command = p_cast<BaseCommand> (protocol->unmarshal(istream)) ;
 
             // Forward to command listener
 

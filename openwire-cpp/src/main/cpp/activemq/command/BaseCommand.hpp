@@ -18,7 +18,12 @@
 #define ActiveMQ_BaseCommand_hpp_
 
 #include <string>
-#include "activemq/command/AbstractCommand.hpp"
+#include "activemq/ICommand.hpp"
+#include "activemq/command/BaseDataStructure.hpp"
+#include "activemq/protocol/IMarshaller.hpp"
+#include "ppr/io/IOutputStream.hpp"
+#include "ppr/io/IInputStream.hpp"
+#include "ppr/io/IOException.hpp"
 #include "ppr/util/ifr/p"
 
 namespace apache
@@ -29,13 +34,28 @@ namespace apache
     {
       using namespace ifr;
       using namespace std;
+      using namespace apache::activemq;
+      using namespace apache::activemq::protocol;
+      using namespace apache::ppr::io;
 
 /*
  * 
  */
-class BaseCommand : public AbstractCommand
+class BaseCommand : public BaseDataStructure, public ICommand
 {
+protected:
+    int  commandId ;
+    bool responseRequired ;
+
 public:
+    virtual int getCommandId() ;
+    virtual void setCommandId(int id) ;
+    virtual bool getResponseRequired() ;
+    virtual void setResponseRequired(bool value) ;
+
+    virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw(IOException) ;
+
     // Equals operator
     bool operator== (BaseCommand& other) ;
 

@@ -43,9 +43,9 @@ public:
     MutexFilter(p<ITransport> next) ;
     virtual ~MutexFilter() ;
 
-	virtual void oneway(p<ICommand> command) ;
-	virtual p<FutureResponse> asyncRequest(p<ICommand> command) ;
-	virtual p<Response> request(p<ICommand> command) ;
+	virtual void oneway(p<BaseCommand> command) ;
+	virtual p<FutureResponse> asyncRequest(p<BaseCommand> command) ;
+	virtual p<Response> request(p<BaseCommand> command) ;
 } ;
 
 /* namespace */

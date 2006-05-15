@@ -206,7 +206,7 @@ p<ISession> Connection::createSession(AcknowledgementMode ackMode) throw(CmsExce
 /*
  * Performs a synchronous request-response with the broker.
  */
-p<Response> Connection::syncRequest(p<ICommand> command) throw(CmsException) 
+p<Response> Connection::syncRequest(p<BaseCommand> command) throw(CmsException) 
 {
     checkConnected() ;
     
@@ -233,7 +233,7 @@ p<Response> Connection::syncRequest(p<ICommand> command) throw(CmsException)
 /*
  *
  */
-void Connection::oneway(p<ICommand> command) throw(CmsException)
+void Connection::oneway(p<BaseCommand> command) throw(CmsException)
 {
     checkConnected() ;
     transport->oneway(command) ;
@@ -247,6 +247,35 @@ void Connection::disposeOf(p<IDataStructure> dataStructure) throw(CmsException)
     p<RemoveInfo> command = new RemoveInfo() ;
     command->setObjectId( dataStructure ) ;
     syncRequest(command) ;
+
+    //
+    // Delete session from internal list if a session id was supplied
+    // Note! Dispose of sessions should only be invoked from Session.close()
+    //
+    if( dataStructure->getDataStructureType() == SessionId::TYPE )
+    {
+        list< p<ISession> >::iterator tempIter ;
+        p<SessionId>                  sessionId ;
+
+        // Convert data structure to a session id
+        sessionId = p_cast<SessionId> (dataStructure) ;
+
+        // Iterate through all sessions and check for a match on the session id
+        for( tempIter = sessions.begin() ;
+             tempIter != sessions.end() ;
+             tempIter++ )
+        {
+            p<Session> session = p_cast<Session> (*tempIter) ;
+
+            // Do we have a session id match?
+            if( session->getSessionId()->getValue() == sessionId->getValue() )
+            {
+                // Remove session
+                sessions.remove(session) ;
+                break ;
+            }
+        }
+    }
 }
 
 /*
@@ -332,7 +361,7 @@ void Connection::checkConnected() throw(CmsException)
 /*
  * Handle incoming commands.
  */
-void Connection::onCommand(p<ITransport> transport, p<ICommand> command)
+void Connection::onCommand(p<ITransport> transport, p<BaseCommand> command)
 {
     if( command->getDataStructureType() == MessageDispatch::TYPE )
     {

@@ -18,7 +18,7 @@
 #define ActiveMQ_ICommandListener_hpp_
 
 #include <exception>
-#include "activemq/ICommand.hpp"
+#include "activemq/command/BaseCommand.hpp"
 #include "ppr/util/ifr/p"
 
 namespace apache
@@ -29,7 +29,6 @@ namespace apache
     {
       using namespace ifr;
       using namespace std;
-      using namespace apache::activemq;
       using namespace apache::activemq::command;
       using namespace apache::cms;
       struct ITransport;
@@ -39,7 +38,7 @@ namespace apache
  */
 struct ICommandListener : Interface
 {
-    virtual void onCommand(p<ITransport> transport, p<ICommand> command) = 0 ;
+    virtual void onCommand(p<ITransport> transport, p<BaseCommand> command) = 0 ;
     virtual void onError(p<ITransport> transport, exception& error) = 0 ;
 } ;
 

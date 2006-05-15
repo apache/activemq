@@ -17,7 +17,7 @@
 #ifndef Ppr_ByteArrayInputStream_hpp_
 #define Ppr_ByteArrayInputStream_hpp_
 
-#include "ppr/io/DataInputStream.hpp"
+#include "ppr/io/IInputStream.hpp"
 #include "ppr/io/EOFException.hpp"
 #include "ppr/util/ifr/array"
 #include "ppr/util/ifr/p"
@@ -34,7 +34,7 @@ namespace apache
  * ByteArrayInputStream reads primitive C++ data types from an
  * in-memory byte array.
  */
-class ByteArrayInputStream : public DataInputStream
+class ByteArrayInputStream : public IInputStream
 {
 private:
     array<char> body ;

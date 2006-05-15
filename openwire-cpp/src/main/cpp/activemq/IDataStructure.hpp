@@ -39,7 +39,6 @@ namespace apache
 struct IDataStructure : Interface
 {
     virtual unsigned char getDataStructureType() = 0 ;
-    virtual bool isMarshallAware() = 0 ;
     virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) = 0 ;
     virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) = 0 ;
 } ;

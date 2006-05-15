@@ -20,7 +20,7 @@
 #include <string>
 #include <ostream>
 #include <sstream>
-#include "activemq/command/AbstractCommand.hpp"
+#include "activemq/command/BaseCommand.hpp"
 #include "ppr/util/ifr/array"
 #include "ppr/util/ifr/p"
 
@@ -47,7 +47,7 @@ struct StackTraceElement
 /*
  * Represents an exception on the broker.
  */
-class BrokerError : public AbstractCommand
+class BrokerError : public BaseCommand
 {
 private:
     p<string>             message ;

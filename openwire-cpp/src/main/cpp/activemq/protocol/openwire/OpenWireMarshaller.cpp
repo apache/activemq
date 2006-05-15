@@ -33,6 +33,7 @@ using namespace apache::activemq::protocol::openwire;
 OpenWireMarshaller::OpenWireMarshaller(p<WireFormatInfo> formatInfo)
 {
     this->formatInfo = formatInfo ;
+    this->encoder    = CharsetEncoderRegistry::getEncoder() ;
 }
 
 // --- Operation methods --------------------------------------------
@@ -40,12 +41,15 @@ OpenWireMarshaller::OpenWireMarshaller(p<WireFormatInfo> formatInfo)
 /*
  * 
  */
-int OpenWireMarshaller::marshalBoolean(bool value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalBoolean(bool value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
-            writer->writeBoolean(value) ;
+            dos->writeBoolean(value) ;
 
         return (int)BOOLSIZE ;
     }
@@ -59,12 +63,15 @@ int OpenWireMarshaller::marshalBoolean(bool value, int mode, p<IOutputStream> wr
 /*
  * 
  */
-int OpenWireMarshaller::marshalByte(char value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalByte(char value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
-            writer->writeByte(value) ;
+            dos->writeByte(value) ;
 
         return (int)sizeof(char) ;
     }
@@ -78,12 +85,15 @@ int OpenWireMarshaller::marshalByte(char value, int mode, p<IOutputStream> write
 /*
  * 
  */
-int OpenWireMarshaller::marshalShort(short value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalShort(short value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
-            writer->writeShort(value) ;
+            dos->writeShort(value) ;
 
         return (int)sizeof(short) ;
     }
@@ -97,12 +107,15 @@ int OpenWireMarshaller::marshalShort(short value, int mode, p<IOutputStream> wri
 /*
  * 
  */
-int OpenWireMarshaller::marshalInt(int value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalInt(int value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
-            writer->writeInt(value) ;
+            dos->writeInt(value) ;
 
         return (int)sizeof(int) ;
     }
@@ -116,12 +129,15 @@ int OpenWireMarshaller::marshalInt(int value, int mode, p<IOutputStream> writer)
 /*
  * 
  */
-int OpenWireMarshaller::marshalLong(long long value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalLong(long long value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
-            writer->writeLong(value) ;
+            dos->writeLong(value) ;
 
         return (int)sizeof(long long) ;
     }
@@ -135,12 +151,15 @@ int OpenWireMarshaller::marshalLong(long long value, int mode, p<IOutputStream> 
 /*
  * 
  */
-int OpenWireMarshaller::marshalFloat(float value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalFloat(float value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
-            writer->writeFloat(value) ;
+            dos->writeFloat(value) ;
 
         return (int)sizeof(float) ;
     }
@@ -154,12 +173,15 @@ int OpenWireMarshaller::marshalFloat(float value, int mode, p<IOutputStream> wri
 /*
  * 
  */
-int OpenWireMarshaller::marshalDouble(double value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalDouble(double value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
-            writer->writeDouble(value) ;
+            dos->writeDouble(value) ;
 
         return (int)sizeof(double) ;
     }
@@ -173,14 +195,17 @@ int OpenWireMarshaller::marshalDouble(double value, int mode, p<IOutputStream> w
 /*
  * 
  */
-int OpenWireMarshaller::marshalString(p<string> value, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalString(p<string> value, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
         {
-            writer->writeBoolean( value != NULL ) ; 
-            writer->writeString(value) ;
+            dos->writeBoolean( value != NULL ) ; 
+            dos->writeString(value) ;
         }
         int size = 0 ;
 
@@ -191,7 +216,7 @@ int OpenWireMarshaller::marshalString(p<string> value, int mode, p<IOutputStream
         {
             // String char counter and length
             size += sizeof(short) ;
-            size += (int)value->length() ;
+            size += ( encoder != NULL ) ? encoder->length(value) : (int)value->length() ;
         }
         return size ;
     }
@@ -205,8 +230,11 @@ int OpenWireMarshaller::marshalString(p<string> value, int mode, p<IOutputStream
 /*
  * 
  */
-int OpenWireMarshaller::marshalObject(p<IDataStructure> object, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalObject(p<IDataStructure> object, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         int size = 0 ;
@@ -215,11 +243,11 @@ int OpenWireMarshaller::marshalObject(p<IDataStructure> object, int mode, p<IOut
         if( mode == IMarshaller::MARSHAL_WRITE )
         {
             // Null marker
-            writer->writeBoolean( object != NULL ) ;
+            dos->writeBoolean( object != NULL ) ;
 
             // Data structure type
             if( object != NULL )
-                writer->writeByte( object->getDataStructureType() ) ;
+                dos->writeByte( object->getDataStructureType() ) ;
         }
 
         // Length of null marker
@@ -231,7 +259,7 @@ int OpenWireMarshaller::marshalObject(p<IDataStructure> object, int mode, p<IOut
             size += sizeof(char) ;
 
             // Marshal the command body
-            size += object->marshal(smartify(this), mode, writer) ;
+            size += object->marshal(smartify(this), mode, ostream) ;
         }
         return size ;
     }
@@ -245,8 +273,11 @@ int OpenWireMarshaller::marshalObject(p<IDataStructure> object, int mode, p<IOut
 /*
  * 
  */
-int OpenWireMarshaller::marshalObjectArray(array<IDataStructure> objects, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalObjectArray(array<IDataStructure> objects, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         int size = 0 ;
@@ -255,11 +286,11 @@ int OpenWireMarshaller::marshalObjectArray(array<IDataStructure> objects, int mo
         if( mode == IMarshaller::MARSHAL_WRITE )
         {
             // Null object marker
-            writer->writeBoolean( objects != NULL ) ;
+            dos->writeBoolean( objects != NULL ) ;
 
             // Check for NULL array
             if( objects != NULL )
-                writer->writeShort( (short)objects.size() ) ;
+                dos->writeShort( (short)objects.size() ) ;
             else
                 return BOOLSIZE ;
         }
@@ -273,7 +304,7 @@ int OpenWireMarshaller::marshalObjectArray(array<IDataStructure> objects, int mo
 
         // Write/measure each object in array
         for( int i = 0; i < (int)objects.size(); i++ )
-            size += objects[i]->marshal(smartify(this), mode, writer) ;
+            size += objects[i]->marshal(smartify(this), mode, ostream) ;
 
         return size ;
     }
@@ -287,8 +318,11 @@ int OpenWireMarshaller::marshalObjectArray(array<IDataStructure> objects, int mo
 /*
  * 
  */
-int OpenWireMarshaller::marshalByteArray(array<char> values, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalByteArray(array<char> values, int mode, p<IOutputStream> ostream) throw(IOException)
 {
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         int size = 0 ;
@@ -297,7 +331,7 @@ int OpenWireMarshaller::marshalByteArray(array<char> values, int mode, p<IOutput
         if( mode == IMarshaller::MARSHAL_WRITE )
         {
             // Null marker
-            writer->writeBoolean( values != NULL ) ;
+            dos->writeBoolean( values != NULL ) ;
 
             // Check for NULL array
             if( values != NULL )
@@ -306,8 +340,8 @@ int OpenWireMarshaller::marshalByteArray(array<char> values, int mode, p<IOutput
                 int length = (int)values.size() ;
 
                 // Length and content
-                writer->writeInt( length ) ;
-                writer->write( values.c_array(), 0, length) ;
+                dos->writeInt( length ) ;
+                dos->write( values.c_array(), 0, length) ;
             }
         }
         // Check for NULL array
@@ -331,7 +365,7 @@ int OpenWireMarshaller::marshalByteArray(array<char> values, int mode, p<IOutput
 /*
  * 
  */
-int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStream> writer) throw(IOException)
+int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStream> ostream) throw(IOException)
 {
     if( !formatInfo->getTightEncodingEnabled() )
     {
@@ -364,7 +398,7 @@ int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStr
 
                 // Add size for key char count, lenght of key and value type
                 size += sizeof(short) ;
-                size += (int)key.length() ;
+                size += ( encoder != NULL ) ? encoder->length( p<string>( new string(key)) ) : (int)key.length() ;
                 size += sizeof(unsigned char) ;
 
                 // Write the map value
@@ -396,7 +430,8 @@ int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStr
                         size += sizeof(short) ;
                         break ;
                     default:
-                        size += (int)val.getString()->size() ;
+                        // Calculate encoded/decoded string length
+                        size += ( encoder != NULL ) ? encoder->length(val.getString()) : (int)val.getString()->size() ;
                 }
             }
         }
@@ -404,15 +439,18 @@ int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStr
         // Write size/content of map
         else if( mode == IMarshaller::MARSHAL_WRITE )
         {
+            // Assert that supplied output stream is a data output stream
+            p<DataOutputStream> dos = checkOutputStream(ostream) ;
+
             // Write 'null' marker
             if( object == NULL )
             {
-                writer->writeInt(-1) ;
+                dos->writeInt(-1) ;
                 return size ;
             }
 
             // Write map item count
-            writer->writeInt( (int)object->size()) ;
+            dos->writeInt( (int)object->size()) ;
 
             // Loop through map contents
             for( tempIter = object->begin() ;
@@ -425,66 +463,64 @@ int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStr
                 key = tempIter->first ;
                 val = tempIter->second ;
 
-                // Add size for key char count, lenght of key and value type
+                // Add size for key char count and value type
                 size += sizeof(short) ;
-                size += (int)key.length() ;
                 size += sizeof(unsigned char) ;
 
-                // Write the map key
-                writer->writeString( p<string>( new string(tempIter->first) ) ) ;
+                // Write the map key, add size for key length
+                size += dos->writeString( p<string>( new string(tempIter->first) ) ) ;
 
                 // Write the map value
                 switch( val.getType() )
                 {
                     case MapItemHolder::BOOLEAN:
-                        writer->writeByte( TYPE_BOOLEAN ) ;
-                        writer->writeBoolean( val.getBoolean() ) ;
+                        dos->writeByte( TYPE_BOOLEAN ) ;
+                        dos->writeBoolean( val.getBoolean() ) ;
                         size += BOOLSIZE ;
                         break ;
                     case MapItemHolder::BYTE:
-                        writer->writeByte( TYPE_BYTE ) ;
-                        writer->writeByte( val.getByte() ) ;
+                        dos->writeByte( TYPE_BYTE ) ;
+                        dos->writeByte( val.getByte() ) ;
                         size += sizeof(char) ;
                         break ;
                     case MapItemHolder::BYTEARRAY:
-                        writer->writeByte( TYPE_BYTEARRAY ) ;
+                        dos->writeByte( TYPE_BYTEARRAY ) ;
                         buffer = val.getBytes() ;
-                        writer->writeInt( (int)buffer.size() ) ;
-                        writer->write(buffer.c_array(), 0, (int)buffer.size()) ;
+                        dos->writeInt( (int)buffer.size() ) ;
+                        dos->write(buffer.c_array(), 0, (int)buffer.size()) ;
                         size += (int)buffer.size() ;
                         break ;
                     case MapItemHolder::DOUBLE:
-                        writer->writeByte( TYPE_DOUBLE ) ;
-                        writer->writeDouble( val.getDouble() ) ;
+                        dos->writeByte( TYPE_DOUBLE ) ;
+                        dos->writeDouble( val.getDouble() ) ;
                         size += sizeof(double) ;
                         break ;
                     case MapItemHolder::FLOAT:
-                        writer->writeByte( TYPE_FLOAT ) ;
-                        writer->writeFloat( val.getFloat() ) ;
+                        dos->writeByte( TYPE_FLOAT ) ;
+                        dos->writeFloat( val.getFloat() ) ;
                         size += sizeof(float) ;
                         break ;
                     case MapItemHolder::INTEGER:
-                        writer->writeByte( TYPE_INTEGER ) ;
-                        writer->writeInt( val.getInt() ) ;
+                        dos->writeByte( TYPE_INTEGER ) ;
+                        dos->writeInt( val.getInt() ) ;
                         size += sizeof(int) ;
                         break ;
                     case MapItemHolder::LONG:
-                        writer->writeByte( TYPE_LONG ) ;
-                        writer->writeLong( val.getLong() ) ;
+                        dos->writeByte( TYPE_LONG ) ;
+                        dos->writeLong( val.getLong() ) ;
                         size += sizeof(long) ;
                         break ;
                     case MapItemHolder::SHORT:
-                        writer->writeByte( TYPE_SHORT ) ;
-                        writer->writeShort( val.getShort() ) ;
+                        dos->writeByte( TYPE_SHORT ) ;
+                        dos->writeShort( val.getShort() ) ;
                         size += sizeof(short) ;
                         break ;
                     case MapItemHolder::STRING:
-                        writer->writeByte( TYPE_STRING ) ;
-                        writer->writeString( val.getString() ) ;
-                        size += (int)val.getString()->size() ;
+                        dos->writeByte( TYPE_STRING ) ;
+                        size += dos->writeString( val.getString() ) ;
                         break ;
                     default:
-                        writer->writeByte( TYPE_NULL ) ;
+                        dos->writeByte( TYPE_NULL ) ;
                 }
             }
         }
@@ -500,11 +536,14 @@ int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStr
 /*
  * 
  */
-bool OpenWireMarshaller::unmarshalBoolean(int mode, p<IInputStream> reader) throw(IOException)
+bool OpenWireMarshaller::unmarshalBoolean(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        return reader->readBoolean() ;
+        return dis->readBoolean() ;
     }
     else
     {
@@ -516,11 +555,14 @@ bool OpenWireMarshaller::unmarshalBoolean(int mode, p<IInputStream> reader) thro
 /*
  * 
  */
-char OpenWireMarshaller::unmarshalByte(int mode, p<IInputStream> reader) throw(IOException)
+char OpenWireMarshaller::unmarshalByte(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        return reader->readByte() ;
+        return dis->readByte() ;
     }
     else
     {
@@ -531,11 +573,14 @@ char OpenWireMarshaller::unmarshalByte(int mode, p<IInputStream> reader) throw(I
 /*
  * 
  */
-short OpenWireMarshaller::unmarshalShort(int mode, p<IInputStream> reader) throw(IOException)
+short OpenWireMarshaller::unmarshalShort(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        return reader->readShort() ;
+        return dis->readShort() ;
     }
     else
     {
@@ -547,11 +592,14 @@ short OpenWireMarshaller::unmarshalShort(int mode, p<IInputStream> reader) throw
 /*
  * 
  */
-int OpenWireMarshaller::unmarshalInt(int mode, p<IInputStream> reader) throw(IOException)
+int OpenWireMarshaller::unmarshalInt(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        return reader->readInt() ;
+        return dis->readInt() ;
     }
     else
     {
@@ -563,11 +611,14 @@ int OpenWireMarshaller::unmarshalInt(int mode, p<IInputStream> reader) throw(IOE
 /*
  * 
  */
-long long OpenWireMarshaller::unmarshalLong(int mode, p<IInputStream> reader) throw(IOException)
+long long OpenWireMarshaller::unmarshalLong(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        return reader->readLong() ;
+        return dis->readLong() ;
     }
     else
     {
@@ -579,11 +630,14 @@ long long OpenWireMarshaller::unmarshalLong(int mode, p<IInputStream> reader) th
 /*
  * 
  */
-float OpenWireMarshaller::unmarshalFloat(int mode, p<IInputStream> reader) throw(IOException)
+float OpenWireMarshaller::unmarshalFloat(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        return reader->readFloat() ;
+        return dis->readFloat() ;
     }
     else
     {
@@ -595,11 +649,14 @@ float OpenWireMarshaller::unmarshalFloat(int mode, p<IInputStream> reader) throw
 /*
  * 
  */
-double OpenWireMarshaller::unmarshalDouble(int mode, p<IInputStream> reader) throw(IOException)
+double OpenWireMarshaller::unmarshalDouble(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        return reader->readFloat() ;
+        return dis->readFloat() ;
     }
     else
     {
@@ -611,12 +668,15 @@ double OpenWireMarshaller::unmarshalDouble(int mode, p<IInputStream> reader) thr
 /*
  * 
  */
-p<string> OpenWireMarshaller::unmarshalString(int mode, p<IInputStream> reader) throw(IOException)
+p<string> OpenWireMarshaller::unmarshalString(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
-        if( reader->readBoolean() )
-            return reader->readString() ;
+        if( dis->readBoolean() )
+            return dis->readString() ;
         else
             return NULL ;
     }
@@ -630,24 +690,27 @@ p<string> OpenWireMarshaller::unmarshalString(int mode, p<IInputStream> reader) 
 /*
  * 
  */
-p<IDataStructure> OpenWireMarshaller::unmarshalObject(int mode, p<IInputStream> reader) throw(IOException)
+p<IDataStructure> OpenWireMarshaller::unmarshalObject(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         // Null marker
-        if( !reader->readBoolean() )
+        if( !dis->readBoolean() )
             return NULL ;
 
         // Read data structure
-        unsigned char dataType = reader->readByte() ;
+        unsigned char dataType = dis->readByte() ;
 
         // Create command object
-        p<IDataStructure> object = AbstractCommand::createObject(dataType) ;
+        p<IDataStructure> object = BaseDataStructure::createObject(dataType) ;
         if( object == NULL )
             throw IOException("Unmarshal failed; unknown data structure type %d, at %s line %d", dataType, __FILE__, __LINE__) ;
 
         // Finally, unmarshal command body
-        object->unmarshal(smartify(this), IMarshaller::MARSHAL_READ, reader) ;
+        object->unmarshal(smartify(this), IMarshaller::MARSHAL_READ, istream) ;
         return object ;
     }
     else
@@ -660,15 +723,18 @@ p<IDataStructure> OpenWireMarshaller::unmarshalObject(int mode, p<IInputStream> 
 /*
  * 
  */
-array<IDataStructure> OpenWireMarshaller::unmarshalObjectArray(int mode, p<IInputStream> reader) throw(IOException)
+array<IDataStructure> OpenWireMarshaller::unmarshalObjectArray(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         // Null marker
-        if( !reader->readBoolean() )
+        if( !dis->readBoolean() )
             return NULL ;
 
-        int length = reader->readShort() ;
+        int length = dis->readShort() ;
 
         // Check for NULL array
         if( length == 0 )
@@ -681,7 +747,7 @@ array<IDataStructure> OpenWireMarshaller::unmarshalObjectArray(int mode, p<IInpu
 
         // Unmarshal each item in array
         for( int i = 0 ; i < length ; i++ )
-            objects[i] = unmarshalObject(mode, reader) ;
+            objects[i] = unmarshalObject(mode, istream) ;
 
         return objects ;
     }
@@ -695,15 +761,18 @@ array<IDataStructure> OpenWireMarshaller::unmarshalObjectArray(int mode, p<IInpu
 /*
  * 
  */
-array<char> OpenWireMarshaller::unmarshalByteArray(int mode, p<IInputStream> reader) throw(IOException)
+array<char> OpenWireMarshaller::unmarshalByteArray(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         // Null marker
-        if( !reader->readBoolean() )
+        if( !dis->readBoolean() )
             return NULL ;
 
-        int length = reader->readInt() ;
+        int length = dis->readInt() ;
 
         // Check for NULL array
         if( length == 0 )
@@ -713,7 +782,7 @@ array<char> OpenWireMarshaller::unmarshalByteArray(int mode, p<IInputStream> rea
         array<char> value (length);
 
         // Unmarshal all bytes in array
-        reader->read(value.c_array(), 0, length) ;
+        dis->read(value.c_array(), 0, length) ;
 
         return value ;
     }
@@ -727,12 +796,15 @@ array<char> OpenWireMarshaller::unmarshalByteArray(int mode, p<IInputStream> rea
 /*
  * 
  */
-p<PropertyMap> OpenWireMarshaller::unmarshalMap(int mode, p<IInputStream> reader) throw(IOException)
+p<PropertyMap> OpenWireMarshaller::unmarshalMap(int mode, p<IInputStream> istream) throw(IOException)
 {
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+
     if( !formatInfo->getTightEncodingEnabled() )
     {
         // Get size of map
-        int size = reader->readInt() ;
+        int size = dis->readInt() ;
 
         // Check for NULL map
         if( size < 0 )
@@ -750,43 +822,43 @@ p<PropertyMap> OpenWireMarshaller::unmarshalMap(int mode, p<IInputStream> reader
         for( int i = 0 ; i < size ; i++ )
         {
             // Get next key
-            key = reader->readString() ;
+            key = dis->readString() ;
             
             // Get the primitive type
-            type = reader->readByte() ;
+            type = dis->readByte() ;
 
             // Depending on type read next value
             switch( type )
             {
                 case TYPE_BOOLEAN:
-                    val = MapItemHolder( reader->readBoolean() ) ;
+                    val = MapItemHolder( dis->readBoolean() ) ;
                     break ;
                 case TYPE_BYTE:
-                    val = MapItemHolder( reader->readByte() ) ;
+                    val = MapItemHolder( dis->readByte() ) ;
                     break ;
                 case TYPE_BYTEARRAY:
-                    length = reader->readInt() ;
+                    length = dis->readInt() ;
                     buffer = array<char> (length) ;
-                    reader->read(buffer.c_array(), 0, length) ;
+                    dis->read(buffer.c_array(), 0, length) ;
                     val = MapItemHolder( buffer ) ;
                     break ;
                 case TYPE_DOUBLE:
-                    val = MapItemHolder( reader->readDouble() ) ;
+                    val = MapItemHolder( dis->readDouble() ) ;
                     break ;
                 case TYPE_FLOAT:
-                    val = MapItemHolder( reader->readFloat() ) ;
+                    val = MapItemHolder( dis->readFloat() ) ;
                     break ;
                 case TYPE_INTEGER:
-                    val = MapItemHolder( reader->readInt() ) ;
+                    val = MapItemHolder( dis->readInt() ) ;
                     break ;
                 case TYPE_LONG:
-                    val = MapItemHolder( reader->readLong() ) ;
+                    val = MapItemHolder( dis->readLong() ) ;
                     break ;
                 case TYPE_SHORT:
-                    val = MapItemHolder( reader->readShort() ) ;
+                    val = MapItemHolder( dis->readShort() ) ;
                     break ;
                 case TYPE_STRING:
-                    val = MapItemHolder( reader->readString() ) ;
+                    val = MapItemHolder( dis->readString() ) ;
                     break ;
                 default:
                     val = MapItemHolder() ;
@@ -801,4 +873,30 @@ p<PropertyMap> OpenWireMarshaller::unmarshalMap(int mode, p<IInputStream> reader
         // Not yet implemented (loose unmarshalling)
     }
     return NULL;
+}
+
+/*
+ * 
+ */
+p<DataOutputStream> OpenWireMarshaller::checkOutputStream(p<IOutputStream> ostream) throw (IOException)
+{
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = p_dyncast<DataOutputStream> (ostream) ;
+    if( dos == NULL )
+        throw IOException("OpenWireMarshaller requires a DataOutputStream") ;
+
+    return dos ;
+}
+
+/*
+ * 
+ */
+p<DataInputStream> OpenWireMarshaller::checkInputStream(p<IInputStream> istream) throw (IOException)
+{
+    // Assert that supplied output stream is a data output stream
+    p<DataInputStream> dis = p_dyncast<DataInputStream> (istream) ;
+    if( dis == NULL )
+        throw IOException("OpenWireMarshaller requires a DataInputStream") ;
+
+    return dis ;
 }

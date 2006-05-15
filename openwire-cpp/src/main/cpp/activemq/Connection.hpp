@@ -102,8 +102,8 @@ public:
     // Operation methods
     virtual p<ISession> createSession() throw(CmsException) ;
     virtual p<ISession> createSession(AcknowledgementMode mode) throw(CmsException) ;
-    virtual p<Response> syncRequest(p<ICommand> command) throw(CmsException) ;
-    virtual void oneway(p<ICommand> command) throw(CmsException) ;
+    virtual p<Response> syncRequest(p<BaseCommand> command) throw(CmsException) ;
+    virtual void oneway(p<BaseCommand> command) throw(CmsException) ;
     virtual void disposeOf(p<IDataStructure> dataStructure) throw(CmsException) ;
     virtual p<string> createTemporaryDestinationName() ;
     virtual p<LocalTransactionId> createLocalTransactionId() ;
@@ -113,7 +113,7 @@ protected:
     // Implementation methods
     p<SessionInfo> createSessionInfo(AcknowledgementMode mode) ;
     void checkConnected() throw(CmsException) ;
-    void onCommand(p<ITransport> transport, p<ICommand> command) ;
+    void onCommand(p<ITransport> transport, p<BaseCommand> command) ;
     void onError(p<ITransport> transport, exception& error) ;
 } ;
 

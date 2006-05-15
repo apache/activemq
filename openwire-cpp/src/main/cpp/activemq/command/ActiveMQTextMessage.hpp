@@ -20,6 +20,10 @@
 #include <string>
 #include "cms/ITextMessage.hpp"
 #include "activemq/command/ActiveMQMessage.hpp"
+#include "ppr/io/ByteArrayOutputStream.hpp"
+#include "ppr/io/DataOutputStream.hpp"
+#include "ppr/io/encoding/ICharsetEncoder.hpp"
+#include "ppr/io/encoding/CharsetEncoderRegistry.hpp"
 #include "ppr/util/MapItemHolder.hpp"
 #include "ppr/util/ifr/p"
 
@@ -31,6 +35,8 @@ namespace apache
     {
       using namespace ifr;
       using namespace apache::cms;
+      using namespace apache::ppr::io;
+      using namespace apache::ppr::io::encoding;
       using namespace apache::ppr::util;
 
 /*
@@ -38,12 +44,16 @@ namespace apache
  */
 class ActiveMQTextMessage : public ActiveMQMessage, public ITextMessage
 {
+private:
+    p<ICharsetEncoder> encoder ;
+
 public:
     const static unsigned char TYPE = 28 ;
 
 public:
     ActiveMQTextMessage() ;
     ActiveMQTextMessage(const char* text) ;
+    ActiveMQTextMessage(const char* text, const char* encname) ;
     virtual ~ActiveMQTextMessage() ;
 
     virtual unsigned char getDataStructureType() ;

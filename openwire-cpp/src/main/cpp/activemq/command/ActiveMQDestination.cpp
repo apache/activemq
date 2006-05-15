@@ -347,18 +347,18 @@ p<string> ActiveMQDestination::getClientId(p<ActiveMQDestination> destination)
 /*
  *
  */
-int ActiveMQDestination::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw (IOException)
+int ActiveMQDestination::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw (IOException)
 {
     int size = 0 ;
 
-    size += marshaller->marshalString(physicalName, mode, writer) ; 
+    size += marshaller->marshalString(physicalName, mode, ostream) ; 
     return size ;
 }
 
 /*
  *
  */
-void ActiveMQDestination::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw (IOException)
+void ActiveMQDestination::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw (IOException)
 {
-    physicalName = p_cast<string>(marshaller->unmarshalString(mode, reader)) ; 
+    physicalName = p_cast<string>(marshaller->unmarshalString(mode, istream)) ; 
 }

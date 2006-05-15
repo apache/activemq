@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ActiveMQ_AbstractCommand_hpp_
-#define ActiveMQ_AbstractCommand_hpp_
+#ifndef ActiveMQ_BaseDataStructure_hpp_
+#define ActiveMQ_BaseDataStructure_hpp_
 
 #include <string>
-#include "activemq/ICommand.hpp"
 #include "activemq/IDataStructure.hpp"
 #include "ppr/io/IOutputStream.hpp"
 #include "ppr/io/IInputStream.hpp"
@@ -39,24 +38,16 @@ namespace apache
 /*
  * 
  */
-class AbstractCommand : public ICommand
+class BaseDataStructure : public IDataStructure
 {
 protected:
-    int  commandId ;
-    bool responseRequired ;
+    BaseDataStructure() { } ;
 
-protected:
-    AbstractCommand() : commandId (0), responseRequired (false) {}
 public:
-    virtual int getCommandId() ;
-    virtual void setCommandId(int id) ;
-    virtual bool getResponseRequired() ;
-    virtual void setResponseRequired(bool value) ;
     virtual unsigned char getDataStructureType() ;
 
-    virtual bool isMarshallAware() ;
-    virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw(IOException) ;
+    virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw(IOException) ;
 
     static p<IDataStructure> createObject(unsigned char type) ;
     static p<string> getDataStructureTypeAsString(unsigned char type) ;
@@ -67,4 +58,4 @@ public:
   }
 }
 
-#endif /*ActiveMQ_AbstractCommand_hpp_*/
+#endif /*ActiveMQ_BaseDataStructure_hpp_*/

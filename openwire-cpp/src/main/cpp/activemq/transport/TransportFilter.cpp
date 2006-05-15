@@ -70,7 +70,7 @@ void TransportFilter::start()
 /*
  * 
  */
-void TransportFilter::oneway(p<ICommand> command)
+void TransportFilter::oneway(p<BaseCommand> command)
 {
     this->next->oneway(command) ;
 }
@@ -78,7 +78,7 @@ void TransportFilter::oneway(p<ICommand> command)
 /*
  * 
  */
-p<FutureResponse> TransportFilter::asyncRequest(p<ICommand> command)
+p<FutureResponse> TransportFilter::asyncRequest(p<BaseCommand> command)
 {
     return this->next->asyncRequest(command) ;
 }
@@ -86,7 +86,7 @@ p<FutureResponse> TransportFilter::asyncRequest(p<ICommand> command)
 /*
  * 
  */
-p<Response> TransportFilter::request(p<ICommand> command)
+p<Response> TransportFilter::request(p<BaseCommand> command)
 {
     return this->next->request(command) ;
 }
@@ -96,7 +96,7 @@ p<Response> TransportFilter::request(p<ICommand> command)
 /*
  * 
  */
-void TransportFilter::onCommand(p<ITransport> transport, p<ICommand> command)
+void TransportFilter::onCommand(p<ITransport> transport, p<BaseCommand> command)
 {
     // Forward incoming command to "real" listener
     this->listener->onCommand(transport, command) ;

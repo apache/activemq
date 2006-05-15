@@ -45,14 +45,6 @@ struct IInputStream : Interface
 {
     virtual void close() throw(IOException) = 0 ;
     virtual int read(char* buffer, int index, int count) throw(IOException) = 0 ;
-    virtual char readByte() throw(IOException) = 0 ;
-    virtual bool readBoolean() throw(IOException) = 0 ;
-    virtual double readDouble() throw(IOException) = 0 ;
-    virtual float readFloat() throw(IOException) = 0 ;
-    virtual short readShort() throw(IOException) = 0 ;
-    virtual int readInt() throw(IOException) = 0 ;
-    virtual long long readLong() throw(IOException) = 0 ;
-    virtual p<string> readString() throw(IOException) = 0 ;
 } ;
 
 /* namespace */

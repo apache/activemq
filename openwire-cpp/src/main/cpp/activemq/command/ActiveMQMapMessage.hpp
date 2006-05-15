@@ -83,12 +83,12 @@ public:
     virtual short getShort(const char* name) throw (MessageFormatException, IllegalArgumentException) ;
     virtual void setShort(const char* name, short value) throw (IllegalArgumentException) ;
     virtual p<string> getString(const char* name) throw (MessageFormatException, IllegalArgumentException) ;
-    virtual void setString(const char* name, p<string> value) throw (IllegalArgumentException) ;
+    virtual void setString(const char* name, const char* value) throw (IllegalArgumentException) ;
     virtual array<string> getMapNames() ;
     virtual bool itemExists(const char* name) ;
 
-    virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw (IOException) ;
-    virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw (IOException) ;
+    virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw (IOException) ;
+    virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw (IOException) ;
 
     //
     // The methods below are needed to resolve the multiple

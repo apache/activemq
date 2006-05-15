@@ -21,9 +21,19 @@ using namespace apache::ppr::io;
 /*
  *
  */
-DataInputStream::DataInputStream()
+DataInputStream::DataInputStream(p<IInputStream> istream)
 {
-    // no-op
+    this->istream = istream ;
+    this->encoder = CharsetEncoderRegistry::getEncoder() ;
+}
+
+/*
+ *
+ */
+DataInputStream::DataInputStream(p<IInputStream> istream, const char* encname)
+{
+    this->istream = istream ;
+    this->encoder = CharsetEncoderRegistry::getEncoder(encname) ;
 }
 
 /*
@@ -37,12 +47,40 @@ DataInputStream::~DataInputStream()
 /*
  *
  */
+void DataInputStream::close() throw(IOException)
+{
+    // Cascade close request to underlying stream
+    if( istream != NULL )
+    {
+        istream->close() ;
+        istream = NULL ;
+    }
+}
+
+/*
+ *
+ */
+int DataInputStream::read(char* buffer, int offset, int length) throw(IOException)
+{
+    // Check if underlying stream has been closed
+    checkClosed() ;
+
+    // Read buffer
+    return istream->read(buffer, offset, length) ;
+}
+
+/*
+ *
+ */
 char DataInputStream::readByte() throw(IOException)
 {
     char value ;
 
+    // Check if underlying stream has been closed
+    checkClosed() ;
+
     // Read a single byte
-    read(&value, 0, sizeof(char)) ;
+    istream->read(&value, 0, sizeof(char)) ;
     return value ;
 }
 
@@ -62,8 +100,11 @@ double DataInputStream::readDouble() throw(IOException)
 {
     double value ;
 
+    // Check if underlying stream has been closed
+    checkClosed() ;
+
     // Read a double and convert from big endian to little endian if necessary
-    read((char*)&value, 0, sizeof(double) ) ;
+    istream->read((char*)&value, 0, sizeof(double) ) ;
     return ntohd(value) ;
 }
 
@@ -74,8 +115,11 @@ float DataInputStream::readFloat() throw(IOException)
 {
     float value ;
 
+    // Check if underlying stream has been closed
+    checkClosed() ;
+
     // Read a float and convert from big endian to little endian if necessary
-    read((char*)&value, 0, sizeof(float)) ;
+    istream->read((char*)&value, 0, sizeof(float)) ;
     return ntohf(value) ;
 }
 
@@ -86,8 +130,11 @@ short DataInputStream::readShort() throw(IOException)
 {
     short value ;
 
+    // Check if underlying stream has been closed
+    checkClosed() ;
+
     // Read a short and convert from big endian to little endian if necessary
-    read((char*)&value, 0, sizeof(short)) ;
+    istream->read((char*)&value, 0, sizeof(short)) ;
     return ntohs(value) ;
 }
 
@@ -98,8 +145,11 @@ int DataInputStream::readInt() throw(IOException)
 {
     int value ;
 
+    // Check if underlying stream has been closed
+    checkClosed() ;
+
     // Read an int and convert from big endian to little endian if necessary
-    read((char*)&value, 0, sizeof(int)) ;
+    istream->read((char*)&value, 0, sizeof(int)) ;
     return ntohi(value) ;
 }
 
@@ -110,8 +160,11 @@ long long DataInputStream::readLong() throw(IOException)
 {
     long long value ;
 
+    // Check if underlying stream has been closed
+    checkClosed() ;
+
     // Read a long long and convert from big endian to little endian if necessary
-    read((char*)&value, 0, sizeof(long long)) ;
+    istream->read((char*)&value, 0, sizeof(long long)) ;
     return ntohll(value) ;
 }
 
@@ -121,26 +174,42 @@ long long DataInputStream::readLong() throw(IOException)
 p<string> DataInputStream::readString() throw(IOException)
 {
     p<string> value ;
-    char*     buffer ;
     short     length ;
+
+    // Check if underlying stream has been closed
+    checkClosed() ;
 
     // Read length of string
     length = readShort() ;
-    if (length < 0) {
-        throw IOException ("Negative length of string");
-    } else if (length > 0) {
-        buffer = new char[length+1] ;
+    if (length < 0)
+        throw IOException ("Negative length of string") ;
+    else if (length > 0)
+    {
+        array<char> buffer = array<char> (length+1) ;
 
         // Read string bytes
-        read(buffer, 0, length) ;
-        *(buffer+length) = '\0' ;
+        istream->read(&buffer[0], 0, length) ;
+        buffer[length] = '\0' ;
 
-        // Create string class
+        // Create string
         value = new string() ;
-        value->assign(buffer) ;
+        value->assign( buffer.c_array() ) ;
 
-        return value ;
-    } else {
-        return new string ("");
+        // Decode string if charset encoder has been configured
+        if( encoder != NULL )
+            value = encoder->decode(value) ;
     }
+    else   // ...empty string
+        value = new string("") ;
+
+    return value ;
+}
+
+/*
+ * Check if stream has been closed.
+ */
+void DataInputStream::checkClosed() throw(IOException)
+{
+    if( istream == NULL )
+        throw IOException("Input stream closed") ;
 }

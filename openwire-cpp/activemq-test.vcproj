@@ -47,6 +47,7 @@
 				SmallerTypeCheck="true"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(IntDir)\test.pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -122,6 +123,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				ProgramDataBaseFileName="$(IntDir)\test.pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -179,15 +181,47 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\test\cpp\TestListener.cpp"
+				RelativePath=".\src\test\cpp\IUnitTest.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\test\cpp\TestListener.hpp"
+				RelativePath=".\src\test\cpp\TestAsynchQueue.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\test\cpp\TestMain.cpp"
+				RelativePath=".\src\test\cpp\TestAsynchQueue.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestAsynchTopic.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestAsynchTopic.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestLocalTXCommit.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestLocalTXCommit.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestSuite.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestSuite.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestSynchQueue.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\test\cpp\TestSynchQueue.hpp"
 				>
 			</File>
 		</Filter>

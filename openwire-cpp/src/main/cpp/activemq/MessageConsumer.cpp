@@ -162,10 +162,11 @@ void MessageConsumer::dispatchAsyncMessages()
 
         if( message != NULL )
         {
-            listener->onMessage(message) ;
-
             // Auto acknowledge message if selected
             autoAcknowledge(message) ;
+
+            // Let listener process message
+            listener->onMessage(message) ;
         }
         else
             break ;

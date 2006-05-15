@@ -41,8 +41,8 @@ namespace apache
 struct IProtocol : Interface
 {
     virtual void handshake(p<ITransport> transport) = 0 ;
-	virtual void marshal(p<IDataStructure> object, p<IOutputStream> writer) throw(IOException) = 0 ;
-	virtual p<IDataStructure> unmarshal(p<IInputStream> reader) throw(IOException) = 0 ;
+	virtual void marshal(p<IDataStructure> object, p<IOutputStream> ostream) throw(IOException) = 0 ;
+	virtual p<IDataStructure> unmarshal(p<IInputStream> istream) throw(IOException) = 0 ;
 } ;
 
 /* namespace */

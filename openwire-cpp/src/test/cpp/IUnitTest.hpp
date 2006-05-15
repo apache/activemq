@@ -14,31 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef TestListener_hpp_
-#define TestListener_hpp_
+#ifndef IUnitTest_hpp_
+#define IUnitTest_hpp_
 
-#include <iostream>
-#include <string>
+// Turn off warning message for ignored exception specification
+#ifdef _MSC_VER
+#pragma warning( disable : 4290 )
+#endif
 
-#include "cms/IMessage.hpp"
-#include "cms/IBytesMessage.hpp"
-#include "cms/IMessageListener.hpp"
+#include <exception>
 #include "ppr/util/ifr/p"
 
-using namespace apache::cms;
 using namespace ifr;
 using namespace std;
 
-/*
- * 
- */
-class TestListener : public IMessageListener
+struct IUnitTest : Interface
 {
-public:
-    TestListener() ;
-    virtual ~TestListener() ;
+    virtual void setUp() throw (exception)  = 0 ;
+    virtual void execute() throw (exception)  = 0 ;
+    virtual void tearDown() throw (exception)  = 0 ;
+    virtual p<string> toString() = 0 ;
+};
 
-    virtual void onMessage(p<IMessage> message) ;
-} ;
-
-#endif /*TestListener_hpp_*/
+#endif /*IUnitTest_hpp_*/

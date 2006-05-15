@@ -36,7 +36,7 @@ LoggingFilter::LoggingFilter(p<ITransport> next) :
 /*
  * 
  */
-void LoggingFilter::oneway(p<ICommand> command)
+void LoggingFilter::oneway(p<BaseCommand> command)
 {
     int cmdid  = command->getCommandId(),
         corrid = -1 ;
@@ -48,13 +48,7 @@ void LoggingFilter::oneway(p<ICommand> command)
     // Dump log entry
     printf("Sending command: cmd.id = %d, corr.id = %d, type = %s\n",
            cmdid, corrid, 
-           AbstractCommand::getDataStructureTypeAsString(command->getDataStructureType())->c_str() ) ;
-
-/*    cout << "Sending command: id = " <<
-            command->getCommandId() <<
-            ", type = " <<
-            AbstractCommand::getDataStructureTypeAsString(command->getDataStructureType())->c_str() <<
-            endl ;*/
+           BaseDataStructure::getDataStructureTypeAsString(command->getDataStructureType())->c_str() ) ;
 
     this->next->oneway(command) ;
 }
@@ -65,7 +59,7 @@ void LoggingFilter::oneway(p<ICommand> command)
 /*
  * 
  */
-void LoggingFilter::onCommand(p<ITransport> transport, p<ICommand> command)
+void LoggingFilter::onCommand(p<ITransport> transport, p<BaseCommand> command)
 {
     if( command == NULL )
         cout << "Received NULL command" << endl ;
@@ -81,13 +75,7 @@ void LoggingFilter::onCommand(p<ITransport> transport, p<ICommand> command)
         // Dump log entry
         printf("Received command: cmd.id = %d, corr.id = %d, type = %s\n",
                cmdid, corrid, 
-               AbstractCommand::getDataStructureTypeAsString(command->getDataStructureType())->c_str() ) ;
-
-/*        cout << "Recived command: id = " <<
-                command->getCommandId() <<
-                ", type = " <<
-                AbstractCommand::getDataStructureTypeAsString(command->getDataStructureType())->c_str() <<
-                endl ;*/
+               BaseDataStructure::getDataStructureTypeAsString(command->getDataStructureType())->c_str() ) ;
     }
 
     // Forward incoming command to "real" listener

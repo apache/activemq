@@ -88,12 +88,8 @@ public:
 
 protected:
     // Implementation
-    int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw(IOException) ;
-    void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw(IOException) ;
-
-public:
-    // Static methods
-    //static p<ActiveMQMessage> transform(p<IMessage> message) ;
+    int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw(IOException) ;
 } ;
 
 /* namespace */

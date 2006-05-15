@@ -25,13 +25,15 @@
 #include <string>
 #include <map>
 #include "activemq/IDataStructure.hpp"
-#include "activemq/command/AbstractCommand.hpp"
+#include "activemq/command/BaseDataStructure.hpp"
 #include "activemq/command/WireFormatInfo.hpp"
 #include "activemq/protocol/IMarshaller.hpp"
 #include "activemq/protocol/openwire/OpenWireProtocol.hpp"
 #include "ppr/io/DataOutputStream.hpp"
 #include "ppr/io/DataInputStream.hpp"
 #include "ppr/io/IOException.hpp"
+#include "ppr/io/encoding/CharsetEncoderRegistry.hpp"
+#include "ppr/io/encoding/ICharsetEncoder.hpp"
 #include "ppr/util/MapItemHolder.hpp"
 #include "ppr/util/ifr/array"
 #include "ppr/util/ifr/p"
@@ -49,6 +51,7 @@ namespace apache
         using namespace apache::activemq::command;
         using namespace apache::activemq::protocol;
         using namespace apache::ppr::io;
+        using namespace apache::ppr::io::encoding;
         using namespace apache::ppr::util;
 
 /*
@@ -57,7 +60,8 @@ namespace apache
 class OpenWireMarshaller : public IMarshaller
 {
 private:
-    p<WireFormatInfo> formatInfo ;
+    p<WireFormatInfo>  formatInfo ;
+    p<ICharsetEncoder> encoder ;
 
 public:
     // Primitive types
@@ -76,31 +80,35 @@ public:
 public:
     OpenWireMarshaller(p<WireFormatInfo> formatInfo) ;
 
-    virtual int marshalBoolean(bool value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalByte(char value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalShort(short value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalInt(int value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalLong(long long value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalFloat(float value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalDouble(double value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalString(p<string> value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalObject(p<IDataStructure> object, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalObjectArray(array<IDataStructure> object, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalByteArray(array<char> value, int mode, p<IOutputStream> writer) throw(IOException) ;
-    virtual int marshalMap(p<PropertyMap> value, int mode, p<IOutputStream> writer) throw(IOException) ;
+    virtual int marshalBoolean(bool value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalByte(char value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalShort(short value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalInt(int value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalLong(long long value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalFloat(float value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalDouble(double value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalString(p<string> value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalObject(p<IDataStructure> object, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalObjectArray(array<IDataStructure> object, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalByteArray(array<char> value, int mode, p<IOutputStream> ostream) throw(IOException) ;
+    virtual int marshalMap(p<PropertyMap> value, int mode, p<IOutputStream> ostream) throw(IOException) ;
 
-    virtual bool unmarshalBoolean(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual char unmarshalByte(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual short unmarshalShort(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual int unmarshalInt(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual long long unmarshalLong(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual float unmarshalFloat(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual double unmarshalDouble(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual p<string> unmarshalString(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual p<IDataStructure> unmarshalObject(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual array<IDataStructure> unmarshalObjectArray(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual array<char> unmarshalByteArray(int mode, p<IInputStream> reader) throw(IOException) ;
-    virtual p<PropertyMap> unmarshalMap(int mode, p<IInputStream> reader) throw(IOException) ;
+    virtual bool unmarshalBoolean(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual char unmarshalByte(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual short unmarshalShort(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual int unmarshalInt(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual long long unmarshalLong(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual float unmarshalFloat(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual double unmarshalDouble(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual p<string> unmarshalString(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual p<IDataStructure> unmarshalObject(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual array<IDataStructure> unmarshalObjectArray(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual array<char> unmarshalByteArray(int mode, p<IInputStream> istream) throw(IOException) ;
+    virtual p<PropertyMap> unmarshalMap(int mode, p<IInputStream> istream) throw(IOException) ;
+
+protected:
+    p<DataOutputStream> checkOutputStream(p<IOutputStream> ostream) throw (IOException) ;
+    p<DataInputStream> checkInputStream(p<IInputStream> istream) throw (IOException) ;
 } ;
 
 /* namespace */

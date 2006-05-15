@@ -23,6 +23,7 @@ using namespace apache::activemq::command;
  */
 ActiveMQTextMessage::ActiveMQTextMessage()
 {
+    encoder = CharsetEncoderRegistry::getEncoder() ;
     setText(NULL) ;
 }
 
@@ -31,6 +32,16 @@ ActiveMQTextMessage::ActiveMQTextMessage()
  */
 ActiveMQTextMessage::ActiveMQTextMessage(const char* text)
 {
+    encoder = CharsetEncoderRegistry::getEncoder() ;
+    setText(text) ;
+}
+
+/*
+ * 
+ */
+ActiveMQTextMessage::ActiveMQTextMessage(const char* text, const char* encname)
+{
+    encoder = CharsetEncoderRegistry::getEncoder(encname) ;
     setText(text) ;
 }
 
@@ -57,17 +68,16 @@ p<string> ActiveMQTextMessage::getText()
     // Extract text from message content
     if( this->content.size() > 0 )
     {
-        int utflen = 0 ;
-        char* buffer = this->content.c_array() ;
+        p<string> value ;
 
-        // TODO: assuming that the text is ASCII
-        utflen |= (char) ((buffer[0] << 24) & 0xFF) ;
-        utflen |= (char) ((buffer[1] >> 16) & 0xFF);
-        utflen |= (char) ((buffer[2] >> 8) & 0xFF);
-        utflen |= (char) ((buffer[3] >> 0) & 0xFF);
+        // Use undecoded string, skip string length
+        value = new string( this->content.c_array() + sizeof(int), this->content.size() - sizeof(int) ) ;
 
-        p<string> text = new string( buffer + 4, this->content.size() - 4 ) ;
-        return text ;
+        // Decode string if an encoder has been set up
+        if( encoder != NULL )
+            value = encoder->decode( value ) ;
+
+        return value ;
     }
     return NULL ;
 }
@@ -79,19 +89,32 @@ void ActiveMQTextMessage::setText(const char* text)
 {
     if( text != NULL )
     {
-        int length = (int)strlen(text) ;
-        int utflen = length ;
+        p<DataOutputStream>      dos ;
+        p<ByteArrayOutputStream> bos ;
+        p<string>                value ;
+        int                      length ;
 
-        // TODO: assuming that the text is ASCII
-        this->content = array<char> (length + 4) ;
+        // Set up in-memory streams
+        bos = new ByteArrayOutputStream() ;
+        dos = new DataOutputStream( bos ) ;
 
-        this->content[0] = (char) ((utflen >> 24) & 0xFF) ;
-        this->content[1] = (char) ((utflen >> 16) & 0xFF);
-        this->content[2] = (char) ((utflen >> 8) & 0xFF);
-        this->content[3] = (char) ((utflen >> 0) & 0xFF);
+        // Encode string if an encoder has been set up
+        if( encoder != NULL )
+        {
+            // Encode string
+            value = encoder->encode( p<string> (new string(text)), &length) ;
+        }
+        else   // ...use unencoded string
+        {
+            length = (int)strlen(text) ;
+            value  = new string(text) ;
+        }
+        // Prepend data with the string length (4 bytes)
+        dos->writeInt( length ) ;
+        dos->write( value->c_str(), 0, length ) ;
 
-        for( int i = 0 ; i < length ; i++ )
-            this->content[4+i] = text[i] ;
+        // Finally, store text in content holder
+        this->content = bos->toArray() ;
     }
     else
         this->content = NULL ;

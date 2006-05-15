@@ -18,7 +18,18 @@
 
 using namespace apache::ppr::io;
 
-void SocketInputStream::close() throw(IOException)
+/*
+ *
+ */
+SocketInputStream::SocketInputStream(p<ISocket> socket)
+{
+    this->socket = socket ;
+}
+
+/*
+ *
+ */
+SocketInputStream::~SocketInputStream()
 {
     // no-op
 }
@@ -26,21 +37,37 @@ void SocketInputStream::close() throw(IOException)
 /*
  *
  */
-int SocketInputStream::read(char* buf, int index, int size) throw(IOException)
+void SocketInputStream::close() throw(IOException)
 {
-    char* buffer = buf + index ;
-    int   length, remaining = size ;
+    // Cascade close request to underlying socket
+    if( socket != NULL )
+    {
+        socket->close() ;
+        socket = NULL ;
+    }
+}
+
+/*
+ *
+ */
+int SocketInputStream::read(char* buf, int offset, int length) throw(IOException)
+{
+    char* buffer = buf + offset ;
+    //char* buffer = buf + index ;
+    //int   length, remaining = size ;
+    int bytesRead ;
 
     // Loop until requested number of bytes are read
-    while( remaining > 0 )
-    {
+    //while( remaining > 0 )
+    //{
         // Try to read remaining bytes
-        length = remaining ;
+      //  length = remaining ;
 
         try
         {
             // Read some bytes from socket
-            length = socket->receive(buffer, length) ;
+            //length = socket->receive(buffer, length) ;
+            bytesRead = socket->receive(buffer, length) ;
         }
         catch( SocketException se )
         {
@@ -49,8 +76,9 @@ int SocketInputStream::read(char* buf, int index, int size) throw(IOException)
         }
 
         // Adjust buffer pointer and remaining number of bytes
-        buffer    += length ;
-        remaining -= length ;
-	}
-	return size ;
+        //buffer    += length ;
+        //remaining -= length ;
+	//}
+	//return size ;
+    return bytesRead ;
 }
