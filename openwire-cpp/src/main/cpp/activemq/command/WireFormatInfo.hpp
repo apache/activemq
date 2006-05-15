@@ -24,7 +24,7 @@
 
 #include <string>
 #include <map>
-#include "activemq/command/AbstractCommand.hpp"
+#include "activemq/command/BaseCommand.hpp"
 #include "activemq/protocol/IMarshaller.hpp"
 #include "ppr/io/IOutputStream.hpp"
 #include "ppr/io/IInputStream.hpp"
@@ -49,7 +49,7 @@ namespace apache
 /*
  *  Marshalling code for Open Wire Format for WireFormatInfo
  */
-class WireFormatInfo : public AbstractCommand
+class WireFormatInfo : public BaseCommand
 {
 protected:
     array<char> magic ;

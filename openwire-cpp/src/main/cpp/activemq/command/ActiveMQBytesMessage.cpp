@@ -24,8 +24,10 @@ using namespace apache::activemq::command;
  */
 ActiveMQBytesMessage::ActiveMQBytesMessage()
 {
-    this->in       = NULL ;
-    this->out      = new ByteArrayOutputStream() ;
+    this->bis      = NULL ;
+    this->bos      = new ByteArrayOutputStream() ;
+    this->dis      = NULL ;
+    this->dos      = new DataOutputStream( bos ) ;
     this->readMode = false ;
 }
 
@@ -38,8 +40,10 @@ ActiveMQBytesMessage::ActiveMQBytesMessage(char* body, int size)
     array<char> buffer = array<char> (size) ;
     memcpy(buffer.c_array(), body, size);
 
-    this->in       = NULL ;
-    this->out      = new ByteArrayOutputStream(buffer) ;
+    this->bis      = NULL ;
+    this->bos      = new ByteArrayOutputStream(buffer) ;
+    this->dis      = NULL ;
+    this->dos      = new DataOutputStream( bos ) ;
     this->readMode = false ;
 }
 
@@ -63,10 +67,20 @@ unsigned char ActiveMQBytesMessage::getDataStructureType()
  */
 void ActiveMQBytesMessage::reset()
 {
-    if( !readMode )
+    if( readMode )
     {
-        this->in       = new ByteArrayInputStream( out->toArray() ) ;
-        this->out      = NULL ;
+        this->bos      = new ByteArrayOutputStream( bis->toArray() ) ;
+        this->bis      = NULL ;
+        this->dos      = new DataOutputStream( bos ) ;
+        this->dis      = NULL ;
+        this->readMode = false ;
+    }
+    else
+    {
+        this->bis      = new ByteArrayInputStream( bos->toArray() ) ;
+        this->bos      = NULL ;
+        this->dis      = new DataInputStream( bis ) ;
+        this->dos      = NULL ;
         this->readMode = true ;
     }
 }
@@ -83,7 +97,7 @@ char ActiveMQBytesMessage::readByte() throw(MessageNotReadableException, Message
     try
     {
         // Read a single byte
-        return readByte() ;
+        return dis->readByte() ;
     }
     catch( EOFException eof )
     {
@@ -94,7 +108,7 @@ char ActiveMQBytesMessage::readByte() throw(MessageNotReadableException, Message
 /*
  *
  */
-int ActiveMQBytesMessage::readBytes(char* buffer, int index, int length) throw (MessageNotReadableException, MessageEOFException)
+int ActiveMQBytesMessage::readBytes(char* buffer, int offset, int length) throw (MessageNotReadableException, MessageEOFException)
 {
     // Assert read mode
     if( !readMode )
@@ -103,7 +117,7 @@ int ActiveMQBytesMessage::readBytes(char* buffer, int index, int length) throw (
     try
     {
         // Read some bytes
-        return in->read(buffer, index, length) ;
+        return dis->read(buffer, offset, length) ;
     }
     catch( EOFException eof )
     {
@@ -123,7 +137,7 @@ bool ActiveMQBytesMessage::readBoolean() throw(MessageNotReadableException, Mess
     try
     {
         // Read a boolean
-        return in->readBoolean() ;
+        return dis->readBoolean() ;
     }
     catch( EOFException eof )
     {
@@ -143,7 +157,7 @@ double ActiveMQBytesMessage::readDouble() throw(MessageNotReadableException, Mes
     try
     {
         // Read a double
-        return in->readDouble() ;
+        return dis->readDouble() ;
     }
     catch( EOFException eof )
     {
@@ -163,7 +177,7 @@ float ActiveMQBytesMessage::readFloat() throw(MessageNotReadableException, Messa
     try
     {
         // Read a float
-        return in->readFloat() ;
+        return dis->readFloat() ;
     }
     catch( EOFException eof )
     {
@@ -183,7 +197,7 @@ short ActiveMQBytesMessage::readShort() throw(MessageNotReadableException, Messa
     try
     {
         // Read a short
-        return in->readShort() ;
+        return dis->readShort() ;
     }
     catch( EOFException eof )
     {
@@ -203,7 +217,7 @@ int ActiveMQBytesMessage::readInt() throw(MessageNotReadableException, MessageEO
     try
     {
         // Read an integer
-        return in->readInt() ;
+        return dis->readInt() ;
     }
     catch( EOFException eof )
     {
@@ -223,7 +237,7 @@ long long ActiveMQBytesMessage::readLong() throw(MessageNotReadableException, Me
     try
     {
         // Read a long long
-        return in->readLong() ;
+        return dis->readLong() ;
     }
     catch( EOFException eof )
     {
@@ -234,7 +248,7 @@ long long ActiveMQBytesMessage::readLong() throw(MessageNotReadableException, Me
 /*
  *
  */
-p<string> ActiveMQBytesMessage::readUTF() throw(MessageNotReadableException, MessageEOFException)
+p<string> ActiveMQBytesMessage::readString() throw(MessageNotReadableException, MessageEOFException)
 {
     // Assert read mode
     if( !readMode )
@@ -243,7 +257,7 @@ p<string> ActiveMQBytesMessage::readUTF() throw(MessageNotReadableException, Mes
     try
     {
         // Read a string
-        return in->readString() ;
+        return dis->readString() ;
     }
     catch( EOFException eof )
     {
@@ -261,20 +275,20 @@ void ActiveMQBytesMessage::writeByte(char value) throw (MessageNotWritableExcept
         throw MessageNotWritableException() ;
 
     // Write a single byte
-    out->writeByte(value) ;
+    dos->writeByte(value) ;
 }
 
 /*
  * 
  */
-void ActiveMQBytesMessage::writeBytes(char* value, int index, int length) throw (MessageNotWritableException)
+void ActiveMQBytesMessage::writeBytes(char* value, int offset, int length) throw (MessageNotWritableException)
 {
     // Assert write mode
     if( readMode )
         throw MessageNotWritableException() ;
 
     // Write some bytes
-    out->write(value, index, length) ;
+    dos->write(value, offset, length) ;
 }
 
 /*
@@ -287,7 +301,7 @@ void ActiveMQBytesMessage::writeBoolean(bool value) throw (MessageNotWritableExc
         throw MessageNotWritableException() ;
 
     // Write a boolean
-    out->writeBoolean(value) ;
+    dos->writeBoolean(value) ;
 }
 
 /*
@@ -300,7 +314,7 @@ void ActiveMQBytesMessage::writeDouble(double value) throw (MessageNotWritableEx
         throw MessageNotWritableException() ;
 
     // Write a double
-    out->writeDouble(value) ;
+    dos->writeDouble(value) ;
 }
 
 /*
@@ -313,7 +327,7 @@ void ActiveMQBytesMessage::writeFloat(float value) throw (MessageNotWritableExce
         throw MessageNotWritableException() ;
 
     // Write a float
-    out->writeFloat(value) ;
+    dos->writeFloat(value) ;
 }
 
 /*
@@ -326,7 +340,7 @@ void ActiveMQBytesMessage::writeInt(int value) throw (MessageNotWritableExceptio
         throw MessageNotWritableException() ;
 
     // Write an integer
-    out->writeInt(value) ;
+    dos->writeInt(value) ;
 }
 
 /*
@@ -339,7 +353,7 @@ void ActiveMQBytesMessage::writeLong(long long value) throw (MessageNotWritableE
         throw MessageNotWritableException() ;
 
     // Write a long long
-    out->writeLong(value) ;
+    dos->writeLong(value) ;
 }
 
 /*
@@ -352,13 +366,13 @@ void ActiveMQBytesMessage::writeShort(short value) throw (MessageNotWritableExce
         throw MessageNotWritableException() ;
 
     // Write a short
-    out->writeShort(value) ;
+    dos->writeShort(value) ;
 }
 
 /*
  * 
  */
-void ActiveMQBytesMessage::writeUTF(const char* value) throw (MessageNotWritableException)
+void ActiveMQBytesMessage::writeString(const char* value) throw (MessageNotWritableException)
 {
     // Assert write mode
     if( readMode )
@@ -366,22 +380,22 @@ void ActiveMQBytesMessage::writeUTF(const char* value) throw (MessageNotWritable
 
     // Write a string
     p<string> v = new string(value) ;
-    out->writeString(v) ;
+    dos->writeString(v) ;
 }
 
 /*
  *
  */
-int ActiveMQBytesMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw (IOException)
+int ActiveMQBytesMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw (IOException)
 {
     int size = 0 ;
 
     // Copy body to message content container
     if( mode == IMarshaller::MARSHAL_SIZE )
-        this->content = ( readMode) ? in->toArray() : out->toArray() ;
+        this->content = ( readMode) ? bis->toArray() : bos->toArray() ;
 
 //    size += (int)this->content.size() ;
-    size += ActiveMQMessage::marshal(marshaller, mode, writer) ;
+    size += ActiveMQMessage::marshal(marshaller, mode, ostream) ;
 
     // Note! Message content marshalling is done in super class
 
@@ -391,16 +405,18 @@ int ActiveMQBytesMessage::marshal(p<IMarshaller> marshaller, int mode, p<IOutput
 /*
  *
  */
-void ActiveMQBytesMessage::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw (IOException)
+void ActiveMQBytesMessage::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw (IOException)
 {
     // Note! Message content unmarshalling is done in super class
-    ActiveMQMessage::unmarshal(marshaller, mode, reader) ;
+    ActiveMQMessage::unmarshal(marshaller, mode, istream) ;
 
     // Copy body to message content holder
     if( mode == IMarshaller::MARSHAL_READ )
     {
-        in       = new ByteArrayInputStream( this->content ) ;
-        out      = NULL ;
+        bis      = new ByteArrayInputStream( this->content ) ;
+        bos      = NULL ;
+        dis      = new DataInputStream( bis ) ;
+        dos      = NULL ;
         readMode = true ;
     }
 }

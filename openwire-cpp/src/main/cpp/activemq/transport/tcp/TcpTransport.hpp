@@ -26,7 +26,6 @@
 #include <map>
 #include "cms/CmsException.hpp"
 #include "activemq/BrokerException.hpp"
-#include "activemq/ICommand.hpp"
 #include "activemq/command/BaseCommand.hpp"
 #include "activemq/command/Response.hpp"
 #include "activemq/command/ExceptionResponse.hpp"
@@ -35,6 +34,10 @@
 #include "activemq/transport/ITransport.hpp"
 #include "activemq/transport/ICommandListener.hpp"
 #include "ppr/InvalidOperationException.hpp"
+#include "ppr/io/DataInputStream.hpp"
+#include "ppr/io/DataOutputStream.hpp"
+#include "ppr/io/BufferedInputStream.hpp"
+#include "ppr/io/BufferedOutputStream.hpp"
 #include "ppr/io/SocketInputStream.hpp"
 #include "ppr/io/SocketOutputStream.hpp"
 #include "ppr/net/ISocket.hpp"
@@ -73,14 +76,14 @@ namespace apache
 class TcpTransport : public ITransport
 {
 private:
-    p<IProtocol>                 protocol ;
-    p<SocketInputStream>         reader ;
-    p<SocketOutputStream>        writer ;
-    p<ICommandListener>          listener ;
-    p<ReadThread>                readThread ;
-    p<ISocket>                   socket ;
-    bool                         closed,
-                                 started ;
+    p<IProtocol>        protocol ;
+    p<DataInputStream>  istream ;
+    p<DataOutputStream> ostream ;
+    p<ICommandListener> listener ;
+    p<ReadThread>       readThread ;
+    p<ISocket>          socket ;
+    bool                closed,
+                        started ;
 
 public:
     TcpTransport(p<ISocket> socket, p<IProtocol> wireProtocol) ;
@@ -90,9 +93,9 @@ public:
     virtual p<ICommandListener> getCommandListener() ;
 
     virtual void start() ;
-    virtual void oneway(p<ICommand> command) ;
-    virtual p<FutureResponse> asyncRequest(p<ICommand> command) ;
-    virtual p<Response> request(p<ICommand> command) ;
+    virtual void oneway(p<BaseCommand> command) ;
+    virtual p<FutureResponse> asyncRequest(p<BaseCommand> command) ;
+    virtual p<Response> request(p<BaseCommand> command) ;
 
 public:
     void readLoop() ;

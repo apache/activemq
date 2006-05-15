@@ -17,7 +17,7 @@
 #ifndef Ppr_SocketInputStream_hpp_
 #define Ppr_SocketInputStream_hpp_
 
-#include "ppr/io/DataInputStream.hpp"
+#include "ppr/io/IInputStream.hpp"
 #include "ppr/net/ISocket.hpp"
 #include "ppr/net/SocketException.hpp"
 #include "ppr/util/ifr/p"
@@ -30,22 +30,23 @@ namespace apache
     {
       using namespace ifr ;
       using namespace apache::ppr::net ;
-      using namespace apache::ppr::util ;
 
 /*
  * SocketInputStream reads primitive C++ data types from a
  * socket stream. It currently uses PPR sockets for
  * platform independency.
  */
-class SocketInputStream : public DataInputStream
+class SocketInputStream : public IInputStream
 {
 private:
     p<ISocket> socket ;
+
 public:
-    SocketInputStream(p<ISocket> socket) : socket (socket) {}
-public:
+    SocketInputStream(p<ISocket> socket) ;
+    virtual ~SocketInputStream() ;
+
     virtual void close() throw(IOException) ;
-    virtual int read(char* buffer, int index, int size) throw(IOException) ;
+    virtual int read(char* buffer, int offset, int length) throw(IOException) ;
 } ;
 
 /* namespace */

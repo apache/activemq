@@ -21,17 +21,77 @@ using namespace apache::activemq::command;
 
 // Attribute methods ------------------------------------------------
 
+/*
+ * 
+ */
+int BaseCommand::getCommandId()
+{
+    return commandId ; 
+}
+
+/*
+ * 
+ */
+void BaseCommand::setCommandId(int id)
+{
+    commandId = id ; 
+}
+
+/*
+ * 
+ */
+bool BaseCommand::getResponseRequired()
+{
+    return responseRequired ;
+}
+
+/*
+ * 
+ */
+void BaseCommand::setResponseRequired(bool value)
+{
+    responseRequired = value ;
+}
+
+/*
+ * 
+ */
 int BaseCommand::getHashCode()
 {
-    return ( commandId * 38 ) + getDataStructureType() ;
+    return ( commandId * 38 ) + BaseDataStructure::getDataStructureType() ;
 }
 
 
 // Operation methods ------------------------------------------------
 
+/*
+ * 
+ */
+int BaseCommand::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw(IOException)
+{
+    int size = 0 ;
+
+    size += marshaller->marshalInt(commandId, mode, ostream) ;
+    size += marshaller->marshalBoolean(responseRequired, mode, ostream) ; 
+
+    return size ;
+}
+
+/*
+ * 
+ */
+void BaseCommand::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw(IOException)
+{
+    commandId = marshaller->unmarshalInt(mode, istream) ;
+    responseRequired = marshaller->unmarshalBoolean(mode, istream) ; 
+}
+
+/*
+ * 
+ */
 bool BaseCommand::operator== (BaseCommand& that)
 {
-    if( this->getDataStructureType() == that.getDataStructureType() &&
+    if( BaseDataStructure::getDataStructureType() == ((BaseDataStructure)that).getDataStructureType() &&
         this->commandId == that.commandId )
     {
         return true ;
@@ -39,12 +99,15 @@ bool BaseCommand::operator== (BaseCommand& that)
     return false ;
 }
 
+/*
+ * 
+ */
 p<string> BaseCommand::toString()
 {
     p<string> str = new string() ;
     char      buffer[10] ;
     
-    str->assign( getDataStructureTypeAsString( getDataStructureType() )->c_str() ) ;
+    str->assign( BaseDataStructure::getDataStructureTypeAsString( BaseDataStructure::getDataStructureType() )->c_str() ) ;
 
     if( str->length() == 0 )
         str->assign("") ;

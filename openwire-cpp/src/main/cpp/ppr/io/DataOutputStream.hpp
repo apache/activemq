@@ -18,6 +18,8 @@
 #define Ppr_DataOutputStream_hpp_
 
 #include "ppr/io/IOutputStream.hpp"
+#include "ppr/io/encoding/ICharsetEncoder.hpp"
+#include "ppr/io/encoding/CharsetEncoderRegistry.hpp"
 #include "ppr/util/Endian.hpp"
 #include "ppr/util/ifr/p"
 
@@ -27,13 +29,15 @@ namespace apache
   {
     namespace io
     {
-      using namespace apache::ppr::util; // htonx and ntohx functions.
       using namespace ifr;
+      using namespace apache::ppr::util; // htonx and ntohx functions.
+      using namespace apache::ppr::io::encoding;
 
 /*
  * The DataOutputStream class writes primitive C++ data types to an
  * underlying output stream in a Java compatible way. Strings
- * are written as raw bytes, no character encoding is performed.
+ * are written as either raw bytes or encoded should encoding
+ * have been configured.
  *
  * All numeric data types are written in big endian (network byte
  * order) and if the platform is little endian they are converted
@@ -43,10 +47,18 @@ namespace apache
  */
 class DataOutputStream : public IOutputStream
 {
+private:
+    p<IOutputStream>   ostream ;
+    p<ICharsetEncoder> encoder ;
+
 public:
-    virtual void close() throw(IOException) = 0 ;
-    virtual void flush() throw(IOException) = 0 ;
-    virtual int write(const char* buffer, int index, int count) throw(IOException) = 0 ;
+    DataOutputStream(p<IOutputStream> ostream) ;
+    DataOutputStream(p<IOutputStream> ostream, const char* encname) ;
+    virtual ~DataOutputStream() ;
+
+    virtual void close() throw(IOException) ;
+    virtual void flush() throw(IOException) ;
+    virtual int write(const char* buffer, int offset, int length) throw(IOException) ;
     virtual void writeByte(char v) throw(IOException) ;
     virtual void writeBoolean(bool v) throw(IOException) ;
     virtual void writeDouble(double v) throw(IOException) ;
@@ -54,7 +66,10 @@ public:
     virtual void writeShort(short v) throw(IOException) ;
     virtual void writeInt(int v) throw(IOException) ;
     virtual void writeLong(long long v) throw(IOException) ;
-    virtual void writeString(p<string> v) throw(IOException) ;
+    virtual int writeString(p<string> v) throw(IOException) ;
+
+protected:
+    void checkClosed() throw(IOException) ;
 } ;
 
 /* namespace */

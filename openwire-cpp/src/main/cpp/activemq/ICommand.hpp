@@ -17,17 +17,18 @@
 #ifndef ActiveMQ_ICommand_hpp_
 #define ActiveMQ_ICommand_hpp_
 
-#include "activemq/IDataStructure.hpp"
+#include "ppr/util/ifr/p"
 
 namespace apache
 {
   namespace activemq
   {
+    using namespace ifr;
 
 /*
  * An OpenWire command
  */
-struct ICommand : IDataStructure
+struct ICommand : Interface
 {
     virtual int getCommandId() = 0;
     virtual void setCommandId(int value) = 0;

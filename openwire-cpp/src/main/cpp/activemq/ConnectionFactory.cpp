@@ -27,7 +27,7 @@ using namespace apache::activemq;
 ConnectionFactory::ConnectionFactory()
 {
     // Use default URI
-    brokerUri        = new Uri ("tcp://localhost:61616?wireFormat=openwire") ;
+    brokerUri        = new Uri ("tcp://localhost:61616") ;
     username         = NULL ;
     password         = NULL ;
     clientId         = Guid::getGuidString() ;

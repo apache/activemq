@@ -18,6 +18,7 @@
 #define ActiveMQ_TransportFilter_hpp_
 
 #include <string>
+#include "activemq/command/BaseCommand.hpp"
 #include "activemq/command/Response.hpp"
 #include "activemq/transport/ITransport.hpp"
 #include "ppr/InvalidOperationException.hpp"
@@ -50,11 +51,11 @@ public:
     virtual p<ICommandListener> getCommandListener() ;
 
 	virtual void start() ;
-	virtual void oneway(p<ICommand> command) ;
-	virtual p<FutureResponse> asyncRequest(p<ICommand> command) ;
-	virtual p<Response> request(p<ICommand> command) ;
+	virtual void oneway(p<BaseCommand> command) ;
+	virtual p<FutureResponse> asyncRequest(p<BaseCommand> command) ;
+	virtual p<Response> request(p<BaseCommand> command) ;
 
-    virtual void onCommand(p<ITransport> transport, p<ICommand> command) ;
+    virtual void onCommand(p<ITransport> transport, p<BaseCommand> command) ;
     virtual void onError(p<ITransport> transport, exception& error) ;
 } ;
 

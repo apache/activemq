@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 #include <string.h>
-#include "activemq/command/AbstractCommand.hpp"
+#include "activemq/command/BaseDataStructure.hpp"
+
 #include "activemq/command/ActiveMQMessage.hpp"
 #include "activemq/command/ActiveMQBytesMessage.hpp"
 #include "activemq/command/ActiveMQMapMessage.hpp"
@@ -23,6 +24,11 @@
 #include "activemq/command/ActiveMQStreamMessage.hpp"
 #include "activemq/command/ActiveMQTextMessage.hpp"
 #include "activemq/command/ActiveMQQueue.hpp"
+#include "activemq/command/ActiveMQTopic.hpp"
+#include "activemq/command/ActiveMQTempQueue.hpp"
+#include "activemq/command/ActiveMQTempTopic.hpp"
+#include "activemq/command/ExceptionResponse.hpp"
+#include "activemq/command/ConnectionId.hpp"
 #include "activemq/command/ConsumerId.hpp"
 #include "activemq/command/ProducerId.hpp"
 #include "activemq/command/MessageId.hpp"
@@ -49,39 +55,7 @@ using namespace apache::activemq::command;
 /*
  * 
  */
-int AbstractCommand::getCommandId()
-{
-    return commandId ; 
-}
-
-/*
- * 
- */
-void AbstractCommand::setCommandId(int id)
-{
-    commandId = id ; 
-}
-
-/*
- * 
- */
-bool AbstractCommand::getResponseRequired()
-{
-    return responseRequired ;
-}
-
-/*
- * 
- */
-void AbstractCommand::setResponseRequired(bool value)
-{
-    responseRequired = value ;
-}
-
-/*
- * 
- */
-unsigned char AbstractCommand::getDataStructureType()
+unsigned char BaseDataStructure::getDataStructureType()
 {
     return 0 ;
 }
@@ -89,15 +63,7 @@ unsigned char AbstractCommand::getDataStructureType()
 /*
  * 
  */
-bool AbstractCommand::isMarshallAware()
-{
-    return false ;
-}
-
-/*
- * 
- */
-int AbstractCommand::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw(IOException)
+int BaseDataStructure::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw(IOException)
 {
     return 0 ;
 }
@@ -105,15 +71,15 @@ int AbstractCommand::marshal(p<IMarshaller> marshaller, int mode, p<IOutputStrea
 /*
  * 
  */
-void AbstractCommand::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw(IOException)
+void BaseDataStructure::unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw(IOException)
 {
 }
 
 /*
  * 
  */
-p<IDataStructure> AbstractCommand::createObject(unsigned char type)
- {
+p<IDataStructure> BaseDataStructure::createObject(unsigned char type)
+{
     switch( type )
     {
         case ActiveMQMessage::TYPE:
@@ -130,6 +96,16 @@ p<IDataStructure> AbstractCommand::createObject(unsigned char type)
             return new ActiveMQMapMessage() ;
         case ActiveMQQueue::TYPE:
             return new ActiveMQQueue() ;
+        case ActiveMQTopic::TYPE:
+            return new ActiveMQTopic() ;
+        case ActiveMQTempQueue::TYPE:
+            return new ActiveMQTempQueue() ;
+        case ActiveMQTempTopic::TYPE:
+            return new ActiveMQTempTopic() ;
+        case ExceptionResponse::TYPE:
+            return new ExceptionResponse() ;
+        case ConnectionId::TYPE:
+            return new ConnectionId() ;
         case ConsumerId::TYPE:
             return new ConsumerId() ;
         case ProducerId::TYPE:
@@ -178,7 +154,7 @@ p<IDataStructure> AbstractCommand::createObject(unsigned char type)
 /*
  * 
  */
-p<string> AbstractCommand::getDataStructureTypeAsString(unsigned char type)
+p<string> BaseDataStructure::getDataStructureTypeAsString(unsigned char type)
 {
     p<string> packetType = new string() ;
 
@@ -205,6 +181,12 @@ p<string> AbstractCommand::getDataStructureTypeAsString(unsigned char type)
         case ActiveMQQueue::TYPE:
             packetType->assign("ACTIVEMQ_QUEUE") ;
             break ;
+        case ActiveMQTopic::TYPE:
+            packetType->assign("ACTIVEMQ_TOPIC") ;
+            break ;
+        case ConnectionId::TYPE:
+            packetType->assign("CONNECTION_ID") ;
+            break ;
         case ConsumerId::TYPE:
             packetType->assign("CONSUMER_ID") ;
             break ;
@@ -225,6 +207,9 @@ p<string> AbstractCommand::getDataStructureTypeAsString(unsigned char type)
             break ;
         case Response::TYPE:
             packetType->assign("RESPONSE") ;
+            break ;
+        case ExceptionResponse::TYPE:
+            packetType->assign("EXCEPTION_RESPONSE") ;
             break ;
         case ConsumerInfo::TYPE:
             packetType->assign("CONSUMER_INFO") ;

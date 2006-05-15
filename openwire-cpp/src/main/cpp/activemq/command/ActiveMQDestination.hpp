@@ -23,7 +23,7 @@
 #include "cms/IQueue.hpp"
 #include "cms/ITemporaryTopic.hpp"
 #include "cms/ITemporaryQueue.hpp"
-#include "activemq/command/AbstractCommand.hpp"
+#include "activemq/command/BaseCommand.hpp"
 #include "activemq/protocol/IMarshaller.hpp"
 #include "ppr/io/IOutputStream.hpp"
 #include "ppr/io/IInputStream.hpp"
@@ -49,7 +49,7 @@ namespace apache
 /*
  * 
  */
-class ActiveMQDestination : public AbstractCommand, public IDestination
+class ActiveMQDestination : public BaseCommand, public IDestination
 {
 private:
     p<string> orderedTarget,
@@ -109,8 +109,8 @@ public:
     virtual bool isWildcard() ;
     virtual p<string> toString() ;
 
-    virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> writer) throw (IOException) ;
-    virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> reader) throw (IOException) ;
+    virtual int marshal(p<IMarshaller> marshaller, int mode, p<IOutputStream> ostream) throw (IOException) ;
+    virtual void unmarshal(p<IMarshaller> marshaller, int mode, p<IInputStream> istream) throw (IOException) ;
 
     //
     // Abstract methods

@@ -75,9 +75,11 @@ void OpenWireProtocol::handshake(p<ITransport> transport)
 /*
  * 
  */
-void OpenWireProtocol::marshal(p<IDataStructure> object, p<IOutputStream> writer) throw(IOException)
+void OpenWireProtocol::marshal(p<IDataStructure> object, p<IOutputStream> ostream) throw(IOException)
 {
-    int size = 0 ;
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = checkOutputStream(ostream) ;
+    int                 size = 0 ;
 
     // Was a non-NULL object supplied
     if( object != NULL )
@@ -88,14 +90,14 @@ void OpenWireProtocol::marshal(p<IDataStructure> object, p<IOutputStream> writer
         if( !wireFormatInfo->getSizePrefixDisabled() )
         {
             size  = 1 ; // data structure type
-            size += object->marshal(wireMarshaller, IMarshaller::MARSHAL_SIZE, writer) ;
+            size += object->marshal(wireMarshaller, IMarshaller::MARSHAL_SIZE, ostream) ;
 
             // Write size header
-            writer->writeInt(size) ;
+            dos->writeInt(size) ;
         }
         // Finally, write command type and body
-        writer->writeByte(dataType) ;
-        object->marshal(wireMarshaller, IMarshaller::MARSHAL_WRITE, writer) ;
+        dos->writeByte(dataType) ;
+        object->marshal(wireMarshaller, IMarshaller::MARSHAL_WRITE, ostream) ;
     }
     else   // ...NULL object
     {
@@ -106,37 +108,65 @@ void OpenWireProtocol::marshal(p<IDataStructure> object, p<IOutputStream> writer
             size = 1 ; // data structure type
 
             // Write size header
-            writer->writeInt(size) ;
+            dos->writeInt(size) ;
         }
         // Write NULL command type and empty body
-        writer->writeByte(NULL_TYPE) ;
+        dos->writeByte(NULL_TYPE) ;
     }
 }
 
 /*
  * 
  */
-p<IDataStructure> OpenWireProtocol::unmarshal(p<IInputStream> reader) throw(IOException)
+p<IDataStructure> OpenWireProtocol::unmarshal(p<IInputStream> istream) throw(IOException)
 {
-    int size = 0 ;
+    // Assert that supplied input stream is a data input stream
+    p<DataInputStream> dis = checkInputStream(istream) ;
+    int                size = 0 ;
 
     // Read packet size if configured
     if( !wireFormatInfo->getSizePrefixDisabled() )
-        size = reader->readInt() ;
+        size = dis->readInt() ;
 
     // First byte is the data structure type
-    unsigned char dataType = reader->readByte() ;
+    unsigned char dataType = dis->readByte() ;
 
     // Check for NULL type
     if( dataType == NULL_TYPE )
         return NULL ;
 
     // Create command object
-    p<IDataStructure> object = AbstractCommand::createObject(dataType) ;
+    p<IDataStructure> object = BaseDataStructure::createObject(dataType) ;
     if( object == NULL )
         throw IOException("Unmarshal failed; unknown data structure type %d, at %s line %d", dataType, __FILE__, __LINE__) ;
 
     // Finally, unmarshal command body
-    object->unmarshal(wireMarshaller, IMarshaller::MARSHAL_READ, reader) ;
+    object->unmarshal(wireMarshaller, IMarshaller::MARSHAL_READ, istream) ;
     return object ;
+}
+
+/*
+ * 
+ */
+p<DataOutputStream> OpenWireProtocol::checkOutputStream(p<IOutputStream> ostream) throw (IOException)
+{
+    // Assert that supplied output stream is a data output stream
+    p<DataOutputStream> dos = p_dyncast<DataOutputStream> (ostream) ;
+    if( dos == NULL )
+        throw IOException("OpenWireProtocol requires a DataOutputStream") ;
+
+    return dos ;
+}
+
+/*
+ * 
+ */
+p<DataInputStream> OpenWireProtocol::checkInputStream(p<IInputStream> istream) throw (IOException)
+{
+    // Assert that supplied output stream is a data output stream
+    p<DataInputStream> dis = p_dyncast<DataInputStream> (istream) ;
+    if( dis == NULL )
+        throw IOException("OpenWireProtocol requires a DataInputStream") ;
+
+    return dis ;
 }

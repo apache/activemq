@@ -46,15 +46,7 @@ struct IOutputStream : Interface
 {
     virtual void close() throw(IOException) = 0 ;
     virtual void flush() throw(IOException) = 0 ;
-    virtual int write(const char* buffer, int index, int count) throw(IOException) = 0 ;
-    virtual void writeByte(char v) throw(IOException) = 0 ;
-    virtual void writeBoolean(bool v) throw(IOException) = 0 ;
-    virtual void writeDouble(double v) throw(IOException) = 0 ;
-    virtual void writeFloat(float v) throw(IOException) = 0 ;
-    virtual void writeShort(short v) throw(IOException) = 0 ;
-    virtual void writeInt(int v) throw(IOException) = 0 ;
-    virtual void writeLong(long long v) throw(IOException) = 0 ;
-    virtual void writeString(p<string> v) throw(IOException) = 0 ;
+    virtual int write(const char* buffer, int offset, int length) throw(IOException) = 0 ;
 } ;
 
 /* namespace */

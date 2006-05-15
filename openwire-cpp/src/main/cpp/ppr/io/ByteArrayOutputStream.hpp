@@ -17,7 +17,7 @@
 #ifndef Ppr_ByteArrayOutputStream_hpp_
 #define Ppr_ByteArrayOutputStream_hpp_
 
-#include "ppr/io/DataOutputStream.hpp"
+#include "ppr/io/IOutputStream.hpp"
 #include "ppr/util/ifr/array"
 #include "ppr/util/ifr/p"
 
@@ -33,7 +33,7 @@ namespace apache
  * ByteArrayOutputStream writes primitive C++ data types to a
  * in memory byte array.
  */
-class ByteArrayOutputStream : public DataOutputStream
+class ByteArrayOutputStream : public IOutputStream
 {
 private:
     array<char> body ;

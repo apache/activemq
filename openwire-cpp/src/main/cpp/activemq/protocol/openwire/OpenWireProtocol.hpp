@@ -27,6 +27,8 @@
 #include "activemq/protocol/IProtocol.hpp"
 #include "ppr/io/IOutputStream.hpp"
 #include "ppr/io/IInputStream.hpp"
+#include "ppr/io/DataInputStream.hpp"
+#include "ppr/io/DataOutputStream.hpp"
 #include "ppr/io/IOException.hpp"
 #include "ppr/util/ifr/array"
 #include "ppr/util/ifr/p"
@@ -68,8 +70,12 @@ public:
 	virtual bool getStackTraceEnabled() ;
 
     virtual void handshake(p<ITransport> transport) ;
-	virtual void marshal(p<IDataStructure> object, p<IOutputStream> writer) throw(IOException) ;
-	virtual p<IDataStructure> unmarshal(p<IInputStream> reader) throw(IOException) ;
+	virtual void marshal(p<IDataStructure> object, p<IOutputStream> ostream) throw(IOException) ;
+	virtual p<IDataStructure> unmarshal(p<IInputStream> istream) throw(IOException) ;
+
+protected:
+    p<DataOutputStream> checkOutputStream(p<IOutputStream> ostream) throw (IOException) ;
+    p<DataInputStream> checkInputStream(p<IInputStream> istream) throw (IOException) ;
 } ;
 
 /* namespace */

@@ -44,7 +44,7 @@ MutexFilter::~MutexFilter()
 /*
  * 
  */
-void MutexFilter::oneway(p<ICommand> command)
+void MutexFilter::oneway(p<BaseCommand> command)
 {
     // Wait for transmission lock and then transmit command
     LOCKED_SCOPE (mutex) ;
@@ -54,7 +54,7 @@ void MutexFilter::oneway(p<ICommand> command)
 /*
  * 
  */
-p<FutureResponse> MutexFilter::asyncRequest(p<ICommand> command)
+p<FutureResponse> MutexFilter::asyncRequest(p<BaseCommand> command)
 {
     // Wait for transmission lock and then transmit command
     LOCKED_SCOPE (mutex) ;
@@ -64,7 +64,7 @@ p<FutureResponse> MutexFilter::asyncRequest(p<ICommand> command)
 /*
  * 
  */
-p<Response> MutexFilter::request(p<ICommand> command)
+p<Response> MutexFilter::request(p<BaseCommand> command)
 {
     // Wait for transmission lock and then transmit command
     LOCKED_SCOPE (mutex) ;

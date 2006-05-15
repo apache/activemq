@@ -18,7 +18,7 @@
 #define ActiveMQ_ITransport_hpp_
 
 #include "cms/IStartable.hpp"
-#include "activemq/ICommand.hpp"
+#include "activemq/command/BaseCommand.hpp"
 #include "activemq/command/Response.hpp"
 #include "activemq/transport/FutureResponse.hpp"
 #include "activemq/transport/ICommandListener.hpp"
@@ -43,9 +43,9 @@ struct ITransport : IStartable
     virtual void setCommandListener(p<ICommandListener> listener) = 0 ;
     virtual p<ICommandListener> getCommandListener() = 0 ;
 
-    virtual void oneway(p<ICommand> command) = 0 ;
-	virtual p<FutureResponse> asyncRequest(p<ICommand> command) = 0 ;
-	virtual p<Response> request(p<ICommand> command) = 0 ;
+    virtual void oneway(p<BaseCommand> command) = 0 ;
+	virtual p<FutureResponse> asyncRequest(p<BaseCommand> command) = 0 ;
+	virtual p<Response> request(p<BaseCommand> command) = 0 ;
 } ;
 
 /* namespace */

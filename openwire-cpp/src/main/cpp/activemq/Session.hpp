@@ -134,6 +134,7 @@ public:
     void interrupt()
     {
         interrupted = true ;
+        wakeup() ;
     }
 
     void wakeup()
@@ -144,13 +145,19 @@ public:
 protected:
     virtual void run () throw (p<exception>) 
     {
-        while( !interrupted )
+        do
         {
             // Wait for wake-up call
             semaphore.wait() ;
 
+            if( interrupted )
+                break ;
+
             session->dispatchAsyncMessages() ;
-        }
+        } while( !interrupted ) ;
+
+        // Clean up (prevent cyclic dependency)
+        session = NULL ;
     }
 } ;
 

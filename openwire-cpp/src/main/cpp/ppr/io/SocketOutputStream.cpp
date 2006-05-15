@@ -34,11 +34,22 @@ SocketOutputStream::~SocketOutputStream()
     // no-op
 }
 
+/*
+ *
+ */
 void SocketOutputStream::close() throw(IOException)
 {
-    // no-op
+    // Cascade close request to underlying socket
+    if( socket != NULL )
+    {
+        socket->close() ;
+        socket = NULL ;
+    }
 }
 
+/*
+ *
+ */
 void SocketOutputStream::flush() throw(IOException)
 {
     // no-op
@@ -47,21 +58,24 @@ void SocketOutputStream::flush() throw(IOException)
 /*
  *
  */
-int SocketOutputStream::write(const char* buf, int index, int size) throw(IOException)
+int SocketOutputStream::write(const char* buf, int offset, int length) throw(IOException)
 {
-    const char*  buffer = buf + index ;
-    int          length, remaining = size ;
+    const char*  buffer = buf + offset ;
+    //const char*  buffer = buf + index ;
+    //int          length, remaining = size ;
+    int bytesWritten ;
 
     // Loop until requested number of bytes are read
-    while( remaining > 0 )
-    {
+    //while( remaining > 0 )
+    //{
         // Try to write remaining bytes
-        length = remaining ;
+        //length = remaining ;
 
         try
         {
             // Write some bytes to socket
-            length = socket->send(buffer, length) ;
+            //length = socket->send(buffer, length) ;
+            bytesWritten = socket->send(buffer, length) ;
         }
         catch( SocketException se )
         {
@@ -70,8 +84,9 @@ int SocketOutputStream::write(const char* buf, int index, int size) throw(IOExce
         }
 
         // Adjust buffer pointer and remaining number of bytes
-        buffer    += length ;
-        remaining -= length ;
-	}
-	return size ;
+        //buffer    += length ;
+        //remaining -= length ;
+	//}
+	//return size ;
+    return bytesWritten ;
 }

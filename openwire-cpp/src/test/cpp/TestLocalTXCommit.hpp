@@ -1,0 +1,63 @@
+/*
+ * Copyright 2006 The Apache Software Foundation or its licensors, as
+ * applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef TestLocalTXCommit_hpp_
+#define TestLocalTXCommit_hpp_
+
+#include <exception>
+#include <string>
+
+#include "cms/IConnection.hpp"
+#include "activemq/AcknowledgementMode.hpp"
+#include "ppr/thread/Semaphore.hpp"
+#include "ppr/TraceException.hpp"
+#include "ppr/util/ifr/p"
+
+#include "IUnitTest.hpp"
+
+using namespace apache;
+using namespace apache::cms;
+using namespace apache::ppr;
+using namespace apache::ppr::thread;
+using namespace ifr;
+using namespace std;
+
+/*
+ * Tests sending multiple messages to a queue guarded by a local transaction.
+ */
+class TestLocalTXCommit : public IUnitTest, public IMessageListener
+{
+private:
+    p<IConnection> connection ;
+    p<ISession>    session ;
+    Semaphore      semaphore ; 
+    char*          error ;
+    bool           transmitted ;
+    int            matchCount ;
+
+public:
+    TestLocalTXCommit(p<IConnection> connection) ;
+    virtual ~TestLocalTXCommit() ;
+
+    virtual void setUp() throw (exception) ;
+    virtual void execute() throw (exception) ;
+    virtual void tearDown() throw (exception) ;
+    virtual p<string> toString() ;
+
+    virtual void onMessage(p<IMessage> message) ;
+} ;
+
+#endif /*TestLocalTXCommit_hpp_*/

@@ -37,7 +37,7 @@ CorrelatorFilter::CorrelatorFilter(p<ITransport> next) :
 /*
  * 
  */
-void CorrelatorFilter::oneway(p<ICommand> command)
+void CorrelatorFilter::oneway(p<BaseCommand> command)
 {
     // Set command id and that no response is required
     command->setCommandId( getNextCommandId() ) ;
@@ -49,7 +49,7 @@ void CorrelatorFilter::oneway(p<ICommand> command)
 /*
  * 
  */
-p<FutureResponse> CorrelatorFilter::asyncRequest(p<ICommand> command)
+p<FutureResponse> CorrelatorFilter::asyncRequest(p<BaseCommand> command)
 {
     // Set command id and that a response is required
     command->setCommandId( getNextCommandId() ) ;
@@ -68,7 +68,7 @@ p<FutureResponse> CorrelatorFilter::asyncRequest(p<ICommand> command)
 /*
  * 
  */
-p<Response> CorrelatorFilter::request(p<ICommand> command)
+p<Response> CorrelatorFilter::request(p<BaseCommand> command)
 {
     p<FutureResponse> future = asyncRequest(command) ;
     p<Response> response = future->getResponse() ;
@@ -94,9 +94,10 @@ p<Response> CorrelatorFilter::request(p<ICommand> command)
 /*
  * 
  */
-void CorrelatorFilter::onCommand(p<ITransport> transport, p<ICommand> command)
+void CorrelatorFilter::onCommand(p<ITransport> transport, p<BaseCommand> command)
 {
-    if( command->getDataStructureType() == Response::TYPE )
+    if( command->getDataStructureType() == Response::TYPE ||
+        command->getDataStructureType() == ExceptionResponse::TYPE )
     {
         p<Response>       response = p_cast<Response>(command) ;
         p<FutureResponse> future = requestMap[response->getCorrelationId()] ;

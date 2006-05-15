@@ -46,6 +46,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(IntDir)\amqlib.pdb"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -108,6 +109,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(IntDir)\amqlib.pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -179,6 +181,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\main\cpp\activemq\command\ConnectionControl.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\main\cpp\activemq\command\ConnectionControl.hpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\main\cpp\activemq\ConnectionException.hpp"
 					>
 				</File>
@@ -196,6 +206,14 @@
 				</File>
 				<File
 					RelativePath=".\src\main\cpp\activemq\ConsumerClosedException.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\main\cpp\activemq\command\ConsumerControl.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\main\cpp\activemq\command\ConsumerControl.hpp"
 					>
 				</File>
 				<File
@@ -281,14 +299,6 @@
 				<Filter
 					Name="command"
 					>
-					<File
-						RelativePath=".\src\main\cpp\activemq\command\AbstractCommand.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\src\main\cpp\activemq\command\AbstractCommand.hpp"
-						>
-					</File>
 					<File
 						RelativePath=".\src\main\cpp\activemq\command\ActiveMQBytesMessage.cpp"
 						>
@@ -391,6 +401,14 @@
 					</File>
 					<File
 						RelativePath=".\src\main\cpp\activemq\command\BaseCommand.hpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\BaseDataStructure.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\BaseDataStructure.hpp"
 						>
 					</File>
 					<File
@@ -566,6 +584,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\src\main\cpp\activemq\command\LastPartialCommand.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\LastPartialCommand.hpp"
+						>
+					</File>
+					<File
 						RelativePath=".\src\main\cpp\activemq\command\LocalTransactionId.cpp"
 						>
 					</File>
@@ -614,6 +640,22 @@
 						>
 					</File>
 					<File
+						RelativePath=".\src\main\cpp\activemq\command\NetworkBridgeFilter.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\NetworkBridgeFilter.hpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\PartialCommand.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\PartialCommand.hpp"
+						>
+					</File>
+					<File
 						RelativePath=".\src\main\cpp\activemq\command\ProducerId.cpp"
 						>
 					</File>
@@ -643,6 +685,14 @@
 					</File>
 					<File
 						RelativePath=".\src\main\cpp\activemq\command\RemoveSubscriptionInfo.hpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\ReplayCommand.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\activemq\command\ReplayCommand.hpp"
 						>
 					</File>
 					<File
@@ -950,6 +1000,22 @@
 					Name="io"
 					>
 					<File
+						RelativePath=".\src\main\cpp\ppr\io\BufferedInputStream.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\ppr\io\BufferedInputStream.hpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\ppr\io\BufferedOutputStream.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\main\cpp\ppr\io\BufferedOutputStream.hpp"
+						>
+					</File>
+					<File
 						RelativePath=".\src\main\cpp\ppr\io\ByteArrayInputStream.cpp"
 						>
 					</File>
@@ -1013,6 +1079,30 @@
 						RelativePath=".\src\main\cpp\ppr\io\SocketOutputStream.hpp"
 						>
 					</File>
+					<Filter
+						Name="encoding"
+						>
+						<File
+							RelativePath=".\src\main\cpp\ppr\io\encoding\AsciiToUTF8Encoder.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\src\main\cpp\ppr\io\encoding\AsciiToUTF8Encoder.hpp"
+							>
+						</File>
+						<File
+							RelativePath=".\src\main\cpp\ppr\io\encoding\CharsetEncoderRegistry.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\src\main\cpp\ppr\io\encoding\CharsetEncoderRegistry.hpp"
+							>
+						</File>
+						<File
+							RelativePath=".\src\main\cpp\ppr\io\encoding\ICharsetEncoder.hpp"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="net"

@@ -43,9 +43,9 @@ public:
     LoggingFilter(p<ITransport> next) ;
     virtual ~LoggingFilter() {}
 
-	virtual void oneway(p<ICommand> command) ;
+	virtual void oneway(p<BaseCommand> command) ;
 
-    virtual void onCommand(p<ITransport> transport, p<ICommand> command) ;
+    virtual void onCommand(p<ITransport> transport, p<BaseCommand> command) ;
     virtual void onError(p<ITransport> transport, exception& error) ;
 } ;
 

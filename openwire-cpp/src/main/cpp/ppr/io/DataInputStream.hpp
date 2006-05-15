@@ -18,6 +18,8 @@
 #define Ppr_DataInputStream_hpp_
 
 #include "ppr/io/IInputStream.hpp"
+#include "ppr/io/encoding/ICharsetEncoder.hpp"
+#include "ppr/io/encoding/CharsetEncoderRegistry.hpp"
 #include "ppr/util/Endian.hpp"
 #include "ppr/util/ifr/p"
 
@@ -27,13 +29,14 @@ namespace apache
   {
     namespace io
     {
-      using namespace apache::ppr::util; //htonx and ntohx functions.
       using namespace ifr;
+      using namespace apache::ppr::util; //htonx and ntohx functions.
+      using namespace apache::ppr::io::encoding;
 
 /*
  * The DataInputStream class reads primitive C++ data types from an
  * underlying input stream in a Java compatible way. Strings are
- * read as raw bytes, no character decoding is performed.
+ * read as raw bytes or decoded should encoding have been configured.
  *
  * All numeric data types are assumed to be available in big
  * endian (network byte order) and are converted automatically
@@ -43,12 +46,17 @@ namespace apache
  */
 class DataInputStream : public IInputStream
 {
+private:
+    p<IInputStream>    istream ;
+    p<ICharsetEncoder> encoder ;
+
 public:
-    DataInputStream() ;
+    DataInputStream(p<IInputStream> istream) ;
+    DataInputStream(p<IInputStream> istream, const char* encname) ;
     virtual ~DataInputStream() ;
 
-    virtual void close() throw(IOException) = 0 ;
-    virtual int read(char* buffer, int index, int count) throw(IOException) = 0 ;
+    virtual void close() throw(IOException) ;
+    virtual int read(char* buffer, int offset, int length) throw(IOException) ;
     virtual char readByte() throw(IOException) ;
     virtual bool readBoolean() throw(IOException) ;
     virtual double readDouble() throw(IOException) ;
@@ -57,6 +65,9 @@ public:
     virtual int readInt() throw(IOException) ;
     virtual long long readLong() throw(IOException) ;
     virtual p<string> readString() throw(IOException) ;
+
+protected:
+    void checkClosed() throw(IOException) ;
 } ;
 
 /* namespace */

@@ -51,7 +51,7 @@ struct IBytesMessage : IMessage
     virtual int readInt() throw (MessageNotReadableException, MessageEOFException) = 0 ;
     virtual long long readLong() throw (MessageNotReadableException, MessageEOFException) = 0 ;
     virtual short readShort() throw (MessageNotReadableException, MessageEOFException) = 0 ;
-    virtual p<string> readUTF() throw (MessageNotReadableException, MessageEOFException) = 0 ;
+    virtual p<string> readString() throw (MessageNotReadableException, MessageEOFException) = 0 ;
     virtual void writeBoolean(bool value) throw (MessageNotWritableException) = 0 ;
     virtual void writeByte(char value) throw (MessageNotWritableException) = 0 ;
     virtual void writeBytes(char* value, int index, int length) throw (MessageNotWritableException) = 0 ;
@@ -60,7 +60,7 @@ struct IBytesMessage : IMessage
     virtual void writeInt(int value) throw (MessageNotWritableException) = 0 ;
     virtual void writeLong(long long value) throw (MessageNotWritableException) = 0 ;
     virtual void writeShort(short value) throw (MessageNotWritableException) = 0 ;
-    virtual void writeUTF(const char* value) throw (MessageNotWritableException) = 0 ;
+    virtual void writeString(const char* value) throw (MessageNotWritableException) = 0 ;
 } ;
 
 /* namespace */

@@ -1,5 +1,6 @@
 SRCDIR = src/main/cpp
-MAKESUPPORT_HOME = $(PWD)
+TSTDIR = src/test/cpp
+MAKE_HOME = $(PWD)
 
 LIBOFILES = \
 	$(OUTDIR)/activemq/BrokerException.o \
@@ -15,7 +16,6 @@ LIBOFILES = \
 	$(OUTDIR)/activemq/Session.o \
 	$(OUTDIR)/activemq/TransactionContext.o \
 	\
-	$(OUTDIR)/activemq/command/AbstractCommand.o \
 	$(OUTDIR)/activemq/command/ActiveMQBytesMessage.o \
 	$(OUTDIR)/activemq/command/ActiveMQDestination.o \
 	$(OUTDIR)/activemq/command/ActiveMQMapMessage.o \
@@ -23,17 +23,21 @@ LIBOFILES = \
 	$(OUTDIR)/activemq/command/ActiveMQObjectMessage.o \
 	$(OUTDIR)/activemq/command/ActiveMQQueue.o \
 	$(OUTDIR)/activemq/command/ActiveMQStreamMessage.o \
+	$(OUTDIR)/activemq/command/ActiveMQTempDestination.o \
 	$(OUTDIR)/activemq/command/ActiveMQTempQueue.o \
 	$(OUTDIR)/activemq/command/ActiveMQTempTopic.o \
 	$(OUTDIR)/activemq/command/ActiveMQTextMessage.o \
 	$(OUTDIR)/activemq/command/ActiveMQTopic.o \
+	$(OUTDIR)/activemq/command/BaseDataStructure.o \
 	$(OUTDIR)/activemq/command/BaseCommand.o \
 	$(OUTDIR)/activemq/command/BrokerError.o \
 	$(OUTDIR)/activemq/command/BrokerId.o \
 	$(OUTDIR)/activemq/command/BrokerInfo.o \
+	$(OUTDIR)/activemq/command/ConnectionControl.o \
 	$(OUTDIR)/activemq/command/ConnectionError.o \
 	$(OUTDIR)/activemq/command/ConnectionId.o \
 	$(OUTDIR)/activemq/command/ConnectionInfo.o \
+	$(OUTDIR)/activemq/command/ConsumerControl.o \
 	$(OUTDIR)/activemq/command/ConsumerId.o \
 	$(OUTDIR)/activemq/command/ConsumerInfo.o \
 	$(OUTDIR)/activemq/command/ControlCommand.o \
@@ -49,16 +53,20 @@ LIBOFILES = \
 	$(OUTDIR)/activemq/command/JournalTrace.o \
 	$(OUTDIR)/activemq/command/JournalTransaction.o \
 	$(OUTDIR)/activemq/command/KeepAliveInfo.o \
+	$(OUTDIR)/activemq/command/LastPartialCommand.o \
 	$(OUTDIR)/activemq/command/LocalTransactionId.o \
 	$(OUTDIR)/activemq/command/Message.o \
 	$(OUTDIR)/activemq/command/MessageAck.o \
 	$(OUTDIR)/activemq/command/MessageDispatch.o \
 	$(OUTDIR)/activemq/command/MessageDispatchNotification.o \
 	$(OUTDIR)/activemq/command/MessageId.o \
+	$(OUTDIR)/activemq/command/NetworkBridgeFilter.o \
+	$(OUTDIR)/activemq/command/PartialCommand.o \
 	$(OUTDIR)/activemq/command/ProducerId.o \
 	$(OUTDIR)/activemq/command/ProducerInfo.o \
 	$(OUTDIR)/activemq/command/RemoveInfo.o \
 	$(OUTDIR)/activemq/command/RemoveSubscriptionInfo.o \
+	$(OUTDIR)/activemq/command/ReplayCommand.o \
 	$(OUTDIR)/activemq/command/Response.o \
 	$(OUTDIR)/activemq/command/SessionId.o \
 	$(OUTDIR)/activemq/command/SessionInfo.o \
@@ -68,7 +76,6 @@ LIBOFILES = \
 	$(OUTDIR)/activemq/command/TransactionInfo.o \
 	$(OUTDIR)/activemq/command/WireFormatInfo.o \
 	$(OUTDIR)/activemq/command/XATransactionId.o \
-	$(OUTDIR)/activemq/command/ActiveMQTempDestination.o \
 	\
 	$(OUTDIR)/activemq/protocol/openwire/OpenWireMarshaller.o \
 	$(OUTDIR)/activemq/protocol/openwire/OpenWireProtocol.o \
@@ -84,6 +91,10 @@ LIBOFILES = \
 	\
 	$(OUTDIR)/cms/CmsException.o \
 	\
+	$(OUTDIR)/ppr/io/encoding/AsciiToUTF8Encoder.o \
+	$(OUTDIR)/ppr/io/encoding/CharsetEncoderRegistry.o \
+	$(OUTDIR)/ppr/io/BufferedInputStream.o \
+	$(OUTDIR)/ppr/io/BufferedOutputStream.o \
 	$(OUTDIR)/ppr/io/ByteArrayInputStream.o \
 	$(OUTDIR)/ppr/io/ByteArrayOutputStream.o \
 	$(OUTDIR)/ppr/io/DataInputStream.o \
@@ -106,12 +117,16 @@ LIBOFILES = \
 OUTLIB = $(OUTDIR)/libactivemq.a
 
 EXEOFILES = \
-	$(OUTDIR)/TestMain.o \
-	$(OUTDIR)/TestListener.o \
+	$(OUTDIR)/TestSuite.o \
+	$(OUTDIR)/TestSynchQueue.o \
+	$(OUTDIR)/TestAsynchQueue.o \
+	$(OUTDIR)/TestAsynchTopic.o \
+	$(OUTDIR)/TestLocalTXCommit.o \
 
 EXELIBS = -lactivemq -lpthread -lstdc++
+OUTEXE  = $(OUTDIR)/test
 
 DEFINES          =
 
-include $(MAKESUPPORT_HOME)/makefile.cfg
+include $(MAKE_HOME)/makefile.cfg
 
