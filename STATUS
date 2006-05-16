@@ -37,13 +37,13 @@ X -- SVN modules created and committers added to avail file?
      Yes:       https://svn.apache.org/repos/asf/incubator/activemq
 
 X -- Are the developer,commit and user mailing lists set up and archived?
-     Yes:       http://activemq.org/Mailing+Lists
+     Yes:       http://incubator.apache.org/activemq/mailing-lists.html
 
 X -- Bug tracking system enabled?
-     Yes:       http://jira.activemq.org
+     Yes:       http://issues.apache.org/activemq/browse/AMQ
 
 X -- wiki based documentation site enabled?
-     Yes:       http://www.activemq.org
+     Yes:       http://goopen.org/confluence/display/ACTIVEMQ/Home
 
 X -- Has the project migrated to our infrastructure?
      Yes
@@ -86,7 +86,7 @@ X -- Has the community adopted the Apache voting rules and is otherwise followin
      Yes
 
 Exit Milestone:
-X -- v4.0-M4
+X -- v4.0
 
 organisational acceptance:
 
