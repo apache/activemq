@@ -109,7 +109,7 @@ rem Select all components that belongs to the specified broker except advisory t
 rem and display the specified attributes
 set QUERY_PARAM=--objname "Type=*,BrokerName=%BROKER_NAME%" "-xQTopic=ActiveMQ.Advisory.*" --view "Type,BrokerName,Destination,ConnectorName,EnqueueCount,DequeueCount,TotalEnqueueCount,TotalDequeueCount,Messages,TotalMessages,ConsumerCount,TotalConsumerCount,DispatchQueueSize"
 
-"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_TASK% %QUERY_PARAM% %ACTIVEMQ_CMD_LINE_ARGS%
+"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %QUERY_PARAM% %ACTIVEMQ_CMD_LINE_ARGS%
 
 
 goto end
