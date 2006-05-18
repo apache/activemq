@@ -151,9 +151,9 @@ fi
 QUERY_PARAM="--objname Type=*,BrokerName=${BROKER_NAME} -xQTopic=ActiveMQ.Advisory.* --view Type,BrokerName,Destination,ConnectorName,EnqueueCount,DequeueCount,TotalEnqueueCount,TotalDequeueCount,Messages,TotalMessages,ConsumerCount,TotalConsumerCount,DispatchQueueSize"
 
 if [ -n "$CYGHOME" ]; then
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dcygwin.user.home="$CYGHOME" -jar ${ACTIVEMQ_HOME}/bin/run.jar $ACTIVEMQ_TASK $QUERY_PARAM $ACTIVEMQ_CMD_LINE_ARGS
+    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $ACTIVEMQ_TASK $QUERY_PARAM $ACTIVEMQ_CMD_LINE_ARGS
 else
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -jar ${ACTIVEMQ_HOME}/bin/run.jar $ACTIVEMQ_TASK $QUERY_PARAM $ACTIVEMQ_CMD_LINE_ARGS
+    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "" -Dactivemq.home="${ACTIVEMQ_HOME}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $ACTIVEMQ_TASK $QUERY_PARAM $ACTIVEMQ_CMD_LINE_ARGS
 fi
 
 
