@@ -351,7 +351,42 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         // If the the objects are not of the same type,
         // try to convert up to allow the comparison.
         if (lc != rc) {
-            if (lc == Integer.class) {
+            if (lc == Byte.class) {
+                if (rc == Short.class) {
+                    lv = new Short(((Number) lv).shortValue());
+                }
+                else if (rc == Integer.class) {
+                    lv = new Integer(((Number) lv).intValue());
+                }
+                else if (rc == Long.class) {
+                    lv = new Long(((Number) lv).longValue());
+                }
+                else if (rc == Float.class) {
+                    lv = new Float(((Number) lv).floatValue());
+                }
+                else if (rc == Double.class) {
+                    lv = new Double(((Number) lv).doubleValue());
+                }
+                else {
+                    return Boolean.FALSE;
+                }
+             } else if (lc == Short.class) {
+                if (rc == Integer.class) {
+                    lv = new Integer(((Number) lv).intValue());
+                }
+                else if (rc == Long.class) {
+                    lv = new Long(((Number) lv).longValue());
+                }
+                else if (rc == Float.class) {
+                    lv = new Float(((Number) lv).floatValue());
+                }
+                else if (rc == Double.class) {
+                    lv = new Double(((Number) lv).doubleValue());
+                }
+                else {
+                    return Boolean.FALSE;
+                }
+            } else if (lc == Integer.class) {
                 if (rc == Long.class) {
                     lv = new Long(((Number) lv).longValue());
                 }
