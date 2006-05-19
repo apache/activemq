@@ -78,8 +78,33 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "rank > 100", true);
         assertSelector(message, "rank >= 123", true);
         assertSelector(message, "rank >= 124", false);
+        
     }
 
+    public void testPropertyTypes() throws Exception {
+        Message message = createMessage();
+        assertSelector(message, "byteProp = 123", true);
+        assertSelector(message, "byteProp = 10", false);
+
+        assertSelector(message, "shortProp = 123", true);
+        assertSelector(message, "shortProp = 10", false);
+
+
+        assertSelector(message, "shortProp = 123", true);
+        assertSelector(message, "shortProp = 10", false);
+
+        assertSelector(message, "intProp = 123", true);
+        assertSelector(message, "intProp = 10", false);
+
+        assertSelector(message, "longProp = 123", true);
+        assertSelector(message, "longProp = 10", false);
+
+        assertSelector(message, "floatProp = 123", true);
+        assertSelector(message, "floatProp = 10", false);
+
+        assertSelector(message, "doubleProp = 123", true);
+        assertSelector(message, "doubleProp = 10", false);
+    }
     public void testAndSelectors() throws Exception {
         Message message = createMessage();
 
@@ -297,6 +322,14 @@ public class SelectorTest extends TestCase {
         message.setJMSMessageID("connection:1:1:1:1");
         message.setObjectProperty("name", "James");
         message.setObjectProperty("location", "London");
+        
+        message.setByteProperty("byteProp", (byte)123);
+        message.setShortProperty("shortProp", (short)123);
+        message.setIntProperty("intProp", (int)123);
+        message.setLongProperty("longProp", (long)123);
+        message.setFloatProperty("floatProp", (float)123);
+        message.setDoubleProperty("doubleProp", (double)123);
+
         message.setIntProperty("rank", 123);
         message.setIntProperty("version", 2);
         message.setStringProperty("quote", "'In God We Trust'");
