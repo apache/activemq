@@ -85,6 +85,8 @@ public class SelectorTest extends TestCase {
         Message message = createMessage();
         assertSelector(message, "byteProp = 123", true);
         assertSelector(message, "byteProp = 10", false);
+        assertSelector(message, "byteProp2 = 33", true);
+        assertSelector(message, "byteProp2 = 10", false);
 
         assertSelector(message, "shortProp = 123", true);
         assertSelector(message, "shortProp = 10", false);
@@ -324,6 +326,7 @@ public class SelectorTest extends TestCase {
         message.setObjectProperty("location", "London");
         
         message.setByteProperty("byteProp", (byte)123);
+        message.setByteProperty("byteProp2", (byte) 33);
         message.setShortProperty("shortProp", (short)123);
         message.setIntProperty("intProp", (int)123);
         message.setLongProperty("longProp", (long)123);
@@ -337,7 +340,6 @@ public class SelectorTest extends TestCase {
         message.setStringProperty("punctuation", "!#$&()*+,-./:;<=>?@[\\]^`{|}~");
         message.setBooleanProperty("trueProp", true);
         message.setBooleanProperty("falseProp", false);
-
         return message;
     }
 
