@@ -32,6 +32,7 @@ import javax.resource.spi.work.WorkListener;
 import javax.resource.spi.work.WorkManager;
 
 import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.TransactionContext;
 import org.apache.activemq.ActiveMQSession.DeliveryListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -215,7 +216,8 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             } catch (Throwable e) {
                 throw new RuntimeException("Endpoint after delivery notification failure", e);
             } finally {
-                if( session.getTransactionContext().isInLocalTransaction() ) {
+                TransactionContext transactionContext = session.getTransactionContext();
+                if( transactionContext != null && transactionContext.isInLocalTransaction() ) {
                     if( !useRAManagedTx ) {
                         // Sanitiy Check: If the local transaction has not been commited..
                         // Commit it now.
