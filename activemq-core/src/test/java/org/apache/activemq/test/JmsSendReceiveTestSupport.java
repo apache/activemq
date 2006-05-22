@@ -112,6 +112,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         
         for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(data[i]);
+            configureMessage(message);
             if (verbose) {
                 log.info("About to send a message: " + message + " with text: " + data[i]);
             }
@@ -122,6 +123,14 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         assertMessagesAreReceived();
         log.info("" + data.length + " messages(s) received, closing down connections");
     }
+
+    /**
+     * A hook to allow the message to be configured such as adding extra headers
+     * @throws JMSException 
+     */
+    protected void configureMessage(Message message) throws JMSException {
+    }
+
 
     /**
      * Waits to receive the messages and performs the test if all messages have been received and 
