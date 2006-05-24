@@ -61,6 +61,10 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
     <dependency>
