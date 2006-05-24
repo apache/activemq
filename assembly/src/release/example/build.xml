@@ -102,6 +102,8 @@
 				<include name="activemq-web*.jar" />
 				<include name="activemq-container*.jar" />
 				<include name="commons-bean*.jar" />
+				<include name="spring*.jar" />
+				<include name="xbean*.jar" />				
 
 				<!-- include Apache Derby for persistence -->
 				<include name="derby*.jar" />
