@@ -84,7 +84,7 @@
       </properties>
     </dependency>
 
-    <!--
+   
     <dependency>
       <groupId>activemq</groupId>
       <artifactId>activemq-web</artifactId>
@@ -94,7 +94,7 @@
         <optional>true</optional>
       </properties>
     </dependency>
-    -->
+   
 
     <!-- used by the WS module -->
     <dependency>
