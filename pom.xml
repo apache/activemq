@@ -115,12 +115,10 @@
       <name>Apache CVS Development Repository</name>
       <url>scpexe://cvs.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
     </snapshotRepository>
-<!--
     <site>
-      <id>geronimo-website</id>
-      <url>scpexe://minotaur.apache.org/www/geronimo.apache.org/maven/</url>
+      <id>apache-website</id>
+      <url>scpexe://people.apache.org/www/incubator.apache.org/activemq/maven/</url>
     </site>
--->
   </distributionManagement>
 
   <modules>
