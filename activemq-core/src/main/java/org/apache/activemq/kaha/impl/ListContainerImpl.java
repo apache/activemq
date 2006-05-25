@@ -641,7 +641,7 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
         IndexItem index=null;
         try{
             if(value!=null){
-                DataItem data=dataManager.storeItem(marshaller,value);
+                DataItem data=dataManager.storeDataItem(marshaller,value);
                 index=indexManager.createNewIndex();
                 index.setValueData(data);
                 IndexItem prev=list.getLast();
@@ -668,7 +668,7 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
         IndexItem index=null;
         try{
             if(value!=null){
-                DataItem data=dataManager.storeItem(marshaller,value);
+                DataItem data=dataManager.storeDataItem(marshaller,value);
                 index=indexManager.createNewIndex();
                 index.setValueData(data);
                 IndexItem prev=root;
@@ -695,7 +695,7 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
         IndexItem index=null;
         try{
             if(value!=null){
-                DataItem data=dataManager.storeItem(marshaller,value);
+                DataItem data=dataManager.storeDataItem(marshaller,value);
                 index=indexManager.createNewIndex();
                 index.setValueData(data);
                 IndexItem prev=null;

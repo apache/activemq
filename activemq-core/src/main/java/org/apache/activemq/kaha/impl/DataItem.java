@@ -13,49 +13,27 @@
  */
 package org.apache.activemq.kaha.impl;
 
-import org.apache.activemq.kaha.Marshaller;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
 /**
  * A a wrapper for a data in the store
  * 
  * @version $Revision: 1.2 $
  */
 final class DataItem implements Item{
-    static final int HEAD_SIZE=6; // magic + len
-    private int size;
-    private long offset=POSITION_NOT_SET;
+    
     private int file=(int) POSITION_NOT_SET;
+    private long offset=POSITION_NOT_SET;
+    private int size;
 
     DataItem(){}
     
+    DataItem(DataItem item) {
+        this.file = item.file;
+        this.offset = item.offset;
+        this.size = item.size;
+    }
+    
     boolean isValid(){
         return file != POSITION_NOT_SET;
-    }
-
-    void writeHeader(DataOutput dataOut) throws IOException{
-        dataOut.writeShort(MAGIC);
-        dataOut.writeInt(size);
-    }
-
-    void readHeader(DataInput dataIn) throws IOException{
-        int magic=dataIn.readShort();
-        if(magic==MAGIC){
-            size=dataIn.readInt();
-        }else{
-            throw new BadMagicException("Unexpected Magic value: "+magic);
-        }
-    }
-
-    void writePayload(Marshaller marshaller,Object object,DataOutputStream dataOut) throws IOException{
-        marshaller.writePayload(object,dataOut);
-    }
-
-    Object readPayload(Marshaller marshaller,DataInputStream dataIn) throws IOException{
-        return marshaller.readPayload(dataIn);
     }
 
     /**
@@ -106,5 +84,9 @@ final class DataItem implements Item{
     public String toString(){
         String result="offset = "+offset+", file = " + file + ", size = "+size;
         return result;
+    }
+
+    public DataItem copy() {
+        return new DataItem(this);
     }
 }

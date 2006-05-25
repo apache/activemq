@@ -22,9 +22,9 @@ import org.apache.activemq.kaha.Marshaller;
  * @version $Revision: 1.1.1.1 $
  */
 final class StoreDataReader{
+    
     private DataManager dataManager;
     private StoreByteArrayInputStream dataIn;
-    private byte[] header=new byte[DataItem.HEAD_SIZE];
 
     /**
      * Construct a Store reader
@@ -36,13 +36,31 @@ final class StoreDataReader{
         this.dataIn=new StoreByteArrayInputStream();
     }
 
+    /**
+     * Sets the size property on a DataItem and returns the type of item that this was 
+     * created as.
+     * 
+     * @param marshaller
+     * @param item
+     * @return
+     * @throws IOException
+     */
+    protected byte readDataItemSize(DataItem item) throws IOException {
+
+        RandomAccessFile file = dataManager.getDataFile(item);
+        file.seek(item.getOffset()); // jump to the size field
+        byte rc = file.readByte();
+        item.setSize(file.readInt());
+        return rc;
+    }
+    
     protected Object readItem(Marshaller marshaller,DataItem item) throws IOException{
         RandomAccessFile file=dataManager.getDataFile(item);
-        file.seek(item.getOffset());
-        file.readFully(header);
-        dataIn.restart(header);
-        item.readHeader(dataIn);
+        
+        // TODO: we could reuse the buffer in dataIn if it's big enough to avoid
+        // allocating byte[] arrays on every readItem.
         byte[] data=new byte[item.getSize()];
+        file.seek(item.getOffset()+DataManager.ITEM_HEAD_SIZE);
         file.readFully(data);
         dataIn.restart(data);
         return marshaller.readPayload(dataIn);

@@ -22,7 +22,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
@@ -39,6 +41,10 @@ final class DataManager{
     private StoreDataWriter writer;
     private DataFile currentWriteFile;
     Map fileMap=new HashMap();
+
+    public static final int ITEM_HEAD_SIZE=5; // type + length
+    public static final byte DATA_ITEM_TYPE=1;
+    public static final byte REDO_ITEM_TYPE=2;
 
     DataManager(File dir,String pf){
         this.dir=dir;
@@ -91,15 +97,56 @@ final class DataManager{
         }
         throw new IOException("Could not locate data file "+prefix+item.getFile());
     }
-
-    synchronized Object readItem(Marshaller marshaller,DataItem item) throws IOException{
+    
+    synchronized Object readItem(Marshaller marshaller, DataItem item) throws IOException{
         return reader.readItem(marshaller,item);
     }
 
-    synchronized DataItem storeItem(Marshaller marshaller,Object payload) throws IOException{
-        return writer.storeItem(marshaller,payload);
+    synchronized DataItem storeDataItem(Marshaller marshaller, Object payload) throws IOException{
+        return writer.storeItem(marshaller,payload, DATA_ITEM_TYPE);
+    }
+    
+    synchronized DataItem storeRedoItem(Marshaller marshaller, Object payload) throws IOException{
+        return writer.storeItem(marshaller,payload, REDO_ITEM_TYPE);
     }
 
+    synchronized void recoverRedoItems(Marshaller marshaller, RedoListener listener) throws IOException{
+        DataItem item = new DataItem();
+        item.setFile(currentWriteFile.getNumber().intValue());
+        item.setOffset(0);
+        while( true ) {
+            byte type;
+            try {
+                type = reader.readDataItemSize(item);
+            } catch (IOException ignore) {
+                log.trace("End of data file reached at (header was invalid): "+item);
+                return;
+            }
+            if( type == REDO_ITEM_TYPE ) {
+                // Un-marshal the redo item
+                Object object;
+                try {
+                    object = readItem(marshaller, item);
+                } catch (IOException e1) {
+                    log.trace("End of data file reached at (payload was invalid): "+item);
+                    return;
+                }
+                try {
+                    
+                    listener.onRedoItem(item, object);
+                    // in case the listener is holding on to item references, copy it
+                    // so we don't change it behind the listener's back.
+                    item = item.copy();
+                    
+                } catch (Exception e) {
+                    throw IOExceptionSupport.create("Recovery handler failed: "+e,e);
+                }
+            }
+            // Move to the next item.
+            item.setOffset(item.getOffset()+ITEM_HEAD_SIZE+item.getSize());
+        }
+    }
+    
     synchronized void close() throws IOException{
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
             DataFile dataFile=(DataFile) i.next();

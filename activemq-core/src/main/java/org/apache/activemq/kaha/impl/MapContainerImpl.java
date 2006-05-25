@@ -342,11 +342,11 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
         try{
             if(key!=null){
                 index=indexManager.createNewIndex();
-                DataItem data=dataManager.storeItem(keyMarshaller,key);
+                DataItem data=dataManager.storeDataItem(keyMarshaller,key);
                 index.setKeyData(data);
             }
             if(value!=null){
-                DataItem data=dataManager.storeItem(valueMarshaller,value);
+                DataItem data=dataManager.storeDataItem(valueMarshaller,value);
                 index.setValueData(data);
             }
             IndexItem last=list.isEmpty()?null:(IndexItem) list.getLast();

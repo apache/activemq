@@ -13,13 +13,13 @@
  */
 package org.apache.activemq.kaha;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 /**
  * Implementation of a Marshaller for Objects
  * 
@@ -34,13 +34,20 @@ public class ObjectMarshaller implements Marshaller{
      * @throws IOException
      */
     public void writePayload(Object object,DataOutput dataOut) throws IOException{
-        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        ObjectOutputStream objectOut=new ObjectOutputStream(bytesOut);
+
+// I failed to see why we just did not just used the provided stream directly        
+//        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+//        ObjectOutputStream objectOut=new ObjectOutputStream(bytesOut);
+//        objectOut.writeObject(object);
+//        objectOut.close();
+//        byte[] data = bytesOut.toByteArray();
+//        dataOut.writeInt(data.length);
+//        dataOut.write(data);
+        
+        ObjectOutputStream objectOut=new ObjectOutputStream((OutputStream) dataOut);
         objectOut.writeObject(object);
-        objectOut.close();
-        byte[] data = bytesOut.toByteArray();
-        dataOut.writeInt(data.length);
-        dataOut.write(data);
+        objectOut.reset();
+        objectOut.flush();
     }
 
     /**
@@ -51,15 +58,25 @@ public class ObjectMarshaller implements Marshaller{
      * @throws IOException
      */
     public Object readPayload(DataInput dataIn) throws IOException{
-        int size = dataIn.readInt();
-        byte[] data = new byte[size];
-        dataIn.readFully(data);
-        ByteArrayInputStream bytesIn = new ByteArrayInputStream(data);
-        ObjectInputStream objectIn=new ObjectInputStream(bytesIn);
+        
+// I failed to see why we just did not just used the provided stream directly        
+//        int size = dataIn.readInt();
+//        byte[] data = new byte[size];
+//        dataIn.readFully(data);
+//        ByteArrayInputStream bytesIn = new ByteArrayInputStream(data);
+//        ObjectInputStream objectIn=new ObjectInputStream(bytesIn);
+//        try{
+//            return objectIn.readObject();
+//        }catch(ClassNotFoundException e){
+//            throw new IOException(e.getMessage());
+//        }
+        
+        ObjectInputStream objectIn=new ObjectInputStream((InputStream) dataIn);
         try{
             return objectIn.readObject();
-        }catch(ClassNotFoundException e){
+        } catch(ClassNotFoundException e) {
             throw new IOException(e.getMessage());
         }
+
     }
 }
