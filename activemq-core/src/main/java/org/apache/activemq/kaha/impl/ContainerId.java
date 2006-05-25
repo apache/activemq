@@ -25,20 +25,20 @@ import java.io.ObjectOutput;
 public class ContainerId implements Externalizable{
     private static final long serialVersionUID=-8883779541021821943L;
     private Object key;
-    private String dataContainerPrefix;
+    private String dataContainerName;
 
     /**
      * @return Returns the dataContainerPrefix.
      */
-    public String getDataContainerPrefix(){
-        return dataContainerPrefix;
+    public String getDataContainerName(){
+        return dataContainerName;
     }
 
     /**
      * @param dataContainerPrefix The dataContainerPrefix to set.
      */
-    public void setDataContainerPrefix(String dataContainerPrefix){
-        this.dataContainerPrefix=dataContainerPrefix;
+    public void setDataContainerName(String dataContainerPrefix){
+        this.dataContainerName=dataContainerPrefix;
     }
 
     /**
@@ -69,12 +69,12 @@ public class ContainerId implements Externalizable{
     }
 
     public void writeExternal(ObjectOutput out) throws IOException{
-        out.writeUTF(getDataContainerPrefix());
+        out.writeUTF(getDataContainerName());
         out.writeObject(key);
     }
 
     public void readExternal(ObjectInput in) throws IOException,ClassNotFoundException{
-        dataContainerPrefix=in.readUTF();
+        dataContainerName=in.readUTF();
         key=in.readObject();
     }
 }

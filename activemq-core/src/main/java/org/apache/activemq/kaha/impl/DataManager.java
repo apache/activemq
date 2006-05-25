@@ -33,10 +33,11 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 final class DataManager{
+    
     private static final Log log=LogFactory.getLog(DataManager.class);
     protected static long MAX_FILE_LENGTH=1024*1024*32;
     private final File dir;
-    private final String prefix;
+    private final String name;
     private StoreDataReader reader;
     private StoreDataWriter writer;
     private DataFile currentWriteFile;
@@ -45,23 +46,28 @@ final class DataManager{
     public static final int ITEM_HEAD_SIZE=5; // type + length
     public static final byte DATA_ITEM_TYPE=1;
     public static final byte REDO_ITEM_TYPE=2;
+    
+    Marshaller redoMarshaller = RedoStoreIndexItem.MARSHALLER;
+    private String dataFilePrefix;
 
-    DataManager(File dir,String pf){
+    DataManager(File dir, final String name){
         this.dir=dir;
-        this.prefix=pf;
+        this.name=name;
         this.reader=new StoreDataReader(this);
         this.writer=new StoreDataWriter(this);
+        
+        dataFilePrefix = "data-"+name+"-";
         // build up list of current dataFiles
         File[] files=dir.listFiles(new FilenameFilter(){
-            public boolean accept(File dir,String name){
-                return dir.equals(dir)&&name.startsWith(prefix);
+            public boolean accept(File dir,String n){
+                return dir.equals(dir)&&n.startsWith(dataFilePrefix);
             }
         });
         if(files!=null){
             for(int i=0;i<files.length;i++){
                 File file=files[i];
-                String name=file.getName();
-                String numStr=name.substring(prefix.length(),name.length());
+                String n=file.getName();
+                String numStr=n.substring(dataFilePrefix.length(),n.length());
                 int num=Integer.parseInt(numStr);
                 DataFile dataFile=new DataFile(file,num);
                 fileMap.put(dataFile.getNumber(),dataFile);
@@ -72,8 +78,16 @@ final class DataManager{
         }
     }
     
-    public String getPrefix(){
-        return prefix;
+    private DataFile createAndAddDataFile(int num){
+        String fileName=dataFilePrefix+num;
+        File file=new File(dir,fileName);
+        DataFile result=new DataFile(file,num);
+        fileMap.put(result.getNumber(),result);
+        return result;
+    }
+
+    public String getName(){
+        return name;
     }
 
     DataFile findSpaceForData(DataItem item) throws IOException{
@@ -95,7 +109,7 @@ final class DataManager{
         if(dataFile!=null){
             return dataFile.getRandomAccessFile();
         }
-        throw new IOException("Could not locate data file "+prefix+item.getFile());
+        throw new IOException("Could not locate data file "+name+item.getFile());
     }
     
     synchronized Object readItem(Marshaller marshaller, DataItem item) throws IOException{
@@ -106,11 +120,16 @@ final class DataManager{
         return writer.storeItem(marshaller,payload, DATA_ITEM_TYPE);
     }
     
-    synchronized DataItem storeRedoItem(Marshaller marshaller, Object payload) throws IOException{
-        return writer.storeItem(marshaller,payload, REDO_ITEM_TYPE);
+    synchronized DataItem storeRedoItem(Object payload) throws IOException{
+        return writer.storeItem(redoMarshaller, payload, REDO_ITEM_TYPE);
     }
 
-    synchronized void recoverRedoItems(Marshaller marshaller, RedoListener listener) throws IOException{
+    synchronized void recoverRedoItems(RedoListener listener) throws IOException{
+        
+        // Nothing to recover if there is no current file.
+        if( currentWriteFile == null )
+            return;
+        
         DataItem item = new DataItem();
         item.setFile(currentWriteFile.getNumber().intValue());
         item.setOffset(0);
@@ -126,7 +145,7 @@ final class DataManager{
                 // Un-marshal the redo item
                 Object object;
                 try {
-                    object = readItem(marshaller, item);
+                    object = readItem(redoMarshaller, item);
                 } catch (IOException e1) {
                     log.trace("End of data file reached at (payload was invalid): "+item);
                     return;
@@ -224,17 +243,17 @@ final class DataManager{
         }
     }
 
-    private DataFile createAndAddDataFile(int num){
-        String fileName=prefix+num;
-        File file=new File(dir,fileName);
-        DataFile result=new DataFile(file,num);
-        fileMap.put(result.getNumber(),result);
-        return result;
-    }
-
     private void removeDataFile(DataFile dataFile) throws IOException{
         fileMap.remove(dataFile.getNumber());
         boolean result=dataFile.delete();
         log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
+    }
+
+    public Marshaller getRedoMarshaller() {
+        return redoMarshaller;
+    }
+
+    public void setRedoMarshaller(Marshaller redoMarshaller) {
+        this.redoMarshaller = redoMarshaller;
     }
 }

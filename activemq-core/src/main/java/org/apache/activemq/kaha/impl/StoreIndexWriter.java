@@ -26,8 +26,11 @@ import java.io.RandomAccessFile;
  * @version $Revision: 1.1.1.1 $
  */
 class StoreIndexWriter{
-    protected StoreByteArrayOutputStream dataOut;
-    protected RandomAccessFile file;
+    
+    protected final StoreByteArrayOutputStream dataOut = new StoreByteArrayOutputStream();
+    protected final RandomAccessFile file;
+    protected final String name;
+    protected final DataManager redoLog;
 
     /**
      * Construct a Store index writer
@@ -35,14 +38,33 @@ class StoreIndexWriter{
      * @param file
      */
     StoreIndexWriter(RandomAccessFile file){
-        this.file=file;
-        this.dataOut=new StoreByteArrayOutputStream();
+        this(file, null, null);
     }
 
-    void storeItem(IndexItem index) throws IOException{
+    public StoreIndexWriter(RandomAccessFile file, String indexName, DataManager redoLog) {
+        this.file=file;
+        this.name = indexName;
+        this.redoLog = redoLog;
+    }
+
+    void storeItem(IndexItem indexItem) throws IOException{
+        
+        if( redoLog!=null ) {
+            RedoStoreIndexItem redo = new RedoStoreIndexItem(name, indexItem.getOffset(), indexItem);
+            redoLog.storeRedoItem(redo);
+        }
+        
         dataOut.reset();
-        index.write(dataOut);
-        file.seek(index.getOffset());
+        indexItem.write(dataOut);
+        file.seek(indexItem.getOffset());
         file.write(dataOut.getData(),0,IndexItem.INDEX_SIZE);
     }
+
+    public void redoStoreItem(RedoStoreIndexItem redo) throws IOException {
+        dataOut.reset();
+        redo.getIndexItem().write(dataOut);
+        file.seek(redo.getOffset());
+        file.write(dataOut.getData(),0,IndexItem.INDEX_SIZE);
+    }
+    
 }

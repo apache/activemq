@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
@@ -24,8 +25,9 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-final class IndexManager{
+final class IndexManager {
     private static final Log log=LogFactory.getLog(IndexManager.class);
+    private final String name;
     private File file;
     private RandomAccessFile indexFile;
     private StoreIndexReader reader;
@@ -33,11 +35,12 @@ final class IndexManager{
     private LinkedList freeList=new LinkedList();
     private long length=0;
 
-    IndexManager(File ifile,String mode) throws IOException{
-        file=ifile;
-        indexFile=new RandomAccessFile(ifile,mode);
+    IndexManager(File directory, String name, String mode, DataManager redoLog ) throws IOException{
+        this.name = name;
+        file=new File(directory,"index-"+name);
+;       indexFile=new RandomAccessFile(file,mode);
         reader=new StoreIndexReader(indexFile);
-        writer=new StoreIndexWriter(indexFile);
+        writer=new StoreIndexWriter(indexFile, name, redoLog);
         long offset=0;
         while((offset+IndexItem.INDEX_SIZE)<=indexFile.length()){
             IndexItem index=reader.readItem(offset);
@@ -67,6 +70,10 @@ final class IndexManager{
 
     synchronized void updateIndex(IndexItem index) throws IOException{
         writer.storeItem(index);
+    }
+    
+    public void redo(RedoStoreIndexItem redo) throws IOException {
+        writer.redoStoreItem(redo);
     }
 
     synchronized IndexItem createNewIndex() throws IOException{
@@ -118,4 +125,9 @@ final class IndexManager{
     void setLength(long value){
         this.length=value;
     }
+
+    public String getName() {
+        return name;
+    }
+
 }
