@@ -37,8 +37,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  */
 public class KahaStore implements Store{
     
-    private static final String DEFAULT_DATA_CONTAINER_NAME = "kaha-data.";
-    private static final String DEFAULT_INDEX_CONTAINER_NAME = "kaha-index.";
+    private static final String DEFAULT_CONTAINER_NAME = "kaha";
     
     private File directory;
 
@@ -54,6 +53,7 @@ public class KahaStore implements Store{
     private String name;
     private String mode;
     private boolean initialized;
+    private boolean logIndexChanges=false;
 
     public KahaStore(String name,String mode) throws IOException{
         this.name=name;
@@ -138,7 +138,7 @@ public class KahaStore implements Store{
     }
 
     public MapContainer getMapContainer(Object id) throws IOException{
-        return getMapContainer(id, DEFAULT_DATA_CONTAINER_NAME);
+        return getMapContainer(id, DEFAULT_CONTAINER_NAME);
     }
     
     public synchronized MapContainer getMapContainer(Object id, String dataContainerName) throws IOException{
@@ -148,11 +148,11 @@ public class KahaStore implements Store{
         if(result==null){
             
             DataManager dm = getDataManager(dataContainerName);
-            IndexManager im = getIndexManager(DEFAULT_INDEX_CONTAINER_NAME);
+            IndexManager im = getIndexManager(dm, dataContainerName);
             
             ContainerId containerId = new ContainerId();
             containerId.setKey(id);
-            containerId.setDataContainerPrefix(dataContainerName);
+            containerId.setDataContainerName(dataContainerName);
 
             IndexItem root=mapsContainer.getRoot(containerId);
             if( root == null ) {
@@ -186,19 +186,19 @@ public class KahaStore implements Store{
     }
 
     public ListContainer getListContainer(Object id) throws IOException{
-        return getListContainer(id,DEFAULT_DATA_CONTAINER_NAME);
+        return getListContainer(id,DEFAULT_CONTAINER_NAME);
     }
     
-    public synchronized ListContainer getListContainer(Object id, String dataContainerName) throws IOException{
+    public synchronized ListContainer getListContainer(Object id, String containerName) throws IOException{
         initialize();
        
         ListContainerImpl result=(ListContainerImpl) lists.get(id);
         if(result==null){
-            DataManager dm = getDataManager(dataContainerName);
-            IndexManager im = getIndexManager(DEFAULT_INDEX_CONTAINER_NAME);
+            DataManager dm = getDataManager(containerName);
+            IndexManager im = getIndexManager(dm, containerName);
             ContainerId containerId = new ContainerId();
             containerId.setKey(id);
-            containerId.setDataContainerPrefix(dataContainerName);
+            containerId.setDataContainerName(containerName);
             IndexItem root=listsContainer.getRoot(containerId);
             if( root == null ) {
                 root=listsContainer.addRoot(containerId);
@@ -238,23 +238,23 @@ public class KahaStore implements Store{
             directory=new File(name);
             directory.mkdirs();
             
-            DataManager rootData = getDataManager(DEFAULT_DATA_CONTAINER_NAME);
-            IndexManager rootIndex = getIndexManager(DEFAULT_INDEX_CONTAINER_NAME);
+            DataManager defaultDM = getDataManager(DEFAULT_CONTAINER_NAME);
+            IndexManager defaultIM = getIndexManager(defaultDM, DEFAULT_CONTAINER_NAME);
             
             IndexItem mapRoot=new IndexItem();
             IndexItem listRoot=new IndexItem();
-            if(rootIndex.isEmpty()){
+            if(defaultIM.isEmpty()){
                 mapRoot.setOffset(0);
-                rootIndex.updateIndex(mapRoot);
+                defaultIM.updateIndex(mapRoot);
                 listRoot.setOffset(IndexItem.INDEX_SIZE);
-                rootIndex.updateIndex(listRoot);
-                rootIndex.setLength(IndexItem.INDEX_SIZE*2);
+                defaultIM.updateIndex(listRoot);
+                defaultIM.setLength(IndexItem.INDEX_SIZE*2);
             }else{
-                mapRoot=rootIndex.getIndex(0);
-                listRoot=rootIndex.getIndex(IndexItem.INDEX_SIZE);
+                mapRoot=defaultIM.getIndex(0);
+                listRoot=defaultIM.getIndex(IndexItem.INDEX_SIZE);
             }
-            mapsContainer=new IndexRootContainer(mapRoot,rootIndex,rootData);
-            listsContainer=new IndexRootContainer(listRoot,rootIndex,rootData);
+            mapsContainer=new IndexRootContainer(mapRoot,defaultIM,defaultDM);
+            listsContainer=new IndexRootContainer(listRoot,defaultIM,defaultDM);
 
             for (Iterator i = dataManagers.values().iterator(); i.hasNext();){
                 DataManager dm = (DataManager) i.next();
@@ -263,23 +263,42 @@ public class KahaStore implements Store{
         }
     }
     
-    protected DataManager getDataManager(String prefix) throws IOException {
-        DataManager dm = (DataManager) dataManagers.get(prefix);
+    protected DataManager getDataManager(String name) throws IOException {
+        DataManager dm = (DataManager) dataManagers.get(name);
         if (dm == null){
-            dm = new DataManager(directory,prefix);
-            dataManagers.put(prefix,dm);
+            dm = new DataManager(directory,name);
+            recover(dm);
+            dataManagers.put(name,dm);
         }
         return dm;
     }
     
-    protected IndexManager getIndexManager(String index_name) throws IOException {
-        IndexManager im = (IndexManager) indexManagers.get(index_name);
+    protected IndexManager getIndexManager(DataManager dm, String name) throws IOException {
+        IndexManager im = (IndexManager) indexManagers.get(name);
         if( im == null ) {
-            File ifile=new File(directory,index_name+".idx");
-            im = new IndexManager(ifile,mode);
-            indexManagers.put(index_name,im);
+            im = new IndexManager(directory,name,mode, logIndexChanges?dm:null);
+            indexManagers.put(name,im);
         }
         return im;
+    }
+
+    private void recover(final DataManager dm) throws IOException {
+        dm.recoverRedoItems( new RedoListener() {
+            public void onRedoItem(DataItem item, Object o) throws Exception {
+                RedoStoreIndexItem redo = (RedoStoreIndexItem) o;
+                //IndexManager im = getIndexManager(dm, redo.getIndexName());
+                IndexManager im = getIndexManager(dm, dm.getName());
+                im.redo(redo);
+            }
+        });
+    }
+
+    public boolean isLogIndexChanges() {
+        return logIndexChanges;
+    }
+
+    public void setLogIndexChanges(boolean logIndexChanges) {
+        this.logIndexChanges = logIndexChanges;
     }
 
 }
