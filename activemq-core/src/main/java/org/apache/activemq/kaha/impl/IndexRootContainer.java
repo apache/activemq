@@ -66,7 +66,7 @@ class IndexRootContainer {
             removeRoot(key);
         }
         
-        DataItem data = dataManager.storeItem(rootMarshaller, key);
+        DataItem data = dataManager.storeDataItem(rootMarshaller, key);
         IndexItem index = indexManager.createNewIndex();
         index.setKeyData(data);
         IndexItem newRoot = indexManager.createNewIndex();

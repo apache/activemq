@@ -17,13 +17,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 /**
- * A an Item with a relative postion and location to other Items in the Store
+ * A an Item with a relative position and location to other Items in the Store
  * 
  * @version $Revision: 1.2 $
  */
 final class IndexItem implements Item{
     
-    static final int INDEX_SIZE=43;
+    static final int INDEX_SIZE=51;
     //used by linked list
     IndexItem next;
     IndexItem prev;
@@ -31,13 +31,17 @@ final class IndexItem implements Item{
     private long offset=POSITION_NOT_SET;
     private long previousItem=POSITION_NOT_SET;
     private long nextItem=POSITION_NOT_SET;
-    private long keyOffset=POSITION_NOT_SET;
-    private int keyFile=(int) POSITION_NOT_SET;
-    private long valueOffset=POSITION_NOT_SET;
-    private int valueFile=(int) POSITION_NOT_SET;
     private boolean active=true;
     
-
+    // TODO: consider just using a DataItem for the following fields.
+    private long keyOffset=POSITION_NOT_SET;
+    private int keyFile=(int) POSITION_NOT_SET;
+    private int keySize=0;
+    
+    private long valueOffset=POSITION_NOT_SET;
+    private int valueFile=(int) POSITION_NOT_SET;
+    private int valueSize=0;
+    
     /**
      * Default Constructor
      */
@@ -48,8 +52,10 @@ final class IndexItem implements Item{
         nextItem=POSITION_NOT_SET;
         keyOffset=POSITION_NOT_SET;
         keyFile=(int) POSITION_NOT_SET;
+        keySize=0;
         valueOffset=POSITION_NOT_SET;
         valueFile=(int) POSITION_NOT_SET;
+        valueSize=0;        
         active=true;
     }
 
@@ -57,6 +63,7 @@ final class IndexItem implements Item{
         DataItem result=new DataItem();
         result.setOffset(keyOffset);
         result.setFile(keyFile);
+        result.setSize(keySize);
         return result;
     }
 
@@ -64,17 +71,20 @@ final class IndexItem implements Item{
         DataItem result=new DataItem();
         result.setOffset(valueOffset);
         result.setFile(valueFile);
+        result.setSize(valueSize);
         return result;
     }
 
     void setValueData(DataItem item){
         valueOffset=item.getOffset();
         valueFile=item.getFile();
+        valueSize=item.getSize();
     }
 
     void setKeyData(DataItem item){
         keyOffset=item.getOffset();
         keyFile=item.getFile();
+        keySize=item.getSize();
     }
 
     /**
@@ -88,8 +98,10 @@ final class IndexItem implements Item{
         dataOut.writeLong(nextItem);
         dataOut.writeInt(keyFile);
         dataOut.writeLong(keyOffset);
+        dataOut.writeInt(keySize);
         dataOut.writeInt(valueFile);
         dataOut.writeLong(valueOffset);
+        dataOut.writeInt(valueSize);
     }
 
     /**
@@ -105,8 +117,10 @@ final class IndexItem implements Item{
         nextItem=dataIn.readLong();
         keyFile=dataIn.readInt();
         keyOffset=dataIn.readLong();
+        keySize=dataIn.readInt();
         valueFile=dataIn.readInt();
         valueOffset=dataIn.readLong();
+        valueSize=dataIn.readInt();
     }
 
     /**
@@ -221,12 +235,31 @@ final class IndexItem implements Item{
         this.offset=offset;
     }
 
+    public int getKeySize() {
+        return keySize;
+    }
+
+    public void setKeySize(int keySize) {
+        this.keySize = keySize;
+    }
+
+    public int getValueSize() {
+        return valueSize;
+    }
+
+    public void setValueSize(int valueSize) {
+        this.valueSize = valueSize;
+    }
+
     /**
-     * @return eprtty print of 'this'
+     * @return print of 'this'
      */
     public String toString(){
-        String result="offset="+offset+" , keyFile = "+keyFile+" , keyOffset = "+keyOffset+", valueOffset = "
-                        +valueOffset+" , previousItem = "+previousItem+" , nextItem = "+nextItem;
+        String result="offset="+offset+
+        ", key=("+keyFile+", "+keyOffset+", "+keySize+")"+
+        ", value=("+valueFile+", "+valueOffset+", "+valueSize+")"+
+        ", previousItem="+previousItem+", nextItem="+nextItem
+        ;
         return result;
     }
 }

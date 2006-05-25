@@ -18,7 +18,9 @@
  */
 package org.apache.activemq.kaha.impl;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+
 import org.apache.activemq.kaha.Marshaller;
 /**
  * Optimized Store writer
@@ -26,8 +28,10 @@ import org.apache.activemq.kaha.Marshaller;
  * @version $Revision: 1.1.1.1 $
  */
 final class StoreDataWriter{
-    private StoreByteArrayOutputStream dataOut;
+    
+    private StoreByteArrayOutputStream buffer;
     private DataManager dataManager;
+
 
     /**
      * Construct a Store writer
@@ -36,23 +40,39 @@ final class StoreDataWriter{
      */
     StoreDataWriter(DataManager fileManager){
         this.dataManager=fileManager;
-        this.dataOut=new StoreByteArrayOutputStream();
+        this.buffer=new StoreByteArrayOutputStream();
     }
 
-    DataItem storeItem(Marshaller marshaller,Object payload) throws IOException{
-        dataOut.reset();
-        dataOut.position(DataItem.HEAD_SIZE);
-        marshaller.writePayload(payload,dataOut);
-        int size=dataOut.size();
-        int payloadSize=size-DataItem.HEAD_SIZE;
+    /**
+     * @param marshaller
+     * @param payload
+     * @param data_item2 
+     * @return
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    DataItem storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
+        
+        // Write the packet our internal buffer.
+        buffer.reset();
+        buffer.position(DataManager.ITEM_HEAD_SIZE);
+        marshaller.writePayload(payload,buffer);
+        int size=buffer.size();
+        int payloadSize=size-DataManager.ITEM_HEAD_SIZE;
+        buffer.reset();
+        buffer.writeByte(type);
+        buffer.writeInt(payloadSize);
+
+        // Find the position where this item will land at.
         DataItem item=new DataItem();
         item.setSize(payloadSize);
         DataFile dataFile=dataManager.findSpaceForData(item);
-        dataOut.reset();
-        item.writeHeader(dataOut);
+        
+        // Now splat the buffer to the file.
         dataFile.getRandomAccessFile().seek(item.getOffset());
-        dataFile.getRandomAccessFile().write(dataOut.getData(),0,size);
+        dataFile.getRandomAccessFile().write(buffer.getData(),0,size);
         dataFile.incrementLength(size);
+        
         dataManager.addInterestInFile(dataFile);
         return item;
     }
