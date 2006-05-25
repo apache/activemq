@@ -112,7 +112,7 @@ class IndexRootContainer {
         if (index != null){
             return indexManager.getIndex(index.getValueOffset());
         }
-        throw new IOException("Cannot find root for key " + key);
+        return null;
     }
 
     

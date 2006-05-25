@@ -65,7 +65,6 @@ public class KahaStore implements Store{
         if(!closed){
             closed=true;
             if(initialized){
-//                indexManager.close();
                 
                 for (Iterator iter = indexManagers.values().iterator(); iter.hasNext();) {
                     IndexManager im = (IndexManager) iter.next();
@@ -85,8 +84,7 @@ public class KahaStore implements Store{
 
     public synchronized void force() throws IOException{
         if(initialized){
-//            indexManager.force();
-            
+
             for (Iterator iter = indexManagers.values().iterator(); iter.hasNext();) {
                 IndexManager im = (IndexManager) iter.next();
                 im.force();
@@ -116,7 +114,7 @@ public class KahaStore implements Store{
     public synchronized boolean delete() throws IOException{
         initialize();
         clear();
-        boolean result=true; //indexManager.delete();
+        boolean result=true;
         
         for (Iterator iter = indexManagers.values().iterator(); iter.hasNext();) {
             IndexManager im = (IndexManager) iter.next();
@@ -146,16 +144,24 @@ public class KahaStore implements Store{
     public synchronized MapContainer getMapContainer(Object id, String dataContainerName) throws IOException{
         initialize();
        
-        MapContainer result=(MapContainer) maps.get(id);
+        MapContainerImpl result=(MapContainerImpl) maps.get(id);
         if(result==null){
+            
             DataManager dm = getDataManager(dataContainerName);
             IndexManager im = getIndexManager(DEFAULT_INDEX_CONTAINER_NAME);
+            
             ContainerId containerId = new ContainerId();
             containerId.setKey(id);
             containerId.setDataContainerPrefix(dataContainerName);
-            IndexItem root=mapsContainer.addRoot(containerId);
+
+            IndexItem root=mapsContainer.getRoot(containerId);
+            if( root == null ) {
+                root=mapsContainer.addRoot(containerId);
+            }
             result=new MapContainerImpl(containerId,root,im,dm);
+            result.expressDataInterest();
             maps.put(containerId.getKey(),result);
+            
         }
         return result;
     }
@@ -186,15 +192,19 @@ public class KahaStore implements Store{
     public synchronized ListContainer getListContainer(Object id, String dataContainerName) throws IOException{
         initialize();
        
-        ListContainer result=(ListContainer) lists.get(id);
+        ListContainerImpl result=(ListContainerImpl) lists.get(id);
         if(result==null){
             DataManager dm = getDataManager(dataContainerName);
             IndexManager im = getIndexManager(DEFAULT_INDEX_CONTAINER_NAME);
             ContainerId containerId = new ContainerId();
             containerId.setKey(id);
             containerId.setDataContainerPrefix(dataContainerName);
-            IndexItem root=listsContainer.addRoot(containerId);
+            IndexItem root=listsContainer.getRoot(containerId);
+            if( root == null ) {
+                root=listsContainer.addRoot(containerId);
+            }
             result=new ListContainerImpl(containerId,root,im,dm);
+            result.expressDataInterest();
             lists.put(containerId.getKey(),result);
         }
         return result;
@@ -245,23 +255,7 @@ public class KahaStore implements Store{
             }
             mapsContainer=new IndexRootContainer(mapRoot,rootIndex,rootData);
             listsContainer=new IndexRootContainer(listRoot,rootIndex,rootData);
-            rootData.consolidateDataFiles();
-            for(Iterator i=mapsContainer.getKeys().iterator();i.hasNext();){
-                ContainerId key=(ContainerId) i.next();
-                DataManager dm = getDataManager(key.getDataContainerPrefix());
-                IndexItem root=mapsContainer.getRoot(key);
-                BaseContainerImpl container=new MapContainerImpl(key,root,rootIndex,dm);
-                container.expressDataInterest();
-                maps.put(key.getKey(),container);
-            }
-            for(Iterator i=listsContainer.getKeys().iterator();i.hasNext();){
-                ContainerId key=(ContainerId) i.next();
-                DataManager dm = getDataManager(key.getDataContainerPrefix());
-                IndexItem root=listsContainer.getRoot(key);
-                BaseContainerImpl container=new ListContainerImpl(key,root,rootIndex,dm);
-                container.expressDataInterest();
-                lists.put(key.getKey(),container);
-            }
+
             for (Iterator i = dataManagers.values().iterator(); i.hasNext();){
                 DataManager dm = (DataManager) i.next();
                 dm.consolidateDataFiles();
