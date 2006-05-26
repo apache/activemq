@@ -229,8 +229,8 @@ public class FailoverTransport implements CompositeTransport {
                 ServiceSupport.dispose(connectedTransport);
                 connectedTransport = null;
                 connectedTransportURI = null;
-                reconnectTask.wakeup();
             }
+            reconnectTask.wakeup();
         }
     }
 
