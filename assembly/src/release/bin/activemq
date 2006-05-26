@@ -130,7 +130,7 @@ if [ -z "$ACTIVEMQ_OPTS" ] ; then
 fi
 
 #SUNJMX="-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
-SUNJMX=""
+SUNJMX="-Dcom.sun.management.jmxremote"
 ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX"
 # Uncomment to enable YourKit profiling
 #ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
