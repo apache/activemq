@@ -1,11 +1,11 @@
-Welcome to ActiveMQ 
+Welcome to Apache ActiveMQ 
 =================== 
-ActiveMQ is a high performance Apache 2.0 licenced Message Broker and JMS 1.1 implementation.
+Apache ActiveMQ is a high performance Apache 2.0 licenced Message Broker and JMS 1.1 implementation.
 
 
 Incubation Disclaimer
 =====================
-ActiveMQ is an effort undergoing incubation at the Apache Software Foundation (ASF), sponsored by the Geronimo PMC. 
+Apache ActiveMQ is an effort undergoing incubation at the Apache Software Foundation (ASF), sponsored by the Geronimo PMC. 
 
 Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, 
 communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. 
@@ -19,22 +19,23 @@ Getting Started
 To help you get started, try the following links:-
 
 Getting Started
-http://incubator.apache.org/activemq/Getting+Started
+http://incubator.apache.org/activemq/getting-started.html
 
 Building
-http://incubator.apache.org/activemq/Building
+http://incubator.apache.org/activemq/getting-started.html#GettingStarted-WindowsSourceInstallation
+http://incubator.apache.org/activemq/getting-started.html#GettingStarted-UnixSourceInstallation
 
 Examples
-http://incubator.apache.org/activemq/Examples
+http://incubator.apache.org/activemq/examples.html
 
 We welcome contributions of all kinds, for details of how you can help
-http://incubator.apache.org/activemq/Contributing
+http://incubator.apache.org/activemq/contributing.html
 
 Please refer to the website for details of finding the issue tracker, email lists, wiki or IRC channel
 http://incubator.apache.org/activemq/
 
-Please help us make ActiveMQ better - we appreciate any feedback you may have.
+Please help us make Apache ActiveMQ better - we appreciate any feedback you may have.
 Enjoy!
 
------------------
-The ActiveMQ team
+------------------------
+The Apache ActiveMQ team
