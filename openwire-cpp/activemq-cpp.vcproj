@@ -105,8 +105,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="src\main\cpp"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;WIN32_LEAN_AND_MEAN;_WIN32_WINNT=0x0400"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)\amqlib.pdb"
@@ -1096,6 +1096,10 @@
 						</File>
 						<File
 							RelativePath=".\src\main\cpp\ppr\io\encoding\CharsetEncoderRegistry.hpp"
+							>
+						</File>
+						<File
+							RelativePath=".\src\main\cpp\ppr\io\encoding\CharsetEncodingException.hpp"
 							>
 						</File>
 						<File

@@ -14,40 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef Ppr_ICharsetEncoder_hpp_
-#define Ppr_ICharsetEncoder_hpp_
+#ifndef Ppr_CharsetEncodingException_hpp_
+#define Ppr_CharsetEncodingException_hpp_
 
-#include <string>
-#include <ppr/io/encoding/CharsetEncodingException.hpp>
-#include "ppr/util/ifr/array"
-#include "ppr/util/ifr/p"
+#include "ppr/TraceException.hpp"
 
 namespace apache
 {
   namespace ppr
   {
-    namespace io
-    {
-      namespace encoding
-      {
-        using namespace ifr ;
-        using namespace std ;
 
 /*
- * The ICharsetEncoder interface should be implemented by any class
- * intended to be a character set encoder/decoder.
+ * Signals that a character encoding or decoding error has occurred.
  */
-struct ICharsetEncoder : Interface
+class CharsetEncodingException : public TraceException
 {
-    virtual int length(p<string> str) = 0 ;
-    virtual p<string> encode(p<string> str, int *enclen) throw (CharsetEncodingException) = 0 ;
-    virtual p<string> decode(p<string> str) throw (CharsetEncodingException) = 0 ;
+public:
+    CharsetEncodingException() : TraceException()
+       { /* no-op */ } ;
+    CharsetEncodingException(const char *const& msg) : TraceException(msg)
+       { /* no-op */ } ;
+    CharsetEncodingException(const char* fileName, int lineNo, const char* msg) : TraceException(msg)
+       { /* no-op */ } ;
 } ;
 
 /* namespace */
-      }
-    }
   }
 }
 
-#endif /*Ppr_ICharsetEncoder_hpp_*/
+#endif /*Ppr_CharsetEncodingException_hpp_*/

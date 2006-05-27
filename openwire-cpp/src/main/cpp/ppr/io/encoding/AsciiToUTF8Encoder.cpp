@@ -76,7 +76,7 @@ int AsciiToUTF8Encoder::length(p<string> str)
 /*
  * Encodes given string from ASCII into modified UTF-8.
  */
-p<string> AsciiToUTF8Encoder::encode(p<string> str, int *enclen)
+p<string> AsciiToUTF8Encoder::encode(p<string> str, int *enclen) throw (CharsetEncodingException) 
 {
     // Assert parameter
     if( str == NULL )
@@ -125,7 +125,7 @@ p<string> AsciiToUTF8Encoder::encode(p<string> str, int *enclen)
 /*
  * Decodes given string from modified UTF-8 into ASCII.
  */
-p<string> AsciiToUTF8Encoder::decode(p<string> str)
+p<string> AsciiToUTF8Encoder::decode(p<string> str) throw (CharsetEncodingException)
 {
     // Assert argument
     if( str == NULL || str->length() == 0 )
@@ -159,28 +159,28 @@ p<string> AsciiToUTF8Encoder::decode(p<string> str)
                 i += 2 ;
 
                 if( i > length )
-                    throw exception() ;
+                    throw CharsetEncodingException("Missing character in double pair") ;
 
                 ch2 = (*str)[i - 1] ;
                 if( (ch2 & 0xC0) != 0x80 )
-                    throw exception() ;
+                    throw CharsetEncodingException("Invalid second character in double byte pair") ;
 
                 decstr->append( 1, (char)(((ch & 0x1F) << 6) | (ch2 & 0x3F)) ) ;
                 break ;
             case 14:  // Triple bytes char, 1110xxxx 10xxxxxx 10xxxxxx
                 i += 3 ;
                 if( i > length )
-                    throw exception() ;
+                    throw CharsetEncodingException("Missing character in triple set") ;
 
                 ch2 = (*str)[i - 2] ;
                 ch3 = (*str)[i - 1] ;
                 if( ((ch2 & 0xC0) != 0x80) || ((ch3 & 0xC0) != 0x80) )
-                    throw exception();
+                    throw CharsetEncodingException("Invalid second and/or third character in triple set") ;
 
                 decstr->append( 1, (char)(((ch & 0x0F) << 12) | ((ch2 & 0x3F) << 6) | ((ch3 & 0x3F) << 0)) ) ;
                 break ;
             default:  // Unsupported, 10xxxxxx 1111xxxx
-                throw exception() ;
+                throw CharsetEncodingException("Unsupported type flag") ;
         }
     }
     return decstr ;

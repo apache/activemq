@@ -20,6 +20,7 @@
 #include <string>
 #include <ppr/io/ByteArrayOutputStream.hpp>
 #include <ppr/io/encoding/ICharsetEncoder.hpp>
+#include <ppr/io/encoding/CharsetEncodingException.hpp>
 #include <ppr/util/ifr/array>
 #include <ppr/util/ifr/p>
 
@@ -50,8 +51,8 @@ public:
     virtual ~AsciiToUTF8Encoder() ;
 
     virtual int length(p<string> str) ;
-    virtual p<string> encode(p<string> str, int *enclen) ;
-    virtual p<string> decode(p<string> str) ;
+    virtual p<string> encode(p<string> str, int *enclen) throw (CharsetEncodingException) ;
+    virtual p<string> decode(p<string> str) throw (CharsetEncodingException) ;
 } ;
 
 /* namespace */

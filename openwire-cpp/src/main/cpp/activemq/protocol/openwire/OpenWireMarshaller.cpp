@@ -32,8 +32,9 @@ using namespace apache::activemq::protocol::openwire;
  */
 OpenWireMarshaller::OpenWireMarshaller(p<WireFormatInfo> formatInfo)
 {
-    this->formatInfo = formatInfo ;
-    this->encoder    = CharsetEncoderRegistry::getEncoder() ;
+    this->formatInfo       = formatInfo ;
+    this->encoder          = CharsetEncoderRegistry::getEncoder() ;
+    this->useTightEncoding = formatInfo->getTightEncodingEnabled() ;
 }
 
 // --- Operation methods --------------------------------------------
@@ -46,7 +47,7 @@ int OpenWireMarshaller::marshalBoolean(bool value, int mode, p<IOutputStream> os
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
             dos->writeBoolean(value) ;
@@ -68,7 +69,7 @@ int OpenWireMarshaller::marshalByte(char value, int mode, p<IOutputStream> ostre
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
             dos->writeByte(value) ;
@@ -90,7 +91,7 @@ int OpenWireMarshaller::marshalShort(short value, int mode, p<IOutputStream> ost
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
             dos->writeShort(value) ;
@@ -112,7 +113,7 @@ int OpenWireMarshaller::marshalInt(int value, int mode, p<IOutputStream> ostream
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
             dos->writeInt(value) ;
@@ -134,7 +135,7 @@ int OpenWireMarshaller::marshalLong(long long value, int mode, p<IOutputStream> 
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
             dos->writeLong(value) ;
@@ -156,7 +157,7 @@ int OpenWireMarshaller::marshalFloat(float value, int mode, p<IOutputStream> ost
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
             dos->writeFloat(value) ;
@@ -178,7 +179,7 @@ int OpenWireMarshaller::marshalDouble(double value, int mode, p<IOutputStream> o
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
             dos->writeDouble(value) ;
@@ -200,7 +201,7 @@ int OpenWireMarshaller::marshalString(p<string> value, int mode, p<IOutputStream
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( mode == IMarshaller::MARSHAL_WRITE )
         {
@@ -235,7 +236,7 @@ int OpenWireMarshaller::marshalObject(p<IDataStructure> object, int mode, p<IOut
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         int size = 0 ;
 
@@ -278,7 +279,7 @@ int OpenWireMarshaller::marshalObjectArray(array<IDataStructure> objects, int mo
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         int size = 0 ;
 
@@ -323,7 +324,7 @@ int OpenWireMarshaller::marshalByteArray(array<char> values, int mode, p<IOutput
     // Assert that supplied output stream is a data output stream
     p<DataOutputStream> dos = checkOutputStream(ostream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         int size = 0 ;
 
@@ -367,7 +368,7 @@ int OpenWireMarshaller::marshalByteArray(array<char> values, int mode, p<IOutput
  */
 int OpenWireMarshaller::marshalMap(p<PropertyMap> object, int mode, p<IOutputStream> ostream) throw(IOException)
 {
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         int size = 0 ;
 
@@ -541,7 +542,7 @@ bool OpenWireMarshaller::unmarshalBoolean(int mode, p<IInputStream> istream) thr
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         return dis->readBoolean() ;
     }
@@ -560,7 +561,7 @@ char OpenWireMarshaller::unmarshalByte(int mode, p<IInputStream> istream) throw(
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         return dis->readByte() ;
     }
@@ -578,7 +579,7 @@ short OpenWireMarshaller::unmarshalShort(int mode, p<IInputStream> istream) thro
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         return dis->readShort() ;
     }
@@ -597,7 +598,7 @@ int OpenWireMarshaller::unmarshalInt(int mode, p<IInputStream> istream) throw(IO
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         return dis->readInt() ;
     }
@@ -616,7 +617,7 @@ long long OpenWireMarshaller::unmarshalLong(int mode, p<IInputStream> istream) t
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         return dis->readLong() ;
     }
@@ -635,7 +636,7 @@ float OpenWireMarshaller::unmarshalFloat(int mode, p<IInputStream> istream) thro
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         return dis->readFloat() ;
     }
@@ -654,7 +655,7 @@ double OpenWireMarshaller::unmarshalDouble(int mode, p<IInputStream> istream) th
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         return dis->readFloat() ;
     }
@@ -673,7 +674,7 @@ p<string> OpenWireMarshaller::unmarshalString(int mode, p<IInputStream> istream)
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         if( dis->readBoolean() )
             return dis->readString() ;
@@ -695,7 +696,7 @@ p<IDataStructure> OpenWireMarshaller::unmarshalObject(int mode, p<IInputStream> 
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         // Null marker
         if( !dis->readBoolean() )
@@ -728,7 +729,7 @@ array<IDataStructure> OpenWireMarshaller::unmarshalObjectArray(int mode, p<IInpu
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         // Null marker
         if( !dis->readBoolean() )
@@ -766,7 +767,7 @@ array<char> OpenWireMarshaller::unmarshalByteArray(int mode, p<IInputStream> ist
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         // Null marker
         if( !dis->readBoolean() )
@@ -801,7 +802,7 @@ p<PropertyMap> OpenWireMarshaller::unmarshalMap(int mode, p<IInputStream> istrea
     // Assert that supplied input stream is a data input stream
     p<DataInputStream> dis = checkInputStream(istream) ;
 
-    if( !formatInfo->getTightEncodingEnabled() )
+    if( !useTightEncoding )
     {
         // Get size of map
         int size = dis->readInt() ;

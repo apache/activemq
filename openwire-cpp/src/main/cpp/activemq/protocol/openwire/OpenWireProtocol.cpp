@@ -43,6 +43,9 @@ OpenWireProtocol::OpenWireProtocol()
     wireFormatInfo->setSizePrefixDisabled(false) ;
     wireFormatInfo->setTightEncodingEnabled(false) ;
 
+    // Use variable instead of map lookup for performance reason
+    this->sizePrefixDisabled = wireFormatInfo->getSizePrefixDisabled() ;
+
     // Create wire marshaller
     wireMarshaller = new OpenWireMarshaller(wireFormatInfo) ;
 }
@@ -87,7 +90,7 @@ void OpenWireProtocol::marshal(p<IDataStructure> object, p<IOutputStream> ostrea
         unsigned char dataType = object->getDataStructureType() ;
 
         // Calculate size to be marshalled if configured
-        if( !wireFormatInfo->getSizePrefixDisabled() )
+        if( !sizePrefixDisabled )
         {
             size  = 1 ; // data structure type
             size += object->marshal(wireMarshaller, IMarshaller::MARSHAL_SIZE, ostream) ;
@@ -102,7 +105,7 @@ void OpenWireProtocol::marshal(p<IDataStructure> object, p<IOutputStream> ostrea
     else   // ...NULL object
     {
         // Calculate size to be marshalled if configured
-        if( !wireFormatInfo->getSizePrefixDisabled() )
+        if( !sizePrefixDisabled )
         {
             // Calculate size to be marshalled
             size = 1 ; // data structure type
@@ -125,7 +128,7 @@ p<IDataStructure> OpenWireProtocol::unmarshal(p<IInputStream> istream) throw(IOE
     int                size = 0 ;
 
     // Read packet size if configured
-    if( !wireFormatInfo->getSizePrefixDisabled() )
+    if( !sizePrefixDisabled )
         size = dis->readInt() ;
 
     // First byte is the data structure type
