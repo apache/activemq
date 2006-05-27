@@ -197,7 +197,14 @@ p<string> DataInputStream::readString() throw(IOException)
 
         // Decode string if charset encoder has been configured
         if( encoder != NULL )
-            value = encoder->decode(value) ;
+        {
+            try {
+                value = encoder->decode(value) ;
+            }
+            catch( CharsetEncodingException &cee ) {
+                throw new IOException( cee.what() ) ;
+            }
+        }
     }
     else   // ...empty string
         value = new string("") ;

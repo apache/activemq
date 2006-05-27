@@ -33,11 +33,11 @@ FutureResponse::FutureResponse()
 p<Response> FutureResponse::getResponse()
 {
     // Wait for response to arrive
-    LOCKED_SCOPE (mutex);
-    while ( response == NULL )
+    LOCKED_SCOPE (mutex) ;
+    if ( response == NULL )
     {
         LOCKED_SCOPE_UNLOCK;
-        semaphore->wait(maxWait); // BUG: Why have a max wait when what you do is just to wait again and again? //dafah
+        semaphore->wait();
         LOCKED_SCOPE_RELOCK;
     }
     return response ;

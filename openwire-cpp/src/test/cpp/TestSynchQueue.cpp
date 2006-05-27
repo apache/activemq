@@ -56,11 +56,10 @@ void TestSynchQueue::execute() throw (exception)
 
     // Connect to queue
     queue = session->getQueue("FOO.BAR") ;
-
+    
     // Create a consumer and producer
     consumer = session->createConsumer(queue) ;
     producer = session->createProducer(queue) ;
-    producer->setPersistent(true) ;
 
     // Create a message
     reqMessage = session->createTextMessage("Hello World!") ;
@@ -78,17 +77,26 @@ void TestSynchQueue::execute() throw (exception)
         throw TraceException("Received a null message") ;
     else
     {
+        p<string> str ;
+
         props = rspMessage->getProperties() ;
         item  = (*props)["someHeader"] ;
 
         // Verify message
-        if( rspMessage->getJMSCorrelationID()->compare("abc") != 0 )
+        str = rspMessage->getJMSCorrelationID() ;
+        if( str == NULL || str->compare("abc") != 0 )
             throw TraceException("Returned message has invalid correlation ID") ;
-        if( rspMessage->getJMSXGroupID()->compare("cheese") != 0 )
+
+        str = rspMessage->getJMSXGroupID() ;
+        if( str == NULL || str->compare("cheese") != 0 )
             throw TraceException("Returned message has invalid group ID") ;
-        if( rspMessage->getText()->compare("Hello World!") != 0 )
+
+        str = rspMessage->getText() ;
+        if( str == NULL || str->compare("Hello World!") != 0 )
             throw TraceException("Returned message has altered body text") ;
-        if( item.getString()->compare("James") != 0 )
+
+        str = item.getString() ;
+        if( str == NULL || str->compare("James") != 0 )
             throw TraceException("Returned message has invalid properties") ;
     }
 }

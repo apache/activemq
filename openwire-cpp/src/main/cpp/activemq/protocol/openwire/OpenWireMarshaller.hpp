@@ -62,6 +62,7 @@ class OpenWireMarshaller : public IMarshaller
 private:
     p<WireFormatInfo>  formatInfo ;
     p<ICharsetEncoder> encoder ;
+    bool               useTightEncoding ;
 
 public:
     // Primitive types

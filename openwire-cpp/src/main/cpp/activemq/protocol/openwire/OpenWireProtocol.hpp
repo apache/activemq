@@ -57,6 +57,7 @@ class OpenWireProtocol : public IProtocol
 private:
     p<OpenWireMarshaller> wireMarshaller ;
     p<WireFormatInfo>     wireFormatInfo ;
+    bool                  sizePrefixDisabled ;
 
     static const char NULL_TYPE ;
     static const int  PROTOCOL_VERSION ;

@@ -184,7 +184,14 @@ int DataOutputStream::writeString(p<string> value) throw(IOException)
 
     // Encode string if an charset encoder has been configured
     if( encoder != NULL )
-        data = encoder->encode(value, &length) ;
+    {
+        try {
+            data = encoder->encode(value, &length) ;
+        }
+        catch( CharsetEncodingException &cee ) {
+            throw IOException( cee.what() ) ;
+        }
+    }
     else
         data = value ;
 

@@ -248,8 +248,7 @@ void MessageConsumer::doClientAcknowledge(p<ActiveMQMessage> message)
 void MessageConsumer::doAcknowledge(p<Message> message)
 {
     p<MessageAck> ack = createMessageAck(message) ;
-    //cout << "Sending Ack: " << ack->getAckType() << endl ;
-    session->getConnection()->syncRequest(ack) ;
+    session->getConnection()->oneway(ack) ;
 }
 
 /*

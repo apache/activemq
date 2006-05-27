@@ -20,6 +20,7 @@
 #include "ppr/io/IOutputStream.hpp"
 #include "ppr/io/encoding/ICharsetEncoder.hpp"
 #include "ppr/io/encoding/CharsetEncoderRegistry.hpp"
+#include "ppr/io/encoding/CharsetEncodingException.hpp"
 #include "ppr/util/Endian.hpp"
 #include "ppr/util/ifr/p"
 
