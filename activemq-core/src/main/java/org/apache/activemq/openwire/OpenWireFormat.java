@@ -233,11 +233,15 @@ final public class OpenWireFormat implements WireFormat {
 	            BooleanStream bs = new BooleanStream();
 	            size += dsm.tightMarshal1(this, c, bs);
 	            size += bs.marshalledSize(); 
-	
-	            dataOut.writeInt(size);
+
+                if( !sizePrefixDisabled ) {
+                    dataOut.writeInt(size);
+                }
+                
 	            dataOut.writeByte(type);            
 	            bs.marshal(dataOut);
 	            dsm.tightMarshal2(this, c, dataOut, bs);
+                
             } else {            	
             	DataOutputStream looseOut = dataOut;
             	ByteArrayOutputStream baos=null;
@@ -253,7 +257,7 @@ final public class OpenWireFormat implements WireFormat {
                 if( !sizePrefixDisabled ) {
                     looseOut.close();
                     ByteSequence sequence = baos.toByteSequence();
-                    dataOut.writeInt(sequence.getLength()-4);
+                    dataOut.writeInt(sequence.getLength());
                     dataOut.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
                 }
 

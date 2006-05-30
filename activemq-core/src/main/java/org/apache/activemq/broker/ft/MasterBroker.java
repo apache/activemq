@@ -328,7 +328,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
 
     protected void sendToSlave(Message message){
         
-        if (message.isPersistent() && !message.isInTransaction()){
+        if ( message.isResponseRequired() ){
             sendSyncToSlave(message);
         }else{
             sendAsyncToSlave(message);
@@ -338,8 +338,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
     }
     
     protected void sendToSlave(MessageAck ack){
-       
-        if (ack.isInTransaction()){
+        if ( ack.isResponseRequired() ){
             sendAsyncToSlave(ack);
         }else{
             sendSyncToSlave(ack);
