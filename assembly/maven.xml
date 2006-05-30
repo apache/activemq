@@ -170,6 +170,9 @@
     </j:forEach>
 
     <ant:echo message="${project.root}"/>
+    <ant:copy todir="${maven.dist.bin.assembly.dir}">
+       <fileset dir="${project.root}" includes="STATUS"/>
+    </ant:copy>
 
     <!-- Copy documentation -->
     <u:file var="file" name="${project.root}/activemq-core/target/docs"/>
