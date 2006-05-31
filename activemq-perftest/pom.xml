@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>activemq-parent</artifactId>
+        <groupId>incubator-activemq</groupId>
+        <version>4.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>activemq-perftest</artifactId>
+    <packaging>jar</packaging>
+    <name>ActiveMQ :: Performance Test</name>
+    <description>Performance Testing Framework for ActiveMQ</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>incubator-activemq</groupId>
+            <artifactId>activemq-core</artifactId>
+            <version>4.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>incubator-activemq</groupId>
+            <artifactId>activemq-console</artifactId>
+            <version>4.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>incubator-activemq</groupId>
+                <artifactId>maven-perf-plugin</artifactId>
+                <version>4.0-SNAPSHOT</version>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
