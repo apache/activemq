@@ -39,11 +39,6 @@
             <version>4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>incubator-activemq</groupId>
-            <artifactId>activemq-perftest</artifactId>
-            <version>4.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <version>10.1.1.0</version>
