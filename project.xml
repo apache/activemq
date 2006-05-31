@@ -50,7 +50,7 @@
     <distributionDirectory>/www/geronimo.apache.org/builds</distributionDirectory>
 
     <repository>
-       <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</connection>
+       <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk/</connection>
        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</developerConnection>
        <url>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/</url>
     </repository>     
