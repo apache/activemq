@@ -12,7 +12,7 @@
 
 
     <groupId>incubator-activemq</groupId>
-    <artifactId>maven-perf-plugin</artifactId>
+    <artifactId>maven-activemq-perf-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <name>ActiveMQ :: Performance Test Plugin</name>
 
