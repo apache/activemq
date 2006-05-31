@@ -1,0 +1,15 @@
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0">
+  
+  <broker useJmx="false" brokerName="kahaBroker" start="false" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+    <persistenceAdapter>
+       <kahaPersistentAdaptor dir="target/kaha-data"/>
+    </persistenceAdapter>
+  
+    <transportConnectors>
+       <transportConnector name="default" uri="tcp://localhost:61616"/>
+    </transportConnectors>
+  </broker>
+  
+</beans>
+<!-- END SNIPPET: xbean -->
