@@ -30,8 +30,8 @@ import java.nio.channels.FileChannel;
 /**
  * Goal which starts activemq broker.
  *
- * @goal server
- * @phase process
+ * @goal broker
+ * @phase process-sources
  */
 public class ServerMojo
         extends AbstractMojo {
@@ -46,7 +46,7 @@ public class ServerMojo
     /**
      * Location of the predefined config files.
      *
-     * @parameter expression="${configDirectory}" default-value="${basedir}/src/main/resources/config"
+     * @parameter expression="${configDirectory}" default-value="${basedir}/src/main/resources/broker-conf"
      * @required
      */
     private String configDirectory;
