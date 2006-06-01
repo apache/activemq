@@ -17,6 +17,7 @@
 package org.apache.activemq.tool;
 
 public interface PerfMeasurable {
+    public void reset();
     public long getThroughput();
     public long getInterval();
     public long getDuration();

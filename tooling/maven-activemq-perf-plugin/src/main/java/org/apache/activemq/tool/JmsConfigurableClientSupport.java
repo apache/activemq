@@ -22,6 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.jms.*;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
     private static final Log log = LogFactory.getLog(JmsConfigurableClientSupport.class);
@@ -47,8 +48,21 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
     protected MessageProducer   jmsMessageProducer = null;
     protected MessageConsumer   jmsMessageConsumer = null;
 
+    public ConnectionFactory createConnectionFactory(ConnectionFactory factory) {
+        jmsFactory = factory;
+        configureJmsObject(jmsFactory, factorySettings);
+        return jmsFactory;
+    }
+
     public ConnectionFactory createConnectionFactory(String url) {
         jmsFactory = super.createConnectionFactory(factoryClass, url, factorySettings);
+        return jmsFactory;
+    }
+
+    public ConnectionFactory createConnectionFactory(String url, Map props) {
+        // Add previous settings to current settings
+        props.putAll(factorySettings);
+        jmsFactory = super.createConnectionFactory(factoryClass, url, props);
         return jmsFactory;
     }
 
@@ -59,8 +73,8 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
     }
 
     public ConnectionFactory createConnectionFactory(String clazz, String url, Map props) {
-        factoryClass = clazz;
         // Add previous settings to current settings
+        factoryClass = clazz;
         props.putAll(factorySettings);
         jmsFactory = super.createConnectionFactory(clazz, url, props);
         return jmsFactory;
@@ -168,6 +182,14 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
         return topic;
     }
 
+    public void addConfigParam(Map props) {
+        for (Iterator i=props.keySet().iterator(); i.hasNext();) {
+            String key = (String)i.next();
+            Object val = props.get(key);
+            addConfigParam(key, val);
+        }
+    }
+
     public void addConfigParam(String key, Object value) {
         // Simple mapping of JMS Server to connection factory class
         if (key.equalsIgnoreCase("server")) {
@@ -221,6 +243,61 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
         } else {
             log.warn("Unknown setting: " + key + " = " + value);
         }
+    }
+
+    public String getServerType() {
+        return serverType;
+    }
+
+    public String getFactoryClass() {
+        return factoryClass;
+    }
+
+    public Map getFactorySettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(factorySettings);
+    }
+
+    public Map getConnectionSettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(connectionSettings);
+    }
+
+    public Map getSessionSettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(sessionSettings);
+    }
+
+    public Map getDestinationSettings() {
+        // Create a new HashMap to make the previous one read-only
+        Map temp = new HashMap(queueSettings);
+        temp.putAll(topicSettings);
+        return connectionSettings;
+    }
+
+    public Map getQueueSettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(queueSettings);
+    }
+
+    public Map getTopicSettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(topicSettings);
+    }
+
+    public Map getProducerSettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(producerSettings);
+    }
+
+    public Map getConsumerSettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(consumerSettings);
+    }
+
+    public Map getMessageSettings() {
+        // Create a new HashMap to make the previous one read-only
+        return new HashMap(messageSettings);
     }
 
     public void configureJmsObject(Object jmsObject, Map props) {

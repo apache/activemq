@@ -32,6 +32,10 @@ public class JmsBasicClientSupport {
         return createConnectionFactory(DEFAULT_CONNECTION_FACTORY_CLASS, url, null);
     }
 
+    public ConnectionFactory createConnectionFactory(String url, Map props) {
+        return createConnectionFactory(DEFAULT_CONNECTION_FACTORY_CLASS, url, props);
+    }
+
     public ConnectionFactory createConnectionFactory(String clazz, String url) {
         return createConnectionFactory(clazz, url, null);
     }
@@ -54,7 +58,7 @@ public class JmsBasicClientSupport {
             Class factoryClass = Class.forName(clazz);
             Constructor c = factoryClass.getConstructor(new Class[] {String.class});
             ConnectionFactory factoryObj = (ConnectionFactory)c.newInstance(new Object[] {url});
-            
+
             return factoryObj;
         } catch (Exception e) {
             throw new RuntimeException (e);
