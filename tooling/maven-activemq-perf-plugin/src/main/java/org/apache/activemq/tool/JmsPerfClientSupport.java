@@ -26,19 +26,23 @@ public class JmsPerfClientSupport extends JmsConfigurableClientSupport implement
 
     protected PerfEventListener listener = null;
 
+    public void reset() {
+        setThroughput(0);
+    }
+
     public long getThroughput() {
         return throughput;
     }
 
-    public void setThroughput(long val) {
+    public synchronized void setThroughput(long val) {
         this.throughput = val;
     }
 
-    public void incThroughput() {
+    public synchronized void incThroughput() {
         throughput++;
     }
 
-    public void incThroughput(long val) {
+    public synchronized void incThroughput(long val) {
         throughput += val;
     }
 
