@@ -180,10 +180,6 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
         } else if (key.equalsIgnoreCase("factoryClass")) {
             factoryClass = value.toString();
 
-        // Connection URL to use
-        } else if (key.equalsIgnoreCase("url")) {
-            factoryUrl = value.toString();
-
         // Connection factory specific settings
         } else if (key.startsWith("factory.")) {
             factorySettings.put(key.substring("factory.".length()), value);
