@@ -145,6 +145,18 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
         return jmsMessageProducer;
     }
 
+    public MessageConsumer createMessageConsumer(Destination dest) throws JMSException {
+        jmsMessageConsumer = getSession().createConsumer(dest);
+        configureJmsObject(jmsMessageConsumer, consumerSettings);
+        return jmsMessageConsumer;
+    }
+
+    public MessageConsumer createMessageConsumer(Destination dest, String selector) throws JMSException {
+        jmsMessageConsumer = getSession().createConsumer(dest, selector);
+        configureJmsObject(jmsMessageConsumer, consumerSettings);
+        return jmsMessageConsumer;
+    }
+
     public MessageConsumer createMessageConsumer(Destination dest, String selector, boolean noLocal) throws JMSException {
         jmsMessageConsumer = getSession().createConsumer(dest, selector, noLocal);
         configureJmsObject(jmsMessageConsumer, consumerSettings);
@@ -161,6 +173,12 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    public TopicSubscriber createDurableSubscriber(Topic dest, String name) throws JMSException {
+        jmsMessageConsumer = getSession().createDurableSubscriber(dest, name);
+        configureJmsObject(jmsMessageConsumer, consumerSettings);
+        return (TopicSubscriber)jmsMessageConsumer;
     }
 
     public TopicSubscriber createDurableSubscriber(Topic dest, String name, String selector, boolean noLocal) throws JMSException {
