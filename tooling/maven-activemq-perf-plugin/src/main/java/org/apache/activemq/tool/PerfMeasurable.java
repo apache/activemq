@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.tool;
 
+import java.util.Map;
+
 public interface PerfMeasurable {
     public void reset();
     public long getThroughput();
-    public long getInterval();
-    public long getDuration();
-    public long getRampUpTime();
-    public long getRampDownTime();
+    public Map  getClientSettings();
     public void setPerfEventListener(PerfEventListener listener);
     public PerfEventListener getPerfEventListener();
 }

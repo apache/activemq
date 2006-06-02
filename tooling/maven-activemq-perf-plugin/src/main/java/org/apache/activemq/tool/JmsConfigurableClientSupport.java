@@ -32,6 +32,7 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
 
     private String serverType = "";
     private String factoryClass = "";
+    private String clientID = "";
 
     private Map factorySettings    = new HashMap();
     private Map connectionSettings = new HashMap();
@@ -154,6 +155,14 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
         return jmsMessageConsumer;
     }
 
+    public String getClientID() {
+        try {
+            return getConnection().getClientID();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     public TopicSubscriber createDurableSubscriber(Topic dest, String name, String selector, boolean noLocal) throws JMSException {
         jmsMessageConsumer = getSession().createDurableSubscriber(dest, name, selector, noLocal);
         configureJmsObject(jmsMessageConsumer, consumerSettings);
@@ -192,14 +201,14 @@ public class JmsConfigurableClientSupport extends JmsBasicClientSupport {
 
     public void addConfigParam(String key, Object value) {
         // Simple mapping of JMS Server to connection factory class
-        if (key.equalsIgnoreCase("server")) {
+        if (key.equalsIgnoreCase("client.server")) {
             serverType = value.toString();
             if (serverType.equalsIgnoreCase(AMQ_SERVER)) {
                 factoryClass = AMQ_CONNECTION_FACTORY_CLASS;
             }
 
         // Manually specify the connection factory class to use
-        } else if (key.equalsIgnoreCase("factoryClass")) {
+        } else if (key.equalsIgnoreCase("client.factoryClass")) {
             factoryClass = value.toString();
 
         // Connection factory specific settings

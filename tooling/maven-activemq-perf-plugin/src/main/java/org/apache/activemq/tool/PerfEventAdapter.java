@@ -19,27 +19,27 @@ package org.apache.activemq.tool;
 import javax.jms.JMSException;
 
 public class PerfEventAdapter implements PerfEventListener {
-    public void onConfigStart() {
+    public void onConfigStart(PerfMeasurable client) {
     }
 
-    public void onConfigEnd() {
+    public void onConfigEnd(PerfMeasurable client) {
     }
 
-    public void onPublishStart() {
+    public void onPublishStart(PerfMeasurable client) {
     }
 
-    public void onPublishEnd() {
+    public void onPublishEnd(PerfMeasurable client) {
     }
 
-    public void onConsumeStart() {
+    public void onConsumeStart(PerfMeasurable client) {
     }
 
-    public void onConsumeEnd() {
+    public void onConsumeEnd(PerfMeasurable client) {
     }
 
-    public void onJMSException(JMSException e) {
+    public void onJMSException(PerfMeasurable client, JMSException e) {
     }
 
-    public void onException(Exception e) {
+    public void onException(PerfMeasurable client, Exception e) {
     }
 }
