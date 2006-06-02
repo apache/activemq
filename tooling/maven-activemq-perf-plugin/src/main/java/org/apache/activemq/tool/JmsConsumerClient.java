@@ -29,6 +29,7 @@ public class JmsConsumerClient extends JmsPerfClientSupport implements MessageLi
     private Destination destination = null;
 
     private boolean isDurable = false;
+    private boolean isAsync = true;
 
     public JmsConsumerClient(ConnectionFactory factory) {
         this.factory = factory;
@@ -66,46 +67,51 @@ public class JmsConsumerClient extends JmsPerfClientSupport implements MessageLi
             setDestination(getDestinationName());
         }
 
-        System.out.println("Connecting to URL: " + brokerUrl);
-        System.out.println("Consuming: " + destination);
-        System.out.println("Using " + (isDurable ? "durable" : "non-durable") + " subscription");
-
-
         if (isDurable) {
             createDurableSubscriber((Topic) getDestination(), getClass().getName());
         } else {
             createMessageConsumer(getDestination());
         }
 
-        getMessageConsumer().setMessageListener(this);
-        getConnection().start();
+        if (isAsync) {
+            getMessageConsumer().setMessageListener(this);
+            getConnection().start();
 
-        try {
-            Thread.sleep(duration);
-        } catch (InterruptedException e) {
-            throw new JMSException("Error while consumer is sleeping " + e.getMessage());
+            try {
+                Thread.sleep(duration);
+            } catch (InterruptedException e) {
+                throw new JMSException("Error while consumer is sleeping " + e.getMessage());
+            }
+        } else {
+            getConnection().start();
+            consumeMessages(getMessageConsumer(), duration);
         }
 
-        getMessageConsumer().close();
-        getConnection().close();
-
-        System.out.println("Throughput : " + this.getThroughput());
-
+        close(); //close consumer, session, and connection.
         listener.onConfigEnd(this);
     }
 
+    //Increments throughput
     public void onMessage(Message message) {
-        try {
-            TextMessage textMessage = (TextMessage) message;
+        System.out.println(message.toString());
+        this.incThroughput();
+    }
 
-            // lets force the content to be deserialized
-            String text = textMessage.getText();
-            System.out.println("message: " + text + ":" + this.getThroughput());
-            this.incThroughput();
-        } catch (JMSException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    protected void consumeMessages(MessageConsumer consumer, long duration) throws JMSException {
+
+        long currentTime = System.currentTimeMillis();
+        long endTime = currentTime + duration;
+
+        while (System.currentTimeMillis() <= endTime) {
+            Message message = consumer.receive();
+            onMessage(message);
         }
+    }
+
+    protected void close() throws JMSException {
+        getMessageConsumer().close();
+        getSession().close();
+        getConnection().close();
     }
 
     public static void main(String[] args) throws Exception {
@@ -115,6 +121,22 @@ public class JmsConsumerClient extends JmsPerfClientSupport implements MessageLi
     }
 
     // Helper Methods
+
+    public boolean isDurable() {
+        return isDurable;
+    }
+
+    public void setDurable(boolean durable) {
+        isDurable = durable;
+    }
+
+    public boolean isAsync() {
+        return isAsync;
+    }
+
+    public void setAsync(boolean async) {
+        isAsync = async;
+    }
 
     public String getDestinationName() {
         return this.destinationName;
