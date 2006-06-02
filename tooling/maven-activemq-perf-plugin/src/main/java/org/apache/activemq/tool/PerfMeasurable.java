@@ -20,6 +20,7 @@ import java.util.Map;
 
 public interface PerfMeasurable {
     public void reset();
+    public String getClientName();
     public long getThroughput();
     public Map  getClientSettings();
     public void setPerfEventListener(PerfEventListener listener);

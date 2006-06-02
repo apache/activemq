@@ -242,9 +242,41 @@ public class JmsProducerClient extends JmsPerfClientSupport {
     }
 
     public static void main(String[] args) throws Exception {
-        JmsProducerClient prod = new JmsProducerClient("org.apache.activemq.ActiveMQConnectionFactory", "tcp://localhost:61616", "topic://TEST.FOO");
-        prod.setPerfEventListener(new PerfEventAdapter());
-        prod.createProducer();
-        prod.sendTimeBasedMessages(2000);
+        final long duration     = 1 * 60 * 1000;
+        long rampUpTime   = 5 * 1000;
+        long rampDownTime = 5 * 1000;
+        long interval     = 1000;
+
+        PerfMeasurementTool tool = new PerfMeasurementTool();
+        tool.setDuration(duration);
+        tool.setInterval(interval);
+        tool.setRampUpTime(rampUpTime);
+        tool.setRampDownTime(rampDownTime);
+
+        JmsProducerClient[] client = new JmsProducerClient[10];
+        for (int i=0; i<10; i++) {
+            client[i] = new JmsProducerClient("org.apache.activemq.ActiveMQConnectionFactory", "tcp://localhost:61616", "topic://TEST.FOO");
+            client[i].addConfigParam("factory.asyncSend", "true");
+            client[i].setPerfEventListener(new PerfEventAdapter());
+            client[i].createProducer();
+            tool.registerClient(client[i]);
+        }
+
+        tool.startSampler();
+
+        for (int i=0; i<10; i++) {
+            final JmsProducerClient p = client[i];
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        p.sendTimeBasedMessages(duration);
+                    } catch (JMSException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            t.start();
+
+        }
     }
 }
