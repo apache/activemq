@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.tool;
 
+import java.util.Map;
+import java.util.HashMap;
+
 public class JmsPerfClientSupport extends JmsConfigurableClientSupport implements PerfMeasurable {
 
     protected long throughput   = 0;
-    protected long interval     = 1000; // 1 sec
-    protected long duration     = 1000 * 60 * 10; // 10 min
-    protected long rampUpTime   = 1000 * 60 * 1;  // 1 min
-    protected long rampDownTime = 1000 * 60 * 1;  // 1 min
 
     protected PerfEventListener listener = null;
 
@@ -46,43 +45,28 @@ public class JmsPerfClientSupport extends JmsConfigurableClientSupport implement
         throughput += val;
     }
 
-    public long getInterval() {
-        return interval;
-    }
-
-    public void setInterval(long val) {
-        this.interval = val;
-    }
-
-    public long getDuration() {
-        return duration;
-    }
-
-    public void setDuration(long val) {
-        this.duration = val;
-    }
-
-    public long getRampUpTime() {
-        return rampUpTime;
-    }
-
-    public void setRampUpTime(long val) {
-        this.rampUpTime = val;
-    }
-
-    public long getRampDownTime() {
-        return rampDownTime;
-    }
-
-    public void setRampDownTime(long val) {
-        this.rampDownTime = val;
-    }
-
     public void setPerfEventListener(PerfEventListener listener) {
         this.listener = listener;
     }
 
     public PerfEventListener getPerfEventListener() {
         return listener;
+    }
+
+    public Map getClientSettings() {
+        Map settings = new HashMap();
+        settings.put("client.server", getServerType());
+        settings.put("client.factoryClass", getFactoryClass());
+        settings.put("client.clientID", getClientID());
+        settings.putAll(getFactorySettings());
+        settings.putAll(getConnectionSettings());
+        settings.putAll(getSessionSettings());
+        settings.putAll(getQueueSettings());
+        settings.putAll(getTopicSettings());
+        settings.putAll(getProducerSettings());
+        settings.putAll(getConsumerSettings());
+        settings.putAll(getMessageSettings());
+
+        return settings;
     }
 }

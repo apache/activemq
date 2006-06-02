@@ -80,7 +80,7 @@ public class JmsProducerClient extends JmsPerfClientSupport {
 
     public void createProducer(int messageSize) throws JMSException {
 
-        listener.onConfigStart();
+        listener.onConfigStart(this);
 
         // Create connection factory
         if (factory != null) {
@@ -120,7 +120,7 @@ public class JmsProducerClient extends JmsPerfClientSupport {
             message = createTextMessage(buff);
         }
 
-        listener.onConfigEnd();
+        listener.onConfigEnd(this);
     }
 
     public void sendCountBasedMessages(long messageCount) throws JMSException {
@@ -132,20 +132,22 @@ public class JmsProducerClient extends JmsPerfClientSupport {
             if (message != null) {
                 // Send to more than one actual destination
                 if (dest.length > 1) {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     for (int i=0; i<messageCount; i++) {
                         for (int j=0; j<dest.length; j++) {
                             getMessageProducer().send(dest[j], message);
+                            incThroughput();
                         }
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
                 // Send to only one actual destination
                 } else {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     for (int i=0; i<messageCount; i++) {
                         getMessageProducer().send(message);
+                        incThroughput();
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
                 }
 
             // Send different type of messages using indexing to identify each one.
@@ -154,21 +156,23 @@ public class JmsProducerClient extends JmsPerfClientSupport {
             } else {
                 // Send to more than one actual destination
                 if (dest.length > 1) {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     for (int i=0; i<messageCount; i++) {
                         for (int j=0; j<dest.length; j++) {
                             getMessageProducer().send(dest[j], createTextMessage("Text Message [" + i + "]"));
+                            incThroughput();
                         }
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
 
                 // Send to only one actual destination
                 } else {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     for (int i=0; i<messageCount; i++) {
                         getMessageProducer().send(createTextMessage("Text Message [" + i + "]"));
+                        incThroughput();
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
                 }
             }
         } finally {
@@ -188,20 +192,22 @@ public class JmsProducerClient extends JmsPerfClientSupport {
             if (message != null) {
                 // Send to more than one actual destination
                 if (dest.length > 1) {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     while (System.currentTimeMillis() < endTime) {
                         for (int j=0; j<dest.length; j++) {
                             getMessageProducer().send(dest[j], message);
+                            incThroughput();
                         }
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
                 // Send to only one actual destination
                 } else {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     while (System.currentTimeMillis() < endTime) {
                         getMessageProducer().send(message);
+                        incThroughput();
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
                 }
 
             // Send different type of messages using indexing to identify each one.
@@ -211,21 +217,23 @@ public class JmsProducerClient extends JmsPerfClientSupport {
                 // Send to more than one actual destination
                 long count = 1;
                 if (dest.length > 1) {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     while (System.currentTimeMillis() < endTime) {
                         for (int j=0; j<dest.length; j++) {
                             getMessageProducer().send(dest[j], createTextMessage("Text Message [" + count++ + "]"));
+                            incThroughput();
                         }
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
 
                 // Send to only one actual destination
                 } else {
-                    listener.onPublishStart();
+                    listener.onPublishStart(this);
                     while (System.currentTimeMillis() < endTime) {
                         getMessageProducer().send(createTextMessage("Text Message [" + count++ + "]"));
+                        incThroughput();
                     }
-                    listener.onPublishEnd();
+                    listener.onPublishEnd(this);
                 }
             }
         } finally {
