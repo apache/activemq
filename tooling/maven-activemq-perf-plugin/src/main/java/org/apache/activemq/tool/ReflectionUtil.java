@@ -55,7 +55,9 @@ public final class ReflectionUtil {
             String methodName = "set" + name.substring(0,1).toUpperCase() + name.substring(1);
 
             Method method = getPrimitiveMethod(targetClass, methodName, val);
-            method.invoke(target, val);
+            Object[] objVal = {val};
+            method.invoke(target, objVal);
+            //method.invoke(target, val);
             //System.out.println("." + methodName + "(" + val + ")");
         } catch (Exception e) {
             log.warn("", e);
