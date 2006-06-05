@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.Properties;
 
 public class PerfMeasurementTool implements PerfEventListener, Runnable {
+    public static final String PREFIX_CONFIG_SYSTEM_TEST = "sampler.";
+
     private long duration     = 5 * 60 * 1000; // 5 mins by default test duration
     private long interval     = 1000;          // 1 sec sample interval
     private long rampUpTime   = 1 * 60 * 1000; // 1 min default test ramp up time

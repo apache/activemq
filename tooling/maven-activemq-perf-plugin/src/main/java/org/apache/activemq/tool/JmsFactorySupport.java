@@ -47,6 +47,7 @@ public class JmsFactorySupport {
             log.debug("Created: " + jmsFactory.getClass().getName() + " using SPIConnectionFactory: " + spiFactory.getClass().getName());
             return jmsFactory;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new JMSException(e.getMessage());
         }
     }

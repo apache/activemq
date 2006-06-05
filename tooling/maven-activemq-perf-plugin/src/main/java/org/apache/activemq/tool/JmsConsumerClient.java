@@ -253,7 +253,7 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
     }
 
     public static void main(String[] args) throws JMSException {
-        String[] options = new String[22];
+        String[] options = new String[21];
         options[0] = "-Dsampler.duration=60000";     // 1 min
         options[1] = "-Dsampler.interval=5000";      // 5 secs
         options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
@@ -273,12 +273,11 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
         options[14] = "-Dconsumer.recvType=time";
 
         options[15] = "-Dfactory.brokerUrl=tcp://localhost:61616";
-        options[16] = "-Dfactory.clientID=consumerSampleClient";
-        options[17] = "-Dfactory.optimAck=true";
-        options[18] = "-Dfactory.optimDispatch=true";
-        options[19] = "-Dfactory.prefetchQueue=100";
-        options[20] = "-Dfactory.prefetchTopic=32767";
-        options[21] = "-Dfactory.useRetroactive=false";
+        options[16] = "-Dfactory.optimAck=true";
+        options[17] = "-Dfactory.optimDispatch=true";
+        options[18] = "-Dfactory.prefetchQueue=100";
+        options[19] = "-Dfactory.prefetchTopic=32767";
+        options[20] = "-Dfactory.useRetroactive=false";
 
         args = options;
 
