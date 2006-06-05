@@ -145,6 +145,7 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
         } catch (InterruptedException e) {
         } finally {
             isRunning.set(false);
+            isRunning.notifyAll();
         }
     }
 
