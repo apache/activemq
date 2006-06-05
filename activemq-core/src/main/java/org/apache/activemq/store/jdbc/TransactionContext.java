@@ -104,7 +104,6 @@ public class TransactionContext {
     public void close() throws IOException {
         if( !inTx ) {
             try {
-                executeBatch();
                 
                 /**
                  * we are not in a transaction so should not be committing ??
@@ -115,7 +114,7 @@ public class TransactionContext {
                 try{
                     executeBatch();
                 } finally {
-                    if (connection != null) {
+                    if (connection != null && !connection.getAutoCommit()) {
                         connection.commit();
                     }
                 }
@@ -149,7 +148,8 @@ public class TransactionContext {
             throw new IOException("Not started.");
         try {
             executeBatch();
-            connection.commit();
+            if( !connection.getAutoCommit() )
+                connection.commit();
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Commit failed: ", e);
             throw IOExceptionSupport.create(e);
