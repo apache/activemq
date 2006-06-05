@@ -35,6 +35,7 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
 
     private AtomicBoolean start = new AtomicBoolean(false);
     private AtomicBoolean stop  = new AtomicBoolean(false);
+    private AtomicBoolean isRunning = new AtomicBoolean(false);
     private Properties samplerSettings = new Properties();
 
     private List perfClients = new ArrayList();
@@ -119,6 +120,8 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public void startSampler() {
         Thread t = new Thread(this);
         t.setName("Performance Sampler");
+
+        isRunning.set(true);
         t.start();
     }
 
@@ -140,6 +143,8 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
                 sampleIndex++;
             }
         } catch (InterruptedException e) {
+        } finally {
+            isRunning.set(false);
         }
     }
 
@@ -149,6 +154,15 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
             System.out.println("<sample index=" + sampleIndex + " name=" + client.getClientName() +
                                " throughput=" + client.getThroughput() + "/>");
             client.reset();
+        }
+    }
+
+    public void waitForSamplerToFinish(long timeout) {
+        while (isRunning.get()) {
+            try {
+                isRunning.wait(timeout);
+            } catch (InterruptedException e) {
+            }
         }
     }
 }
