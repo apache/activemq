@@ -251,7 +251,6 @@
             <exclude>**/KahaRecoveryBrokerTest.*</exclude>
 
             <!-- TODO FIX ME -->
-            <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             <exclude>**/MulticastTransportTest.*</exclude>
             
             <exclude>**/MulticastNetworkTest.*</exclude>
@@ -262,6 +261,10 @@
             <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
             <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
             <exclude>**/QueueBridgeXBeanTest.*</exclude>
+            
+            <!-- UDP related tests someimes fail on some platforms -->
+            <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
+            <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
