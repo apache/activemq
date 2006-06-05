@@ -52,7 +52,7 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
     }
 
     public static void main(String[] args) {
-        String[] options = new String[19];
+        /*String[] options = new String[19];
         options[0] = "-Dsampler.duration=60000";     // 1 min
         options[1] = "-Dsampler.interval=5000";      // 5 secs
         options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
@@ -77,7 +77,7 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
         options[17] = "-DsysTest.totalDests=5";
         options[18] = "-DsysTest.destDistro=all";
 
-        args = options;
+        args = options;*/
 
         Properties sysSettings  = new Properties();
 
@@ -93,6 +93,7 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
         }
 
         JmsProducerSystem sysTest = new JmsProducerSystem();
+        sysTest.setReportDirectory("./target/Test-perf");
         sysTest.setSettings(sysSettings);
         sysTest.runSystemTest();
     }

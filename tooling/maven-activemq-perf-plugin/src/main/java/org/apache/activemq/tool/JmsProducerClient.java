@@ -291,7 +291,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
     }
 
     public static void main(String[] args) throws JMSException {
-        String[] options = new String[16];
+        /*String[] options = new String[16];
         options[0] = "-Dsampler.duration=60000";     // 1 min
         options[1] = "-Dsampler.interval=5000";      // 5 secs
         options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
@@ -312,7 +312,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
         options[14] = "-Dfactory.brokerUrl=tcp://localhost:61616";
         options[15] = "-Dfactory.asyncSend=true";
 
-        args = options;
+        args = options;*/
 
         Properties samplerSettings  = new Properties();
         Properties producerSettings = new Properties();
