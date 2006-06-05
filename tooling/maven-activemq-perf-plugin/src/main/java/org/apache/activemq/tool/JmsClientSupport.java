@@ -18,7 +18,6 @@ package org.apache.activemq.tool;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.Session;
