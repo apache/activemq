@@ -17,153 +17,298 @@
 
 package org.apache.activemq.tool;
 
-import javax.jms.*;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.Log;
 
-public class JmsConsumerClient extends JmsPerfClientSupport implements MessageListener {
+import javax.jms.MessageListener;
+import javax.jms.MessageConsumer;
+import javax.jms.JMSException;
+import javax.jms.Destination;
+import javax.jms.Topic;
+import javax.jms.Message;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
-    private ConnectionFactory factory = null;
+public class JmsConsumerClient extends JmsPerformanceSupport {
+    private static final Log log = LogFactory.getLog(JmsConsumerClient.class);
 
-    private String factoryClass = null;
-    private String brokerUrl = null;
-    private String destinationName = null;
-    private Destination destination = null;
+    private static final String PREFIX_CONFIG_CONSUMER = "consumer.";
+    public  static final String TIME_BASED_RECEIVING  = "time";
+    public  static final String COUNT_BASED_RECEIVING = "count";
 
-    private boolean isDurable = false;
-    private boolean isAsync = true;
+    protected Properties      jmsConsumerSettings = new Properties();
+    protected MessageConsumer jmsConsumer;
 
-    public JmsConsumerClient(ConnectionFactory factory) {
-        this.factory = factory;
-    }
+    protected boolean durable   = false;
+    protected boolean asyncRecv = true;
+    protected String  consumerName = "TestConsumerClient";
 
-    public JmsConsumerClient(ConnectionFactory factory, String destinationName) {
-        this.factory = factory;
-        this.setDestinationName(destinationName);
-    }
+    protected long   recvCount    = 1000000;       // Receive a million messages by default
+    protected long   recvDuration = 5 * 60 * 1000; // Receive for 5 mins by default
+    protected String recvType     = TIME_BASED_RECEIVING;
 
-    public JmsConsumerClient(String factoryClass, String brokerUrl, String destinationName) {
-        this.factoryClass = factoryClass;
-        this.brokerUrl = brokerUrl;
-        this.destinationName = destinationName;
-    }
-
-    public JmsConsumerClient(String brokerUrl, String destinationName) {
-        this.brokerUrl = brokerUrl;
-        this.destinationName = destinationName;
-    }
-
-    public void createConsumer(long duration) throws JMSException {
-        listener.onConfigEnd(this);
-
-        // Create connection factory
-        if (factory != null) {
-            createConnectionFactory(factory);
-        } else if (factoryClass != null) {
-            createConnectionFactory(factoryClass, brokerUrl);
+    public void receiveMessages() throws JMSException {
+        if (listener != null) {
+            listener.onConfigEnd(this);
+        }
+        if (isAsyncRecv()) {
+            receiveAsyncMessages();
         } else {
-            createConnectionFactory(brokerUrl);
+            receiveSyncMessages();
+        }
+    }
+
+    public void receiveSyncMessages() throws JMSException {
+        if (getJmsConsumer() == null) {
+            createJmsConsumer();
         }
 
-        if (getDestination() == null) {
-            setDestination(getDestinationName());
-        }
-
-        if (isDurable) {
-            createDurableSubscriber((Topic) getDestination(), getClass().getName());
-        } else {
-            createMessageConsumer(getDestination());
-        }
-
-        if (isAsync) {
-            getMessageConsumer().setMessageListener(this);
+        try {
             getConnection().start();
+            if (listener != null) {
+                listener.onConsumeStart(this);
+            }
+            if (getRecvType().equalsIgnoreCase(TIME_BASED_RECEIVING)) {
+                long endTime = System.currentTimeMillis() + getRecvDuration();
+                while (System.currentTimeMillis() < endTime) {
+                    getJmsConsumer().receive();
+                    incThroughput();
+                }
+            } else {
+                int count = 0;
+                while (count < getRecvCount()) {
+                    getJmsConsumer().receive();
+                    incThroughput();
+                    count++;
+                }
+            }
+        } finally {
+            if (listener != null) {
+                listener.onConsumeEnd(this);
+            }
+            getConnection().close();
+        }
+    }
+
+    public void receiveAsyncMessages() throws JMSException {
+        if (getJmsConsumer() == null) {
+            createJmsConsumer();
+        }
+
+        if (getRecvType().equalsIgnoreCase(TIME_BASED_RECEIVING)) {
+            getJmsConsumer().setMessageListener(new MessageListener() {
+                public void onMessage(Message msg) {
+                    incThroughput();
+                }
+            });
 
             try {
-                Thread.sleep(duration);
-            } catch (InterruptedException e) {
-                throw new JMSException("Error while consumer is sleeping " + e.getMessage());
+                getConnection().start();
+                if (listener != null) {
+                    listener.onConsumeStart(this);
+                }
+                try {
+                    Thread.sleep(getRecvDuration());
+                } catch (InterruptedException e) {
+                    throw new JMSException("JMS consumer thread sleep has been interrupted. Message: " + e.getMessage());
+                }
+            } finally {
+                if (listener != null) {
+                    listener.onConsumeEnd(this);
+                }
+                getConnection().close();
             }
         } else {
-            getConnection().start();
-            consumeMessages(getMessageConsumer(), duration);
+            final AtomicInteger count = new AtomicInteger(0);
+            getJmsConsumer().setMessageListener(new MessageListener() {
+                public void onMessage(Message msg) {
+                    incThroughput();
+                    count.incrementAndGet();
+                    count.notify();
+                }
+            });
+
+            try {
+                getConnection().start();
+                if (listener != null) {
+                    listener.onConsumeStart(this);
+                }
+                try {
+                    while (count.get() < getRecvCount()) {
+                        count.wait();
+                    }
+                } catch (InterruptedException e) {
+                    throw new JMSException("JMS consumer thread wait has been interrupted. Message: " + e.getMessage());
+                }
+            } finally {
+                if (listener != null) {
+                    listener.onConsumeEnd(this);
+                }
+                getConnection().close();
+            }
         }
-
-        close(); //close consumer, session, and connection.
-        listener.onConfigEnd(this);
     }
 
-    //Increments throughput
-    public void onMessage(Message message) {
-        System.out.println(message.toString());
-        this.incThroughput();
+    public MessageConsumer createJmsConsumer() throws JMSException {
+        Destination[] dest = createDestination();
+        return createJmsConsumer(dest[0]);
     }
 
-    protected void consumeMessages(MessageConsumer consumer, long duration) throws JMSException {
-
-        long currentTime = System.currentTimeMillis();
-        long endTime = currentTime + duration;
-
-        while (System.currentTimeMillis() <= endTime) {
-            Message message = consumer.receive();
-            onMessage(message);
+    public MessageConsumer createJmsConsumer(Destination dest) throws JMSException {
+        if (isDurable()) {
+            jmsConsumer = getSession().createDurableSubscriber((Topic)dest, getConsumerName());
+        } else {
+            jmsConsumer = getSession().createConsumer(dest);
         }
+        return jmsConsumer;
     }
 
-    protected void close() throws JMSException {
-        getMessageConsumer().close();
-        getSession().close();
-        getConnection().close();
+    public MessageConsumer createJmsConsumer(Destination dest, String selector, boolean noLocal) throws JMSException {
+        if (isDurable()) {
+            jmsConsumer = getSession().createDurableSubscriber((Topic)dest, getConsumerName(), selector, noLocal);
+        } else {
+            jmsConsumer = getSession().createConsumer(dest, selector, noLocal);
+        }
+        return jmsConsumer;
     }
 
-    public static void main(String[] args) throws Exception {
-        JmsConsumerClient cons = new JmsConsumerClient("org.apache.activemq.ActiveMQConnectionFactory", "tcp://localhost:61616", "topic://TEST.FOO");
-        cons.setPerfEventListener(new PerfEventAdapter());
-        cons.createConsumer(20000);
+    public MessageConsumer getJmsConsumer() {
+        return jmsConsumer;
     }
 
-    // Helper Methods
+    public Properties getJmsConsumerSettings() {
+        return jmsConsumerSettings;
+    }
+
+    public void setJmsConsumerSettings(Properties jmsConsumerSettings) {
+        this.jmsConsumerSettings = jmsConsumerSettings;
+        ReflectionUtil.configureClass(this, jmsConsumerSettings);
+    }
 
     public boolean isDurable() {
-        return isDurable;
+        return durable;
     }
 
     public void setDurable(boolean durable) {
-        isDurable = durable;
+        this.durable = durable;
     }
 
-    public boolean isAsync() {
-        return isAsync;
+    public boolean isAsyncRecv() {
+        return asyncRecv;
     }
 
-    public void setAsync(boolean async) {
-        isAsync = async;
+    public void setAsyncRecv(boolean asyncRecv) {
+        this.asyncRecv = asyncRecv;
     }
 
-    public String getDestinationName() {
-        return this.destinationName;
+    public String getConsumerName() {
+        return consumerName;
     }
 
-    public void setDestinationName(String destinationName) {
-        this.destinationName = destinationName;
+    public void setConsumerName(String consumerName) {
+        this.consumerName = consumerName;
     }
 
-    public Destination getDestination() {
-        return this.destination;
+    public long getRecvCount() {
+        return recvCount;
     }
 
-    public void setDestination(Destination dest) {
-        this.destination = dest;
+    public void setRecvCount(long recvCount) {
+        this.recvCount = recvCount;
     }
 
-    public void setDestination(String destinationName) throws JMSException {
+    public long getRecvDuration() {
+        return recvDuration;
+    }
 
-        this.setDestinationName(destinationName);
-        // Create destinations
-        if (this.getDestinationName().startsWith("topic://")) {
-            setDestination(createTopic(getDestinationName().substring("topic://".length())));
-        } else if (getDestinationName().startsWith("queue://")) {
-            setDestination(createQueue(getDestinationName().substring("queue://".length())));
+    public void setRecvDuration(long recvDuration) {
+        this.recvDuration = recvDuration;
+    }
+
+    public String getRecvType() {
+        return recvType;
+    }
+
+    public void setRecvType(String recvType) {
+        this.recvType = recvType;
+    }
+
+    public Properties getSettings() {
+        Properties allSettings = new Properties(jmsConsumerSettings);
+        allSettings.putAll(super.getSettings());
+        return allSettings;
+    }
+
+    public void setSettings(Properties settings) {
+        super.setSettings(settings);
+        ReflectionUtil.configureClass(this, jmsConsumerSettings);
+    }
+
+    public void setProperty(String key, String value) {
+        if (key.startsWith(PREFIX_CONFIG_CONSUMER)) {
+            jmsConsumerSettings.setProperty(key, value);
         } else {
-            setDestination(createQueue(getDestinationName()));
+            super.setProperty(key, value);
         }
+    }
+
+    public static void main(String[] args) throws JMSException {
+        String[] options = new String[22];
+        options[0] = "-Dsampler.duration=60000";     // 1 min
+        options[1] = "-Dsampler.interval=5000";      // 5 secs
+        options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
+        options[3] = "-Dsampler.rampDownTime=10000"; // 10 secs
+
+        options[4] = "-Dclient.spiClass=org.apache.activemq.tool.spi.ActiveMQPojoSPI";
+        options[5] = "-Dclient.sessTransacted=false";
+        options[6] = "-Dclient.sessAckMode=autoAck";
+        options[7] = "-Dclient.destName=topic://FOO.BAR.TEST";
+        options[8] = "-Dclient.destCount=1";
+        options[9] = "-Dclient.destComposite=false";
+
+        options[10] = "-Dconsumer.durable=false";
+        options[11] = "-Dconsumer.asyncRecv=true";
+        options[12] = "-Dconsumer.recvCount=1000";     // 1000 messages
+        options[13] = "-Dconsumer.recvDuration=60000"; // 1 min
+        options[14] = "-Dconsumer.recvType=time";
+
+        options[15] = "-Dfactory.brokerUrl=tcp://localhost:61616";
+        options[16] = "-Dfactory.clientID=consumerSampleClient";
+        options[17] = "-Dfactory.optimAck=true";
+        options[18] = "-Dfactory.optimDispatch=true";
+        options[19] = "-Dfactory.prefetchQueue=100";
+        options[20] = "-Dfactory.prefetchTopic=32767";
+        options[21] = "-Dfactory.useRetroactive=false";
+
+        args = options;
+
+        Properties samplerSettings  = new Properties();
+        Properties consumerSettings = new Properties();
+
+        for (int i=0; i<args.length; i++) {
+            // Get property define options only
+            if (args[i].startsWith("-D")) {
+                String propDefine = args[i].substring("-D".length());
+                int  index = propDefine.indexOf("=");
+                String key = propDefine.substring(0, index);
+                String val = propDefine.substring(index+1);
+                if (key.startsWith("sampler.")) {
+                    samplerSettings.setProperty(key, val);
+                } else {
+                    consumerSettings.setProperty(key, val);
+                }
+            }
+        }
+
+        JmsConsumerClient client = new JmsConsumerClient();
+        client.setSettings(consumerSettings);
+
+        PerfMeasurementTool sampler = new PerfMeasurementTool();
+        sampler.setSamplerSettings(samplerSettings);
+        sampler.registerClient(client);
+        sampler.startSampler();
+
+        client.setPerfEventListener(sampler);
+        client.receiveMessages();
     }
 }

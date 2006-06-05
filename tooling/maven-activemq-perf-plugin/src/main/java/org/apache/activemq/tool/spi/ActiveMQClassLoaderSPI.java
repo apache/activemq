@@ -14,15 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool;
+package org.apache.activemq.tool.spi;
 
-import java.util.Properties;
-
-public interface PerfMeasurable {
-    public void reset();
-    public String getClientName();
-    public long getThroughput();
-    public Properties getSettings();
-    public void setPerfEventListener(PerfEventListener listener);
-    public PerfEventListener getPerfEventListener();
+public class ActiveMQClassLoaderSPI extends ClassLoaderSPIConnectionFactory {
+    public String getClassName() {
+        return "org.apache.activemq.ActiveMQConnectionFactory";
+    }
 }

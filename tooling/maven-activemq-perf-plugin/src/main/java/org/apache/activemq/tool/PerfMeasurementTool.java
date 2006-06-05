@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.tool;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Properties;
 
 public class PerfMeasurementTool implements PerfEventListener, Runnable {
     private long duration     = 5 * 60 * 1000; // 5 mins by default test duration
@@ -33,14 +33,13 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
 
     private AtomicBoolean start = new AtomicBoolean(false);
     private AtomicBoolean stop  = new AtomicBoolean(false);
+    private Properties samplerSettings = new Properties();
 
     private List perfClients = new ArrayList();
-    private AtomicInteger unstartedClients = new AtomicInteger(0);
 
     public void registerClient(PerfMeasurable client) {
         client.setPerfEventListener(this);
         perfClients.add(client);
-        unstartedClients.incrementAndGet();
     }
 
     public void registerClient(PerfMeasurable[] clients) {
@@ -49,10 +48,13 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
         }
     }
 
-    public void startSampler() {
-        Thread t = new Thread(this);
-        t.setName("Performance Sampler");
-        t.start();
+    public Properties getSamplerSettings() {
+        return samplerSettings;
+    }
+
+    public void setSamplerSettings(Properties samplerSettings) {
+        this.samplerSettings = samplerSettings;
+        ReflectionUtil.configureClass(this, samplerSettings);
     }
 
     public long getDuration() {
@@ -110,6 +112,12 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
 
     public void onException(PerfMeasurable client, Exception e) {
         stop.set(true);
+    }
+
+    public void startSampler() {
+        Thread t = new Thread(this);
+        t.setName("Performance Sampler");
+        t.start();
     }
 
     public void run() {

@@ -14,15 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool;
+package org.apache.activemq.tool.spi;
 
+import javax.jms.ConnectionFactory;
 import java.util.Properties;
 
-public interface PerfMeasurable {
-    public void reset();
-    public String getClientName();
-    public long getThroughput();
-    public Properties getSettings();
-    public void setPerfEventListener(PerfEventListener listener);
-    public PerfEventListener getPerfEventListener();
+public interface SPIConnectionFactory {
+    public ConnectionFactory createConnectionFactory(Properties settings) throws Exception;
+    public void configureConnectionFactory(ConnectionFactory jmsFactory, Properties settings) throws Exception;
 }
