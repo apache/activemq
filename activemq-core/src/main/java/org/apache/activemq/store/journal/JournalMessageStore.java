@@ -263,7 +263,6 @@ public class JournalMessageStore implements MessageStore {
                     
                     size += message.getSize();
                     
-                    iterator.remove();
                     message.decrementReferenceCount();
                     
                     // Commit the batch if it's getting too big
