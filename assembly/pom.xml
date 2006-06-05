@@ -296,6 +296,7 @@
           </execution>
         </executions>
       </plugin>
+      <!-- 
       <plugin>
         <groupId>incubator-activemq</groupId>
         <artifactId>maven-activemq-perf-plugin</artifactId>
@@ -304,6 +305,7 @@
           <configFile>src/release/conf/activemq.xml</configFile>
         </configuration>
       </plugin>
+      -->
     </plugins>
   </build>
 
