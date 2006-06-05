@@ -16,16 +16,18 @@ package org.apache.activemq.maven;
  * limitations under the License.
  */
 
-import org.apache.activemq.tool.ConsumerTool;
+import org.apache.activemq.tool.JmsConsumerClient;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+
+import javax.jms.JMSException;
 
 
 /**
  * Goal which touches a timestamp file.
  *
  * @goal consumer
- * @phase process
+ * @phase process-sources
  */
 public class ConsumerMojo
         extends AbstractMojo {
@@ -64,6 +66,10 @@ public class ConsumerMojo
             throws MojoExecutionException {
 
         String[] args = {url, topic, subject, durable, maximumMessage};
-        ConsumerTool.main(args);
+        try {
+            JmsConsumerClient.main(args);
+        } catch (JMSException e) {
+            throw new MojoExecutionException("Error Executing Consumer: " + e.getMessage());
+        }
     }
 }

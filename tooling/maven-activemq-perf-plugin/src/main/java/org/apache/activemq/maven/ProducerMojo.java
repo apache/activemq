@@ -1,9 +1,10 @@
 package org.apache.activemq.maven;
 
-import org.apache.activemq.tool.ConsumerTool;
-import org.apache.activemq.tool.ProducerTool;
+import org.apache.activemq.tool.JmsProducerClient;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+
+import javax.jms.JMSException;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -65,7 +66,11 @@ public class ProducerMojo
     public void execute()
             throws MojoExecutionException {
 
-        String[] args = {url,topic,subject,durable,messageCount,messageSize};
-        ProducerTool.main(args);
+        String[] args = {url, topic, subject, durable, messageCount, messageSize};
+        try {
+            JmsProducerClient.main(args);
+        } catch (JMSException e) {
+            throw new MojoExecutionException("Error executing Producer: " + e.getMessage());
+        }
     }
 }
