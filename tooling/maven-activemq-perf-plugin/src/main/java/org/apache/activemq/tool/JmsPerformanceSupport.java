@@ -18,10 +18,9 @@ package org.apache.activemq.tool;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
 
-import java.util.Map;
-import java.util.HashMap;
+import javax.jms.JMSException;
 
-public class JmsPerfClientSupport extends JmsConfigurableClientSupport implements PerfMeasurable {
+public class JmsPerformanceSupport extends JmsClientSupport implements PerfMeasurable {
 
     protected AtomicLong throughput = new AtomicLong(0);
 
@@ -29,6 +28,14 @@ public class JmsPerfClientSupport extends JmsConfigurableClientSupport implement
 
     public void reset() {
         setThroughput(0);
+    }
+
+    public String getClientName() {
+        try {
+            return getConnection().getClientID();
+        } catch (JMSException e) {
+            return "";
+        }
     }
 
     public long getThroughput() {
@@ -53,26 +60,5 @@ public class JmsPerfClientSupport extends JmsConfigurableClientSupport implement
 
     public PerfEventListener getPerfEventListener() {
         return listener;
-    }
-
-    public Map getClientSettings() {
-        Map settings = new HashMap();
-        settings.put("client.server", getServerType());
-        settings.put("client.factoryClass", getFactoryClass());
-        settings.put("client.clientID", getClientID());
-        settings.putAll(getFactorySettings());
-        settings.putAll(getConnectionSettings());
-        settings.putAll(getSessionSettings());
-        settings.putAll(getQueueSettings());
-        settings.putAll(getTopicSettings());
-        settings.putAll(getProducerSettings());
-        settings.putAll(getConsumerSettings());
-        settings.putAll(getMessageSettings());
-
-        return settings;
-    }
-
-    public String getClientName() {
-        return getClientID();
     }
 }
