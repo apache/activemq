@@ -6,7 +6,7 @@
     <parent>
         <artifactId>activemq-parent</artifactId>
         <groupId>incubator-activemq</groupId>
-        <version>4.0-SNAPSHOT</version>
+        <version>4.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>activemq-perftest</artifactId>
