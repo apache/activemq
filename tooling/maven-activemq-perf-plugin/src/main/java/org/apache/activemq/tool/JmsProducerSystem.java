@@ -51,8 +51,8 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
         return "JMS Producer Thread Group";
     }
 
-    public static void main(String[] args) throws JMSException {
-        String[] options = new String[17];
+    public static void main(String[] args) {
+        String[] options = new String[19];
         options[0] = "-Dsampler.duration=60000";     // 1 min
         options[1] = "-Dsampler.interval=5000";      // 5 secs
         options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
@@ -74,6 +74,8 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
         options[15] = "-Dfactory.asyncSend=true";
 
         options[16] = "-DsysTest.numClients=5";
+        options[17] = "-DsysTest.totalDests=5";
+        options[18] = "-DsysTest.destDistro=all";
 
         args = options;
 

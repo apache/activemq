@@ -45,6 +45,7 @@ public class JmsClientSupport extends JmsFactorySupport {
     protected String  sessAckMode    = SESSION_AUTO_ACKNOWLEDGE;
     protected String  destName       = "TEST.FOO";
     protected int     destCount      = 1;
+    protected int     destIndex      = 0;
     protected boolean destComposite  = false;
 
     public ConnectionFactory createConnectionFactory() throws JMSException {
@@ -78,14 +79,15 @@ public class JmsClientSupport extends JmsFactorySupport {
     }
 
     public Destination[] createDestination() throws JMSException {
-        Destination[] dest = new Destination[getDestCount()];
-        for (int i=0; i<getDestCount(); i++) {
-            dest[i] = createDestination(getDestName() + "." + i);
-        }
 
         if (isDestComposite()) {
-            return new Destination[] {createDestination(getDestName() + ".>")};
+            return new Destination[] {createCompositeDestination(getDestName(), getDestCount())};
         } else {
+            Destination[] dest = new Destination[getDestCount()];
+            for (int i=0; i<getDestCount(); i++) {
+                dest[i] = createDestination(getDestName() + "." + (getDestIndex() + i));
+            }
+
             return dest;
         }
     }
@@ -98,6 +100,28 @@ public class JmsClientSupport extends JmsFactorySupport {
         } else {
             return getSession().createTopic(name);
         }
+    }
+
+    public Destination createCompositeDestination(String name, int count) throws JMSException {
+        String compDestName = "";
+        String simpleName;
+
+        if (name.startsWith("queue://")) {
+            simpleName = name.substring("queue://".length());
+        } else if (name.startsWith("topic://")) {
+            simpleName = name.substring("topic://".length());
+        } else {
+            simpleName = name;
+        }
+
+        int i;
+        compDestName = name + ".0,"; // First destination
+        for (i=1; i<count-1; i++) {
+            compDestName += (simpleName + "." + i +",");
+        }
+        compDestName += (simpleName + "." + i); // Last destination (minus the comma)
+
+        return createDestination(compDestName);
     }
 
     public String getSpiClass() {
@@ -138,6 +162,14 @@ public class JmsClientSupport extends JmsFactorySupport {
 
     public void setDestCount(int destCount) {
         this.destCount = destCount;
+    }
+
+    public int getDestIndex() {
+        return destIndex;
+    }
+
+    public void setDestIndex(int destIndex) {
+        this.destIndex = destIndex;
     }
 
     public boolean isDestComposite() {

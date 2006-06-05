@@ -52,7 +52,7 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
     }
 
     public static void main(String[] args) throws JMSException {
-        String[] options = new String[22];
+        String[] options = new String[24];
         options[0] = "-Dsampler.duration=60000";     // 1 min
         options[1] = "-Dsampler.interval=5000";      // 5 secs
         options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
@@ -79,6 +79,8 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
         options[20] = "-Dfactory.useRetroactive=false";
 
         options[21] = "-DsysTest.numClients=5";
+        options[22] = "-DsysTest.totalDests=5";
+        options[23] = "-DsysTest.destDistro=all";
 
         args = options;
 
