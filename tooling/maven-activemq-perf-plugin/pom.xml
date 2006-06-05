@@ -35,7 +35,7 @@
         <dependency>
             <groupId>incubator-activemq</groupId>
             <artifactId>activeio-core</artifactId>
-            <version>3.0-SNAPSHOT</version>
+            <version>3.0-beta2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
