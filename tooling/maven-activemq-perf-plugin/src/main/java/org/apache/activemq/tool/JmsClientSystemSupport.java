@@ -26,6 +26,12 @@ public abstract class JmsClientSystemSupport {
     private static final Log log = LogFactory.getLog(JmsClientSystemSupport.class);
 
     public static final String PREFIX_CONFIG_SYSTEM_TEST = "sysTest.";
+    public static final String DEST_DISTRO_ALL    = "all";    // Each client will send/receive to all destination;
+    public static final String DEST_DISTRO_EQUAL  = "equal";  // Equally divide the number of destinations to the number of clients
+    public static final String DEST_DISTRO_DIVIDE = "divide"; // Divide the destination among the clients, even if some have more destination than others
+
+    protected static final String KEY_CLIENT_DEST_COUNT = "client.destCount";
+    protected static final String KEY_CLIENT_DEST_INDEX = "client.destIndex";
 
     protected Properties sysTestSettings   = new Properties();
     protected Properties samplerSettings   = new Properties();
@@ -34,17 +40,20 @@ public abstract class JmsClientSystemSupport {
     protected PerfMeasurementTool performanceSampler;
 
     protected int numClients = 1;
+    protected int totalDests = 1;
+    protected String destDistro = DEST_DISTRO_ALL;
 
     public void runSystemTest() {
-        // Create a new copy of the settings to ensure immutability
-        final Properties clientSettings = getJmsClientSettings();
-
         // Create performance sampler
         performanceSampler = new PerfMeasurementTool();
         performanceSampler.setSamplerSettings(samplerSettings);
 
         clientThreadGroup = new ThreadGroup(getThreadGroupName());
-        for (int i=0; i<numClients; i++) {
+        for (int i=0; i<getNumClients(); i++) {
+            final Properties clientSettings = new Properties();
+            clientSettings.putAll(getJmsClientSettings());
+            distributeDestinations(getDestDistro(), i, getNumClients(), getTotalDests(), clientSettings);
+
             final String clientName = getClientName() + i;
             Thread t = new Thread(clientThreadGroup, new Runnable() {
                 public void run() {
@@ -56,6 +65,51 @@ public abstract class JmsClientSystemSupport {
         }
 
         performanceSampler.startSampler();
+    }
+
+    protected void distributeDestinations(String distroType, int clientIndex, int numClients, int numDests, Properties clientSettings) {
+        if (distroType.equalsIgnoreCase(DEST_DISTRO_ALL)) {
+            clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(numDests));
+            clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, "0");
+        } else if (distroType.equalsIgnoreCase(DEST_DISTRO_EQUAL)) {
+            int destPerClient = (numDests / numClients);
+            // There are equal or more destinations per client
+            if (destPerClient > 0) {
+                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(destPerClient));
+                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(destPerClient * clientIndex));
+
+            // If there are more clients than destinations, share destinations per client
+            } else {
+                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, "1"); // At most one destination per client
+                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(clientIndex % numDests));
+            }
+        } else if (distroType.equalsIgnoreCase(DEST_DISTRO_DIVIDE)) {
+            int destPerClient = (numDests / numClients);
+            // There are equal or more destinations per client
+            if (destPerClient > 0) {
+                int remain = numDests % numClients;
+                int nextIndex;
+                if (clientIndex < remain) {
+                    destPerClient++;
+                    nextIndex = clientIndex * destPerClient;
+                } else {
+                    nextIndex = (clientIndex * destPerClient) + remain;
+                }
+
+                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(destPerClient));
+                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(nextIndex));
+
+            // If there are more clients than destinations, share destinations per client
+            } else {
+                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, "1"); // At most one destination per client
+                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(clientIndex % numDests));
+            }
+
+        // Send to all for unknown behavior
+        } else {
+            clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(numDests));
+            clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, "0");
+        }
     }
 
     public abstract void runJmsClient(String clientName, Properties clientSettings);
@@ -138,5 +192,21 @@ public abstract class JmsClientSystemSupport {
 
     public void setNumClients(int numClients) {
         this.numClients = numClients;
+    }
+
+    public String getDestDistro() {
+        return destDistro;
+    }
+
+    public void setDestDistro(String destDistro) {
+        this.destDistro = destDistro;
+    }
+
+    public int getTotalDests() {
+        return totalDests;
+    }
+
+    public void setTotalDests(int totalDests) {
+        this.totalDests = totalDests;
     }
 }
