@@ -129,7 +129,10 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
         // Compute for the actual duration window of the sampler
         long endTime = System.currentTimeMillis() + duration - rampDownTime;
         try {
-            Thread.sleep(rampUpTime);
+            try {
+                Thread.sleep(rampUpTime);
+            } catch (InterruptedException e) {
+            }
 
             // Let's reset the throughput first and start getting the samples
             for (Iterator i=perfClients.iterator(); i.hasNext();) {
@@ -138,14 +141,18 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
             }
 
             while (System.currentTimeMillis() < endTime && !stop.get()) {
-                Thread.sleep(interval);
+                try {
+                    Thread.sleep(interval);
+                } catch (InterruptedException e) {
+                }
                 sampleClients();
                 sampleIndex++;
             }
-        } catch (InterruptedException e) {
         } finally {
             isRunning.set(false);
-            isRunning.notifyAll();
+            synchronized (isRunning) {
+                isRunning.notifyAll();
+            }
         }
     }
 
@@ -161,7 +168,9 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public void waitForSamplerToFinish(long timeout) {
         while (isRunning.get()) {
             try {
-                isRunning.wait(timeout);
+                synchronized (isRunning) {
+                    isRunning.wait(timeout);
+                }
             } catch (InterruptedException e) {
             }
         }
