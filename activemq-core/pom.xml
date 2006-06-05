@@ -263,7 +263,7 @@
             <exclude>**/QueueBridgeXBeanTest.*</exclude>
             
             <!-- UDP related tests someimes fail on some platforms -->
-            <exclude>**/UdpTransport.*</exclude>
+            <exclude>**/UdpTransportTest.*</exclude>
             <exclude>**/UdpTransportUsingServerTest.*</exclude>
             <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
