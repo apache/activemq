@@ -1,10 +1,8 @@
 package org.apache.activemq.maven;
 
-import org.apache.activemq.tool.JmsProducerClient;
+import org.apache.activemq.tool.JmsProducerSystem;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-
-import javax.jms.JMSException;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -33,44 +31,159 @@ public class ProducerMojo
         extends AbstractMojo {
 
     /**
-     * @parameter expression="${url}" default-value="tcp://localhost:61616"
+     * @parameter expression="${sampler.durable}" default-value="60000"
      * @required
      */
-    private String url;
+    private String duration;
+
     /**
-     * @parameter expression="${topic}" default-value="true"
+     * @parameter expression="${sampler.interval}" default-value="5000"
      * @required
      */
-    private String topic;
+    private String interval;
+
     /**
-     * @parameter expression="${subject}" default-value="FOO.BAR"
+     * @parameter expression="${sampler.rampUpTime}" default-value="10000"
      * @required
      */
-    private String subject;
+    private String rampUpTime;
+
     /**
-     * @parameter expression="${durable}" default-value="false"
+     * @parameter expression="${sampler.rampDownTime}" default-value="10000"
      * @required
      */
-    private String durable;
+    private String rampDownTime;
+
     /**
-     * @parameter expression="${messageCount}" default-value="10"
+     * @parameter expression="${client.spiClass}" default-value="org.apache.activemq.tool.spi.ActiveMQPojoSPI"
      * @required
      */
-    private String messageCount;
+    private String spiClass;
+
     /**
-     * @parameter expression="${messageSize}" default-value="255"
+     * @parameter expression="${client.sessTransacted}" default-value="false"
+     * @required
+     */
+    private String sessTransacted;
+
+    /**
+     * @parameter expression="${client.sessAckMode}" default-value="autoAck"
+     * @required
+     */
+    private String sessAckMode;
+
+    /**
+     * @parameter expression="${client.destName}" default-value="topic://FOO.BAR.TEST"
+     * @required
+     */
+    private String destName;
+
+    /**
+     * @parameter expression="${client.destCount}" default-value="1"
+     * @required
+     */
+    private String destCount;
+
+    /**
+     * @parameter expression="${client.destComposite}" default-value="false"
+     * @required
+     */
+    private String destComposite;
+
+    /**
+     * @parameter expression="${producer.messageSize}" default-value="1024"
      * @required
      */
     private String messageSize;
 
+    /**
+     * @parameter expression="${producer.sendCount}" default-value="1000"
+     * @required
+     */
+    private String sendCount;
+
+    /**
+     * @parameter expression="${producer.sendDuration}" default-value="60000"
+     * @required
+     */
+    private String sendDuration;
+
+    /**
+     * @parameter expression="${producer.sendType}" default-value="time"
+     * @required
+     */
+    private String sendType;
+
+    /**
+     * @parameter expression="${factory.brokerUrl}" default-value="tcp://localhost:61616"
+     * @required
+     */
+    private String brokerUrl;
+
+    /**
+     * @parameter expression="${factory.asyncSend}" default-value="true"
+     * @required
+     */
+    private String asyncSend;
+
+    /**
+     * @parameter expression="${sysTest.numClients}" default-value="5"
+     * @required
+     */
+    private String numClients;
+
+    /**
+     * @parameter expression="${sysTest.totalDests}" default-value="5"
+     * @required
+     */
+    private String totalDests;
+
+    /**
+     * @parameter expression="${sysTest.destDistro}" default-value="all"
+     * @required
+     */
+    private String destDistro;
+
+    /**
+     * @parameter expression="${sysTest.reportDirectory}" default-value="${project.build.directory}/test-perf"
+     * @required
+     */
+    private String reportDirectory;
+
+
     public void execute()
             throws MojoExecutionException {
 
-        String[] args = {url, topic, subject, durable, messageCount, messageSize};
-        try {
-            JmsProducerClient.main(args);
-        } catch (JMSException e) {
-            throw new MojoExecutionException("Error executing Producer: " + e.getMessage());
-        }
+        JmsProducerSystem.main(createArgument());
+    }
+
+    public String[] createArgument() {
+        String[] options = new String[25];
+        options[0] = "-Dsampler.duration=" + duration;     // 1 min
+        options[1] = "-Dsampler.interval=" + interval;      // 5 secs
+        options[2] = "-Dsampler.rampUpTime=" + rampUpTime;   // 10 secs
+        options[3] = "-Dsampler.rampDownTime=" + rampDownTime; // 10 secs
+
+        options[4] = "-Dclient.spiClass=" + spiClass;
+        options[5] = "-Dclient.sessTransacted=" + sessTransacted;
+        options[6] = "-Dclient.sessAckMode=" + sessAckMode;
+        options[7] = "-Dclient.destName=" + destName;
+        options[8] = "-Dclient.destCount=" + destCount;
+        options[9] = "-Dclient.destComposite=" + destComposite;
+
+        options[10] = "-Dproducer.messageSize="+messageSize;
+        options[11] = "-Dproducer.sendCount="+sendCount;     // 1000 messages
+        options[12] = "-Dproducer.sendDuration="+sendDuration; // 1 min
+        options[13] = "-Dproducer.sendType="+sendType;
+
+        options[14] = "-Dfactory.brokerUrl="+brokerUrl;
+        options[15] = "-Dfactory.asyncSend="+asyncSend;
+
+        options[21] = "-DsysTest.numClients=" + numClients;
+        options[22] = "-DsysTest.totalDests=" + totalDests;
+        options[23] = "-DsysTest.destDistro=" + destDistro;
+        options[24] = "-DsysTest.reportDirectory=" + reportDirectory;
+
+        return options;
     }
 }

@@ -19,23 +19,26 @@ package org.apache.activemq.tool;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
-import java.util.List;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public static final String PREFIX_CONFIG_SYSTEM_TEST = "sampler.";
 
-    private long duration     = 5 * 60 * 1000; // 5 mins by default test duration
-    private long interval     = 1000;          // 1 sec sample interval
-    private long rampUpTime   = 1 * 60 * 1000; // 1 min default test ramp up time
+    private long duration = 5 * 60 * 1000; // 5 mins by default test duration
+    private long interval = 1000;          // 1 sec sample interval
+    private long rampUpTime = 1 * 60 * 1000; // 1 min default test ramp up time
     private long rampDownTime = 1 * 60 * 1000; // 1 min default test ramp down time
-    private long sampleIndex  = 0;
+    private long sampleIndex = 0;
 
     private AtomicBoolean start = new AtomicBoolean(false);
-    private AtomicBoolean stop  = new AtomicBoolean(false);
+    private AtomicBoolean stop = new AtomicBoolean(false);
     private AtomicBoolean isRunning = new AtomicBoolean(false);
+    private DataOutputStream dataDoutputStream = null;
     private Properties samplerSettings = new Properties();
 
     private List perfClients = new ArrayList();
@@ -46,7 +49,7 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     }
 
     public void registerClient(PerfMeasurable[] clients) {
-        for (int i=0; i<clients.length; i++) {
+        for (int i = 0; i < clients.length; i++) {
             registerClient(clients[i]);
         }
     }
@@ -58,6 +61,14 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public void setSamplerSettings(Properties samplerSettings) {
         this.samplerSettings = samplerSettings;
         ReflectionUtil.configureClass(this, samplerSettings);
+    }
+
+    public DataOutputStream getDataOutputStream() {
+        return dataDoutputStream;
+    }
+
+    public void setDataOutputStream(DataOutputStream dataDoutputStream) {
+        this.dataDoutputStream = dataDoutputStream;
     }
 
     public long getDuration() {
@@ -135,8 +146,8 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
             }
 
             // Let's reset the throughput first and start getting the samples
-            for (Iterator i=perfClients.iterator(); i.hasNext();) {
-                PerfMeasurable client = (PerfMeasurable)i.next();
+            for (Iterator i = perfClients.iterator(); i.hasNext();) {
+                PerfMeasurable client = (PerfMeasurable) i.next();
                 client.reset();
             }
 
@@ -157,10 +168,10 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     }
 
     public void sampleClients() {
-        for (Iterator i=perfClients.iterator(); i.hasNext();) {
-            PerfMeasurable client = (PerfMeasurable)i.next();
-            System.out.println("<sample index=" + sampleIndex + " name=" + client.getClientName() +
-                               " throughput=" + client.getThroughput() + "/>");
+        for (Iterator i = perfClients.iterator(); i.hasNext();) {
+            PerfMeasurable client = (PerfMeasurable) i.next();
+            writeResult("<sample index=" + sampleIndex + " name=" + client.getClientName() +
+                    " throughput=" + client.getThroughput() + "/>\n");
             client.reset();
         }
     }
@@ -173,6 +184,14 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
                 }
             } catch (InterruptedException e) {
             }
+        }
+    }
+
+    public void writeResult(String result) {
+        try {
+            getDataOutputStream().writeChars(result);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

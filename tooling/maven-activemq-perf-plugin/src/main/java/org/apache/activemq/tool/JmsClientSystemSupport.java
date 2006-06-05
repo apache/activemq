@@ -38,6 +38,7 @@ public abstract class JmsClientSystemSupport {
     protected Properties jmsClientSettings = new Properties();
     protected ThreadGroup clientThreadGroup;
     protected PerfMeasurementTool performanceSampler;
+    protected String reportDirectory;
 
     protected int numClients = 1;
     protected int totalDests = 1;
@@ -47,6 +48,13 @@ public abstract class JmsClientSystemSupport {
         // Create performance sampler
         performanceSampler = new PerfMeasurementTool();
         performanceSampler.setSamplerSettings(samplerSettings);
+
+        PerfReportGenerator report = new PerfReportGenerator();
+        report.setReportDirectory(this.getReportDirectory());
+        report.setReportName(this.getClass().toString());
+        report.startGenerateReport();
+
+        performanceSampler.setDataOutputStream(report.getDataOutputStream());
 
         clientThreadGroup = new ThreadGroup(getThreadGroupName());
         for (int i=0; i<getNumClients(); i++) {
@@ -65,6 +73,9 @@ public abstract class JmsClientSystemSupport {
         }
 
         performanceSampler.startSampler();
+        performanceSampler.waitForSamplerToFinish(0);
+
+        report.stopGenerateReport();
     }
 
     protected void distributeDestinations(String distroType, int clientIndex, int numClients, int numDests, Properties clientSettings) {
@@ -159,6 +170,14 @@ public abstract class JmsClientSystemSupport {
         } else {
             jmsClientSettings.setProperty(key, value);
         }
+    }
+
+    public String getReportDirectory(){
+        return reportDirectory;
+    }
+
+    public void setReportDirectory(String reportDirectory){
+        this.reportDirectory = reportDirectory;
     }
 
     public Properties getSysTestSettings() {
