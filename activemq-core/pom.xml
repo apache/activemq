@@ -263,8 +263,9 @@
             <exclude>**/QueueBridgeXBeanTest.*</exclude>
             
             <!-- UDP related tests someimes fail on some platforms -->
-            <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
+            <exclude>**/UdpTransportUsingServerTest.*</exclude>
             <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
+            <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
