@@ -290,6 +290,9 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
     }
 
     public TransactionContext getTransactionContext() {
+        if (dataSource == null) { 
+            throw new IllegalArgumentException("No dataSource property has been configured");
+        }
         return new TransactionContext(dataSource);
     }
 
