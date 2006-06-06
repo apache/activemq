@@ -16,7 +16,7 @@
 -->
 
 <!-- this file can only be parsed using the xbean-spring library -->
-<!-- START SNIPPET: xbean -->
+<!-- START SNIPPET: example -->
 <beans>
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
@@ -55,4 +55,4 @@
   </bean>
   -->  
 </beans>
-<!-- END SNIPPET: xbean -->
+<!-- END SNIPPET: example -->
