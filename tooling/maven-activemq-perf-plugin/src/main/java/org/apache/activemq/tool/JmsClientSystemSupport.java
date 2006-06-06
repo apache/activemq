@@ -50,8 +50,8 @@ public abstract class JmsClientSystemSupport {
         performanceSampler.setSamplerSettings(samplerSettings);
 
         PerfReportGenerator report = new PerfReportGenerator();
-        report.setReportDirectory(this.getReportDirectory());
-        report.setReportName(this.getClass().toString());
+        report.setReportName(this.getClass().getCanonicalName());
+        report.setTestSettings(getSettings());
         report.startGenerateReport();
 
         performanceSampler.setDataOutputStream(report.getDataOutputStream());

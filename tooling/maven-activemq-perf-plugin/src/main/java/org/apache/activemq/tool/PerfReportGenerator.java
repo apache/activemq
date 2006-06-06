@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Enumeration;
+import java.util.Iterator;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,7 +20,8 @@ public class PerfReportGenerator {
     private String reportDirectory = null;
     private String reportName = null;
     private DataOutputStream dataOutputStream = null;
-    private Properties clientSetting;
+
+    private Properties testSettings;
 
     public PerfReportGenerator() {
     }
@@ -30,8 +33,7 @@ public class PerfReportGenerator {
 
     public void startGenerateReport() {
 
-        setReportDirectory(reportDirectory);
-        setReportName(reportName);
+        setReportDirectory(this.getTestSettings().getProperty("sysTest.reportDirectory"));
 
         File reportDir = new File(getReportDirectory());
 
@@ -42,7 +44,8 @@ public class PerfReportGenerator {
 
         File reportFile = null;
         if (reportDir != null) {
-            reportFile = new File(reportDirectory + File.separator + reportName + ".xml");
+            String filename = (this.getReportName()).substring(this.getReportName().lastIndexOf(".")+1)+"-"+createReportName(getTestSettings());
+            reportFile = new File(this.getReportDirectory() + File.separator + filename + ".xml");
         }
 
         try {
@@ -68,8 +71,26 @@ public class PerfReportGenerator {
 
         buffer.append("<test-report>\n");
         buffer.append("<test-information>\n");
+
         buffer.append("<os-name>" + System.getProperty("os.name") + "</os-name>\n");
         buffer.append("<java-version>" + System.getProperty("java.version") + "</java-version>\n");
+
+        if(this.getTestSettings()!=null){
+            Enumeration keys = getTestSettings().propertyNames();
+
+            buffer.append("<client-settings>\n");
+
+            String key;
+            String key2;
+            while(keys.hasMoreElements()){
+                key = (String) keys.nextElement();
+                key2 = key.substring(key.indexOf(".")+1);
+                buffer.append("<" + key2 +">" + getTestSettings().get(key) + "</" + key2 +">\n");
+            }
+
+            buffer.append("</client-settings>\n");
+        }
+
         buffer.append("</test-information>\n");
         buffer.append("<test-result>\n");
 
@@ -93,7 +114,39 @@ public class PerfReportGenerator {
         return reportName;
     }
 
+    public String createReportName(Properties testSettings) {
+        if(testSettings!=null){
+            String[] keys = {"client.destCount","consumer.asyncRecv","consumer.durable",
+                             "producer.messageSize","sysTest.numClients","sysTest.totalDests"};
+
+            StringBuffer buffer = new StringBuffer();
+            String key;
+            String val;
+            String temp;
+            for(int i=0;i<keys.length;i++){
+                key = keys[i];
+                val = testSettings.getProperty(key);
+
+                if(val==null)continue;
+
+                temp = key.substring(key.indexOf(".")+1);
+                buffer.append(temp+val);
+            }
+
+            return buffer.toString();
+        }
+        return null;
+    }
+
     public void setReportName(String reportName) {
         this.reportName = reportName;
+    }
+
+    public Properties getTestSettings() {
+        return testSettings;
+    }
+
+    public void setTestSettings(Properties testSettings) {
+        this.testSettings = testSettings;
     }
 }
