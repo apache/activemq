@@ -27,7 +27,8 @@ import javax.jms.Destination;
 import javax.jms.Topic;
 import javax.jms.Message;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 public class JmsConsumerClient extends JmsPerformanceSupport {
     private static final Log log = LogFactory.getLog(JmsConsumerClient.class);

@@ -74,17 +74,17 @@ public class ActiveMQPojoSPI implements SPIConnectionFactory {
 
         setting = settings.getProperty(KEY_ASYNC_SEND);
         if (setting != null && setting.length() > 0) {
-            factory.setUseAsyncSend(Boolean.parseBoolean(setting));
+            factory.setUseAsyncSend(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_ASYNC_DISPATCH);
         if (setting != null && setting.length() > 0) {
-            factory.setAsyncDispatch(Boolean.parseBoolean(setting));
+            factory.setAsyncDispatch(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_ASYNC_SESSION);
         if (setting != null && setting.length() > 0) {
-            factory.setAlwaysSessionAsync(Boolean.parseBoolean(setting));
+            factory.setAlwaysSessionAsync(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_CLOSE_TIMEOUT);
@@ -94,32 +94,32 @@ public class ActiveMQPojoSPI implements SPIConnectionFactory {
 
         setting = settings.getProperty(KEY_COPY_MSG_ON_SEND);
         if (setting != null && setting.length() > 0) {
-            factory.setCopyMessageOnSend(Boolean.parseBoolean(setting));
+            factory.setCopyMessageOnSend(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_DISABLE_TIMESTAMP);
         if (setting != null && setting.length() > 0) {
-            factory.setDisableTimeStampsByDefault(Boolean.parseBoolean(setting));
+            factory.setDisableTimeStampsByDefault(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_DEFER_OBJ_SERIAL);
         if (setting != null && setting.length() > 0) {
-            factory.setObjectMessageSerializationDefered(Boolean.parseBoolean(setting));
+            factory.setObjectMessageSerializationDefered(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_ON_SEND_PREP_MSG);
         if (setting != null && setting.length() > 0) {
-            factory.setOnSendPrepareMessageBody(Boolean.parseBoolean(setting));
+            factory.setOnSendPrepareMessageBody(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_OPTIM_ACK);
         if (setting != null && setting.length() > 0) {
-            factory.setOptimizeAcknowledge(Boolean.parseBoolean(setting));
+            factory.setOptimizeAcknowledge(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_OPTIM_DISPATCH);
         if (setting != null && setting.length() > 0) {
-            factory.setOptimizedMessageDispatch(Boolean.parseBoolean(setting));
+            factory.setOptimizedMessageDispatch(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_PREFETCH_QUEUE);
@@ -134,12 +134,12 @@ public class ActiveMQPojoSPI implements SPIConnectionFactory {
 
         setting = settings.getProperty(KEY_USE_COMPRESSION);
         if (setting != null && setting.length() > 0) {
-            factory.setUseCompression(Boolean.parseBoolean(setting));
+            factory.setUseCompression(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_USE_RETROACTIVE);
         if (setting != null && setting.length() > 0) {
-            factory.setUseRetroactiveConsumer(Boolean.parseBoolean(setting));
+            factory.setUseRetroactiveConsumer(Boolean.getBoolean(setting));
         }
     }
 }

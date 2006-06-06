@@ -29,14 +29,14 @@ import java.util.Properties;
 public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public static final String PREFIX_CONFIG_SYSTEM_TEST = "sampler.";
 
-    private long duration = 5 * 60 * 1000; // 5 mins by default test duration
-    private long interval = 1000;          // 1 sec sample interval
-    private long rampUpTime = 1 * 60 * 1000; // 1 min default test ramp up time
+    private long duration     = 5 * 60 * 1000; // 5 mins by default test duration
+    private long interval     = 1000;          // 1 sec sample interval
+    private long rampUpTime   = 1 * 60 * 1000; // 1 min default test ramp up time
     private long rampDownTime = 1 * 60 * 1000; // 1 min default test ramp down time
-    private long sampleIndex = 0;
+    private long sampleIndex  = 0;
 
     private AtomicBoolean start = new AtomicBoolean(false);
-    private AtomicBoolean stop = new AtomicBoolean(false);
+    private AtomicBoolean stop  = new AtomicBoolean(false);
     private AtomicBoolean isRunning = new AtomicBoolean(false);
     private DataOutputStream dataDoutputStream = null;
     private Properties samplerSettings = new Properties();

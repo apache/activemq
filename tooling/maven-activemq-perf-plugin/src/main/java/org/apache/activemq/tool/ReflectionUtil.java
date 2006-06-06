@@ -86,7 +86,7 @@ public final class ReflectionUtil {
                 } else if (propertyType == Byte.TYPE) {
                     targetClass.getMethod(setterMethod, new Class[] {byte.class}).invoke(target, new Object[] {Byte.valueOf(val)});
                 } else if (propertyType == Character.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {char.class}).invoke(target, new Object[] {val.charAt(0)});
+                    targetClass.getMethod(setterMethod, new Class[] {char.class}).invoke(target, new Object[] {new Character(val.charAt(0))});
                 }
             } else {
                 // Set String type
@@ -96,7 +96,7 @@ public final class ReflectionUtil {
                 // For unknown object type, try to call the valueOf method of the object
                 // to convert the string to the target object type
                 } else {
-                    Object param = propertyType.getMethod("valueOf", new Class[] {String.class}).invoke(null, val);
+                    Object param = propertyType.getMethod("valueOf", new Class[] {String.class}).invoke(null, new Object[] {val});
                     targetClass.getMethod(setterMethod, new Class[] {propertyType}).invoke(target, new Object[] {param});
                 }
             }
