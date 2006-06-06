@@ -31,7 +31,7 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
             sampler.registerClient(consumer);
             consumer.setPerfEventListener(sampler);
         }
-
+        
         try {
             consumer.receiveMessages();
         } catch (JMSException e) {
@@ -52,7 +52,7 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
     }
 
     public static void main(String[] args) throws JMSException {
-        /*String[] options = new String[24];
+        /*String[] options = new String[25];
         options[0] = "-Dsampler.duration=60000";     // 1 min
         options[1] = "-Dsampler.interval=5000";      // 5 secs
         options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
@@ -81,6 +81,7 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
         options[21] = "-DsysTest.numClients=5";
         options[22] = "-DsysTest.totalDests=5";
         options[23] = "-DsysTest.destDistro=all";
+        options[24] = "-DsysTest.reportDirectory=./target/test-perf";
 
         args = options;*/
 
@@ -97,7 +98,6 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
         }
 
         JmsConsumerSystem sysTest = new JmsConsumerSystem();
-        sysTest.setReportDirectory("./target/Test-perf");
         sysTest.setSettings(sysSettings);
         sysTest.runSystemTest();
     }
