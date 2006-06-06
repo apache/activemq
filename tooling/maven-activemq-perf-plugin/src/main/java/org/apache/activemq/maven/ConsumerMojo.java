@@ -33,7 +33,7 @@ public class ConsumerMojo
         extends AbstractMojo {
 
     /**
-     * @parameter expression="${sampler.durable}" default-value="60000"
+     * @parameter expression="${sampler.duration}" default-value="60000"
      * @required
      */
     private String duration;
@@ -195,6 +195,8 @@ public class ConsumerMojo
 
     public String[] createArgument() {
         String[] options = new String[25];
+
+        System.out.println("--- " + duration + " ----");
         options[0] = "-Dsampler.duration=" + duration;     // 1 min
         options[1] = "-Dsampler.interval=" + interval;      // 5 secs
         options[2] = "-Dsampler.rampUpTime=" + rampUpTime;   // 10 secs

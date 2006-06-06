@@ -31,7 +31,7 @@ public class ProducerMojo
         extends AbstractMojo {
 
     /**
-     * @parameter expression="${sampler.durable}" default-value="60000"
+     * @parameter expression="${sampler.duration}" default-value="60000"
      * @required
      */
     private String duration;
@@ -158,7 +158,8 @@ public class ProducerMojo
     }
 
     public String[] createArgument() {
-        String[] options = new String[25];
+
+        String[] options = new String[20];
         options[0] = "-Dsampler.duration=" + duration;     // 1 min
         options[1] = "-Dsampler.interval=" + interval;      // 5 secs
         options[2] = "-Dsampler.rampUpTime=" + rampUpTime;   // 10 secs
@@ -179,10 +180,10 @@ public class ProducerMojo
         options[14] = "-Dfactory.brokerUrl="+brokerUrl;
         options[15] = "-Dfactory.asyncSend="+asyncSend;
 
-        options[21] = "-DsysTest.numClients=" + numClients;
-        options[22] = "-DsysTest.totalDests=" + totalDests;
-        options[23] = "-DsysTest.destDistro=" + destDistro;
-        options[24] = "-DsysTest.reportDirectory=" + reportDirectory;
+        options[16] = "-DsysTest.numClients=" + numClients;
+        options[17] = "-DsysTest.totalDests=" + totalDests;
+        options[18] = "-DsysTest.destDistro=" + destDistro;
+        options[19] = "-DsysTest.reportDirectory=" + reportDirectory;
 
         return options;
     }
