@@ -17,14 +17,19 @@
 
 <!-- this file can only be parsed using the xbean-spring library -->
 <!-- START SNIPPET: xbean -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker useJmx="true">
+  <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
 
     <persistenceAdapter>
       <journaledJDBC journalLogFiles="5" dataDirectory="${basedir}/target/foo" />
+      
+      <!-- To use a different dataSource, use the following syntax : -->
+      <!-- 
+      <journaledJDBC journalLogFiles="5" dataDirectory="${basedir}/activemq-data" dataSource="#mysql-ds"/>
+       -->
     </persistenceAdapter>
 
     <transportConnectors>
@@ -39,5 +44,15 @@
     </networkConnectors>
   </broker>
 
+  <!-- MySql DataSource Sample Setup -->
+  <!-- 
+  <bean id="mysql-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
+    <property name="username" value="activemq"/>
+    <property name="password" value="activemq"/>
+    <property name="poolPreparedStatements" value="true"/>
+  </bean>
+  -->  
 </beans>
 <!-- END SNIPPET: xbean -->
