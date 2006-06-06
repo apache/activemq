@@ -19,29 +19,26 @@ package org.apache.activemq.store;
 import java.io.File;
 import java.io.IOException;
 
-import javax.sql.DataSource;
 
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.active.JournalImpl;
+import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.journal.QuickJournalPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 
 /**
  * Factory class that can create PersistenceAdapter objects.
  *
  * @version $Revision: 1.4 $
  */
-public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFactory {
+public class DefaultPersistenceAdapterFactory extends DataSourceSupport implements PersistenceAdapterFactory {
     
     private int journalLogFileSize = 1024*1024*20;
     private int journalLogFiles = 2;
-    private File dataDirectory;
-    private DataSource dataSource;
     private TaskRunnerFactory taskRunnerFactory;
     private Journal journal;
     private boolean useJournal=true;
@@ -50,11 +47,11 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
     private JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
     
     public PersistenceAdapter createPersistenceAdapter() throws IOException {
-        File dataDirectory = getDataDirectory();                
         jdbcPersistenceAdapter.setDataSource(getDataSource());
         
-        if( !useJournal )
+        if( !useJournal ) {
             return jdbcPersistenceAdapter;
+        }
         
         // Setup the Journal
         if( useQuickJournal ) {
@@ -62,17 +59,6 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
         }  else {
             return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
         }
-    }
-
-    public File getDataDirectory() {
-        if( dataDirectory==null ) {
-            dataDirectory = new File("activemq-data");
-        }
-        return dataDirectory;
-    }
-
-    public void setDataDirectory(File dataDirectory) {
-        this.dataDirectory = dataDirectory;
     }
 
     public int getJournalLogFiles() {
@@ -91,17 +77,6 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
         this.journalLogFileSize = journalLogFileSize;
     }
     
-    public DataSource getDataSource() throws IOException {
-        if (dataSource == null) {
-            dataSource = createDataSource();
-        }
-        return dataSource;
-    }
-
-    public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
     public JDBCPersistenceAdapter getJdbcAdapter() {
         return jdbcPersistenceAdapter;
     }
@@ -173,21 +148,6 @@ public class DefaultPersistenceAdapterFactory implements PersistenceAdapterFacto
     }
     public void setStatements(Statements statements) {
         jdbcPersistenceAdapter.setStatements(statements);
-    }
-
-    // Implementation methods
-    // -------------------------------------------------------------------------
-    protected DataSource createDataSource() throws IOException {
-        
-        // Setup the Derby datasource.
-        System.setProperty("derby.system.home", getDataDirectory().getCanonicalPath());
-        System.setProperty("derby.storage.fileSyncTransactionLog", "true");
-        System.setProperty("derby.storage.pageCacheSize", "100");
-        
-        final EmbeddedDataSource ds = new EmbeddedDataSource();
-        ds.setDatabaseName("derbydb");
-        ds.setCreateDatabase("create");
-        return ds;
     }
 
     /**

@@ -57,13 +57,12 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
  * 
  * @version $Revision: 1.9 $
  */
-public class JDBCPersistenceAdapter implements PersistenceAdapter {
+public class JDBCPersistenceAdapter extends DataSourceSupport implements PersistenceAdapter {
 
     private static final Log log = LogFactory.getLog(JDBCPersistenceAdapter.class);
     private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/store/jdbc/");
 
     private WireFormat wireFormat = new OpenWireFormat();
-    private DataSource dataSource;
     private Statements statements;
     private JDBCAdapter adapter;
     private MemoryTransactionStore transactionStore;
@@ -76,24 +75,31 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
     }
 
     public JDBCPersistenceAdapter(DataSource ds, WireFormat wireFormat) {
-        this.dataSource = ds;
+        super(ds);
         this.wireFormat = wireFormat;
     }
 
     public Set getDestinations() {
         // Get a connection and insert the message into the DB.
-        TransactionContext c = getTransactionContext();
+        TransactionContext c = null;
         try {
+            c = getTransactionContext();
             return getAdapter().doGetDestinations(c);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             return Collections.EMPTY_SET;
-        } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+        }
+        catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             return Collections.EMPTY_SET;
-        } finally {
-            try {
-                c.close();
-            } catch (Throwable e) {
+        }
+        finally {
+            if (c != null) {
+                try {
+                    c.close();
+                }
+                catch (Throwable e) {
+                }
             }
         }
     }
@@ -172,20 +178,26 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
     }
 
     public void cleanup() {
-        TransactionContext c = getTransactionContext();
+        TransactionContext c = null;
         try {
             log.debug("Cleaning up old messages.");
             c = getTransactionContext();
             getAdapter().doDeleteOldMessages(c);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             log.warn("Old message cleanup failed due to: " + e, e);
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             log.warn("Old message cleanup failed due to: " + e);
-            JDBCPersistenceAdapter.log("Failure Details: ",e);
-        } finally {
-            try {
-                c.close();
-            } catch (Throwable e) {
+            JDBCPersistenceAdapter.log("Failure Details: ", e);
+        }
+        finally {
+            if (c != null) {
+                try {
+                    c.close();
+                }
+                catch (Throwable e) {
+                }
             }
             log.debug("Cleanup done.");
         }
@@ -260,14 +272,6 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         this.adapter.setStatements(getStatements());
     }
 
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
-    public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
     public WireFormat getWireFormat() {
         return wireFormat;
     }
@@ -276,24 +280,21 @@ public class JDBCPersistenceAdapter implements PersistenceAdapter {
         this.wireFormat = wireFormat;
     }
 
-    public TransactionContext getTransactionContext(ConnectionContext context) {
+    public TransactionContext getTransactionContext(ConnectionContext context) throws IOException {
         if (context == null) {
             return getTransactionContext();
         } else {
             TransactionContext answer = (TransactionContext) context.getLongTermStoreContext();
             if (answer == null) {
-                answer = new TransactionContext(dataSource);
+                answer = new TransactionContext(getDataSource());
                 context.setLongTermStoreContext(answer);
             }
             return answer;
         }
     }
 
-    public TransactionContext getTransactionContext() {
-        if (dataSource == null) { 
-            throw new IllegalArgumentException("No dataSource property has been configured");
-        }
-        return new TransactionContext(dataSource);
+    public TransactionContext getTransactionContext() throws IOException {
+        return new TransactionContext(getDataSource());
     }
 
     public void beginTransaction(ConnectionContext context) throws IOException {
