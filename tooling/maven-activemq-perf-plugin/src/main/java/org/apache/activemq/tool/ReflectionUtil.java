@@ -43,12 +43,13 @@ public final class ReflectionUtil {
             debugInfo = "Invoking: " + targetClass.getName();
 
             StringTokenizer tokenizer = new StringTokenizer(key, ".");
+            int tokenCount = tokenizer.countTokens();
 
             // NOTE: Skip the first token, it is assume that this is an indicator for the object itself
             tokenizer.nextToken();
 
-            // For nested settings, get the object first
-            for (int j=0; j<tokenizer.countTokens()-1; j++) {
+            // For nested settings, get the object first. -2, do not count the first and last token
+            for (int j=0; j<tokenCount-2; j++) {
                 // Find getter method first
                 String name = tokenizer.nextToken();
                 String getMethod = "get" + name.substring(0,1).toUpperCase() + name.substring(1);
@@ -96,6 +97,7 @@ public final class ReflectionUtil {
                 // For unknown object type, try to call the valueOf method of the object
                 // to convert the string to the target object type
                 } else {
+                    // Note valueOf method should be public and static
                     Object param = propertyType.getMethod("valueOf", new Class[] {String.class}).invoke(null, new Object[] {val});
                     targetClass.getMethod(setterMethod, new Class[] {propertyType}).invoke(target, new Object[] {param});
                 }
