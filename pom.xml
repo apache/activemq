@@ -23,6 +23,12 @@
   
   <modelVersion>4.0.0</modelVersion>
   
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>1</version>
+  </parent>
+
   <groupId>incubator-activemq</groupId>
   <artifactId>activemq-parent</artifactId>
   <version>4.1-SNAPSHOT</version>
@@ -55,10 +61,23 @@
   </mailingLists>
 
   <repositories>
+    <!-- keep the central repo so that it is first tried -->
     <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Snapshots Repository</name>
-      <url>http://cvs.apache.org/maven-snapshot-repository</url>
+      <id>central</id>
+      <url>http://ibiblio.org/maven2/</url>
+    </repository>
+    <repository>
+      <id>mortbay-repo</id>
+      <name>Mortbay Jetty Repo</name>
+      <!-- temporary solution until codehaus to ibiblio rsync working again -->
+      <url>http://www.mortbay.org/maven2/release</url>
+    </repository>
+    <!-- For geronimo-1.2-SNAPSHOT jars 
+    <repository>
+      <id>apache-maven1-snapshot</id>
+      <name>Apache Maven1 Repo</name>
+      <url>http://people.apache.org/repository</url>
+      <layout>legacy</layout>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -66,52 +85,21 @@
         <enabled>false</enabled>
       </releases>
     </repository>
-    <repository>
-      <id>codehaus-snapshot</id>
-      <name>CodeHaus Snapshot Repo</name>
-      <url>http://snapshots.maven.codehaus.org/maven2</url>
-    </repository>
-    <repository>
-      <id>apache-maven1-snapshot</id>
-      <name>Activemq Maven1 Repo</name>
-      <url>http://cvs.apache.org/repository</url>
-      <layout>legacy</layout>
-    </repository>
-
-    <repository>
-      <id>mortbay-repo</id>
-      <name>Mortbay Jetty Repo</name>
-      <!-- temporary solution until codehaus to ibiblio rsync working again -->
-      <url>http://www.mortbay.org/maven2/release</url>
-    </repository>
-
+    -->
   </repositories>
 
   <pluginRepositories>
+    <!-- keep the central repo so that it is first tried -->
     <pluginRepository>
-      <id>codehaus.snapshots</id>
-      <name>Maven Central Plugins Development Repository</name>
-      <url>http://snapshots.maven.codehaus.org/maven2</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
+      <id>central</id>
+      <url>http://ibiblio.org/maven2/</url>
     </pluginRepository>
-    <pluginRepository>
-      <id>maven-csharp-plugins</id>
-      <name>maven-csharp</name>
-      <url>http://maven-csharp.javaforge.com/repo</url>
-    </pluginRepository>
-
     <pluginRepository>
       <id>mortbay-repo</id>
       <name>Mortbay Jetty Repo</name>
       <!-- temporary solution until codehaus to ibiblio rsync working again -->
       <url>http://www.mortbay.org/maven2/release</url>
     </pluginRepository>
-
   </pluginRepositories>
 
 
@@ -151,31 +139,16 @@
     <module>maven-bundle-plugin</module>
     <module>assembly</module>
 
-<!--
     <module>activeio</module>
--->
     <!-- module>activecluster</module -->
 
   </modules> 
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
     <developerConnection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
     <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/</url>
   </scm>
-
-  <organization>
-    <name>Apache Software Foundation.</name>
-    <url>http://www.apache.org/</url>
-  </organization>
 
   <dependencyManagement>
     <dependencies>
@@ -249,7 +222,7 @@
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activeio-core</artifactId>
-        <version>3.0-beta2</version>
+        <version>3.0-SNAPSHOT</version>
       </dependency>
             
       <!-- =============================== -->
@@ -791,6 +764,11 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${org-apache-maven-surefire-plugin-version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>javacc-maven-plugin</artifactId>
+          <version>2.0</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -838,8 +816,48 @@
         <artifactId>jxr-maven-plugin</artifactId>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
-        <artifactId>surefire-report-maven-plugin</artifactId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>taglist-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jxr-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <links>
+            <link>http://java.sun.com/j2ee/1.4/docs/api</link>
+            <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+            <link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
+            <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
+            <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
+            <link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
+            <link>http://jakarta.apache.org/commons/logging/api/</link>
+            <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
+            <link>http://www.junit.org/junit/javadoc/</link>
+            <link>http://logging.apache.org/log4j/docs/api/</link>
+            <link>http://jakarta.apache.org/regexp/apidocs/</link>
+            <link>http://jakarta.apache.org/velocity/api/</link>
+          </links>
+        </configuration>
       </plugin>
     </plugins>
   </reporting>
