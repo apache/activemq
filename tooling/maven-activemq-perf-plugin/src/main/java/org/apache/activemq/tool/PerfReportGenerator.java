@@ -1,25 +1,34 @@
+/**
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.activemq.tool;
 
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Properties;
+import java.io.PrintWriter;
 import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.Properties;
 
-/**
- * Created by IntelliJ IDEA.
- * User: admin
- * Date: Jun 5, 2006
- * Time: 10:57:52 AM
- * To change this template use File | Settings | File Templates.
- */
 public class PerfReportGenerator {
 
     private String reportDirectory = null;
     private String reportName = null;
-    private DataOutputStream dataOutputStream = null;
+    private PrintWriter writer = null;
 
     private Properties testSettings;
 
@@ -44,61 +53,55 @@ public class PerfReportGenerator {
 
         File reportFile = null;
         if (reportDir != null) {
-            String filename = (this.getReportName()).substring(this.getReportName().lastIndexOf(".")+1)+"-"+createReportName(getTestSettings());
+            String filename = (this.getReportName()).substring(this.getReportName().lastIndexOf(".") + 1) + "-" + createReportName(getTestSettings());
             reportFile = new File(this.getReportDirectory() + File.separator + filename + ".xml");
         }
 
         try {
-            dataOutputStream = new DataOutputStream(new FileOutputStream(reportFile));
-            dataOutputStream.writeChars(getTestInformation().toString());
+            this.writer = new PrintWriter(new FileOutputStream(reportFile));
+            addTestInformation(getWriter());
         } catch (IOException e1) {
             e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
 
     public void stopGenerateReport() {
-        try {
-            dataOutputStream.writeChars("</test-result>\n</test-report>");
-            dataOutputStream.flush();
-            dataOutputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        this.getWriter().println("</test-result>");
+        this.getWriter().println("</test-report>");
+        this.getWriter().flush();
+        this.getWriter().close();
     }
 
-    protected String getTestInformation() {
-        StringBuffer buffer = new StringBuffer();
+    protected void addTestInformation(PrintWriter writer) {
 
-        buffer.append("<test-report>\n");
-        buffer.append("<test-information>\n");
+        writer.println("<test-report>");
+        writer.println("<test-information>");
 
-        buffer.append("<os-name>" + System.getProperty("os.name") + "</os-name>\n");
-        buffer.append("<java-version>" + System.getProperty("java.version") + "</java-version>\n");
+        writer.println("<os-name>" + System.getProperty("os.name") + "</os-name>");
+        writer.println("<java-version>" + System.getProperty("java.version") + "</java-version>");
 
-        if(this.getTestSettings()!=null){
+        if (this.getTestSettings() != null) {
             Enumeration keys = getTestSettings().propertyNames();
 
-            buffer.append("<client-settings>\n");
+            writer.println("<client-settings>");
 
             String key;
             String key2;
-            while(keys.hasMoreElements()){
+            while (keys.hasMoreElements()) {
                 key = (String) keys.nextElement();
-                key2 = key.substring(key.indexOf(".")+1);
-                buffer.append("<" + key2 +">" + getTestSettings().get(key) + "</" + key2 +">\n");
+                key2 = key.substring(key.indexOf(".") + 1);
+                writer.println("<" + key2 + ">" + getTestSettings().get(key) + "</" + key2 + ">");
             }
 
-            buffer.append("</client-settings>\n");
+            writer.println("</client-settings>");
         }
 
-        buffer.append("</test-information>\n");
-        buffer.append("<test-result>\n");
-
-        return buffer.toString();
+        writer.println("</test-information>");
+        writer.println("<test-result>");
     }
 
-    public DataOutputStream getDataOutputStream() {
-        return this.dataOutputStream;
+    public PrintWriter getWriter() {
+        return this.writer;
     }
 
 
@@ -115,22 +118,22 @@ public class PerfReportGenerator {
     }
 
     public String createReportName(Properties testSettings) {
-        if(testSettings!=null){
-            String[] keys = {"client.destCount","consumer.asyncRecv","consumer.durable",
-                             "producer.messageSize","sysTest.numClients","sysTest.totalDests"};
+        if (testSettings != null) {
+            String[] keys = {"client.destCount", "consumer.asyncRecv", "consumer.durable",
+                             "producer.messageSize", "sysTest.numClients", "sysTest.totalDests"};
 
             StringBuffer buffer = new StringBuffer();
             String key;
             String val;
             String temp;
-            for(int i=0;i<keys.length;i++){
+            for (int i = 0; i < keys.length; i++) {
                 key = keys[i];
                 val = testSettings.getProperty(key);
 
-                if(val==null)continue;
+                if (val == null) continue;
 
-                temp = key.substring(key.indexOf(".")+1);
-                buffer.append(temp+val);
+                temp = key.substring(key.indexOf(".") + 1);
+                buffer.append(temp + val);
             }
 
             return buffer.toString();
