@@ -55,62 +55,62 @@ public class ProducerMojo
     private String rampDownTime;
 
     /**
-     * @parameter expression="${client.spiClass}" default-value="org.apache.activemq.tool.spi.ActiveMQPojoSPI"
+     * @parameter expression="${producer.spiClass}" default-value="org.apache.activemq.tool.spi.ActiveMQPojoSPI"
      * @required
      */
     private String spiClass;
 
     /**
-     * @parameter expression="${client.sessTransacted}" default-value="false"
+     * @parameter expression="${producer.sessTransacted}" default-value="false"
      * @required
      */
     private String sessTransacted;
 
     /**
-     * @parameter expression="${client.sessAckMode}" default-value="autoAck"
+     * @parameter expression="${producer.sessAckMode}" default-value="autoAck"
      * @required
      */
     private String sessAckMode;
 
     /**
-     * @parameter expression="${client.destName}" default-value="topic://FOO.BAR.TEST"
+     * @parameter expression="${producer.destName}" default-value="topic://FOO.BAR.TEST"
      * @required
      */
     private String destName;
 
     /**
-     * @parameter expression="${client.destCount}" default-value="1"
+     * @parameter expression="${producer.destCount}" default-value="1"
      * @required
      */
     private String destCount;
 
     /**
-     * @parameter expression="${client.destComposite}" default-value="false"
+     * @parameter expression="${producer.destComposite}" default-value="false"
      * @required
      */
     private String destComposite;
 
     /**
-     * @parameter expression="${client.messageSize}" default-value="1024"
+     * @parameter expression="${producer.messageSize}" default-value="1024"
      * @required
      */
     private String messageSize;
 
     /**
-     * @parameter expression="${client.sendCount}" default-value="1000"
+     * @parameter expression="${producer.sendCount}" default-value="1000"
      * @required
      */
     private String sendCount;
 
     /*
-     * @parameter expression="${client.sendDuration}" default-value="60000"
+     * @parameter expression="${producer.sendDuration}" default-value="60000"
      * @required
 
     private String sendDuration;
     */
 
     /**
-     * @parameter expression="${client.sendType}" default-value="time"
+     * @parameter expression="${producer.sendType}" default-value="time"
      * @required
      */
     private String sendType;
@@ -166,17 +166,17 @@ public class ProducerMojo
         options[2] = "sampler.rampUpTime=" + rampUpTime;   // 10 secs
         options[3] = "sampler.rampDownTime=" + rampDownTime; // 10 secs
 
-        options[4] = "client.spiClass=" + spiClass;
-        options[5] = "client.sessTransacted=" + sessTransacted;
-        options[6] = "client.sessAckMode=" + sessAckMode;
-        options[7] = "client.destName=" + destName;
-        options[8] = "client.destCount=" + destCount;
-        options[9] = "client.destComposite=" + destComposite;
+        options[4] = "producer.spiClass=" + spiClass;
+        options[5] = "producer.sessTransacted=" + sessTransacted;
+        options[6] = "producer.sessAckMode=" + sessAckMode;
+        options[7] = "producer.destName=" + destName;
+        options[8] = "producer.destCount=" + destCount;
+        options[9] = "producer.destComposite=" + destComposite;
 
-        options[10] = "client.messageSize="+messageSize;
-        options[11] = "client.sendCount="+sendCount;     // 1000 messages
-        options[12] = "client.sendDuration="+duration; // use sampler.duration.
-        options[13] = "client.sendType="+sendType;
+        options[10] = "producer.messageSize="+messageSize;
+        options[11] = "producer.sendCount="+sendCount;     // 1000 messages
+        options[12] = "producer.sendDuration="+duration; // use sampler.duration.
+        options[13] = "producer.sendType="+sendType;
 
         options[14] = "factory.brokerUrl="+brokerUrl;
         options[15] = "factory.asyncSend="+asyncSend;
