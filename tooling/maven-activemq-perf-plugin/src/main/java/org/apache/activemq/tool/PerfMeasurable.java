@@ -20,6 +20,7 @@ import java.util.Properties;
 
 public interface PerfMeasurable {
     public void reset();
+    public int getClientNumber();
     public String getClientName();
     public long getThroughput();
     public Properties getSettings();

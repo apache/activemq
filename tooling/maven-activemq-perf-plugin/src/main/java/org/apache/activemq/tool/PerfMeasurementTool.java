@@ -169,8 +169,8 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public void sampleClients() {
         for (Iterator i = perfClients.iterator(); i.hasNext();) {
             PerfMeasurable client = (PerfMeasurable) i.next();
-            getWriter().println("<sample index=" + sampleIndex + " name=" + client.getClientName() +
-                    " throughput=" + client.getThroughput() + "/>");
+            getWriter().println("<sample index='" + sampleIndex + "' clientNumber='" +  client.getClientNumber() 
+                    + "' name='" + client.getClientName() + "' throughput='" + client.getThroughput() + "'/>");
             client.reset();
         }
     }
