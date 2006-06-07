@@ -17,36 +17,30 @@
 
 package org.apache.activemq.tool;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-
-import javax.jms.MessageListener;
-import javax.jms.MessageConsumer;
-import javax.jms.JMSException;
-import javax.jms.Destination;
-import javax.jms.Topic;
-import javax.jms.Message;
-import java.util.Properties;
-
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import javax.jms.*;
+import java.util.Properties;
 
 public class JmsConsumerClient extends JmsPerformanceSupport {
     private static final Log log = LogFactory.getLog(JmsConsumerClient.class);
 
     private static final String PREFIX_CONFIG_CONSUMER = "consumer.";
-    public  static final String TIME_BASED_RECEIVING  = "time";
-    public  static final String COUNT_BASED_RECEIVING = "count";
+    public static final String TIME_BASED_RECEIVING = "time";
+    public static final String COUNT_BASED_RECEIVING = "count";
 
-    protected Properties      jmsConsumerSettings = new Properties();
+    protected Properties jmsConsumerSettings = new Properties();
     protected MessageConsumer jmsConsumer;
 
-    protected boolean durable   = false;
+    protected boolean durable = false;
     protected boolean asyncRecv = true;
-    protected String  consumerName = "TestConsumerClient";
+    protected String consumerName = "TestConsumerClient";
 
-    protected long   recvCount    = 1000000;       // Receive a million messages by default
-    protected long   recvDuration = 5 * 60 * 1000; // Receive for 5 mins by default
-    protected String recvType     = TIME_BASED_RECEIVING;
+    protected long recvCount = 1000000;       // Receive a million messages by default
+    protected long recvDuration = 5 * 60 * 1000; // Receive for 5 mins by default
+    protected String recvType = TIME_BASED_RECEIVING;
 
     public void receiveMessages() throws JMSException {
         if (listener != null) {
@@ -157,7 +151,7 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
 
     public MessageConsumer createJmsConsumer(Destination dest) throws JMSException {
         if (isDurable()) {
-            jmsConsumer = getSession().createDurableSubscriber((Topic)dest, getConsumerName());
+            jmsConsumer = getSession().createDurableSubscriber((Topic) dest, getConsumerName());
         } else {
             jmsConsumer = getSession().createConsumer(dest);
         }
@@ -166,7 +160,7 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
 
     public MessageConsumer createJmsConsumer(Destination dest, String selector, boolean noLocal) throws JMSException {
         if (isDurable()) {
-            jmsConsumer = getSession().createDurableSubscriber((Topic)dest, getConsumerName(), selector, noLocal);
+            jmsConsumer = getSession().createDurableSubscriber((Topic) dest, getConsumerName(), selector, noLocal);
         } else {
             jmsConsumer = getSession().createConsumer(dest, selector, noLocal);
         }
@@ -254,50 +248,21 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
     }
 
     public static void main(String[] args) throws JMSException {
-        /*String[] options = new String[21];
-        options[0] = "-Dsampler.duration=60000";     // 1 min
-        options[1] = "-Dsampler.interval=5000";      // 5 secs
-        options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
-        options[3] = "-Dsampler.rampDownTime=10000"; // 10 secs
 
-        options[4] = "-Dclient.spiClass=org.apache.activemq.tool.spi.ActiveMQPojoSPI";
-        options[5] = "-Dclient.sessTransacted=false";
-        options[6] = "-Dclient.sessAckMode=autoAck";
-        options[7] = "-Dclient.destName=topic://FOO.BAR.TEST";
-        options[8] = "-Dclient.destCount=1";
-        options[9] = "-Dclient.destComposite=false";
-
-        options[10] = "-Dconsumer.durable=false";
-        options[11] = "-Dconsumer.asyncRecv=true";
-        options[12] = "-Dconsumer.recvCount=1000";     // 1000 messages
-        options[13] = "-Dconsumer.recvDuration=60000"; // 1 min
-        options[14] = "-Dconsumer.recvType=time";
-
-        options[15] = "-Dfactory.brokerUrl=tcp://localhost:61616";
-        options[16] = "-Dfactory.optimAck=true";
-        options[17] = "-Dfactory.optimDispatch=true";
-        options[18] = "-Dfactory.prefetchQueue=100";
-        options[19] = "-Dfactory.prefetchTopic=32767";
-        options[20] = "-Dfactory.useRetroactive=false";
-
-        args = options;   */
-
-        Properties samplerSettings  = new Properties();
+        Properties samplerSettings = new Properties();
         Properties consumerSettings = new Properties();
 
-        for (int i=0; i<args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             // Get property define options only
-            if (args[i].startsWith("-D")) {
-                String propDefine = args[i].substring("-D".length());
-                int  index = propDefine.indexOf("=");
-                String key = propDefine.substring(0, index);
-                String val = propDefine.substring(index+1);
-                if (key.startsWith("sampler.")) {
-                    samplerSettings.setProperty(key, val);
-                } else {
-                    consumerSettings.setProperty(key, val);
-                }
+            int index = args[i].indexOf("=");
+            String key = args[i].substring(0, index);
+            String val = args[i].substring(index + 1);
+            if (key.startsWith("sampler.")) {
+                samplerSettings.setProperty(key, val);
+            } else {
+                consumerSettings.setProperty(key, val);
             }
+
         }
 
         JmsConsumerClient client = new JmsConsumerClient();

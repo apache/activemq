@@ -52,45 +52,14 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
     }
 
     public static void main(String[] args) {
-        /*String[] options = new String[20];
-        options[0] = "-Dsampler.duration=60000";     // 1 min
-        options[1] = "-Dsampler.interval=5000";      // 5 secs
-        options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
-        options[3] = "-Dsampler.rampDownTime=10000"; // 10 secs
+        Properties sysSettings = new Properties();
 
-        options[4] = "-Dclient.spiClass=org.apache.activemq.tool.spi.ActiveMQPojoSPI";
-        options[5] = "-Dclient.sessTransacted=false";
-        options[6] = "-Dclient.sessAckMode=autoAck";
-        options[7] = "-Dclient.destName=topic://FOO.BAR.TEST";
-        options[8] = "-Dclient.destCount=1";
-        options[9] = "-Dclient.destComposite=false";
-
-        options[10] = "-Dproducer.messageSize=1024";
-        options[11] = "-Dproducer.sendCount=1000";     // 1000 messages
-        options[12] = "-Dproducer.sendDuration=60000"; // 1 min
-        options[13] = "-Dproducer.sendType=time";
-
-        options[14] = "-Dfactory.brokerUrl=tcp://localhost:61616";
-        options[15] = "-Dfactory.asyncSend=true";
-
-        options[16] = "-DsysTest.numClients=5";
-        options[17] = "-DsysTest.totalDests=5";
-        options[18] = "-DsysTest.destDistro=all";
-        options[19] = "-DsysTest.reportDirectory=./target/test-perf";
-
-        args = options; */
-
-        Properties sysSettings  = new Properties();
-
-        for (int i=0; i<args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             // Get property define options only
-            if (args[i].startsWith("-D")) {
-                String propDefine = args[i].substring("-D".length());
-                int  index = propDefine.indexOf("=");
-                String key = propDefine.substring(0, index);
-                String val = propDefine.substring(index+1);
-                sysSettings.setProperty(key, val);
-            }
+            int index = args[i].indexOf("=");
+            String key = args[i].substring(0, index);
+            String val = args[i].substring(index + 1);
+            sysSettings.setProperty(key, val);
         }
 
         JmsProducerSystem sysTest = new JmsProducerSystem();

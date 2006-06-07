@@ -19,7 +19,6 @@
             <plugin>
                 <groupId>incubator-activemq</groupId>
                 <artifactId>maven-activemq-perf-plugin</artifactId>
-                <version>4.1-SNAPSHOT</version>
             </plugin>
         </plugins>
     </build>
