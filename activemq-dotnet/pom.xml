@@ -10,6 +10,14 @@
   <artifactId>activemq-dotnet</artifactId>
   <packaging>dotnet-library</packaging>
 
+  <repositories>
+    <repository>
+      <id>maven-csharp</id>
+      <name>maven-csharp</name>
+      <url>http://maven-csharp.javaforge.com/repo</url>
+    </repository>
+  </repositories>
+
   <build>
 
     <outputDirectory>target/dotnet-assembly</outputDirectory>
