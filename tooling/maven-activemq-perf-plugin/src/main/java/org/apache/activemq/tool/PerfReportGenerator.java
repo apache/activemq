@@ -119,8 +119,8 @@ public class PerfReportGenerator {
 
     public String createReportName(Properties testSettings) {
         if (testSettings != null) {
-            String[] keys = {"client.destCount", "consumer.asyncRecv", "consumer.durable",
-                             "producer.messageSize", "sysTest.numClients", "sysTest.totalDests"};
+            String[] keys = {"client.destCount", "client.asyncRecv", "client.durable",
+                             "client.messageSize", "sysTest.numClients", "sysTest.totalDests"};
 
             StringBuffer buffer = new StringBuffer();
             String key;

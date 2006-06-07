@@ -91,26 +91,26 @@ public class ProducerMojo
     private String destComposite;
 
     /**
-     * @parameter expression="${producer.messageSize}" default-value="1024"
+     * @parameter expression="${client.messageSize}" default-value="1024"
      * @required
      */
     private String messageSize;
 
     /**
-     * @parameter expression="${producer.sendCount}" default-value="1000"
+     * @parameter expression="${client.sendCount}" default-value="1000"
      * @required
      */
     private String sendCount;
 
     /*
-     * @parameter expression="${producer.sendDuration}" default-value="60000"
+     * @parameter expression="${client.sendDuration}" default-value="60000"
      * @required
 
     private String sendDuration;
     */
 
     /**
-     * @parameter expression="${producer.sendType}" default-value="time"
+     * @parameter expression="${client.sendType}" default-value="time"
      * @required
      */
     private String sendType;
@@ -173,10 +173,10 @@ public class ProducerMojo
         options[8] = "client.destCount=" + destCount;
         options[9] = "client.destComposite=" + destComposite;
 
-        options[10] = "producer.messageSize="+messageSize;
-        options[11] = "producer.sendCount="+sendCount;     // 1000 messages
-        options[12] = "producer.sendDuration="+duration; // use sampler.duration.
-        options[13] = "producer.sendType="+sendType;
+        options[10] = "client.messageSize="+messageSize;
+        options[11] = "client.sendCount="+sendCount;     // 1000 messages
+        options[12] = "client.sendDuration="+duration; // use sampler.duration.
+        options[13] = "client.sendType="+sendType;
 
         options[14] = "factory.brokerUrl="+brokerUrl;
         options[15] = "factory.asyncSend="+asyncSend;

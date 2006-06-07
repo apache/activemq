@@ -93,32 +93,32 @@ public class ConsumerMojo
     private String destComposite;
 
     /**
-     * @parameter expression="${consumer.durable}" default-value="false"
+     * @parameter expression="${client.durable}" default-value="false"
      * @required
      */
     private String durable;
 
     /**
-     * @parameter expression="${consumer.asyncRecv}" default-value="true"
+     * @parameter expression="${client.asyncRecv}" default-value="true"
      * @required
      */
     private String asyncRecv;
 
     /**
-     * @parameter expression="${consumer.recvCount}" default-value="1000"
+     * @parameter expression="${client.recvCount}" default-value="1000"
      * @required
      */
     private String recvCount;
 
     /*
-     * @parameter expression="${consumer.recvDuration}" default-value="60000"
+     * @parameter expression="${client.recvDuration}" default-value="60000"
      * @required
 
     private String recvDuration;
     */
 
     /**
-     * @parameter expression="${consumer.recvType}" default-value="time"
+     * @parameter expression="${client.recvType}" default-value="time"
      * @required
      */
     private String recvType;
@@ -209,11 +209,11 @@ public class ConsumerMojo
         options[8] = "client.destCount=" + destCount;
         options[9] = "client.destComposite=" + destComposite;
 
-        options[10] = "consumer.durable=" + durable;
-        options[11] = "consumer.asyncRecv=" + asyncRecv;
-        options[12] = "consumer.recvCount=" + recvCount;     // 1000 messages
-        options[13] = "consumer.recvDuration=" + duration; // use sampler.duration.
-        options[14] = "consumer.recvType=" + recvType;
+        options[10] = "client.durable=" + durable;
+        options[11] = "client.asyncRecv=" + asyncRecv;
+        options[12] = "client.recvCount=" + recvCount;     // 1000 messages
+        options[13] = "client.recvDuration=" + duration; // use sampler.duration.
+        options[14] = "client.recvType=" + recvType;
 
         options[15] = "factory.brokerUrl=" + brokerUrl;
         options[16] = "factory.optimAck=" + optimAck;
