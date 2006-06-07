@@ -102,11 +102,12 @@ public class ProducerMojo
      */
     private String sendCount;
 
-    /**
+    /*
      * @parameter expression="${producer.sendDuration}" default-value="60000"
      * @required
-     */
+
     private String sendDuration;
+    */
 
     /**
      * @parameter expression="${producer.sendType}" default-value="time"
@@ -160,30 +161,30 @@ public class ProducerMojo
     public String[] createArgument() {
 
         String[] options = new String[20];
-        options[0] = "-Dsampler.duration=" + duration;     // 1 min
-        options[1] = "-Dsampler.interval=" + interval;      // 5 secs
-        options[2] = "-Dsampler.rampUpTime=" + rampUpTime;   // 10 secs
-        options[3] = "-Dsampler.rampDownTime=" + rampDownTime; // 10 secs
+        options[0] = "sampler.duration=" + duration;     // 1 min
+        options[1] = "sampler.interval=" + interval;      // 5 secs
+        options[2] = "sampler.rampUpTime=" + rampUpTime;   // 10 secs
+        options[3] = "sampler.rampDownTime=" + rampDownTime; // 10 secs
 
-        options[4] = "-Dclient.spiClass=" + spiClass;
-        options[5] = "-Dclient.sessTransacted=" + sessTransacted;
-        options[6] = "-Dclient.sessAckMode=" + sessAckMode;
-        options[7] = "-Dclient.destName=" + destName;
-        options[8] = "-Dclient.destCount=" + destCount;
-        options[9] = "-Dclient.destComposite=" + destComposite;
+        options[4] = "client.spiClass=" + spiClass;
+        options[5] = "client.sessTransacted=" + sessTransacted;
+        options[6] = "client.sessAckMode=" + sessAckMode;
+        options[7] = "client.destName=" + destName;
+        options[8] = "client.destCount=" + destCount;
+        options[9] = "client.destComposite=" + destComposite;
 
-        options[10] = "-Dproducer.messageSize="+messageSize;
-        options[11] = "-Dproducer.sendCount="+sendCount;     // 1000 messages
-        options[12] = "-Dproducer.sendDuration="+sendDuration; // 1 min
-        options[13] = "-Dproducer.sendType="+sendType;
+        options[10] = "producer.messageSize="+messageSize;
+        options[11] = "producer.sendCount="+sendCount;     // 1000 messages
+        options[12] = "producer.sendDuration="+duration; // use sampler.duration.
+        options[13] = "producer.sendType="+sendType;
 
-        options[14] = "-Dfactory.brokerUrl="+brokerUrl;
-        options[15] = "-Dfactory.asyncSend="+asyncSend;
+        options[14] = "factory.brokerUrl="+brokerUrl;
+        options[15] = "factory.asyncSend="+asyncSend;
 
-        options[16] = "-DsysTest.numClients=" + numClients;
-        options[17] = "-DsysTest.totalDests=" + totalDests;
-        options[18] = "-DsysTest.destDistro=" + destDistro;
-        options[19] = "-DsysTest.reportDirectory=" + reportDirectory;
+        options[16] = "sysTest.numClients=" + numClients;
+        options[17] = "sysTest.totalDests=" + totalDests;
+        options[18] = "sysTest.destDistro=" + destDistro;
+        options[19] = "sysTest.reportDirectory=" + reportDirectory;
 
         return options;
     }

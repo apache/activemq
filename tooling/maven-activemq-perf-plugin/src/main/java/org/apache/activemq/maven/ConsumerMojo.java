@@ -110,11 +110,12 @@ public class ConsumerMojo
      */
     private String recvCount;
 
-    /**
+    /*
      * @parameter expression="${consumer.recvDuration}" default-value="60000"
      * @required
-     */
+
     private String recvDuration;
+    */
 
     /**
      * @parameter expression="${consumer.recvType}" default-value="time"
@@ -196,36 +197,35 @@ public class ConsumerMojo
     public String[] createArgument() {
         String[] options = new String[25];
 
-        System.out.println("--- " + duration + " ----");
-        options[0] = "-Dsampler.duration=" + duration;     // 1 min
-        options[1] = "-Dsampler.interval=" + interval;      // 5 secs
-        options[2] = "-Dsampler.rampUpTime=" + rampUpTime;   // 10 secs
-        options[3] = "-Dsampler.rampDownTime=" + rampDownTime; // 10 secs
+        options[0] = "sampler.duration=" + duration;     // 1 min
+        options[1] = "sampler.interval=" + interval;      // 5 secs
+        options[2] = "sampler.rampUpTime=" + rampUpTime;   // 10 secs
+        options[3] = "sampler.rampDownTime=" + rampDownTime; // 10 secs
 
-        options[4] = "-Dclient.spiClass=" + spiClass;
-        options[5] = "-Dclient.sessTransacted=" + sessTransacted;
-        options[6] = "-Dclient.sessAckMode=" + sessAckMode;
-        options[7] = "-Dclient.destName=" + destName;
-        options[8] = "-Dclient.destCount=" + destCount;
-        options[9] = "-Dclient.destComposite=" + destComposite;
+        options[4] = "client.spiClass=" + spiClass;
+        options[5] = "client.sessTransacted=" + sessTransacted;
+        options[6] = "client.sessAckMode=" + sessAckMode;
+        options[7] = "client.destName=" + destName;
+        options[8] = "client.destCount=" + destCount;
+        options[9] = "client.destComposite=" + destComposite;
 
-        options[10] = "-Dconsumer.durable=" + durable;
-        options[11] = "-Dconsumer.asyncRecv=" + asyncRecv;
-        options[12] = "-Dconsumer.recvCount=" + recvCount;     // 1000 messages
-        options[13] = "-Dconsumer.recvDuration=" + recvDuration; // 1 min
-        options[14] = "-Dconsumer.recvType=" + recvType;
+        options[10] = "consumer.durable=" + durable;
+        options[11] = "consumer.asyncRecv=" + asyncRecv;
+        options[12] = "consumer.recvCount=" + recvCount;     // 1000 messages
+        options[13] = "consumer.recvDuration=" + duration; // use sampler.duration.
+        options[14] = "consumer.recvType=" + recvType;
 
-        options[15] = "-Dfactory.brokerUrl=" + brokerUrl;
-        options[16] = "-Dfactory.optimAck=" + optimAck;
-        options[17] = "-Dfactory.optimDispatch=" + optimDispatch;
-        options[18] = "-Dfactory.prefetchQueue=" + prefetchQueue;
-        options[19] = "-Dfactory.prefetchTopic=" + prefetchTopic;
-        options[20] = "-Dfactory.useRetroactive=" + useRetroactive;
+        options[15] = "factory.brokerUrl=" + brokerUrl;
+        options[16] = "factory.optimAck=" + optimAck;
+        options[17] = "factory.optimDispatch=" + optimDispatch;
+        options[18] = "factory.prefetchQueue=" + prefetchQueue;
+        options[19] = "factory.prefetchTopic=" + prefetchTopic;
+        options[20] = "factory.useRetroactive=" + useRetroactive;
 
-        options[21] = "-DsysTest.numClients=" + numClients;
-        options[22] = "-DsysTest.totalDests=" + totalDests;
-        options[23] = "-DsysTest.destDistro=" + destDistro;
-        options[24] = "-DsysTest.reportDirectory=" + reportDirectory;
+        options[21] = "sysTest.numClients=" + numClients;
+        options[22] = "sysTest.totalDests=" + totalDests;
+        options[23] = "sysTest.destDistro=" + destDistro;
+        options[24] = "sysTest.reportDirectory=" + reportDirectory;
 
         return options;
     }

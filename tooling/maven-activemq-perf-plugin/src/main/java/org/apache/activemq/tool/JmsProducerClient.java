@@ -19,28 +19,28 @@ package org.apache.activemq.tool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.MessageProducer;
 import javax.jms.Destination;
-import javax.jms.TextMessage;
 import javax.jms.JMSException;
-import java.util.Properties;
+import javax.jms.MessageProducer;
+import javax.jms.TextMessage;
 import java.util.Arrays;
+import java.util.Properties;
 
 public class JmsProducerClient extends JmsPerformanceSupport {
     private static final Log log = LogFactory.getLog(JmsProducerClient.class);
 
     private static final String PREFIX_CONFIG_PRODUCER = "producer.";
-    public  static final String TIME_BASED_SENDING  = "time";
-    public  static final String COUNT_BASED_SENDING = "count";
+    public static final String TIME_BASED_SENDING = "time";
+    public static final String COUNT_BASED_SENDING = "count";
 
-    protected Properties      jmsProducerSettings = new Properties();
+    protected Properties jmsProducerSettings = new Properties();
     protected MessageProducer jmsProducer;
-    protected TextMessage     jmsTextMessage;
+    protected TextMessage jmsTextMessage;
 
-    protected int    messageSize  = 1024;          // Send 1kb messages by default
-    protected long   sendCount    = 1000000;       // Send a million messages by default
-    protected long   sendDuration = 5 * 60 * 1000; // Send for 5 mins by default
-    protected String sendType     = TIME_BASED_SENDING;
+    protected int messageSize = 1024;          // Send 1kb messages by default
+    protected long sendCount = 1000000;       // Send a million messages by default
+    protected long sendDuration = 5 * 60 * 1000; // Send for 5 mins by default
+    protected String sendType = TIME_BASED_SENDING;
 
     public void sendMessages() throws JMSException {
         if (listener != null) {
@@ -50,7 +50,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
         if (sendType.equalsIgnoreCase(COUNT_BASED_SENDING)) {
             sendCountBasedMessages(getSendCount());
 
-        // Send messages for a specific duration
+            // Send messages for a specific duration
         } else {
             sendTimeBasedMessages(getSendDuration());
         }
@@ -78,36 +78,36 @@ public class JmsProducerClient extends JmsPerformanceSupport {
             if (getJmsTextMessage() != null) {
                 // Send to more than one actual destination
                 if (dest.length > 1) {
-                    for (int i=0; i<messageCount; i++) {
-                        for (int j=0; j<dest.length; j++) {
+                    for (int i = 0; i < messageCount; i++) {
+                        for (int j = 0; j < dest.length; j++) {
                             getJmsProducer().send(dest[j], getJmsTextMessage());
                             incThroughput();
                         }
                     }
-                // Send to only one actual destination
+                    // Send to only one actual destination
                 } else {
-                    for (int i=0; i<messageCount; i++) {
+                    for (int i = 0; i < messageCount; i++) {
                         getJmsProducer().send(getJmsTextMessage());
                         incThroughput();
                     }
                 }
 
-            // Send different type of messages using indexing to identify each one.
-            // Message size will vary. Definitely slower, since messages properties
-            // will be set individually each send.
+                // Send different type of messages using indexing to identify each one.
+                // Message size will vary. Definitely slower, since messages properties
+                // will be set individually each send.
             } else {
                 // Send to more than one actual destination
                 if (dest.length > 1) {
-                    for (int i=0; i<messageCount; i++) {
-                        for (int j=0; j<dest.length; j++) {
+                    for (int i = 0; i < messageCount; i++) {
+                        for (int j = 0; j < dest.length; j++) {
                             getJmsProducer().send(dest[j], createJmsTextMessage("Text Message [" + i + "]"));
                             incThroughput();
                         }
                     }
 
-                // Send to only one actual destination
+                    // Send to only one actual destination
                 } else {
-                    for (int i=0; i<messageCount; i++) {
+                    for (int i = 0; i < messageCount; i++) {
                         getJmsProducer().send(createJmsTextMessage("Text Message [" + i + "]"));
                         incThroughput();
                     }
@@ -122,7 +122,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
     }
 
     public void sendTimeBasedMessages(long duration) throws JMSException {
-        long endTime   = System.currentTimeMillis() + duration;
+        long endTime = System.currentTimeMillis() + duration;
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
 
@@ -148,12 +148,12 @@ public class JmsProducerClient extends JmsPerformanceSupport {
                 // Send to more than one actual destination
                 if (dest.length > 1) {
                     while (System.currentTimeMillis() < endTime) {
-                        for (int j=0; j<dest.length; j++) {
+                        for (int j = 0; j < dest.length; j++) {
                             getJmsProducer().send(dest[j], getJmsTextMessage());
                             incThroughput();
                         }
                     }
-                // Send to only one actual destination
+                    // Send to only one actual destination
                 } else {
                     while (System.currentTimeMillis() < endTime) {
                         getJmsProducer().send(getJmsTextMessage());
@@ -161,21 +161,21 @@ public class JmsProducerClient extends JmsPerformanceSupport {
                     }
                 }
 
-            // Send different type of messages using indexing to identify each one.
-            // Message size will vary. Definitely slower, since messages properties
-            // will be set individually each send.
+                // Send different type of messages using indexing to identify each one.
+                // Message size will vary. Definitely slower, since messages properties
+                // will be set individually each send.
             } else {
                 // Send to more than one actual destination
                 long count = 1;
                 if (dest.length > 1) {
                     while (System.currentTimeMillis() < endTime) {
-                        for (int j=0; j<dest.length; j++) {
+                        for (int j = 0; j < dest.length; j++) {
                             getJmsProducer().send(dest[j], createJmsTextMessage("Text Message [" + count++ + "]"));
                             incThroughput();
                         }
                     }
 
-                // Send to only one actual destination
+                    // Send to only one actual destination
                 } else {
                     while (System.currentTimeMillis() < endTime) {
 
@@ -235,7 +235,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
 
     protected String buildText(String text, int size) {
         byte[] data = new byte[size - text.length()];
-        Arrays.fill(data, (byte)0);
+        Arrays.fill(data, (byte) 0);
         return text + new String(data);
     }
 
@@ -291,45 +291,20 @@ public class JmsProducerClient extends JmsPerformanceSupport {
     }
 
     public static void main(String[] args) throws JMSException {
-        /*String[] options = new String[16];
-        options[0] = "-Dsampler.duration=60000";     // 1 min
-        options[1] = "-Dsampler.interval=5000";      // 5 secs
-        options[2] = "-Dsampler.rampUpTime=10000";   // 10 secs
-        options[3] = "-Dsampler.rampDownTime=10000"; // 10 secs
-
-        options[4] = "-Dclient.spiClass=org.apache.activemq.tool.spi.ActiveMQPojoSPI";
-        options[5] = "-Dclient.sessTransacted=false";
-        options[6] = "-Dclient.sessAckMode=autoAck";
-        options[7] = "-Dclient.destName=topic://FOO.BAR.TEST";
-        options[8] = "-Dclient.destCount=1";
-        options[9] = "-Dclient.destComposite=false";
-
-        options[10] = "-Dproducer.messageSize=1024";
-        options[11] = "-Dproducer.sendCount=1000";     // 1000 messages
-        options[12] = "-Dproducer.sendDuration=60000"; // 1 min
-        options[13] = "-Dproducer.sendType=time";
-
-        options[14] = "-Dfactory.brokerUrl=tcp://localhost:61616";
-        options[15] = "-Dfactory.asyncSend=true";
-
-        args = options;*/
-
-        Properties samplerSettings  = new Properties();
+        Properties samplerSettings = new Properties();
         Properties producerSettings = new Properties();
 
-        for (int i=0; i<args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             // Get property define options only
-            if (args[i].startsWith("-D")) {
-                String propDefine = args[i].substring("-D".length());
-                int  index = propDefine.indexOf("=");
-                String key = propDefine.substring(0, index);
-                String val = propDefine.substring(index+1);
-                if (key.startsWith("sampler.")) {
-                    samplerSettings.setProperty(key, val);
-                } else {
-                    producerSettings.setProperty(key, val);
-                }
+            int index = args[i].indexOf("=");
+            String key = args[i].substring(0, index);
+            String val = args[i].substring(index + 1);
+            if (key.startsWith("sampler.")) {
+                samplerSettings.setProperty(key, val);
+            } else {
+                producerSettings.setProperty(key, val);
             }
+
         }
 
         JmsProducerClient client = new JmsProducerClient();
