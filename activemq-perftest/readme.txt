@@ -24,6 +24,44 @@ Goals                  | Description
                        |   specified in the parameter "sysTest.reportDirectory".
                        |
 
+
+-----------------------------------------------------------------------------------------------
+|Performance Test Report Template
+|-----------------------------------------------------------------------------------------------
+|<test-report>
+|  <test-information>
+|    <system-settings>
+|         .
+|         .
+|         .
+|         System Properties
+|         .
+|         .
+|         .
+|    </system-settings>
+|    <client-settings>
+|         .
+|         .
+|         .
+|         Configuration Properties
+|         .
+|         .
+|         .
+|
+|    </client-settings>
+|  </test-information>
+|  <test-result>
+|    <sample index=0 name=ID:foconer-4730-1149675813127-2:3 throughput=2857/>
+|    <sample index=0 name=ID:foconer-4730-1149675813127-2:0 throughput=2845/>
+|    <sample index=0 name=ID:foconer-4730-1149675813127-2:2 throughput=2845/>
+|  </test-result>
+|</test-report>
+|
+-------------------------------------------------------------------------------------------------
+
+
+
+
 ####################################################################################################
 # Configuration for running a system of JMS Clients (Producer/Consumer)
 ####################################################################################################

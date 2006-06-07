@@ -88,7 +88,7 @@ public class PerfReportGenerator {
 
         while (keys.hasMoreElements()) {
             key = (String) keys.nextElement();
-            writer.println("<" + key + ">" + getTestSettings().get(key) + "</" + key + ">");
+            writer.println("<" + key + ">" + System.getProperty(key) + "</" + key + ">");
         }
 
         writer.println("</system-settings>");
