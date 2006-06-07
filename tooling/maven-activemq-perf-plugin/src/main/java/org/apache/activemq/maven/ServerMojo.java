@@ -66,6 +66,13 @@ public class ServerMojo
      */
     private File configFile;
 
+    /**
+     * Broker URL.
+     *
+     * @parameter expression="${url}"
+     */
+    private String url;
+
     public void execute()
             throws MojoExecutionException {
 
@@ -76,20 +83,30 @@ public class ServerMojo
             out.mkdirs();
         }
 
-        File config;
-        if (configFile != null) {
-            config = configFile;
+
+        String[] args = new String[2];
+        if (url != null) {
+           args[0] = "start";
+           args[1] = url;
         } else {
-            config = new File(configDirectory + File.separator + configType + ".xml");
+            File config;
+            if (configFile != null) {
+                config = configFile;
+            } else {
+
+                config = new File(configDirectory + File.separator + configType + ".xml");
+            }
+
+            try {
+                config = copy(config);
+            } catch (IOException e) {
+                throw new MojoExecutionException(e.getMessage());
+            }
+           args[0] = "start";
+           args[1] =  "xbean:" + (config.toURI()).toString();
         }
 
-        try {
-            config = copy(config);
-        } catch (IOException e) {
-            throw new MojoExecutionException(e.getMessage());
-        }
 
-        String[] args = {"start", "xbean:" + (config.toURI()).toString()};
         Main.main(args);
     }
 
