@@ -77,24 +77,34 @@ public class PerfReportGenerator {
         writer.println("<test-report>");
         writer.println("<test-information>");
 
-        writer.println("<os-name>" + System.getProperty("os.name") + "</os-name>");
-        writer.println("<java-version>" + System.getProperty("java.version") + "</java-version>");
+        Enumeration keys;
+        String key;
+
+        // Add system property settings
+        writer.println("<system-settings>");
+
+        Properties sysProp = System.getProperties();
+        keys = sysProp.keys();
+
+        while (keys.hasMoreElements()) {
+            key = (String) keys.nextElement();
+            writer.println("<" + key + ">" + getTestSettings().get(key) + "</" + key + ">");
+        }
+
+        writer.println("</system-settings>");
+
+        // Add client property settings
+        writer.println("<client-settings>");
 
         if (this.getTestSettings() != null) {
-            Enumeration keys = getTestSettings().propertyNames();
+            keys = getTestSettings().propertyNames();
 
-            writer.println("<client-settings>");
-
-            String key;
-            String key2;
             while (keys.hasMoreElements()) {
                 key = (String) keys.nextElement();
-                key2 = key.substring(key.indexOf(".") + 1);
-                writer.println("<" + key2 + ">" + getTestSettings().get(key) + "</" + key2 + ">");
+                writer.println("<" + key + ">" + getTestSettings().get(key) + "</" + key + ">");
             }
-
-            writer.println("</client-settings>");
         }
+        writer.println("</client-settings>");
 
         writer.println("</test-information>");
         writer.println("<test-result>");
@@ -103,7 +113,6 @@ public class PerfReportGenerator {
     public PrintWriter getWriter() {
         return this.writer;
     }
-
 
     public String getReportDirectory() {
         return reportDirectory;
