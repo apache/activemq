@@ -72,11 +72,6 @@
       <url>http://snapshots.maven.codehaus.org/maven2</url>
     </repository>
     <repository>
-      <id>maven-csharp</id>
-      <name>maven-csharp</name>
-      <url>http://maven-csharp.javaforge.com/repo</url>
-    </repository>
-    <repository>
       <id>apache-maven1-snapshot</id>
       <name>Activemq Maven1 Repo</name>
       <url>http://cvs.apache.org/repository</url>
