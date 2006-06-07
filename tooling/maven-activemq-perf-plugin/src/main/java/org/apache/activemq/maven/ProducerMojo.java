@@ -37,7 +37,7 @@ public class ProducerMojo
     private String duration;
 
     /**
-     * @parameter expression="${sampler.interval}" default-value="5000"
+     * @parameter expression="${sampler.interval}" default-value="1000"
      * @required
      */
     private String interval;
@@ -73,7 +73,7 @@ public class ProducerMojo
     private String sessAckMode;
 
     /**
-     * @parameter expression="${producer.destName}" default-value="topic://FOO.BAR.TEST"
+     * @parameter expression="${consumer.destName}" default-value="topic://TEST.PERFORMANCE.FOO.BAR"
      * @required
      */
     private String destName;
@@ -97,7 +97,7 @@ public class ProducerMojo
     private String messageSize;
 
     /**
-     * @parameter expression="${producer.sendCount}" default-value="1000"
+     * @parameter expression="${producer.sendCount}" default-value="1000000"
      * @required
      */
     private String sendCount;
@@ -128,13 +128,13 @@ public class ProducerMojo
     private String asyncSend;
 
     /**
-     * @parameter expression="${sysTest.numClients}" default-value="5"
+     * @parameter expression="${sysTest.numClients}" default-value="1"
      * @required
      */
     private String numClients;
 
     /**
-     * @parameter expression="${sysTest.totalDests}" default-value="5"
+     * @parameter expression="${sysTest.totalDests}" default-value="1"
      * @required
      */
     private String totalDests;
@@ -160,31 +160,32 @@ public class ProducerMojo
 
     public String[] createArgument() {
 
-        String[] options = new String[20];
-        options[0] = "sampler.duration=" + duration;     // 1 min
-        options[1] = "sampler.interval=" + interval;      // 5 secs
-        options[2] = "sampler.rampUpTime=" + rampUpTime;   // 10 secs
-        options[3] = "sampler.rampDownTime=" + rampDownTime; // 10 secs
-
-        options[4] = "producer.spiClass=" + spiClass;
-        options[5] = "producer.sessTransacted=" + sessTransacted;
-        options[6] = "producer.sessAckMode=" + sessAckMode;
-        options[7] = "producer.destName=" + destName;
-        options[8] = "producer.destCount=" + destCount;
-        options[9] = "producer.destComposite=" + destComposite;
-
-        options[10] = "producer.messageSize="+messageSize;
-        options[11] = "producer.sendCount="+sendCount;     // 1000 messages
-        options[12] = "producer.sendDuration="+duration; // use sampler.duration.
-        options[13] = "producer.sendType="+sendType;
-
-        options[14] = "factory.brokerUrl="+brokerUrl;
-        options[15] = "factory.asyncSend="+asyncSend;
-
-        options[16] = "sysTest.numClients=" + numClients;
-        options[17] = "sysTest.totalDests=" + totalDests;
-        options[18] = "sysTest.destDistro=" + destDistro;
-        options[19] = "sysTest.reportDirectory=" + reportDirectory;
+        String[] options = {
+            "sampler.duration=" + duration,   
+            "sampler.interval=" + interval,     
+            "sampler.rampUpTime=" + rampUpTime,   
+            "sampler.rampDownTime=" + rampDownTime, 
+    
+            "producer.spiClass=" + spiClass,
+            "producer.sessTransacted=" + sessTransacted,
+            "producer.sessAckMode=" + sessAckMode,
+            "producer.destName=" + destName,
+            "producer.destCount=" + destCount,
+            "producer.destComposite=" + destComposite,
+    
+            "producer.messageSize="+messageSize,
+            "producer.sendCount="+sendCount,    
+            "producer.sendDuration="+duration, 
+            "producer.sendType="+sendType,
+    
+            "factory.brokerUrl="+brokerUrl,
+            "factory.asyncSend="+asyncSend,
+    
+            "sysTest.numClients=" + numClients,
+            "sysTest.totalDests=" + totalDests,
+            "sysTest.destDistro=" + destDistro,
+            "sysTest.reportDirectory=" + reportDirectory 
+        };
 
         return options;
     }
