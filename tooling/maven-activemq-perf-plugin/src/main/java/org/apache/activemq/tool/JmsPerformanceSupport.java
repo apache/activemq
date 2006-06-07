@@ -22,12 +22,21 @@ import javax.jms.JMSException;
 
 public class JmsPerformanceSupport extends JmsClientSupport implements PerfMeasurable {
 
+    private static int clientCounter;
+    
     protected AtomicLong throughput = new AtomicLong(0);
-
     protected PerfEventListener listener = null;
+    private int clientNumber;
 
     public void reset() {
         setThroughput(0);
+    }
+    
+    public synchronized int getClientNumber() {
+        if (clientNumber == 0) {
+            clientNumber = incrementClientCounter();
+        }
+        return clientNumber;
     }
 
     public String getClientName() {
@@ -60,5 +69,9 @@ public class JmsPerformanceSupport extends JmsClientSupport implements PerfMeasu
 
     public PerfEventListener getPerfEventListener() {
         return listener;
+    }
+
+    protected static synchronized int incrementClientCounter() {
+        return ++clientCounter;
     }
 }
