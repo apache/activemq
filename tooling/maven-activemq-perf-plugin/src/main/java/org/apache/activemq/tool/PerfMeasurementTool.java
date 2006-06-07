@@ -19,8 +19,7 @@ package org.apache.activemq.tool;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +37,7 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     private AtomicBoolean start = new AtomicBoolean(false);
     private AtomicBoolean stop  = new AtomicBoolean(false);
     private AtomicBoolean isRunning = new AtomicBoolean(false);
-    private DataOutputStream dataDoutputStream = null;
+    private PrintWriter writer = null;
     private Properties samplerSettings = new Properties();
 
     private List perfClients = new ArrayList();
@@ -63,12 +62,12 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
         ReflectionUtil.configureClass(this, samplerSettings);
     }
 
-    public DataOutputStream getDataOutputStream() {
-        return dataDoutputStream;
+    public PrintWriter getWriter() {
+        return writer;
     }
 
-    public void setDataOutputStream(DataOutputStream dataDoutputStream) {
-        this.dataDoutputStream = dataDoutputStream;
+    public void setWriter(PrintWriter writer) {
+        this.writer = writer;
     }
 
     public long getDuration() {
@@ -170,8 +169,8 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public void sampleClients() {
         for (Iterator i = perfClients.iterator(); i.hasNext();) {
             PerfMeasurable client = (PerfMeasurable) i.next();
-            writeResult("<sample index=" + sampleIndex + " name=" + client.getClientName() +
-                    " throughput=" + client.getThroughput() + "/>\n");
+            getWriter().println("<sample index=" + sampleIndex + " name=" + client.getClientName() +
+                    " throughput=" + client.getThroughput() + "/>");
             client.reset();
         }
     }
@@ -184,14 +183,6 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
                 }
             } catch (InterruptedException e) {
             }
-        }
-    }
-
-    public void writeResult(String result) {
-        try {
-            getDataOutputStream().writeChars(result);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

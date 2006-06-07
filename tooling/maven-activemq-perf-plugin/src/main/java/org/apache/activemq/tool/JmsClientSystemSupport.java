@@ -54,7 +54,7 @@ public abstract class JmsClientSystemSupport {
         report.setTestSettings(getSettings());
         report.startGenerateReport();
 
-        performanceSampler.setDataOutputStream(report.getDataOutputStream());
+        performanceSampler.setWriter(report.getWriter());
 
         clientThreadGroup = new ThreadGroup(getThreadGroupName());
         for (int i=0; i<getNumClients(); i++) {
