@@ -39,7 +39,7 @@ public class ConsumerMojo
     private String duration;
 
     /**
-     * @parameter expression="${sampler.interval}" default-value="5000"
+     * @parameter expression="${sampler.interval}" default-value="1000"
      * @required
      */
     private String interval;
@@ -75,7 +75,7 @@ public class ConsumerMojo
     private String sessAckMode;
 
     /**
-     * @parameter expression="${consumer.destName}" default-value="topic://FOO.BAR.TEST"
+     * @parameter expression="${consumer.destName}" default-value="topic://TEST.PERFORMANCE.FOO.BAR"
      * @required
      */
     private String destName;
@@ -105,7 +105,7 @@ public class ConsumerMojo
     private String asyncRecv;
 
     /**
-     * @parameter expression="${consumer.recvCount}" default-value="1000"
+     * @parameter expression="${consumer.recvCount}" default-value="1000000"
      * @required
      */
     private String recvCount;
@@ -142,13 +142,13 @@ public class ConsumerMojo
     private String optimDispatch;
 
     /**
-     * @parameter expression="${factory.prefetchQueue}" default-value="10"
+     * @parameter expression="${factory.prefetchQueue}" default-value="5000"
      * @required
      */
     private String prefetchQueue;
 
     /**
-     * @parameter expression="${factory.prefetchTopic}" default-value="10"
+     * @parameter expression="${factory.prefetchTopic}" default-value="5000"
      * @required
      */
     private String prefetchTopic;
@@ -160,13 +160,13 @@ public class ConsumerMojo
     private String useRetroactive;
 
     /**
-     * @parameter expression="${sysTest.numClients}" default-value="5"
+     * @parameter expression="${sysTest.numClients}" default-value="1"
      * @required
      */
     private String numClients;
 
     /**
-     * @parameter expression="${sysTest.totalDests}" default-value="5"
+     * @parameter expression="${sysTest.totalDests}" default-value="1"
      * @required
      */
     private String totalDests;
@@ -195,37 +195,37 @@ public class ConsumerMojo
     }
 
     public String[] createArgument() {
-        String[] options = new String[25];
-
-        options[0] = "sampler.duration=" + duration;     // 1 min
-        options[1] = "sampler.interval=" + interval;      // 5 secs
-        options[2] = "sampler.rampUpTime=" + rampUpTime;   // 10 secs
-        options[3] = "sampler.rampDownTime=" + rampDownTime; // 10 secs
-
-        options[4] = "consumer.spiClass=" + spiClass;
-        options[5] = "consumer.sessTransacted=" + sessTransacted;
-        options[6] = "consumer.sessAckMode=" + sessAckMode;
-        options[7] = "consumer.destName=" + destName;
-        options[8] = "consumer.destCount=" + destCount;
-        options[9] = "consumer.destComposite=" + destComposite;
-
-        options[10] = "consumer.durable=" + durable;
-        options[11] = "consumer.asyncRecv=" + asyncRecv;
-        options[12] = "consumer.recvCount=" + recvCount;     // 1000 messages
-        options[13] = "consumer.recvDuration=" + duration; // use sampler.duration.
-        options[14] = "consumer.recvType=" + recvType;
-
-        options[15] = "factory.brokerUrl=" + brokerUrl;
-        options[16] = "factory.optimAck=" + optimAck;
-        options[17] = "factory.optimDispatch=" + optimDispatch;
-        options[18] = "factory.prefetchQueue=" + prefetchQueue;
-        options[19] = "factory.prefetchTopic=" + prefetchTopic;
-        options[20] = "factory.useRetroactive=" + useRetroactive;
-
-        options[21] = "sysTest.numClients=" + numClients;
-        options[22] = "sysTest.totalDests=" + totalDests;
-        options[23] = "sysTest.destDistro=" + destDistro;
-        options[24] = "sysTest.reportDirectory=" + reportDirectory;
+        String[] options = {
+            "sampler.duration=" + duration, 
+            "sampler.interval=" + interval,    
+            "sampler.rampUpTime=" + rampUpTime,   
+            "sampler.rampDownTime=" + rampDownTime, 
+    
+            "consumer.spiClass=" + spiClass,
+            "consumer.sessTransacted=" + sessTransacted,
+            "consumer.sessAckMode=" + sessAckMode,
+            "consumer.destName=" + destName,
+            "consumer.destCount=" + destCount,
+            "consumer.destComposite=" + destComposite,
+    
+            "consumer.durable=" + durable,
+            "consumer.asyncRecv=" + asyncRecv,
+            "consumer.recvCount=" + recvCount,   
+            "consumer.recvDuration=" + duration, 
+            "consumer.recvType=" + recvType,
+    
+            "factory.brokerUrl=" + brokerUrl,
+            "factory.optimAck=" + optimAck,
+            "factory.optimDispatch=" + optimDispatch,
+            "factory.prefetchQueue=" + prefetchQueue,
+            "factory.prefetchTopic=" + prefetchTopic,
+            "factory.useRetroactive=" + useRetroactive,
+    
+            "sysTest.numClients=" + numClients,
+            "sysTest.totalDests=" + totalDests,
+            "sysTest.destDistro=" + destDistro,
+            "sysTest.reportDirectory=" + reportDirectory
+        };
 
         return options;
     }
