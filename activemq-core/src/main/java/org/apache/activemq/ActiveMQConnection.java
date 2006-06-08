@@ -118,7 +118,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
     private RedeliveryPolicy redeliveryPolicy;
     private boolean disableTimeStampsByDefault = false;
-    private boolean onSendPrepareMessageBody = true;
     private boolean optimizedMessageDispatch = true;
     private boolean copyMessageOnSend = true;
     private boolean useCompression = false;
@@ -797,24 +796,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setCloseTimeout(int closeTimeout){
         this.closeTimeout=closeTimeout;
-    }
-
-
-    /**
-     * 
-     * @return Returns the onSendPrepareMessageBody.
-     */
-    public boolean isOnSendPrepareMessageBody() {
-        return onSendPrepareMessageBody;
-    }
-
-    /**
-     * 
-     * @param onSendPrepareMessageBody
-     *            The onSendPrepareMessageBody to set.
-     */
-    public void setOnSendPrepareMessageBody(boolean onSendPrepareMessageBody) {
-        this.onSendPrepareMessageBody = onSendPrepareMessageBody;
     }
 
     /**

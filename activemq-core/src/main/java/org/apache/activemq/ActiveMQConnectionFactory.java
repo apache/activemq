@@ -74,7 +74,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
 
     private boolean disableTimeStampsByDefault = false;
-    private boolean onSendPrepareMessageBody = true;
     private boolean optimizedMessageDispatch = true;
     private boolean copyMessageOnSend = true;
     private boolean useCompression = false;
@@ -228,7 +227,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setPassword(password);
             connection.setPrefetchPolicy(getPrefetchPolicy());
             connection.setDisableTimeStampsByDefault(isDisableTimeStampsByDefault());
-            connection.setOnSendPrepareMessageBody(isOnSendPrepareMessageBody());
             connection.setOptimizedMessageDispatch(isOptimizedMessageDispatch());
             connection.setCopyMessageOnSend(isCopyMessageOnSend());
             connection.setUseCompression(isUseCompression());
@@ -413,7 +411,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("copyMessageOnSend", Boolean.toString(isCopyMessageOnSend()));
         props.setProperty("disableTimeStampsByDefault", Boolean.toString(isDisableTimeStampsByDefault()));
         props.setProperty("objectMessageSerializationDefered", Boolean.toString(isObjectMessageSerializationDefered()));
-        props.setProperty("onSendPrepareMessageBody", Boolean.toString(isOnSendPrepareMessageBody()));
         props.setProperty("optimizedMessageDispatch", Boolean.toString(isOptimizedMessageDispatch()));
         props.setProperty("password", getPassword());
         props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
@@ -424,14 +421,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("alwaysSessionAsync", Boolean.toString(isAlwaysSessionAsync()));
         props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
         
-    }
-
-    public boolean isOnSendPrepareMessageBody() {
-        return onSendPrepareMessageBody;
-    }
-
-    public void setOnSendPrepareMessageBody(boolean onSendPrepareMessageBody) {
-        this.onSendPrepareMessageBody = onSendPrepareMessageBody;
     }
 
     public boolean isUseCompression() {
