@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.active.JournalImpl;
+import org.apache.activeio.journal.active.JournalLockedException;
 import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
@@ -29,6 +30,8 @@ import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.journal.QuickJournalPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Factory class that can create PersistenceAdapter objects.
@@ -37,6 +40,10 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  */
 public class DefaultPersistenceAdapterFactory extends DataSourceSupport implements PersistenceAdapterFactory {
     
+    private static final int JOURNAL_LOCKED_WAIT_DELAY = 10*1000;
+
+    private static final Log log = LogFactory.getLog(DefaultPersistenceAdapterFactory.class);
+    
     private int journalLogFileSize = 1024*1024*20;
     private int journalLogFiles = 2;
     private TaskRunnerFactory taskRunnerFactory;
@@ -44,6 +51,7 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
     private boolean useJournal=true;
     private boolean useQuickJournal=false;
     private File journalArchiveDirectory;
+    private boolean failIfJournalIsLocked=false;
     private JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
     
     public PersistenceAdapter createPersistenceAdapter() throws IOException {
@@ -155,7 +163,22 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
      */
     protected void createJournal() throws IOException {
         File journalDir = new File(getDataDirectory(), "journal").getCanonicalFile();
-        journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize, getJournalArchiveDirectory());
+        if( failIfJournalIsLocked ) {
+            journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize, getJournalArchiveDirectory());
+        } else {
+            while( true ) {
+                try {
+                    journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize, getJournalArchiveDirectory());
+                    break;
+                } catch (JournalLockedException e) {
+                    log.info("Journal is locked... waiting "+(JOURNAL_LOCKED_WAIT_DELAY/1000)+" seconds for the journal to be unlocked.");
+                    try {
+                        Thread.sleep(JOURNAL_LOCKED_WAIT_DELAY);
+                    } catch (InterruptedException e1) {
+                    }
+                }
+            }
+        }
     }
 
 }
