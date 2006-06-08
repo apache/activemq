@@ -30,11 +30,16 @@ import org.apache.activeio.journal.active.JournalImpl;
  */
 public class JournalPerfTool extends JournalPerfToolSupport {
 	
-	private int logFileSize = 1024*1000*5;
+	private int logFileSize = 1024*1024*50;
     private int logFileCount = 4;
 	
 	public static void main(String[] args) throws Exception {
 		JournalPerfTool tool = new JournalPerfTool();
+        tool.syncFrequency=15;
+        tool.workerIncrement=50;
+        tool.workerThinkTime=0;
+        tool.verbose=false;
+
 		if( args.length > 0 ) {
 			tool.journalDirectory = new File(args[0]);
 		}
