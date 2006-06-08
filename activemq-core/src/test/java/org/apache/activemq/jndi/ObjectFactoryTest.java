@@ -33,7 +33,6 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         factory.setCopyMessageOnSend(false);
         factory.setDisableTimeStampsByDefault(true);
         factory.setObjectMessageSerializationDefered(true);
-        factory.setOnSendPrepareMessageBody(false);
         factory.setOptimizedMessageDispatch(false);
         factory.setPassword("pass");
         factory.setUseAsyncSend(true);
@@ -56,7 +55,6 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         assertEquals(factory.isCopyMessageOnSend(), temp.isCopyMessageOnSend());
         assertEquals(factory.isDisableTimeStampsByDefault(), temp.isDisableTimeStampsByDefault());
         assertEquals(factory.isObjectMessageSerializationDefered(), temp.isObjectMessageSerializationDefered());
-        assertEquals(factory.isOnSendPrepareMessageBody(), temp.isOnSendPrepareMessageBody());
         assertEquals(factory.isOptimizedMessageDispatch(), temp.isOptimizedMessageDispatch());
         assertEquals(factory.getPassword(), temp.getPassword());
         assertEquals(factory.isUseAsyncSend(), temp.isUseAsyncSend());
