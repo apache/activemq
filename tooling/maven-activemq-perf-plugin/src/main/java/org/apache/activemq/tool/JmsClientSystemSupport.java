@@ -38,7 +38,7 @@ public abstract class JmsClientSystemSupport {
     protected Properties jmsClientSettings = new Properties();
     protected ThreadGroup clientThreadGroup;
     protected PerfMeasurementTool performanceSampler;
-    protected String reportDirectory;
+    protected String reportDirectory = "";
 
     protected int numClients = 1;
     protected int totalDests = 1;

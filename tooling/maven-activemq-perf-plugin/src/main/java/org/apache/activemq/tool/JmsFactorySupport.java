@@ -62,10 +62,12 @@ public class JmsFactorySupport {
 
     public void setJmsFactorySettings(Properties jmsFactorySettings) {
         this.jmsFactorySettings = jmsFactorySettings;
-        try {
-            spiFactory.configureConnectionFactory(jmsFactory, jmsFactorySettings);
-        } catch (Exception e) {
-            log.warn(e);
+        if (spiFactory != null) {
+            try {
+                spiFactory.configureConnectionFactory(jmsFactory, jmsFactorySettings);
+            } catch (Exception e) {
+                log.warn(e);
+            }
         }
     }
 
@@ -79,10 +81,14 @@ public class JmsFactorySupport {
             String val = settings.getProperty(key);
             setProperty(key, val);
         }
-        try {
-            spiFactory.configureConnectionFactory(jmsFactory, jmsFactorySettings);
-        } catch (Exception e) {
-            log.warn(e);
+
+        if (spiFactory != null) {
+            try {
+                spiFactory.configureConnectionFactory(jmsFactory, jmsFactorySettings);
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.warn(e);
+            }
         }
     }
 

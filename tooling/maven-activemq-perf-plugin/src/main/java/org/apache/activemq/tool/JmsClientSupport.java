@@ -29,6 +29,8 @@ import java.util.Properties;
 public class JmsClientSupport extends JmsFactorySupport {
     private static final Log log = LogFactory.getLog(JmsClientSupport.class);
 
+    public static final String DEFAULT_SPI_CLASS = "org.apache.activemq.tool.spi.ActiveMQPojoSPI";
+
     private static final String PREFIX_CONFIG_CLIENT = "client.";
     public  static final String SESSION_AUTO_ACKNOWLEDGE    = "autoAck";
     public  static final String SESSION_CLIENT_ACKNOWLEDGE  = "clientAck";
@@ -40,7 +42,7 @@ public class JmsClientSupport extends JmsFactorySupport {
     protected Session       jmsSession;
 
     // Client settings
-    protected String  spiClass;
+    protected String  spiClass = DEFAULT_SPI_CLASS;
     protected boolean sessTransacted = false;
     protected String  sessAckMode    = SESSION_AUTO_ACKNOWLEDGE;
     protected String  destName       = "TEST.FOO";
