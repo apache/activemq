@@ -18,6 +18,7 @@ package org.apache.activemq.store.journal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -134,7 +135,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public Set getDestinations() {
-        Set destinations = longTermPersistence.getDestinations();
+        Set destinations = new HashSet(longTermPersistence.getDestinations());
         destinations.addAll(queues.keySet());
         destinations.addAll(topics.keySet());
         return destinations;
