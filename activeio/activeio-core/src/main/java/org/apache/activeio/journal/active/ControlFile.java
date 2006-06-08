@@ -73,14 +73,14 @@ final public class ControlFile {
         synchronized (set) {
             if (lock == null) {
                 if (!set.add(canonicalPath)) {
-                    throw new IOException("Journal is already opened by this application.");
+                    throw new JournalLockedException("Journal is already opened by this application.");
                 }
 
                 if( !brokenFileLock ) {
                     lock = channel.tryLock();
                     if (lock == null) {
                         set.remove(canonicalPath);
-                        throw new IOException("Journal is already opened by another application");
+                        throw new JournalLockedException("Journal is already opened by another application");
                     }
                 }
             }
