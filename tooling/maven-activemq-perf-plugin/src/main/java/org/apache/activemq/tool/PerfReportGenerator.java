@@ -42,7 +42,8 @@ public class PerfReportGenerator {
 
     public void startGenerateReport() {
 
-        setReportDirectory(this.getTestSettings().getProperty("sysTest.reportDirectory"));
+        setReportDirectory(this.getTestSettings().getProperty("sysTest.reportDirectory", ""));
+
 
         File reportDir = new File(getReportDirectory());
 
