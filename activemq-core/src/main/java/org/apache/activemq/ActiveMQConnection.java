@@ -759,6 +759,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
+     * Sets whether or not timestamps on messages should be disabled or not. If you disable them it adds a small performance boost.
      * 
      * @param timeStampsDisableByDefault
      *            The timeStampsDisableByDefault to set.
@@ -793,7 +794,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
 
     /**
-     * @param closeTimeout The closeTimeout to set.
+     * Sets the timeout before a close is considered complete. Normally a
+     * close() on a connection waits for confirmation from the broker; this
+     * allows that operation to timeout to save the client hanging if there is
+     * no broker
+     * 
+     * @param closeTimeout
+     *            The closeTimeout to set.
      */
     public void setCloseTimeout(int closeTimeout){
         this.closeTimeout=closeTimeout;
@@ -1372,6 +1379,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
 
     /**
+     * Enables an optimised acknowledgement mode where messages are acknowledged in batches rather than individually
+     * 
      * @param optimizeAcknowledge The optimizeAcknowledge to set.
      */
     public void setOptimizeAcknowledge(boolean optimizeAcknowledge){
@@ -1577,6 +1586,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         return useCompression;
     }
 
+    /**
+     * Enables the use of compression of the message bodies
+     * 
+     * @param useCompression
+     */
     public void setUseCompression(boolean useCompression) {
         this.useCompression = useCompression;
     }    
@@ -1803,6 +1817,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         }
     }
 
+    /**
+     * Should a JMS message be copied to a new JMS Message object as part of the
+     * send() method in JMS. This is enabled by default to be compliant with the
+     * JMS specification. You can disable it if you do not mutate JMS messages
+     * after they are sent for a performance boost
+     * 
+     * @param copyMessageOnSend
+     */
     public void setCopyMessageOnSend(boolean copyMessageOnSend) {
         this.copyMessageOnSend = copyMessageOnSend;
     }
