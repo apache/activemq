@@ -153,7 +153,7 @@ abstract public class JournalPerfToolSupport implements JournalEventListener {
     
 	public void overflowNotification(RecordLocation safeLocation) {
 		try {
-			System.out.println("Mark set: "+safeLocation);
+			// System.out.println("Mark set: "+safeLocation);
 			journal.setMark(safeLocation, false);
 		} catch (InvalidRecordLocationException e) {
 			e.printStackTrace();
