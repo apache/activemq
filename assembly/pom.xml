@@ -34,7 +34,13 @@
   <packaging>jar</packaging>
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
-  
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk/assembly</connection>
+    <developerConnection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk/assembly</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/assembly</url>
+  </scm> 
+
   <dependencies>
     
     <!-- activemq -->
