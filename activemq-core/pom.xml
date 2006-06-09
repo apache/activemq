@@ -350,6 +350,10 @@
       </activation>
       <dependencies>
         <dependency>
+          <groupId>activesoap</groupId>
+          <artifactId>jaxp-api</artifactId>
+        </dependency>
+        <dependency>
           <groupId>mx4j</groupId>
           <artifactId>mx4j</artifactId>
         </dependency>
