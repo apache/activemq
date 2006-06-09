@@ -302,6 +302,15 @@
           </execution>
         </executions>
       </plugin>
+      <!-- plugin>
+        <groupId>incubator-activemq</groupId>
+        <artifactId>maven-activemq-plugin</artifactId>
+        <version>${pom.version}</version>
+        <configuration>
+          <configFile>${basedir}/src/release/conf/activemq.xml</configFile>
+          <!-- url>broker:(tcp://localhost:61616)?useJmx=false</url -->
+        <!--/configuration>
+      </plugin -->
     </plugins>
   </build>
 

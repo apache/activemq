@@ -12,9 +12,9 @@
 
 
     <groupId>incubator-activemq</groupId>
-    <artifactId>maven-activemq-memtest-plugin</artifactId>
+    <artifactId>maven-activemq-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <name>ActiveMQ :: Memory Usage Test Plugin</name>
+    <name>ActiveMQ :: StartUp Plugin</name>
 
     <dependencies>
         <dependency>
