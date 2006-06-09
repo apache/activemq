@@ -560,8 +560,10 @@ public class TransactionContext implements XAResource {
                 if( l==null ) {
                     l = new ArrayList(3);
                     endedXATransactionContexts.put(transactionId, l);
-                }  
                 l.add(this);
+                } else if (!l.contains(this)) {
+                    l.add(this);
+                }
             }
 
             // dis-associate
