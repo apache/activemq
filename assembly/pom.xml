@@ -308,8 +308,8 @@
         <version>${pom.version}</version>
         <configuration>
           <configFile>${basedir}/src/release/conf/activemq.xml</configFile>
-          <!-- url>broker:(tcp://localhost:61616)?useJmx=false</url -->
-        <!--/configuration>
+          <url>broker:(tcp://localhost:61616)?useJmx=false</url>
+        </configuration>
       </plugin -->
     </plugins>
   </build>
