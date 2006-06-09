@@ -73,7 +73,7 @@ public class ProducerMojo
     private String sessAckMode;
 
     /**
-     * @parameter expression="${consumer.destName}" default-value="topic://TEST.PERFORMANCE.FOO.BAR"
+     * @parameter expression="${producer.destName}" default-value="topic://TEST.PERFORMANCE.FOO.BAR"
      * @required
      */
     private String destName;

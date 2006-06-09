@@ -34,7 +34,6 @@ public class ActiveMQPojoSPI implements SPIConnectionFactory {
     public static final String KEY_COPY_MSG_ON_SEND  = "factory.copyMsgOnSend";
     public static final String KEY_DISABLE_TIMESTAMP = "factory.disableTimestamp";
     public static final String KEY_DEFER_OBJ_SERIAL  = "factory.deferObjSerial";
-    public static final String KEY_ON_SEND_PREP_MSG  = "factory.onSendPrepMsg";
     public static final String KEY_OPTIM_ACK         = "factory.optimAck";
     public static final String KEY_OPTIM_DISPATCH    = "factory.optimDispatch";
     public static final String KEY_PREFETCH_QUEUE    = "factory.prefetchQueue";
@@ -105,11 +104,6 @@ public class ActiveMQPojoSPI implements SPIConnectionFactory {
         setting = settings.getProperty(KEY_DEFER_OBJ_SERIAL);
         if (setting != null && setting.length() > 0) {
             factory.setObjectMessageSerializationDefered(Boolean.getBoolean(setting));
-        }
-
-        setting = settings.getProperty(KEY_ON_SEND_PREP_MSG);
-        if (setting != null && setting.length() > 0) {
-            factory.setOnSendPrepareMessageBody(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_OPTIM_ACK);
