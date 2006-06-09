@@ -20,6 +20,10 @@
                 <groupId>incubator-activemq</groupId>
                 <artifactId>maven-activemq-perf-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>incubator-activemq</groupId>
+                <artifactId>maven-activemq-memtest-plugin</artifactId>
+            </plugin>            
         </plugins>
     </build>
 
