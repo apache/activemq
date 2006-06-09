@@ -125,7 +125,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected boolean asyncDispatch = false;
     protected boolean alwaysSessionAsync=true;
     private boolean useAsyncSend = false;
-    private boolean optimizeAcknowledge = true;
+    private boolean optimizeAcknowledge = false;
     private boolean useRetroactiveConsumer;
     private int closeTimeout = 15000;
     
