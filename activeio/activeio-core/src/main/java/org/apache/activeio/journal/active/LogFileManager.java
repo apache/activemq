@@ -415,7 +415,7 @@ final public class LogFileManager {
             // Are we overflowing into next logFile?
             if (offset >= ri.getLogFileState().getAppendOffset()) {
                 LogFileNode nextActive = ri.getLogFileState().getNextActive();
-                if (nextActive == null) {
+                if (nextActive == null || nextActive.getId() <= ri.getLogFileState().getId() ) {
                     return null;
                 }
                 logFileId = nextActive.getId();
