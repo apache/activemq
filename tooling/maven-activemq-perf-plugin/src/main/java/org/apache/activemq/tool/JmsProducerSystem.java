@@ -20,11 +20,29 @@ import javax.jms.JMSException;
 import java.util.Properties;
 
 public class JmsProducerSystem extends JmsClientSystemSupport {
-    public void runJmsClient(String clientName, Properties clientSettings) {
+
+    public String getReportName() {
+        if (reportName == null) {
+            return "JmsProducer_ClientCount" + getNumClients() + "_DestCount" + getTotalDests() + "_" + getDestDistro() + ".xml";
+        } else {
+            return reportName;
+        }
+    }
+
+    public String getClientName() {
+        if (clientName == null) {
+            return "JmsProducer";
+        } else {
+            return clientName;
+        }
+    }
+
+    protected void runJmsClient(String clientName, Properties clientSettings) {
         PerfMeasurementTool sampler = getPerformanceSampler();
 
         JmsProducerClient producer = new JmsProducerClient();
         producer.setSettings(clientSettings);
+        producer.setClientName(clientName);
 
         if (sampler != null) {
             sampler.registerClient(producer);
@@ -39,16 +57,20 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
         }
     }
 
-    public String getClientName() {
-        return "JMS Producer: ";
-    }
-
-    public String getThreadName() {
+    protected String getThreadName() {
         return "JMS Producer Thread: ";
     }
 
-    public String getThreadGroupName() {
+    protected String getThreadGroupName() {
         return "JMS Producer Thread Group";
+    }
+
+    protected String getDestCountKey() {
+        return "producer.destCount";
+    }
+
+    protected String getDestIndexKey() {
+        return "producer.destIndex";
     }
 
     public static void main(String[] args) {

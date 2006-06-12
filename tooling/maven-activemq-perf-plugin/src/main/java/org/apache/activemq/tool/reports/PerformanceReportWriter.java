@@ -14,15 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool;
+package org.apache.activemq.tool.reports;
 
 import java.util.Properties;
 
-public interface PerfMeasurable {
-    public void reset();
-    public String getClientName();
-    public long getThroughput();
+public interface PerformanceReportWriter {
+    public void setSettings(Properties settings);
     public Properties getSettings();
-    public void setPerfEventListener(PerfEventListener listener);
-    public PerfEventListener getPerfEventListener();
+    public void openReportWriter();
+    public void closeReportWriter();
+    public void writeInfo(String info);
+    public void writePerfData(String data);
+    public void writeProperties(String header, Properties props);
+    public void writeProperties(Properties props);
 }
