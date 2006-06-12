@@ -135,7 +135,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                     log.warn("Outbound transport to " + remoteBrokerName +  " interrupted ...");
                     clearDownSubscriptions();
                     try{
-                        localBroker.oneway(remoteConnectionInfo.createRemoveCommand());
+                        localBroker.oneway(localConnectionInfo.createRemoveCommand());
                     }catch(IOException e){
                         log.warn("Caught exception from local start",e);
                     }
