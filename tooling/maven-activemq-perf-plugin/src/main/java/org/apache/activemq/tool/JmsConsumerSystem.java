@@ -20,12 +20,30 @@ import javax.jms.JMSException;
 import java.util.Properties;
 
 public class JmsConsumerSystem extends JmsClientSystemSupport {
-    public void runJmsClient(String clientName, Properties clientSettings) {
+
+    public String getReportName() {
+        if (reportName == null) {
+            return "JmsConsumer_ClientCount" + getNumClients() + "_DestCount" + getTotalDests() + "_" + getDestDistro() + ".xml";
+        } else {
+            return reportName;
+        }
+    }
+
+    public String getClientName() {
+        if (clientName == null) {
+            return "JmsConsumer";
+        } else {
+            return clientName;
+        }
+    }
+
+    protected void runJmsClient(String clientName, Properties clientSettings) {
         PerfMeasurementTool sampler = getPerformanceSampler();
 
         JmsConsumerClient consumer = new JmsConsumerClient();
         consumer.setSettings(clientSettings);
         consumer.setConsumerName(clientName); // For durable subscribers
+        consumer.setClientName(clientName);
 
         if (sampler != null) {
             sampler.registerClient(consumer);
@@ -39,16 +57,20 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
         }
     }
 
-    public String getClientName() {
-        return "JMS Consumer: ";
-    }
-
-    public String getThreadName() {
+    protected String getThreadName() {
         return "JMS Consumer Thread: ";
     }
 
-    public String getThreadGroupName() {
+    protected String getThreadGroupName() {
         return "JMS Consumer Thread Group";
+    }
+
+    protected String getDestCountKey() {
+        return "consumer.destCount";
+    }
+
+    protected String getDestIndexKey() {
+        return "consumer.destIndex";
     }
 
     public static void main(String[] args) throws JMSException {

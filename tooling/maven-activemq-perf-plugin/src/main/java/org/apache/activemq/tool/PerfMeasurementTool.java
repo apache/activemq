@@ -19,11 +19,12 @@ package org.apache.activemq.tool;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+
+import org.apache.activemq.tool.reports.PerformanceReportWriter;
 
 public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public static final String PREFIX_CONFIG_SYSTEM_TEST = "sampler.";
@@ -37,7 +38,7 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     private AtomicBoolean start = new AtomicBoolean(false);
     private AtomicBoolean stop  = new AtomicBoolean(false);
     private AtomicBoolean isRunning = new AtomicBoolean(false);
-    private PrintWriter writer = null;
+    private PerformanceReportWriter perfWriter = null;
     private Properties samplerSettings = new Properties();
 
     private List perfClients = new ArrayList();
@@ -62,12 +63,12 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
         ReflectionUtil.configureClass(this, samplerSettings);
     }
 
-    public PrintWriter getWriter() {
-        return writer;
+    public PerformanceReportWriter getPerfWriter() {
+        return perfWriter;
     }
 
-    public void setWriter(PrintWriter writer) {
-        this.writer = writer;
+    public void setPerfWriter(PerformanceReportWriter writer) {
+        this.perfWriter = writer;
     }
 
     public long getDuration() {
@@ -169,8 +170,9 @@ public class PerfMeasurementTool implements PerfEventListener, Runnable {
     public void sampleClients() {
         for (Iterator i = perfClients.iterator(); i.hasNext();) {
             PerfMeasurable client = (PerfMeasurable) i.next();
-            getWriter().println("<sample index='" + sampleIndex + "' clientNumber='" +  client.getClientNumber() 
-                    + "' name='" + client.getClientName() + "' throughput='" + client.getThroughput() + "'/>");
+            if (perfWriter != null) {
+                perfWriter.writePerfData("index=" + sampleIndex + ",clientName=" + client.getClientName() + ",throughput=" + client.getThroughput());
+            }
             client.reset();
         }
     }

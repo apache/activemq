@@ -18,6 +18,9 @@ package org.apache.activemq.tool;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.activemq.tool.reports.VerbosePerfReportWriter;
+import org.apache.activemq.tool.reports.PerformanceReportWriter;
+import org.apache.activemq.tool.reports.XmlFilePerfReportWriter;
 
 import java.util.Properties;
 import java.util.Iterator;
@@ -29,17 +32,20 @@ public abstract class JmsClientSystemSupport {
     public static final String DEST_DISTRO_ALL    = "all";    // Each client will send/receive to all destination;
     public static final String DEST_DISTRO_EQUAL  = "equal";  // Equally divide the number of destinations to the number of clients
     public static final String DEST_DISTRO_DIVIDE = "divide"; // Divide the destination among the clients, even if some have more destination than others
-
-    protected static final String KEY_CLIENT_DEST_COUNT = "client.destCount";
-    protected static final String KEY_CLIENT_DEST_INDEX = "client.destIndex";
+    public static final String REPORT_VERBOSE  = "verbose";
+    public static final String REPORT_XML_FILE = "xml";
 
     protected Properties sysTestSettings   = new Properties();
     protected Properties samplerSettings   = new Properties();
     protected Properties jmsClientSettings = new Properties();
     protected ThreadGroup clientThreadGroup;
     protected PerfMeasurementTool performanceSampler;
-    protected String reportDirectory = "";
 
+    protected String reportType = REPORT_XML_FILE;
+    protected String reportDirectory = "./";
+    protected String reportName = null;
+
+    protected String clientName = null;
     protected int numClients = 1;
     protected int totalDests = 1;
     protected String destDistro = DEST_DISTRO_ALL;
@@ -49,12 +55,11 @@ public abstract class JmsClientSystemSupport {
         performanceSampler = new PerfMeasurementTool();
         performanceSampler.setSamplerSettings(samplerSettings);
 
-        PerfReportGenerator report = new PerfReportGenerator();
-        report.setReportName(this.getClass().getName());
-        report.setTestSettings(getSettings());
-        report.startGenerateReport();
+        PerformanceReportWriter writer = createPerfWriter();
+        performanceSampler.setPerfWriter(writer);
 
-        performanceSampler.setWriter(report.getWriter());
+        writer.openReportWriter();
+        writer.writeProperties("testProperties", getSettings());
 
         clientThreadGroup = new ThreadGroup(getThreadGroupName());
         for (int i=0; i<getNumClients(); i++) {
@@ -75,66 +80,7 @@ public abstract class JmsClientSystemSupport {
         performanceSampler.startSampler();
         performanceSampler.waitForSamplerToFinish(0);
 
-        report.stopGenerateReport();
-    }
-
-    protected void distributeDestinations(String distroType, int clientIndex, int numClients, int numDests, Properties clientSettings) {
-        if (distroType.equalsIgnoreCase(DEST_DISTRO_ALL)) {
-            clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(numDests));
-            clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, "0");
-        } else if (distroType.equalsIgnoreCase(DEST_DISTRO_EQUAL)) {
-            int destPerClient = (numDests / numClients);
-            // There are equal or more destinations per client
-            if (destPerClient > 0) {
-                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(destPerClient));
-                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(destPerClient * clientIndex));
-
-            // If there are more clients than destinations, share destinations per client
-            } else {
-                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, "1"); // At most one destination per client
-                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(clientIndex % numDests));
-            }
-        } else if (distroType.equalsIgnoreCase(DEST_DISTRO_DIVIDE)) {
-            int destPerClient = (numDests / numClients);
-            // There are equal or more destinations per client
-            if (destPerClient > 0) {
-                int remain = numDests % numClients;
-                int nextIndex;
-                if (clientIndex < remain) {
-                    destPerClient++;
-                    nextIndex = clientIndex * destPerClient;
-                } else {
-                    nextIndex = (clientIndex * destPerClient) + remain;
-                }
-
-                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(destPerClient));
-                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(nextIndex));
-
-            // If there are more clients than destinations, share destinations per client
-            } else {
-                clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, "1"); // At most one destination per client
-                clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, String.valueOf(clientIndex % numDests));
-            }
-
-        // Send to all for unknown behavior
-        } else {
-            clientSettings.setProperty(KEY_CLIENT_DEST_COUNT, String.valueOf(numDests));
-            clientSettings.setProperty(KEY_CLIENT_DEST_INDEX, "0");
-        }
-    }
-
-    public abstract void runJmsClient(String clientName, Properties clientSettings);
-
-    public String getClientName() {
-        return "JMS Client: ";
-    }
-
-    public String getThreadName() {
-        return "JMS Client Thread: ";
-    }
-
-    public String getThreadGroupName() {
-        return "JMS Clients Thread Group";
+        writer.closeReportWriter();
     }
 
     public PerfMeasurementTool getPerformanceSampler() {
@@ -227,5 +173,103 @@ public abstract class JmsClientSystemSupport {
 
     public void setTotalDests(int totalDests) {
         this.totalDests = totalDests;
+    }
+
+    public String getReportName() {
+        if (reportName == null) {
+            return "clientPerformanceReport.xml";
+        } else {
+            return reportName;
+        }
+    }
+
+    public void setReportName(String reportName) {
+        this.reportName = reportName;
+    }
+
+    public String getClientName() {
+        if (clientName == null) {
+            return "JMS Client: ";
+        } else {
+            return clientName;
+        }
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    protected PerformanceReportWriter createPerfWriter() {
+        if (reportType.equalsIgnoreCase(REPORT_XML_FILE)) {
+            return new XmlFilePerfReportWriter(getReportDirectory(), getReportName());
+        } else if (reportType.equalsIgnoreCase(REPORT_VERBOSE)) {
+            return new VerbosePerfReportWriter();
+        } else {
+            // Use verbose if unknown report type
+            return new VerbosePerfReportWriter();
+        }
+    }
+
+    protected void distributeDestinations(String distroType, int clientIndex, int numClients, int numDests, Properties clientSettings) {
+        if (distroType.equalsIgnoreCase(DEST_DISTRO_ALL)) {
+            clientSettings.setProperty(getDestCountKey(), String.valueOf(numDests));
+            clientSettings.setProperty(getDestIndexKey(), "0");
+        } else if (distroType.equalsIgnoreCase(DEST_DISTRO_EQUAL)) {
+            int destPerClient = (numDests / numClients);
+            // There are equal or more destinations per client
+            if (destPerClient > 0) {
+                clientSettings.setProperty(getDestCountKey(), String.valueOf(destPerClient));
+                clientSettings.setProperty(getDestIndexKey(), String.valueOf(destPerClient * clientIndex));
+
+            // If there are more clients than destinations, share destinations per client
+            } else {
+                clientSettings.setProperty(getDestCountKey(), "1"); // At most one destination per client
+                clientSettings.setProperty(getDestIndexKey(), String.valueOf(clientIndex % numDests));
+            }
+        } else if (distroType.equalsIgnoreCase(DEST_DISTRO_DIVIDE)) {
+            int destPerClient = (numDests / numClients);
+            // There are equal or more destinations per client
+            if (destPerClient > 0) {
+                int remain = numDests % numClients;
+                int nextIndex;
+                if (clientIndex < remain) {
+                    destPerClient++;
+                    nextIndex = clientIndex * destPerClient;
+                } else {
+                    nextIndex = (clientIndex * destPerClient) + remain;
+                }
+
+                clientSettings.setProperty(getDestCountKey(), String.valueOf(destPerClient));
+                clientSettings.setProperty(getDestIndexKey(), String.valueOf(nextIndex));
+
+            // If there are more clients than destinations, share destinations per client
+            } else {
+                clientSettings.setProperty(getDestCountKey(), "1"); // At most one destination per client
+                clientSettings.setProperty(getDestIndexKey(), String.valueOf(clientIndex % numDests));
+            }
+
+        // Send to all for unknown behavior
+        } else {
+            clientSettings.setProperty(getDestCountKey(), String.valueOf(numDests));
+            clientSettings.setProperty(getDestIndexKey(), "0");
+        }
+    }
+
+    protected abstract void runJmsClient(String clientName, Properties clientSettings);
+
+    protected String getThreadName() {
+        return "JMS Client Thread: ";
+    }
+
+    protected String getThreadGroupName() {
+        return "JMS Clients Thread Group";
+    }
+
+    protected String getDestCountKey() {
+        return "client.destCount";
+    }
+
+    protected String getDestIndexKey() {
+        return "client.destIndex";
     }
 }
