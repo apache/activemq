@@ -23,7 +23,7 @@ public class JmsProducerSystem extends JmsClientSystemSupport {
 
     public String getReportName() {
         if (reportName == null) {
-            return "JmsProducer_ClientCount" + getNumClients() + "_DestCount" + getTotalDests() + "_" + getDestDistro() + ".xml";
+            return "JmsProducer_Client" + getNumClients() + "_Dest" + getTotalDests() + "_" + getDestDistro() + ".xml";
         } else {
             return reportName;
         }

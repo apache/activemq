@@ -23,7 +23,7 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
 
     public String getReportName() {
         if (reportName == null) {
-            return "JmsConsumer_ClientCount" + getNumClients() + "_DestCount" + getTotalDests() + "_" + getDestDistro() + ".xml";
+            return "JmsConsumer_Client" + getNumClients() + "_Dest" + getTotalDests() + "_" + getDestDistro() + ".xml";
         } else {
             return reportName;
         }
@@ -42,7 +42,6 @@ public class JmsConsumerSystem extends JmsClientSystemSupport {
 
         JmsConsumerClient consumer = new JmsConsumerClient();
         consumer.setSettings(clientSettings);
-        consumer.setConsumerName(clientName); // For durable subscribers
         consumer.setClientName(clientName);
 
         if (sampler != null) {

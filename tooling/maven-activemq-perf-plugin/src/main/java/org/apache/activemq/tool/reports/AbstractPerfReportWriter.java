@@ -28,10 +28,12 @@ import java.util.Set;
 import java.util.Iterator;
 
 public abstract class AbstractPerfReportWriter implements PerformanceReportWriter {
-    public static final String KEY_SYS_TOTAL_TP      = "SystemTotalTP";
-    public static final String KEY_SYS_TOTAL_CLIENTS = "SystemTotalClients";
-    public static final String KEY_SYS_AVE_TP        = "SystemAveTP";
-    public static final String KEY_SYS_AVE_EMM_TP    = "SystemAveEMMTP";
+    public static final String KEY_SYS_TOTAL_TP          = "SystemTotalTP";
+    public static final String KEY_SYS_TOTAL_CLIENTS     = "SystemTotalClients";
+    public static final String KEY_SYS_AVE_TP            = "SystemAveTP";
+    public static final String KEY_SYS_AVE_EMM_TP        = "SystemAveEMMTP";
+    public static final String KEY_SYS_AVE_CLIENT_TP     = "SystemAveClientTP";
+    public static final String KEY_SYS_AVE_CLIENT_EMM_TP = "SystemAveClientEMMTP";
     public static final String KEY_MIN_CLIENT_TP = "MinClientTP";
     public static final String KEY_MAX_CLIENT_TP = "MaxClientTP";
     public static final String KEY_MIN_CLIENT_TOTAL_TP = "MinClientTotalTP";
@@ -175,6 +177,8 @@ public abstract class AbstractPerfReportWriter implements PerformanceReportWrite
         summary.put(KEY_SYS_TOTAL_CLIENTS, String.valueOf(clientCount));
         summary.put(KEY_SYS_AVE_TP, String.valueOf(systemAveTP));
         summary.put(KEY_SYS_AVE_EMM_TP, String.valueOf(systemAveEMMTP));
+        summary.put(KEY_SYS_AVE_CLIENT_TP, String.valueOf(systemAveTP / clientCount));
+        summary.put(KEY_SYS_AVE_CLIENT_EMM_TP, String.valueOf(systemAveEMMTP / clientCount));
         summary.put(KEY_MIN_CLIENT_TP, nameMinClientTP + "=" + minClientTP);
         summary.put(KEY_MAX_CLIENT_TP, nameMaxClientTP + "=" + maxClientTP);
         summary.put(KEY_MIN_CLIENT_TOTAL_TP, nameMinClientTotalTP + "=" + minClientTotalTP);

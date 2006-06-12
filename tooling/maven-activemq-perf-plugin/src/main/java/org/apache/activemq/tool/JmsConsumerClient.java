@@ -36,7 +36,6 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
 
     protected boolean durable = false;
     protected boolean asyncRecv = true;
-    protected String consumerName = "TestConsumerClient";
 
     protected long recvCount = 1000000;       // Receive a million messages by default
     protected long recvDuration = 5 * 60 * 1000; // Receive for 5 mins by default
@@ -151,7 +150,11 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
 
     public MessageConsumer createJmsConsumer(Destination dest) throws JMSException {
         if (isDurable()) {
-            jmsConsumer = getSession().createDurableSubscriber((Topic) dest, getConsumerName());
+            String clientName = getClientName();
+            if (clientName == null) {
+                clientName = "JmsConsumer";
+            }
+            jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName);
         } else {
             jmsConsumer = getSession().createConsumer(dest);
         }
@@ -160,7 +163,11 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
 
     public MessageConsumer createJmsConsumer(Destination dest, String selector, boolean noLocal) throws JMSException {
         if (isDurable()) {
-            jmsConsumer = getSession().createDurableSubscriber((Topic) dest, getConsumerName(), selector, noLocal);
+            String clientName = getClientName();
+            if (clientName == null) {
+                clientName = "JmsConsumer";
+            }
+            jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName, selector, noLocal);
         } else {
             jmsConsumer = getSession().createConsumer(dest, selector, noLocal);
         }
@@ -194,14 +201,6 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
 
     public void setAsyncRecv(boolean asyncRecv) {
         this.asyncRecv = asyncRecv;
-    }
-
-    public String getConsumerName() {
-        return consumerName;
-    }
-
-    public void setConsumerName(String consumerName) {
-        this.consumerName = consumerName;
     }
 
     public long getRecvCount() {
