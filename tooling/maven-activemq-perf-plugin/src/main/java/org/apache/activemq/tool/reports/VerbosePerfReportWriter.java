@@ -72,6 +72,8 @@ public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
         System.out.println("[PERF-SUMMARY] System Total Clients: " + summary.get(KEY_SYS_TOTAL_CLIENTS));
         System.out.println("[PERF-SUMMARY] System Average Throughput: " + summary.get(KEY_SYS_AVE_TP));
         System.out.println("[PERF-SUMMARY] System Average Throughput Excluding Min/Max: " + summary.get(KEY_SYS_AVE_EMM_TP));
+        System.out.println("[PERF-SUMMARY] System Average Client Throughput: " + summary.get(KEY_SYS_AVE_CLIENT_TP));
+        System.out.println("[PERF-SUMMARY] System Average Client Throughput Excluding Min/Max: " + summary.get(KEY_SYS_AVE_CLIENT_EMM_TP));
         System.out.println("[PERF-SUMMARY] Min Client Throughput Per Sample: " + summary.get(KEY_MIN_CLIENT_TP));
         System.out.println("[PERF-SUMMARY] Max Client Throughput Per Sample: " + summary.get(KEY_MAX_CLIENT_TP));
         System.out.println("[PERF-SUMMARY] Min Client Total Throughput: " + summary.get(KEY_MIN_CLIENT_TOTAL_TP));

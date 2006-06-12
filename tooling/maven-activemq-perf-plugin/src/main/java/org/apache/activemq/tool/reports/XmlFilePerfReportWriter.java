@@ -223,6 +223,14 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         System.out.println("System Average Throughput Excluding Min/Max: " + val);
         xmlFileWriter.println("<prop key='" + KEY_SYS_AVE_EMM_TP + "'>" + val + "</prop>");
 
+        val = (String)summary.get(KEY_SYS_AVE_CLIENT_TP);
+        System.out.println("System Average Client Throughput: " + val);
+        xmlFileWriter.println("<prop key='" + KEY_SYS_AVE_CLIENT_TP + "'>" + val + "</prop>");
+
+        val = (String)summary.get(KEY_SYS_AVE_CLIENT_EMM_TP);
+        System.out.println("System Average Client Throughput Excluding Min/Max: " + val);
+        xmlFileWriter.println("<prop key='" + KEY_SYS_AVE_CLIENT_EMM_TP + "'>" + val + "</prop>");
+
         val = (String)summary.get(KEY_MIN_CLIENT_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
