@@ -34,6 +34,12 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
     volatile private MessageReference messages[];
     private int maximumSize=100;
     private int tail=0;
+    
+    public SubscriptionRecoveryPolicy copy() {
+        FixedCountSubscriptionRecoveryPolicy rc = new  FixedCountSubscriptionRecoveryPolicy();
+        rc.setMaximumSize(maximumSize);
+        return rc;
+    }
 
     synchronized public boolean add(ConnectionContext context,MessageReference node) throws Exception{
         messages[tail++]=node;
@@ -109,4 +115,5 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
         }
         return (Message[]) result.toArray(new Message[result.size()]);
     }
+
 }
