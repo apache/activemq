@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.policy;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -74,6 +75,10 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
             result.add(lastImage.getMessage());
         }
         return (Message[])result.toArray(new Message[result.size()]);
+    }
+
+    public SubscriptionRecoveryPolicy copy() {
+        return new LastImageSubscriptionRecoveryPolicy();
     }
 
 }

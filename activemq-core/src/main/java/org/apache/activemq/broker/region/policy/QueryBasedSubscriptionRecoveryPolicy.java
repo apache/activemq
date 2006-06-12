@@ -55,7 +55,10 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     private IdGenerator idGenerator = new IdGenerator();
     private ProducerId producerId = createProducerId();
 
-    public QueryBasedSubscriptionRecoveryPolicy() {
+    public SubscriptionRecoveryPolicy copy() {
+        QueryBasedSubscriptionRecoveryPolicy rc = new QueryBasedSubscriptionRecoveryPolicy();
+        rc.setQuery(query);
+        return rc;
     }
 
     public boolean add(ConnectionContext context, MessageReference message) throws Exception {

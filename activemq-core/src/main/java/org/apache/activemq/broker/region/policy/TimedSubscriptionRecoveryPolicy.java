@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -66,6 +67,12 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
             gc();
         }
     };
+
+    public SubscriptionRecoveryPolicy copy() {
+        TimedSubscriptionRecoveryPolicy rc = new TimedSubscriptionRecoveryPolicy();
+        rc.setRecoverDuration(recoverDuration);
+        return rc;
+    }
 
     public boolean add(ConnectionContext context, MessageReference message) throws Exception {
         buffer.add(new TimestampWrapper(message, lastGCRun));

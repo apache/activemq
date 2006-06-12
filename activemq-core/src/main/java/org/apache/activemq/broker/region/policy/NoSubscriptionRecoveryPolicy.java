@@ -32,6 +32,12 @@ import org.apache.activemq.command.Message;
  */
 public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
+
+    public SubscriptionRecoveryPolicy copy() {
+        // This object is immutable
+        return this;
+    }
+
     public boolean add(ConnectionContext context, MessageReference node) throws Exception {
         return true;
     }

@@ -48,6 +48,13 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
     private int maximumSize = 100 * 64 * 1024;
     private boolean useSharedBuffer = true;
 
+    public SubscriptionRecoveryPolicy copy() {
+        FixedSizedSubscriptionRecoveryPolicy rc = new FixedSizedSubscriptionRecoveryPolicy();
+        rc.setMaximumSize(maximumSize);
+        rc.setUseSharedBuffer(useSharedBuffer);
+        return rc;
+    }
+
     public boolean add(ConnectionContext context, MessageReference message) throws Exception {
         buffer.add(message);
         return true;
@@ -125,4 +132,5 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
             return new DestinationBasedMessageList(maximumSize);
         }
     }
+
 }
