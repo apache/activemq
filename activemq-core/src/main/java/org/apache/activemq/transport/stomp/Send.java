@@ -81,6 +81,7 @@ class Send implements StompCommand {
 
         msg.setProducerId(format.getProducerId());
         msg.setMessageId(format.createMessageId());
+        msg.setJMSTimestamp(System.currentTimeMillis());
         
 
         ActiveMQDestination d = DestinationNamer.convert(destination);

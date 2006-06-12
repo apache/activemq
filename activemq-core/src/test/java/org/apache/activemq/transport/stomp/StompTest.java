@@ -155,6 +155,12 @@ public class StompTest extends CombinationTestSupport {
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
+        
+        // Make sure that the timestamp is valid - should
+        // be very close to the current time.
+        long tnow = System.currentTimeMillis();
+        long tmsg = message.getJMSTimestamp();
+        assertTrue( Math.abs(tnow - tmsg) < 1000 );
     }
 
     
