@@ -561,10 +561,10 @@ final public class OpenWireFormat implements WireFormat {
 		return preferedWireFormatInfo;
 	}
 
-	public void renegociatWireFormat(WireFormatInfo info) throws IOException {
+	public void renegotiateWireFormat(WireFormatInfo info) throws IOException {
 		
 		if( preferedWireFormatInfo==null )
-			throw new IllegalStateException("Wireformat cannot not be renegociated.");
+			throw new IllegalStateException("Wireformat cannot not be renegotiated.");
 		
 		this.setVersion(Math.max(preferedWireFormatInfo.getVersion(), info.getVersion()) );
 		this.stackTraceEnabled = info.isStackTraceEnabled() && preferedWireFormatInfo.isStackTraceEnabled();
