@@ -26,7 +26,7 @@ import org.apache.activemq.command.WireFormatInfo;
 public class OpenWireFormatFactory implements WireFormatFactory {
 
 	//
-	// The default values here are what the wireformat chanages to after a default negociation.
+	// The default values here are what the wire format changes to after a default negotiation.
 	//
 	
     private int version=1;

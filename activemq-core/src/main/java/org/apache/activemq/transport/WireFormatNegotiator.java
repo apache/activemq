@@ -97,7 +97,7 @@ public class WireFormatNegotiator extends TransportFilter {
                     onException(new IOException("Remote wire format ("+info.getVersion()+") is lower the minimum version required ("+minimumVersion+")"));
                 }
                 
-                wireFormat.renegociatWireFormat(info);
+                wireFormat.renegotiateWireFormat(info);
                 
                 if (log.isDebugEnabled()) {
                     log.debug(this + " after negotiation: " + wireFormat);

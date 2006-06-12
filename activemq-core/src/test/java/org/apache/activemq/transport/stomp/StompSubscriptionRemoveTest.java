@@ -27,18 +27,14 @@ import java.net.Socket;
 
 import javax.jms.Connection;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -183,14 +179,14 @@ public class StompSubscriptionRemoveTest extends TestCase {
         }
         stompSocket.close();
         broker.stop();
-        log.info("Total messages receved: " + messagesCount);
-        assertTrue("Messages receved after connection loss: " + messagesCount, messagesCount >= 2000);
+        log.info("Total messages received: " + messagesCount);
+        assertTrue("Messages received after connection loss: " + messagesCount, messagesCount >= 2000);
 
         // The first ack messages has no chance complete, so we receiving more messages
 
         // Don't know how to list subscriptions for the broker. Currently you
-        // can check using jmx console. You'll see
-        // Subscription whithout any connections
+        // can check using JMX console. You'll see
+        // Subscription without any connections
     }
 
     public void sendFrame(String data) throws Exception {
