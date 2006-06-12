@@ -250,9 +250,9 @@
             <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
             <exclude>**/KahaRecoveryBrokerTest.*</exclude>
 
-            <!-- TODO FIX ME -->
+            <!-- Multicast and UDP based tests fail on GBuild -->
+            <exclude>**/PeerTransportTest.*</exclude>
             <exclude>**/MulticastTransportTest.*</exclude>
-            
             <exclude>**/MulticastNetworkTest.*</exclude>
             <exclude>**/UnreliableUdpTransportTest.*</exclude>
             <exclude>**/SslTransportBrokerTest.*</exclude>
