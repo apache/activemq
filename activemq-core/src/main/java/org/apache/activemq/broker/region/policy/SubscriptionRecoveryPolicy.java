@@ -64,4 +64,8 @@ public interface SubscriptionRecoveryPolicy extends Service {
      */
     Message[] browse(ActiveMQDestination dest) throws Exception;
 
+    /**
+     * Used to copy the policy object.
+     */
+    SubscriptionRecoveryPolicy copy();
 }

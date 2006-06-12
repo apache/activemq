@@ -65,7 +65,7 @@ public class PolicyEntry extends DestinationMapEntry {
             topic.setDeadLetterStrategy(deadLetterStrategy);
         }
         if (subscriptionRecoveryPolicy != null) {
-            topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy);
+            topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy.copy());
         }
         topic.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
         if( memoryLimit>0 ) {
