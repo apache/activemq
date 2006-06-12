@@ -1,4 +1,4 @@
-<!-- START SNIPPET: xbean -->
+<!-- START SNIPPET: example -->
 <beans>
   
   <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
@@ -91,4 +91,4 @@
   -->  
 
 </beans>
-<!-- END SNIPPET: xbean -->
+<!-- END SNIPPET: example -->
