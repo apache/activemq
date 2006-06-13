@@ -97,7 +97,7 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 set LOCALCLASSPATH=%ACTIVEMQ_HOME%\conf;%LOCALCLASSPATH%
 
 set ACTIVEMQ_TASK="browse"
-"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar %ACTIVEMQ_HOME%/bin/run.jar %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
+"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
 
 
 goto end
@@ -112,4 +112,5 @@ if "%OS%"=="Windows_NT" @endlocal
 
 :mainEnd
 if exist "%HOME%\activemqrc_post.bat" call "%HOME%\activemqrc_post.bat"
+
 
