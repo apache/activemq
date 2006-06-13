@@ -136,7 +136,14 @@ fi
 ACTIVEMQ_TASK="query"
 
 BROKER_NAME=$1
-if [ -z "$BROKER_NAME" ] ; then
+if [ "$BROKER_NAME" = "--help" -o "$BROKER_NAME" = "-h" -o "$BROKER_NAME" = "-?" ] ; then 
+    echo
+    echo Performs a predefined query that displays useful statistics regarding the specified broker.
+    echo If no broker name is specified, it will try and select from all registered brokers.
+    echo Usage: bstat [brokerName] [--jmxurl url]
+    echo
+    exit 0
+elif [ -z "$BROKER_NAME" ] ; then
     BROKER_NAME="*"
 fi
 shift

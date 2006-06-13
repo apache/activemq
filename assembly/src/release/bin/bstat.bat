@@ -30,7 +30,11 @@ set DEFAULT_ACTIVEMQ_HOME=
 
 rem Assume first parameter is broker name
 set BROKER_NAME=%1
+if "%BROKER_NAME%" == "--help" goto dispHelp
+if "%BROKER_NAME%" == "-h" goto dispHelp
+if "%BROKER_NAME%" == "-?" goto dispHelp
 if "%BROKER_NAME%" == "" set BROKER_NAME=*
+
 shift
 
 rem Slurp the command line arguments. This loop allows for an unlimited number
@@ -111,9 +115,17 @@ set QUERY_PARAM=--objname "Type=*,BrokerName=%BROKER_NAME%" "-xQTopic=ActiveMQ.A
 
 "%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -classpath "%LOCALCLASSPATH%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %QUERY_PARAM% %ACTIVEMQ_CMD_LINE_ARGS%
 
-
 goto end
 
+:dispHelp
+
+echo.
+echo Performs a predefined query that displays useful statistics regarding the specified broker.
+echo If no broker name is specified, it will try and select from all registered brokers.
+echo Usage: bstat [brokerName] [--jmxurl url]
+echo.
+
+goto end
 
 :end
 set LOCALCLASSPATH=
