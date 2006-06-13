@@ -9,6 +9,29 @@
     <packaging>maven-plugin</packaging>
     <name>ActiveMQ :: Dependency Plugin</name>
 
+  <distributionManagement>
+    <repository>
+      <id>apache-repo</id>
+      <name>Apache CVS Repository</name>
+      <url>scp://minotaur.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
+    </repository>
+    <snapshotRepository>
+      <id>apache-snapshots</id>
+      <name>Apache CVS Development Repository</name>
+      <url>scp://minotaur.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
+    </snapshotRepository>
+    <site>
+      <id>apache-website</id>
+      <url>scpexe://people.apache.org/www/incubator.apache.org/activemq/maven/tooling/maven-dependency-plugin/</url>
+    </site>
+  </distributionManagement>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk/tooling/maven-dependency-plugin</connection>
+    <developerConnection>scm:svn:http://svn.apache.org/repos/asf/incubator/activemq/trunk/tooling/maven-dependency-plugin</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/tooling/maven-dependency-plugin/</url>
+  </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.maven</groupId>
