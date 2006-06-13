@@ -97,6 +97,7 @@ public interface Stomp {
             String LOGIN = "login";
             String PASSCODE = "passcode";
             String CLIENT_ID = "client-id";
+            String REQUEST_ID = "request-id";
         }
 
         public interface Error {
@@ -105,6 +106,7 @@ public interface Stomp {
 
         public interface Connected {
             String SESSION = "session";
+            String RESPONSE_ID = "response-id";
         }
 
         public interface Ack {
