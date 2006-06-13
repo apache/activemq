@@ -127,7 +127,7 @@ public class StompTest extends CombinationTestSupport {
      
         String f = receiveFrame(10000);
         assertTrue(f.startsWith("CONNECTED"));
-        assertTrue(f.contains("response-id:1"));
+        assertTrue(f.indexOf("response-id:1") >= 0);
         
     }
     
