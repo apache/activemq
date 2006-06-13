@@ -183,6 +183,12 @@ public class ConsumerMojo
      */
     private String reportDirectory;
 
+    /**
+     * @parameter expression="${sysTest.reportType}" default-value="xml"
+     * @required
+     */
+    private String reportType;
+
     public void execute()
             throws MojoExecutionException {
 
@@ -224,7 +230,8 @@ public class ConsumerMojo
             "sysTest.numClients=" + numClients,
             "sysTest.totalDests=" + totalDests,
             "sysTest.destDistro=" + destDistro,
-            "sysTest.reportDirectory=" + reportDirectory
+            "sysTest.reportDirectory=" + reportDirectory,
+            "sysTest.reportType=" + reportType
         };
 
         return options;
