@@ -187,6 +187,14 @@ public abstract class JmsClientSystemSupport {
         this.reportName = reportName;
     }
 
+    public String getReportType() {
+        return reportType;
+    }
+
+    public void setReportType(String reportType) {
+        this.reportType = reportType;
+    }
+
     public String getClientName() {
         if (clientName == null) {
             return "JMS Client: ";
