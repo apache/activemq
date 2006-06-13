@@ -122,11 +122,12 @@ public class StompTest extends CombinationTestSupport {
 
     public void testConnect() throws Exception {
           
-        String connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n" + Stomp.NULL;
+        String connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "request-id: 1\n" + "\n" + Stomp.NULL;
         sendFrame(connect_frame);
      
         String f = receiveFrame(10000);
         assertTrue(f.startsWith("CONNECTED"));
+        assertTrue(f.contains("response-id:1"));
         
     }
     
