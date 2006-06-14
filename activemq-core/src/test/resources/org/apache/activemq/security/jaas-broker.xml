@@ -16,7 +16,7 @@
 -->
 
 <!-- this file can only be parsed using the xbean-spring library -->
-<!-- START SNIPPET: xbean -->
+<!-- START SNIPPET: example -->
 <beans xmlns="http://activemq.org/config/1.0">
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
@@ -48,4 +48,4 @@
   </broker>
 
 </beans>
-<!-- END SNIPPET: xbean -->
+<!-- END SNIPPET: example -->
