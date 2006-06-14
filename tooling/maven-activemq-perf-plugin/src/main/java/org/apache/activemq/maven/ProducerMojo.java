@@ -91,6 +91,12 @@ public class ProducerMojo
     private String destComposite;
 
     /**
+     * @parameter expression="${producer.deliveryMode}" default-value="nonpersistent"
+     * @required
+     */
+    private String deliveryMode;
+
+    /**
      * @parameter expression="${producer.messageSize}" default-value="1024"
      * @required
      */
@@ -178,7 +184,8 @@ public class ProducerMojo
             "producer.destName=" + destName,
             "producer.destCount=" + destCount,
             "producer.destComposite=" + destComposite,
-    
+
+            "producer.deliveryMode="+deliveryMode,
             "producer.messageSize="+messageSize,
             "producer.sendCount="+sendCount,    
             "producer.sendDuration="+duration, 
