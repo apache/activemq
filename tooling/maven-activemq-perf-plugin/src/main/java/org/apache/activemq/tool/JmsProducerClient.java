@@ -19,10 +19,8 @@ package org.apache.activemq.tool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
+import javax.jms.*;
+
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -32,11 +30,14 @@ public class JmsProducerClient extends JmsPerformanceSupport {
     private static final String PREFIX_CONFIG_PRODUCER = "producer.";
     public static final String TIME_BASED_SENDING = "time";
     public static final String COUNT_BASED_SENDING = "count";
+    public static final String DELIVERY_MODE_PERSISTENT = "persistent";
+    public static final String DELIVERY_MODE_NON_PERSISTENT = "nonpersistent";
 
     protected Properties jmsProducerSettings = new Properties();
     protected MessageProducer jmsProducer;
     protected TextMessage jmsTextMessage;
 
+    protected String deliveryMode = DELIVERY_MODE_NON_PERSISTENT;
     protected int messageSize = 1024;          // Send 1kb messages by default
     protected long sendCount = 1000000;       // Send a million messages by default
     protected long sendDuration = 5 * 60 * 1000; // Send for 5 mins by default
@@ -203,11 +204,27 @@ public class JmsProducerClient extends JmsPerformanceSupport {
 
     public MessageProducer createJmsProducer() throws JMSException {
         jmsProducer = getSession().createProducer(null);
+        if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_PERSISTENT)) {
+            jmsProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        } else if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_NON_PERSISTENT)) {
+            jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        } else {
+            log.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
+            jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        }
         return jmsProducer;
     }
 
     public MessageProducer createJmsProducer(Destination dest) throws JMSException {
         jmsProducer = getSession().createProducer(dest);
+        if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_PERSISTENT)) {
+            jmsProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        } else if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_NON_PERSISTENT)) {
+            jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        } else {
+            log.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
+            jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        }
         return jmsProducer;
     }
 
@@ -237,6 +254,14 @@ public class JmsProducerClient extends JmsPerformanceSupport {
         byte[] data = new byte[size - text.length()];
         Arrays.fill(data, (byte) 0);
         return text + new String(data);
+    }
+
+    public String getDeliveryMode() {
+        return deliveryMode;
+    }
+
+    public void setDeliveryMode(String deliveryMode) {
+        this.deliveryMode = deliveryMode;
     }
 
     public int getMessageSize() {
