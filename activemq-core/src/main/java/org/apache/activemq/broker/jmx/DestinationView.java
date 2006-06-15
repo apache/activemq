@@ -13,11 +13,13 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
 import javax.jms.Connection;
+import javax.jms.InvalidSelectorException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.management.openmbean.CompositeData;
@@ -35,8 +37,11 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.BooleanExpression;
+import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.selector.SelectorParser;
 
-public class DestinationView {
+public class DestinationView implements DestinationViewMBean {
     protected final Destination destination;
     protected final ManagedRegionBroker broker;
 
@@ -91,27 +96,80 @@ public class DestinationView {
     }
 
     public CompositeData[] browse() throws OpenDataException{
+        try {
+            return browse(null);
+        } catch (InvalidSelectorException e) {
+            // should not happen.
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public CompositeData[] browse(String selector) throws OpenDataException, InvalidSelectorException{
         Message[] messages=destination.browse();
-        CompositeData c[]=new CompositeData[messages.length];
-        for(int i=0;i<c.length;i++){
+        ArrayList c = new ArrayList();
+                
+        MessageEvaluationContext ctx = new MessageEvaluationContext();
+        ctx.setDestination(destination.getActiveMQDestination());
+        BooleanExpression selectorExpression = selector==null ? null : new SelectorParser().parse(selector);
+        
+        for(int i=0;i<messages.length;i++){
             try{
-                c[i]=OpenTypeSupport.convert(messages[i]);
-            }catch(Throwable e){
+                
+                if( selectorExpression==null ) {
+                    c.add(OpenTypeSupport.convert(messages[i]));
+                } else {
+                    ctx.setMessageReference(messages[i]);
+                    if ( selectorExpression.matches(ctx) ) {
+                        c.add(OpenTypeSupport.convert(messages[i]));
+                    }
+                }
+                
+            } catch(Throwable e) {
                 e.printStackTrace();
             }
         }
-        return c;
+        
+        CompositeData rc[]=new CompositeData[c.size()];
+        c.toArray(rc);
+        return rc;
     }
 
     public TabularData browseAsTable() throws OpenDataException{
+        try {
+            return browseAsTable(null);
+        } catch (InvalidSelectorException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public TabularData browseAsTable(String selector) throws OpenDataException, InvalidSelectorException{
         OpenTypeFactory factory=OpenTypeSupport.getFactory(ActiveMQMessage.class);
         Message[] messages=destination.browse();
         CompositeType ct=factory.getCompositeType();
         TabularType tt=new TabularType("MessageList","MessageList",ct,new String[] { "JMSMessageID" });
         TabularDataSupport rc=new TabularDataSupport(tt);
+        
+        
+        MessageEvaluationContext ctx = new MessageEvaluationContext();
+        ctx.setDestination(destination.getActiveMQDestination());
+        BooleanExpression selectorExpression = selector==null ? null : new SelectorParser().parse(selector);
+        
         for(int i=0;i<messages.length;i++){
-            rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
+            try {
+                if( selectorExpression==null ) {
+                    rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
+                } else {
+                    ctx.setMessageReference(messages[i]);
+                    if ( selectorExpression.matches(ctx) ) {
+                        rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
+                    }
+                }
+                rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
+            } catch(Throwable e) {
+                e.printStackTrace();
+            }
         }
+        
         return rc;
     }
     
