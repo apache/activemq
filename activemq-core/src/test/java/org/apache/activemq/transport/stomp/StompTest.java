@@ -298,6 +298,49 @@ public class StompTest extends CombinationTestSupport {
         sendFrame(frame);
     }
 
+    public void testSubscribeWithMessageSentWithProperties() throws Exception {
+        
+        String frame =
+            "CONNECT\n" +
+            "login: brianm\n" +
+            "passcode: wombats\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
+        
+        frame = receiveFrame(100000);
+        assertTrue(frame.startsWith("CONNECTED"));
+        
+        frame =
+            "SUBSCRIBE\n" +
+            "destination:/queue/" + getQueueName() + "\n" +
+            "ack:auto\n\n" +
+            Stomp.NULL;
+        sendFrame(frame);
+        
+        
+        MessageProducer producer = session.createProducer(queue);
+        TextMessage message = session.createTextMessage("Hello World");
+        message.setStringProperty("s", "value");
+        message.setBooleanProperty("n", false);
+        message.setByteProperty("byte", (byte) 9);
+        message.setDoubleProperty("d", 2.0);
+        message.setFloatProperty("f", (float) 6.0);
+        message.setIntProperty("i", 10);
+        message.setLongProperty("l", 121);
+        message.setShortProperty("s", (short) 12);
+        producer.send(message);
+        
+        frame = receiveFrame(10000);
+        assertTrue(frame.startsWith("MESSAGE"));
+        
+        System.out.println("out: "+frame);
+        
+        frame =
+            "DISCONNECT\n" +
+            "\n\n"+
+            Stomp.NULL;
+        sendFrame(frame);
+    }
 
     public void testMessagesAreInOrder() throws Exception {
         int ctr = 10;
