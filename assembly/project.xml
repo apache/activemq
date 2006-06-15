@@ -19,7 +19,7 @@
   <pomVersion>3</pomVersion>
   <extend>${basedir}/../etc/project.xml</extend>
   <name>ActiveMQ :: Assembly</name>
-  <id>incubator-activemq</id>
+  <id>apache-incubator-activemq</id>
   <shortDescription>ActiveMQ Assembly</shortDescription>
   <description>ActiveMQ Assembly creates an ActiveMQ distribution</description>
 
