@@ -18,6 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import java.util.Map;
 
+import javax.jms.InvalidSelectorException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
@@ -64,6 +65,18 @@ public interface DestinationViewMBean {
      * @return A list of all the messages in the destination's queue.
      */
     public TabularData browseAsTable() throws OpenDataException;
+
+    /**
+     * @return An array of all the messages in the destination's queue.
+     * @throws InvalidSelectorException 
+     */
+    public CompositeData[] browse(String selector) throws OpenDataException, InvalidSelectorException;
+    
+    /**
+     * @return A list of all the messages in the destination's queue.
+     * @throws InvalidSelectorException 
+     */
+    public TabularData browseAsTable(String selector) throws OpenDataException, InvalidSelectorException;
 
     /**
      * Sends a TextMesage to the destination.
