@@ -59,6 +59,15 @@
                    <ant:uptodate property="${uptodatePropName}" targetfile="${uptodateFile}" srcfile="${artifact.path}"/>
                    <j:if test="${context.getVariable(uptodatePropName) != 'true'}">
                       <unjar dest="${maven.build.dir}/classes" src="${artifact.path}"/>       
+                      <ant:move todir="${maven.build.dir}/classes/META-INF/${artifact.name}">
+                          <fileset dir="${maven.build.dir}/classes/META-INF">
+                              <include name="MANIFEST.MF*"/>
+                              <include name="COPYRIGHT*"/>
+                              <include name="LICENSE*"/>
+                              <include name="NOTICE*"/>
+                              <include name="DISCLAIMER*"/>
+                          </fileset>
+                      </ant:move>
                       <touch file="${uptodateFile}"/>
                    </j:if>         
                 </j:if>       
