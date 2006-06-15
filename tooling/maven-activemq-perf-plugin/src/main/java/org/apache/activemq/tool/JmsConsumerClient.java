@@ -21,8 +21,15 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.*;
 import java.util.Properties;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Topic;
 
 public class JmsConsumerClient extends JmsPerformanceSupport {
     private static final Log log = LogFactory.getLog(JmsConsumerClient.class);
@@ -142,7 +149,15 @@ public class JmsConsumerClient extends JmsPerformanceSupport {
             }
         }
     }
-
+    
+    public Connection getConnection() throws JMSException {
+    	Connection c = super.getConnection();
+    	if (c.getClientID() == null && isDurable()) {
+    		c.setClientID(getClientName());
+    	}
+    	return c;
+    }
+    
     public MessageConsumer createJmsConsumer() throws JMSException {
         Destination[] dest = createDestination();
         return createJmsConsumer(dest[0]);
