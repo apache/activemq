@@ -1,21 +1,24 @@
 <!-- START SNIPPET: example -->
 <beans xmlns="http://activemq.org/config/1.0">
+
+  <!-- Allows us to use system properties as variables in this configuration file -->
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
   
   <broker useJmx="true">
   
     <!--  Use the following to set the broker memory limit (in bytes)
-  	<memoryManager>  
-	  	<usageManager id="memory-manager" limit="1048576"/>
-  	</memoryManager>
-  	-->
-  	
-	<!-- Use the following to configure how ActiveMQ is exposed in JMX
-	<managementContext>
-	   <managementContext connectorPort="1099" jmxDomainName="org.apache.activemq"/>
-	</managementContext>
-	-->
+    <memoryManager>  
+        <usageManager id="memory-manager" limit="1048576"/>
+    </memoryManager>
+    -->
+    
+    <!-- Use the following to configure how ActiveMQ is exposed in JMX
+    <managementContext>
+       <managementContext connectorPort="1099" jmxDomainName="org.apache.activemq"/>
+    </managementContext>
+    -->
 
-	<!-- In ActiveMQ 4, you can setup destination policies -->  
+    <!-- In ActiveMQ 4, you can setup destination policies -->  
     <destinationPolicy>
       <policyMap><policyEntries>
         
@@ -33,7 +36,7 @@
   
   
     <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="../activemq-data"/>
+        <journaledJDBC journalLogFiles="5" dataDirectory="${activemq.home}/activemq-data"/>
       <!-- To use a different datasource, use th following syntax : -->
       <!-- 
       <journaledJDBC journalLogFiles="5" dataDirectory="../activemq-data" dataSource="#postgres-ds"/>

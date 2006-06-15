@@ -357,20 +357,20 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             ConsumerInfo info=(ConsumerInfo) data;
             BrokerId[] path=info.getBrokerPath();
             if((path!=null&&path.length>= networkTTL)){
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring Subscription " + info + " restricted to " + networkTTL + " network hops only");
+                if(log.isDebugEnabled())
+                    log.debug("Ignoring Subscription " + info + " restricted to " + networkTTL + " network hops only");
                 return;
             }
             if(contains(info.getBrokerPath(),localBrokerPath[0])){
                 // Ignore this consumer as it's a consumer we locally sent to the broker.
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring sub " + info + " already routed through this broker once");
+                if(log.isDebugEnabled())
+                    log.debug("Ignoring sub " + info + " already routed through this broker once");
                 return;
             }
             if (!isPermissableDestination(info.getDestination())){
                 //ignore if not in the permited or in the excluded list
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring sub " + info + " destination " + info.getDestination() + " is not permiited");
+                if(log.isDebugEnabled())
+                    log.debug("Ignoring sub " + info + " destination " + info.getDestination() + " is not permiited");
                 return;
             }
             // Update the packet to show where it came from.
@@ -379,11 +379,11 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             DemandSubscription sub=createDemandSubscription(info);
             if (sub != null){
                 addSubscription(sub);
-                if(log.isTraceEnabled())
-                    log.trace("Forwarding sub on "+localBroker+" from "+remoteBrokerName+" :  "+info);
+                if(log.isDebugEnabled())
+                    log.debug("Forwarding sub on "+localBroker+" from "+remoteBrokerName+" :  "+info);
             }else {
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring sub " + info + " already subscribed to matching destination");
+                if(log.isDebugEnabled())
+                    log.debug("Ignoring sub " + info + " already subscribed to matching destination");
             }
         }
         else if (data.getClass()==DestinationInfo.class){
@@ -392,14 +392,14 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             DestinationInfo destInfo = (DestinationInfo) data;
             BrokerId[] path=destInfo.getBrokerPath();
             if((path!=null&&path.length>= networkTTL)){
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring Subscription " + destInfo + " restricted to " + networkTTL + " network hops only");
+                if(log.isDebugEnabled())
+                    log.debug("Ignoring Subscription " + destInfo + " restricted to " + networkTTL + " network hops only");
                 return;
             }
             if(contains(destInfo.getBrokerPath(),localBrokerPath[0])){
                 // Ignore this consumer as it's a consumer we locally sent to the broker.
-                if(log.isTraceEnabled())
-                    log.trace("Ignoring sub " + destInfo + " already routed through this broker once");
+                if(log.isDebugEnabled())
+                    log.debug("Ignoring sub " + destInfo + " already routed through this broker once");
                 return;
             }
             
