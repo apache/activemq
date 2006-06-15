@@ -15,10 +15,21 @@
  */
 package org.apache.activemq.broker.view;
 
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
@@ -28,17 +39,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapNode;
-
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
-import java.io.PrintWriter;
-import java.util.*;
 
 /**
  * 
@@ -153,11 +154,13 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     }
 
     protected void printProducers(PrintWriter writer, Map clients, Map queues, Map topics) {
-        for (Iterator iter = producerDestinations.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            ProducerId producerId = (ProducerId) entry.getKey();
-            Set destinationSet = (Set) entry.getValue();
-            printProducers(writer, clients, queues, topics, producerId, destinationSet);
+        synchronized(lock) {
+            for (Iterator iter = producerDestinations.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                ProducerId producerId = (ProducerId) entry.getKey();
+                Set destinationSet = (Set) entry.getValue();
+                printProducers(writer, clients, queues, topics, producerId, destinationSet);
+            }
         }
     }
 
