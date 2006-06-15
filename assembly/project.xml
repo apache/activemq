@@ -86,7 +86,7 @@
 
    
     <dependency>
-      <groupId>activemq</groupId>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
       <version>${pom.currentVersion}</version>
       <type>jar</type>
