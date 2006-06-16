@@ -20,11 +20,14 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 
 import org.apache.activemq.command.Response;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 public class FutureResponse {
+    private static final Log log = LogFactory.getLog(FutureResponse.class);
            
     private final ResponseCallback responseCallback;
     private final ArrayBlockingQueue responseSlot = new ArrayBlockingQueue(1);
@@ -34,10 +37,17 @@ public class FutureResponse {
     }
 
     public Response getResult() throws IOException {
-        try {
-            return (Response) responseSlot.take();
-        } catch (InterruptedException e) {
-            throw new InterruptedIOException("Interrupted.");
+        while (true) {
+            try {
+                return (Response) responseSlot.take();
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                if (log.isDebugEnabled()) {
+                    log.debug("Operation interupted: " + e, e);
+                }
+                // throw new InterruptedIOException("Interrupted.");
+            }
         }
     }
     
