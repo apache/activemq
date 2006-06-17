@@ -37,17 +37,15 @@ public class FutureResponse {
     }
 
     public Response getResult() throws IOException {
-        while (true) {
-            try {
-                return (Response) responseSlot.take();
+        try {
+            return (Response) responseSlot.take();
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            if (log.isDebugEnabled()) {
+                log.debug("Operation interupted: " + e, e);
             }
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                if (log.isDebugEnabled()) {
-                    log.debug("Operation interupted: " + e, e);
-                }
-                // throw new InterruptedIOException("Interrupted.");
-            }
+            throw new InterruptedIOException("Interrupted.");
         }
     }
     
@@ -60,13 +58,10 @@ public class FutureResponse {
     }
     
     public void set(Response result) throws InterruptedIOException {
-        try {
-            responseSlot.put(result);
-        } catch (InterruptedException e) {
-            throw new InterruptedIOException("Interrupted.");
+        if( responseSlot.offer(result) ) {
+            if( responseCallback !=null ) {
+                responseCallback.onCompletion(this);
+            }        
         }
-        if( responseCallback !=null ) {
-            responseCallback.onCompletion(this);
-        }        
     }
 }
