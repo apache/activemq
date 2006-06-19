@@ -1652,7 +1652,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * Creates an output stream allowing full control over the delivery mode, the priority and time to live of the messaages and the properties added to messages on the stream.
+     * Creates an output stream allowing full control over the delivery mode,
+     * the priority and time to live of the messages and the properties added to
+     * messages on the stream.
+     * 
+     * @param streamProperties
+     *            defines a map of key-value pairs where the keys are strings
+     *            and the values are primitive values (numbers and strings)
+     *            which are appended to the messages similarly to using the
+     *            {@link javax.jms.Message#setObjectProperty(String, Object)}
+     *            method
      */
     public OutputStream createOutputStream(Destination dest, Map streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException {
         checkClosedOrFailed();
