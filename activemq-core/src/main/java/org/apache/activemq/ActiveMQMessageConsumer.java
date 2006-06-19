@@ -754,12 +754,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 // stop the delivery of messages.
                 unconsumedMessages.stop();
                 // Start up the delivery again a little later.
-                if(redeliveryDelay==0){
-                    redeliveryDelay=redeliveryPolicy.getInitialRedeliveryDelay();
-                }else{
-                    if(redeliveryPolicy.isUseExponentialBackOff())
-                        redeliveryDelay*=redeliveryPolicy.getBackOffMultiplier();
-                }
+                redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
                 Scheduler.executeAfterDelay(new Runnable(){
                     public void run(){
                         try{
