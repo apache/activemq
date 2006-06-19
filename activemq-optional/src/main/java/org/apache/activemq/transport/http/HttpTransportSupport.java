@@ -41,6 +41,10 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
 
     // Properties
     // -------------------------------------------------------------------------
+    public String getRemoteAddress() {
+        return remoteUrl.toString();
+    }
+
     public URI getRemoteUrl() {
         return remoteUrl;
     }

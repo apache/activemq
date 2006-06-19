@@ -120,8 +120,7 @@ public class HttpTransport extends HttpTransportSupport {
             }
         }
     }
-    
-    
+ 
 
     // Implementation methods
     // -------------------------------------------------------------------------
