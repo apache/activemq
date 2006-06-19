@@ -97,4 +97,8 @@ public class ConnectionView implements ConnectionViewMBean {
         return connection.getStatistics().getDequeues().getCount();
     }
 
+	public String getRemoteAddress() {
+		return connection.getRemoteAddress();
+	}
+
 }

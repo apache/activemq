@@ -73,17 +73,6 @@ public class StompSubscriptionRemoveTest extends TestCase {
         // consumer.close();
         session.close();
         connection.close();
-        broker.stop();
-        while (broker.isStarted()) {
-            Thread.sleep(1000);
-        }
-
-        broker = new BrokerService();
-        broker.setPersistent(true);
-
-        broker.addConnector("stomp://localhost:61613").setName("Stomp");
-        broker.addConnector("tcp://localhost:61616").setName("Default");
-        broker.start();
 
         stompSocket = new Socket("localhost", 61613);
         inputBuffer = new ByteArrayOutputStream();

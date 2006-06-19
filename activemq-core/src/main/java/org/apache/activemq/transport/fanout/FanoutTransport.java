@@ -518,4 +518,13 @@ public class FanoutTransport implements CompositeTransport {
         
     }
 
+	public String getRemoteAddress() {
+		if(primary != null){
+		   if(primary.transport != null){
+			   return primary.transport.getRemoteAddress(); 
+		   }
+		}
+		return null;
+	}
+
 }

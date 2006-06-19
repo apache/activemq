@@ -96,4 +96,9 @@ public interface Connection extends Service {
      */
     public boolean isManageable();
 
+    /**
+     * @return the source address for this connection
+     */
+	public String getRemoteAddress();
+
 }

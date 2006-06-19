@@ -46,5 +46,9 @@ public class StubTransport extends TransportSupport {
         return queue;
     }
 
+	public String getRemoteAddress() {
+		return null;
+	}
+
     
 }

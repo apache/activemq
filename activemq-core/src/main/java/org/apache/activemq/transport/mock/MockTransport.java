@@ -127,6 +127,10 @@ public class MockTransport extends DefaultTransportListener implements Transport
         filter.setTransportListener(this);
         getNext().setTransportListener(filter);
         setNext(filter);
-    }  
+    }
+
+	public String getRemoteAddress() {
+		return next.getRemoteAddress();
+	}  
     
 }

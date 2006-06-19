@@ -513,4 +513,11 @@ public class FailoverTransport implements CompositeTransport {
         return connectedTransportURI==null ? "unconnected" : connectedTransportURI.toString();
     }
 
+	public String getRemoteAddress() {
+		if(connectedTransport != null){
+			return connectedTransport.getRemoteAddress();
+		}
+		return null;
+	}
+
 }

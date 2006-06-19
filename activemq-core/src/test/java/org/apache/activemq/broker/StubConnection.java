@@ -58,6 +58,10 @@ public class StubConnection implements Service {
             protected OpenWireFormat getWireFormat() {
                 return wireFormat;
             }
+
+			public String getRemoteAddress() {
+				return null;
+			}
         };
     }
 

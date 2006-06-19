@@ -108,4 +108,8 @@ public class TransportFilter implements TransportListener,Transport{
         }
         return next.narrow(target);
     }
+
+	public String getRemoteAddress() {
+		return next.getRemoteAddress();
+	}
 }

@@ -331,4 +331,11 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void setSocketOptions(Map socketOptions) {
         IntrospectionSupport.setProperties(socket, socketOptions);
     }
+
+	public String getRemoteAddress() {
+		if(socket != null){
+			return "" + socket.getRemoteSocketAddress();
+		}
+		return null;
+	}
 }

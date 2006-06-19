@@ -216,4 +216,8 @@ public class TransportConnection extends AbstractConnection {
             setMarkedCandidate(false);
         }
     }
+
+	public String getRemoteAddress() {
+		return transport.getRemoteAddress();
+	}
 }
