@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import java.io.Serializable;
+import java.util.Random;
 
 /**
  * Configuration options used to control how messages are re-delivered when they
@@ -26,8 +27,12 @@ import java.io.Serializable;
  */
 public class RedeliveryPolicy implements Cloneable, Serializable {
 
+    // +/-15% for a 30% spread -cgs
+    protected double collisionAvoidanceFactor = 0.15d;
     protected int maximumRedeliveries = 5;
     protected long initialRedeliveryDelay = 1000L;
+    protected static Random randomNumberGenerator;
+    protected boolean useCollisionAvoidance = false;
     protected boolean useExponentialBackOff = false;
     protected short backOffMultiplier = 5;
 
@@ -51,6 +56,14 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
         this.backOffMultiplier = backOffMultiplier;
     }
 
+    public short getCollisionAvoidancePercent() {
+        return (short) Math.round(collisionAvoidanceFactor * 100);
+    }
+
+    public void setCollisionAvoidancePercent(short collisionAvoidancePercent) {
+        this.collisionAvoidanceFactor = collisionAvoidancePercent * 0.01d;
+    }
+
     public long getInitialRedeliveryDelay() {
         return initialRedeliveryDelay;
     }
@@ -67,6 +80,41 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
         this.maximumRedeliveries = maximumRedeliveries;
     }
 
+    public long getRedeliveryDelay(long previousDelay) {
+        long redeliveryDelay;
+
+        if (previousDelay == 0) {
+            redeliveryDelay = initialRedeliveryDelay;
+        } else if (useExponentialBackOff && backOffMultiplier > 1) {
+            redeliveryDelay = previousDelay * backOffMultiplier;
+        } else {
+            redeliveryDelay = previousDelay;
+        }
+
+        if (useCollisionAvoidance) {
+            if (randomNumberGenerator == null) {
+                initRandomNumberGenerator();
+            }
+
+            /* 
+             * First random determines +/-, second random determines how far to
+             * go in that direction. -cgs
+             */
+            double variance = (randomNumberGenerator.nextBoolean() ? collisionAvoidanceFactor : -collisionAvoidanceFactor) * randomNumberGenerator.nextDouble();
+            redeliveryDelay += redeliveryDelay * variance;
+        }
+
+        return redeliveryDelay;
+    }
+
+    public boolean isUseCollisionAvoidance() {
+        return useCollisionAvoidance;
+    }
+
+    public void setUseCollisionAvoidance(boolean useCollisionAvoidance) {
+        this.useCollisionAvoidance = useCollisionAvoidance;
+    }
+
     public boolean isUseExponentialBackOff() {
         return useExponentialBackOff;
     }
@@ -74,4 +122,11 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
     public void setUseExponentialBackOff(boolean useExponentialBackOff) {
         this.useExponentialBackOff = useExponentialBackOff;
     }
+
+    protected static synchronized void initRandomNumberGenerator() {
+        if (randomNumberGenerator == null) {
+            randomNumberGenerator = new Random();
+        }
+    }
+
 }
