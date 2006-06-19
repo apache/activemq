@@ -50,6 +50,7 @@ public class ProxyTestSupport extends BrokerTestSupport {
 
         connector = service.addConnector(getLocalURI());
         proxyConnector=new ProxyConnector();
+        proxyConnector.setName("proxy");
         proxyConnector.setBind(new URI(getLocalProxyURI()));
         proxyConnector.setRemote(new URI("fanout:static://"+getRemoteURI()));
         service.addProxyConnector(proxyConnector);
@@ -64,6 +65,7 @@ public class ProxyTestSupport extends BrokerTestSupport {
 
         remoteConnector = service.addConnector(getRemoteURI());
         remoteProxyConnector = new ProxyConnector();
+        remoteProxyConnector.setName("remoteProxy");
         remoteProxyConnector.setBind(new URI(getRemoteProxyURI()));
         remoteProxyConnector.setRemote(new URI("fanout:static://"+getLocalURI()));
         service.addProxyConnector(remoteProxyConnector);
