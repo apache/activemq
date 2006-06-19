@@ -152,7 +152,11 @@ public class ProxyConnector implements Service {
 
     public String getName() {
         if( name == null ) {
-            name = server.getConnectURI().toString();
+            if( server!=null ) {
+                name = server.getConnectURI().toString();
+            } else {
+                name = "proxy";
+            }
         }
         return name;
     }

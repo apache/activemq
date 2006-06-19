@@ -221,9 +221,6 @@
             <!-- These are performance tests so take too long to run -->
             <exclude>**/perf/*</exclude>
                 
-            <!-- This test currently fails -->
-            <exclude>**/ItStillMarshallsTheSameTest.*</exclude>
-                
             <!-- http://jira.activemq.org/jira/browse/AMQ-522 -->
             <exclude>**/ProxyConnectorTest.*</exclude>
                 
