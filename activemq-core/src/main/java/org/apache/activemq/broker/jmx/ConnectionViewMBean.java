@@ -62,5 +62,12 @@ public interface ConnectionViewMBean extends Service {
      * @return the number of messages dequeued on this connection
      */
     public long getDequeueCount();
+    
+    /**
+     * Returns the source address for this connection
+     * 
+     * @return the souce address for this connection
+     */
+    public String getRemoteAddress();
 
 }

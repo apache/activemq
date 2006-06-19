@@ -84,4 +84,10 @@ public interface Transport extends Service {
      */
     public Object narrow(Class target);
 
+    /**
+     * @return the remote address for this connection
+     *  
+     */
+	public String getRemoteAddress();
+
 }

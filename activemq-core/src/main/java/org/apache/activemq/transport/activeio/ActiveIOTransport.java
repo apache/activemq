@@ -196,4 +196,13 @@ public class ActiveIOTransport implements Transport {
         return writeCounter;
     }
 
+	public String getRemoteAddress() {
+		SocketMetadata sm = (SocketMetadata) commandChannel.getAdapter(SocketMetadata.class);
+		
+        if (sm != null) {
+            return "" + sm.getRemoteSocketAddress();
+        }
+        return null;
+	}
+
 }

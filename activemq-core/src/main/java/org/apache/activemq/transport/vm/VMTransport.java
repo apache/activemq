@@ -143,4 +143,11 @@ public class VMTransport implements Transport{
         return location+"#"+id;
     }
 
+	public String getRemoteAddress() {
+		if(peer != null){
+			return peer.toString();
+		}
+		return null;
+	}
+
 }

@@ -439,4 +439,11 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
             return (InetSocketAddress)channel.socket().getLocalSocketAddress();
         }
     }
+
+	public String getRemoteAddress() {
+		if(targetAddress != null){
+			return "" + targetAddress;
+		}
+		return null;
+	}
 }
