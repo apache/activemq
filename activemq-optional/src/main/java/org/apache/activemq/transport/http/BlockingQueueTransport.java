@@ -56,6 +56,11 @@ public class BlockingQueueTransport extends TransportSupport {
         }
     }
 
+    
+    public String getRemoteAddress() {
+        return "blockingQueue";
+    }
+
     protected void doStart() throws Exception {
     }
 
