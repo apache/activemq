@@ -147,7 +147,14 @@ var amq =
   {
     if (amq._queueMessages>0)
     {
-      amq._messageQueue+=(amq._messages==0?'destination=':'&destination=')+destination+'&message='+message+'&type='+type;
+      if (amq._messages==0)
+      {
+        amq._messageQueue='destination='+destination+'&message='+message+'&type='+type;
+      }
+      else
+      {
+        amq._messageQueue='d'+amq._messages+'='+destination+'&m'+amq._messages+'='+message+'&t'+amq._messages+'='+type;
+      }
       amq._messages++;
     }
     else
