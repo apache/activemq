@@ -1,4 +1,4 @@
-/**
+    /**
  *
  * Copyright 2005-2006 The Apache Software Foundation
  *
@@ -84,6 +84,9 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
         try {
             if( info.isUseInboundSessionEnabled() ) {
                 return new InboundConnectionProxy();
+            }
+            if (manager == null) {
+                throw new JMSException("No JCA ConnectionManager configured! Either enable UseInboundSessionEnabled or get your JCA container to configure one.");
             }
             return (Connection) manager.allocateConnection(factory, info);
         }
