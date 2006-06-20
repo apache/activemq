@@ -100,6 +100,11 @@
       <!-- temporary solution until codehaus to ibiblio rsync working again -->
       <url>http://www.mortbay.org/maven2/release</url>
     </pluginRepository>
+    <pluginRepository>
+      <id>apache-snapshots</id>
+      <name>Snapshot repository</name>
+      <url>http://people.apache.org/maven-snapshot-repository/</url>
+    </pluginRepository>
   </pluginRepositories>
 
 
