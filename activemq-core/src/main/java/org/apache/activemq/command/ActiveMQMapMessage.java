@@ -81,7 +81,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MAP_MESSAGE;
 
-    transient protected HashMap map = new HashMap();
+    transient protected Map map = new HashMap();
 
     public Message copy() {
         ActiveMQMapMessage copy = new ActiveMQMapMessage();
@@ -624,13 +624,11 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     public void setObject(String name, Object value) throws JMSException {
         initializeWriting();
         if (value != null) {
-            if (value instanceof Number || value instanceof String || value instanceof Boolean ||
-                    value instanceof Byte
-                    || value instanceof Character || value instanceof byte[]) {
-                put(name, value);
-            } else {
-                throw new MessageFormatException(value.getClass() + " is not a primitive type");
+            // byte[] not allowed on properties
+            if (!(value instanceof byte[])) {
+                checkValidObject(value);
             }
+            put(name, value);
         } else {
             put(name, null);
         }

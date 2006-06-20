@@ -241,6 +241,8 @@ public class ActiveMQMapMessageTest extends TestCase {
             msg.setObject("short", shortValue);
             msg.setObject("string", stringValue);
         } catch (MessageFormatException mfe) {
+            System.out.println("Caught: " + mfe);
+            mfe.printStackTrace();
             fail("object formats should be correct");
         }
         

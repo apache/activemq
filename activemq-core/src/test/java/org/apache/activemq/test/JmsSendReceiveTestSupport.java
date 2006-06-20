@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.2 $
  */
-public class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
+public abstract class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
     protected static final Log log = LogFactory.getLog(JmsSendReceiveTestSupport.class);
     
     protected int messageCount = 100;
@@ -111,7 +111,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         messages.clear();
         
         for (int i = 0; i < data.length; i++) {
-            Message message = session.createTextMessage(data[i]);
+            Message message = createMessage(i);
             configureMessage(message);
             if (verbose) {
                 log.info("About to send a message: " + message + " with text: " + data[i]);
@@ -122,6 +122,12 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         
         assertMessagesAreReceived();
         log.info("" + data.length + " messages(s) received, closing down connections");
+    }
+
+
+    protected Message createMessage(int index) throws JMSException {
+        Message message = session.createTextMessage(data[index]);
+        return message;
     }
 
     /**
@@ -155,23 +161,29 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         
         if (data.length != copyOfMessages.size()) {
             for (Iterator iter = copyOfMessages.iterator(); iter.hasNext();) {
-                TextMessage message = (TextMessage) iter.next();
-                log.info("<== " + counter++ + " = " + message.getText());
+                Object message = iter.next();
+                log.info("<== " + counter++ + " = " + message);
             }
         }
         
         assertEquals("Not enough messages received", data.length, receivedMessages.size());
         
         for (int i = 0; i < data.length; i++) {
-        	TextMessage received = (TextMessage) receivedMessages.get(i);
-            String text = received.getText();
-        
-            if (verbose) {
-                log.info("Received Text: " + text);
-            }
-            
-            assertEquals("Message: " + i, data[i], text);
+        	Message received = (Message) receivedMessages.get(i);
+            assertMessageValid(i, received);
         }
+    }
+
+
+    protected void assertMessageValid(int index, Message message) throws JMSException {
+        TextMessage textMessage = (TextMessage) message;
+        String text = textMessage.getText();
+      
+        if (verbose) {
+            log.info("Received Text: " + text);
+        }
+        
+        assertEquals("Message: " + index, data[index], text);
     }
 
     /**

@@ -29,7 +29,7 @@ import org.apache.activeio.packet.Packet;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.openwire.OpenWireFormat;
 
-public class DataStructureTestSupport extends CombinationTestSupport {
+public abstract class DataStructureTestSupport extends CombinationTestSupport {
     public boolean cacheEnabled;
     public WireFormat wireFormat;
 

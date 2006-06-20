@@ -46,7 +46,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     protected int version;
     protected ByteSequence marshalledProperties;
     
-    protected transient HashMap properties;
+    protected transient Map properties;
     private transient Endpoint from;
     private transient Endpoint to;
 
@@ -159,7 +159,7 @@ public class WireFormatInfo implements Command, MarshallAware {
         }
     }
     
-    private HashMap unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
+    private Map unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
         return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)), MAX_PROPERTY_SIZE);
     }
 
