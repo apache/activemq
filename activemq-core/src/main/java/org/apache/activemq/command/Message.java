@@ -70,7 +70,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     protected int redeliveryCounter;
 
     protected int size;
-    protected HashMap properties;
+    protected Map properties;
     protected boolean readOnlyProperties = false;
     protected boolean readOnlyBody = false;
     protected transient boolean recievedByDFBridge = false;
@@ -160,7 +160,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         }
     }
     
-    private HashMap unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
+    private Map unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
         return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)));
     }
 

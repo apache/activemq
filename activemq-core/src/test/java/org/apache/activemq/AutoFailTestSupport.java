@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.0 $
  */
 
-public class AutoFailTestSupport extends TestCase {
+public abstract class AutoFailTestSupport extends TestCase {
     protected static final Log log = LogFactory.getLog(AutoFailTestSupport.class);
 
     public static final int EXIT_SUCCESS = 0;

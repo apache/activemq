@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -30,6 +31,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.filter.PropertyExpression;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.Callback;
@@ -405,11 +407,22 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
     }
     
 
-    private void checkValidObject(Object value) throws MessageFormatException {
-        if(!(value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer ||
-                value instanceof Long || value instanceof Float || value instanceof Double || value instanceof String ||
-                value == null)) {
-            throw new MessageFormatException("Only objectified primitive objects and String types are allowed");
+    protected void checkValidObject(Object value) throws MessageFormatException {
+        if (!(value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long
+                || value instanceof Float || value instanceof Double || value instanceof Character || value instanceof String || value == null)) {
+
+            ActiveMQConnection conn = getConnection();
+            // conn is null if we are in the broker rather than a JMS client
+            if (conn == null || conn.isNestedMapAndListEnabled()) {
+                if (!(value instanceof Map || value instanceof List)) {
+                    throw new MessageFormatException("Only objectified primitive objects, String, Map and List types are allowed but was: " + value + " type: "
+                            + value.getClass());
+                }
+            }
+            else {
+                throw new MessageFormatException("Only objectified primitive objects and String types are allowed but was: " + value + " type: "
+                        + value.getClass());
+            }
         }
     }
 

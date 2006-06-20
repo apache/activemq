@@ -65,7 +65,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.5 $
  */
-public class CombinationTestSupport extends AutoFailTestSupport {
+public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     protected static final Log log = LogFactory.getLog(CombinationTestSupport.class);
     

@@ -126,6 +126,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected boolean alwaysSessionAsync=true;
     private boolean useAsyncSend = false;
     private boolean optimizeAcknowledge = false;
+    private boolean nestedMapAndListEnabled = true;
     private boolean useRetroactiveConsumer;
     private int closeTimeout = 15000;
     
@@ -825,6 +826,18 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setUseRetroactiveConsumer(boolean useRetroactiveConsumer) {
         this.useRetroactiveConsumer = useRetroactiveConsumer;
     }
+
+    public boolean isNestedMapAndListEnabled() {
+        return nestedMapAndListEnabled;
+    }
+
+    /**
+     * Enables/disables whether or not Message properties and MapMessage entries support nested Map and List objects
+     */
+    public void setNestedMapAndListEnabled(boolean structuredMapsEnabled) {
+        this.nestedMapAndListEnabled = structuredMapsEnabled;
+    }
+
 
     /**
      * Adds a transport listener so that a client can be notified of events in the underlying 

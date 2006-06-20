@@ -22,8 +22,11 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UTFDataFormatException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 
@@ -46,8 +49,10 @@ public class MarshallingSupport {
     public static final byte FLOAT_TYPE              = 8;
     public static final byte STRING_TYPE             = 9;
     public static final byte BYTE_ARRAY_TYPE         = 10;
+    public static final byte MAP_TYPE                = 11;
+    public static final byte LIST_TYPE               = 12;
 
-    static  public void marshalPrimitiveMap(HashMap map, DataOutputStream out) throws IOException {
+    static  public void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
         if( map == null ) {
             out.writeInt(-1);
         } else {
@@ -61,7 +66,7 @@ public class MarshallingSupport {
         }
     }
 
-    static public HashMap unmarshalPrimitiveMap(DataInputStream in) throws IOException {
+    static public Map unmarshalPrimitiveMap(DataInputStream in) throws IOException {
 		return unmarshalPrimitiveMap(in, Integer.MAX_VALUE);
 	}
 
@@ -71,7 +76,7 @@ public class MarshallingSupport {
      * @throws IOException 
      * @throws IOException
      */
-	public static HashMap unmarshalPrimitiveMap(DataInputStream in, int max_property_size) throws IOException {
+	public static Map unmarshalPrimitiveMap(DataInputStream in, int max_property_size) throws IOException {
         int size = in.readInt();
         if( size > max_property_size ) {
         	throw new IOException("Primitive map is larger than the allowed size: "+size);
@@ -87,6 +92,23 @@ public class MarshallingSupport {
             return rc;
         }
         
+    }
+
+    public static void marshalPrimitiveList(List list, DataOutputStream out) throws IOException {
+        out.writeInt(list.size());
+        for (Iterator iter = list.iterator(); iter.hasNext();) {
+            Object element = (Object) iter.next();
+            marshalPrimitive(out, element);
+        }
+    }
+
+    public static List unmarshalPrimitiveList(DataInputStream in) throws IOException {
+        int size = in.readInt();
+        List answer = new ArrayList(size);
+        while (size-- > 0) {
+            answer.add(unmarshalPrimitive(in));
+        }
+        return answer;
     }
 
     static public void marshalPrimitive(DataOutputStream out, Object value) throws IOException {
@@ -123,10 +145,17 @@ public class MarshallingSupport {
         } else if( value.getClass() == String.class ) {
             out.writeByte(STRING_TYPE);
             out.writeUTF((String)value);
+        } else if( value instanceof Map) {
+            out.writeByte(MAP_TYPE);
+            marshalPrimitiveMap((Map) value, out);
+        } else if( value instanceof List) {
+            out.writeByte(LIST_TYPE);
+            marshalPrimitiveList((List) value, out);
         } else {
             throw new IOException("Object is not a primitive: "+value);
         }
     }
+
 
     static public Object unmarshalPrimitive(DataInputStream in) throws IOException {
         Object value=null;
@@ -161,6 +190,12 @@ public class MarshallingSupport {
             break;
         case STRING_TYPE:
             value = in.readUTF();
+            break;
+        case MAP_TYPE:
+            value = unmarshalPrimitiveMap(in);
+            break;
+        case LIST_TYPE:
+            value = unmarshalPrimitiveList(in);
             break;
         }
         return value;
