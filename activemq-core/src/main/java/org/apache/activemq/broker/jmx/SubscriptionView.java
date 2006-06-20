@@ -165,6 +165,65 @@ public class SubscriptionView implements SubscriptionViewMBean {
     }
     
     /**
+     * @return whether or not the subscriber is retroactive or not
+     */
+    public boolean isRetroactive() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.isRetroactive() : false;
+    }
+    
+    /**
+     * @return whether or not the subscriber is an exclusive consumer
+     */
+    public boolean isExclusive() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.isExclusive() : false;
+    }
+    
+    
+    /**
+     * @return whether or not the subscriber is durable (persistent)
+     */
+    public boolean isDurable() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.isDurable() : false;
+    }
+    
+    /**
+     * @return whether or not the subscriber ignores local messages
+     */
+    public boolean isNoLocal() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.isNoLocal() : false;
+    }
+    
+    
+    /**
+     * @return the maximum number of pending messages allowed in addition to the prefetch size. If enabled
+     * to a non-zero value then this will perform eviction of messages for slow consumers on non-durable topics.
+     */
+    public int getMaximumPendingMessageLimit() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.getMaximumPendingMessageLimit() : 0;
+    }
+    
+    /**
+     * @return the consumer priority
+     */
+    public byte getPriority() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.getPriority() : 0;
+    }
+    
+    /**
+     * @return the name of the consumer which is only used for durable consumers.
+     */
+    public String getSubcriptionName() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.getSubcriptionName() : null;
+    }
+    
+    /**
      * @return number of messages pending delivery
      */
     public int getPendingQueueSize(){
