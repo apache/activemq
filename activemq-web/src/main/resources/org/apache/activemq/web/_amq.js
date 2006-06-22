@@ -76,13 +76,14 @@ var amq =
       var body = amq._messageQueue;
       amq._messageQueue='';
       amq._messages=0;
-      new Ajax.Request(amq.uri, { method: 'post', postBody: body});
+      amq._queueMessages++;
+      new Ajax.Request(amq.uri, { method: 'post', postBody: body, onSuccess: amq.endBatch});
     }
   },
 
   _pollHandler: function(request)
   {
-    amq._queueMessages++;
+    amq.startBatch();
     try
     {
       amq._messageHandler(request);
@@ -93,20 +94,10 @@ var amq =
     {
         alert(e);
     }
+    amq.endBatch();
 
-    amq._queueMessages--;
-
-    if (amq._queueMessages==0 && amq._messages>0)
-    {
-      var body = amq._messageQueue+'&poll='+amq.poll;
-      amq._messageQueue='';
-      amq._messages=0;
-      new Ajax.Request(amq.uri, { method: 'post', onSuccess: amq._pollHandler, postBody: body });
-    }
-    else if (amq.poll)
-    {
-        new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler });
-    }
+    new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler });
+    
   },
 
   // Add a function that gets called on every poll response, after all received
@@ -153,19 +144,20 @@ var amq =
       }
       else
       {
-        amq._messageQueue='d'+amq._messages+'='+destination+'&m'+amq._messages+'='+message+'&t'+amq._messages+'='+type;
+        amq._messageQueue+='&d'+amq._messages+'='+destination+'&m'+amq._messages+'='+message+'&t'+amq._messages+'='+type;
       }
       amq._messages++;
     }
     else
     {
-      new Ajax.Request(amq.uri, { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type});
+      amq.startBatch();
+      new Ajax.Request(amq.uri, { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type, onSuccess: amq.endBatch});
     }
   },
-
+  
   _startPolling : function()
   {
-    if (amq.poll)
+   if (amq.poll)
       new Ajax.Request(amq.uri, { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
   }
 };
