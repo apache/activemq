@@ -1,0 +1,61 @@
+/**
+ * Copyright 2005-2006 The Apache Software Foundation
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq.tool.properties;
+
+public class JmsClientProperties extends AbstractObjectProperties {
+    public static final String SESSION_AUTO_ACKNOWLEDGE    = "autoAck";
+    public static final String SESSION_CLIENT_ACKNOWLEDGE  = "clientAck";
+    public static final String SESSION_DUPS_OK_ACKNOWLEDGE = "dupsAck";
+    public static final String SESSION_TRANSACTED          = "transacted";
+
+    protected String  destName       = "TEST.FOO";
+    protected boolean destComposite  = false;
+
+    protected String  sessAckMode    = SESSION_AUTO_ACKNOWLEDGE;
+    protected boolean sessTransacted = false;
+
+    public String getDestName() {
+        return destName;
+    }
+
+    public void setDestName(String destName) {
+        this.destName = destName;
+    }
+
+    public boolean isDestComposite() {
+        return destComposite;
+    }
+
+    public void setDestComposite(boolean destComposite) {
+        this.destComposite = destComposite;
+    }
+
+    public String getSessAckMode() {
+        return sessAckMode;
+    }
+
+    public void setSessAckMode(String sessAckMode) {
+        this.sessAckMode = sessAckMode;
+    }
+
+    public boolean isSessTransacted() {
+        return sessTransacted;
+    }
+
+    public void setSessTransacted(boolean sessTransacted) {
+        this.sessTransacted = sessTransacted;
+    }
+}

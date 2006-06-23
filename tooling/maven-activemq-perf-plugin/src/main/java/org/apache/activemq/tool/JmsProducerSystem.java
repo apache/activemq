@@ -16,76 +16,72 @@
  */
 package org.apache.activemq.tool;
 
+import org.apache.activemq.tool.properties.JmsClientSystemProperties;
+import org.apache.activemq.tool.properties.JmsProducerSystemProperties;
+import org.apache.activemq.tool.properties.JmsProducerProperties;
+import org.apache.activemq.tool.properties.JmsClientProperties;
+import org.apache.activemq.tool.sampler.ThroughputSamplerTask;
+
 import javax.jms.JMSException;
 import java.util.Properties;
 
-public class JmsProducerSystem extends JmsClientSystemSupport {
+public class JmsProducerSystem extends AbstractJmsClientSystem {
+    protected JmsProducerSystemProperties sysTest = new JmsProducerSystemProperties();
+    protected JmsProducerProperties producer = new JmsProducerProperties();
 
-    public String getReportName() {
-        if (reportName == null) {
-            return "JmsProducer_Client" + getNumClients() + "_Dest" + getTotalDests() + "_" + getDestDistro() + ".xml";
-        } else {
-            return reportName;
-        }
+    public JmsClientSystemProperties getSysTest() {
+        return sysTest;
     }
 
-    public String getClientName() {
-        if (clientName == null) {
-            return "JmsProducer";
-        } else {
-            return clientName;
-        }
+    public void setSysTest(JmsClientSystemProperties sysTestProps) {
+        sysTest = (JmsProducerSystemProperties)sysTestProps;
     }
 
-    protected void runJmsClient(String clientName, Properties clientSettings) {
-        PerfMeasurementTool sampler = getPerformanceSampler();
+    public JmsClientProperties getJmsClientProperties() {
+        return getProducer();
+    }
 
-        JmsProducerClient producer = new JmsProducerClient();
-        producer.setSettings(clientSettings);
-        producer.setClientName(clientName);
+    public JmsProducerProperties getProducer() {
+        return producer;
+    }
+
+    public void setProducer(JmsProducerProperties producer) {
+        this.producer = producer;
+    }
+
+    protected void runJmsClient(String clientName, int clientDestIndex, int clientDestCount) {
+        ThroughputSamplerTask sampler = getTpSampler();
+
+        JmsProducerClient producerClient = new JmsProducerClient(producer, jmsConnFactory);
+        producerClient.setClientName(clientName);
 
         if (sampler != null) {
-            sampler.registerClient(producer);
-            producer.setPerfEventListener(sampler);
+            sampler.registerClient(producerClient);
         }
 
         try {
-            producer.createJmsTextMessage();
-            producer.sendMessages();
+            producerClient.sendMessages(clientDestIndex, clientDestCount);
         } catch (JMSException e) {
             e.printStackTrace();
         }
     }
 
-    protected String getThreadName() {
-        return "JMS Producer Thread: ";
-    }
-
-    protected String getThreadGroupName() {
-        return "JMS Producer Thread Group";
-    }
-
-    protected String getDestCountKey() {
-        return "producer.destCount";
-    }
-
-    protected String getDestIndexKey() {
-        return "producer.destIndex";
-    }
-
     public static void main(String[] args) {
-        Properties sysSettings = new Properties();
-
-        for (int i = 0; i < args.length; i++) {
-            // Get property define options only
+        Properties props = new Properties();
+        for (int i=0; i<args.length; i++) {
             int index = args[i].indexOf("=");
             String key = args[i].substring(0, index);
             String val = args[i].substring(index + 1);
-            sysSettings.setProperty(key, val);
+            props.setProperty(key, val);
         }
 
-        JmsProducerSystem sysTest = new JmsProducerSystem();
-        sysTest.setSettings(sysSettings);
-        sysTest.runSystemTest();
+        JmsProducerSystem sys = new JmsProducerSystem();
+        sys.configureProperties(props);
+
+        try {
+            sys.runSystemTest();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
     }
 }

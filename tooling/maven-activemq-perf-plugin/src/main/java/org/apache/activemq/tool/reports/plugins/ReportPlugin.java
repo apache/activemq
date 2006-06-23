@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool;
+package org.apache.activemq.tool.reports.plugins;
 
-import java.util.Properties;
+import java.util.Map;
 
-public interface PerfMeasurable {
-    public void reset();
-    public String getClientName();
-    public long getThroughput();
-    public Properties getSettings();
-    public void setPerfEventListener(PerfEventListener listener);
-    public PerfEventListener getPerfEventListener();
+public interface ReportPlugin {
+    public static final int REPORT_PLUGIN_THROUGHPUT = 0;
+    public static final int REPORT_PLUGIN_CPU        = 1;
+
+    public void handleCsvData(String csvData);
+    public Map getSummary();
 }

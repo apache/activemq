@@ -14,17 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool;
+package org.apache.activemq.tool.properties;
 
-import javax.jms.JMSException;
-
-public interface PerfEventListener {
-    public void onConfigStart(PerfMeasurable client);
-    public void onConfigEnd(PerfMeasurable client);
-    public void onPublishStart(PerfMeasurable client);
-    public void onPublishEnd(PerfMeasurable client);
-    public void onConsumeStart(PerfMeasurable client);
-    public void onConsumeEnd(PerfMeasurable client);
-    public void onJMSException(PerfMeasurable client, JMSException e);
-    public void onException(PerfMeasurable client, Exception e);
+public class JmsConsumerSystemProperties extends JmsClientSystemProperties {
+    public JmsConsumerSystemProperties() {
+        clientPrefix = "JmsConsumer";
+    }
 }

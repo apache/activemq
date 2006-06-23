@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.tool.reports;
 
+import org.apache.activemq.tool.reports.plugins.ReportPlugin;
+import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
+
 import java.util.Properties;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,7 +27,7 @@ import java.util.Arrays;
 public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
 
     public void openReportWriter() {
-        writeProperties("System Properties", System.getProperties());
+        // Do nothing
     }
 
     public void closeReportWriter() {
@@ -36,20 +39,13 @@ public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
         System.out.println("[PERF-INFO]: " + info);
     }
 
-    public void writeHeader(String header) {
-        char[] border = new char[header.length() + 8]; // +8 for spacing
-        Arrays.fill(border, '#');
-        String borderStr = new String(border);
-
-        System.out.println(borderStr);
-        System.out.println("#   " + header + "   #");
-        System.out.println(borderStr);
-    }
-
-    public void writePerfData(String data) {
-        System.out.println("[PERF-DATA]: " + data);
-        // Assume data is a CSV of key-value pair
-        parsePerfCsvData(data);
+    public void writeCsvData(int csvType, String csvData) {
+        if (csvType == ReportPlugin.REPORT_PLUGIN_THROUGHPUT) {
+            System.out.println("[PERF-TP]: " + csvData);
+        } else if (csvType == ReportPlugin.REPORT_PLUGIN_CPU) {
+            System.out.println("[PERF-CPU]: " + csvData);
+        }
+        handleCsvData(csvType, csvData);
     }
 
     public void writeProperties(String header, Properties props) {
@@ -66,22 +62,32 @@ public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     public void writePerfSummary() {
-        Map summary = createPerfSummary(clientThroughputs);
+        Map summary = getSummary(ReportPlugin.REPORT_PLUGIN_THROUGHPUT);
 
-        System.out.println("[PERF-SUMMARY] System Total Throughput: " + summary.get(KEY_SYS_TOTAL_TP));
-        System.out.println("[PERF-SUMMARY] System Total Clients: " + summary.get(KEY_SYS_TOTAL_CLIENTS));
-        System.out.println("[PERF-SUMMARY] System Average Throughput: " + summary.get(KEY_SYS_AVE_TP));
-        System.out.println("[PERF-SUMMARY] System Average Throughput Excluding Min/Max: " + summary.get(KEY_SYS_AVE_EMM_TP));
-        System.out.println("[PERF-SUMMARY] System Average Client Throughput: " + summary.get(KEY_SYS_AVE_CLIENT_TP));
-        System.out.println("[PERF-SUMMARY] System Average Client Throughput Excluding Min/Max: " + summary.get(KEY_SYS_AVE_CLIENT_EMM_TP));
-        System.out.println("[PERF-SUMMARY] Min Client Throughput Per Sample: " + summary.get(KEY_MIN_CLIENT_TP));
-        System.out.println("[PERF-SUMMARY] Max Client Throughput Per Sample: " + summary.get(KEY_MAX_CLIENT_TP));
-        System.out.println("[PERF-SUMMARY] Min Client Total Throughput: " + summary.get(KEY_MIN_CLIENT_TOTAL_TP));
-        System.out.println("[PERF-SUMMARY] Max Client Total Throughput: " + summary.get(KEY_MAX_CLIENT_TOTAL_TP));
-        System.out.println("[PERF-SUMMARY] Min Client Average Throughput: " + summary.get(KEY_MIN_CLIENT_AVE_TP));
-        System.out.println("[PERF-SUMMARY] Max Client Average Throughput: " + summary.get(KEY_MAX_CLIENT_AVE_TP));
-        System.out.println("[PERF-SUMMARY] Min Client Average Throughput Excluding Min/Max: " + summary.get(KEY_MIN_CLIENT_AVE_EMM_TP));
-        System.out.println("[PERF-SUMMARY] Max Client Average Throughput Excluding Min/Max: " + summary.get(KEY_MAX_CLIENT_AVE_EMM_TP));
+        System.out.println("[PERF-TP-SUMMARY] System Total Throughput: " + summary.get(ThroughputReportPlugin.KEY_SYS_TOTAL_TP));
+        System.out.println("[PERF-TP-SUMMARY] System Total Clients: " + summary.get(ThroughputReportPlugin.KEY_SYS_TOTAL_CLIENTS));
+        System.out.println("[PERF-TP-SUMMARY] System Average Throughput: " + summary.get(ThroughputReportPlugin.KEY_SYS_AVE_TP));
+        System.out.println("[PERF-TP-SUMMARY] System Average Throughput Excluding Min/Max: " + summary.get(ThroughputReportPlugin.KEY_SYS_AVE_EMM_TP));
+        System.out.println("[PERF-TP-SUMMARY] System Average Client Throughput: " + summary.get(ThroughputReportPlugin.KEY_SYS_AVE_CLIENT_TP));
+        System.out.println("[PERF-TP-SUMMARY] System Average Client Throughput Excluding Min/Max: " + summary.get(ThroughputReportPlugin.KEY_SYS_AVE_CLIENT_EMM_TP));
+        System.out.println("[PERF-TP-SUMMARY] Min Client Throughput Per Sample: " + summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_TP));
+        System.out.println("[PERF-TP-SUMMARY] Max Client Throughput Per Sample: " + summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_TP));
+        System.out.println("[PERF-TP-SUMMARY] Min Client Total Throughput: " + summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_TOTAL_TP));
+        System.out.println("[PERF-TP-SUMMARY] Max Client Total Throughput: " + summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_TOTAL_TP));
+        System.out.println("[PERF-TP-SUMMARY] Min Client Average Throughput: " + summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_TP));
+        System.out.println("[PERF-TP-SUMMARY] Max Client Average Throughput: " + summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_TP));
+        System.out.println("[PERF-TP-SUMMARY] Min Client Average Throughput Excluding Min/Max: " + summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_EMM_TP));
+        System.out.println("[PERF-TP-SUMMARY] Max Client Average Throughput Excluding Min/Max: " + summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_EMM_TP));
+    }
+
+    protected void writeHeader(String header) {
+        char[] border = new char[header.length() + 8]; // +8 for spacing
+        Arrays.fill(border, '#');
+        String borderStr = new String(border);
+
+        System.out.println(borderStr);
+        System.out.println("#   " + header + "   #");
+        System.out.println(borderStr);
     }
 
 }

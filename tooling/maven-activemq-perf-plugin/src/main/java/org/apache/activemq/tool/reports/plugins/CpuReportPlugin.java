@@ -14,32 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool;
+package org.apache.activemq.tool.reports.plugins;
 
-import javax.jms.JMSException;
+import java.util.Map;
 
-public class PerfEventAdapter implements PerfEventListener {
-    public void onConfigStart(PerfMeasurable client) {
+public class CpuReportPlugin implements ReportPlugin {
+    public void handleCsvData(String csvData) {
+        // Do nothing
     }
 
-    public void onConfigEnd(PerfMeasurable client) {
-    }
-
-    public void onPublishStart(PerfMeasurable client) {
-    }
-
-    public void onPublishEnd(PerfMeasurable client) {
-    }
-
-    public void onConsumeStart(PerfMeasurable client) {
-    }
-
-    public void onConsumeEnd(PerfMeasurable client) {
-    }
-
-    public void onJMSException(PerfMeasurable client, JMSException e) {
-    }
-
-    public void onException(PerfMeasurable client, Exception e) {
+    public Map getSummary() {
+        return null; // Do nothing
     }
 }

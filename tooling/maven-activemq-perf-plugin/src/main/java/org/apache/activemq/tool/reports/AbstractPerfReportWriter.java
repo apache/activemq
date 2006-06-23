@@ -16,178 +16,23 @@
  */
 package org.apache.activemq.tool.reports;
 
-import org.apache.activemq.tool.ReflectionUtil;
+import org.apache.activemq.tool.reports.plugins.ReportPlugin;
+import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
+import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
 
-import java.util.Properties;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.StringTokenizer;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.Iterator;
 
 public abstract class AbstractPerfReportWriter implements PerformanceReportWriter {
-    public static final String KEY_SYS_TOTAL_TP          = "SystemTotalTP";
-    public static final String KEY_SYS_TOTAL_CLIENTS     = "SystemTotalClients";
-    public static final String KEY_SYS_AVE_TP            = "SystemAveTP";
-    public static final String KEY_SYS_AVE_EMM_TP        = "SystemAveEMMTP";
-    public static final String KEY_SYS_AVE_CLIENT_TP     = "SystemAveClientTP";
-    public static final String KEY_SYS_AVE_CLIENT_EMM_TP = "SystemAveClientEMMTP";
-    public static final String KEY_MIN_CLIENT_TP = "MinClientTP";
-    public static final String KEY_MAX_CLIENT_TP = "MaxClientTP";
-    public static final String KEY_MIN_CLIENT_TOTAL_TP = "MinClientTotalTP";
-    public static final String KEY_MAX_CLIENT_TOTAL_TP = "MaxClientTotalTP";
-    public static final String KEY_MIN_CLIENT_AVE_TP = "MinClientAveTP";
-    public static final String KEY_MAX_CLIENT_AVE_TP = "MaxClientAveTP";
-    public static final String KEY_MIN_CLIENT_AVE_EMM_TP = "MinClientAveEMMTP";
-    public static final String KEY_MAX_CLIENT_AVE_EMM_TP = "MaxClientAveEMMTP";
+    protected ReportPlugin[] plugins = new ReportPlugin[] {
+                                                new ThroughputReportPlugin(),
+                                                new CpuReportPlugin()
+                                       };
 
-    protected Properties settings;
-    protected Map clientThroughputs = new HashMap();
-
-    public void setSettings(Properties settings) {
-        this.settings = settings;
-        ReflectionUtil.configureClass(this, settings);
+    protected void handleCsvData(int pluginType, String csvData) {
+        plugins[pluginType].handleCsvData(csvData);
     }
 
-    public Properties getSettings() {
-        return settings;
-    }
-
-    protected void parsePerfCsvData(String csvData) {
-        StringTokenizer tokenizer = new StringTokenizer(csvData, ",");
-        String data, key, val, clientName = null;
-        Long throughput = null;
-        while (tokenizer.hasMoreTokens()) {
-            data = tokenizer.nextToken();
-            key  = data.substring(0, data.indexOf("="));
-            val  = data.substring(data.indexOf("=") + 1);
-
-            if (key.equalsIgnoreCase("clientName")) {
-                clientName = val;
-            } else if (key.equalsIgnoreCase("throughput")) {
-                throughput = Long.valueOf(val);
-            } else {
-                // Ignore unknown token
-            }
-        }
-        addToClientTPList(clientName, throughput);
-    }
-
-    protected void addToClientTPList(String clientName, Long throughput) {
-        // Write to client's throughput list
-        if (clientName == null || throughput == null) {
-            throw new IllegalArgumentException("Invalid Throughput CSV Data: clientName=" + clientName + ", throughput=" + throughput);
-        }
-
-        List clientTPList = (List)clientThroughputs.get(clientName);
-        if (clientTPList == null) {
-            clientTPList = new ArrayList();
-            clientThroughputs.put(clientName, clientTPList);
-        }
-        clientTPList.add(throughput);
-    }
-
-    protected Map createPerfSummary(Map clientTPMap) {
-        long   minClientTP = Long.MAX_VALUE, // TP = throughput
-               maxClientTP = Long.MIN_VALUE,
-               minClientTotalTP = Long.MAX_VALUE,
-               maxClientTotalTP = Long.MIN_VALUE,
-               systemTotalTP = 0;
-
-        double minClientAveTP = Double.MAX_VALUE,
-               maxClientAveTP = Double.MIN_VALUE,
-               minClientAveEMMTP = Double.MAX_VALUE, // EMM = Excluding Min/Max
-               maxClientAveEMMTP = Double.MIN_VALUE,
-               systemAveTP = 0.0,
-               systemAveEMMTP = 0.0;
-
-        String nameMinClientTP = "",
-               nameMaxClientTP = "",
-               nameMinClientTotalTP = "",
-               nameMaxClientTotalTP = "",
-               nameMinClientAveTP = "",
-               nameMaxClientAveTP = "",
-               nameMinClientAveEMMTP = "",
-               nameMaxClientAveEMMTP = "";
-
-        Set clientNames = clientTPMap.keySet();
-        String clientName;
-        List   clientTPList;
-        long tempLong;
-        double tempDouble;
-        int clientCount = 0;
-        for (Iterator i=clientNames.iterator(); i.hasNext();) {
-            clientName = (String)i.next();
-            clientTPList = (List)clientTPMap.get(clientName);
-            clientCount++;
-
-            tempLong = PerformanceStatisticsUtil.getMinThroughput(clientTPList);
-            if (tempLong < minClientTP) {
-                minClientTP = tempLong;
-                nameMinClientTP = clientName;
-            }
-
-            tempLong = PerformanceStatisticsUtil.getMaxThroughput(clientTPList);
-            if (tempLong > maxClientTP) {
-                maxClientTP = tempLong;
-                nameMaxClientTP = clientName;
-            }
-
-            tempLong = PerformanceStatisticsUtil.getTotalThroughput(clientTPList);
-            systemTotalTP += tempLong; // Accumulate total TP
-            if (tempLong < minClientTotalTP) {
-                minClientTotalTP = tempLong;
-                nameMinClientTotalTP = clientName;
-            }
-
-            if (tempLong > maxClientTotalTP) {
-                maxClientTotalTP = tempLong;
-                nameMaxClientTotalTP = clientName;
-            }
-
-            tempDouble = PerformanceStatisticsUtil.getAveThroughput(clientTPList);
-            systemAveTP += tempDouble; // Accumulate ave throughput
-            if (tempDouble < minClientAveTP) {
-                minClientAveTP = tempDouble;
-                nameMinClientAveTP = clientName;
-            }
-
-            if (tempDouble > maxClientAveTP) {
-                maxClientAveTP = tempDouble;
-                nameMaxClientAveTP = clientName;
-            }
-
-            tempDouble = PerformanceStatisticsUtil.getAveThroughputExcludingMinMax(clientTPList);
-            systemAveEMMTP += tempDouble; // Accumulate ave throughput excluding min/max
-            if (tempDouble < minClientAveEMMTP) {
-                minClientAveEMMTP = tempDouble;
-                nameMinClientAveEMMTP = clientName;
-            }
-
-            if (tempDouble > maxClientAveEMMTP) {
-                maxClientAveEMMTP = tempDouble;
-                nameMaxClientAveEMMTP = clientName;
-            }
-        }
-
-        Map summary = new HashMap();
-        summary.put(KEY_SYS_TOTAL_TP, String.valueOf(systemTotalTP));
-        summary.put(KEY_SYS_TOTAL_CLIENTS, String.valueOf(clientCount));
-        summary.put(KEY_SYS_AVE_TP, String.valueOf(systemAveTP));
-        summary.put(KEY_SYS_AVE_EMM_TP, String.valueOf(systemAveEMMTP));
-        summary.put(KEY_SYS_AVE_CLIENT_TP, String.valueOf(systemAveTP / clientCount));
-        summary.put(KEY_SYS_AVE_CLIENT_EMM_TP, String.valueOf(systemAveEMMTP / clientCount));
-        summary.put(KEY_MIN_CLIENT_TP, nameMinClientTP + "=" + minClientTP);
-        summary.put(KEY_MAX_CLIENT_TP, nameMaxClientTP + "=" + maxClientTP);
-        summary.put(KEY_MIN_CLIENT_TOTAL_TP, nameMinClientTotalTP + "=" + minClientTotalTP);
-        summary.put(KEY_MAX_CLIENT_TOTAL_TP, nameMaxClientTotalTP + "=" + maxClientTotalTP);
-        summary.put(KEY_MIN_CLIENT_AVE_TP, nameMinClientAveTP + "=" + minClientAveTP);
-        summary.put(KEY_MAX_CLIENT_AVE_TP, nameMaxClientAveTP + "=" + maxClientAveTP);
-        summary.put(KEY_MIN_CLIENT_AVE_EMM_TP, nameMinClientAveEMMTP + "=" + minClientAveEMMTP);
-        summary.put(KEY_MAX_CLIENT_AVE_EMM_TP, nameMaxClientAveEMMTP + "=" + maxClientAveEMMTP);
-
-        return summary;
+    protected Map getSummary(int pluginType) {
+        return plugins[pluginType].getSummary();
     }
 }

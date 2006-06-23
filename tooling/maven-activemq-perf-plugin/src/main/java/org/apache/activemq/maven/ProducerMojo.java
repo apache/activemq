@@ -1,17 +1,12 @@
-package org.apache.activemq.maven;
-
-import org.apache.activemq.tool.JmsProducerSystem;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-
-/*
- * Copyright 2001-2005 The Apache Software Foundation.
+/**
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +14,18 @@ import org.apache.maven.plugin.MojoExecutionException;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.activemq.maven;
 
+import org.apache.activemq.tool.JmsProducerSystem;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Properties;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Goal which touches a timestamp file.
@@ -27,180 +33,40 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @goal producer
  * @phase process
  */
-public class ProducerMojo
-        extends AbstractMojo {
+public class ProducerMojo extends AbstractMojo {
 
-    /**
-     * @parameter expression="${sampler.duration}" default-value="60000"
-     * @required
-     */
-    private String duration;
+    private String[] validPrefix = {
+        "sysTest.",
+        "factory.",
+        "producer.",
+        "tpSampler.",
+        "cpuSampler."
+    };
 
-    /**
-     * @parameter expression="${sampler.interval}" default-value="1000"
-     * @required
-     */
-    private String interval;
-
-    /**
-     * @parameter expression="${sampler.rampUpTime}" default-value="10000"
-     * @required
-     */
-    private String rampUpTime;
-
-    /**
-     * @parameter expression="${sampler.rampDownTime}" default-value="10000"
-     * @required
-     */
-    private String rampDownTime;
-
-    /**
-     * @parameter expression="${producer.spiClass}" default-value="org.apache.activemq.tool.spi.ActiveMQPojoSPI"
-     * @required
-     */
-    private String spiClass;
-
-    /**
-     * @parameter expression="${producer.sessTransacted}" default-value="false"
-     * @required
-     */
-    private String sessTransacted;
-
-    /**
-     * @parameter expression="${producer.sessAckMode}" default-value="autoAck"
-     * @required
-     */
-    private String sessAckMode;
-
-    /**
-     * @parameter expression="${producer.destName}" default-value="topic://TEST.PERFORMANCE.FOO.BAR"
-     * @required
-     */
-    private String destName;
-
-    /**
-     * @parameter expression="${producer.destCount}" default-value="1"
-     * @required
-     */
-    private String destCount;
-
-    /**
-     * @parameter expression="${producer.destComposite}" default-value="false"
-     * @required
-     */
-    private String destComposite;
-
-    /**
-     * @parameter expression="${producer.deliveryMode}" default-value="nonpersistent"
-     * @required
-     */
-    private String deliveryMode;
-
-    /**
-     * @parameter expression="${producer.messageSize}" default-value="1024"
-     * @required
-     */
-    private String messageSize;
-
-    /**
-     * @parameter expression="${producer.sendCount}" default-value="1000000"
-     * @required
-     */
-    private String sendCount;
-
-    /*
-     * @parameter expression="${producer.sendDuration}" default-value="60000"
-     * @required
-
-    private String sendDuration;
-    */
-
-    /**
-     * @parameter expression="${producer.sendType}" default-value="time"
-     * @required
-     */
-    private String sendType;
-
-    /**
-     * @parameter expression="${factory.brokerUrl}" default-value="tcp://localhost:61616"
-     * @required
-     */
-    private String brokerUrl;
-
-    /**
-     * @parameter expression="${factory.asyncSend}" default-value="true"
-     * @required
-     */
-    private String asyncSend;
-
-    /**
-     * @parameter expression="${sysTest.numClients}" default-value="1"
-     * @required
-     */
-    private String numClients;
-
-    /**
-     * @parameter expression="${sysTest.totalDests}" default-value="1"
-     * @required
-     */
-    private String totalDests;
-
-    /**
-     * @parameter expression="${sysTest.destDistro}" default-value="all"
-     * @required
-     */
-    private String destDistro;
-
-    /**
-     * @parameter expression="${sysTest.reportDirectory}" default-value="${project.build.directory}/test-perf"
-     * @required
-     */
-    private String reportDirectory;
-
-    /**
-     * @parameter expression="${sysTest.reportType}" default-value="xml"
-     * @required
-     */
-    private String reportType;
-
-
-    public void execute()
-            throws MojoExecutionException {
-
+    public void execute() throws MojoExecutionException {
         JmsProducerSystem.main(createArgument());
     }
 
-    public String[] createArgument() {
+    protected String[] createArgument() {
+        List args = new ArrayList();
+        Properties sysProps = System.getProperties();
+        Set keys = new HashSet(sysProps.keySet());
 
-        String[] options = {
-            "sampler.duration=" + duration,   
-            "sampler.interval=" + interval,     
-            "sampler.rampUpTime=" + rampUpTime,   
-            "sampler.rampDownTime=" + rampDownTime, 
-    
-            "producer.spiClass=" + spiClass,
-            "producer.sessTransacted=" + sessTransacted,
-            "producer.sessAckMode=" + sessAckMode,
-            "producer.destName=" + destName,
-            "producer.destCount=" + destCount,
-            "producer.destComposite=" + destComposite,
+        for (Iterator i=keys.iterator(); i.hasNext();) {
+            String key = (String)i.next();
+            if (isRecognizedProperty(key)) {
+                args.add(key + "=" + sysProps.remove(key));
+            }
+        }
+        return (String[])args.toArray(new String[0]);
+    }
 
-            "producer.deliveryMode="+deliveryMode,
-            "producer.messageSize="+messageSize,
-            "producer.sendCount="+sendCount,    
-            "producer.sendDuration="+duration, 
-            "producer.sendType="+sendType,
-    
-            "factory.brokerUrl="+brokerUrl,
-            "factory.asyncSend="+asyncSend,
-    
-            "sysTest.numClients=" + numClients,
-            "sysTest.totalDests=" + totalDests,
-            "sysTest.destDistro=" + destDistro,
-            "sysTest.reportDirectory=" + reportDirectory,
-            "sysTest.reportType=" + reportType
-        };
-
-        return options;
+    protected boolean isRecognizedProperty(String key) {
+        for (int j=0; j<validPrefix.length; j++) {
+            if (key.startsWith(validPrefix[j])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

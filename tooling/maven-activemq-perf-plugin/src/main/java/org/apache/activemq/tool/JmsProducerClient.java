@@ -16,51 +16,60 @@
  */
 package org.apache.activemq.tool;
 
+import org.apache.activemq.tool.properties.JmsProducerProperties;
+import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.*;
-
+import javax.jms.ConnectionFactory;
+import javax.jms.MessageProducer;
+import javax.jms.TextMessage;
+import javax.jms.JMSException;
+import javax.jms.Destination;
+import javax.jms.DeliveryMode;
 import java.util.Arrays;
-import java.util.Properties;
 
-public class JmsProducerClient extends JmsPerformanceSupport {
+public class JmsProducerClient extends AbstractJmsMeasurableClient {
     private static final Log log = LogFactory.getLog(JmsProducerClient.class);
 
-    private static final String PREFIX_CONFIG_PRODUCER = "producer.";
-    public static final String TIME_BASED_SENDING = "time";
-    public static final String COUNT_BASED_SENDING = "count";
-    public static final String DELIVERY_MODE_PERSISTENT = "persistent";
-    public static final String DELIVERY_MODE_NON_PERSISTENT = "nonpersistent";
-
-    protected Properties jmsProducerSettings = new Properties();
+    protected JmsProducerProperties client;
     protected MessageProducer jmsProducer;
     protected TextMessage jmsTextMessage;
 
-    protected String deliveryMode = DELIVERY_MODE_NON_PERSISTENT;
-    protected int messageSize = 1024;          // Send 1kb messages by default
-    protected long sendCount = 1000000;       // Send a million messages by default
-    protected long sendDuration = 5 * 60 * 1000; // Send for 5 mins by default
-    protected String sendType = TIME_BASED_SENDING;
+    public JmsProducerClient(ConnectionFactory factory) {
+        this(new JmsProducerProperties(), factory);
+    }
+
+    public JmsProducerClient(JmsProducerProperties clientProps, ConnectionFactory factory) {
+        super(factory);
+        this.client = clientProps;
+    }
 
     public void sendMessages() throws JMSException {
-        if (listener != null) {
-            listener.onConfigEnd(this);
-        }
         // Send a specific number of messages
-        if (sendType.equalsIgnoreCase(COUNT_BASED_SENDING)) {
-            sendCountBasedMessages(getSendCount());
+        if (client.getSendType().equalsIgnoreCase(JmsProducerProperties.COUNT_BASED_SENDING)) {
+            sendCountBasedMessages(client.getSendCount());
 
-            // Send messages for a specific duration
+        // Send messages for a specific duration
         } else {
-            sendTimeBasedMessages(getSendDuration());
+            sendTimeBasedMessages(client.getSendDuration());
         }
+    }
+
+    public void sendMessages(int destCount) throws JMSException {
+        this.destCount = destCount;
+        sendMessages();
+    }
+
+    public void sendMessages(int destIndex, int destCount) throws JMSException {
+        this.destIndex = destIndex;
+        sendMessages(destCount);
     }
 
     public void sendCountBasedMessages(long messageCount) throws JMSException {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
-        Destination[] dest = createDestination();
+        Destination[] dest = createDestination(destIndex, destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -72,11 +81,13 @@ public class JmsProducerClient extends JmsPerformanceSupport {
         }
         try {
             getConnection().start();
-            if (listener != null) {
-                listener.onPublishStart(this);
-            }
+            log.info("Starting to publish " + client.getMessageSize() + " byte(s) of " + messageCount + " messages...");
+
             // Send one type of message only, avoiding the creation of different messages on sending
-            if (getJmsTextMessage() != null) {
+            if (!client.isCreateNewMsg()) {
+                // Create only a single message
+                createJmsTextMessage();
+
                 // Send to more than one actual destination
                 if (dest.length > 1) {
                     for (int i = 0; i < messageCount; i++) {
@@ -115,9 +126,6 @@ public class JmsProducerClient extends JmsPerformanceSupport {
                 }
             }
         } finally {
-            if (listener != null) {
-                listener.onPublishEnd(this);
-            }
             getConnection().close();
         }
     }
@@ -127,7 +135,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
 
-        Destination[] dest = createDestination();
+        Destination[] dest = createDestination(destIndex, destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -140,12 +148,13 @@ public class JmsProducerClient extends JmsPerformanceSupport {
 
         try {
             getConnection().start();
-            if (listener != null) {
-                listener.onPublishStart(this);
-            }
+            log.info("Starting to publish " + client.getMessageSize() + " byte(s) messages for " + duration + " ms");
 
             // Send one type of message only, avoiding the creation of different messages on sending
-            if (getJmsTextMessage() != null) {
+            if (!client.isCreateNewMsg()) {
+                // Create only a single message
+                createJmsTextMessage();
+
                 // Send to more than one actual destination
                 if (dest.length > 1) {
                     while (System.currentTimeMillis() < endTime) {
@@ -186,27 +195,17 @@ public class JmsProducerClient extends JmsPerformanceSupport {
                 }
             }
         } finally {
-            if (listener != null) {
-                listener.onPublishEnd(this);
-            }
             getConnection().close();
         }
     }
 
-    public Properties getJmsProducerSettings() {
-        return jmsProducerSettings;
-    }
-
-    public void setJmsProducerSettings(Properties jmsProducerSettings) {
-        this.jmsProducerSettings = jmsProducerSettings;
-        ReflectionUtil.configureClass(this, jmsProducerSettings);
-    }
-
     public MessageProducer createJmsProducer() throws JMSException {
         jmsProducer = getSession().createProducer(null);
-        if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_PERSISTENT)) {
+        if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_PERSISTENT)) {
+            log.info("Creating producer to possible multiple destinations with persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        } else if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_NON_PERSISTENT)) {
+        } else if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_NON_PERSISTENT)) {
+            log.info("Creating producer to possible multiple destinations with non-persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         } else {
             log.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
@@ -217,9 +216,11 @@ public class JmsProducerClient extends JmsPerformanceSupport {
 
     public MessageProducer createJmsProducer(Destination dest) throws JMSException {
         jmsProducer = getSession().createProducer(dest);
-        if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_PERSISTENT)) {
+        if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_PERSISTENT)) {
+            log.info("Creating producer to: " + dest.toString() + " with persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        } else if (getDeliveryMode().equalsIgnoreCase(DELIVERY_MODE_NON_PERSISTENT)) {
+        } else if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_NON_PERSISTENT)) {
+            log.info("Creating  producer to: " + dest.toString() + " with non-persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         } else {
             log.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
@@ -233,7 +234,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
     }
 
     public TextMessage createJmsTextMessage() throws JMSException {
-        return createJmsTextMessage(getMessageSize());
+        return createJmsTextMessage(client.getMessageSize());
     }
 
     public TextMessage createJmsTextMessage(int size) throws JMSException {
@@ -242,7 +243,7 @@ public class JmsProducerClient extends JmsPerformanceSupport {
     }
 
     public TextMessage createJmsTextMessage(String text) throws JMSException {
-        jmsTextMessage = getSession().createTextMessage(buildText(text, getMessageSize()));
+        jmsTextMessage = getSession().createTextMessage(buildText(text, client.getMessageSize()));
         return jmsTextMessage;
     }
 
@@ -250,100 +251,17 @@ public class JmsProducerClient extends JmsPerformanceSupport {
         return jmsTextMessage;
     }
 
+    public JmsClientProperties getClient() {
+        return client;
+    }
+
+    public void setClient(JmsClientProperties clientProps) {
+        client = (JmsProducerProperties)clientProps;
+    }
+
     protected String buildText(String text, int size) {
         byte[] data = new byte[size - text.length()];
         Arrays.fill(data, (byte) 0);
         return text + new String(data);
-    }
-
-    public String getDeliveryMode() {
-        return deliveryMode;
-    }
-
-    public void setDeliveryMode(String deliveryMode) {
-        this.deliveryMode = deliveryMode;
-    }
-
-    public int getMessageSize() {
-        return messageSize;
-    }
-
-    public void setMessageSize(int messageSize) {
-        this.messageSize = messageSize;
-    }
-
-    public long getSendCount() {
-        return sendCount;
-    }
-
-    public void setSendCount(long sendCount) {
-        this.sendCount = sendCount;
-    }
-
-    public long getSendDuration() {
-        return sendDuration;
-    }
-
-    public void setSendDuration(long sendDuration) {
-        this.sendDuration = sendDuration;
-    }
-
-    public String getSendType() {
-        return sendType;
-    }
-
-    public void setSendType(String sendType) {
-        this.sendType = sendType;
-    }
-
-    public Properties getSettings() {
-        Properties allSettings = new Properties(jmsProducerSettings);
-        allSettings.putAll(super.getSettings());
-        return allSettings;
-    }
-
-    public void setSettings(Properties settings) {
-        super.setSettings(settings);
-        ReflectionUtil.configureClass(this, jmsProducerSettings);
-    }
-
-    public void setProperty(String key, String value) {
-        if (key.startsWith(PREFIX_CONFIG_PRODUCER)) {
-            jmsProducerSettings.setProperty(key, value);
-        } else {
-            super.setProperty(key, value);
-        }
-    }
-
-    public static void main(String[] args) throws JMSException {
-        Properties samplerSettings = new Properties();
-        Properties producerSettings = new Properties();
-
-        for (int i = 0; i < args.length; i++) {
-            // Get property define options only
-            int index = args[i].indexOf("=");
-            String key = args[i].substring(0, index);
-            String val = args[i].substring(index + 1);
-            if (key.startsWith("sampler.")) {
-                samplerSettings.setProperty(key, val);
-            } else {
-                producerSettings.setProperty(key, val);
-            }
-
-        }
-
-        JmsProducerClient client = new JmsProducerClient();
-        client.setSettings(producerSettings);
-
-        PerfMeasurementTool sampler = new PerfMeasurementTool();
-        sampler.setSamplerSettings(samplerSettings);
-        sampler.registerClient(client);
-        sampler.startSampler();
-
-        client.setPerfEventListener(sampler);
-
-        // This will reuse only a single message every send, which will improve performance
-        client.createJmsTextMessage();
-        client.sendMessages();
     }
 }

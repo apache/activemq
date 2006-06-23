@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.tool.spi;
 
-import org.apache.activemq.tool.ReflectionUtil;
+import org.apache.activemq.tool.properties.ReflectionUtil;
 
 import javax.jms.ConnectionFactory;
 import java.util.Properties;
