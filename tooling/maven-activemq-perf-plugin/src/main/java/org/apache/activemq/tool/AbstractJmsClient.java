@@ -25,6 +25,7 @@ import javax.jms.Connection;
 import javax.jms.Session;
 import javax.jms.JMSException;
 import javax.jms.Destination;
+import java.util.Enumeration;
 
 public abstract class AbstractJmsClient {
     private static final Log log = LogFactory.getLog(AbstractJmsClient.class);
@@ -79,15 +80,26 @@ public abstract class AbstractJmsClient {
         if (jmsConnection == null) {
             jmsConnection = factory.createConnection();
 
-            getClient().setJmsProvider(jmsConnection.getMetaData().getJMSProviderName() + jmsConnection.getMetaData().getProviderVersion());
+            // Get Connection Metadata
+            getClient().setJmsProvider(jmsConnection.getMetaData().getJMSProviderName() + " " + jmsConnection.getMetaData().getProviderVersion());
             getClient().setJmsVersion("JMS " + jmsConnection.getMetaData().getJMSVersion());
-            getClient().setJmsProperties(jmsConnection.getMetaData().getJMSXPropertyNames().toString());
+
+            String jmsProperties = "";
+            Enumeration props = jmsConnection.getMetaData().getJMSXPropertyNames();
+            while (props.hasMoreElements()) {
+                jmsProperties += (props.nextElement().toString() + ",");
+            }
+            if (jmsProperties.length() > 0) {
+                // Remove the last comma
+                jmsProperties = jmsProperties.substring(0, jmsProperties.length()-1);
+            }
+            getClient().setJmsProperties(jmsProperties);
         }
 
         log.info("Using JMS Connection:" +
                 " Provider=" + getClient().getJmsProvider() +
-                " JMS Spec=" + getClient().getJmsVersion() +
-                " JMS Properties=" + getClient().getJmsProperties());
+                ", JMS Spec=" + getClient().getJmsVersion() +
+                ", JMS Properties=" + getClient().getJmsProperties());
         return jmsConnection;
     }
 
