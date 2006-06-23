@@ -1,0 +1,34 @@
+package org.apache.activemq.tool.sampler;
+
+import org.apache.activemq.tool.sampler.plugins.CpuSamplerPlugin;
+import org.apache.activemq.tool.sampler.plugins.LinuxCpuSamplerPlugin;
+import org.apache.activemq.tool.reports.plugins.ReportPlugin;
+
+import java.io.IOException;
+
+public class CpuSamplerTask extends AbstractPerformanceSampler {
+
+    private CpuSamplerPlugin plugin = null;
+
+    public void createPlugin() throws IOException {
+        createPlugin(System.getProperty("os.name"));
+    }
+
+    public void createPlugin(String osName) throws IOException {
+        if (osName == null) {
+            throw new IOException("No defined OS name found. Foound: " + osName);
+        }
+
+        if (osName.equalsIgnoreCase(CpuSamplerPlugin.LINUX)) {
+            plugin = new LinuxCpuSamplerPlugin();
+        } else {
+            throw new IOException("No CPU Sampler Plugin found for OS: " + osName + ". CPU Sampler will not be started.");
+        }
+    }
+
+    public void sampleData() {
+        if (plugin != null && perfReportWriter != null) {
+            perfReportWriter.writeCsvData(ReportPlugin.REPORT_PLUGIN_CPU, plugin.getCpuUtilizationStats());
+        }
+    }
+}
