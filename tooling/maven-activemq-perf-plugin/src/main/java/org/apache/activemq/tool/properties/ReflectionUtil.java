@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Arrays;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -218,7 +219,7 @@ public final class ReflectionUtil {
     public static Field[] getAllFields(Class targetClass) {
         List fieldList = new ArrayList();
         while (targetClass != null) {
-            Collections.addAll(fieldList, targetClass.getDeclaredFields());
+            fieldList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
             targetClass = targetClass.getSuperclass();
         }
         return (Field[])fieldList.toArray(new Field[0]);
