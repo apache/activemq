@@ -27,6 +27,10 @@ public class JmsClientProperties extends AbstractObjectProperties {
     protected String  sessAckMode    = SESSION_AUTO_ACKNOWLEDGE;
     protected boolean sessTransacted = false;
 
+    protected String jmsProvider = null;
+    protected String jmsVersion = null;
+    protected String jmsProperties = null;
+
     public String getDestName() {
         return destName;
     }
@@ -57,5 +61,29 @@ public class JmsClientProperties extends AbstractObjectProperties {
 
     public void setSessTransacted(boolean sessTransacted) {
         this.sessTransacted = sessTransacted;
+    }
+
+    public String getJmsProvider() {
+        return jmsProvider;
+    }
+
+    public void setJmsProvider(String jmsProvider) {
+        this.jmsProvider = jmsProvider;
+    }
+
+    public String getJmsVersion() {
+        return jmsVersion;
+    }
+
+    public void setJmsVersion(String jmsVersion) {
+        this.jmsVersion = jmsVersion;
+    }
+
+    public String getJmsProperties() {
+        return jmsProperties;
+    }
+
+    public void setJmsProperties(String jmsProperties) {
+        this.jmsProperties = jmsProperties;
     }
 }

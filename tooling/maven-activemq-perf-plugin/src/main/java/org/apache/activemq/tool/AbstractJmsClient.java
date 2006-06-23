@@ -17,6 +17,8 @@
 package org.apache.activemq.tool;
 
 import org.apache.activemq.tool.properties.JmsClientProperties;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.Connection;
@@ -25,6 +27,8 @@ import javax.jms.JMSException;
 import javax.jms.Destination;
 
 public abstract class AbstractJmsClient {
+    private static final Log log = LogFactory.getLog(AbstractJmsClient.class);
+
     protected ConnectionFactory factory;
     protected Connection jmsConnection;
     protected Session jmsSession;
@@ -74,7 +78,16 @@ public abstract class AbstractJmsClient {
     public Connection getConnection() throws JMSException {
         if (jmsConnection == null) {
             jmsConnection = factory.createConnection();
+
+            getClient().setJmsProvider(jmsConnection.getMetaData().getJMSProviderName() + jmsConnection.getMetaData().getProviderVersion());
+            getClient().setJmsVersion("JMS " + jmsConnection.getMetaData().getJMSVersion());
+            getClient().setJmsProperties(jmsConnection.getMetaData().getJMSXPropertyNames().toString());
         }
+
+        log.info("Using JMS Connection:" +
+                " Provider=" + getClient().getJmsProvider() +
+                " JMS Spec=" + getClient().getJmsVersion() +
+                " JMS Properties=" + getClient().getJmsProperties());
         return jmsConnection;
     }
 
