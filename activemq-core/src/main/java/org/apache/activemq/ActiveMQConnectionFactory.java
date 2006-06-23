@@ -54,7 +54,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
  * Connections. <p/> This class also implements QueueConnectionFactory and
  * TopicConnectionFactory. You can use this connection to create both
  * QueueConnections and TopicConnections.
- * 
+ *
  * @version $Revision: 1.9 $
  * @see javax.jms.ConnectionFactory
  */
@@ -86,7 +86,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean useRetroactiveConsumer;
 
     JMSStatsImpl factoryStats = new JMSStatsImpl();
-     
+
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
             public Thread newThread(Runnable run) {
                 Thread thread = new Thread(run);
@@ -120,7 +120,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             throw new RuntimeException("This should never happen: " + e, e);
         }
     }
-    
+
     /**
      * @param brokerURL
      * @return
@@ -237,7 +237,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
-            
+
             transport.start();
 
             if( clientID !=null )
@@ -269,23 +269,23 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
     public void setBrokerURL(String brokerURL) {
         this.brokerURL = createURI(brokerURL);
-        
+
         // Use all the properties prefixed with 'jms.' to set the connection factory
         // options.
         if( this.brokerURL.getQuery() !=null ) {
             // It might be a standard URI or...
             try {
-                
+
                 Map map = URISupport.parseQuery(this.brokerURL.getQuery());
                 if( IntrospectionSupport.setProperties(this, map, "jms.") ) {
                     this.brokerURL = URISupport.createRemainingURI(this.brokerURL, map);
                 }
-                
+
             } catch (URISyntaxException e) {
             }
-            
+
         } else {
-            
+
             // It might be a composite URI.
             try {
                 CompositeData data = URISupport.parseComposite(this.brokerURL);
@@ -360,7 +360,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setUserName(String userName) {
         this.userName = userName;
     }
-    
+
     public boolean isUseRetroactiveConsumer() {
         return useRetroactiveConsumer;
     }
@@ -386,13 +386,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public void buildFromProperties(Properties properties) {
-        
+
         if (properties == null) {
             properties = new Properties();
         }
-        
+
         IntrospectionSupport.setProperties(this, properties);
-        
+
         String temp = properties.getProperty(Context.PROVIDER_URL);
         if (temp == null || temp.length() == 0) {
             temp = properties.getProperty("brokerURL");
@@ -404,23 +404,37 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     public void populateProperties(Properties props) {
         props.setProperty("asyncDispatch", Boolean.toString(isAsyncDispatch()));
-        props.setProperty(Context.PROVIDER_URL, getBrokerURL());
-        props.setProperty("brokerURL", getBrokerURL());
-        if (getClientID() != null)
+
+        if (getBrokerURL() != null) {
+            props.setProperty(Context.PROVIDER_URL, getBrokerURL());
+            props.setProperty("brokerURL", getBrokerURL());
+        }
+
+        if (getClientID() != null) {
             props.setProperty("clientID", getClientID());
+        }
+
         props.setProperty("copyMessageOnSend", Boolean.toString(isCopyMessageOnSend()));
         props.setProperty("disableTimeStampsByDefault", Boolean.toString(isDisableTimeStampsByDefault()));
         props.setProperty("objectMessageSerializationDefered", Boolean.toString(isObjectMessageSerializationDefered()));
         props.setProperty("optimizedMessageDispatch", Boolean.toString(isOptimizedMessageDispatch()));
-        props.setProperty("password", getPassword());
+
+        if (getPassword() != null) {
+            props.setProperty("password", getPassword());
+        }
+
         props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
-        props.setProperty("userName", getUserName());
+
+        if (getUserName() != null) {
+            props.setProperty("userName", getUserName());
+        }
+        
         props.setProperty("closeTimeout", Integer.toString(getCloseTimeout()));
         props.setProperty("alwaysSessionAsync", Boolean.toString(isAlwaysSessionAsync()));
         props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
-        
+
     }
 
     public boolean isUseCompression() {
