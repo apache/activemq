@@ -16,24 +16,21 @@
  */
 package org.apache.activemq.tool;
 
+import org.apache.activemq.tool.sampler.MeasurableClient;
+
+import javax.jms.ConnectionFactory;
+
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
 
-public class JmsPerformanceSupport extends JmsClientSupport implements PerfMeasurable {
-
+public abstract class AbstractJmsMeasurableClient extends AbstractJmsClient implements MeasurableClient {
     protected AtomicLong throughput = new AtomicLong(0);
-    protected PerfEventListener listener = null;
-    protected String clientName = null;
+
+    public AbstractJmsMeasurableClient( ConnectionFactory factory) {
+        super( factory);
+    }
 
     public void reset() {
         setThroughput(0);
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
-
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
     }
 
     public long getThroughput() {
@@ -50,13 +47,5 @@ public class JmsPerformanceSupport extends JmsClientSupport implements PerfMeasu
 
     public void incThroughput(long val) {
         throughput.addAndGet(val);
-    }
-
-    public void setPerfEventListener(PerfEventListener listener) {
-        this.listener = listener;
-    }
-
-    public PerfEventListener getPerfEventListener() {
-        return listener;
     }
 }

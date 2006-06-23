@@ -1,13 +1,12 @@
-package org.apache.activemq.maven;
-
-/*
- * Copyright 2001-2005 The Apache Software Foundation.
+/**
+ *
+ * Copyright 2005-2006 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +14,18 @@ package org.apache.activemq.maven;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.activemq.maven;
 
 import org.apache.activemq.tool.JmsConsumerSystem;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import javax.jms.JMSException;
-
+import java.util.Properties;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Goal which touches a timestamp file.
@@ -29,211 +33,40 @@ import javax.jms.JMSException;
  * @goal consumer
  * @phase process-sources
  */
-public class ConsumerMojo
-        extends AbstractMojo {
+public class ConsumerMojo extends AbstractMojo {
 
-    /**
-     * @parameter expression="${sampler.duration}" default-value="60000"
-     * @required
-     */
-    private String duration;
+    private String[] validPrefix = {
+        "sysTest.",
+        "factory.",
+        "consumer.",
+        "tpSampler.",
+        "cpuSampler."
+    };
 
-    /**
-     * @parameter expression="${sampler.interval}" default-value="1000"
-     * @required
-     */
-    private String interval;
-
-    /**
-     * @parameter expression="${sampler.rampUpTime}" default-value="10000"
-     * @required
-     */
-    private String rampUpTime;
-
-    /**
-     * @parameter expression="${sampler.rampDownTime}" default-value="10000"
-     * @required
-     */
-    private String rampDownTime;
-
-    /**
-     * @parameter expression="${consumer.spiClass}" default-value="org.apache.activemq.tool.spi.ActiveMQPojoSPI"
-     * @required
-     */
-    private String spiClass;
-
-    /**
-     * @parameter expression="${consumer.sessTransacted}" default-value="false"
-     * @required
-     */
-    private String sessTransacted;
-
-    /**
-     * @parameter expression="${consumer.sessAckMode}" default-value="autoAck"
-     * @required
-     */
-    private String sessAckMode;
-
-    /**
-     * @parameter expression="${consumer.destName}" default-value="topic://TEST.PERFORMANCE.FOO.BAR"
-     * @required
-     */
-    private String destName;
-
-    /**
-     * @parameter expression="${consumer.destCount}" default-value="1"
-     * @required
-     */
-    private String destCount;
-
-    /**
-     * @parameter expression="${consumer.destComposite}" default-value="false"
-     * @required
-     */
-    private String destComposite;
-
-    /**
-     * @parameter expression="${consumer.durable}" default-value="false"
-     * @required
-     */
-    private String durable;
-
-    /**
-     * @parameter expression="${consumer.asyncRecv}" default-value="true"
-     * @required
-     */
-    private String asyncRecv;
-
-    /**
-     * @parameter expression="${consumer.recvCount}" default-value="1000000"
-     * @required
-     */
-    private String recvCount;
-
-    /*
-     * @parameter expression="${consumer.recvDuration}" default-value="60000"
-     * @required
-
-    private String recvDuration;
-    */
-
-    /**
-     * @parameter expression="${consumer.recvType}" default-value="time"
-     * @required
-     */
-    private String recvType;
-
-    /**
-     * @parameter expression="${factory.brokerUrl}" default-value="tcp://localhost:61616"
-     * @required
-     */
-    private String brokerUrl;
-
-    /**
-     * @parameter expression="${factory.optimAck}" default-value="true"
-     * @required
-     */
-    private String optimAck;
-
-    /**
-     * @parameter expression="${factory.optimDispatch}" default-value="true"
-     * @required
-     */
-    private String optimDispatch;
-
-    /**
-     * @parameter expression="${factory.prefetchQueue}" default-value="5000"
-     * @required
-     */
-    private String prefetchQueue;
-
-    /**
-     * @parameter expression="${factory.prefetchTopic}" default-value="5000"
-     * @required
-     */
-    private String prefetchTopic;
-
-    /**
-     * @parameter expression="${factory.useRetroactive}" default-value="false"
-     * @required
-     */
-    private String useRetroactive;
-
-    /**
-     * @parameter expression="${sysTest.numClients}" default-value="1"
-     * @required
-     */
-    private String numClients;
-
-    /**
-     * @parameter expression="${sysTest.totalDests}" default-value="1"
-     * @required
-     */
-    private String totalDests;
-
-    /**
-     * @parameter expression="${sysTest.destDistro}" default-value="all"
-     * @required
-     */
-    private String destDistro;
-
-    /**
-     * @parameter expression="${sysTest.reportDirectory}" default-value="${project.build.directory}/test-perf"
-     * @required
-     */
-    private String reportDirectory;
-
-    /**
-     * @parameter expression="${sysTest.reportType}" default-value="xml"
-     * @required
-     */
-    private String reportType;
-
-    public void execute()
-            throws MojoExecutionException {
-
-        try {
-            JmsConsumerSystem.main(createArgument());
-        } catch (JMSException e) {
-            throw new MojoExecutionException(e.getMessage());
-        }
-
+    public void execute() throws MojoExecutionException {
+        JmsConsumerSystem.main(createArgument());
     }
 
-    public String[] createArgument() {
-        String[] options = {
-            "sampler.duration=" + duration, 
-            "sampler.interval=" + interval,    
-            "sampler.rampUpTime=" + rampUpTime,   
-            "sampler.rampDownTime=" + rampDownTime, 
-    
-            "consumer.spiClass=" + spiClass,
-            "consumer.sessTransacted=" + sessTransacted,
-            "consumer.sessAckMode=" + sessAckMode,
-            "consumer.destName=" + destName,
-            "consumer.destCount=" + destCount,
-            "consumer.destComposite=" + destComposite,
-    
-            "consumer.durable=" + durable,
-            "consumer.asyncRecv=" + asyncRecv,
-            "consumer.recvCount=" + recvCount,   
-            "consumer.recvDuration=" + duration, 
-            "consumer.recvType=" + recvType,
-    
-            "factory.brokerUrl=" + brokerUrl,
-            "factory.optimAck=" + optimAck,
-            "factory.optimDispatch=" + optimDispatch,
-            "factory.prefetchQueue=" + prefetchQueue,
-            "factory.prefetchTopic=" + prefetchTopic,
-            "factory.useRetroactive=" + useRetroactive,
-    
-            "sysTest.numClients=" + numClients,
-            "sysTest.totalDests=" + totalDests,
-            "sysTest.destDistro=" + destDistro,
-            "sysTest.reportDirectory=" + reportDirectory,
-            "sysTest.reportType=" + reportType
-        };
+    protected String[] createArgument() {
+        List args = new ArrayList();
+        Properties sysProps = System.getProperties();
+        Set keys = new HashSet(sysProps.keySet());
 
-        return options;
+        for (Iterator i=keys.iterator(); i.hasNext();) {
+            String key = (String)i.next();
+            if (isRecognizedProperty(key)) {
+                args.add(key + "=" + sysProps.remove(key));
+            }
+        }
+        return (String[])args.toArray(new String[0]);
+    }
+
+    protected boolean isRecognizedProperty(String key) {
+        for (int j=0; j<validPrefix.length; j++) {
+            if (key.startsWith(validPrefix[j])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

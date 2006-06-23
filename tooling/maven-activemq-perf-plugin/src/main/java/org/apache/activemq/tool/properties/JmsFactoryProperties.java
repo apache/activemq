@@ -14,15 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool.reports;
+package org.apache.activemq.tool.properties;
 
 import java.util.Properties;
 
-public interface PerformanceReportWriter {
-    public void openReportWriter();
-    public void closeReportWriter();
-    public void writeInfo(String info);
-    public void writeCsvData(int csvType, String csvData);
-    public void writeProperties(String header, Properties props);
-    public void writeProperties(Properties props);
+public class JmsFactoryProperties extends AbstractObjectProperties {
+    Properties factorySettings = new Properties();
+
+    public boolean acceptConfig(String key, String val) {
+        // Since we do not know the specific properties of each factory,
+        // lets cache it first and give it to the spi later
+        factorySettings.setProperty(key, val);
+        return false;
+    }
+
+    public Properties getFactorySettings() {
+        return factorySettings;
+    }
 }

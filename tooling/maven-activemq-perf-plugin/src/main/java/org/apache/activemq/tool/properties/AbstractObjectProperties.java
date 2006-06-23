@@ -14,15 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.tool.reports;
+package org.apache.activemq.tool.properties;
 
 import java.util.Properties;
 
-public interface PerformanceReportWriter {
-    public void openReportWriter();
-    public void closeReportWriter();
-    public void writeInfo(String info);
-    public void writeCsvData(int csvType, String csvData);
-    public void writeProperties(String header, Properties props);
-    public void writeProperties(Properties props);
+public abstract class AbstractObjectProperties implements ReflectionConfigurable {
+
+    public void configureProperties(Properties props) {
+        ReflectionUtil.configureClass(this, props);
+    }
+
+    public Properties retrieveProperties(Properties props) {
+        return null;
+    }
+
+    public boolean acceptConfig(String key, String val) {
+        return true; // accept by default
+    }
 }

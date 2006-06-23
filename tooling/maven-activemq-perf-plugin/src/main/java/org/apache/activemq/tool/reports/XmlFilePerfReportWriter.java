@@ -18,6 +18,8 @@ package org.apache.activemq.tool.reports;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.activemq.tool.reports.plugins.ReportPlugin;
+import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
 
 import java.util.Properties;
 import java.util.List;
@@ -99,12 +101,24 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         this.reportName = reportName;
     }
 
+    public File getXmlFile() {
+        return xmlFile;
+    }
+
+    public void setXmlFile(File xmlFile) {
+        this.xmlFile = xmlFile;
+    }
+
     public void writeInfo(String info) {
         tempLogFileWriter.println("[INFO]" + info);
     }
 
-    public void writePerfData(String data) {
-        tempLogFileWriter.println("[DATA]" + data);
+    public void writeCsvData(int csvType, String csvData) {
+        if (csvType == ReportPlugin.REPORT_PLUGIN_THROUGHPUT) {
+            tempLogFileWriter.println("[TP-DATA]" + csvData);
+        } else if (csvType == ReportPlugin.REPORT_PLUGIN_CPU) {
+            tempLogFileWriter.println("[CPU-DATA]" + csvData);
+        }
     }
 
     public void writeProperties(String header, Properties props) {
@@ -116,7 +130,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     protected File createTempLogFile() {
-        File f = null;
+        File f;
         try {
             f = File.createTempFile("tmpPL", null);
         } catch (IOException e) {
@@ -130,8 +144,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         String filename = (getReportName().endsWith(".xml") ? getReportName() : (getReportName() + ".xml"));
         String path = (getReportDir() == null) ? "" : getReportDir();
 
-        File f = new File(path + filename);
-        return f;
+        return new File(path + filename);
     }
 
     protected void writeToXml() {
@@ -145,7 +158,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
             writeXmlFooter();
             xmlFileWriter.close();
 
-            System.out.println("Created performance report: " + xmlFile.getAbsolutePath());
+            log.info("Created performance report: " + xmlFile.getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -161,8 +174,6 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
 
     protected void writeXmlTestSettings() {
         Properties props;
-        // Write system settings
-        writeMap("systemSettings", System.getProperties());
 
         // Write test settings
         for (Iterator i=testPropsMap.keySet().iterator(); i.hasNext();) {
@@ -186,12 +197,16 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(tempLogFile)));
         String line;
         while ((line = reader.readLine()) != null) {
-            if (line.startsWith("[DATA]")) {
-                parsePerfCsvData(line.substring("[DATA]".length()));
+            if (line.startsWith("[TP-DATA]")) {
+                handleCsvData(ReportPlugin.REPORT_PLUGIN_THROUGHPUT, line.substring("[TP-DATA]".length()));
+                parsePerfCsvData("tpdata", line.substring("[TP-DATA]".length()));
+            } else if (line.startsWith("[CPU-DATA]")) {
+                handleCsvData(ReportPlugin.REPORT_PLUGIN_CPU, line.substring("[CPU-DATA]".length()));
+                parsePerfCsvData("cpudata", line.substring("[CPU-DATA]".length()));
             } else if (line.startsWith("[INFO]")) {
-                xmlFileWriter.println("<value>" + line + "</value>");
+                xmlFileWriter.println("<info>" + line + "</info>");
             } else {
-                xmlFileWriter.println("<value>[ERROR]" + line + "</value>");
+                xmlFileWriter.println("<error>" + line + "</error>");
             }
         }
 
@@ -200,84 +215,85 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     protected void writeXmlPerfSummary() {
-        Map summary = createPerfSummary(clientThroughputs);
+        // Write throughput summary
+        Map summary = getSummary(ReportPlugin.REPORT_PLUGIN_THROUGHPUT);
 
         xmlFileWriter.println("<property name='perfSummary'>");
         xmlFileWriter.println("<props>");
 
         String val, clientName, clientVal;
 
-        val = (String)summary.get(KEY_SYS_TOTAL_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_SYS_TOTAL_TP);
         System.out.println("System Total Throughput: " + val);
-        xmlFileWriter.println("<prop key='" + KEY_SYS_TOTAL_TP + "'>" + val + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_SYS_TOTAL_TP + "'>" + val + "</prop>");
 
-        val = (String)summary.get(KEY_SYS_TOTAL_CLIENTS);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_SYS_TOTAL_CLIENTS);
         System.out.println("System Total Clients: " + val);
-        xmlFileWriter.println("<prop key='" + KEY_SYS_TOTAL_CLIENTS + "'>" + val + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_SYS_TOTAL_CLIENTS + "'>" + val + "</prop>");
 
-        val = (String)summary.get(KEY_SYS_AVE_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_SYS_AVE_TP);
         System.out.println("System Average Throughput: " + val);
-        xmlFileWriter.println("<prop key='" + KEY_SYS_AVE_TP + "'>" + val + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_SYS_AVE_TP + "'>" + val + "</prop>");
 
-        val = (String)summary.get(KEY_SYS_AVE_EMM_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_SYS_AVE_EMM_TP);
         System.out.println("System Average Throughput Excluding Min/Max: " + val);
-        xmlFileWriter.println("<prop key='" + KEY_SYS_AVE_EMM_TP + "'>" + val + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_SYS_AVE_EMM_TP + "'>" + val + "</prop>");
 
-        val = (String)summary.get(KEY_SYS_AVE_CLIENT_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_SYS_AVE_CLIENT_TP);
         System.out.println("System Average Client Throughput: " + val);
-        xmlFileWriter.println("<prop key='" + KEY_SYS_AVE_CLIENT_TP + "'>" + val + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_SYS_AVE_CLIENT_TP + "'>" + val + "</prop>");
 
-        val = (String)summary.get(KEY_SYS_AVE_CLIENT_EMM_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_SYS_AVE_CLIENT_EMM_TP);
         System.out.println("System Average Client Throughput Excluding Min/Max: " + val);
-        xmlFileWriter.println("<prop key='" + KEY_SYS_AVE_CLIENT_EMM_TP + "'>" + val + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_SYS_AVE_CLIENT_EMM_TP + "'>" + val + "</prop>");
 
-        val = (String)summary.get(KEY_MIN_CLIENT_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Client Throughput Per Sample: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MIN_CLIENT_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
-        val = (String)summary.get(KEY_MAX_CLIENT_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Client Throughput Per Sample: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MAX_CLIENT_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
-        val = (String)summary.get(KEY_MIN_CLIENT_TOTAL_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_TOTAL_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Client Total Throughput: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MIN_CLIENT_TOTAL_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_TOTAL_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
-        val = (String)summary.get(KEY_MAX_CLIENT_TOTAL_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_TOTAL_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Client Total Throughput: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MAX_CLIENT_TOTAL_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_TOTAL_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
-        val = (String)summary.get(KEY_MIN_CLIENT_AVE_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Average Client Throughput: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MIN_CLIENT_AVE_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
-        val = (String)summary.get(KEY_MAX_CLIENT_AVE_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Average Client Throughput: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MAX_CLIENT_AVE_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
-        val = (String)summary.get(KEY_MIN_CLIENT_AVE_EMM_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_EMM_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Average Client Throughput Excluding Min/Max: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MIN_CLIENT_AVE_EMM_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_EMM_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
-        val = (String)summary.get(KEY_MAX_CLIENT_AVE_EMM_TP);
+        val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_EMM_TP);
         clientName = val.substring(0, val.indexOf("="));
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Average Client Throughput Excluding Min/Max: clientName=" + clientName + ", value=" + clientVal);
-        xmlFileWriter.println("<prop key='" + KEY_MAX_CLIENT_AVE_EMM_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+        xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_EMM_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         xmlFileWriter.println("</props>");
         xmlFileWriter.println("</property>");
@@ -295,26 +311,19 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         xmlFileWriter.println("</property>");
     }
 
-    protected void parsePerfCsvData(String csvData) {
+    protected void parsePerfCsvData(String elementName, String csvData) {
         StringTokenizer tokenizer = new StringTokenizer(csvData, ",");
-        String data, key, val, clientName = null;
-        Long throughput = null;
-        int index = -1;
+        String xmlElement;
+
+        xmlElement = "<" + elementName;
+        String data, key, val;
         while (tokenizer.hasMoreTokens()) {
             data = tokenizer.nextToken();
             key  = data.substring(0, data.indexOf("="));
             val  = data.substring(data.indexOf("=") + 1);
-
-            if (key.equalsIgnoreCase("clientName")) {
-                clientName = val;
-            } else if (key.equalsIgnoreCase("throughput")) {
-                throughput = Long.valueOf(val);
-            } else if (key.equalsIgnoreCase("index")) {
-                index = Integer.parseInt(val);
-            }
+            xmlElement += (" " + key + "='" + val + "'");
         }
-        addToClientTPList(clientName, throughput);
-        xmlFileWriter.println("<value index='" + index + "' clientName='" + clientName +
-                              "'>" + throughput.longValue() + "</value>");
+        xmlElement += " />";
+        xmlFileWriter.println(xmlElement);
     }
 }
