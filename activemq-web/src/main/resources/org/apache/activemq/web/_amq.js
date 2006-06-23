@@ -12,6 +12,10 @@ var amq =
 
   // Polling. Set to true (default) if waiting poll for messages is needed
   poll: true,
+  
+  // Poll delay. if set to positive integer, this is the time to wait in ms before
+  // sending the next poll after the last completes.
+  _pollDelay: 0,
 
   _first: true,
   _pollEvent: function(first) {},
@@ -96,8 +100,15 @@ var amq =
     }
     amq.endBatch();
 
+    if (amq._pollDelay>0)
+      setTimeout('amq._sendPoll()',amq._pollDelay);
+    else
+      amq._sendPoll();
+  },
+  
+  _sendPoll: function(request)
+  {
     new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler });
-    
   },
 
   // Add a function that gets called on every poll response, after all received
@@ -117,7 +128,7 @@ var amq =
   // xml content.
   sendMessage : function(destination,message)
   {
-   amq._sendMessage(destination,message,'send');
+    amq._sendMessage(destination,message,'send');
   },
 
   // Listen on a channel or topic.   handler must be a function taking a message arguement
