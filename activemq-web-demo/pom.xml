@@ -40,6 +40,7 @@
       <plugin>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>maven-jetty6-plugin</artifactId>
+	<version>${jetty-version}</version>
         <configuration>
           <scanIntervalSeconds>10</scanIntervalSeconds>
         </configuration>
