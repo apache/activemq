@@ -36,11 +36,6 @@ public final class ReflectionUtil {
     }
 
     public static void configureClass(Object obj, String key, String val) {
-        // Check if we will recognize the property first
-        if (obj instanceof ReflectionConfigurable && !((ReflectionConfigurable)obj).acceptConfig(key, val)) {
-            return;
-        }
-
         try {
             String debugInfo;
 
@@ -67,6 +62,11 @@ public final class ReflectionUtil {
 
             // Property name
             String property = tokenizer.nextToken();
+
+            // Check if the target object will accept the settings
+            if (obj instanceof ReflectionConfigurable && !((ReflectionConfigurable)target).acceptConfig(property, val)) {
+                return;
+            }
 
             // Determine data type of property
             Class propertyType = getField(targetClass, property).getType();
