@@ -22,24 +22,24 @@ import javax.jms.ConnectionFactory;
 import java.util.Properties;
 
 public class ActiveMQPojoSPI implements SPIConnectionFactory {
-    public static final String KEY_BROKER_URL        = "factory.brokerUrl";
-    public static final String KEY_USERNAME          = "factory.username";
-    public static final String KEY_PASSWORD          = "factory.password";
-    public static final String KEY_CLIENT_ID         = "factory.clientID";
+    public static final String KEY_BROKER_URL        = "brokerUrl";
+    public static final String KEY_USERNAME          = "username";
+    public static final String KEY_PASSWORD          = "password";
+    public static final String KEY_CLIENT_ID         = "clientID";
 
-    public static final String KEY_ASYNC_SEND        = "factory.asyncSend";
-    public static final String KEY_ASYNC_DISPATCH    = "factory.asyncDispatch";
-    public static final String KEY_ASYNC_SESSION     = "factory.asyncSession";
-    public static final String KEY_CLOSE_TIMEOUT     = "factory.closeTimeout";
-    public static final String KEY_COPY_MSG_ON_SEND  = "factory.copyMsgOnSend";
-    public static final String KEY_DISABLE_TIMESTAMP = "factory.disableTimestamp";
-    public static final String KEY_DEFER_OBJ_SERIAL  = "factory.deferObjSerial";
-    public static final String KEY_OPTIM_ACK         = "factory.optimAck";
-    public static final String KEY_OPTIM_DISPATCH    = "factory.optimDispatch";
-    public static final String KEY_PREFETCH_QUEUE    = "factory.prefetchQueue";
-    public static final String KEY_PREFETCH_TOPIC    = "factory.prefetchTopic";
-    public static final String KEY_USE_COMPRESSION   = "factory.useCompression";
-    public static final String KEY_USE_RETROACTIVE   = "factory.useRetroactive";
+    public static final String KEY_ASYNC_SEND        = "asyncSend";
+    public static final String KEY_ASYNC_DISPATCH    = "asyncDispatch";
+    public static final String KEY_ASYNC_SESSION     = "asyncSession";
+    public static final String KEY_CLOSE_TIMEOUT     = "closeTimeout";
+    public static final String KEY_COPY_MSG_ON_SEND  = "copyMsgOnSend";
+    public static final String KEY_DISABLE_TIMESTAMP = "disableTimestamp";
+    public static final String KEY_DEFER_OBJ_SERIAL  = "deferObjSerial";
+    public static final String KEY_OPTIM_ACK         = "optimAck";
+    public static final String KEY_OPTIM_DISPATCH    = "optimDispatch";
+    public static final String KEY_PREFETCH_QUEUE    = "prefetchQueue";
+    public static final String KEY_PREFETCH_TOPIC    = "prefetchTopic";
+    public static final String KEY_USE_COMPRESSION   = "useCompression";
+    public static final String KEY_USE_RETROACTIVE   = "useRetroactive";
 
     public ConnectionFactory createConnectionFactory(Properties settings) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
