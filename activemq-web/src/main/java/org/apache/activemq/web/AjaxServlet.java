@@ -51,10 +51,11 @@ public class AjaxServlet extends MessageListenerServlet {
     protected void doJavaScript(HttpServletRequest request, HttpServletResponse response)throws IOException, ServletException {
         
         // Look for a local resource first.
-        URL url = getServletContext().getResource(request.getServletPath()+request.getPathInfo());
+        String js = request.getServletPath()+request.getPathInfo();
+        URL url = getServletContext().getResource(js);
         if (url!=null)
         {
-            getServletContext().getRequestDispatcher(request.getServletPath()+request.getPathInfo()).forward(request,response);
+            getServletContext().getNamedDispatcher("default").forward(request,response);
             return;
         }
         
