@@ -17,6 +17,7 @@ package org.apache.activemq.web;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +48,18 @@ public class AjaxServlet extends MessageListenerServlet {
             super.doGet(request, response);
     }
     
-    protected void doJavaScript(HttpServletRequest request, HttpServletResponse response)throws IOException {
+    protected void doJavaScript(HttpServletRequest request, HttpServletResponse response)throws IOException, ServletException {
+        
+        // Look for a local resource first.
+        String js = request.getServletPath()+request.getPathInfo();
+        URL url = getServletContext().getResource(js);
+        if (url!=null)
+        {
+            getServletContext().getNamedDispatcher("default").forward(request,response);
+            return;
+        }
+        
+        // Serve from the classpath resources
         String resource="org/apache/activemq/web"+request.getPathInfo();
         synchronized(jsCache){
             

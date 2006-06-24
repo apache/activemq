@@ -12,6 +12,10 @@ var amq =
 
   // Polling. Set to true (default) if waiting poll for messages is needed
   poll: true,
+  
+  // Poll delay. if set to positive integer, this is the time to wait in ms before
+  // sending the next poll after the last completes.
+  _pollDelay: 0,
 
   _first: true,
   _pollEvent: function(first) {},
@@ -76,13 +80,14 @@ var amq =
       var body = amq._messageQueue;
       amq._messageQueue='';
       amq._messages=0;
-      new Ajax.Request(amq.uri, { method: 'post', postBody: body});
+      amq._queueMessages++;
+      new Ajax.Request(amq.uri, { method: 'post', postBody: body, onSuccess: amq.endBatch});
     }
   },
 
   _pollHandler: function(request)
   {
-    amq._queueMessages++;
+    amq.startBatch();
     try
     {
       amq._messageHandler(request);
@@ -93,20 +98,17 @@ var amq =
     {
         alert(e);
     }
+    amq.endBatch();
 
-    amq._queueMessages--;
-
-    if (amq._queueMessages==0 && amq._messages>0)
-    {
-      var body = amq._messageQueue+'&poll='+amq.poll;
-      amq._messageQueue='';
-      amq._messages=0;
-      new Ajax.Request(amq.uri, { method: 'post', onSuccess: amq._pollHandler, postBody: body });
-    }
-    else if (amq.poll)
-    {
-        new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler });
-    }
+    if (amq._pollDelay>0)
+      setTimeout('amq._sendPoll()',amq._pollDelay);
+    else
+      amq._sendPoll();
+  },
+  
+  _sendPoll: function(request)
+  {
+    new Ajax.Request(amq.uri, { method: 'get', onSuccess: amq._pollHandler });
   },
 
   // Add a function that gets called on every poll response, after all received
@@ -126,7 +128,7 @@ var amq =
   // xml content.
   sendMessage : function(destination,message)
   {
-   amq._sendMessage(destination,message,'send');
+    amq._sendMessage(destination,message,'send');
   },
 
   // Listen on a channel or topic.   handler must be a function taking a message arguement
@@ -147,18 +149,26 @@ var amq =
   {
     if (amq._queueMessages>0)
     {
-      amq._messageQueue+=(amq._messages==0?'destination=':'&destination=')+destination+'&message='+message+'&type='+type;
+      if (amq._messages==0)
+      {
+        amq._messageQueue='destination='+destination+'&message='+message+'&type='+type;
+      }
+      else
+      {
+        amq._messageQueue+='&d'+amq._messages+'='+destination+'&m'+amq._messages+'='+message+'&t'+amq._messages+'='+type;
+      }
       amq._messages++;
     }
     else
     {
-      new Ajax.Request(amq.uri, { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type});
+      amq.startBatch();
+      new Ajax.Request(amq.uri, { method: 'post', postBody: 'destination='+destination+'&message='+message+'&type='+type, onSuccess: amq.endBatch});
     }
   },
-
+  
   _startPolling : function()
   {
-    if (amq.poll)
+   if (amq.poll)
       new Ajax.Request(amq.uri, { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
   }
 };

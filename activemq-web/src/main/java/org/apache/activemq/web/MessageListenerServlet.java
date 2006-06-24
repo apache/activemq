@@ -90,7 +90,16 @@ public class MessageListenerServlet extends MessageServletSupport {
     }
 
     /**
-     * Sends a message to a destination
+     * Sends a message to a destination or manage subscriptions.
+     * 
+     * If the the content type of the POST is <code>application/x-www-form-urlencoded</code>, then the form parameters 
+     * "destination", "message" and "type" are used to pass a message or a subscription.  If multiple messages
+     * or subscriptions are passed in a single post, then additional parameters are shortened to "dN", "mN" and "tN"
+     * where N is an index starting from 1. The type is either "send", "listen" or "unlisten".  For send types,
+     * the message is the text of the TextMessage, otherwise it is the ID to be used for the subscription.
+     * 
+     * If the content type is not <code>application/x-www-form-urlencoded</code>, then the body of the post is
+     * sent as the message to a destination that is derived from a query parameter, the URL or the default destination.
      * 
      * @param request
      * @param response
@@ -110,29 +119,29 @@ public class MessageListenerServlet extends MessageServletSupport {
                 log.debug("POST client="+client+" session="+request.getSession().getId()+" info="+request.getPathInfo()+" contentType="+request.getContentType());
             // dump(request.getParameterMap());
             }
-            String[] destinations = request.getParameterValues("destination");
-            String[] messages = request.getParameterValues("message");
-            String[] types = request.getParameterValues("type");
             
-            if (destinations.length!=messages.length || messages.length!=types.length)
-            {
-                if (log.isDebugEnabled()) {
-                    log.debug("ERROR destination="+destinations.length+" message="+messages.length+" type="+types.length);
-                }
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST,"missmatched destination, message or type");
-                return;
-            }
+            int messages=0;
             
-            for (int i=0;i<types.length;i++)
+            // loop until no more messages
+            while (true)
             {
+                // Get the message parameters.   Multiple messages are encoded with more compact parameter names.
+                String destination_name = request.getParameter(messages==0?"destination":("d"+messages));
+                String message = request.getParameter(messages==0?"message":("m"+messages));
+                String type = request.getParameter(messages==0?"type":("t"+messages));
+                
+                if (destination_name==null || message==null || type==null)
+                    break;
+                
                 try {
-                    String type=types[i];
-                    Destination destination=getDestination(client,request,destinations[i]);
+                    Destination destination=getDestination(client,request,destination_name);
                     
                     if (log.isDebugEnabled()) {
-                        log.debug(i+" destination="+destinations[i]+" message="+messages[i]+" type="+types[i]);
+                        log.debug(messages+" destination="+destination_name+" message="+message+" type="+type);
                         log.debug(destination+" is a "+destination.getClass().getName());
                     }
+                    
+                    messages++;
                     
                     if ("listen".equals(type))
                     {
@@ -142,9 +151,9 @@ public class MessageListenerServlet extends MessageServletSupport {
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
                         
                         consumer.setAvailableListener(listener);
-                        consumerIdMap.put(consumer, messages[i]);
+                        consumerIdMap.put(consumer, message);
                         if (log.isDebugEnabled()) {
-                            log.debug("Subscribed: "+consumer+" to "+destination+" id="+messages[i]);
+                            log.debug("Subscribed: "+consumer+" to "+destination+" id="+message);
                         }
                     }
                     else if ("unlisten".equals(type))
@@ -161,13 +170,13 @@ public class MessageListenerServlet extends MessageServletSupport {
                     }
                     else if ("send".equals(type))
                     {
-                        TextMessage message = client.getSession().createTextMessage(messages[i]);
-                        appendParametersToMessage(request, message);
+                        TextMessage text = client.getSession().createTextMessage(message);
+                        appendParametersToMessage(request, text);
 
-                        client.send(destination, message);
-                        message_ids+=message.getJMSMessageID()+"\n";
+                        client.send(destination, text);
+                        message_ids+=text.getJMSMessageID()+"\n";
                         if (log.isDebugEnabled()) {
-                            log.debug("Sent "+messages[i]+" to "+destination);
+                            log.debug("Sent "+message+" to "+destination);
                         }
                     }
                     else
