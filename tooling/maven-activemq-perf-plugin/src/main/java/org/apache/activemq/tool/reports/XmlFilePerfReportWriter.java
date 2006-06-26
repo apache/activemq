@@ -312,7 +312,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     protected void parsePerfCsvData(String elementName, String csvData) {
-        StringTokenizer tokenizer = new StringTokenizer(csvData, ",");
+        StringTokenizer tokenizer = new StringTokenizer(csvData, ",;");
         String xmlElement;
 
         xmlElement = "<" + elementName;
