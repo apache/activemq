@@ -11,6 +11,12 @@ public class ThroughputSamplerTask extends AbstractPerformanceSampler {
     private final Object mutex = new Object();
     private List clients = new ArrayList();
 
+    public void registerClient(MeasurableClient client) {
+        synchronized (mutex) {
+            clients.add(client);
+        }
+    }
+
 	public void sampleData() {
 		for (Iterator i = clients.iterator(); i.hasNext();) {
             MeasurableClient client = (MeasurableClient) i.next();
@@ -22,12 +28,6 @@ public class ThroughputSamplerTask extends AbstractPerformanceSampler {
             client.reset();
         }
 	}
-
-	public void registerClient(MeasurableClient client) {
-        synchronized (mutex) {
-            clients.add(client);
-        }
-    }
 
     protected void onSamplerStart() {
         // Reset the throughput of the clients

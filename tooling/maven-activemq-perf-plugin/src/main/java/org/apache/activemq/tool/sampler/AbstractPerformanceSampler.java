@@ -72,9 +72,6 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
 
     public void run() {
         try {
-            // Compute for the actual duration window of the sampler
-            long endTime = System.currentTimeMillis() + duration - rampDownTime;
-
             onRampUpStart();
             if (perfEventListener != null) {
             	perfEventListener.onRampUpStart(this);
@@ -91,15 +88,7 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
             	perfEventListener.onSamplerStart(this);
             }
 
-            while (System.currentTimeMillis() < endTime) {
-                try {
-                    Thread.sleep(interval);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                sampleData();
-                sampleIndex++;
-            }
+            sample();
 
             onSamplerEnd();
             if (perfEventListener != null) {
@@ -124,7 +113,22 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
         }
 	}
 
-	public abstract void sampleData();
+    protected void sample() {
+        // Compute for the actual duration window of the sampler
+        long endTime = System.currentTimeMillis() + duration - rampDownTime - rampUpTime;
+
+        while (System.currentTimeMillis() < endTime) {
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            sampleData();
+            sampleIndex++;
+        }
+    }
+
+    public abstract void sampleData();
 
     public boolean isRunning() {
 		return isRunning.get();
