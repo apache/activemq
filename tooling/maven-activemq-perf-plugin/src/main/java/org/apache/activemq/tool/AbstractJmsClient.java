@@ -79,27 +79,8 @@ public abstract class AbstractJmsClient {
     public Connection getConnection() throws JMSException {
         if (jmsConnection == null) {
             jmsConnection = factory.createConnection();
-
-            // Get Connection Metadata
-            getClient().setJmsProvider(jmsConnection.getMetaData().getJMSProviderName() + " " + jmsConnection.getMetaData().getProviderVersion());
-            getClient().setJmsVersion("JMS " + jmsConnection.getMetaData().getJMSVersion());
-
-            String jmsProperties = "";
-            Enumeration props = jmsConnection.getMetaData().getJMSXPropertyNames();
-            while (props.hasMoreElements()) {
-                jmsProperties += (props.nextElement().toString() + ",");
-            }
-            if (jmsProperties.length() > 0) {
-                // Remove the last comma
-                jmsProperties = jmsProperties.substring(0, jmsProperties.length()-1);
-            }
-            getClient().setJmsProperties(jmsProperties);
+            log.info("Creating JMS Connection: Provider=" + getClient().getJmsProvider() + ", JMS Spec=" + getClient().getJmsVersion());
         }
-
-        log.info("Using JMS Connection:" +
-                " Provider=" + getClient().getJmsProvider() +
-                ", JMS Spec=" + getClient().getJmsVersion() +
-                ", JMS Properties=" + getClient().getJmsProperties());
         return jmsConnection;
     }
 
