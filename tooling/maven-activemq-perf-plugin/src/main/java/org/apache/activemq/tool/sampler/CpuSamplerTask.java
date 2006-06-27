@@ -28,7 +28,7 @@ public class CpuSamplerTask extends AbstractPerformanceSampler {
 
     public void sampleData() {
         if (plugin != null && perfReportWriter != null) {
-            perfReportWriter.writeCsvData(ReportPlugin.REPORT_PLUGIN_CPU, plugin.getCpuUtilizationStats());
+            perfReportWriter.writeCsvData(ReportPlugin.REPORT_PLUGIN_CPU, "index=" + sampleIndex + "," + plugin.getCpuUtilizationStats());
         }
     }
 
