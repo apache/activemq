@@ -14,6 +14,8 @@ public interface CpuSamplerPlugin {
 	public final static String MAC_OS_X     = "Mac OS X";
 	public final static String POWERPC      = "PowerPC";
 	public final static String OS_2         = "OS/2";
-	
+
 	public String getCpuUtilizationStats();
+    public void start();
+    public void stop();
 }
