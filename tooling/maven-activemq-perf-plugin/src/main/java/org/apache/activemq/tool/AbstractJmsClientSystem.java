@@ -32,7 +32,9 @@ import org.apache.activemq.tool.spi.SPIConnectionFactory;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+import javax.jms.ConnectionMetaData;
 import java.util.Properties;
+import java.util.Enumeration;
 import java.io.IOException;
 
 public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
@@ -51,6 +53,8 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
     public void runSystemTest() throws JMSException {
         // Create connection factory
         jmsConnFactory = loadJmsFactory(getSysTest().getSpiClass(), factory.getFactorySettings());
+
+        setProviderMetaData(jmsConnFactory.createConnection().getMetaData(), getJmsClientProperties());
 
         // Create performance sampler
         PerformanceReportWriter writer = createPerfWriter();
@@ -204,6 +208,22 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
             e.printStackTrace();
             throw new JMSException(e.getMessage());
         }
+    }
+
+    protected void setProviderMetaData(ConnectionMetaData metaData, JmsClientProperties props) throws JMSException {
+        props.setJmsProvider(metaData.getJMSProviderName() + "-" + metaData.getProviderVersion());
+        props.setJmsVersion(metaData.getJMSVersion());
+
+        String jmsProperties = "";
+        Enumeration jmsProps = metaData.getJMSXPropertyNames();
+        while (jmsProps.hasMoreElements()) {
+            jmsProperties += (jmsProps.nextElement().toString() + ",");
+        }
+        if (jmsProperties.length() > 0) {
+            // Remove the last comma
+            jmsProperties = jmsProperties.substring(0, jmsProperties.length()-1);
+        }
+        props.setJmsProperties(jmsProperties);
     }
 
     protected abstract void runJmsClient(String clientName, int clientDestIndex, int clientDestCount);
