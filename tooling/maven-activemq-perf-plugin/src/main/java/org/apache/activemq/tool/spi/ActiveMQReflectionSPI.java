@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.tool.spi;
 
-public class ActiveMQClassLoaderSPI extends ClassLoaderSPIConnectionFactory {
+public class ActiveMQReflectionSPI extends ReflectionSPIConnectionFactory {
     public String getClassName() {
         return "org.apache.activemq.ActiveMQConnectionFactory";
     }

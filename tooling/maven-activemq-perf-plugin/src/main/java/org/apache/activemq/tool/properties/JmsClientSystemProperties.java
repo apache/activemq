@@ -33,7 +33,7 @@ public class JmsClientSystemProperties extends AbstractObjectProperties {
 
     protected String samplers = SAMPLER_TP + "," + SAMPLER_CPU; // Start both samplers
 
-    protected String spiClass = "org.apache.activemq.tool.spi.ActiveMQClassLoaderSPI";
+    protected String spiClass = "org.apache.activemq.tool.spi.ActiveMQReflectionSPI";
     protected String clientPrefix = "JmsClient";
     protected int numClients = 1;
     protected int totalDests = 1;
