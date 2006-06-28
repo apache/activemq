@@ -39,7 +39,7 @@ public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFa
         ClassLoader newClassLoader = getContextClassLoader(settings);
         Thread.currentThread().setContextClassLoader(newClassLoader);
 
-        return instantiateConnectionFactory(newClassLoader, settings);
+        return instantiateConnectionFactory(settings);
     }
 
     protected ClassLoader getContextClassLoader(Properties settings) {
@@ -76,5 +76,5 @@ public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFa
         return ClassLoaderSPIConnectionFactory.class.getClassLoader();
     }
 
-    protected abstract ConnectionFactory instantiateConnectionFactory(ClassLoader cl, Properties settings) throws Exception;
+    protected abstract ConnectionFactory instantiateConnectionFactory(Properties settings) throws Exception;
 }

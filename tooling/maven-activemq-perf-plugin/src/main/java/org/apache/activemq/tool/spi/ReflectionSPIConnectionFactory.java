@@ -23,8 +23,8 @@ import java.util.Properties;
 
 public abstract class ReflectionSPIConnectionFactory extends ClassLoaderSPIConnectionFactory {
 
-    public ConnectionFactory instantiateConnectionFactory(ClassLoader cl, Properties settings) throws Exception {
-        Class factoryClass = cl.loadClass(getClassName());
+    public ConnectionFactory instantiateConnectionFactory(Properties settings) throws Exception {
+        Class factoryClass = Thread.currentThread().getContextClassLoader().loadClass(getClassName());
         ConnectionFactory factory = (ConnectionFactory)factoryClass.newInstance();
         configureConnectionFactory(factory, settings);
         return factory;
