@@ -18,6 +18,8 @@ package org.apache.activemq;
 
 import javax.jms.*;
 
+import org.apache.activemq.network.DiscoveryNetworkConnector;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -60,20 +62,37 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     protected boolean verbose = false;
 
     protected void bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
+       bridgeBrokers(localBrokerName,remoteBrokerName,false,1);
+    }
+    
+    
+    protected void bridgeBrokers(String localBrokerName, String remoteBrokerName,boolean dynamicOnly) throws Exception {
         BrokerService localBroker  = ((BrokerItem)brokers.get(localBrokerName)).broker;
         BrokerService remoteBroker = ((BrokerItem)brokers.get(remoteBrokerName)).broker;
 
-        bridgeBrokers(localBroker, remoteBroker);
+        bridgeBrokers(localBroker, remoteBroker,dynamicOnly,1);
     }
+    
+    protected void bridgeBrokers(String localBrokerName, String remoteBrokerName,boolean dynamicOnly, int networkTTL) throws Exception {
+        BrokerService localBroker  = ((BrokerItem)brokers.get(localBrokerName)).broker;
+        BrokerService remoteBroker = ((BrokerItem)brokers.get(remoteBrokerName)).broker;
+
+        bridgeBrokers(localBroker, remoteBroker,dynamicOnly,networkTTL);
+    }
+    
+   
 
     // Overwrite this method to specify how you want to bridge the two brokers
     // By default, bridge them using add network connector of the local broker and the first connector of the remote broker
-    protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {
+    protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker,boolean dynamicOnly, int networkTTL) throws Exception {
         List transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
             remoteURI = ((TransportConnector)transportConnectors.get(0)).getConnectUri();
-            localBroker.addNetworkConnector("static:" + remoteURI);
+            NetworkConnector connector=new DiscoveryNetworkConnector(new URI("static:" + remoteURI));
+            connector.setDynamicOnly(dynamicOnly);
+            connector.setNetworkTTL(networkTTL);
+            localBroker.addNetworkConnector(connector);
         } else {
             throw new Exception("Remote broker has no registered connectors.");
         }
@@ -270,7 +289,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
 
     // Class to group broker components together
-    protected class BrokerItem {
+    public class BrokerItem {
         public BrokerService broker;
         public ActiveMQConnectionFactory factory;
         public List connections;
