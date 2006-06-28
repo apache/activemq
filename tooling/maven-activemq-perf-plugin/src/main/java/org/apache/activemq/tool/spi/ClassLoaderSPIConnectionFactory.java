@@ -52,7 +52,6 @@ public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFa
                 try {
                     File f = new File(dir);
                     dir = f.getAbsolutePath();
-                    System.out.println(dir);
                     urls.add(f.toURL());
 
                     File[] files = f.listFiles();
@@ -71,7 +70,7 @@ public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFa
 
             URL u[] = new URL[urls.size()];
             urls.toArray(u);
-            return new URLClassLoader(u, ClassLoaderSPIConnectionFactory.class.getClassLoader());
+            return new URLClassLoader(u, Thread.currentThread().getContextClassLoader());
         }
         return ClassLoaderSPIConnectionFactory.class.getClassLoader();
     }

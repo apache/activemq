@@ -19,12 +19,11 @@ package org.apache.activemq.tool;
 import junit.framework.TestCase;
 
 import java.util.Properties;
+import java.io.File;
 
 import org.apache.activemq.tool.properties.ReflectionUtil;
 
 public class ReflectionUtilTest extends TestCase {
-    private ReflectionUtilTest testData;
-    private String data;
 
     public void testDataTypeConfig() {
         TestClass3 targetObj = new TestClass3();
@@ -67,11 +66,11 @@ public class ReflectionUtilTest extends TestCase {
     }
 
     public void testValueOfMethod() {
-        ReflectionUtilTest targetObj = new ReflectionUtilTest();
+        TestClass4 targetObj = new TestClass4();
 
-        ReflectionUtil.configureClass(targetObj, "testData", "TEST.FOO.BAR");
+        ReflectionUtil.configureClass(targetObj, "testFile", "TEST.FOO.BAR");
 
-        assertEquals("TEST.FOO.BAR", targetObj.testData.data);
+        assertEquals("TEST.FOO.BAR", targetObj.testFile.toString());
     }
 
     public void testGetProperties() {
@@ -100,15 +99,6 @@ public class ReflectionUtilTest extends TestCase {
         targetObj.setTestData(testData);
 
         Properties p = ReflectionUtil.retrieveObjectProperties(targetObj);
-        assertEquals("false", p.getProperty("testData.booleanData"));
-        assertEquals("15", p.getProperty("testData.byteData"));
-        assertEquals("G", p.getProperty("testData.charData"));
-        assertEquals("765.43", p.getProperty("testData.doubleData"));
-        assertEquals("543.21", p.getProperty("testData.floatData"));
-        assertEquals("654321", p.getProperty("testData.intData"));
-        assertEquals("987654321", p.getProperty("testData.longData"));
-        assertEquals("4321", p.getProperty("testData.shortData"));
-        assertEquals("BAR.TEST.FOO", p.getProperty("testData.stringData"));
         assertEquals("true", p.getProperty("booleanData"));
         assertEquals("10", p.getProperty("byteData"));
         assertEquals("D", p.getProperty("charData"));
@@ -118,6 +108,16 @@ public class ReflectionUtilTest extends TestCase {
         assertEquals("1234567890", p.getProperty("longData"));
         assertEquals("1234", p.getProperty("shortData"));
         assertEquals("Test.FOO.BAR", p.getProperty("stringData"));
+        assertEquals("false", p.getProperty("testData.booleanData"));
+        assertEquals("15", p.getProperty("testData.byteData"));
+        assertEquals("G", p.getProperty("testData.charData"));
+        assertEquals("765.43", p.getProperty("testData.doubleData"));
+        assertEquals("543.21", p.getProperty("testData.floatData"));
+        assertEquals("654321", p.getProperty("testData.intData"));
+        assertEquals("987654321", p.getProperty("testData.longData"));
+        assertEquals("4321", p.getProperty("testData.shortData"));
+        assertEquals("BAR.TEST.FOO", p.getProperty("testData.stringData"));
+
     }
 
     public void testNestedConfig() {
@@ -145,28 +145,6 @@ public class ReflectionUtilTest extends TestCase {
         t4.setTestData(t5);
         ReflectionUtil.configureClass(t1, "testData.testData.testData.testData.stringData", "t5");
         assertEquals("t5", t5.getStringData());
-    }
-
-    public static ReflectionUtilTest valueOf(String data) {
-        ReflectionUtilTest test = new ReflectionUtilTest();
-        test.data = data;
-        return test;
-    }
-
-    public ReflectionUtilTest getTestData() {
-        return testData;
-    }
-
-    public void setTestData(ReflectionUtilTest testData) {
-        this.testData = testData;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
     }
 
     public class TestClass1 {
@@ -265,6 +243,18 @@ public class ReflectionUtilTest extends TestCase {
 
         public void setTestData(TestClass3 testData) {
             this.testData = testData;
+        }
+    }
+
+    public class TestClass4 {
+        private File testFile;
+
+        public String getTestFile() {
+            return testFile.toString();
+        }
+
+        public void setTestFile(String testFile) {
+            this.testFile = new File(testFile);
         }
     }
 }

@@ -23,10 +23,9 @@ import java.util.StringTokenizer;
 import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.lang.reflect.Method;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Constructor;
 
 public final class ReflectionUtil {
     private static final Log log = LogFactory.getLog(ReflectionUtil.class);
@@ -47,7 +46,7 @@ public final class ReflectionUtil {
             StringTokenizer tokenizer = new StringTokenizer(key, ".");
             int tokenCount = tokenizer.countTokens();
 
-            // For nested settings, get the object first. -2, do not count the first and last token
+            // For nested settings, get the object first. -1, do not count the last token
             for (int j=0; j<tokenCount-1; j++) {
                 // Find getter method first
                 String name = tokenizer.nextToken();
@@ -67,43 +66,46 @@ public final class ReflectionUtil {
                 return;
             }
 
-            // Determine data type of property
-            Class propertyType = getField(targetClass, property).getType();
+            // Find setter method
+            Method setterMethod = findSetterMethod(targetClass, property);
 
-            // Get setter method
-            String setterMethod = "set" + property.substring(0,1).toUpperCase() + property.substring(1);
+            // Get the first parameter type. This assumes that there is only one parameter.
+            if (setterMethod == null) {
+                throw new IllegalAccessException("Unable to find appropriate setter method signature for property: " + property);
+            }
+            Class paramType = setterMethod.getParameterTypes()[0];
 
             // Set primitive type
-            debugInfo += ("." + setterMethod + "(" + propertyType.getName() + ": " + val + ")");
-            if (propertyType.isPrimitive()) {
-                if (propertyType == Boolean.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {boolean.class}).invoke(target, new Object[] {Boolean.valueOf(val)});
-                } else if (propertyType == Integer.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {int.class}).invoke(target, new Object[] {Integer.valueOf(val)});
-                } else if (propertyType == Long.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {long.class}).invoke(target, new Object[] {Long.valueOf(val)});
-                } else if (propertyType == Double.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {double.class}).invoke(target, new Object[] {Double.valueOf(val)});
-                } else if (propertyType == Float.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {float.class}).invoke(target, new Object[] {Float.valueOf(val)});
-                } else if (propertyType == Short.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {short.class}).invoke(target, new Object[] {Short.valueOf(val)});
-                } else if (propertyType == Byte.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {byte.class}).invoke(target, new Object[] {Byte.valueOf(val)});
-                } else if (propertyType == Character.TYPE) {
-                    targetClass.getMethod(setterMethod, new Class[] {char.class}).invoke(target, new Object[] {new Character(val.charAt(0))});
+            debugInfo += ("." + setterMethod + "(" + paramType.getName() + ": " + val + ")");
+            if (paramType.isPrimitive()) {
+                if (paramType == Boolean.TYPE) {
+                    setterMethod.invoke(target, new Object[] {Boolean.valueOf(val)});
+                } else if (paramType == Integer.TYPE) {
+                    setterMethod.invoke(target, new Object[] {Integer.valueOf(val)});
+                } else if (paramType == Long.TYPE) {
+                    setterMethod.invoke(target, new Object[] {Long.valueOf(val)});
+                } else if (paramType == Double.TYPE) {
+                    setterMethod.invoke(target, new Object[] {Double.valueOf(val)});
+                } else if (paramType == Float.TYPE) {
+                    setterMethod.invoke(target, new Object[] {Float.valueOf(val)});
+                } else if (paramType == Short.TYPE) {
+                    setterMethod.invoke(target, new Object[] {Short.valueOf(val)});
+                } else if (paramType == Byte.TYPE) {
+                    setterMethod.invoke(target, new Object[] {Byte.valueOf(val)});
+                } else if (paramType == Character.TYPE) {
+                    setterMethod.invoke(target, new Object[] {new Character(val.charAt(0))});
                 }
             } else {
                 // Set String type
-                if (propertyType == String.class) {
-                    targetClass.getMethod(setterMethod, new Class[] {String.class}).invoke(target, new Object[] {val});
+                if (paramType == String.class) {
+                    setterMethod.invoke(target, new Object[] {val});
 
-                // For unknown object type, try to call the valueOf method of the object
-                // to convert the string to the target object type
+                // For unknown object type, try to create an instance of the object using a String constructor
                 } else {
-                    // Note valueOf method should be public and static
-                    Object param = propertyType.getMethod("valueOf", new Class[] {String.class}).invoke(null, new Object[] {val});
-                    targetClass.getMethod(setterMethod, new Class[] {propertyType}).invoke(target, new Object[] {param});
+                    Constructor c = paramType.getConstructor(new Class[] {String.class});
+                    Object paramObject = c.newInstance(new Object[] {val});
+
+                    setterMethod.invoke(target, new Object[] {paramObject});
                 }
             }
             log.debug(debugInfo);
@@ -142,32 +144,36 @@ public final class ReflectionUtil {
             return new Properties();
         } else {
             Properties props = new Properties();
-            Field[] fields = getAllFields(targetClass);
-            Method getterMethod;
-            for (int i=0; i<fields.length; i++) {
+            Method[] getterMethods = findAllGetterMethods(targetClass);
+            for (int i=0; i<getterMethods.length; i++) {
                 try {
-                    if ((getterMethod = isPropertyField(targetClass, fields[i])) != null) {
-                        if (fields[i].getType().isPrimitive() || fields[i].getType() == String.class) {
+                    String propertyName = getPropertyName(getterMethods[i].getName());
+                    Class retType = getterMethods[i].getReturnType();
+
+                    // If primitive or string type, return it
+                    if (retType.isPrimitive() || retType == String.class) {
+                        // Check for an appropriate setter method to consider it as a property
+                        if (findSetterMethod(targetClass, propertyName) != null) {
                             Object val = null;
                             try {
-                                val = getterMethod.invoke(targetObject, null);
+                                val = getterMethods[i].invoke(targetObject, null);
                             } catch (InvocationTargetException e) {
                                 e.printStackTrace();
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
                             }
-                            props.setProperty(prefix + fields[i].getName(), val + "");
-                        } else {
-                            try {
-                                Object val = getterMethod.invoke(targetObject, null);
-                                if (val != null) {
-                                    props.putAll(retrieveClassProperties(fields[i].getName() + ".", val.getClass(), val));
-                                }
-                            } catch (InvocationTargetException e) {
-                                e.printStackTrace();
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
+                            props.setProperty(prefix + propertyName, val + "");
+                        }
+                    } else {
+                        try {
+                            Object val = getterMethods[i].invoke(targetObject, null);
+                            if (val != null) {
+                                props.putAll(retrieveClassProperties(propertyName + ".", val.getClass(), val));
                             }
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
                         }
                     }
                 } catch (Throwable t) {
@@ -179,48 +185,91 @@ public final class ReflectionUtil {
         }
     }
 
-    protected static Method isPropertyField(Class targetClass, Field targetField) {
-        String fieldName = targetField.getName();
-        String getMethod = "get" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
-        String isMethod  = "is"  + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
-        String setMethod = "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
+    private static Method findSetterMethod(Class targetClass, String propertyName) {
+        String methodName = "set" + propertyName.substring(0,1).toUpperCase() + propertyName.substring(1);
 
-        // Check setter method
-        try {
-            targetClass.getMethod(setMethod, new Class[]{targetField.getType()});
-        } catch (NoSuchMethodException e) {
-            return null;
-        }
-
-        // Check getter method and return it if it exists
-        try {
-            return targetClass.getMethod(getMethod, null);
-        } catch (NoSuchMethodException e1) {
-            try {
-                return targetClass.getMethod(isMethod, null);
-            } catch (NoSuchMethodException e2) {
-                return null;
+        Method[] methods = targetClass.getMethods();
+        for (int i=0; i<methods.length; i++) {
+            if (methods[i].getName().equals(methodName) && isSetterMethod(methods[i])) {
+                return methods[i];
             }
         }
+        return null;
     }
 
-    public static Field getField(Class targetClass, String fieldName) throws NoSuchFieldException {
-        while (targetClass != null) {
-            try {
-                return targetClass.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                targetClass = targetClass.getSuperclass();
+    private static Method findGetterMethod(Class targetClass, String propertyName) {
+        String methodName1 = "get" + propertyName.substring(0,1).toUpperCase() + propertyName.substring(1);
+        String methodName2 = "is"  + propertyName.substring(0,1).toUpperCase() + propertyName.substring(1);
+
+        Method[] methods = targetClass.getMethods();
+        for (int i=0; i<methods.length; i++) {
+            if ((methods[i].getName().equals(methodName1) || methods[i].getName().equals(methodName2)) && isGetterMethod(methods[i])) {
+                return methods[i];
             }
         }
-        throw new NoSuchFieldException(fieldName);
+        return null;
     }
 
-    public static Field[] getAllFields(Class targetClass) {
-        List fieldList = new ArrayList();
-        while (targetClass != null) {
-            fieldList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
-            targetClass = targetClass.getSuperclass();
+    private static Method[] findAllGetterMethods(Class targetClass) {
+        List getterMethods = new ArrayList();
+        Method[] methods = targetClass.getMethods();
+
+        for (int i=0; i<methods.length; i++) {
+            if (isGetterMethod(methods[i])) {
+                getterMethods.add(methods[i]);
+            }
         }
-        return (Field[])fieldList.toArray(new Field[0]);
+
+        return (Method[])getterMethods.toArray(new Method[] {});
+    }
+
+    private static boolean isGetterMethod(Method method) {
+        // Check method signature first
+        // If 'get' method, must return a non-void value
+        // If 'is' method, must return a boolean value
+        // Both must have no parameters
+        // Method must not belong to the Object class to prevent infinite loop
+        return (((method.getName().startsWith("is") && method.getReturnType() == Boolean.TYPE) ||
+                 (method.getName().startsWith("get") && method.getReturnType() != Void.TYPE)) &&
+                (method.getParameterTypes().length == 0) && method.getDeclaringClass() != Object.class);
+    }
+
+    private static boolean isSetterMethod(Method method) {
+        // Check method signature first
+        if (method.getName().startsWith("set") && method.getReturnType() == Void.TYPE) {
+            Class[] paramType = method.getParameterTypes();
+            // Check that it can only accept one parameter
+            if (paramType.length == 1) {
+                // Check if parameter is a primitive or can accept a String parameter
+                if (paramType[0].isPrimitive() || paramType[0] == String.class) {
+                    return true;
+                } else {
+                    // Check if object can accept a string as a constructor
+                    try {
+                        if (paramType[0].getConstructor(new Class[] {String.class}) != null) {
+                            return true;
+                        }
+                    } catch (NoSuchMethodException e) {
+                        // Do nothing
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static String getPropertyName(String methodName) {
+        String name;
+        if (methodName.startsWith("get")) {
+            name = methodName.substring(3);
+        } else if (methodName.startsWith("set")) {
+            name = methodName.substring(3);
+        } else if (methodName.startsWith("is")) {
+            name = methodName.substring(2);
+        } else {
+            name = "";
+        }
+
+        return name.substring(0,1).toLowerCase() + name.substring(1);
     }
 }
