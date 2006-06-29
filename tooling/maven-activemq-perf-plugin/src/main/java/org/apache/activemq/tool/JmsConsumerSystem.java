@@ -67,20 +67,8 @@ public class JmsConsumerSystem extends AbstractJmsClientSystem {
     }
 
     public static void main(String[] args) {
-        Properties props = new Properties();
-        for (int i=0; i<args.length; i++) {
-            String arg = args[i];
-            if (arg.startsWith("-D") || arg.startsWith("-d")) {
-                arg = arg.substring(2);
-            }
-            int index  = arg.indexOf("=");
-            String key = arg.substring(0, index);
-            String val = arg.substring(index + 1);
-            props.setProperty(key, val);
-        }
-
         JmsConsumerSystem sys = new JmsConsumerSystem();
-        sys.configureProperties(props);
+        sys.configureProperties(AbstractJmsClientSystem.parseStringArgs(args));
 
         try {
             sys.runSystemTest();
