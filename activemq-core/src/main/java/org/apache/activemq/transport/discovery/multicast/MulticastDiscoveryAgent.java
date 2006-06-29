@@ -256,10 +256,12 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent,Runnable{
                     String str=new String(packet.getData(),packet.getOffset(),packet.getLength());
                     processData(str);
                 }
-            }catch(SocketTimeoutException se){
+            } catch(SocketTimeoutException se){
                 // ignore
-            }catch(IOException e){
-                log.error("failed to process packet: "+e);
+            } catch(IOException e){
+            	if( started.get() ) {
+            		log.error("failed to process packet: "+e);
+            	}
             }
         }
     }
