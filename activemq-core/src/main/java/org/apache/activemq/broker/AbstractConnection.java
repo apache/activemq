@@ -179,10 +179,35 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if (e instanceof IOException) {
             serviceTransportException((IOException) e);
         }
+        
+        // Handle the case where the broker is stopped 
+        // But the client is still connected.
+        else if (e.getClass() == BrokerStoppedException.class ) {
+            if( !disposed ) {
+                if( serviceLog.isDebugEnabled() )
+                	serviceLog.debug("Broker has been stopped.  Notifying client and closing his connection.");
+                
+                ConnectionError ce = new ConnectionError();
+                ce.setException(e);
+                dispatchSync(ce);
+                
+                // Wait a little bit to try to get the output buffer to flush the exption notification to the client.
+                try {
+					Thread.sleep(500);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+				}
+                
+				// Worst case is we just kill the connection before the notification gets to him.
+                ServiceSupport.dispose(this);
+            }
+        }
+        
         else if( !disposed && !inServiceException ) {
             inServiceException = true;
                 try {
-                serviceLog.info("Async error occurred: "+e,e);
+                if( serviceLog.isDebugEnabled() )
+                	serviceLog.debug("Async error occurred: "+e,e);
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
                 dispatchAsync(ce);
@@ -201,7 +226,8 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             response = command.visit(this);
         } catch ( Throwable e ) {
             if( responseRequired ) {
-                serviceLog.info("Sync error occurred: "+e,e);
+            	if( serviceLog.isDebugEnabled() && e.getClass()!=BrokerStoppedException.class )
+            		serviceLog.debug("Error occured while processing sync command: "+e,e);
                 response = new ExceptionResponse(e);
             } else {
                 serviceException(e);
@@ -558,6 +584,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     public void dispatchSync(Command message) {
         processDispatch(message);
     }
+    
     
     public void dispatchAsync(Command message) {
         if( taskRunner==null ) {
