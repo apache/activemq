@@ -69,6 +69,13 @@ public class SelectorTest extends TestCase {
         
         assertSelector(message, "JMSMessageID = 'id:test:1:1:1:1'", true);
         assertSelector(message, "JMSMessageID = 'id:not-test:1:1:1:1'", false);
+        
+        message = createMessage();
+        message.setJMSType("1001");
+        
+        assertSelector(message, "JMSType='1001'", true);
+        assertSelector(message, "JMSType='1001' OR JMSType='1002'", true);
+        assertSelector(message, "JMSType = 'crap'", false);
     }
     
     public void testBasicSelectors() throws Exception {
