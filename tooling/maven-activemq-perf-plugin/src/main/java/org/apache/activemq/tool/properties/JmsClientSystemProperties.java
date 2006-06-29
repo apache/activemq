@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.tool.properties;
 
+import java.io.File;
+
 public class JmsClientSystemProperties extends AbstractObjectProperties {
     public static final String DEST_DISTRO_ALL    = "all";    // Each client will send/receive to all destination;
     public static final String DEST_DISTRO_EQUAL  = "equal";  // Equally divide the number of destinations to the number of clients
@@ -26,6 +28,8 @@ public class JmsClientSystemProperties extends AbstractObjectProperties {
 
     public static final String SAMPLER_TP  = "tp";
     public static final String SAMPLER_CPU = "cpu";
+
+    protected File propsConfigFile = null;
 
     protected String reportType = REPORT_XML_FILE;
     protected String reportDir  = "./";
@@ -109,5 +113,13 @@ public class JmsClientSystemProperties extends AbstractObjectProperties {
 
     public void setDestDistro(String destDistro) {
         this.destDistro = destDistro;
+    }
+
+    public String getPropsConfigFile() {
+        return this.propsConfigFile + "";
+    }
+
+    public void setPropsConfigFile(String propsConfigFile) {
+        this.propsConfigFile = new File(propsConfigFile);
     }
 }
