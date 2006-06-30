@@ -56,10 +56,13 @@ public abstract class MessageServletSupport extends HttpServlet {
     private boolean defaultMessagePersistent = true;
     private int defaultMessagePriority = 5;
     private long defaultMessageTimeToLive = 0;
+    private String destinationOptions;
 
     public void init(ServletConfig servletConfig) throws ServletException {
         super.init(servletConfig);
 
+        destinationOptions = servletConfig.getInitParameter("destinationOptions");
+        
         String name = servletConfig.getInitParameter("topic");
         if (name != null) {
             defaultTopicFlag = asBoolean(name);
@@ -289,7 +292,11 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
         else 
             is_topic=isTopic(request);
-             
+        
+        if( destinationOptions!=null ) {
+            destinationName += "?" + destinationOptions;
+        }
+        
         if (is_topic) {
             return client.getSession().createTopic(destinationName);
         }
