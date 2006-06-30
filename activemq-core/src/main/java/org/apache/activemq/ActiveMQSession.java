@@ -72,7 +72,6 @@ import org.apache.activemq.management.JMSSessionStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.thread.Scheduler;
-import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -198,7 +197,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected boolean closed;
     protected boolean asyncDispatch;
     protected boolean sessionAsyncDispatch;
-    protected TaskRunner taskRunner;
 
     /**
      * Construct the Session
