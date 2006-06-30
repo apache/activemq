@@ -61,11 +61,16 @@ public class ActiveMQSessionExecutor implements Task {
     }
 
     private void wakeup() {
-        if( taskRunner!=null && !dispatchedBySessionPool && hasUncomsumedMessages() ) {
-            try {
-                taskRunner.wakeup();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        if( !dispatchedBySessionPool && hasUncomsumedMessages() ) {
+            if( taskRunner!=null ) {
+                try {
+                    taskRunner.wakeup();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                while( iterate() )
+                    ;
             }
         }
     }
@@ -79,12 +84,6 @@ public class ActiveMQSessionExecutor implements Task {
         return !messageQueue.isClosed() && messageQueue.isRunning() && !messageQueue.isEmpty();
     }
 
-    /**
-     * implementation of Runnable
-     */
-    public void run() {
-    }
-    
     void dispatch(MessageDispatch message){
 
         // TODO  - we should use a Map for this indexed by consumerId
@@ -101,7 +100,9 @@ public class ActiveMQSessionExecutor implements Task {
     synchronized void start() {
         if( !messageQueue.isRunning() ) {
             messageQueue.start();
-            taskRunner = ActiveMQConnection.SESSION_TASK_RUNNER.createTaskRunner(this, "ActiveMQ Session: "+session.getSessionId());
+            if( session.isSessionAsyncDispatch() || dispatchedBySessionPool ) {
+                taskRunner = ActiveMQConnection.SESSION_TASK_RUNNER.createTaskRunner(this, "ActiveMQ Session: "+session.getSessionId());
+            }
             wakeup();
         }
     }
@@ -110,7 +111,10 @@ public class ActiveMQSessionExecutor implements Task {
         try {
             if( messageQueue.isRunning() ) {
                 messageQueue.stop();
-                taskRunner.shutdown();
+                if( taskRunner!=null ) {
+                    taskRunner.shutdown();
+                    taskRunner=null;
+                }
             }
         } catch (InterruptedException e) {
             throw JMSExceptionSupport.create(e);
@@ -147,7 +151,7 @@ public class ActiveMQSessionExecutor implements Task {
             return false;
         } else {
             dispatch(message);
-            return messageQueue.isRunning();
+            return !messageQueue.isEmpty();
         }
     }
 
