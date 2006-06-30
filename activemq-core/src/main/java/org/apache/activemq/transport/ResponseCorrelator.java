@@ -17,9 +17,7 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import org.apache.activemq.command.Command;
@@ -82,16 +80,12 @@ public class ResponseCorrelator extends TransportFilter {
     public void onCommand(Command command) {
         boolean debug = log.isDebugEnabled();
         if( command.isResponse() ) {
-            try {
-                Response response = (Response) command;
-                FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
-                if( future!=null ) {
-                    future.set(response);
-                } else {
-                    if( debug ) log.debug("Received unexpected response for command id: "+response.getCorrelationId());
-                }
-            } catch (InterruptedIOException e) {
-                onException(e);
+            Response response = (Response) command;
+            FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
+            if( future!=null ) {
+                future.set(response);
+            } else {
+                if( debug ) log.debug("Received unexpected response for command id: "+response.getCorrelationId());
             }
         } else {
             getTransportListener().onCommand(command);
@@ -109,12 +103,8 @@ public class ResponseCorrelator extends TransportFilter {
         requestMap.clear();
         
         for (Iterator iter = requests.iterator(); iter.hasNext();) {
-            try {
-                FutureResponse fr = (FutureResponse) iter.next();
-                fr.set(new ExceptionResponse(error));
-            } catch (InterruptedIOException e) {
-                Thread.currentThread().interrupt();
-            }
+            FutureResponse fr = (FutureResponse) iter.next();
+            fr.set(new ExceptionResponse(error));
         }
         
         super.onException(error);
