@@ -57,7 +57,7 @@ public class FutureResponse {
         }
     }
     
-    public void set(Response result) throws InterruptedIOException {
+    public void set(Response result) {
         if( responseSlot.offer(result) ) {
             if( responseCallback !=null ) {
                 responseCallback.onCompletion(this);
