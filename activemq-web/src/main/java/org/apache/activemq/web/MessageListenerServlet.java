@@ -435,25 +435,25 @@ public class MessageListenerServlet extends MessageServletSupport {
             lastAccess=System.currentTimeMillis();
         }
         
-        public void setContinuation(Continuation continuation) {
-            synchronized (client) {
-                this.continuation = continuation;
-            }
+        synchronized public void setContinuation(Continuation continuation) {
+            this.continuation = continuation;
         }
 
-        public void onMessageAvailable(MessageConsumer consumer) {
-            synchronized (client) {
-                if (log.isDebugEnabled()) {
-                    log.debug("message for "+consumer+"continuation="+continuation);
-                }
-                if (continuation != null)
-                    continuation.resume();
-                else if (System.currentTimeMillis()-lastAccess>2*maximumReadTimeout)
-                {
-                    client.closeConsumers();
-                }
-                continuation = null;
+        synchronized public void onMessageAvailable(MessageConsumer consumer) {
+            if (log.isDebugEnabled()) {
+                log.debug("message for "+consumer+"continuation="+continuation);
             }
+            if (continuation != null)
+                continuation.resume();
+            else if (System.currentTimeMillis()-lastAccess>2*maximumReadTimeout)
+            {
+                new Thread() {
+                    public void run() {
+                        client.closeConsumers();
+                    };
+                }.start();
+            }
+            continuation = null;
         }
 
     }
