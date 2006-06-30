@@ -64,6 +64,7 @@ public class TransportConnector implements Connector {
     private URI discoveryUri;
     private URI connectUri;
     private String name;
+    private boolean disableAsyncDispatch=false;
 
 
     /**
@@ -94,6 +95,7 @@ public class TransportConnector implements Connector {
         rc.setDiscoveryAgent(discoveryAgent);
         rc.setDiscoveryUri(discoveryUri);
         rc.setName(name);
+        rc.setDisableAsyncDispatch(disableAsyncDispatch);
         return rc;
     }
     
@@ -228,7 +230,7 @@ public class TransportConnector implements Connector {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Connection createConnection(Transport transport) throws IOException {
-        TransportConnection answer = new TransportConnection(this, transport, broker, taskRunnerFactory);
+        TransportConnection answer = new TransportConnection(this, transport, broker, disableAsyncDispatch ? null : taskRunnerFactory);
         answer.setMessageAuthorizationPolicy(messageAuthorizationPolicy);
         return answer;
     }
@@ -303,4 +305,12 @@ public class TransportConnector implements Connector {
     public String toString() {
         return getName();
     }
+
+	public boolean isDisableAsyncDispatch() {
+		return disableAsyncDispatch;
+	}
+
+	public void setDisableAsyncDispatch(boolean disableAsyncDispatch) {
+		this.disableAsyncDispatch = disableAsyncDispatch;
+	}
 }
