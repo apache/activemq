@@ -35,6 +35,53 @@ import java.util.Map.Entry;
 
 public class IntrospectionSupport {
         
+	
+    static public boolean getProperties(Object target, Map props, String optionPrefix) {
+    	
+        boolean rc = false;
+        if( target == null )
+            throw new IllegalArgumentException("target was null.");
+        if( props == null )
+            throw new IllegalArgumentException("props was null.");
+        
+        if( optionPrefix == null )
+        	optionPrefix="";
+        
+        Class clazz = target.getClass();
+        Method[] methods = clazz.getMethods();
+        for (int i = 0; i < methods.length; i++) {
+            Method method = methods[i];
+            String name = method.getName();
+            Class type = method.getReturnType();
+            Class params[] = method.getParameterTypes();
+            if( name.startsWith("get") && params.length==0 && 
+            		type!=null && isSettableType(type)) {
+
+            	try {
+            		
+            		Object value = method.invoke(target, new Object[]{});
+            		if( value == null )
+            			continue;
+            		
+            		String strValue = convertToString(value, type);
+            		if( strValue ==null )
+            			continue;
+            		
+                    name = name.substring(3,4).toLowerCase()+name.substring(4);
+                    props.put(optionPrefix+name, strValue);
+                    rc = true;
+                    
+            	} catch ( Throwable ignore) {
+            	}
+            	
+            }
+        }
+        
+        return rc;
+    }
+	
+	
+	
     static public boolean setProperties(Object target, Map props, String optionPrefix) {
         boolean rc = false;
         if( target == null )
@@ -74,8 +121,10 @@ public class IntrospectionSupport {
         
         return rc;
     }
-    
-    public static void setProperties(Object target, Map props) {
+          
+    public static boolean setProperties(Object target, Map props) {
+    	boolean rc = false;
+    	
         if( target == null )
             throw new IllegalArgumentException("target was null.");
         if( props == null )
@@ -85,8 +134,11 @@ public class IntrospectionSupport {
             Map.Entry entry = (Entry) iter.next();
             if( setProperty(target, (String) entry.getKey(), entry.getValue()) ) {
                 iter.remove();
+                rc=true;
             }
         }
+        
+        return rc;
     }
 
     private static boolean setProperty(Object target, String name, Object value) {
@@ -117,6 +169,18 @@ public class IntrospectionSupport {
         }
         if( type == URI.class ) {
             return new URI(value.toString());
+        }
+        return null;
+    }
+
+    private static String convertToString(Object value, Class type) throws URISyntaxException {
+        PropertyEditor editor = PropertyEditorManager.findEditor(type);
+        if( editor != null ) { 
+            editor.setValue(value);
+            return editor.getAsText();
+        }
+        if( type == URI.class ) {
+            return ((URI)value).toString();
         }
         return null;
     }

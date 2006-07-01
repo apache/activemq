@@ -59,4 +59,27 @@ public class InitialContextTest extends TestCase {
 
         assertEquals("the brokerURL should match", expected, connectionFactory.getBrokerURL());
     }
+    
+    
+    
+    public void testConnectionFactoryPolicyConfig() throws Exception {
+    	
+        Properties properties = new Properties();
+        properties.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
+        properties.put(Context.PROVIDER_URL, "tcp://localhost:65432");
+        properties.put("prefetchPolicy.queuePrefetch", "777");
+        properties.put("redeliveryPolicy.maximumRedeliveries", "15");
+        properties.put("redeliveryPolicy.backOffMultiplier", "32");
+
+        InitialContext context = new InitialContext(properties);
+        assertTrue("Created context", context != null);
+
+        ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory) context.lookup("ConnectionFactory");
+
+        assertTrue("Should have created a ConnectionFactory", connectionFactory != null);
+
+        assertEquals(777, connectionFactory.getPrefetchPolicy().getQueuePrefetch());
+        assertEquals(15, connectionFactory.getRedeliveryPolicy().getMaximumRedeliveries());
+        assertEquals(32, connectionFactory.getRedeliveryPolicy().getBackOffMultiplier());
+    }
 }

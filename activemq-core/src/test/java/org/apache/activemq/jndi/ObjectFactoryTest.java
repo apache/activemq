@@ -39,6 +39,10 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         factory.setUseCompression(true);
         factory.setUseRetroactiveConsumer(true);
         factory.setUserName("user");
+        factory.getPrefetchPolicy().setQueuePrefetch(777);
+        factory.getRedeliveryPolicy().setMaximumRedeliveries(15);
+        factory.getRedeliveryPolicy().setBackOffMultiplier((short) 32);
+        
 
         // Create reference
         Reference ref = JNDIReferenceFactory.createReference(factory.getClass().getName(), factory);
@@ -61,6 +65,9 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         assertEquals(factory.isUseCompression(), temp.isUseCompression());
         assertEquals(factory.isUseRetroactiveConsumer(), temp.isUseRetroactiveConsumer());
         assertEquals(factory.getUserName(), temp.getUserName());
+        assertEquals(factory.getPrefetchPolicy().getQueuePrefetch(), temp.getPrefetchPolicy().getQueuePrefetch());
+        assertEquals(factory.getRedeliveryPolicy().getMaximumRedeliveries(), temp.getRedeliveryPolicy().getMaximumRedeliveries());
+        assertEquals(factory.getRedeliveryPolicy().getBackOffMultiplier(), temp.getRedeliveryPolicy().getBackOffMultiplier());
     }
 
     public void testDestination() throws Exception {
