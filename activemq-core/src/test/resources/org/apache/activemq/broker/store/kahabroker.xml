@@ -23,7 +23,7 @@
     </transportConnectors>
 
     <persistenceAdapter>
-      <kahaPersistentAdaptor dir = "activemq-data/storetest"/>
+      <kahaPersistentAdaptor dir = "${basedir}/target/activemq-data/kaha-broker.db"/>
     </persistenceAdapter>
   </broker>
 

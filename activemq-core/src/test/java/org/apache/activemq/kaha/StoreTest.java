@@ -25,10 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.activemq.kaha.ListContainer;
-import org.apache.activemq.kaha.MapContainer;
-import org.apache.activemq.kaha.Store;
-import org.apache.activemq.kaha.StoreFactory;
+
 import junit.framework.TestCase;
 
 /**
@@ -38,7 +35,7 @@ import junit.framework.TestCase;
 */
 public class StoreTest extends TestCase{
     
-    protected String name = "sdbStoreTest.db";
+    protected String name;
     protected Store store;
     
 
@@ -197,6 +194,7 @@ public class StoreTest extends TestCase{
     
     protected void setUp() throws Exception{
         super.setUp();
+        name = System.getProperty("basedir", ".")+"/target/activemq-data/store-test.db";
         store = getStore();
         
     }
