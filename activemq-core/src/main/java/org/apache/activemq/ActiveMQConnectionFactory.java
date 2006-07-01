@@ -20,7 +20,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Enumeration;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -30,10 +29,8 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
-import javax.naming.Referenceable;
-import javax.naming.Reference;
-import javax.naming.NamingException;
 
+import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -43,7 +40,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
-import org.apache.activemq.jndi.JNDIBaseStorable;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -277,7 +273,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             try {
 
                 Map map = URISupport.parseQuery(this.brokerURL.getQuery());
-                if( IntrospectionSupport.setProperties(this, map, "jms.") ) {
+                if( buildFromMap(IntrospectionSupport.extractProperties(map, "jms.")) ) {
                     this.brokerURL = URISupport.createRemainingURI(this.brokerURL, map);
                 }
 
@@ -289,7 +285,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             // It might be a composite URI.
             try {
                 CompositeData data = URISupport.parseComposite(this.brokerURL);
-                if( IntrospectionSupport.setProperties(this, data.getParameters(), "jms.") ) {
+                if( buildFromMap(IntrospectionSupport.extractProperties(data.getParameters(), "jms.")) ) {
                     this.brokerURL = data.toURI();
                 }
             } catch (URISyntaxException e) {
@@ -337,7 +333,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.password = password;
     }
 
-    public ActiveMQPrefetchPolicy getPrefetchPolicy() {
+    public  ActiveMQPrefetchPolicy getPrefetchPolicy() {
         return prefetchPolicy;
     }
 
@@ -386,12 +382,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public void buildFromProperties(Properties properties) {
-
+    	
         if (properties == null) {
             properties = new Properties();
         }
-
-        IntrospectionSupport.setProperties(this, properties);
 
         String temp = properties.getProperty(Context.PROVIDER_URL);
         if (temp == null || temp.length() == 0) {
@@ -400,6 +394,28 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         if (temp != null && temp.length() > 0) {
             setBrokerURL(temp);
         }
+        
+        buildFromMap(properties);    	
+    }
+    
+    public boolean buildFromMap(Map properties) {
+    	boolean rc=false;
+    	
+        ActiveMQPrefetchPolicy p = new ActiveMQPrefetchPolicy(); 
+        if( IntrospectionSupport.setProperties(p, properties, "prefetchPolicy.") ) {
+        	setPrefetchPolicy(p);
+        	rc = true;
+        }
+
+        RedeliveryPolicy rp = new RedeliveryPolicy();
+        if ( IntrospectionSupport.setProperties(rp, properties, "redeliveryPolicy.") ) {
+            setRedeliveryPolicy(rp);
+            rc = true;
+        }
+        
+        rc |= IntrospectionSupport.setProperties(this, properties);
+        
+        return rc;
     }
 
     public void populateProperties(Properties props) {
@@ -414,6 +430,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             props.setProperty("clientID", getClientID());
         }
 
+        IntrospectionSupport.getProperties(getPrefetchPolicy(), props, "prefetchPolicy.");
+        IntrospectionSupport.getProperties(getRedeliveryPolicy(), props, "redeliveryPolicy.");
+        
         props.setProperty("copyMessageOnSend", Boolean.toString(isCopyMessageOnSend()));
         props.setProperty("disableTimeStampsByDefault", Boolean.toString(isDisableTimeStampsByDefault()));
         props.setProperty("objectMessageSerializationDefered", Boolean.toString(isObjectMessageSerializationDefered()));
