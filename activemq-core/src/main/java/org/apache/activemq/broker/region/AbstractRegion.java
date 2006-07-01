@@ -141,6 +141,7 @@ abstract public class AbstractRegion implements Region {
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        log.debug("Adding consumer: "+info.getConsumerId());
 
         Subscription sub = createSubscription(context, info);
 
@@ -162,7 +163,7 @@ abstract public class AbstractRegion implements Region {
                 }
             }
         }
-        
+                
         subscriptions.put(info.getConsumerId(), sub);
 
         // Add the subscription to all the matching queues.
@@ -196,6 +197,8 @@ abstract public class AbstractRegion implements Region {
     }
     
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+    	
+        log.debug("Removing consumer: "+info.getConsumerId());
         
         Subscription sub = (Subscription) subscriptions.remove(info.getConsumerId());
         if( sub==null )
