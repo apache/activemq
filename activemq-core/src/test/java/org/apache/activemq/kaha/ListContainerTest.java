@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 
 public class ListContainerTest extends TestCase{
    
-    protected String name = "test";
+    protected String name;
     protected Store store;
     protected ListContainer container;
     protected LinkedList testList;
@@ -291,6 +291,7 @@ public class ListContainerTest extends TestCase{
     
     protected void setUp() throws Exception{
         super.setUp();
+        name = System.getProperty("basedir", ".")+"/target/activemq-data/list-container.db";
         StoreFactory.delete(name);
         store = getStore();
         store.deleteListContainer(name);

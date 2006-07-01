@@ -48,6 +48,7 @@ public class LoadTest extends TestCase{
 
     protected void setUp() throws Exception{
         super.setUp();
+        name = System.getProperty("basedir", ".")+"/target/activemq-data/load.db";
         StoreFactory.delete(name);
         store=getStore();
     }

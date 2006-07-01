@@ -15,7 +15,7 @@ import junit.framework.TestCase;
 
 public class MapContainerTest extends TestCase{
     
-    protected String name = "test";
+    protected String name;
     protected Store store;
     protected MapContainer container;
     protected Map testMap;
@@ -158,6 +158,7 @@ public class MapContainerTest extends TestCase{
     
     protected void setUp() throws Exception{
         super.setUp();
+        name = System.getProperty("basedir", ".")+"/target/activemq-data/map-container.db";
         store = getStore();
         store.deleteListContainer(name);
         container = store.getMapContainer(name);

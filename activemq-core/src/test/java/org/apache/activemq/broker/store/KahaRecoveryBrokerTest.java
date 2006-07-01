@@ -40,8 +40,7 @@ public class KahaRecoveryBrokerTest extends RecoveryBrokerTest {
     
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService broker = new BrokerService();
-       
-        KahaPersistentAdaptor adaptor = new KahaPersistentAdaptor(new File("activemq-data/storetest"));
+        KahaPersistentAdaptor adaptor = new KahaPersistentAdaptor(new File( System.getProperty("basedir", ".")+"/target/activemq-data/kaha-store.db"));
         broker.setPersistenceAdapter(adaptor);
         broker.addConnector("tcp://localhost:0");
         return broker;
