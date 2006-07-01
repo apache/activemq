@@ -54,7 +54,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
      */
     public void testRemoveSubscriber() throws Exception {
         BrokerService broker = new BrokerService();
-        broker.setPersistent(true);
+        broker.setPersistent(false);
 
         broker.addConnector("stomp://localhost:61613").setName("Stomp");
         broker.addConnector("tcp://localhost:61616").setName("Default");
@@ -114,6 +114,9 @@ public class StompSubscriptionRemoveTest extends TestCase {
             ++messagesCount;
             ++count;
         }
+        
+        sendFrame("DISCONNECT\n\n");
+        Thread.sleep(1000);
         stompSocket.close();
 
         stompSocket = new Socket("localhost", 61613);
@@ -162,7 +165,8 @@ public class StompSubscriptionRemoveTest extends TestCase {
         catch (IOException ex) {
             ex.printStackTrace();
         }
-        
+                
+        sendFrame("DISCONNECT\n\n");
         stompSocket.close();
         broker.stop();
         
