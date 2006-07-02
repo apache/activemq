@@ -52,16 +52,17 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     private ServerSocket serverSocket;
     private int backlog = 5000;
     private WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
-    private TcpTransportFactory transportFactory = new TcpTransportFactory();
+    private final TcpTransportFactory transportFactory;
     private long maxInactivityDuration = 30000;
     private int minmumWireFormatVersion;
     private boolean trace;
     private Map transportOptions;
     
-    public TcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+    public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
-        serverSocket = createServerSocket(location, serverSocketFactory);
-        serverSocket.setSoTimeout(2000);
+        this.transportFactory=transportFactory;
+        this.serverSocket = createServerSocket(location, serverSocketFactory);
+        this.serverSocket.setSoTimeout(2000);
         updatePhysicalUri(location);
     }
 
@@ -132,7 +133,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                         options.put("trace", new Boolean(trace));
                         options.putAll(transportOptions);
                         WireFormat format = wireFormatFactory.createWireFormat();
-                        TcpTransport transport = new TcpTransport(format, socket);
+                        Transport transport = createTransport(socket, format);
                         Transport configuredTransport = transportFactory.configure(transport, format, options);
                         getAcceptListener().onAccept(configuredTransport);
                     }
@@ -151,6 +152,17 @@ public class TcpTransportServer extends TransportServerThreadSupport {
             }
         }
     }
+
+    /**
+     * Allow derived classes to override the Transport implementation that this transport server creates.
+     * @param socket
+     * @param format
+     * @return
+     * @throws IOException
+     */
+	protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
+		return new TcpTransport(format, socket);
+	}
 
     /**
      * @return pretty print of this

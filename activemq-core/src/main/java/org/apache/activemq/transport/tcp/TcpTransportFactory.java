@@ -29,8 +29,6 @@ import javax.net.SocketFactory;
 import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
-import org.apache.activemq.transport.MutexTransport;
-import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLogger;
@@ -49,7 +47,7 @@ public class TcpTransportFactory extends TransportFactory {
             Map options = new HashMap(URISupport.parseParamters(location));
 
             ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            TcpTransportServer server = new TcpTransportServer(location, serverSocketFactory);
+            TcpTransportServer server = createTcpTransportServer(location, serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
             Map transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -62,31 +60,24 @@ public class TcpTransportFactory extends TransportFactory {
         }
     }
 
-    public Transport configure(Transport transport, WireFormat format, Map options) {
-        IntrospectionSupport.setProperties(transport, options);
-        TcpTransport tcpTransport = (TcpTransport) transport;
-        Map socketOptions = IntrospectionSupport.extractProperties(options, "socket.");        
-        tcpTransport.setSocketOptions(socketOptions);
-
-        if (tcpTransport.isTrace()) {
-            transport = new TransportLogger(transport);
-        }
-
-        transport = new InactivityMonitor(transport);
-
-        // Only need the OpenWireFormat if using openwire
-        if( format instanceof OpenWireFormat ) {
-        	transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, tcpTransport.getMinmumWireFormatVersion());
-        }
-        
-        transport = new MutexTransport(transport);
-        transport = new ResponseCorrelator(transport);
-        return transport;
-    }
+    /**
+     * Allows subclasses of TcpTransportFactory to create custom instances of TcpTransportServer.
+     * 
+     * @param location
+     * @param serverSocketFactory
+     * @return
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+	protected TcpTransportServer createTcpTransportServer(final URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+		return new TcpTransportServer(this, location, serverSocketFactory);
+	}
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        IntrospectionSupport.setProperties(transport, options);
-        TcpTransport tcpTransport = (TcpTransport) transport;
+        
+        TcpTransport tcpTransport = (TcpTransport) transport.narrow(TcpTransport.class);
+        IntrospectionSupport.setProperties(tcpTransport, options);
+        
         Map socketOptions = IntrospectionSupport.extractProperties(options, "socket.");        
         tcpTransport.setSocketOptions(socketOptions);
 
@@ -96,7 +87,7 @@ public class TcpTransportFactory extends TransportFactory {
 
         transport = new InactivityMonitor(transport);
 
-        // Only need the OpenWireFormat if using openwire
+        // Only need the WireFormatNegotiator if using openwire
         if( format instanceof OpenWireFormat ) {
         	transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, tcpTransport.getMinmumWireFormatVersion());
         }
@@ -120,11 +111,23 @@ public class TcpTransportFactory extends TransportFactory {
             }
         }
         SocketFactory socketFactory = createSocketFactory();
-        if (localLocation != null) {
-            return new TcpTransport(wf, socketFactory, location, localLocation);
-        }
-        return new TcpTransport(wf, socketFactory, location);
+        return createTcpTransport(wf, socketFactory, location, localLocation);
     }
+
+    /**
+     * Allows subclasses of TcpTransportFactory to provide a create custom TcpTransport intances. 
+     * 
+     * @param location
+     * @param wf
+     * @param socketFactory
+     * @param localLocation 
+     * @return
+     * @throws UnknownHostException
+     * @throws IOException
+     */
+	private TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
+		return new TcpTransport(wf, socketFactory, location, localLocation);
+	}
 
     protected ServerSocketFactory createServerSocketFactory() {
         return ServerSocketFactory.getDefault();
