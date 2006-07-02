@@ -30,7 +30,7 @@ import org.apache.activemq.state.CommandVisitor;
  * 
  * @author <a href="http://hiramchirino.com">chirino</a> 
  */
-public class StompCommand implements Command {
+public class StompFrame implements Command {
 
     private static final byte[] NO_DATA = new byte[]{};
 
@@ -38,13 +38,13 @@ public class StompCommand implements Command {
 	private Map headers = Collections.EMPTY_MAP;
 	private byte[] content = NO_DATA;
 
-	public StompCommand(String command, HashMap headers, byte[] data) {
+	public StompFrame(String command, HashMap headers, byte[] data) {
 		this.action = command;
 		this.headers = headers;
 		this.content = data;
 	}
 
-	public StompCommand() {
+	public StompFrame() {
 	}
 
 	public String getAction() {

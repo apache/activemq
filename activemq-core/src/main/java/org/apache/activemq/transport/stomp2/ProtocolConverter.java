@@ -19,7 +19,6 @@ package org.apache.activemq.transport.stomp2;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.ProtocolException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -87,13 +86,13 @@ public class ProtocolConverter {
     	}
     }
 
-    protected ResponseHandler createResponseHandler(StompCommand command){
+    protected ResponseHandler createResponseHandler(StompFrame command){
         final String receiptId = (String) command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
         // A response may not be needed.
         if( receiptId != null ) {
 	        return new ResponseHandler() {
 	    		public void onResponse(ProtocolConverter converter, Response response) throws IOException {
-	                StompCommand sc = new StompCommand();
+	                StompFrame sc = new StompFrame();
 	                sc.setHeaders(new HashMap(5));
 	                sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
 	        		transportFilter.sendToStomp(sc);
@@ -112,7 +111,7 @@ public class ProtocolConverter {
 		transportFilter.sendToActiveMQ(command);
 	}
 
-	protected void sendToStomp(StompCommand command) throws IOException {
+	protected void sendToStomp(StompFrame command) throws IOException {
 		transportFilter.sendToStomp(command);
 	}
 
@@ -120,8 +119,12 @@ public class ProtocolConverter {
      * Convert a stomp command
      * @param command
      */
-	public void onStompCommad( StompCommand command ) throws IOException, JMSException {
+	public void onStompCommad( StompFrame command ) throws IOException, JMSException {
 		try {
+			
+			if( command.getClass() == StompFrameError.class ) {
+				throw ((StompFrameError)command).getException();
+			}
 			
 			String action = command.getAction();
 	        if (action.startsWith(Stomp.Commands.SEND))
@@ -161,13 +164,15 @@ public class ProtocolConverter {
             	headers.put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
             }
         	
-        	StompCommand errorMessage = new StompCommand(Stomp.Responses.ERROR,headers,baos.toByteArray());
+        	StompFrame errorMessage = new StompFrame(Stomp.Responses.ERROR,headers,baos.toByteArray());
 			sendToStomp(errorMessage);
 			
+			if( e.isFatal() )
+				getTransportFilter().onException(e);
         }
 	}
 	
-	protected void onStompSend(StompCommand command) throws IOException, JMSException {
+	protected void onStompSend(StompFrame command) throws IOException, JMSException {
 		checkConnected();
 
     	Map headers = command.getHeaders();
@@ -193,7 +198,7 @@ public class ProtocolConverter {
 	}
 	
 
-    protected void onStompAck(StompCommand command) throws ProtocolException {
+    protected void onStompAck(StompFrame command) throws ProtocolException {
 		checkConnected();
 
     	// TODO: acking with just a message id is very bogus
@@ -231,7 +236,7 @@ public class ProtocolConverter {
 	}
     
 
-	protected void onStompBegin(StompCommand command) throws ProtocolException {
+	protected void onStompBegin(StompFrame command) throws ProtocolException {
 		checkConnected();
 
 		Map headers = command.getHeaders();
@@ -258,7 +263,7 @@ public class ProtocolConverter {
 		
 	}
 	
-	protected void onStompCommit(StompCommand command) throws ProtocolException {
+	protected void onStompCommit(StompFrame command) throws ProtocolException {
 		checkConnected();
 
 		Map headers = command.getHeaders();
@@ -283,7 +288,7 @@ public class ProtocolConverter {
 		sendToActiveMQ(tx, createResponseHandler(command));
 	}
 
-	protected void onStompAbort(StompCommand command) throws ProtocolException {
+	protected void onStompAbort(StompFrame command) throws ProtocolException {
 		checkConnected();
     	Map headers = command.getHeaders();
 		
@@ -308,7 +313,7 @@ public class ProtocolConverter {
 		
 	}
 
-	protected void onStompSubscribe(StompCommand command) throws ProtocolException {
+	protected void onStompSubscribe(StompFrame command) throws ProtocolException {
 		checkConnected();
     	Map headers = command.getHeaders();
         
@@ -343,7 +348,7 @@ public class ProtocolConverter {
 		
 	}
 
-	protected void onStompUnsubscribe(StompCommand command) throws ProtocolException {
+	protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {
 		checkConnected();
     	Map headers = command.getHeaders();
 
@@ -375,7 +380,7 @@ public class ProtocolConverter {
         throw new ProtocolException("No subscription matched.");
 	}
 
-	protected void onStompConnect(StompCommand command) throws ProtocolException {
+	protected void onStompConnect(StompFrame command) throws ProtocolException {
 
 		if(connected.get()) {
 			throw new ProtocolException("Allready connected.");
@@ -422,7 +427,7 @@ public class ProtocolConverter {
 		                    responseHeaders.put(Stomp.Headers.Connected.RESPONSE_ID, requestId);
 	            		}
 	                    
-	                    StompCommand sc = new StompCommand();
+	                    StompFrame sc = new StompFrame();
 	                    sc.setAction(Stomp.Responses.CONNECTED);
 	                    sc.setHeaders(responseHeaders);
 	                    sendToStomp(sc);
@@ -434,7 +439,7 @@ public class ProtocolConverter {
 		
 	}
 
-	protected void onStompDisconnect(StompCommand command) throws ProtocolException {
+	protected void onStompDisconnect(StompFrame command) throws ProtocolException {
 		checkConnected();
 		sendToActiveMQ(new ShutdownInfo(), createResponseHandler(command));
 		connected.set(false);
@@ -473,7 +478,7 @@ public class ProtocolConverter {
 		
 	}
 
-	public  ActiveMQMessage convertMessage(StompCommand command) throws IOException, JMSException {
+	public  ActiveMQMessage convertMessage(StompFrame command) throws IOException, JMSException {
 		Map headers = command.getHeaders();
         
         // now the body
@@ -488,7 +493,7 @@ public class ProtocolConverter {
             try {
 				text.setText(new String(command.getContent(), "UTF-8"));
 			} catch (Throwable e) {
-				throw (ProtocolException)new ProtocolException("Text could not bet set: "+e).initCause(e);
+				throw new ProtocolException("Text could not bet set: "+e, false, e);
 			}
             msg = text;
         }
@@ -530,9 +535,9 @@ public class ProtocolConverter {
         return msg;        
 	}
 	
-	public StompCommand convertMessage(ActiveMQMessage message) throws IOException, JMSException {
+	public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
 
-		StompCommand command = new StompCommand();
+		StompFrame command = new StompFrame();
 		command.setAction(Stomp.Responses.MESSAGE);
 		
 		HashMap headers = new HashMap();
@@ -620,8 +625,4 @@ public class ProtocolConverter {
 		this.transportFilter = transportFilter;
 	}
 	
-	public void onStompExcepton(IOException error) {
-		// TODO Auto-generated method stub
-	}
-
 }

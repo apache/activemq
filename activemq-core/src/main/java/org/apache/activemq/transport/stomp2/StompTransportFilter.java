@@ -46,14 +46,6 @@ public class StompTransportFilter extends TransportFilter {
 		protocolConverter.setTransportFilter(this);
 	}
 
-	public void start() throws Exception {
-		super.start();
-	}
-	
-	public void stop() throws Exception {
-		super.stop();
-	}
-	
 	public void oneway(Command command) throws IOException {
         try {
         	protocolConverter.onActiveMQCommad(command);
@@ -64,7 +56,7 @@ public class StompTransportFilter extends TransportFilter {
 	
 	public void onCommand(Command command) {
         try {
-        	protocolConverter.onStompCommad((StompCommand) command);
+        	protocolConverter.onStompCommad((StompFrame) command);
 		} catch (IOException e) {
 			onException(e);
 		} catch (JMSException e) {
@@ -72,24 +64,16 @@ public class StompTransportFilter extends TransportFilter {
 		}
 	}
 	
-	public void onException(IOException error) {
-		protocolConverter.onStompExcepton(error);
-		transportListener.onException(error);
-	}
-
-
 	public void sendToActiveMQ(Command command) {
 		synchronized(sendToActiveMQMutex) {
 			transportListener.onCommand(command);
 		}
 	}
 	
-	public void sendToStomp(StompCommand command) throws IOException {
+	public void sendToStomp(StompFrame command) throws IOException {
 		synchronized(sendToStompMutex) {
 			next.oneway(command);
 		}
 	}
 
-
-	
 }
