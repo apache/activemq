@@ -421,7 +421,11 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( ss == null )
             throw new IllegalStateException("Cannot add a producer to a session that had not been registered: "+sessionId);
         broker.addProducer(cs.getContext(), info);
-        ss.addProducer(info);
+        try {
+            ss.addProducer(info);
+		} catch (IllegalStateException e) {
+			broker.removeProducer(cs.getContext(), info);
+		}
         return null;
     }
     
@@ -451,7 +455,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             throw new IllegalStateException("Cannot add a consumer to a session that had not been registered: "+sessionId);
 
         broker.addConsumer(cs.getContext(), info);
-        ss.addConsumer(info);
+        try {
+			ss.addConsumer(info);
+		} catch (IllegalStateException e) {
+			broker.removeConsumer(cs.getContext(), info);
+		}
+        
         return null;
     }
     
@@ -476,8 +485,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         ConnectionId connectionId = info.getSessionId().getParentId();
         
         ConnectionState cs = lookupConnectionState(connectionId);
-        broker.addSession(cs.getContext(), info);
-        cs.addSession(info);
+    	broker.addSession(cs.getContext(), info);
+        try {
+            cs.addSession(info);
+		} catch (IllegalStateException e) {
+			broker.removeSession(cs.getContext(), info);
+		}
         return null;
     }
     
@@ -487,6 +500,10 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         ConnectionState cs = lookupConnectionState(connectionId);
         SessionState session = cs.getSessionState(id);
+        
+        // Don't let new consumers or producers get added while we are closing this down.
+        session.shutdown();
+        
         if( session == null )
             throw new IllegalStateException("Cannot remove session that had not been registered: "+id);
         
@@ -543,6 +560,9 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     public Response processRemoveConnection(ConnectionId id)  {
         
         ConnectionState cs = lookupConnectionState(id);
+        
+        // Don't allow things to be added to the connection state while we are shutting down.
+        cs.shutdown();
         
         // Cascade the connection stop to the sessions.
         for (Iterator iter = cs.getSessionIds().iterator(); iter.hasNext();) {
