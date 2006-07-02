@@ -145,7 +145,15 @@ public class OpenTypeSupport {
             try {
                 byte preview[] = new byte[ (int)Math.min(length, 255) ];
                 m.readBytes(preview);
-                rc.put("BodyPreview", preview);
+                
+                // This is whack!  Java 1.5 JMX spec does not support primitive arrays!
+                // In 1.6 it seems it is supported.. but until then...
+                Byte data[] = new Byte[ preview.length ];
+                for (int i = 0; i < data.length; i++) {
+					data[i] = new Byte(preview[i]);
+				}
+                
+                rc.put("BodyPreview", data);
             } catch (JMSException e) {
                 rc.put("BodyPreview", new byte[]{});
             }
