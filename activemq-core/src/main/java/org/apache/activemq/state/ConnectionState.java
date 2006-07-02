@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
@@ -37,6 +38,7 @@ public class ConnectionState {
     final ConnectionInfo info;
     private final ConcurrentHashMap sessions = new ConcurrentHashMap();
     private final List tempDestinations = Collections.synchronizedList(new ArrayList());
+    private final AtomicBoolean shutdown = new AtomicBoolean(false);
     
     public ConnectionState(ConnectionInfo info) {
         this.info = info;
@@ -49,10 +51,11 @@ public class ConnectionState {
     }
 
     public void addTempDestination(DestinationInfo info) {
+    	checkShutdown();
         tempDestinations.add(info);
     }
 
-    public void removeTempDestination(ActiveMQDestination destination) {
+	public void removeTempDestination(ActiveMQDestination destination) {
         for (Iterator iter = tempDestinations.iterator(); iter.hasNext();) {
             DestinationInfo di = (DestinationInfo) iter.next();
             if( di.getDestination().equals(destination) ) {
@@ -62,6 +65,7 @@ public class ConnectionState {
     }
 
     public void addSession(SessionInfo info) {
+    	checkShutdown();
         sessions.put(info.getSessionId(), new SessionState(info));            
     }        
     public SessionState removeSession(SessionId id) {
@@ -85,5 +89,19 @@ public class ConnectionState {
 
     public Collection getSessionStates() {
         return sessions.values();
-    }        
+    }
+    
+    private void checkShutdown() {
+		if( shutdown.get() )
+			throw new IllegalStateException("Disposed");
+	}
+    
+    public void shutdown() {
+    	if( shutdown.compareAndSet(false, true) ) {
+    		for (Iterator iter = sessions.values().iterator(); iter.hasNext();) {
+				SessionState ss = (SessionState) iter.next();
+				ss.shutdown();
+			}
+    	}
+    }
 }

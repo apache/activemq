@@ -19,6 +19,7 @@ package org.apache.activemq.state;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -33,6 +34,7 @@ public class SessionState {
     
     public final ConcurrentHashMap producers = new ConcurrentHashMap();
     public final ConcurrentHashMap consumers = new ConcurrentHashMap();
+    private final AtomicBoolean shutdown = new AtomicBoolean(false);
     
     public SessionState(SessionInfo info) {
         this.info = info;
@@ -42,6 +44,7 @@ public class SessionState {
     }
     
     public void addProducer(ProducerInfo info) {
+    	checkShutdown();
         producers.put(info.getProducerId(), new ProducerState(info));            
     }        
     public ProducerState removeProducer(ProducerId id) {
@@ -49,6 +52,7 @@ public class SessionState {
     }
     
     public void addConsumer(ConsumerInfo info) {
+    	checkShutdown();
         consumers.put(info.getConsumerId(), new ConsumerState(info));            
     }        
     public ConsumerState removeConsumer(ConsumerId id) {
@@ -72,5 +76,15 @@ public class SessionState {
     
     public Collection getConsumerStates() {
         return consumers.values();
-    }        
+    }
+    
+    private void checkShutdown() {
+		if( shutdown.get() )
+			throw new IllegalStateException("Disposed");
+	}
+    
+    public void shutdown() {
+    	shutdown.set(false);
+    }
+
 }
