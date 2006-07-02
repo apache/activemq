@@ -341,9 +341,11 @@
                 <!-- These are performance tests so take too long to run -->
                 <exclude>**/perf/*</exclude>
                 
-                <!-- these tests don't always work when rendezvous can't work on the OSS -->
+                <!-- This is working for me on linux..  If it starts failing please open a issue
+                     and describe the enviorment.
                 <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
-
+				-->
+				
                 <!-- Kaha in flux - removing tests -->
                 <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
                 <exclude>**/KahaRecoveryBrokerTest.*</exclude>
