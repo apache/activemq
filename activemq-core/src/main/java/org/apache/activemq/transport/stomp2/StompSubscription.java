@@ -69,7 +69,7 @@ public class StompSubscription {
             protocolConverter.getTransportFilter().sendToActiveMQ(ack);
         }
         
-        StompCommand command = protocolConverter.convertMessage(message);
+        StompFrame command = protocolConverter.convertMessage(message);
         
         command.setAction(Stomp.Responses.MESSAGE);        
         if (subscriptionId!=null) {
