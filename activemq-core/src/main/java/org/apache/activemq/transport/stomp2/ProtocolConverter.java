@@ -93,7 +93,8 @@ public class ProtocolConverter {
 	        return new ResponseHandler() {
 	    		public void onResponse(ProtocolConverter converter, Response response) throws IOException {
 	                StompFrame sc = new StompFrame();
-	                sc.setHeaders(new HashMap(5));
+	                sc.setAction(Stomp.Responses.RECEIPT);
+	                sc.setHeaders(new HashMap(1));
 	                sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
 	        		transportFilter.sendToStomp(sc);
 	    		}
