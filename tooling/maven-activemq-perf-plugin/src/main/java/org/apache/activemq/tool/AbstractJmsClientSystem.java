@@ -233,6 +233,11 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
     protected static Properties parseStringArgs(String[] args) {
         File configFile = null;
         Properties props = new Properties();
+
+        if (args == null || args.length == 0) {
+            return props; // Empty properties
+        }
+        
         for (int i=0; i<args.length; i++) {
             String arg = args[i];
             if (arg.startsWith("-D") || arg.startsWith("-d")) {
@@ -253,7 +258,9 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
 
         Properties fileProps = new Properties();
         try {
-            fileProps.load(new FileInputStream(configFile));
+            if (configFile != null) {
+                fileProps.load(new FileInputStream(configFile));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
