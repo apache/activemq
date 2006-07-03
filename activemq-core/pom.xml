@@ -289,6 +289,7 @@
           <execution>
             <phase>generate-sources</phase>
             <configuration>
+              <sourceRoot>${basedir}/target/generated</sourceRoot>
               <tasks>
 
                 <mkdir dir="${basedir}/target/generated"/>
@@ -330,7 +331,8 @@
             <phase>generate-sources</phase>
             <configuration>
               <sourceDirectory>${basedir}/src/main/grammar</sourceDirectory>
-              <outputDirectory>${basedir}/src/main/java/org/apache/activemq/selector</outputDirectory>
+              <outputDirectory>${basedir}/target/generated-javacc</outputDirectory>
+              <packageName>org.apache.activemq.selector</packageName>
             </configuration>
             <goals>
               <goal>javacc</goal>
