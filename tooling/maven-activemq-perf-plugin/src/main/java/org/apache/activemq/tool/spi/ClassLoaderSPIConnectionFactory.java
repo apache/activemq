@@ -51,15 +51,20 @@ public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFa
                 String dir = tokens.nextToken();
                 try {
                     File f = new File(dir);
-                    log.info("Adding extension dir: " + f.getAbsolutePath());
-                    urls.add(f.toURL());
+                    if (!f.exists()) {
+                        log.warn("Cannot find extension dir: " + f.getAbsolutePath());
+                    } else {
+                        log.info("Adding extension dir: " + f.getAbsolutePath());
 
-                    File[] files = f.listFiles();
-                    if( files!=null ) {
-                        for (int j = 0; j < files.length; j++) {
-                            if( files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar") ) {
-                                log.info("Adding extension dir: " + files[j].getAbsolutePath());
-                                urls.add(files[j].toURL());
+                        urls.add(f.toURL());
+
+                        File[] files = f.listFiles();
+                        if( files!=null ) {
+                            for (int j = 0; j < files.length; j++) {
+                                if( files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar") ) {
+                                    log.info("Adding extension dir: " + files[j].getAbsolutePath());
+                                    urls.add(files[j].toURL());
+                                }
                             }
                         }
                     }
