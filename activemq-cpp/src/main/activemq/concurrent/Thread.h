@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include <assert.h>
 
-#if (defined(__unix__) || defined(unix) || defined(MACOSX)) && !defined(USG)
+#if (defined(__unix__) || defined(unix) || defined(MACOSX) || defined(__APPLE__)) && !defined(USG)
    
    #ifndef unix
       #define unix
