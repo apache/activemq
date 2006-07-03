@@ -1,0 +1,80 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>activemq</groupId>
+    <artifactId>activemq-cpp-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  
+  <artifactId>activemq-cpp</artifactId>
+  <name>ActiveMQ :: CPP :: WIN32 :: MSVC</name>
+  <description>The C++ client library for interfacing with an ActiveMQ broker</description>
+  <packaging>lib</packaging>  
+
+  <build>
+  	  <finalName>${artifactId}</finalName>	  
+	  <plugins>
+	      <plugin>
+	      
+	        <!-- configure the Mojo native plugin -->
+	        <groupId>org.codehaus.mojo</groupId>
+	        <artifactId>native-maven-plugin</artifactId>
+	        <version>1.0-alpha-1-SNAPSHOT</version>
+	        <extensions>true</extensions>
+	             
+	        <configuration>
+	        
+	          <!-- All compiler flags are determined by the profile -->
+	          <compilerProvider>msvc</compilerProvider>
+	          <env.factory.name>org.codehaus.mojo.natives.msvc.MSVC2005x86EnvFactory</env.factory.name>
+	          <compilerStartOptions>
+	            <compilerStartOption>${compiler.options}</compilerStartOption>
+	          </compilerStartOptions>
+	          <linkerExecutable>lib</linkerExecutable>
+	          <linkerStartOptions>
+	            <linkerStartOption></linkerStartOption>
+	          </linkerStartOptions>
+	          
+	      	</configuration>
+	      	
+	      </plugin>
+	    </plugins>
+  </build>
+  
+  <profiles>
+  	<profile>
+    
+      <id>release</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      
+      <properties>
+	    <compiler.options>/INCREMENTAL:NO /O2 /D WIN32 /D NDEBUG /D _LIB /D WIN32_LEAN_AND_MEAN /D _CRT_SECURE_NO_DEPRECATE /FD /EHsc /MD /Fo"Release\\" /Fd"Release\vc80.pdb" /W2 /nologo /c /Wp64 /Zi /TP</compiler.options>
+  	  </properties>
+  	  
+    </profile>
+    
+    <profile>
+    
+      <id>debug</id>
+      <activation>
+        <property>
+          <name>debug</name>
+        </property>
+      </activation>
+      
+      <properties>
+	    <compiler.options>/INCREMENTAL:NO /Od /D WIN32 /D _DEBUG /D _LIB /D WIN32_LEAN_AND_MEAN /D _CRT_SECURE_NO_DEPRECATE /Gm /EHsc /RTC1 /MDd /Fo"Debug\\" /Fd"Debug\vc80.pdb" /W2 /nologo /c /Wp64 /ZI /TP</compiler.options>
+  	  </properties>
+  	  
+    </profile>
+    
+  </profiles>
+
+</project>
+
