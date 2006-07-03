@@ -237,7 +237,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         if (args == null || args.length == 0) {
             return props; // Empty properties
         }
-        
+
         for (int i=0; i<args.length; i++) {
             String arg = args[i];
             if (arg.startsWith("-D") || arg.startsWith("-d")) {
@@ -259,6 +259,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         Properties fileProps = new Properties();
         try {
             if (configFile != null) {
+                log.info("Loading properties file: " + configFile.getAbsolutePath());
                 fileProps.load(new FileInputStream(configFile));
             }
         } catch (IOException e) {
