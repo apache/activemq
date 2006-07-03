@@ -39,9 +39,9 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         String uri = config.getSchemeSpecificPart();
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(uri);
 
-        XBeanBrokerService broker = null;
+        BrokerService broker = null;
         try {
-            broker = (XBeanBrokerService) context.getBean("broker");
+            broker = (BrokerService) context.getBean("broker");
         }
         catch (BeansException e) {
         }
@@ -51,7 +51,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
             String[] names = context.getBeanNamesForType(BrokerService.class);
             for (int i = 0; i < names.length; i++) {
                 String name = names[i];
-                broker = (XBeanBrokerService) context.getBean(name);
+                broker = (BrokerService) context.getBean(name);
                 if (broker != null) {
                     break;
                 }
