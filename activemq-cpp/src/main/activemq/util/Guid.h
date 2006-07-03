@@ -17,7 +17,7 @@
 #ifndef ACTIVEMQ_UTIL_GUID_H
 #define ACTIVEMQ_UTIL_GUID_H
 
-#if defined( unix ) && !defined( __CYGWIN__ )
+#if defined( unix ) || defined(__APPLE__) && !defined( __CYGWIN__ ) 
    #include <uuid/uuid.h>
 #elif defined(_WIN32) || defined( __CYGWIN__ )
 	#include <objbase.h>
@@ -187,7 +187,7 @@ namespace util{
    private:
    
       // the uuid that this object represents.
-      #ifdef unix
+      #if defined( unix ) || defined(__APPLE__)
          uuid_t uuid;
       #else
          ::GUID uuid;
