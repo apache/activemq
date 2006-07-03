@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#if defined(unix) && !defined(__CYGWIN__)
+#if (defined(unix) || defined(__APPLE__)) && !defined(__CYGWIN__)
    #include <unistd.h>
    #include <netdb.h>
    #include <fcntl.h>
@@ -46,7 +46,7 @@ using namespace activemq::network;
 using namespace activemq::io;
 
 
-#if !defined( unix ) || defined( __CYGWIN__ )
+#if !(defined( unix ) || defined(__APPLE__)) || defined( __CYGWIN__ )
 
    // Static socket initializer needed for winsock
 
@@ -77,7 +77,7 @@ TcpSocket::TcpSocket() {
    inputStream = NULL;
    outputStream = NULL;
    
-#if !defined( unix ) || defined( __CYGWIN__ )
+#if !(defined( unix ) || defined(__APPLE__)) || defined( __CYGWIN__ )
     if (staticSocketInitializer.getSocketInitError() != NULL) {
         throw *staticSocketInitializer.getSocketInitError();
     }
@@ -192,7 +192,7 @@ void TcpSocket::close() throw( cms::CMSException )
       
       ::shutdown(socketHandle, 2);
         
-      #if defined(unix) && !defined(__CYGWIN__)
+      #if (defined(unix) || defined(__APPLE__)) && !defined(__CYGWIN__)
          ::close(socketHandle);
       #else
          ::closesocket(socketHandle);
@@ -286,7 +286,7 @@ void TcpSocket::setSendBufferSize( const int size ) throw(SocketException){
 ////////////////////////////////////////////////////////////////////////////////
 void TcpSocket::setSoTimeout ( const int millisecs ) throw (SocketException)
 {
-#if defined( unix ) && !defined( __CYGWIN__ )
+#if (defined( unix ) || defined(__APPLE__)) && !defined( __CYGWIN__ )
   timeval timot;
   timot.tv_sec = millisecs / 1000;
   timot.tv_usec = (millisecs % 1000) * 1000;
@@ -301,7 +301,7 @@ void TcpSocket::setSoTimeout ( const int millisecs ) throw (SocketException)
 ////////////////////////////////////////////////////////////////////////////////
 int TcpSocket::getSoTimeout() const throw(SocketException)
 {
-#if defined( unix ) && !defined( __CYGWIN__ )
+#if (defined( unix ) || defined(__APPLE__)) && !defined( __CYGWIN__ )
   timeval timot;
   timot.tv_sec = 0;
   timot.tv_usec = 0;
@@ -313,7 +313,7 @@ int TcpSocket::getSoTimeout() const throw(SocketException)
   
   ::getsockopt(socketHandle, SOL_SOCKET, SO_RCVTIMEO, (char*) &timot, &size);
   
-#if defined( unix ) && !defined( __CYGWIN__ )
+#if (defined( unix ) || defined(__APPLE__)) && !defined( __CYGWIN__ )
   return (timot.tv_sec * 1000) + (timot.tv_usec / 1000);
 #else
   return timot;

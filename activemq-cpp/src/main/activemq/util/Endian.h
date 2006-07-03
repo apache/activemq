@@ -17,7 +17,7 @@
 #ifndef ACTIVEMQ_UTIL_ENDIAN_H
 #define ACTIVEMQ_UTIL_ENDIAN_H
 
-#ifdef unix
+#if defined( unix ) || defined(__APPLE__)
 #include <netinet/in.h>
 #else
 #include <Winsock2.h>
@@ -25,7 +25,7 @@
 
 // First try - check __BYTE_ORDER macro
 #if !defined IFR_IS_BIG_ENDIAN && !defined IFR_IS_LITTLE_ENDIAN && !defined IFR_IS_DPD_ENDIAN
-# ifdef unix
+# if defined( unix ) || defined(__APPLE__)
 #  include <sys/param.h> // defines __BYTE_ORDER (or sometimes __LITTLE_ENDIAN or __BIG_ENDIAN or __PDP_ENDIAN)
 # endif
 # if defined (__GLIBC__)

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
  
-#if defined(unix) && !defined(__CYGWIN__)
+#if (defined(unix) || defined(__APPLE__)) && !defined(__CYGWIN__)
    #include <sys/poll.h>
    #include <sys/socket.h>
    #include <errno.h>
@@ -50,7 +50,7 @@ SocketInputStream::~SocketInputStream()
 int SocketInputStream::available() const{
    
    
-#if defined(unix) && !defined(__CYGWIN__)
+#if (defined(unix) || defined(__APPLE__)) && !defined(__CYGWIN__)
     
     // Poll the socket for input.
     pollfd fd;
