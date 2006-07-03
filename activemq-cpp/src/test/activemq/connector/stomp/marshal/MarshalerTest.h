@@ -1,0 +1,104 @@
+#ifndef _ACTIVEMQ_CONNECTOR_STOMP_MARSHAL_MARSHALERTEST_H_
+#define _ACTIVEMQ_CONNECTOR_STOMP_MARSHAL_MARSHALERTEST_H_
+
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+#include <activemq/transport/Command.h>
+#include <activemq/connector/stomp/StompTopic.h>
+#include <activemq/connector/stomp/commands/ConnectedCommand.h>
+#include <activemq/connector/stomp/commands/TextMessageCommand.h>
+#include <activemq/connector/stomp/commands/BytesMessageCommand.h>
+#include <activemq/connector/stomp/marshal/Marshaler.h>
+
+namespace activemq{
+namespace connector{
+namespace stomp{
+namespace marshal{
+
+    class MarshalerTest : public CppUnit::TestFixture
+    {
+        CPPUNIT_TEST_SUITE( MarshalerTest );
+        CPPUNIT_TEST( test );
+        CPPUNIT_TEST_SUITE_END();
+
+    public:
+    
+    	MarshalerTest() {}
+    	virtual ~MarshalerTest() {}
+
+        void test( void )
+        {
+            Marshaler marshaler;
+            
+            commands::ConnectedCommand   connectedCommand;
+            commands::TextMessageCommand textCommand;
+            commands::BytesMessageCommand bytesCommand;
+            
+            // Sync to expected output
+            connectedCommand.setSessionId( "test" );
+
+            // Sync to expected output
+            textCommand.setCMSDestination( StompTopic("a") );
+            textCommand.setCMSMessageId( "123" );
+            textCommand.getProperties().setProperty( 
+                "sampleProperty", "testvalue" );
+            textCommand.setText( "testMessage" );
+
+            // Sync to expected output
+            bytesCommand.setCMSDestination( StompTopic("a") );
+            bytesCommand.setCMSMessageId( "123" );
+            bytesCommand.getProperties().setProperty( 
+                "sampleProperty", "testvalue" );
+            bytesCommand.setBodyBytes( 
+                (const unsigned char*)"123456789\0", 10 );
+            
+            StompFrame* connectedFrame = 
+                marshaler.marshal( &connectedCommand ).clone();
+            StompFrame* textFrame = 
+                marshaler.marshal( &textCommand ).clone();
+            StompFrame* bytesFrame = 
+                marshaler.marshal( &bytesCommand ).clone();
+
+            CPPUNIT_ASSERT( connectedFrame != NULL );
+            CPPUNIT_ASSERT( textFrame != NULL );
+            CPPUNIT_ASSERT( bytesFrame != NULL );
+
+            commands::ConnectedCommand   connectedCommand1( connectedFrame );
+            commands::TextMessageCommand textCommand1( textFrame );
+            commands::BytesMessageCommand bytesCommand1( bytesFrame );
+            
+            // Connected Tests
+            CPPUNIT_ASSERT( connectedCommand.getCommandId() == 
+                            connectedCommand1.getCommandId() );
+            CPPUNIT_ASSERT( connectedCommand.getStompCommandId() == 
+                            connectedCommand1.getStompCommandId() );
+            CPPUNIT_ASSERT( connectedCommand.isResponseRequired() == 
+                            connectedCommand1.isResponseRequired() );
+            CPPUNIT_ASSERT( connectedCommand.getCorrelationId() == 
+                            connectedCommand1.getCorrelationId() );
+
+            // TextMessage Tests
+            CPPUNIT_ASSERT( textCommand.getCommandId() == 
+                            textCommand1.getCommandId() );
+            CPPUNIT_ASSERT( textCommand.getStompCommandId() == 
+                            textCommand1.getStompCommandId() );
+            CPPUNIT_ASSERT( std::string( textCommand.getText() ) == 
+                            textCommand1.getText() );
+
+            // BytesMessage Tests
+            CPPUNIT_ASSERT( bytesCommand.getCommandId() == 
+                            bytesCommand1.getCommandId() );
+            CPPUNIT_ASSERT( bytesCommand.getStompCommandId() == 
+                            bytesCommand1.getStompCommandId() );
+            CPPUNIT_ASSERT( std::string( (const char*)bytesCommand.getBodyBytes() ) == 
+                            (const char*)bytesCommand1.getBodyBytes() );
+            
+
+        }
+
+    };
+
+}}}}
+
+#endif /*_ACTIVEMQ_CONNECTOR_STOMP_MARSHAL_MARSHALERTEST_H_*/
