@@ -79,6 +79,7 @@ public abstract class AbstractJmsClient {
     public Connection getConnection() throws JMSException {
         if (jmsConnection == null) {
             jmsConnection = factory.createConnection();
+            jmsConnection.setClientID(getClientName());
             log.info("Creating JMS Connection: Provider=" + getClient().getJmsProvider() + ", JMS Spec=" + getClient().getJmsVersion());
         }
         return jmsConnection;
