@@ -116,6 +116,7 @@ public class BrokerService implements Service, Serializable {
     private String masterConnectorURI;
     private JmsConnector[] jmsBridgeConnectors; //these are Jms to Jms bridges to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
+    private boolean advisorySupport = true;
     private URI vmConnectorURI;
     private PolicyMap destinationPolicy;
     private AtomicBoolean started = new AtomicBoolean(false);
@@ -670,6 +671,17 @@ public class BrokerService implements Service, Serializable {
     public void setUseShutdownHook(boolean useShutdownHook) {
         this.useShutdownHook = useShutdownHook;
     }
+    
+    public boolean isAdvisorySupport() {
+        return advisorySupport;
+    }
+
+    /**
+     * Allows the support of advisory messages to be disabled for performance reasons.
+     */
+    public void setAdvisorySupport(boolean advisorySupport) {
+        this.advisorySupport = advisorySupport;
+    }
 
     public List getTransportConnectors() {
         return new ArrayList(transportConnectors);
@@ -949,7 +961,9 @@ public class BrokerService implements Service, Serializable {
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
-        broker = new AdvisoryBroker(broker);
+        if (isAdvisorySupport()) {
+            broker = new AdvisoryBroker(broker);
+        }
         broker = new CompositeDestinationBroker(broker);
         if (isPopulateJMSXUserID()) {
             broker = new UserIDBroker(broker);
