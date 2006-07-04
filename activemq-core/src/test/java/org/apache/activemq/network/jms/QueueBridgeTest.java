@@ -51,23 +51,35 @@ public class QueueBridgeTest extends TestCase implements MessageListener {
     protected MessageProducer requestServerProducer;
 
     protected void setUp() throws Exception {
-        
         super.setUp();
-        context = new ClassPathXmlApplicationContext("org/apache/activemq/network/jms/queue-config.xml");
-        ActiveMQConnectionFactory fac = (ActiveMQConnectionFactory) context.getBean("localFactory");
-        localConnection = fac.createQueueConnection();
-        localConnection.start();
+        context = createApplicationContext();
+        
+        createConnections();
+        
         requestServerSession = localConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
         Queue theQueue = requestServerSession.createQueue(getClass().getName());
         requestServerConsumer = requestServerSession.createConsumer(theQueue);
         requestServerConsumer.setMessageListener(this);
         requestServerProducer = requestServerSession.createProducer(null);
         
+        QueueSession session = remoteConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
+        requestor = new QueueRequestor(session,theQueue);
+    }
+
+
+    protected void createConnections() throws JMSException {
+        ActiveMQConnectionFactory fac = (ActiveMQConnectionFactory) context.getBean("localFactory");
+        localConnection = fac.createQueueConnection();
+        localConnection.start();
+        
         fac = (ActiveMQConnectionFactory) context.getBean("remoteFactory");
         remoteConnection = fac.createQueueConnection();
         remoteConnection.start();
-        QueueSession session = remoteConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
-        requestor = new QueueRequestor(session,theQueue);
+    }
+
+
+    protected AbstractApplicationContext createApplicationContext() {
+        return new ClassPathXmlApplicationContext("org/apache/activemq/network/jms/queue-config.xml");
     }
 
     
