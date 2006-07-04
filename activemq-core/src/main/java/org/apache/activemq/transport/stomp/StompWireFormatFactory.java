@@ -14,17 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.stomp2;
+package org.apache.activemq.transport.stomp;
 
-import java.io.IOException;
-
-import org.apache.activemq.command.Response;
+import org.apache.activeio.command.WireFormat;
+import org.apache.activeio.command.WireFormatFactory;
 
 /**
- * Interface used by the ProtocolConverter for callbacks.
- * 
- * @author <a href="http://hiramchirino.com">chirino</a> 
+ * Creates WireFormat objects that marshalls the <a href="http://stomp.codehaus.org/">Stomp</a> protocol.
  */
-interface ResponseHandler {
-    void onResponse(ProtocolConverter converter, Response response) throws IOException;
+public class StompWireFormatFactory implements WireFormatFactory {
+    public WireFormat createWireFormat() {
+        return new StompWireFormat();
+    }
 }

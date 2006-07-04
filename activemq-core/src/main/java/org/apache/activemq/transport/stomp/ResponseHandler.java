@@ -14,37 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.stomp2;
+package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
 
+import org.apache.activemq.command.Response;
+
 /**
+ * Interface used by the ProtocolConverter for callbacks.
  * 
  * @author <a href="http://hiramchirino.com">chirino</a> 
  */
-public class ProtocolException extends IOException {
-
-	private static final long serialVersionUID = -2869735532997332242L;
-	
-	private final boolean fatal;
-
-	public ProtocolException() {
-		this(null);
-	}
-	public ProtocolException(String s) {
-		this(s, false);
-	}
-	public ProtocolException(String s, boolean fatal) {
-		this(s,fatal, null);
-	}
-	public ProtocolException(String s, boolean fatal, Throwable cause) {
-		super(s);
-		this.fatal = fatal;
-		initCause(cause);
-	}
-	
-	public boolean isFatal() {
-		return fatal;
-	}
-
+interface ResponseHandler {
+    void onResponse(ProtocolConverter converter, Response response) throws IOException;
 }

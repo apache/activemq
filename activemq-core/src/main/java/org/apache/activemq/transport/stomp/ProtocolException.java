@@ -14,25 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.stomp2;
+package org.apache.activemq.transport.stomp;
+
+import java.io.IOException;
 
 /**
- * Command indicating that an invalid Stomp Frame was received.
  * 
  * @author <a href="http://hiramchirino.com">chirino</a> 
  */
-public class StompFrameError extends StompFrame {
+public class ProtocolException extends IOException {
 
+	private static final long serialVersionUID = -2869735532997332242L;
+	
+	private final boolean fatal;
 
-	private final ProtocolException exception;
-
-	public StompFrameError(ProtocolException exception) {
-		this.exception = exception;
+	public ProtocolException() {
+		this(null);
 	}
-
-	public ProtocolException getException() {
-		return exception;
+	public ProtocolException(String s) {
+		this(s, false);
 	}
-
+	public ProtocolException(String s, boolean fatal) {
+		this(s,fatal, null);
+	}
+	public ProtocolException(String s, boolean fatal, Throwable cause) {
+		super(s);
+		this.fatal = fatal;
+		initCause(cause);
+	}
+	
+	public boolean isFatal() {
+		return fatal;
+	}
 
 }

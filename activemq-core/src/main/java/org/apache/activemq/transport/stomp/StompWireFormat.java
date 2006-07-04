@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.stomp2;
+package org.apache.activemq.transport.stomp;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -60,7 +60,7 @@ public class StompWireFormat implements WireFormat {
     }
 
     public void marshal(Object command, DataOutputStream os) throws IOException {
-		StompFrame stomp = (org.apache.activemq.transport.stomp2.StompFrame) command;
+		StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame) command;
 
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(stomp.getAction());
