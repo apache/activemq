@@ -165,14 +165,6 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         }
     }
 
-    public Connection getConnection() throws JMSException {
-        Connection c = super.getConnection();
-        if (c.getClientID() == null && client.isDurable()) {
-            c.setClientID(getClientName());
-        }
-        return c;
-    }
-
     public MessageConsumer createJmsConsumer() throws JMSException {
         Destination[] dest = createDestination(destIndex, destCount);
         return createJmsConsumer(dest[0]);
@@ -184,7 +176,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             if (clientName == null) {
                 clientName = "JmsConsumer";
             }
-            log.info("Creating durable subscriber to: " + dest.toString());
+            log.info("Creating durable subscriber (" + getConnection().getClientID() + ") to: " + dest.toString());
             jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName);
         } else {
             log.info("Creating non-durable consumer to: " + dest.toString());
@@ -199,7 +191,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             if (clientName == null) {
                 clientName = "JmsConsumer";
             }
-            log.info("Creating durable subscriber to: " + dest.toString());
+            log.info("Creating durable subscriber (" + getConnection().getClientID() + ") to: " + dest.toString());
             jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName, selector, noLocal);
         } else {
             log.info("Creating non-durable consumer to: " + dest.toString());
