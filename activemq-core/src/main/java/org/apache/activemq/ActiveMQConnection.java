@@ -122,7 +122,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean copyMessageOnSend = true;
     private boolean useCompression = false;
     private boolean objectMessageSerializationDefered = false;
-    protected boolean asyncDispatch = false;
+    protected boolean dispatchAsync = false;
     protected boolean alwaysSessionAsync=true;
     private boolean useAsyncSend = false;
     private boolean optimizeAcknowledge = false;
@@ -274,7 +274,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         ||acknowledgeMode==Session.CLIENT_ACKNOWLEDGE;
         return new ActiveMQSession(this,getNextSessionId(),(transacted?Session.SESSION_TRANSACTED
                         :(acknowledgeMode==Session.SESSION_TRANSACTED?Session.AUTO_ACKNOWLEDGE:acknowledgeMode)),
-                        asyncDispatch,alwaysSessionAsync);
+                        dispatchAsync,alwaysSessionAsync);
     }
 
     /**
@@ -674,7 +674,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setSubcriptionName(subscriptionName);
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
-        info.setDispatchAsync(asyncDispatch);
+        info.setDispatchAsync(dispatchAsync);
 
         // Allows the options on the destination to configure the consumerInfo
         if( info.getDestination().getOptions()!=null ) {
@@ -727,8 +727,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * @param prefetchPolicy
-     *            The prefetchPolicy to set.
+     * Sets the <a
+     * href="http://incubator.apache.org/activemq/what-is-the-prefetch-limit-for.html">prefetch
+     * policy</a> for consumers created by this connection.
      */
     public void setPrefetchPolicy(ActiveMQPrefetchPolicy prefetchPolicy) {
         this.prefetchPolicy = prefetchPolicy;
@@ -1031,7 +1032,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
         info.setNoLocal(noLocal);
-        info.setDispatchAsync(asyncDispatch);
+        info.setDispatchAsync(dispatchAsync);
         
         // Allows the options on the destination to configure the consumerInfo
         if( info.getDestination().getOptions()!=null ) {
@@ -1358,10 +1359,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
 
     /**
-     * @param alwaysSessionAsync The alwaysSessionAsync to set.
+     * If this flag is set then a separate thread is not used for dispatching
+     * messages for each Session in the Connection. However, a separate thread
+     * is always used if there is more than one session, or the session isn't in
+     * auto acknowledge or duplicates ok mode
+     * 
+     * @param alwaysSessionAsync
+     *            The alwaysSessionAsync to set.
      */
-    public void setAlwaysSessionAsync(boolean alwaysSessionAsync){
-        this.alwaysSessionAsync=alwaysSessionAsync;
+    public void setAlwaysSessionAsync(boolean alwaysSessionAsync) {
+        this.alwaysSessionAsync = alwaysSessionAsync;
     }
 
     /**
@@ -1603,12 +1610,28 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     }
 
-    public boolean isAsyncDispatch() {
-        return asyncDispatch;
+    public boolean isDispatchAsync() {
+        return dispatchAsync;
     }
 
-    public void setAsyncDispatch(boolean asyncDispatch) {
-        this.asyncDispatch = asyncDispatch;
+    /**
+     * Enables or disables the default setting of whether or not consumers have
+     * their messages <a
+     * href="http://incubator.apache.org/activemq/consumer-dispatch-async.html">dispatched
+     * synchronously or asynchronously by the broker</a>.
+     * 
+     * For non-durable topics for example we typically dispatch synchronously by
+     * default to minimize context switches which boost performance. However
+     * sometimes its better to go slower to ensure that a single blocked
+     * consumer socket does not block delivery to other consumers.
+     * 
+     * @param asyncDispatch
+     *            If true then consumers created on this connection will default
+     *            to having their messages dispatched asynchronously. The
+     *            default value is false.
+     */
+    public void setDispatchAsync(boolean asyncDispatch) {
+        this.dispatchAsync = asyncDispatch;
     }
 
     public boolean isObjectMessageSerializationDefered() {

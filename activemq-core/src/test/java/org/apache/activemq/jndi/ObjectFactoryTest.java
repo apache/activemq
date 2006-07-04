@@ -27,7 +27,7 @@ public class ObjectFactoryTest extends CombinationTestSupport {
     public void testConnectionFactory() throws Exception {
         // Create sample connection factory
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        factory.setAsyncDispatch(false);
+        factory.setDispatchAsync(false);
         factory.setBrokerURL("vm://test");
         factory.setClientID("test");
         factory.setCopyMessageOnSend(false);
@@ -53,7 +53,7 @@ public class ObjectFactoryTest extends CombinationTestSupport {
         temp = (ActiveMQConnectionFactory)refFactory.getObjectInstance(ref, null, null, null);
 
         // Check settings
-        assertEquals(factory.isAsyncDispatch(), temp.isAsyncDispatch());
+        assertEquals(factory.isDispatchAsync(), temp.isDispatchAsync());
         assertEquals(factory.getBrokerURL(), temp.getBrokerURL());
         assertEquals(factory.getClientID(), temp.getClientID());
         assertEquals(factory.isCopyMessageOnSend(), temp.isCopyMessageOnSend());
