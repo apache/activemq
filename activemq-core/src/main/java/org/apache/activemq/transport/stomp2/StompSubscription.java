@@ -28,7 +28,6 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.transport.stomp.Stomp;
 
 /**
  * Keeps track of the STOMP susbscription so that acking is correctly done.
