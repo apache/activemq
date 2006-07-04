@@ -70,6 +70,9 @@ public class Subscription {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             format.enqueueCommand(ack);
         }
+        else {
+            throw new JMSException("Unknown ackMode: " + ackMode);
+        }
         
         
         FrameBuilder builder = new FrameBuilder(Stomp.Responses.MESSAGE);
