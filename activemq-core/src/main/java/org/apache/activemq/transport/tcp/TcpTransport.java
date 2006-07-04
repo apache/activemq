@@ -23,12 +23,13 @@ import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Map;
+
+import javax.net.SocketFactory;
 
 import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.Service;
@@ -39,8 +40,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.net.SocketFactory;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
@@ -60,10 +59,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private boolean trace;
     private boolean useLocalHost = true;
     private int minmumWireFormatVersion;
-    private InetSocketAddress socketAddress;
-
-    private Map socketOptions;
-
+    private InetSocketAddress remoteAddress;
+	private InetSocketAddress localAddress;
     
     /**
      * Construct basic helpers
@@ -72,19 +69,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     protected TcpTransport(WireFormat wireFormat) {
         this.wireFormat = wireFormat;
-    }
-
-    /**
-     * Connect to a remote Node - e.g. a Broker
-     * 
-     * @param wireFormat
-     * @param remoteLocation
-     * @throws IOException
-     * @throws UnknownHostException
-     */
-    public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation) throws UnknownHostException, IOException {
-        this(wireFormat);
-        this.socket = createSocket(socketFactory, remoteLocation);
     }
 
     /**
@@ -231,36 +215,22 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * Factory method to create a new socket
      * 
      * @param remoteLocation
-     *            the URI to connect to
-     * @return the newly created socket
-     * @throws UnknownHostException
-     * @throws IOException
-     */
-    protected Socket createSocket(SocketFactory socketFactory, URI remoteLocation) throws UnknownHostException, IOException {
-        String host = resolveHostName(remoteLocation.getHost());
-        socketAddress = new InetSocketAddress(host, remoteLocation.getPort());
-        Socket sock = socketFactory.createSocket();
-        return sock;
-    }
-
-    /**
-     * Factory method to create a new socket
-     * 
-     * @param remoteLocation
-     * @param localLocation
+     * @param localLocation ignored if null
      * @return
      * @throws IOException
      * @throws IOException
      * @throws UnknownHostException
      */
     protected Socket createSocket(SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws IOException, UnknownHostException {
+    	
         String host = resolveHostName(remoteLocation.getHost());
-        SocketAddress sockAddress = new InetSocketAddress(host, remoteLocation.getPort());
-        SocketAddress localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
-        Socket sock = socketFactory.createSocket();
-        initialiseSocket(sock);
-        sock.bind(localAddress);
-        sock.connect(sockAddress);
+        remoteAddress = new InetSocketAddress(host, remoteLocation.getPort());
+        
+        if( localLocation!=null ) {
+        	localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
+        }
+        
+        Socket sock = socketFactory.createSocket();        
         return sock;
     }
 
@@ -293,12 +263,15 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     protected void doStart() throws Exception {
         initialiseSocket(socket);
-        if (socketAddress != null) {
+        if( localAddress!=null ) {
+        	socket.bind(localAddress);
+        }
+        if (remoteAddress != null) {
             if (connectionTimeout >= 0) {
-                socket.connect(socketAddress, connectionTimeout);
+                socket.connect(remoteAddress, connectionTimeout);
             }
             else {
-                socket.connect(socketAddress);
+                socket.connect(remoteAddress);
             }
         }
         initializeStreams();

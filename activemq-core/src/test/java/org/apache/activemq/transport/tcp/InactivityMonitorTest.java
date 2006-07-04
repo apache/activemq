@@ -148,7 +148,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         // 
         // Manually create a client transport so that it does not send KeepAlive packets.
         // this should simulate a client hang.
-        clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:61616"));
+        clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:61616"), null);
         clientTransport.setTransportListener(new TransportListener() {
             public void onCommand(Command command) {
                 clientReceiveCount.incrementAndGet();

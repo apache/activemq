@@ -198,13 +198,34 @@ public abstract class TransportFactory {
         return "default";
     }
 
-    protected Transport configure(Transport transport, WireFormat wf, Map options) throws Exception {
-        IntrospectionSupport.setProperties(transport, options);
+    /**
+     * Fully configures and adds all need transport filters so that the transport
+     * can be used by the JMS client.
+     * 
+     * @param transport
+     * @param wf
+     * @param options
+     * @return
+     * @throws Exception
+     */
+    public Transport configure(Transport transport, WireFormat wf, Map options) throws Exception {
+    	transport = compositeConfigure(transport, wf, options);
+    	
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
+        
         return transport;
     }
 
+    /**
+     * Similar to configure(...) but this avoid adding in the MutexTransport and ResponseCorrelator transport layers
+     * so that the resulting transport can more efficiently be used as part of a composite transport.
+     * 
+     * @param transport
+     * @param format
+     * @param options
+     * @return
+     */
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
         return transport;

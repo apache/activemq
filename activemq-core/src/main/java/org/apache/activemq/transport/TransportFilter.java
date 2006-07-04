@@ -21,7 +21,7 @@ import org.apache.activemq.command.Response;
  */
 public class TransportFilter implements TransportListener,Transport{
     final protected Transport next;
-    private TransportListener transportListener;
+    protected TransportListener transportListener;
 
     public TransportFilter(Transport next){
         this.next=next;
