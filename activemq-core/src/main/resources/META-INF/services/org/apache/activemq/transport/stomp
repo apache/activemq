@@ -1,1 +1,1 @@
-class=org.apache.activemq.transport.stomp2.StompTransportFactory
+class=org.apache.activemq.transport.stomp.StompTransportFactory

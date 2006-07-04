@@ -1,1 +1,1 @@
-class=org.apache.activemq.transport.stomp2.StompWireFormatFactory
+class=org.apache.activemq.transport.stomp.StompWireFormatFactory

@@ -14,16 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.stomp2;
-
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.command.WireFormatFactory;
+package org.apache.activemq.transport.stomp;
 
 /**
- * Creates WireFormat objects that marshalls the <a href="http://stomp.codehaus.org/">Stomp</a> protocol.
+ * Command indicating that an invalid Stomp Frame was received.
+ * 
+ * @author <a href="http://hiramchirino.com">chirino</a> 
  */
-public class StompWireFormatFactory implements WireFormatFactory {
-    public WireFormat createWireFormat() {
-        return new StompWireFormat();
-    }
+public class StompFrameError extends StompFrame {
+
+
+	private final ProtocolException exception;
+
+	public StompFrameError(ProtocolException exception) {
+		this.exception = exception;
+	}
+
+	public ProtocolException getException() {
+		return exception;
+	}
+
+
 }
