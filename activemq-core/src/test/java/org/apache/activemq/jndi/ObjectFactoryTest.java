@@ -27,7 +27,7 @@ public class ObjectFactoryTest extends CombinationTestSupport {
     public void testConnectionFactory() throws Exception {
         // Create sample connection factory
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        factory.setDispatchAsync(false);
+        factory.setDispatchAsync(true);
         factory.setBrokerURL("vm://test");
         factory.setClientID("test");
         factory.setCopyMessageOnSend(false);
