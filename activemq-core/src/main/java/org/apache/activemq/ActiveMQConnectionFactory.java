@@ -80,6 +80,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean optimizeAcknowledge = false;
     private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
+    private boolean nestedMapAndListEnabled = true;
 
     JMSStatsImpl factoryStats = new JMSStatsImpl();
 
@@ -263,6 +264,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public String getBrokerURL() {
         return brokerURL==null?null:brokerURL.toString();
     }
+    
+    /**
+     * Sets the <a
+     * href="http://incubator.apache.org/activemq/configuring-transports.html">connection
+     * URL</a> used to connect to the ActiveMQ broker.
+     */
     public void setBrokerURL(String brokerURL) {
         this.brokerURL = createURI(brokerURL);
 
@@ -297,6 +304,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return clientID;
     }
 
+    /**
+     * Sets the JMS clientID to use for the created connection. Note that this can only be used by one connection at once so generally its a better idea
+     * to set the clientID on a Connection
+     */
     public void setClientID(String clientID) {
         this.clientID = clientID;
     }
@@ -305,6 +316,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return copyMessageOnSend;
     }
 
+    /**
+     * Should a JMS message be copied to a new JMS Message object as part of the
+     * send() method in JMS. This is enabled by default to be compliant with the
+     * JMS specification. You can disable it if you do not mutate JMS messages
+     * after they are sent for a performance boost
+     */
     public void setCopyMessageOnSend(boolean copyMessageOnSend) {
         this.copyMessageOnSend = copyMessageOnSend;
     }
@@ -313,6 +330,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return disableTimeStampsByDefault;
     }
 
+    /**
+     * Sets whether or not timestamps on messages should be disabled or not. If
+     * you disable them it adds a small performance boost.
+     */
     public void setDisableTimeStampsByDefault(boolean disableTimeStampsByDefault) {
         this.disableTimeStampsByDefault = disableTimeStampsByDefault;
     }
@@ -321,6 +342,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return optimizedMessageDispatch;
     }
 
+    /**
+     * If this flag is set then an larger prefetch limit is used - only
+     * applicable for durable topic subscribers.
+     */
     public void setOptimizedMessageDispatch(boolean optimizedMessageDispatch) {
         this.optimizedMessageDispatch = optimizedMessageDispatch;
     }
@@ -329,6 +354,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return password;
     }
 
+    /**
+     * Sets the JMS password used for connections created from this factory
+     */
     public void setPassword(String password) {
         this.password = password;
     }
@@ -350,6 +378,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return useAsyncSend;
     }
 
+    /**
+     * Forces the use of <a
+     * href="http://incubator.apache.org/activemq/async-sends.html">Async Sends</a>
+     * which adds a massive performance boost; but means that the send() method
+     * will return immediately whether the message has been sent or not which
+     * could lead to message loss.
+     */
     public void setUseAsyncSend(boolean useAsyncSend) {
         this.useAsyncSend = useAsyncSend;
     }
@@ -358,6 +393,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return userName;
     }
 
+    /**
+     * Sets the JMS userName used by connections created by this factory
+     */
     public void setUserName(String userName) {
         this.userName = userName;
     }
@@ -465,6 +503,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return useCompression;
     }
 
+    /**
+     * Enables the use of compression of the message bodies
+     */
     public void setUseCompression(boolean useCompression) {
         this.useCompression = useCompression;
     }
@@ -473,6 +514,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return objectMessageSerializationDefered;
     }
 
+    /**
+     * When an object is set on an ObjectMessage, the JMS spec requires the
+     * object to be serialized by that set method. Enabling this flag causes the
+     * object to not get serialized. The object may subsequently get serialized
+     * if the message needs to be sent over a socket or stored to disk.
+     */
     public void setObjectMessageSerializationDefered(boolean objectMessageSerializationDefered) {
         this.objectMessageSerializationDefered = objectMessageSerializationDefered;
     }
@@ -509,7 +556,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * @param closeTimeout The closeTimeout to set.
+     * Sets the timeout before a close is considered complete. Normally a
+     * close() on a connection waits for confirmation from the broker; this
+     * allows that operation to timeout to save the client hanging if there is
+     * no broker
      */
     public void setCloseTimeout(int closeTimeout){
         this.closeTimeout=closeTimeout;
@@ -523,7 +573,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * @param alwaysSessionAsync The alwaysSessionAsync to set.
+     * If this flag is set then a separate thread is not used for dispatching
+     * messages for each Session in the Connection. However, a separate thread
+     * is always used if there is more than one session, or the session isn't in
+     * auto acknowledge or duplicates ok mode
      */
     public void setAlwaysSessionAsync(boolean alwaysSessionAsync){
         this.alwaysSessionAsync=alwaysSessionAsync;
@@ -541,5 +594,19 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setOptimizeAcknowledge(boolean optimizeAcknowledge){
         this.optimizeAcknowledge=optimizeAcknowledge;
+    }
+    
+    public boolean isNestedMapAndListEnabled() {
+        return nestedMapAndListEnabled ;
+    }
+
+    /**
+     * Enables/disables whether or not Message properties and MapMessage entries
+     * support <a
+     * href="http://incubator.apache.org/activemq/structured-message-properties-and-mapmessages.html">Nested
+     * Structures</a> of Map and List objects
+     */
+    public void setNestedMapAndListEnabled(boolean structuredMapsEnabled) {
+        this.nestedMapAndListEnabled = structuredMapsEnabled;
     }
 }

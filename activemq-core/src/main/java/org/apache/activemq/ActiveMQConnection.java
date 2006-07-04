@@ -760,10 +760,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * Sets whether or not timestamps on messages should be disabled or not. If you disable them it adds a small performance boost.
-     * 
-     * @param timeStampsDisableByDefault
-     *            The timeStampsDisableByDefault to set.
+     * Sets whether or not timestamps on messages should be disabled or not. If
+     * you disable them it adds a small performance boost.
      */
     public void setDisableTimeStampsByDefault(boolean timeStampsDisableByDefault) {
         this.disableTimeStampsByDefault = timeStampsDisableByDefault;
@@ -778,9 +776,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * 
-     * @param dispatchOptimizedMessage
-     *            The dispatchOptimizedMessage to set.
+     * If this flag is set then an larger prefetch limit is used - only
+     * applicable for durable topic subscribers.
      */
     public void setOptimizedMessageDispatch(boolean dispatchOptimizedMessage) {
         this.optimizedMessageDispatch = dispatchOptimizedMessage;
@@ -799,9 +796,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * close() on a connection waits for confirmation from the broker; this
      * allows that operation to timeout to save the client hanging if there is
      * no broker
-     * 
-     * @param closeTimeout
-     *            The closeTimeout to set.
      */
     public void setCloseTimeout(int closeTimeout){
         this.closeTimeout=closeTimeout;
@@ -833,7 +827,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * Enables/disables whether or not Message properties and MapMessage entries support nested Map and List objects
+     * Enables/disables whether or not Message properties and MapMessage entries
+     * support <a
+     * href="http://incubator.apache.org/activemq/structured-message-properties-and-mapmessages.html">Nested
+     * Structures</a> of Map and List objects
      */
     public void setNestedMapAndListEnabled(boolean structuredMapsEnabled) {
         this.nestedMapAndListEnabled = structuredMapsEnabled;
@@ -1237,8 +1234,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * @param useAsyncSend
-     *            The useAsyncSend to set.
+     * Forces the use of <a
+     * href="http://incubator.apache.org/activemq/async-sends.html">Async Sends</a>
+     * which adds a massive performance boost; but means that the send() method
+     * will return immediately whether the message has been sent or not which
+     * could lead to message loss.
      */
     public void setUseAsyncSend(boolean useAsyncSend) {
         this.useAsyncSend = useAsyncSend;
@@ -1363,9 +1363,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * messages for each Session in the Connection. However, a separate thread
      * is always used if there is more than one session, or the session isn't in
      * auto acknowledge or duplicates ok mode
-     * 
-     * @param alwaysSessionAsync
-     *            The alwaysSessionAsync to set.
      */
     public void setAlwaysSessionAsync(boolean alwaysSessionAsync) {
         this.alwaysSessionAsync = alwaysSessionAsync;
@@ -1589,8 +1586,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     /**
      * Enables the use of compression of the message bodies
-     * 
-     * @param useCompression
      */
     public void setUseCompression(boolean useCompression) {
         this.useCompression = useCompression;
@@ -1638,6 +1633,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         return objectMessageSerializationDefered;
     }
 
+    /**
+     * When an object is set on an ObjectMessage, the JMS spec requires the
+     * object to be serialized by that set method. Enabling this flag causes the
+     * object to not get serialized. The object may subsequently get serialized
+     * if the message needs to be sent over a socket or stored to disk.
+     */
     public void setObjectMessageSerializationDefered(boolean objectMessageSerializationDefered) {
         this.objectMessageSerializationDefered = objectMessageSerializationDefered;
     }
@@ -1848,8 +1849,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * send() method in JMS. This is enabled by default to be compliant with the
      * JMS specification. You can disable it if you do not mutate JMS messages
      * after they are sent for a performance boost
-     * 
-     * @param copyMessageOnSend
      */
     public void setCopyMessageOnSend(boolean copyMessageOnSend) {
         this.copyMessageOnSend = copyMessageOnSend;
