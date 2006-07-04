@@ -74,7 +74,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean copyMessageOnSend = true;
     private boolean useCompression = false;
     private boolean objectMessageSerializationDefered = false;
-    protected boolean asyncDispatch = false;
+    protected boolean dispatchAsync = false;
     protected boolean alwaysSessionAsync=true;
     private boolean useAsyncSend = false;
     private boolean optimizeAcknowledge = false;
@@ -227,7 +227,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setCopyMessageOnSend(isCopyMessageOnSend());
             connection.setUseCompression(isUseCompression());
             connection.setObjectMessageSerializationDefered(isObjectMessageSerializationDefered());
-            connection.setAsyncDispatch(isAsyncDispatch());
+            connection.setDispatchAsync(isDispatchAsync());
             connection.setUseAsyncSend(isUseAsyncSend());
             connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
             connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
@@ -337,6 +337,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return prefetchPolicy;
     }
 
+    /**
+     * Sets the <a
+     * href="http://incubator.apache.org/activemq/what-is-the-prefetch-limit-for.html">prefetch
+     * policy</a> for consumers created by this connection.
+     */
     public void setPrefetchPolicy(ActiveMQPrefetchPolicy prefetchPolicy) {
         this.prefetchPolicy = prefetchPolicy;
     }
@@ -419,7 +424,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public void populateProperties(Properties props) {
-        props.setProperty("asyncDispatch", Boolean.toString(isAsyncDispatch()));
+        props.setProperty("dispatchAsync", Boolean.toString(isDispatchAsync()));
 
         if (getBrokerURL() != null) {
             props.setProperty(Context.PROVIDER_URL, getBrokerURL());
@@ -472,12 +477,28 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.objectMessageSerializationDefered = objectMessageSerializationDefered;
     }
 
-    public boolean isAsyncDispatch() {
-        return asyncDispatch;
+    public boolean isDispatchAsync() {
+        return dispatchAsync;
     }
 
-    public void setAsyncDispatch(boolean asyncDispatch) {
-        this.asyncDispatch = asyncDispatch;
+    /**
+     * Enables or disables the default setting of whether or not consumers have
+     * their messages <a
+     * href="http://incubator.apache.org/activemq/consumer-dispatch-async.html">dispatched
+     * synchronously or asynchronously by the broker</a>.
+     * 
+     * For non-durable topics for example we typically dispatch synchronously by
+     * default to minimize context switches which boost performance. However
+     * sometimes its better to go slower to ensure that a single blocked
+     * consumer socket does not block delivery to other consumers.
+     * 
+     * @param asyncDispatch
+     *            If true then consumers created on this connection will default
+     *            to having their messages dispatched asynchronously. The
+     *            default value is false.
+     */
+    public void setDispatchAsync(boolean asyncDispatch) {
+        this.dispatchAsync = asyncDispatch;
     }
 
     /**
