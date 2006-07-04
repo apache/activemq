@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -50,6 +51,9 @@ import java.nio.channels.DatagramChannel;
  */
 public class UdpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Log log = LogFactory.getLog(UdpTransport.class);
+
+	private static final int MAX_BIND_ATTEMPTS = 50;
+	private static final long BIND_ATTEMPT_DELAY = 100;
 
     private CommandChannel commandChannel;
     private OpenWireFormat wireFormat;
@@ -387,7 +391,26 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (log.isDebugEnabled()) {
             log.debug("Binding to address: " + localAddress);
         }
-        socket.bind(localAddress);
+        
+        //
+        // We have noticed that on some platfoms like linux, after you close down
+        // a previously bound socket, it can take a little while before we can bind it again.
+        // 
+        for(int i=0; i < MAX_BIND_ATTEMPTS; i++){
+			try {
+				socket.bind(localAddress);
+				return;
+			} catch (BindException e) {
+				if ( i+1 == MAX_BIND_ATTEMPTS )
+					throw e;
+				try {
+					Thread.sleep(BIND_ATTEMPT_DELAY);
+				} catch (InterruptedException e1) {
+					throw e;
+				}
+			}			
+    	}
+
     }
 
     protected DatagramChannel connect(DatagramChannel channel, SocketAddress targetAddress2) throws IOException {
