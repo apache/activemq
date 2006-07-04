@@ -70,20 +70,46 @@ Command* StompCommandReader::readCommand(void)
 void StompCommandReader::readStompCommand( StompFrame& frame ) 
    throw ( StompConnectorException )
 {  
-    // Read the command;
-    int numChars = readStompHeaderLine();
+	while( true ) 
+	{
+	    // Clean up the mess.
+	    buffer.clear();
 
-    if( numChars <= 0 )
-    {
-        throw StompConnectorException(
-            __FILE__, __LINE__,
-            "StompCommandReader::readStompCommand: "
-            "Error on Read of Command Header" );
-    }
+	    // Read the command;
+	    readStompHeaderLine();
 
-    // Set the command in the frame - copy the memory.
-    frame.setCommand( reinterpret_cast<char*>(&buffer[0]) );
-
+        // Ignore all white space before the command.
+        int offset=-1;
+        for( size_t ix = 0; ix < buffer.size()-1; ++ix )
+        {
+        	// Find the first non space character
+        	char b = buffer[ix];
+            switch ( b ) 
+            {
+            	case '\n':
+            	case '\t':
+            	case '\r':
+            		break;
+            	  
+	            default:
+		            offset = ix;
+		            break; 
+            } 
+            
+	        if( offset != -1 )
+	        {
+	        	break;
+	        }            
+        }
+	
+	    if( offset >= 0 )
+	    {
+		    // Set the command in the frame - copy the memory.
+		    frame.setCommand( reinterpret_cast<char*>(&buffer[offset]) );
+			break;
+	    }
+	
+	}
     // Clean up the mess.
     buffer.clear();
 }
@@ -224,8 +250,7 @@ void StompCommandReader::readStompBody( StompFrame& frame )
         read( &buffer[0], content_length );
 
         // Content Length read, now pop the end terminator off (\0\n).
-        if(inputStream->read() != '\0' ||
-           inputStream->read() != '\n')
+        if(inputStream->read() != '\0' )
         {
             throw StompConnectorException(
                 __FILE__, __LINE__,
@@ -249,16 +274,6 @@ void StompCommandReader::readStompBody( StompFrame& frame )
             if(byte != '\0')
             {            
                 continue;
-            }
-
-            // We read up to the first NULL, now lets pop off the required
-            // newline to complete the packet.
-            if(inputStream->read() != '\n')
-            {
-                throw StompConnectorException(
-                    __FILE__, __LINE__,
-                    "StompCommandReader::readStompBody: "
-                    "Read Body, and no trailing newline");
             }
 
             break;  // Read null and newline we are done.
