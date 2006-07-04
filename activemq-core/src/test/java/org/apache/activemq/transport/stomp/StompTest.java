@@ -22,6 +22,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.transport.stomp2.Stomp;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;

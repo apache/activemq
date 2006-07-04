@@ -29,7 +29,6 @@ import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.ByteSequence;
 import org.apache.activeio.packet.Packet;
 import org.apache.activeio.util.ByteArrayOutputStream;
-import org.apache.activemq.transport.stomp.Stomp;
 
 /**
  * Implements marshalling and unmarsalling the <a href="http://stomp.codehaus.org/">Stomp</a> protocol.
