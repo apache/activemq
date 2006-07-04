@@ -22,8 +22,45 @@ import java.util.Properties;
 import java.io.File;
 
 import org.apache.activemq.tool.properties.ReflectionUtil;
+import org.apache.activemq.tool.properties.ReflectionConfigurable;
 
 public class ReflectionUtilTest extends TestCase {
+    public void testConfigurableOption() {
+        TestClass5 data = new TestClass5();
+
+        data.willIntercept = true;
+        ReflectionUtil.configureClass(data, "this-should-not-matter", "this-should-not-matter");
+        assertTrue(data.intercepted);
+
+        data.willIntercept = false;
+        data.nest = new TestClass5();
+        data.nest.willIntercept = true;
+        ReflectionUtil.configureClass(data, "nest.this-should-not-matter", "this-should-not-matter");
+        assertTrue(data.intercepted);
+        assertTrue(data.nest.intercepted);
+
+        data.willIntercept = false;
+        data.nest = new TestClass5();
+        data.nest.willIntercept = false;
+        data.nest.nest = new TestClass5();
+        data.nest.nest.willIntercept = true;
+        ReflectionUtil.configureClass(data, "nest.nest.this-should-not-matter", "this-should-not-matter");
+        assertTrue(data.intercepted);
+        assertTrue(data.nest.intercepted);
+        assertTrue(data.nest.nest.intercepted);
+
+        TestClass6 data2 = new TestClass6();
+        data2.nestConfig = new TestClass5();
+        data2.nestConfig.willIntercept = true;
+        ReflectionUtil.configureClass(data2, "nestConfig.this-should-not-matter", "this-should-not-matter");
+        assertTrue(data2.nestConfig.intercepted);
+
+        data2.nestNotConfig = new TestClass6();
+        data2.nestNotConfig.nestConfig = new TestClass5();
+        data2.nestNotConfig.nestConfig.willIntercept = true;
+        ReflectionUtil.configureClass(data2, "nestNotConfig.nestConfig.this-should-not-matter", "this-should-not-matter");
+        assertTrue(data2.nestNotConfig.nestConfig.intercepted);
+    }
 
     public void testDataTypeConfig() {
         TestClass3 targetObj = new TestClass3();
@@ -255,6 +292,55 @@ public class ReflectionUtilTest extends TestCase {
 
         public void setTestFile(String testFile) {
             this.testFile = new File(testFile);
+        }
+    }
+
+    public class TestClass5 implements ReflectionConfigurable {
+        public boolean intercepted = false;
+        public boolean willIntercept = true;
+        public TestClass5 nest = null;
+
+        public void configureProperties(Properties props) {
+            // Do nothing
+        }
+
+        public Properties retrieveProperties(Properties props) {
+            return null;
+        }
+
+        public boolean acceptConfig(String key, String val) {
+            intercepted = true;
+
+            return !willIntercept;
+        }
+
+        public TestClass5 getNest() {
+            return nest;
+        }
+
+        public void setNest(TestClass5 nest) {
+            this.nest = nest;
+        }
+    }
+
+    public class TestClass6 {
+        public TestClass6 nestNotConfig = null;
+        public TestClass5 nestConfig = null;
+
+        public TestClass6 getNestNotConfig() {
+            return nestNotConfig;
+        }
+
+        public void setNestNotConfig(TestClass6 nestNotConfig) {
+            this.nestNotConfig = nestNotConfig;
+        }
+
+        public TestClass5 getNestConfig() {
+            return nestConfig;
+        }
+
+        public void setNestConfig(TestClass5 nestConfig) {
+            this.nestConfig = nestConfig;
         }
     }
 }

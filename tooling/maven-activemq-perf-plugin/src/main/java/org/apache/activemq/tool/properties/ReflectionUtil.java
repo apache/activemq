@@ -44,25 +44,38 @@ public final class ReflectionUtil {
             debugInfo = "Invoking: " + targetClass.getName();
 
             StringTokenizer tokenizer = new StringTokenizer(key, ".");
+            String keySubString = key;
             int tokenCount = tokenizer.countTokens();
 
             // For nested settings, get the object first. -1, do not count the last token
             for (int j=0; j<tokenCount-1; j++) {
                 // Find getter method first
                 String name = tokenizer.nextToken();
+
+                // Check if the target object will accept the settings
+                if (target instanceof ReflectionConfigurable && !((ReflectionConfigurable)target).acceptConfig(keySubString, val)) {
+                    return;
+                } else {
+                    // This will reduce the key, so that it will be recognize by the next object. i.e.
+                    // Property name: factory.prefetchPolicy.queuePrefetch
+                    // Calling order: this.getFactory().prefetchPolicy().queuePrefetch();
+                    // If factory does not accept the config, it should be given prefetchPolicy.queuePrefetch as the key
+                    keySubString = keySubString.substring(name.length() + 1); // +1 to account for the '.'
+                }
+
                 String getMethod = "get" + name.substring(0,1).toUpperCase() + name.substring(1);
                 Method method = targetClass.getMethod(getMethod, new Class[] {});
                 target = method.invoke(target, null);
                 targetClass = target.getClass();
+
 
                 debugInfo += ("." + getMethod + "()");
             }
 
             // Property name
             String property = tokenizer.nextToken();
-
             // Check if the target object will accept the settings
-            if (obj instanceof ReflectionConfigurable && !((ReflectionConfigurable)target).acceptConfig(property, val)) {
+            if (target instanceof ReflectionConfigurable && !((ReflectionConfigurable)target).acceptConfig(property, val)) {
                 return;
             }
 
