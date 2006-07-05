@@ -66,7 +66,7 @@ public class BundleMojo extends AbstractMojo
         {
             Artifact a = (Artifact) itr.next();
 
-            if (includeList.contains(a.getArtifactId()))
+            if (includeList.contains(a.getArtifactId()) && "jar".equals(a.getType()) )
             {
                 getLog().info("Found " + a.getArtifactId());
                 
@@ -93,13 +93,32 @@ public class BundleMojo extends AbstractMojo
     
         try
         {
+        	getLog().info("Extracting: "+file+": to "+location);
             UnArchiver unArchiver = this.archiverManager.getUnArchiver( archiveExt );
-    
             unArchiver.setSourceFile( file );
-    
             unArchiver.setDestDirectory( location );
-    
             unArchiver.extract();
+            
+            File metaDir = new File(location, "META-INF");
+            File jarMetaDir = new File(metaDir, file.getName());            
+            FileUtils.mkdir(jarMetaDir.getAbsolutePath());
+            
+            File[] files = metaDir.listFiles();
+            for (int i = 0; i < files.length; i++) {
+				String name = files[i].getName();
+				if( 
+					name.toUpperCase().startsWith("MANIFEST.MF") || 
+					name.toUpperCase().startsWith("COPYRIGHT") || 
+					name.toUpperCase().startsWith("LICENSE") || 
+					name.toUpperCase().startsWith("NOTICE") || 
+					name.toUpperCase().startsWith("DISCLAIMER") 
+				) {
+					
+		            FileUtils.copyFileToDirectory(files[i], jarMetaDir);
+		            files[i].delete();
+				}
+			}
+            
         }
         catch ( IOException e )
         {
