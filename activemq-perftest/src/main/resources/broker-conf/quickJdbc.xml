@@ -1,7 +1,7 @@
 <!-- START SNIPPET: xbean -->
 <beans xmlns="http://activemq.org/config/1.0">
   
-  <broker useJmx="false" brokerName="quickJdbcBroker" start="false" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+  <broker useJmx="false" brokerName="quickJdbcBroker" start="false" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
     <persistenceAdapter>
        <journaledJDBC journalLogFiles="4" journalLogFileSize="32768" useJournal="true" useQuickJournal="true" dataSource="#derby-ds" dataDirectory="target/quickJdbc-data"/>
     </persistenceAdapter>

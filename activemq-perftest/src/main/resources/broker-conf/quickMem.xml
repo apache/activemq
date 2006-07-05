@@ -2,7 +2,7 @@
 
 <beans xmlns:amq="http://activemq.org/config/1.0">
 
-    <amq:broker brokerName="quickMemBroker" start="false" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+    <amq:broker brokerName="quickMemBroker" start="false" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
 
         <amq:transportConnectors>
             <amq:transportConnector uri="tcp://localhost:61616"/>
