@@ -19,7 +19,6 @@ package org.apache.activemq.state;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -28,6 +27,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 public class SessionState {        
     final SessionInfo info;
