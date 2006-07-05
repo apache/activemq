@@ -30,7 +30,8 @@ public class BrokerStoppedException extends IllegalStateException {
 	}
 
 	public BrokerStoppedException(String message, Throwable cause) {
-		super(message, cause);
+		super(message);
+		initCause(cause);
 	}
 
 	public BrokerStoppedException(String s) {
@@ -38,7 +39,7 @@ public class BrokerStoppedException extends IllegalStateException {
 	}
 
 	public BrokerStoppedException(Throwable cause) {
-		super(cause);
+		initCause(cause);
 	}
 
 }
