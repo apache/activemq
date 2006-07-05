@@ -1,7 +1,7 @@
 <!-- START SNIPPET: xbean -->
 <beans xmlns="http://activemq.org/config/1.0">
   
-  <broker useJmx="false" brokerName="memoryBroker" start="false" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+  <broker useJmx="false" brokerName="memoryBroker" start="false" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
     <persistenceAdapter>
        <memoryPersistenceAdapter/>
     </persistenceAdapter>
