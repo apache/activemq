@@ -107,12 +107,12 @@
         <repository>
             <id>apache-repo</id>
             <name>Apache CVS Repository</name>
-            <url>scp://minotaur.apache.org/www/people.apache.org/maven-snapshot-repository</url>
+            <url>scpexe://minotaur.apache.org/www/people.apache.org/maven-snapshot-repository</url>
         </repository>
         <snapshotRepository>
             <id>apache-snapshots</id>
             <name>Apache CVS Development Repository</name>
-            <url>scp://minotaur.apache.org/www/people.apache.org/maven-snapshot-repository</url>
+            <url>scpexe://minotaur.apache.org/www/people.apache.org/maven-snapshot-repository</url>
         </snapshotRepository>
         <site>
             <id>apache-website</id>
@@ -789,7 +789,7 @@
                         </goals>
                         <configuration>
                             <remoteRepositoryId>apache.m1.releases</remoteRepositoryId>
-                            <remoteRepositoryUrl>scp://minotaur.apache.org/www/people.apache.org/repository</remoteRepositoryUrl>
+                            <remoteRepositoryUrl>scpexe://minotaur.apache.org/www/people.apache.org/repository</remoteRepositoryUrl>
                         </configuration>
                     </execution>
                 </executions>
