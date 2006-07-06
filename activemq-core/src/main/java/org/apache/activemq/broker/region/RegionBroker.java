@@ -103,6 +103,21 @@ public class RegionBroker implements Broker {
         return answer;
     }
 
+    public Set getDestinations(ActiveMQDestination destination) {
+        switch(destination.getDestinationType()) {
+        case ActiveMQDestination.QUEUE_TYPE:
+            return queueRegion.getDestinations(destination);
+        case ActiveMQDestination.TOPIC_TYPE:
+            return topicRegion.getDestinations(destination);
+        case ActiveMQDestination.TEMP_QUEUE_TYPE:
+            return tempQueueRegion.getDestinations(destination);
+        case ActiveMQDestination.TEMP_TOPIC_TYPE:
+            return tempTopicRegion.getDestinations(destination);
+        default:
+            return Collections.EMPTY_SET;
+        }
+    }
+
     public Broker getAdaptor(Class type){
         if (type.isInstance(this)){
             return this;

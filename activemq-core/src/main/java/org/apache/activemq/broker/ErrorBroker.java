@@ -54,6 +54,10 @@ public class ErrorBroker implements Broker {
         return Collections.EMPTY_MAP;
     }
 
+    public Set getDestinations(ActiveMQDestination destination) {
+        return Collections.EMPTY_SET;
+    }
+
     public Broker getAdaptor(Class type){
         if (type.isInstance(this)){
             return this;

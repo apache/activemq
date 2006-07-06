@@ -134,6 +134,17 @@ abstract public class AbstractRegion implements Region {
         }
     }
     
+    /**
+     * Provide an exact or wildcard lookup of destinations in the region
+     * 
+     * @return a set of matching destination objects.
+     */
+    public Set getDestinations(ActiveMQDestination destination) {
+        synchronized(destinationsMutex){
+            return destinationMap.get(destination);
+        }
+    }
+    
     public Map getDestinationMap() {
         synchronized(destinationsMutex){
             return new HashMap(destinations);

@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import java.util.Map;
-import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -34,6 +32,9 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Like a BrokerFilter but it allows you to switch the getNext().broker.  This has more 
@@ -72,6 +73,10 @@ public class MutableBrokerFilter implements Broker {
         
     public Map getDestinationMap() {
         return getNext().getDestinationMap();
+    }
+
+    public Set getDestinations(ActiveMQDestination destination) {
+        return getNext().getDestinations(destination);
     }
 
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
