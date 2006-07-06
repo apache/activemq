@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import java.util.Map;
-import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -35,6 +33,9 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Allows you to intercept broker operation so that features such as security can be 
  * implemented as a pluggable filter.
@@ -48,7 +49,6 @@ public class BrokerFilter implements Broker {
     public BrokerFilter(Broker next) {
         this.next=next;
     }
-    
    
     public Broker getAdaptor(Class type){
         if (type.isInstance(this)){
@@ -59,6 +59,10 @@ public class BrokerFilter implements Broker {
 
     public Map getDestinationMap() {
         return next.getDestinationMap();
+    }
+
+    public Set getDestinations(ActiveMQDestination destination) {
+        return next.getDestinations(destination);
     }
 
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {

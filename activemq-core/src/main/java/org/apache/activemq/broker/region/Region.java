@@ -26,6 +26,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A Region is used to implement the different QOS options available to 
@@ -114,5 +115,12 @@ public interface Region extends Service {
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
 
     public void gc();
+
+    /**
+     * Provide an exact or wildcard lookup of destinations in the region
+     * 
+     * @return a set of matching destination objects.
+     */
+    public Set getDestinations(ActiveMQDestination destination);
     
 }

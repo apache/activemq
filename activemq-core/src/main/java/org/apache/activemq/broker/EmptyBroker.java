@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -35,6 +32,10 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Dumb implementation - used to be overriden by listeners
@@ -60,6 +61,10 @@ public class EmptyBroker implements Broker{
 
     public Map getDestinationMap() {
         return Collections.EMPTY_MAP;
+    }
+
+    public Set getDestinations(ActiveMQDestination destination) {
+        return Collections.EMPTY_SET;
     }
 
     public void addConnection(ConnectionContext context,ConnectionInfo info) throws Exception{
