@@ -16,11 +16,13 @@
  */
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
@@ -41,8 +43,10 @@ public class ConsumerTool extends ToolSupport implements MessageListener, Except
     private boolean pauseBeforeShutdown;
     private boolean running;
     private Session session;
+
     private long sleepTime=0;
     private long receiveTimeOut=0;
+	private MessageProducer replyProducer;
 
     public static void main(String[] args) {
         ConsumerTool tool = new ConsumerTool();
@@ -88,6 +92,10 @@ public class ConsumerTool extends ToolSupport implements MessageListener, Except
             Connection connection = createConnection();
             connection.setExceptionListener(this);
             session = createSession(connection);
+            
+            replyProducer = session.createProducer(null);
+            replyProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            
             MessageConsumer consumer = null;
             if (durable && topic) {
                 consumer = session.createDurableSubscriber((Topic) destination, consumerName);
@@ -133,6 +141,14 @@ public class ConsumerTool extends ToolSupport implements MessageListener, Except
             if(transacted) {
                 session.commit();
             }
+            
+            if ( message.getJMSReplyTo() !=null ) {            	
+            	replyProducer.send(message.getJMSReplyTo(), session.createTextMessage("Reply: "+message.getJMSMessageID()));
+                if(transacted) {
+                    session.commit();
+                }
+            }
+            
             /*
             if (++count % dumpCount == 0) {
                 dumpStats(connection);

@@ -168,6 +168,25 @@
 		</java>
 	</target>
 
+	<target name="requester" depends="compile" description="Runs a simple requester">
+
+		<echo>Running requester against server at $$url = ${url} for subject $$subject = ${subject}</echo>
+		<java classname="RequesterTool" fork="yes" maxmemory="100M">
+			<classpath refid="javac.classpath" />
+			<jvmarg value="-server" />
+			<arg value="${url}" />
+			<arg value="${topic}" />
+			<arg value="${subject}" />
+			<arg value="${durable}" />
+			<arg value="${max}" />
+			<arg value="${messageSize}" />
+			<arg value="${producerClientId}" />
+			<arg value="${timeToLive}" />
+			<arg value="${sleepTime}" />
+			<arg value="${transacted}" />
+		</java>
+	</target>
+
 	<target name="embedBroker" depends="compile" description="Runs a simple producer">
 
 		<echo>Running an embedded broker example</echo>
