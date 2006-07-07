@@ -282,7 +282,7 @@
               <goal>createbundle</goal>
             </goals>
             <configuration>
-              <includes>activemq-core,activemq-console,activeio-core,activemq-optional,backport-util-concurrent,commons-logging,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,derby</includes>
+              <includes>activemq-core,activemq-console,activeio-core,activemq-jaas,activemq-optional,backport-util-concurrent,commons-logging,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,derby</includes>
             </configuration>
           </execution>
         </executions>
