@@ -25,6 +25,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
@@ -317,7 +318,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
         }
     }
 
-    protected void serviceRemoteException(Exception error) {
+    protected void serviceRemoteException(Throwable error) {
         log.info("Network connection between "+localBroker+" and "+remoteBroker+" shutdown: "+error.getMessage(),error);
         ServiceSupport.dispose(this);
     }
@@ -336,6 +337,9 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                     }
                 }else if(command.isBrokerInfo()){
                     serviceRemoteBrokerInfo(command);
+                }else if(command.getClass() == ConnectionError.class ) {
+                	ConnectionError ce = (ConnectionError) command;
+                	serviceRemoteException(ce.getException());
                 }else{
                     switch(command.getDataStructureType()){
                     case KeepAliveInfo.DATA_STRUCTURE_TYPE:
@@ -520,7 +524,9 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                         shutDown = true;
                         doStop();
                     }
-                    
+                }else if(command.getClass() == ConnectionError.class ) {
+                	ConnectionError ce = (ConnectionError) command;
+                	serviceLocalException(ce.getException());                    
                 }else{
                     switch(command.getDataStructureType()){
                     case WireFormatInfo.DATA_STRUCTURE_TYPE:
