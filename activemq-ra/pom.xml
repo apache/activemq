@@ -27,7 +27,6 @@
     <groupId>incubator-activemq</groupId>
     <artifactId>activemq-parent</artifactId>
     <version>4.1-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-ra</artifactId>
