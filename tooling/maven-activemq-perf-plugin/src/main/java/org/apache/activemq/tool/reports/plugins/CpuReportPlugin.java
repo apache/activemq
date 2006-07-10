@@ -29,7 +29,7 @@ import java.util.HashMap;
 public class CpuReportPlugin implements ReportPlugin {
     private static final Log log = LogFactory.getLog(CpuReportPlugin.class);
 
-    public static final String NAME_IGNORE_LIST = "$r$b$w$swpd$inact$active$free$buff$cache$si$so$in$";
+    public static final String NAME_IGNORE_LIST = "$index$timeUnit$r$b$w$swpd$inact$active$free$buff$cache$si$so$in$";
     public static final String NAME_BLOCK_RECV = "bi";
     public static final String NAME_BLOCK_SENT = "bo";
     public static final String NAME_CTX_SWITCH = "cs";
@@ -143,7 +143,7 @@ public class CpuReportPlugin implements ReportPlugin {
             idleTime.add(Long.valueOf(val));
         } else if (key.equals(NAME_WAIT_TIME)) {
             waitTime.add(Long.valueOf(val));
-        } else if (NAME_IGNORE_LIST.indexOf("$" + key + "$") > 0) {
+        } else if (NAME_IGNORE_LIST.indexOf("$" + key + "$") != -1) {
             // Ignore key
         } else {
             log.warn("Unrecognized CPU data. " + key + "=" + val);
