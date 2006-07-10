@@ -335,7 +335,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         System.out.println("Total Blocks Sent: " + summary.get(CpuReportPlugin.KEY_BLOCK_SENT));
 
         xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_BLOCK_SENT + "'>" + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_SENT) + "</prop>");
-        System.out.println(" Ave Blocks Sent: " + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_SENT));
+        System.out.println("Ave Blocks Sent: " + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_SENT));
 
         xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_CTX_SWITCH + "'>" + summary.get(CpuReportPlugin.KEY_CTX_SWITCH) + "</prop>");
         System.out.println("Total Context Switches: " + summary.get(CpuReportPlugin.KEY_CTX_SWITCH));
