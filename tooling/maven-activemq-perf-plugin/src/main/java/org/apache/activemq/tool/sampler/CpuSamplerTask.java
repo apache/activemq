@@ -2,7 +2,6 @@ package org.apache.activemq.tool.sampler;
 
 import org.apache.activemq.tool.sampler.plugins.CpuSamplerPlugin;
 import org.apache.activemq.tool.sampler.plugins.LinuxCpuSamplerPlugin;
-import org.apache.activemq.tool.reports.plugins.ReportPlugin;
 import org.apache.activemq.tool.reports.AbstractPerfReportWriter;
 
 import java.io.IOException;
