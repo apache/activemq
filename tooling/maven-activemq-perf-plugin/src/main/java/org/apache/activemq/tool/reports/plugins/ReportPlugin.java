@@ -19,9 +19,6 @@ package org.apache.activemq.tool.reports.plugins;
 import java.util.Map;
 
 public interface ReportPlugin {
-    public static final int REPORT_PLUGIN_THROUGHPUT = 0;
-    public static final int REPORT_PLUGIN_CPU        = 1;
-
     public void handleCsvData(String csvData);
     public Map getSummary();
 }

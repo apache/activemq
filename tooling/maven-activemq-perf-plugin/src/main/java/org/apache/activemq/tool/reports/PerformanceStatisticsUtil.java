@@ -23,67 +23,67 @@ public final class PerformanceStatisticsUtil {
     private PerformanceStatisticsUtil() {
     }
 
-    public static long getTotalThroughput(List totalTPList) {
-        long totalTP = 0;
-        if (totalTPList != null) {
-            for (Iterator i=totalTPList.iterator(); i.hasNext();) {
-                totalTP += ((Long)i.next()).longValue();
+    public static long getSum(List numList) {
+        long sum = 0;
+        if (numList != null) {
+            for (Iterator i=numList.iterator(); i.hasNext();) {
+                sum += ((Long)i.next()).longValue();
             }
         } else {
-            totalTP = -1;
+            sum = -1;
         }
-        return totalTP;
+        return sum;
     }
 
-    public static long getMinThroughput(List totalTPList) {
-        long minTP = Long.MAX_VALUE;
-        if (totalTPList != null) {
-            for (Iterator i=totalTPList.iterator(); i.hasNext();) {
-                minTP = Math.min(((Long)i.next()).longValue(), minTP);
+    public static long getMin(List numList) {
+        long min = Long.MAX_VALUE;
+        if (numList != null) {
+            for (Iterator i=numList.iterator(); i.hasNext();) {
+                min = Math.min(((Long)i.next()).longValue(), min);
             }
         } else {
-            minTP = -1;
+            min = -1;
         }
-        return minTP;
+        return min;
     }
 
-    public static long getMaxThroughput(List totalTPList) {
-        long maxTP = Long.MIN_VALUE;
-        if (totalTPList != null) {
-            for (Iterator i=totalTPList.iterator(); i.hasNext();) {
-                maxTP = Math.max(((Long)i.next()).longValue(), maxTP);
+    public static long getMax(List numList) {
+        long max = Long.MIN_VALUE;
+        if (numList != null) {
+            for (Iterator i=numList.iterator(); i.hasNext();) {
+                max = Math.max(((Long)i.next()).longValue(), max);
             }
         } else {
-            maxTP = -1;
+            max = -1;
         }
-        return maxTP;
+        return max;
     }
 
-    public static double getAveThroughput(List totalTPList) {
-        double aveTP;
-        if (totalTPList != null) {
+    public static double getAve(List numList) {
+        double ave;
+        if (numList != null) {
             int sampleCount = 0;
             long totalTP = 0;
-            for (Iterator i=totalTPList.iterator(); i.hasNext();) {
+            for (Iterator i=numList.iterator(); i.hasNext();) {
                 sampleCount++;
                 totalTP += ((Long)i.next()).longValue();
             }
             return (double)totalTP / (double)sampleCount;
         } else {
-            aveTP = -1;
+            ave = -1;
         }
-        return aveTP;
+        return ave;
     }
 
-    public static double getAveThroughputExcludingMinMax(List totalTPList) {
-        double aveTP;
-        long minTP = getMinThroughput(totalTPList);
-        long maxTP = getMaxThroughput(totalTPList);
-        if (totalTPList != null) {
+    public static double getAveEx(List numList) {
+        double ave;
+        long minTP = getMin(numList);
+        long maxTP = getMax(numList);
+        if (numList != null) {
             int sampleCount = 0;
             long totalTP = 0;
             long sampleTP;
-            for (Iterator i=totalTPList.iterator(); i.hasNext();) {
+            for (Iterator i=numList.iterator(); i.hasNext();) {
                 sampleCount++;
                 sampleTP = ((Long)i.next()).longValue();
                 if (sampleTP != minTP && sampleTP != maxTP) {
@@ -92,9 +92,9 @@ public final class PerformanceStatisticsUtil {
             }
             return (double)totalTP / (double)sampleCount;
         } else {
-            aveTP = -1;
+            ave = -1;
         }
-        return aveTP;
+        return ave;
     }
 
 }

@@ -78,7 +78,7 @@ public class ActiveMQPojoSPI implements SPIConnectionFactory {
 
         setting = settings.getProperty(KEY_ASYNC_DISPATCH);
         if (setting != null && setting.length() > 0) {
-            factory.setAsyncDispatch(Boolean.getBoolean(setting));
+            factory.setDispatchAsync(Boolean.getBoolean(setting));
         }
 
         setting = settings.getProperty(KEY_ASYNC_SESSION);

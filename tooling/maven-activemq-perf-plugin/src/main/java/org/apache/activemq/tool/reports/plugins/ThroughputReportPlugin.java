@@ -65,6 +65,11 @@ public class ThroughputReportPlugin implements ReportPlugin {
     }
 
     public Map getSummary() {
+        // Check if tp sampler wasn't used.
+        if (clientThroughputs.size() == 0) {
+            return new HashMap();
+        }
+
         long   minClientTP = Long.MAX_VALUE, // TP = throughput
                maxClientTP = Long.MIN_VALUE,
                minClientTotalTP = Long.MAX_VALUE,
@@ -98,19 +103,19 @@ public class ThroughputReportPlugin implements ReportPlugin {
             clientTPList = (List)clientThroughputs.get(clientName);
             clientCount++;
 
-            tempLong = PerformanceStatisticsUtil.getMinThroughput(clientTPList);
+            tempLong = PerformanceStatisticsUtil.getMin(clientTPList);
             if (tempLong < minClientTP) {
                 minClientTP = tempLong;
                 nameMinClientTP = clientName;
             }
 
-            tempLong = PerformanceStatisticsUtil.getMaxThroughput(clientTPList);
+            tempLong = PerformanceStatisticsUtil.getMax(clientTPList);
             if (tempLong > maxClientTP) {
                 maxClientTP = tempLong;
                 nameMaxClientTP = clientName;
             }
 
-            tempLong = PerformanceStatisticsUtil.getTotalThroughput(clientTPList);
+            tempLong = PerformanceStatisticsUtil.getSum(clientTPList);
             systemTotalTP += tempLong; // Accumulate total TP
             if (tempLong < minClientTotalTP) {
                 minClientTotalTP = tempLong;
@@ -122,7 +127,7 @@ public class ThroughputReportPlugin implements ReportPlugin {
                 nameMaxClientTotalTP = clientName;
             }
 
-            tempDouble = PerformanceStatisticsUtil.getAveThroughput(clientTPList);
+            tempDouble = PerformanceStatisticsUtil.getAve(clientTPList);
             systemAveTP += tempDouble; // Accumulate ave throughput
             if (tempDouble < minClientAveTP) {
                 minClientAveTP = tempDouble;
@@ -134,7 +139,7 @@ public class ThroughputReportPlugin implements ReportPlugin {
                 nameMaxClientAveTP = clientName;
             }
 
-            tempDouble = PerformanceStatisticsUtil.getAveThroughputExcludingMinMax(clientTPList);
+            tempDouble = PerformanceStatisticsUtil.getAveEx(clientTPList);
             systemAveEMMTP += tempDouble; // Accumulate ave throughput excluding min/max
             if (tempDouble < minClientAveEMMTP) {
                 minClientAveEMMTP = tempDouble;

@@ -3,6 +3,7 @@ package org.apache.activemq.tool.sampler;
 import org.apache.activemq.tool.sampler.plugins.CpuSamplerPlugin;
 import org.apache.activemq.tool.sampler.plugins.LinuxCpuSamplerPlugin;
 import org.apache.activemq.tool.reports.plugins.ReportPlugin;
+import org.apache.activemq.tool.reports.AbstractPerfReportWriter;
 
 import java.io.IOException;
 
@@ -28,7 +29,7 @@ public class CpuSamplerTask extends AbstractPerformanceSampler {
 
     public void sampleData() {
         if (plugin != null && perfReportWriter != null) {
-            perfReportWriter.writeCsvData(ReportPlugin.REPORT_PLUGIN_CPU, "index=" + sampleIndex + "," + plugin.getCpuUtilizationStats());
+            perfReportWriter.writeCsvData(AbstractPerfReportWriter.REPORT_PLUGIN_CPU, "index=" + sampleIndex + "," + plugin.getCpuUtilizationStats());
         }
     }
 
