@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.activemq.tool.reports.plugins.ReportPlugin;
 import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
+import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
 
 import java.util.Properties;
 import java.util.List;
@@ -114,9 +115,9 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     public void writeCsvData(int csvType, String csvData) {
-        if (csvType == ReportPlugin.REPORT_PLUGIN_THROUGHPUT) {
+        if (csvType == REPORT_PLUGIN_THROUGHPUT) {
             tempLogFileWriter.println("[TP-DATA]" + csvData);
-        } else if (csvType == ReportPlugin.REPORT_PLUGIN_CPU) {
+        } else if (csvType == REPORT_PLUGIN_CPU) {
             tempLogFileWriter.println("[CPU-DATA]" + csvData);
         }
     }
@@ -198,10 +199,10 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         String line;
         while ((line = reader.readLine()) != null) {
             if (line.startsWith("[TP-DATA]")) {
-                handleCsvData(ReportPlugin.REPORT_PLUGIN_THROUGHPUT, line.substring("[TP-DATA]".length()));
+                handleCsvData(REPORT_PLUGIN_THROUGHPUT, line.substring("[TP-DATA]".length()));
                 parsePerfCsvData("tpdata", line.substring("[TP-DATA]".length()));
             } else if (line.startsWith("[CPU-DATA]")) {
-                handleCsvData(ReportPlugin.REPORT_PLUGIN_CPU, line.substring("[CPU-DATA]".length()));
+                handleCsvData(REPORT_PLUGIN_CPU, line.substring("[CPU-DATA]".length()));
                 parsePerfCsvData("cpudata", line.substring("[CPU-DATA]".length()));
             } else if (line.startsWith("[INFO]")) {
                 xmlFileWriter.println("<info>" + line + "</info>");
@@ -215,13 +216,31 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     protected void writeXmlPerfSummary() {
-        // Write throughput summary
-        Map summary = getSummary(ReportPlugin.REPORT_PLUGIN_THROUGHPUT);
 
-        xmlFileWriter.println("<property name='perfSummary'>");
+        Map summary;
+
+        summary = getSummary(REPORT_PLUGIN_THROUGHPUT);
+        if (summary != null && summary.size() > 0) {
+            writeThroughputSummary(summary);
+        }
+
+        summary = getSummary(REPORT_PLUGIN_CPU);
+        if (summary != null && summary.size() > 0) {
+            writeCpuSummary(summary);
+        }
+
+    }
+
+    protected void writeThroughputSummary(Map summary) {
+        // Write throughput summary
+        xmlFileWriter.println("<property name='perfTpSummary'>");
         xmlFileWriter.println("<props>");
 
         String val, clientName, clientVal;
+
+        System.out.println("#########################################");
+        System.out.println("####    SYSTEM THROUGHPUT SUMMARY    ####");
+        System.out.println("#########################################");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_SYS_TOTAL_TP);
         System.out.println("System Total Throughput: " + val);
@@ -294,6 +313,60 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         clientVal  = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Average Client Throughput Excluding Min/Max: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_EMM_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
+
+        xmlFileWriter.println("</props>");
+        xmlFileWriter.println("</property>");
+    }
+
+    protected void writeCpuSummary(Map summary) {
+        xmlFileWriter.println("<property name='perfTpSummary'>");
+        xmlFileWriter.println("<props>");
+
+        System.out.println("########################################");
+        System.out.println("####    SYSTEM CPU USAGE SUMMARY    ####");
+        System.out.println("########################################");
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_BLOCK_RECV + "'>" + summary.get(CpuReportPlugin.KEY_BLOCK_RECV) + "</prop>");
+        System.out.println("Total Blocks Received: " + summary.get(CpuReportPlugin.KEY_BLOCK_RECV));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_BLOCK_RECV + "'>" + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_RECV) + "</prop>");
+        System.out.println("Ave Blocks Received: " + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_RECV));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_BLOCK_SENT + "'>" + summary.get(CpuReportPlugin.KEY_BLOCK_SENT) + "</prop>");
+        System.out.println("Total Blocks Sent: " + summary.get(CpuReportPlugin.KEY_BLOCK_SENT));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_BLOCK_SENT + "'>" + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_SENT) + "</prop>");
+        System.out.println(" Ave Blocks Sent: " + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_SENT));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_CTX_SWITCH + "'>" + summary.get(CpuReportPlugin.KEY_CTX_SWITCH) + "</prop>");
+        System.out.println("Total Context Switches: " + summary.get(CpuReportPlugin.KEY_CTX_SWITCH));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_CTX_SWITCH + "'>" + summary.get(CpuReportPlugin.KEY_AVE_CTX_SWITCH) + "</prop>");
+        System.out.println("Ave Context Switches: " + summary.get(CpuReportPlugin.KEY_AVE_CTX_SWITCH));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_USER_TIME + "'>" + summary.get(CpuReportPlugin.KEY_USER_TIME) + "</prop>");
+        System.out.println("Total User Time: " + summary.get(CpuReportPlugin.KEY_USER_TIME));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_USER_TIME + "'>" + summary.get(CpuReportPlugin.KEY_AVE_USER_TIME) + "</prop>");
+        System.out.println("Ave User Time: " + summary.get(CpuReportPlugin.KEY_AVE_USER_TIME));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_SYS_TIME + "'>" + summary.get(CpuReportPlugin.KEY_SYS_TIME) + "</prop>");
+        System.out.println("Total System Time: " + summary.get(CpuReportPlugin.KEY_SYS_TIME));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_SYS_TIME + "'>" + summary.get(CpuReportPlugin.KEY_AVE_SYS_TIME) + "</prop>");
+        System.out.println("Ave System Time: " + summary.get(CpuReportPlugin.KEY_AVE_SYS_TIME));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_IDLE_TIME + "'>" + summary.get(CpuReportPlugin.KEY_IDLE_TIME) + "</prop>");
+        System.out.println("Total Idle Time: " + summary.get(CpuReportPlugin.KEY_IDLE_TIME));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_IDLE_TIME + "'>" + summary.get(CpuReportPlugin.KEY_AVE_IDLE_TIME) + "</prop>");
+        System.out.println("Ave Idle Time: " + summary.get(CpuReportPlugin.KEY_AVE_IDLE_TIME));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_WAIT_TIME + "'>" + summary.get(CpuReportPlugin.KEY_WAIT_TIME) + "</prop>");
+        System.out.println("Total Wait Time: " + summary.get(CpuReportPlugin.KEY_WAIT_TIME));
+
+        xmlFileWriter.println("<prop key='" + CpuReportPlugin.KEY_AVE_WAIT_TIME + "'>" + summary.get(CpuReportPlugin.KEY_AVE_WAIT_TIME) + "</prop>");
+        System.out.println("Ave Wait Time: " + summary.get(CpuReportPlugin.KEY_AVE_WAIT_TIME));
 
         xmlFileWriter.println("</props>");
         xmlFileWriter.println("</property>");

@@ -23,6 +23,10 @@ import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
 import java.util.Map;
 
 public abstract class AbstractPerfReportWriter implements PerformanceReportWriter {
+
+    public static final int REPORT_PLUGIN_THROUGHPUT = 0;
+    public static final int REPORT_PLUGIN_CPU        = 1;
+    
     protected ReportPlugin[] plugins = new ReportPlugin[] {
                                                 new ThroughputReportPlugin(),
                                                 new CpuReportPlugin()

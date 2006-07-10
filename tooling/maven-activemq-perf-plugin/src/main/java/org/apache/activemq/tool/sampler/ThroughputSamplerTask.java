@@ -1,6 +1,7 @@
 package org.apache.activemq.tool.sampler;
 
 import org.apache.activemq.tool.reports.plugins.ReportPlugin;
+import org.apache.activemq.tool.reports.AbstractPerfReportWriter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,7 +22,7 @@ public class ThroughputSamplerTask extends AbstractPerformanceSampler {
 		for (Iterator i = clients.iterator(); i.hasNext();) {
             MeasurableClient client = (MeasurableClient) i.next();
             if (perfReportWriter != null) {
-            	perfReportWriter.writeCsvData(ReportPlugin.REPORT_PLUGIN_THROUGHPUT,
+            	perfReportWriter.writeCsvData(AbstractPerfReportWriter.REPORT_PLUGIN_THROUGHPUT,
                         "index=" + sampleIndex + ",clientName=" + client.getClientName() +
                         ",throughput=" + client.getThroughput());
             }

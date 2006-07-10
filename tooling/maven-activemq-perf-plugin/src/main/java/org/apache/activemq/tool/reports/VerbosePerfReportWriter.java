@@ -18,6 +18,7 @@ package org.apache.activemq.tool.reports;
 
 import org.apache.activemq.tool.reports.plugins.ReportPlugin;
 import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
+import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
 
 import java.util.Properties;
 import java.util.Iterator;
@@ -40,9 +41,9 @@ public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     public void writeCsvData(int csvType, String csvData) {
-        if (csvType == ReportPlugin.REPORT_PLUGIN_THROUGHPUT) {
+        if (csvType == REPORT_PLUGIN_THROUGHPUT) {
             System.out.println("[PERF-TP]: " + csvData);
-        } else if (csvType == ReportPlugin.REPORT_PLUGIN_CPU) {
+        } else if (csvType == REPORT_PLUGIN_CPU) {
             System.out.println("[PERF-CPU]: " + csvData);
         }
         handleCsvData(csvType, csvData);
@@ -62,8 +63,23 @@ public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     public void writePerfSummary() {
-        Map summary = getSummary(ReportPlugin.REPORT_PLUGIN_THROUGHPUT);
 
+        Map summary;
+
+        summary = getSummary(REPORT_PLUGIN_THROUGHPUT);
+        if (summary != null && summary.size() > 0) {
+            writeThroughputSummary(summary);
+        }
+
+        summary = getSummary(REPORT_PLUGIN_CPU);
+        if (summary != null && summary.size() > 0) {
+            writeCpuSummary(summary);
+        }
+
+    }
+
+    protected void writeThroughputSummary(Map summary) {
+        writeHeader("SYSTEM THROUGHPUT SUMMARY");
         System.out.println("[PERF-TP-SUMMARY] System Total Throughput: " + summary.get(ThroughputReportPlugin.KEY_SYS_TOTAL_TP));
         System.out.println("[PERF-TP-SUMMARY] System Total Clients: " + summary.get(ThroughputReportPlugin.KEY_SYS_TOTAL_CLIENTS));
         System.out.println("[PERF-TP-SUMMARY] System Average Throughput: " + summary.get(ThroughputReportPlugin.KEY_SYS_AVE_TP));
@@ -78,6 +94,30 @@ public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
         System.out.println("[PERF-TP-SUMMARY] Max Client Average Throughput: " + summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_TP));
         System.out.println("[PERF-TP-SUMMARY] Min Client Average Throughput Excluding Min/Max: " + summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_EMM_TP));
         System.out.println("[PERF-TP-SUMMARY] Max Client Average Throughput Excluding Min/Max: " + summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_EMM_TP));
+    }
+
+    protected void writeCpuSummary(Map summary) {
+        writeHeader("SYSTEM CPU USAGE SUMMARY");
+        System.out.println("[PERF-CPU-SUMMARY] Total Blocks Received: " + summary.get(CpuReportPlugin.KEY_BLOCK_RECV));
+        System.out.println("[PERF-CPU-SUMMARY] Ave Blocks Received: " + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_RECV));
+
+        System.out.println("[PERF-CPU-SUMMARY] Total Blocks Sent: " + summary.get(CpuReportPlugin.KEY_BLOCK_SENT));
+        System.out.println("[PERF-CPU-SUMMARY] Ave Blocks Sent: " + summary.get(CpuReportPlugin.KEY_AVE_BLOCK_SENT));
+
+        System.out.println("[PERF-CPU-SUMMARY] Total Context Switches: " + summary.get(CpuReportPlugin.KEY_CTX_SWITCH));
+        System.out.println("[PERF-CPU-SUMMARY] Ave Context Switches: " + summary.get(CpuReportPlugin.KEY_AVE_CTX_SWITCH));
+
+        System.out.println("[PERF-CPU-SUMMARY] Total User Time: " + summary.get(CpuReportPlugin.KEY_USER_TIME));
+        System.out.println("[PERF-CPU-SUMMARY] Ave User Time: " + summary.get(CpuReportPlugin.KEY_AVE_USER_TIME));
+
+        System.out.println("[PERF-CPU-SUMMARY] Total System Time: " + summary.get(CpuReportPlugin.KEY_SYS_TIME));
+        System.out.println("[PERF-CPU-SUMMARY] Ave System Time: " + summary.get(CpuReportPlugin.KEY_AVE_SYS_TIME));
+
+        System.out.println("[PERF-CPU-SUMMARY] Total Idle Time: " + summary.get(CpuReportPlugin.KEY_IDLE_TIME));
+        System.out.println("[PERF-CPU-SUMMARY] Ave Idle Time: " + summary.get(CpuReportPlugin.KEY_AVE_IDLE_TIME));
+
+        System.out.println("[PERF-CPU-SUMMARY] Total Wait Time: " + summary.get(CpuReportPlugin.KEY_WAIT_TIME));
+        System.out.println("[PERF-CPU-SUMMARY] Ave Wait Time: " + summary.get(CpuReportPlugin.KEY_AVE_WAIT_TIME));
     }
 
     protected void writeHeader(String header) {
