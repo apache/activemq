@@ -16,12 +16,13 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.util.Map;
-
 import javax.jms.InvalidSelectorException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
+
+import java.util.List;
+import java.util.Map;
 
 
 public interface DestinationViewMBean {
@@ -98,5 +99,15 @@ public interface DestinationViewMBean {
     public int getMemoryPercentageUsed();
     public long getMemoryLimit();
     public void setMemoryLimit(long limit);
+
+    /**
+     * Browses the current destination returning a list of messages
+     */
+    public List browseMessages() throws InvalidSelectorException;
+
+    /**
+     * Browses the current destination with the given selector returning a list of messages
+     */
+    public List browseMessages(String selector) throws InvalidSelectorException;
 
 }

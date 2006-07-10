@@ -16,6 +16,7 @@ package org.apache.activemq.broker.jmx;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.Connection;
@@ -107,7 +108,7 @@ public class DestinationView implements DestinationViewMBean {
     public CompositeData[] browse(String selector) throws OpenDataException, InvalidSelectorException{
         Message[] messages=destination.browse();
         ArrayList c = new ArrayList();
-                
+        
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
         BooleanExpression selectorExpression = selector==null ? null : new SelectorParser().parse(selector);
@@ -132,6 +133,45 @@ public class DestinationView implements DestinationViewMBean {
         CompositeData rc[]=new CompositeData[c.size()];
         c.toArray(rc);
         return rc;
+    }
+    
+    /**
+     * Browses the current destination returning a list of messages
+     */
+    public List browseMessages() throws InvalidSelectorException {
+        return browseMessages(null);
+    }    
+    
+    /**
+     * Browses the current destination with the given selector returning a list of messages
+     */
+    public List browseMessages(String selector) throws InvalidSelectorException {
+        Message[] messages = destination.browse();
+        ArrayList answer = new ArrayList();
+
+        MessageEvaluationContext ctx = new MessageEvaluationContext();
+        ctx.setDestination(destination.getActiveMQDestination());
+        BooleanExpression selectorExpression = selector == null ? null : new SelectorParser().parse(selector);
+
+        for (int i = 0; i < messages.length; i++) {
+            try {
+                Message message = messages[i];
+                if (selectorExpression == null) {
+                    answer.add(OpenTypeSupport.convert(message));
+                }
+                else {
+                    ctx.setMessageReference(message);
+                    if (selectorExpression.matches(ctx)) {
+                        answer.add(message);
+                    }
+                }
+
+            }
+            catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+        return answer;
     }
 
     public TabularData browseAsTable() throws OpenDataException{
