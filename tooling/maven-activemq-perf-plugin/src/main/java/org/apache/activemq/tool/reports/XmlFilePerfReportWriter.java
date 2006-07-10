@@ -18,7 +18,6 @@ package org.apache.activemq.tool.reports;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.activemq.tool.reports.plugins.ReportPlugin;
 import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
 import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
 
