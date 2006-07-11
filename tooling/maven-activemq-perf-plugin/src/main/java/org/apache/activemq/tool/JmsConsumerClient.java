@@ -90,6 +90,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
                 log.info("Unsubscribing durable subscriber: " + getClientName());
+                getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
             getConnection().close();
@@ -114,6 +115,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
                 log.info("Unsubscribing durable subscriber: " + getClientName());
+                getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
             getConnection().close();
@@ -142,6 +144,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
                 log.info("Unsubscribing durable subscriber: " + getClientName());
+                getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
             getConnection().close();
@@ -175,6 +178,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
                 log.info("Unsubscribing durable subscriber: " + getClientName());
+                getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
             getConnection().close();
