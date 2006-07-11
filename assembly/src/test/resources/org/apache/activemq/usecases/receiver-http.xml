@@ -22,7 +22,7 @@
     </transportConnectors>
 
     <networkConnectors>
-      <networkConnector uri="static:(failover:http://localhost:62301)"/>
+      <networkConnector uri="static:(http://localhost:62301?trace=true)"/>
     </networkConnectors>
 
     <persistenceAdapter>
