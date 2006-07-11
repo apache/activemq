@@ -19,6 +19,7 @@ package org.apache.activemq.transport;
 import java.io.IOException;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,7 +33,7 @@ public class TransportLogger extends TransportFilter {
     private final Log log;
     
     public TransportLogger(Transport next) {
-        this( next, LogFactory.getLog(TransportLogger.class.getName()+":"+getNextId()));
+        this( next, LogFactory.getLog(TransportLogger.class.getName()+".Connection:"+getNextId()));
     }
     
     synchronized private static int getNextId() {
@@ -44,6 +45,26 @@ public class TransportLogger extends TransportFilter {
         this.log = log;
     }
 
+    public Response request(Command command) throws IOException {
+        log.debug("SENDING REQUEST: "+command);
+    	Response rc = super.request(command);
+        log.debug("GOT RESPONSE: "+rc);
+    	return rc;
+    }
+    
+    public Response request(Command command, int timeout) throws IOException {
+        log.debug("SENDING REQUEST: "+command);
+    	Response rc = super.request(command, timeout);
+        log.debug("GOT RESPONSE: "+rc);
+    	return rc;
+    }
+    
+    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+        log.debug("SENDING ASNYC REQUEST: "+command);
+    	FutureResponse rc = next.asyncRequest(command, responseCallback);
+    	return rc;
+    }
+    
     public void oneway(Command command) throws IOException {
         if( log.isDebugEnabled() ) {
             log.debug("SENDING: "+command);
@@ -53,7 +74,11 @@ public class TransportLogger extends TransportFilter {
     
     public void onCommand(Command command) {
         if( log.isDebugEnabled() ) {
-            log.debug("RECEIVED: from: "+ command.getFrom() + " : " + command);
+        	if( command.getFrom()!=null ) {
+                log.debug("RECEIVED: from: "+ command.getFrom() + " : " + command);
+        	} else {
+                log.debug("RECEIVED: " + command);
+        	}
         }
         getTransportListener().onCommand(command);
     }
