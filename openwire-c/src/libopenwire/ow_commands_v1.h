@@ -108,8 +108,8 @@ typedef struct ow_ActiveMQObjectMessage {
    struct ow_ActiveMQDestination *replyTo;
    ow_long timestamp;
    ow_string *type;
-   ow_byte_array *content;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *content;
+   struct ow_ByteSequence *marshalledProperties;
    struct ow_DataStructure *dataStructure;
    struct ow_ConsumerId *targetConsumerId;
    ow_boolean compressed;
@@ -220,8 +220,8 @@ typedef struct ow_ActiveMQStreamMessage {
    struct ow_ActiveMQDestination *replyTo;
    ow_long timestamp;
    ow_string *type;
-   ow_byte_array *content;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *content;
+   struct ow_ByteSequence *marshalledProperties;
    struct ow_DataStructure *dataStructure;
    struct ow_ConsumerId *targetConsumerId;
    ow_boolean compressed;
@@ -429,8 +429,8 @@ typedef struct ow_ActiveMQTextMessage {
    struct ow_ActiveMQDestination *replyTo;
    ow_long timestamp;
    ow_string *type;
-   ow_byte_array *content;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *content;
+   struct ow_ByteSequence *marshalledProperties;
    struct ow_DataStructure *dataStructure;
    struct ow_ConsumerId *targetConsumerId;
    ow_boolean compressed;
@@ -518,8 +518,8 @@ typedef struct ow_ActiveMQBytesMessage {
    struct ow_ActiveMQDestination *replyTo;
    ow_long timestamp;
    ow_string *type;
-   ow_byte_array *content;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *content;
+   struct ow_ByteSequence *marshalledProperties;
    struct ow_DataStructure *dataStructure;
    struct ow_ConsumerId *targetConsumerId;
    ow_boolean compressed;
@@ -538,7 +538,7 @@ typedef struct ow_WireFormatInfo {
    ow_byte structType;
    ow_byte_array *magic;
    ow_int version;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *marshalledProperties;
 
 } ow_WireFormatInfo;
 ow_WireFormatInfo *ow_WireFormatInfo_create(apr_pool_t *pool);
@@ -701,8 +701,8 @@ typedef struct ow_Message {
    struct ow_ActiveMQDestination *replyTo;
    ow_long timestamp;
    ow_string *type;
-   ow_byte_array *content;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *content;
+   struct ow_ByteSequence *marshalledProperties;
    struct ow_DataStructure *dataStructure;
    struct ow_ConsumerId *targetConsumerId;
    ow_boolean compressed;
@@ -806,8 +806,8 @@ typedef struct ow_ActiveMQMapMessage {
    struct ow_ActiveMQDestination *replyTo;
    ow_long timestamp;
    ow_string *type;
-   ow_byte_array *content;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *content;
+   struct ow_ByteSequence *marshalledProperties;
    struct ow_DataStructure *dataStructure;
    struct ow_ConsumerId *targetConsumerId;
    ow_boolean compressed;
@@ -841,8 +841,8 @@ typedef struct ow_ActiveMQMessage {
    struct ow_ActiveMQDestination *replyTo;
    ow_long timestamp;
    ow_string *type;
-   ow_byte_array *content;
-   ow_byte_array *marshalledProperties;
+   struct ow_ByteSequence *content;
+   struct ow_ByteSequence *marshalledProperties;
    struct ow_DataStructure *dataStructure;
    struct ow_ConsumerId *targetConsumerId;
    ow_boolean compressed;
