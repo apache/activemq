@@ -17,12 +17,13 @@
 package org.apache.activemq.transport.http;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.Map;
 
 import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
@@ -51,10 +52,18 @@ public class HttpTransportFactory extends TransportFactory {
         return "xstream";
     }
 
-    protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
-        TextWireFormat textWireFormat = asTextWireFormat(wf);
-        Transport transport = new HttpClientTransport(textWireFormat, location);
-        return transport;
+    protected Transport createTransport(URI location, WireFormat wf) throws IOException {
+		TextWireFormat textWireFormat = asTextWireFormat(wf);
+		return new HttpClientTransport(textWireFormat, location);
+    }
+    
+    public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+    	HttpClientTransport httpTransport = (HttpClientTransport) super.compositeConfigure(transport, format, options);
+		transport = httpTransport;
+    	if( httpTransport.isTrace() ) {
+			transport = new TransportLogger(httpTransport);
+    	}
+		return transport;
     }
 
 }
