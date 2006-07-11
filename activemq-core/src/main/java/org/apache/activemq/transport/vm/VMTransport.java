@@ -77,6 +77,8 @@ public class VMTransport implements Transport{
             }else {
                 queue.add(command);
             }
+        } else {
+            throw new IOException("Peer disconnected.");
         }
     }
 
