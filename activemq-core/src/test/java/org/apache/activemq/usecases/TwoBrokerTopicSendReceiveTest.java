@@ -16,14 +16,17 @@
  */
 package org.apache.activemq.usecases;
 
+import java.util.HashMap;
+import java.util.Iterator;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
 /**
@@ -33,10 +36,18 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
 
     protected ActiveMQConnectionFactory sendFactory;
     protected ActiveMQConnectionFactory receiveFactory;
+    protected HashMap brokers = new HashMap();
 
     protected void setUp() throws Exception {
         sendFactory = createSenderConnectionFactory();
         receiveFactory = createReceiverConnectionFactory();
+
+        // Give server enough time to setup,
+        // so we don't lose messages when connection fails
+        log.info("Waiting for brokers Initialize.");
+        Thread.sleep(5000);
+        log.info("Brokers should be initialized by now.. starting test.");
+        
         super.setUp();
     }
 
@@ -50,6 +61,11 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
 
     protected void tearDown() throws Exception {
         super.tearDown();
+    	for (Iterator iter = brokers.values().iterator(); iter.hasNext();) {
+			BrokerService broker = (BrokerService) iter.next();
+			ServiceSupport.dispose(broker);
+			iter.remove();
+		}
     }
 
     protected Connection createReceiveConnection() throws JMSException {
@@ -64,11 +80,10 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
         try {
             BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(config));
             brokerFactory.afterPropertiesSet();
-
             BrokerService broker = brokerFactory.getBroker();
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getConnectUri());
-
-            return factory;
+            brokers.put(brokerName, broker);
+            
+            return new ActiveMQConnectionFactory(connectUrl);
 
         } catch (Exception e) {
             e.printStackTrace();
