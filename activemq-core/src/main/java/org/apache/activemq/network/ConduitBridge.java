@@ -54,6 +54,10 @@ public class ConduitBridge extends DemandForwardingBridge{
     }
     
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info){
+    	    	
+    	if( info.getSelector()!=null )
+    		return false;
+    	
         //search through existing subscriptions and see if we have a match
         boolean matched = false;
         DestinationFilter filter=DestinationFilter.parseFilter(info.getDestination());
