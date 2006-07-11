@@ -162,17 +162,20 @@ public class DestinationMap {
 
     /**
      * @param dest
+     * @return 
      */
-    public void removeAll(ActiveMQDestination key) {
+    public Set removeAll(ActiveMQDestination key) {
+        Set rc = new HashSet();
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             for (int i = 0; i < destinations.length; i++) {
-                removeAll(destinations[i]);
+                rc.add( removeAll(destinations[i]) );
             }
-            return;
+            return rc;
         }
         String[] paths = key.getDestinationPaths();
-        getRootNode(key).removeAll(paths, 0);
+        getRootNode(key).removeAll(rc, paths, 0);
+        return rc;
     }
 
     /**

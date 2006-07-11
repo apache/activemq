@@ -293,6 +293,7 @@
       </plugin>
 
       <!-- Use Gram to Gernerate the OpenWire Marshallers -->
+      <!--
       <plugin>
         <groupId>incubator-activemq</groupId>
         <artifactId>maven-gram-plugin</artifactId>
@@ -321,6 +322,7 @@
           </dependency>
         </dependencies>
       </plugin>
+      -->
 
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>

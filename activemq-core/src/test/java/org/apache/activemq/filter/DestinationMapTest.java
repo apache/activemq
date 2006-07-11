@@ -285,6 +285,21 @@ public class DestinationMapTest extends TestCase {
         assertMapValue("TEST.*.*", v3, v5);
         assertMapValue("TEST.BAR.*", v3);
     }
+    
+    public void testAddAndRemove() throws Exception {
+    	
+        put("FOO.A", v1);
+        assertMapValue("FOO.>", v1);
+        
+        put("FOO.B", v2);        
+        assertMapValue("FOO.>", v1, v2);
+        
+        Set set = map.removeAll(createDestination("FOO.A"));
+        
+        assertMapValue("FOO.>", v2);
+        
+    }
+
 
     protected void loadSample2() {
         put("TEST.FOO", v1);

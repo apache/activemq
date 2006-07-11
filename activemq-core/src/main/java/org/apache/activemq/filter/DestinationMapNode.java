@@ -94,6 +94,31 @@ public class DestinationMapNode {
     }
 
     /**
+     * Returns a mutable List of the values available at this node in the tree
+     */
+    public List removeValues() {
+    	ArrayList v = new ArrayList(values);
+    	parent.getAnyChildNode().getValues().removeAll(v);
+    	values.clear();
+    	pruneIfEmpty();
+        return v;
+    }
+    
+    
+    public Set removeDesendentValues() {
+        Set answer = new HashSet();
+        removeDesendentValues(answer);
+        return answer;
+    }
+    
+    protected void removeDesendentValues(Set answer) {
+        if (anyChild != null) {
+            anyChild.removeDesendentValues(answer);
+        }
+        answer.addAll(removeValues());
+    }
+
+    /**
      * Returns a list of all the values from this node down the tree
      */
     public Set getDesendentValues() {
@@ -133,20 +158,45 @@ public class DestinationMapNode {
         }
     }
 
-    public void removeAll(String[] paths, int idx) {
-        if (idx >= paths.length) {
-            values.clear();
-            pruneIfEmpty();
-        }
-        else {
-            if (idx == paths.length - 1) {
-                getAnyChildNode().getValues().clear();
+    public void removeAll(Set answer, String[] paths, int startIndex) {
+//        if (idx >= paths.length) {
+//            values.clear();
+//            pruneIfEmpty();
+//        }
+//        else {
+//            if (idx == paths.length - 1) {
+//                getAnyChildNode().getValues().clear();
+//            }
+//            else {
+//                getAnyChildNode().removeAll(paths, idx + 1);
+//            }
+//            getChildOrCreate(paths[idx]).removeAll(paths, ++idx);
+//        }
+//        
+        
+        DestinationMapNode node = this;
+        for (int i = startIndex, size = paths.length; i < size && node != null; i++) {
+
+        	String path = paths[i];
+            if (path.equals(ANY_DESCENDENT)) {
+                answer.addAll(node.removeDesendentValues());
+                break;
+            }
+
+            node.appendMatchingWildcards(answer, paths, i);
+            if (path.equals(ANY_CHILD)) {
+                node = node.getAnyChildNode();
             }
             else {
-                getAnyChildNode().removeAll(paths, idx + 1);
+                node = node.getChild(path);
             }
-            getChildOrCreate(paths[idx]).removeAll(paths, ++idx);
         }
+        
+        if (node != null) {
+            answer.addAll(node.removeValues());
+        }
+
+        
     }
 
     protected void appendDescendantValues(Set answer) {
