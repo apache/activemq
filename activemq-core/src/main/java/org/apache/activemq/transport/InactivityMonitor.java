@@ -71,19 +71,19 @@ public class InactivityMonitor extends TransportFilter {
         
     private void writeCheck() {
         if( inSend.get() ) {
-            log.debug("A send is in progress");
+            log.trace("A send is in progress");
             return;
         }
         
         if( !commandSent.get() ) {
-            log.debug("No message sent since last write check, sending a KeepAliveInfo");
+            log.trace("No message sent since last write check, sending a KeepAliveInfo");
             try {
                 next.oneway(new KeepAliveInfo());                
             } catch (IOException e) {
                 onException(e);
             }
         } else {
-            log.debug("Message sent since last write check, resetting flag");
+            log.trace("Message sent since last write check, resetting flag");
         }
         
         commandSent.set(false);
@@ -92,15 +92,15 @@ public class InactivityMonitor extends TransportFilter {
 
     private void readCheck() {
         if( inReceive.get() ) {
-            log.debug("A receive is in progress");
+            log.trace("A receive is in progress");
             return;
         }
         
         if( !commandReceived.get() ) {
-            log.debug("No message received since last read check! ");
+            log.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
             onException(new InactivityIOException("Channel was inactive for too long."));           
         } else {
-            log.debug("Message received since last read check, resetting flag: ");
+            log.trace("Message received since last read check, resetting flag: ");
         }
         
         commandReceived.set(false);
