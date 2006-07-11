@@ -16,13 +16,19 @@ package org.apache.activemq.broker.jmx;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
+
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SubscriptionInfo;
+
 /**
+ * TODO why does this class not inherit from DurableSubscriptionView?
+ * 
  * @version $Revision: 1.5 $
  */
 public class InactiveDurableSubscriptionView extends SubscriptionView implements  DurableSubscriptionViewMBean {
     protected ManagedRegionBroker broker;
-    protected SubscriptionInfo info;
+    protected SubscriptionInfo subscriptionInfo;
     
     
     /**
@@ -34,7 +40,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
     public InactiveDurableSubscriptionView(ManagedRegionBroker broker,String clientId,SubscriptionInfo sub){
         super(clientId,null);
         this.broker = broker;
-        this.info = sub;
+        this.subscriptionInfo = sub;
     }
     
     
@@ -51,7 +57,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @return the destination name
      */
     public String getDestinationName(){
-        return info.getDestination().getPhysicalName();
+        return subscriptionInfo.getDestination().getPhysicalName();
        
     }
 
@@ -79,7 +85,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @return name of the durable consumer
      */
     public String getSubscriptionName(){
-        return info.getSubcriptionName();
+        return subscriptionInfo.getSubcriptionName();
     }
     
     /**
@@ -107,6 +113,19 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      */
     public TabularData browseAsTable() throws OpenDataException{
         return broker.browseAsTable(this);
+    }
+    
+    /**
+     * Destroys the durable subscription so that messages will no longer be stored for this subscription
+     */
+    public void destroy() throws Exception {
+        RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+        info.setClientId(clientId);
+        info.setSubcriptionName(subscriptionInfo.getSubcriptionName());
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(broker);
+        context.setClientId(clientId);
+        broker.removeSubscription(context, info);
     }
     
     public String toString(){

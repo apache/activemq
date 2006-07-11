@@ -16,7 +16,10 @@ package org.apache.activemq.broker.jmx;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
+
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 /**
  * @version $Revision: 1.5 $
  */
@@ -60,6 +63,19 @@ public class DurableSubscriptionView extends SubscriptionView implements  Durabl
      */
     public TabularData browseAsTable() throws OpenDataException{
         return broker.browseAsTable(this);
+    }
+    
+    /**
+     * Destroys the durable subscription so that messages will no longer be stored for this subscription
+     */
+    public void destroy() throws Exception {
+        RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+        info.setClientId(clientId);
+        info.setSubcriptionName(subscriptionName);
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(broker);
+        context.setClientId(clientId);
+        broker.removeSubscription(context, info);
     }
     
     public String toString(){

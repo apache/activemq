@@ -54,7 +54,7 @@ public interface BrokerViewMBean extends Service {
     public void terminateJVM(int exitCode);
     
     /**
-     * Stop the broker and all it's comonents.
+     * Stop the broker and all it's components.
      */
     public void stop() throws Exception;
     
