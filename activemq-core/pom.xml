@@ -274,6 +274,8 @@
             <exclude>**/ThreeBrokerQueueNetworkUsingTcpTest.*</exclude>
             <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
             <exclude>**/ThreeBrokerQueueNetworkTest.*</exclude>
+            <exclude>**/ThreeBrokerTopicNetworkTest.*</exclude>
+            <exclude>**/ThreeBrokerTopicNetworkUsingTcpTest.*</exclude>
             
             <!-- TODO move to optional module...  -->
             <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
