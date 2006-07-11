@@ -26,10 +26,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.util.TextWireFormat;
@@ -67,29 +65,33 @@ public class HttpTunnelServlet extends HttpServlet {
             wireFormat = createWireFormat();
         }
     }
-
+    
+    protected void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        createTransportChannel(request, response);
+    }
+    
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // lets return the next response
         Command packet = null;
+        int count=0;
         try {
-            BlockingQueueTransport transportChannel = getTransportChannel(request);
-            if (transportChannel == null) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "clientID not specified.");
-                log("No transport available! ");
+            BlockingQueueTransport transportChannel = getTransportChannel(request, response);
+            if (transportChannel == null)
                 return;
-            }
+            
             packet = (Command) transportChannel.getQueue().poll(requestTimeout, TimeUnit.MILLISECONDS);
+            
+            DataOutputStream stream = new DataOutputStream(response.getOutputStream());
+//            while( packet !=null ) {
+            	wireFormat.marshal(packet, stream);
+            	count++;
+//            	packet = (Command) transportChannel.getQueue().poll(0, TimeUnit.MILLISECONDS);
+//            }
+
+        } catch (InterruptedException ignore) {
         }
-        catch (InterruptedException e) {
-            // ignore
-        }
-        if (packet == null) {
-            // TODO temporary hack to prevent busy loop.  Replace with continuations
-            try{ Thread.sleep(250);}catch (InterruptedException e) { e.printStackTrace(); }
+        if (count == 0) {
             response.setStatus(HttpServletResponse.SC_REQUEST_TIMEOUT);
-        }
-        else {
-            wireFormat.marshal(packet, new DataOutputStream(response.getOutputStream()));
         }
     }
 
@@ -104,20 +106,13 @@ public class HttpTunnelServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot process wire format of version: " + info.getVersion());
             }
 
-        }
-        else {
-            if (command instanceof ConnectionInfo) {
-                ConnectionInfo info = (ConnectionInfo) command;
-                request.getSession(true).setAttribute("clientID", info.getClientId());
-            }
+        } else {
 
-            BlockingQueueTransport transport = getTransportChannel(request);
-            if (transport == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            }
-            else {
-                transport.doConsume(command);
-            }
+            BlockingQueueTransport transport = getTransportChannel(request, response);
+            if (transport == null)
+                return;
+            
+            transport.doConsume(command);
         }
     }
 
@@ -142,39 +137,43 @@ public class HttpTunnelServlet extends HttpServlet {
         return buffer.toString();
     }
 
-    protected BlockingQueueTransport getTransportChannel(HttpServletRequest request) {
-        HttpSession session = request.getSession(true);
-        String clientID = null;
-        if (session != null) {
-            clientID = (String) session.getAttribute("clientID");
-        }
+    protected BlockingQueueTransport getTransportChannel(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String clientID = request.getHeader("clientID");
         if (clientID == null) {
-            clientID = request.getHeader("clientID");
-        }
-        /**
-         * if (clientID == null) { clientID = request.getParameter("clientID"); }
-         */
-        if (clientID == null) {
-            log.warn("No clientID header so ignoring request");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No clientID header specified");
+            log.warn("No clientID header specified");
             return null;
         }
         synchronized (this) {
             BlockingQueueTransport answer = (BlockingQueueTransport) clients.get(clientID);
             if (answer == null) {
-                answer = createTransportChannel();
-                clients.put(clientID, answer);
-                listener.onAccept(answer);
+                log.warn("The clientID header specified is invalid. Client sesion has not yet been established for it: "+clientID);
+                return null;
             }
-            else {
-                /*
-                try {
-                    answer.oneway(ping);
-                }
-                catch (IOException e) {
-                    log.warn("Failed to ping transport: " + e, e);
-                }
-                */
+            return answer;
+        }
+    }
+    
+    protected BlockingQueueTransport createTransportChannel(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String clientID = request.getHeader("clientID");
+        
+        if (clientID == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No clientID header specified");
+            log.warn("No clientID header specified");
+            return null;
+        }
+        
+        synchronized (this) {
+            BlockingQueueTransport answer = (BlockingQueueTransport) clients.get(clientID);
+            if (answer != null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '"+clientID+"' has allready been established");
+                log.warn("A session for clientID '"+clientID+"' has allready been established");
+                return null;
             }
+            
+            answer = createTransportChannel();
+            clients.put(clientID, answer);
+            listener.onAccept(answer);            
             return answer;
         }
     }
