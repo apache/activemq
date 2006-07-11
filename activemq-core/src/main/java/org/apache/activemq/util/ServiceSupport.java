@@ -39,7 +39,7 @@ public abstract class ServiceSupport implements Service {
             service.stop();
         }
         catch (Exception e) {
-            log.error("Could not stop service: " + service + ". Reason: " + e, e);
+            log.debug("Could not stop service: " + service + ". Reason: " + e, e);
         }
     }
 
