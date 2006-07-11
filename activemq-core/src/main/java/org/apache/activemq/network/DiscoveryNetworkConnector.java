@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.network;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Iterator;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -28,10 +30,7 @@ import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Iterator;
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A network connector which uses a discovery agent to detect the remote brokers
@@ -58,6 +57,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
+    	
+    	// Ignore events once we start stopping.
+    	if( isStopped() || isStopping() )
+    		return;
+    	
         String url = event.getServiceName();
         if (url != null) {
 
@@ -80,7 +84,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             URI connectUri = uri;
             if (failover) {
                 try {
-                    connectUri = new URI("failover:" + connectUri);
+                    connectUri = new URI("failover:(" + connectUri+")?maxReconnectDelay=1000");
                 }
                 catch (URISyntaxException e) {
                     log.warn("Could not create failover URI: " + connectUri);
@@ -90,22 +94,24 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
             log.info("Establishing network connection between from " + localURI + " to " + connectUri);
 
-            Transport localTransport;
-            try {
-                localTransport = createLocalTransport();
-            }
-            catch (Exception e) {
-                log.warn("Could not connect to local URI: " + localURI + ": " + e, e);
-                return;
-            }
-
             Transport remoteTransport;
             try {
                 remoteTransport = TransportFactory.connect(connectUri);
             }
             catch (Exception e) {
-                ServiceSupport.dispose(localTransport);
-                log.warn("Could not connect to remote URI: " + connectUri + ": " + e, e);
+                log.warn("Could not connect to remote URI: " + localURI + ": " + e.getMessage());
+                log.debug("Connection failure exception: "+ e, e);
+                return;
+            }
+
+            Transport localTransport;
+            try {
+                localTransport = createLocalTransport();
+            }
+            catch (Exception e) {
+                ServiceSupport.dispose(remoteTransport);
+                log.warn("Could not connect to local URI: " + localURI + ": " + e.getMessage());
+                log.debug("Connection failure exception: "+ e, e);
                 return;
             }
 
@@ -117,7 +123,13 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                log.warn("Could not start network bridge between: " + localURI + " and: " + uri + " due to: " + e, e);
+                log.warn("Could not start network bridge between: " + localURI + " and: " + uri + " due to: " + e);
+                log.debug("Start failure exception: "+ e, e);
+                
+                try {
+					discoveryAgent.serviceFailed(event);
+				} catch (IOException e1) {
+				}
                 return;
             }
         }
@@ -196,45 +208,81 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         if (conduitSubscriptions) {
             if (dynamicOnly) {
                 result = new ConduitBridge(localTransport, remoteTransport) {
-                    protected void serviceRemoteException(Exception error) {
-                        super.serviceRemoteException(error);
-                        try {
-                            // Notify the discovery agent that the remote broker
-                            // failed.
-                            discoveryAgent.serviceFailed(event);
-                        }
-                        catch (IOException e) {
-                        }
-                    }
+                	protected void serviceLocalException(Throwable error) {
+                		try {
+                			super.serviceLocalException(error);
+                		} finally {
+                			fireServiceFailed();
+                		}
+                	}
+                	protected void serviceRemoteException(Throwable error) {
+                		try {
+                    		super.serviceRemoteException(error);
+                		} finally {
+                			fireServiceFailed();
+                		}
+                	}
+                	public void fireServiceFailed() {
+                		if( !isStopped() ) {
+                            try {
+                                discoveryAgent.serviceFailed(event);
+                            } catch (IOException e) {
+                            }
+                		}
+                	}
                 };
             }
             else {
                 result = new DurableConduitBridge(localTransport, remoteTransport) {
-                    protected void serviceRemoteException(Exception error) {
-                        super.serviceRemoteException(error);
-                        try {
-                            // Notify the discovery agent that the remote broker
-                            // failed.
-                            discoveryAgent.serviceFailed(event);
-                        }
-                        catch (IOException e) {
-                        }
-                    }
+                	protected void serviceLocalException(Throwable error) {
+                		try {
+                			super.serviceLocalException(error);
+                		} finally {
+                			fireServiceFailed();
+                		}
+                	}
+                	protected void serviceRemoteException(Throwable error) {
+                		try {
+                    		super.serviceRemoteException(error);
+                		} finally {
+                			fireServiceFailed();
+                		}
+                	}
+                	public void fireServiceFailed() {
+                		if( !isStopped() ) {
+                            try {
+                                discoveryAgent.serviceFailed(event);
+                            } catch (IOException e) {
+                            }
+                		}
+                	}
                 };
             }
         }
         else {
-            result = new DemandForwardingBridge(localTransport, remoteTransport) {
-                protected void serviceRemoteException(Exception error) {
-                    super.serviceRemoteException(error);
-                    try {
-                        // Notify the discovery agent that the remote broker
-                        // failed.
-                        discoveryAgent.serviceFailed(event);
-                    }
-                    catch (IOException e) {
-                    }
-                }
+            result = new DemandForwardingBridge(localTransport, remoteTransport) {            	
+            	protected void serviceLocalException(Throwable error) {
+            		try {
+            			super.serviceLocalException(error);
+            		} finally {
+            			fireServiceFailed();
+            		}
+            	}
+            	protected void serviceRemoteException(Throwable error) {
+            		try {
+                		super.serviceRemoteException(error);
+            		} finally {
+            			fireServiceFailed();
+            		}
+            	}
+            	public void fireServiceFailed() {
+            		if( !isStopped() ) {
+                        try {
+                            discoveryAgent.serviceFailed(event);
+                        } catch (IOException e) {
+                        }
+            		}
+            	}
             };
         }
         return configureBridge(result);
