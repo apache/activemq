@@ -46,7 +46,6 @@ public class TwoBrokerTopicSendReceiveUsingTcpTest extends TwoBrokerTopicSendRec
         senderBroker = brokerFactory.getBroker();
 
         super.setUp();
-        Thread.sleep(2000);
     }
 
     protected void tearDown() throws Exception {
