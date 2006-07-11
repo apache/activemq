@@ -143,7 +143,7 @@ public class VMTransportFactory extends TransportFactory{
      */
     private TransportServer bind(URI location,boolean dispose) throws IOException{
         String host=location.getHost();
-        log.info("binding to broker: " + host);
+        log.debug("binding to broker: " + host);
         VMTransportServer server=new VMTransportServer(location,dispose);
         Object currentBoundValue=servers.get(host);
         if(currentBoundValue!=null){
@@ -155,10 +155,10 @@ public class VMTransportFactory extends TransportFactory{
 
     public static void stopped(VMTransportServer server){
         String host=server.getBindURI().getHost();
-        log.info("Shutting down VM connectors for broker: "  +host);
         servers.remove(host);
         TransportConnector connector=(TransportConnector) connectors.remove(host);
         if(connector!=null){
+            log.debug("Shutting down VM connectors for broker: "  +host);
             ServiceSupport.dispose(connector);
             BrokerService broker=(BrokerService) brokers.remove(host);
             if(broker!=null){
@@ -168,10 +168,10 @@ public class VMTransportFactory extends TransportFactory{
     }
 
     public static void stopped(String host){
-        log.info("Shutting down VM connectors for broker: "  +host);
         servers.remove(host);
         TransportConnector connector=(TransportConnector) connectors.remove(host);
         if(connector!=null){
+            log.debug("Shutting down VM connectors for broker: "  +host);
             ServiceSupport.dispose(connector);
             BrokerService broker=(BrokerService) brokers.remove(host);
             if(broker!=null){
