@@ -194,8 +194,8 @@ public class FailoverTransport implements CompositeTransport {
                 }
 
                 if(!disposed){
-                        if( log.isTraceEnabled() )
-                            log.trace("Waiting "+reconnectDelay+" ms before attempting connection. ");
+                    
+                        log.debug("Waiting "+reconnectDelay+" ms before attempting connection. ");
                         synchronized(sleepMutex){
                             try{
                                 sleepMutex.wait(reconnectDelay);
@@ -339,7 +339,7 @@ public class FailoverTransport implements CompositeTransport {
 
                         // Wait for transport to be connected.
                         while (connectedTransport == null && !disposed && connectionFailure==null ) {
-                            log.debug("Waiting for transport to reconnect.");
+                            log.trace("Waiting for transport to reconnect.");
                             try {
                                 reconnectMutex.wait(1000);
                             }
