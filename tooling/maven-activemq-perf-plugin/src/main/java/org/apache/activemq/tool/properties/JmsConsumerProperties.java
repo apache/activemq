@@ -20,6 +20,7 @@ public class JmsConsumerProperties extends JmsClientProperties {
     public static final String COUNT_BASED_RECEIVING = "count"; // Receive a specific count of messages
 
     protected boolean durable   = false; // Consumer is a durable subscriber
+    protected boolean unsubscribe = true; // If true, unsubscribe a durable subscriber after it finishes running
     protected boolean asyncRecv = true;  // If true, use onMessage() to receive messages, else use receive()
 
     protected long recvCount    = 1000000;       // Receive a million messages by default
@@ -32,6 +33,14 @@ public class JmsConsumerProperties extends JmsClientProperties {
 
     public void setDurable(boolean durable) {
         this.durable = durable;
+    }
+
+    public boolean isUnsubscribe() {
+        return unsubscribe;
+    }
+
+    public void setUnsubscribe(boolean unsubscribe) {
+        this.unsubscribe = unsubscribe;
     }
 
     public boolean isAsyncRecv() {

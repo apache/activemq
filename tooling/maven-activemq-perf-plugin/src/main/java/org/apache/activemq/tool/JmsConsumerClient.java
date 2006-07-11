@@ -88,6 +88,10 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
                 incThroughput();
             }
         } finally {
+            if (client.isDurable() && client.isUnsubscribe()) {
+                log.info("Unsubscribing durable subscriber: " + getClientName());
+                getSession().unsubscribe(getClientName());
+            }
             getConnection().close();
         }
     }
@@ -108,6 +112,10 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
                 recvCount++;
             }
         } finally {
+            if (client.isDurable() && client.isUnsubscribe()) {
+                log.info("Unsubscribing durable subscriber: " + getClientName());
+                getSession().unsubscribe(getClientName());
+            }
             getConnection().close();
         }
     }
@@ -132,6 +140,10 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
                 throw new JMSException("JMS consumer thread sleep has been interrupted. Message: " + e.getMessage());
             }
         } finally {
+            if (client.isDurable() && client.isUnsubscribe()) {
+                log.info("Unsubscribing durable subscriber: " + getClientName());
+                getSession().unsubscribe(getClientName());
+            }
             getConnection().close();
         }
     }
@@ -161,6 +173,10 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
                 throw new JMSException("JMS consumer thread wait has been interrupted. Message: " + e.getMessage());
             }
         } finally {
+            if (client.isDurable() && client.isUnsubscribe()) {
+                log.info("Unsubscribing durable subscriber: " + getClientName());
+                getSession().unsubscribe(getClientName());
+            }
             getConnection().close();
         }
     }
@@ -175,8 +191,9 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             String clientName = getClientName();
             if (clientName == null) {
                 clientName = "JmsConsumer";
+                setClientName(clientName);
             }
-            log.info("Creating durable subscriber (" + getConnection().getClientID() + ") to: " + dest.toString());
+            log.info("Creating durable subscriber (" + clientName + ") to: " + dest.toString());
             jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName);
         } else {
             log.info("Creating non-durable consumer to: " + dest.toString());
@@ -190,8 +207,9 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             String clientName = getClientName();
             if (clientName == null) {
                 clientName = "JmsConsumer";
+                setClientName(clientName);
             }
-            log.info("Creating durable subscriber (" + getConnection().getClientID() + ") to: " + dest.toString());
+            log.info("Creating durable subscriber (" + clientName + ") to: " + dest.toString());
             jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName, selector, noLocal);
         } else {
             log.info("Creating non-durable consumer to: " + dest.toString());
