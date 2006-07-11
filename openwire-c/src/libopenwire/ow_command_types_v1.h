@@ -45,6 +45,8 @@ extern "C" {
 #define OW_CONTROLCOMMAND_TYPE             14
 #define OW_FLUSHCOMMAND_TYPE               15
 #define OW_CONNECTIONERROR_TYPE            16   
+#define OW_CONSUMERCONTROL_TYPE            17
+#define OW_CONNECTIONCONTROL_TYPE          18
    
 #define OW_MESSAGEDISPATCH_TYPE            21
 #define OW_MESSAGEACK_TYPE                 22
@@ -70,6 +72,10 @@ extern "C" {
 #define OW_JOURNALTRACE_TYPE               53
 #define OW_JOURNALTRANSACTION_TYPE         54
 #define OW_SUBSCRIPTIONINFO_TYPE           55
+
+#define OW_PARTIALCOMMAND_TYPE             60
+#define OW_LASTPARTIALCOMMAND_TYPE         61
+#define OW_REPLAYCOMMAND_TYPE              65   
    
 #define OW_BYTE_TYPE                       70
 #define OW_CHAR_TYPE                       71
@@ -83,7 +89,8 @@ extern "C" {
 #define OW_BYTE_ARRAY_TYPE                 79
    
 #define OW_MESSAGEDISPATCHNOTIFICATION_TYPE 90
-      
+#define OW_NETWORKBRIDGEFILTER_TYPE        91
+         
 #define OW_ACTIVEMQQUEUE_TYPE              100
 #define OW_ACTIVEMQTOPIC_TYPE              101
 #define OW_ACTIVEMQTEMPQUEUE_TYPE          102

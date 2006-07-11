@@ -1733,9 +1733,7 @@ apr_status_t ow_marshal1_WireFormatInfo(ow_bit_buffer *buffer, ow_WireFormatInfo
    ow_marshal1_DataStructure(buffer, (ow_DataStructure*)object);
    
    
-   
-                        ow_bit_buffer_append(buffer,  object->marshalledProperties!=0 );
-                        
+   SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->marshalledProperties));
    
 	return APR_SUCCESS;
 }
@@ -1744,7 +1742,7 @@ apr_status_t ow_marshal2_WireFormatInfo(ow_byte_buffer *buffer, ow_bit_buffer *b
    ow_marshal2_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object);   
    SUCCESS_CHECK(ow_marshal2_byte_array_const_size(buffer, object->magic, 8));
    SUCCESS_CHECK(ow_byte_buffer_append_int(buffer, object->version));
-   SUCCESS_CHECK(ow_marshal2_byte_array(buffer, bitbuffer, object->marshalledProperties));
+   SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->marshalledProperties));
    
 	return APR_SUCCESS;
 }
@@ -1754,7 +1752,7 @@ apr_status_t ow_unmarshal_WireFormatInfo(ow_byte_array *buffer, ow_bit_buffer *b
    ow_unmarshal_DataStructure(buffer, bitbuffer, (ow_DataStructure*)object, pool);   
    SUCCESS_CHECK(ow_unmarshal_byte_array_const_size(buffer, &object->magic, 8, pool));
    SUCCESS_CHECK(ow_byte_array_read_int(buffer, &object->version));
-   SUCCESS_CHECK(ow_unmarshal_byte_array(buffer, bitbuffer, &object->marshalledProperties, pool));
+   SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->marshalledProperties, pool));
    
 	return APR_SUCCESS;
 }
@@ -2351,12 +2349,8 @@ apr_status_t ow_marshal1_Message(ow_bit_buffer *buffer, ow_Message *object)
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->replyTo));
    ow_marshal1_long(buffer, object->timestamp);
    ow_marshal1_string(buffer, object->type);
-   
-                        ow_bit_buffer_append(buffer,  object->content!=0 );
-                        
-   
-                        ow_bit_buffer_append(buffer,  object->marshalledProperties!=0 );
-                        
+   SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->content));
+   SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->marshalledProperties));
    SUCCESS_CHECK(ow_marshal1_nested_object(buffer, (ow_DataStructure*)object->dataStructure));
    SUCCESS_CHECK(ow_marshal1_cached_object(buffer, (ow_DataStructure*)object->targetConsumerId));
    ow_bit_buffer_append(buffer, object->compressed);
@@ -2386,8 +2380,8 @@ apr_status_t ow_marshal2_Message(ow_byte_buffer *buffer, ow_bit_buffer *bitbuffe
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->replyTo));
    SUCCESS_CHECK(ow_marshal2_long(buffer, bitbuffer, object->timestamp));
    SUCCESS_CHECK(ow_marshal2_string(buffer, bitbuffer, object->type));
-   SUCCESS_CHECK(ow_marshal2_byte_array(buffer, bitbuffer, object->content));
-   SUCCESS_CHECK(ow_marshal2_byte_array(buffer, bitbuffer, object->marshalledProperties));
+   SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->content));
+   SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->marshalledProperties));
    SUCCESS_CHECK(ow_marshal2_nested_object(buffer, bitbuffer, (ow_DataStructure*)object->dataStructure));
    SUCCESS_CHECK(ow_marshal2_cached_object(buffer, bitbuffer, (ow_DataStructure*)object->targetConsumerId));
    ow_bit_buffer_read(bitbuffer);
@@ -2418,8 +2412,8 @@ apr_status_t ow_unmarshal_Message(ow_byte_array *buffer, ow_bit_buffer *bitbuffe
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->replyTo, pool));
    SUCCESS_CHECK(ow_unmarshal_long(buffer, bitbuffer, &object->timestamp, pool));
    SUCCESS_CHECK(ow_unmarshal_string(buffer, bitbuffer, &object->type, pool));
-   SUCCESS_CHECK(ow_unmarshal_byte_array(buffer, bitbuffer, &object->content, pool));
-   SUCCESS_CHECK(ow_unmarshal_byte_array(buffer, bitbuffer, &object->marshalledProperties, pool));
+   SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->content, pool));
+   SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->marshalledProperties, pool));
    SUCCESS_CHECK(ow_unmarshal_nested_object(buffer, bitbuffer, (ow_DataStructure**)&object->dataStructure, pool));
    SUCCESS_CHECK(ow_unmarshal_cached_object(buffer, bitbuffer, (ow_DataStructure**)&object->targetConsumerId, pool));
    object->compressed = ow_bit_buffer_read(bitbuffer);
