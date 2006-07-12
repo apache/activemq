@@ -256,7 +256,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             sock.setSendBufferSize(socketBufferSize);
         }
         catch (SocketException se) {
-            log.warn("Cannot set socket buffer size = " + socketBufferSize, se);
+            log.warn("Cannot set socket buffer size = " + socketBufferSize);
+            log.debug("Cannot set socket buffer size. Reason: " + se, se);
         }
         sock.setSoTimeout(soTimeout);
     }
