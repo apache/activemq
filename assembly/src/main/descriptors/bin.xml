@@ -41,6 +41,19 @@
       <outputDirectory>/</outputDirectory>
     </fileSet>
     <fileSet>
+      <directory>src/release/bin</directory>
+      <outputDirectory>/bin</outputDirectory>
+      <includes>
+        <include>activemq</include>
+        <include>browse</include>
+        <include>bstat</include>
+        <include>list</include>
+        <include>query</include>
+        <include>shutdown</include>
+      </includes>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <directory>target</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
