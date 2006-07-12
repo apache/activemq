@@ -54,15 +54,14 @@ namespace ActiveMQ.Commands
                 if (text == null)
                 {
                     // now lets read the content
-                    
                     byte[] data = this.Content;
                     if (data != null)
                     {
                         // TODO assume that the text is ASCII
-                        char[] chars = new char[data.Length];
+                        char[] chars = new char[data.Length-sizeof(int)];
                         for (int i = 0; i < chars.Length; i++)
                         {
-                            chars[i] = (char) data[i];
+                            chars[i] = (char) data[i+sizeof(int)];
                         }
                         text = new String(chars);
                     }
@@ -75,17 +74,31 @@ namespace ActiveMQ.Commands
                 byte[] data = null;
                 if (text != null)
                 {
-                    // TODO assume that the text is ASCII
-                    data = new byte[text.Length];
-                    
-                    // now lets write the bytes
-                    char[] chars = text.ToCharArray();
-                    for (int i = 0; i < chars.Length; i++)
+					// TODO assume that the text is ASCII
+					
+                    byte[] sizePrefix = System.BitConverter.GetBytes(text.Length);
+					data = new byte[text.Length + sizePrefix.Length];  //int at the front of it
+															
+					// add the size prefix
+					for (int j = 0; j < sizePrefix.Length; j++)
                     {
-                        data[i] = (byte) chars[i];
+						// The bytes need to be encoded in big endian
+						if ( BitConverter.IsLittleEndian ) {
+							data[j] = sizePrefix[sizePrefix.Length - j - 1];
+						} else {
+							data[j] = sizePrefix[j];
+						}
                     }
-                }
-                this.Content = data;
+					
+					// Add the data.
+                    char[] chars = text.ToCharArray();
+					for (int i = 0; i < chars.Length; i++)
+                    {
+                        data[i + sizePrefix.Length] = (byte)chars[i];
+                    }
+				}
+				this.Content = data;
+					
             }
         }
     }
