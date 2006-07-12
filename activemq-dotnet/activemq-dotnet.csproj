@@ -1,16 +1,4 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProductVersion>8.0.30703</ProductVersion>
-        <SchemaVersion>2.0</SchemaVersion>
-        <ProjectGuid>{08321F42-4B3D-4815-B592-95962BAC3B9F}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <RootNamespace>activemq-dotnet</RootNamespace>
-        <AssemblyName>activemq-dotnet</AssemblyName>
-        <WarningLevel>4</WarningLevel>
-        <StartupObject/>
-    </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugSymbols>true</DebugSymbols>
         <DebugType>full</DebugType>
@@ -25,6 +13,18 @@
         <OutputPath>bin\Release\</OutputPath>
         <DefineConstants>TRACE</DefineConstants>
         <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProductVersion>8.0.30703</ProductVersion>
+        <SchemaVersion>2.0</SchemaVersion>
+        <ProjectGuid>{08321F42-4B3D-4815-B592-95962BAC3B9F}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <RootNamespace>activemq-dotnet</RootNamespace>
+        <AssemblyName>activemq-dotnet</AssemblyName>
+        <WarningLevel>4</WarningLevel>
+        <StartupObject/>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="nunit.framework"/>
@@ -54,9 +54,11 @@
         <Compile Include="src\main\csharp\ActiveMQ\Commands\BrokerId.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\BrokerInfo.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\Command.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ConnectionControl.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ConnectionError.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ConnectionId.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ConnectionInfo.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\Commands\ConsumerControl.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ConsumerId.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ConsumerInfo.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\Commands\ControlCommand.cs"/>
@@ -132,9 +134,11 @@
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\BaseCommandMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\BrokerIdMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\BrokerInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConnectionControlMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConnectionErrorMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConnectionIdMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConnectionInfoMarshaller.cs"/>
+        <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConsumerControlMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConsumerIdMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ConsumerInfoMarshaller.cs"/>
         <Compile Include="src\main\csharp\ActiveMQ\OpenWire\V1\ControlCommandMarshaller.cs"/>
