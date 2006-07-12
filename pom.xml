@@ -221,6 +221,12 @@
             </dependency>
             <dependency>
                 <groupId>${pom.groupId}</groupId>
+                <artifactId>incubator-activemq</artifactId>
+                <version>${pom.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${pom.groupId}</groupId>
                 <artifactId>activeio-core</artifactId>
                 <version>3.0-SNAPSHOT</version>
             </dependency>
