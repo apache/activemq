@@ -15,43 +15,38 @@
     limitations under the License.
 -->
 <assembly>
-  <id>bin</id>
+  <id>unix-bin</id>
   <formats>
     <format>tar.gz</format>
     <format>tar.bz2</format>
-    <format>zip</format>
   </formats>
   <fileSets>
-    <fileSet>
-      <includes>
-        <include>README*</include>
-        <include>LICENSE*</include>
-        <include>NOTICE*</include>
-      </includes>
-    </fileSet>
+    <!-- I don't think the STATUS file is required.
     <fileSet>
       <directory>..</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>STATUS*</include>
       </includes>
+      <lineEnding>unix</lineEnding>
     </fileSet>
+    -->
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
+      <excludes>
+        <exclude>bin/*</exclude>
+      </excludes>
+      <lineEnding>unix</lineEnding>
     </fileSet>
     <fileSet>
       <directory>src/release/bin</directory>
       <outputDirectory>/bin</outputDirectory>
-      <includes>
-        <include>activemq</include>
-        <include>browse</include>
-        <include>bstat</include>
-        <include>list</include>
-        <include>query</include>
-        <include>shutdown</include>
-      </includes>
+      <excludes>
+        <exclude>*.bat</exclude>
+      </excludes>
       <fileMode>0755</fileMode>
+      <lineEnding>unix</lineEnding>
     </fileSet>
     <fileSet>
       <directory>target</directory>
@@ -69,14 +64,6 @@
     </fileSet>
   </fileSets>
   <dependencySets>
-    <!-- dependencySet>
-      <outputDirectory>/bin</outputDirectory>
-      <outputFileNameMapping>run.jar</outputFileNameMapping>
-      <unpack>false</unpack>
-      <includes>
-         <include>incubator-activemq:activemq-console</include>
-      </includes>
-    </dependencySet -->
     <dependencySet>
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
@@ -122,36 +109,5 @@
          <include>xmlpull:xmlpull</include>
       </includes>
     </dependencySet>
-  </dependencySets>
-  
-  <!--
-  <fileSet>
-      <includes>
-        <include>README*</include>
-        <include>LICENSE*</include>
-        <include>NOTICE*</include>
-        <include>pom.xml</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>src</directory>
-    </fileSet>
-  </fileSets>
-  
-  
-  <fileSets>
-    <fileSet>
-      <directory>target/classes</directory>
-      <outputDirectory>/</outputDirectory>
-    </fileSet>
-  </fileSets>
-  <dependencySets>
-    <dependencySet>
-      <outputDirectory>/</outputDirectory>
-      <unpack>true</unpack>
-      <scope>runtime</scope>
-    </dependencySet>
-  </dependencySets>
-  -->
-  
+  </dependencySets>  
 </assembly>
