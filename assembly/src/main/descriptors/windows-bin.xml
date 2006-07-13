@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2005-2006 The Apache Software Foundation
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<assembly>
+  <id>windows-bin</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <fileSets>
+    <!-- I don't think the STATUS file is required.
+    <fileSet>
+      <directory>..</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>STATUS*</include>
+      </includes>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <excludes>
+        <exclude>bin/*</exclude>
+      </excludes>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>src/release/bin</directory>
+      <outputDirectory>/bin</outputDirectory>
+      <includes>
+        <include>*.bat</include>
+      </includes>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>${pom.artifactId}-${pom.version}.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory>/bin</outputDirectory>
+      <includes>
+        <include>run.jar</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>/lib</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
+         <include>backport-util-concurrent:backport-util-concurrent</include>
+         <include>commons-logging:commons-logging</include>
+         <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
+         <include>incubator-activemq:activemq-core</include>
+         <include>incubator-activemq:activeio-core</include>
+         <include>incubator-activemq:activemq-console</include>         
+         <include>mx4j:mx4j</include>         
+         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
+         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
+      </includes>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>/lib/optional</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
+         <include>incubator-activemq:activemq-rar</include>
+         <include>incubator-activemq:activemq-optional</include>
+         <include>incubator-activemq:activecluster</include>
+         <include>incubator-activemq:activemq-web</include>
+         <include>commons-beanutils:commons-beanutils</include>
+         <include>commons-collections:commons-collections</include>
+         <include>commons-httpclient:commons-httpclient</include>
+         <include>commons-dbcp:commons-dbcp</include>
+         <include>commons-pool:commons-pool</include>
+         <include>org.mortbay.jetty:jetty</include>
+         <include>org.mortbay.jetty:jetty-util</include>
+         <include>org.mortbay.jetty:servlet-api-2.5</include>
+         <include>log4j:log4j</include>
+         <include>mx4j:mx4j-remote</include>
+         <include>mx4j:mx4j-tools</include>
+         <include>org.apache.derby:derby</include>
+         <include>org.apache.geronimo.specs:geronimo-j2ee-jacc_1.0_spec</include>
+         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
+         <include>org.apache.xbean:xbean-spring</include>
+         <include>org.springframework:spring</include>
+         <include>xstream:xstream</include>
+         <include>xmlpull:xmlpull</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>  
+</assembly>
