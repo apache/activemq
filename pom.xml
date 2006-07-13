@@ -259,10 +259,6 @@
                         <groupId>mockobjects</groupId>
                         <artifactId>mockobjects-jdk1.4-j2ee1.3</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>junit</groupId>
-                        <artifactId>junit</artifactId>
-                    </exclusion>
                 </exclusions>
             </dependency>
 
