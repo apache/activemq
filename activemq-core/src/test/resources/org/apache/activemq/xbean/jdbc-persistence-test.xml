@@ -17,10 +17,10 @@
 
 <!-- this file can only be parsed using the xbean-spring library -->
 <!-- START SNIPPET: xbean -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker useJmx="false">
+  <broker useJmx="false" xmlns="http://activemq.org/config/1.0">
 
     <persistenceAdapter>
       <journaledJDBC useJournal="false">

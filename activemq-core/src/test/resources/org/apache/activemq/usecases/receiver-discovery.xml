@@ -14,10 +14,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
 
 
-  <broker brokerName="receiver" persistent="false" useJmx="false">
+  <broker brokerName="receiver" persistent="false" useJmx="false" xmlns="http://activemq.org/config/1.0">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default"/>
     </transportConnectors>

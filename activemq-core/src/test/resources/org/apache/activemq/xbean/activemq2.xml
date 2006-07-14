@@ -15,12 +15,12 @@
     limitations under the License.
 -->
 
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <!-- for easier integration with the JUnit tests, lets not start the broker when the ApplicationContext starts -->
-  <broker useJmx="true" start="false">
+  <broker useJmx="true" start="false" xmlns="http://activemq.org/config/1.0">
     <destinationPolicy>
       <policyMap>
         <policyEntries>

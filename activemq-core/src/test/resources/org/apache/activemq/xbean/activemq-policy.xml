@@ -17,11 +17,11 @@
 
 <!-- this file can only be parsed using the xbean-spring library -->
 <!-- START SNIPPET: xbean -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker persistent="false" brokerName="${brokername}">
+  <broker persistent="false" brokerName="${brokername}" xmlns="http://activemq.org/config/1.0">
 
     <!--  lets define the dispatch policy -->
     <destinationPolicy>
