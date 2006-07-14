@@ -30,7 +30,7 @@ public class JournalDurableSubscriptionTest extends DurableSubscriptionTestSuppo
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         File dataDir = new File("target/test-data/durableJournal");
         DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
-        factory.setDataDirectory(dataDir);
+        factory.setDataDirectoryFile(dataDir);
         factory.setUseJournal(true);
         factory.setJournalLogFileSize(1024*64); 
         return factory.createPersistenceAdapter();

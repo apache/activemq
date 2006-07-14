@@ -125,7 +125,7 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
 
     public File getJournalArchiveDirectory() {
         if( journalArchiveDirectory == null && useQuickJournal ) {
-            journalArchiveDirectory = new File(getDataDirectory(), "journal");
+            journalArchiveDirectory = new File(getDataDirectoryFile(), "journal");
         }
         return journalArchiveDirectory;
     }
@@ -162,7 +162,7 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
      * @throws IOException
      */
     protected void createJournal() throws IOException {
-        File journalDir = new File(getDataDirectory(), "journal").getCanonicalFile();
+        File journalDir = new File(getDataDirectoryFile(), "journal").getCanonicalFile();
         if( failIfJournalIsLocked ) {
             journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize, getJournalArchiveDirectory());
         } else {

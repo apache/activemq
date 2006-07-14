@@ -31,7 +31,8 @@ import java.io.IOException;
  */
 public class DataSourceSupport {
 
-    private File dataDirectory;
+    private String dataDirectory = "activemq-data";
+    private File dataDirectoryFile;
     private DataSource dataSource;
 
     public DataSourceSupport() {
@@ -41,14 +42,22 @@ public class DataSourceSupport {
         this.dataSource = dataSource;
     }
 
-    public File getDataDirectory() {
-        if (dataDirectory == null) {
-            dataDirectory = new File("activemq-data");
+    public File getDataDirectoryFile() {
+        if (dataDirectoryFile == null) {
+            dataDirectoryFile = new File(getDataDirectory());
         }
+        return dataDirectoryFile;
+    }
+
+    public void setDataDirectoryFile(File dataDirectory) {
+        this.dataDirectoryFile = dataDirectory;
+    }
+
+    public String getDataDirectory() {
         return dataDirectory;
     }
 
-    public void setDataDirectory(File dataDirectory) {
+    public void setDataDirectory(String dataDirectory) {
         this.dataDirectory = dataDirectory;
     }
 
@@ -69,7 +78,7 @@ public class DataSourceSupport {
     protected DataSource createDataSource() throws IOException {
 
         // Setup the Derby datasource.
-        System.setProperty("derby.system.home", getDataDirectory().getCanonicalPath());
+        System.setProperty("derby.system.home", getDataDirectoryFile().getCanonicalPath());
         System.setProperty("derby.storage.fileSyncTransactionLog", "true");
         System.setProperty("derby.storage.pageCacheSize", "100");
 
