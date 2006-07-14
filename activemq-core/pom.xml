@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    Copyright 2005-2006 The Apache Software Foundation
-   
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-   
-    http://www.apache.org/licenses/LICENSE-2.0
-   
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+  Copyright 2005-2006 The Apache Software Foundation
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 
-<project
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="http://maven.apache.org/POM/4.0.0">
-  
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -43,7 +41,7 @@
       <artifactId>backport-util-concurrent</artifactId>
       <optional>false</optional>
     </dependency>
-  
+
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
@@ -70,7 +68,7 @@
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
- 
+
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
@@ -85,7 +83,7 @@
       <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
       <optional>true</optional>
     </dependency>
-    
+
     <!-- commons -->
     <dependency>
       <groupId>commons-collections</groupId>
@@ -102,7 +100,7 @@
       <artifactId>commons-pool</artifactId>
       <optional>true</optional>
     </dependency>
-    
+
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
@@ -117,12 +115,12 @@
       <groupId>axion</groupId>
       <artifactId>axion</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>regexp</groupId>
       <artifactId>regexp</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>activemq</groupId>
       <artifactId>jmdns</artifactId>
@@ -219,32 +217,32 @@
             <exclude>**/DefaultStoreBrokerTest.*</exclude>
             <exclude>**/TcpTransportBrokerTest.*</exclude>
             <exclude>**/activeio/*</exclude>
-                
+
             <!-- These are performance tests so take too long to run -->
             <exclude>**/perf/*</exclude>
-                
+
             <!-- http://jira.activemq.org/jira/browse/AMQ-522 -->
             <exclude>**/ProxyConnectorTest.*</exclude>
-                
+
             <!-- http://jira.activemq.org/jira/browse/AMQ-594 -->
             <exclude>**/SimpleNetworkTest.*</exclude>
-                
+
             <!-- http://jira.activemq.org/jira/browse/AMQ-583 -->
             <exclude>**/DiscoveryTransportBrokerTest.*</exclude>
-            
+
             <!-- http://jira.activemq.org/jira/browse/AMQ-610 -->
             <exclude>**/FanoutTransportBrokerTest.*</exclude>
-                
+
             <!-- http://jira.activemq.org/jira/browse/AMQ-626 -->
             <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
             <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
             <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
-                
+
             <!--  these seem to fail only in m2 -->
             <exclude>**/QueueMasterSlaveTest.*</exclude>
             <exclude>**/TopicMasterSlaveTest.*</exclude>
             <exclude>**/TransactedTopicMasterSlaveTest.*</exclude>
-            
+
             <!-- Kaha in flux - removing tests -->
             <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
             <exclude>**/KahaRecoveryBrokerTest.*</exclude>
@@ -255,21 +253,21 @@
             <exclude>**/MulticastNetworkTest.*</exclude>
             <exclude>**/UnreliableUdpTransportTest.*</exclude>
             <exclude>**/SslTransportBrokerTest.*</exclude>
-            
+
             <!-- this one is a little flaky and can fail on some platforms randomly -->
             <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
             <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
-            
+
             <!-- UDP related tests someimes fail on some platforms -->
             <exclude>**/UdpTransportTest.*</exclude>
             <exclude>**/UdpTransportUsingServerTest.*</exclude>
             <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
-            
+
             <!-- http://issues.apache.org/activemq/browse/AMQ-724  -->
             <exclude>**/StompSubscriptionRemoveTest.*</exclude>
-            
-            
+
+
             <!-- m2 tests failing since move from assembly  -->
             <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
             <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
@@ -279,7 +277,7 @@
             <exclude>**/ThreeBrokerQueueNetworkTest.*</exclude>
             <exclude>**/ThreeBrokerTopicNetworkTest.*</exclude>
             <exclude>**/ThreeBrokerTopicNetworkUsingTcpTest.*</exclude>
-            
+
             <!-- TODO move to optional module...  -->
             <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
           </excludes>
@@ -300,73 +298,50 @@
 
       <!-- Use Gram to Gernerate the OpenWire Marshallers -->
       <!--
-      <plugin>
+        <plugin>
         <groupId>incubator-activemq</groupId>
         <artifactId>maven-gram-plugin</artifactId>
         <version>${pom.version}</version>
         <configuration>
-           <scripts>
-             GenerateJavaMarshalling.groovy:
-             GenerateJavaTests.groovy:
-             GenerateCSharpMarshalling.groovy:
-             GenerateCSharpClasses.groovy:
-             GenerateCppMarshallingClasses.groovy:
-             GenerateCppMarshallingHeaders.groovy:
-             GenerateCppHeaders.groovy:
-             GenerateCppClasses.groovy:
-             GenerateCMarshalling.groovy:
-           </scripts>
-           <groovyProperties>
-             <version>1</version>
-           </groovyProperties>
+        <scripts>
+        GenerateJavaMarshalling.groovy:
+        GenerateJavaTests.groovy:
+        GenerateCSharpMarshalling.groovy:
+        GenerateCSharpClasses.groovy:
+        GenerateCppMarshallingClasses.groovy:
+        GenerateCppMarshallingHeaders.groovy:
+        GenerateCppHeaders.groovy:
+        GenerateCppClasses.groovy:
+        GenerateCMarshalling.groovy:
+        </scripts>
+        <groovyProperties>
+        <version>1</version>
+        </groovyProperties>
         </configuration>
         <dependencies>
-          <dependency>
-            <groupId>incubator-activemq</groupId>
-            <artifactId>activemq-openwire-generator</artifactId>
-            <version>${pom.version}</version>
-          </dependency>
+        <dependency>
+        <groupId>incubator-activemq</groupId>
+        <artifactId>activemq-openwire-generator</artifactId>
+        <version>${pom.version}</version>
+        </dependency>
         </dependencies>
-      </plugin>
+        </plugin>
       -->
 
       <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
+        <groupId>org.apache.xbean</groupId>
+        <artifactId>maven-xbean-plugin</artifactId>
         <executions>
           <execution>
-            <phase>generate-sources</phase>
             <configuration>
-              <sourceRoot>${basedir}/target/generated</sourceRoot>
-              <tasks>
-
-                <mkdir dir="${basedir}/target/generated"/>
-                <taskdef name="xsdGenerate" classname="org.apache.xbean.spring.generator.MappingGeneratorTask"/>
-                <xsdGenerate 
-                    destFile="${basedir}/target/activemq-${project.version}.xsd" 
-                    namespace="http://activemq.org/config/1.0"
-                    srcdir="${basedir}/src/main/java"  
-                    metaInfDir="${basedir}/target/generated/"/>
-
-                <copy todir="${basedir}/target/classes">
-                  <fileset dir="${basedir}/target/generated"/>
-                </copy>
-                <copy file="${basedir}/target/activemq-${project.version}.xsd" todir="${basedir}/../xdocs"/>
-                <copy file="${basedir}/target/activemq-${project.version}.xsd.html" todir="${basedir}/../xdocs"/>
-
-              </tasks>
+              <namespace>http://activemq.org/config/1.0</namespace>
+              <schema>target/activemq.xsd</schema>
             </configuration>
             <goals>
-              <goal>run</goal>
+              <goal>mapping</goal>
             </goals>
           </execution>
         </executions>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.xbean</groupId>
-            <artifactId>xbean-spring</artifactId>
-            <version>2.2</version>
-          </dependency>
-        </dependencies>
       </plugin>
 
       <plugin>
@@ -421,7 +396,7 @@
         <dependency>
           <groupId>mx4j</groupId>
           <artifactId>mx4j-impl</artifactId>
-        </dependency>    
+        </dependency>
       </dependencies>
     </profile>
   </profiles>
