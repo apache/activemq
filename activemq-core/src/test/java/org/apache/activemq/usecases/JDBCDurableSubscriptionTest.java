@@ -30,7 +30,7 @@ public class JDBCDurableSubscriptionTest extends DurableSubscriptionTestSupport 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         File dataDir = new File("target/test-data/durableJDBC");
         DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
-        factory.setDataDirectory(dataDir);
+        factory.setDataDirectoryFile(dataDir);
         factory.setUseJournal(false);
         return factory.createPersistenceAdapter();
     }

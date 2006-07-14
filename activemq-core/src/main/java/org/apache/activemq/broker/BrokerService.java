@@ -988,7 +988,7 @@ public class BrokerService implements Service, Serializable {
 
     protected DefaultPersistenceAdapterFactory createPersistenceFactory() {
         DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
-        factory.setDataDirectory(getDataDirectory());
+        factory.setDataDirectoryFile(getDataDirectory());
         factory.setTaskRunnerFactory(getTaskRunnerFactory());
         return factory;
     }
