@@ -14,9 +14,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
   
-  <broker useJmx="true">
+  <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
 
 	<!-- In ActiveMQ 4, you can setup destination policies -->  
     <destinationPolicy>

@@ -14,12 +14,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <usageManager id="memory-manager" limit="1048576"/> <!--  1 meg limit -->
   
-  <broker useJmx="true" deleteAllMessagesOnStartup="true" memoryManager="#memory-manager">
+  <broker useJmx="true" deleteAllMessagesOnStartup="true" memoryManager="#memory-manager"  xmlns="http://activemq.org/config/1.0">
   
     <persistenceAdapter>
       <journaledJDBC 

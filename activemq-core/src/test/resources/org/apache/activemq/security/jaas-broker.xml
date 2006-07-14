@@ -17,10 +17,10 @@
 
 <!-- this file can only be parsed using the xbean-spring library -->
 <!-- START SNIPPET: example -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker useJmx="false" persistent="false">
+  <broker useJmx="false" persistent="false" xmlns="http://activemq.org/config/1.0">
 
     <plugins>
       <!--  use JAAS to authenticate using the login.config file on the classpath to configure JAAS -->
