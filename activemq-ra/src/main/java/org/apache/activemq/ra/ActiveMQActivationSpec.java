@@ -40,7 +40,7 @@ import org.apache.activemq.selector.SelectorParser;
 /**
  * Configures the inbound JMS consumer specification using ActiveMQ
  * 
- * @org.apache.xbean.XBean 
+ * @org.apache.xbean.XBean element="activationSpec"
  * 
  * @version $Revision$ $Date$
  */
