@@ -207,6 +207,7 @@ public class Main {
                         url = jarConnection.getJarFileURL();
                         URI baseURI = new URI(url.toString()).resolve("..");
                         activeMQHome = new File(baseURI).getCanonicalFile();
+                        System.setProperty("activemq.home",activeMQHome.getAbsolutePath());
                     } catch (Exception ignored) {
                     }
                 }
@@ -214,6 +215,7 @@ public class Main {
 
             if(activeMQHome==null){
                 activeMQHome = new File("../.");
+                System.setProperty("activemq.home",activeMQHome.getAbsolutePath());
             }
         }
         
