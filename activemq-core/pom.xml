@@ -331,6 +331,7 @@
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
+        <version>2.5-SNAPSHOT</version>
         <executions>
           <execution>
             <configuration>
