@@ -52,6 +52,7 @@ public class TcpTransportFactory extends TransportFactory {
             IntrospectionSupport.setProperties(server, options);
             Map transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             server.setTransportOption(transportOptions);
+            server.bind();
             
             return server;
         }
@@ -125,7 +126,7 @@ public class TcpTransportFactory extends TransportFactory {
      * @throws UnknownHostException
      * @throws IOException
      */
-	private TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
+	protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
 		return new TcpTransport(wf, socketFactory, location, localLocation);
 	}
 

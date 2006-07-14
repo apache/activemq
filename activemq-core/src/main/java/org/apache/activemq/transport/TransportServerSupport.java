@@ -27,18 +27,16 @@ import java.net.URI;
  */
 public abstract class TransportServerSupport extends ServiceSupport implements TransportServer {
 
-    private URI location;
+    private URI connectURI;
+	private URI bindLocation;
     private TransportAcceptListener acceptListener;
 
     public TransportServerSupport() {
     }
 
     public TransportServerSupport(URI location) {
-        this.location = location;
-    }
-
-    public URI getConnectURI() {
-        return location;
+        this.connectURI = location;
+        this.bindLocation = location;
     }
 
     /**
@@ -60,16 +58,16 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
     /**
      * @return Returns the location.
      */
-    public URI getLocation() {
-        return location;
+    public URI getConnectURI() {
+        return connectURI;
     }
 
     /**
      * @param location
      *            The location to set.
      */
-    public void setLocation(URI location) {
-        this.location = location;
+    public void setConnectURI(URI location) {
+        this.connectURI = location;
     }
 
     protected void onAcceptError(Exception e) {
@@ -77,4 +75,12 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
             acceptListener.onAcceptError(e);
         }
     }
+
+	public URI getBindLocation() {
+		return bindLocation;
+	}
+
+	public void setBindLocation(URI bindLocation) {
+		this.bindLocation = bindLocation;
+	}
 }
