@@ -23,6 +23,7 @@ import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -49,27 +50,19 @@ import org.apache.commons.logging.LogFactory;
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Log log = LogFactory.getLog(TcpTransport.class);
 
-    private int connectionTimeout = 30000;
-    private int soTimeout = 0;
-    private int socketBufferSize = 128 * 1024;
-    private Socket socket;
-    private DataOutputStream dataOut;
-    private DataInputStream dataIn;
-    private WireFormat wireFormat;
-    private boolean trace;
-    private boolean useLocalHost = true;
-    private int minmumWireFormatVersion;
-    private InetSocketAddress remoteAddress;
-	private InetSocketAddress localAddress;
-    
-    /**
-     * Construct basic helpers
-     * 
-     * @param wireFormat
-     */
-    protected TcpTransport(WireFormat wireFormat) {
-        this.wireFormat = wireFormat;
-    }
+    protected final URI remoteLocation;
+    protected final URI localLocation;
+    protected final WireFormat wireFormat;
+
+    protected int connectionTimeout = 30000;
+    protected int soTimeout = 0;
+    protected int socketBufferSize = 128 * 1024;
+    protected Socket socket;
+    protected DataOutputStream dataOut;
+    protected DataInputStream dataIn;
+    protected boolean trace;
+    protected boolean useLocalHost = true;
+    protected int minmumWireFormatVersion;
 
     /**
      * Connect to a remote Node - e.g. a Broker
@@ -83,9 +76,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws UnknownHostException
      */
     public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
-        this(wireFormat);
-        this.socket = createSocket(socketFactory, remoteLocation, localLocation);
+        this.wireFormat = wireFormat;
+        this.socket = socketFactory.createSocket();
+		this.remoteLocation = remoteLocation;
+		this.localLocation = localLocation;
+        setDaemon(false);
     }
+
 
     /**
      * Initialize from a server Socket
@@ -95,8 +92,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws IOException
      */
     public TcpTransport(WireFormat wireFormat, Socket socket) throws IOException {
-        this(wireFormat);
+        this.wireFormat = wireFormat;
         this.socket = socket;
+		this.remoteLocation = null;
+		this.localLocation = null;
         setDaemon(true);
     }
 
@@ -211,29 +210,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     // Implementation methods
     // -------------------------------------------------------------------------
 
-    /**
-     * Factory method to create a new socket
-     * 
-     * @param remoteLocation
-     * @param localLocation ignored if null
-     * @return
-     * @throws IOException
-     * @throws IOException
-     * @throws UnknownHostException
-     */
-    protected Socket createSocket(SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws IOException, UnknownHostException {
-    	
-        String host = resolveHostName(remoteLocation.getHost());
-        remoteAddress = new InetSocketAddress(host, remoteLocation.getPort());
-        
-        if( localLocation!=null ) {
-        	localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
-        }
-        
-        Socket sock = socketFactory.createSocket();        
-        return sock;
-    }
-
     protected String resolveHostName(String host) throws UnknownHostException {
         String localName = InetAddress.getLocalHost().getHostName();
         if (localName != null && isUseLocalHost()) {
@@ -263,23 +239,33 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void doStart() throws Exception {
-        initialiseSocket(socket);
-        if( localAddress!=null ) {
+        connect();
+        super.doStart();
+    }
+
+	protected void connect() throws SocketException, IOException {
+		
+		initialiseSocket(socket);
+		
+        if( localLocation!=null ) {
+        	SocketAddress localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
         	socket.bind(localAddress);
-        }
-        if (remoteAddress != null) {
+        }                
+		if( remoteLocation!=null ) {
+			String host = resolveHostName(remoteLocation.getHost());
+	        InetSocketAddress remoteAddress = new InetSocketAddress(host, remoteLocation.getPort());        
             if (connectionTimeout >= 0) {
                 socket.connect(remoteAddress, connectionTimeout);
             }
             else {
                 socket.connect(remoteAddress);
             }
-        }
+		}
+        
         initializeStreams();
-        super.doStart();
-    }
+	}
 
-    protected void doStop(ServiceStopper stopper) throws Exception {
+    protected void doStop(ServiceStopper stopper) throws Exception {    	
         closeStreams();
         if (socket != null) {
             socket.close();
@@ -303,7 +289,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     public void setSocketOptions(Map socketOptions) {
-        IntrospectionSupport.setProperties(socket, socketOptions);
+    	IntrospectionSupport.setProperties(socket, socketOptions);
     }
 
 	public String getRemoteAddress() {

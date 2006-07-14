@@ -35,6 +35,7 @@ import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,24 +49,47 @@ import javax.net.ServerSocketFactory;
  */
 
 public class TcpTransportServer extends TransportServerThreadSupport {
+	
     private static final Log log = LogFactory.getLog(TcpTransportServer.class);
-    private ServerSocket serverSocket;
-    private int backlog = 5000;
-    private WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
-    private final TcpTransportFactory transportFactory;
-    private long maxInactivityDuration = 30000;
-    private int minmumWireFormatVersion;
-    private boolean trace;
-    private Map transportOptions;
+    protected ServerSocket serverSocket;
+    protected int backlog = 5000;
+    protected WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
+    protected final TcpTransportFactory transportFactory;
+    protected long maxInactivityDuration = 30000;
+    protected int minmumWireFormatVersion;
+    protected boolean trace;
+    protected Map transportOptions;
+    protected final ServerSocketFactory serverSocketFactory;
     
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
         this.transportFactory=transportFactory;
-        this.serverSocket = createServerSocket(location, serverSocketFactory);
-        this.serverSocket.setSoTimeout(2000);
-        updatePhysicalUri(location);
+		this.serverSocketFactory = serverSocketFactory;
     }
 
+    public void bind() throws IOException {
+    	URI bind = getBindLocation();
+    	
+        String host = bind.getHost();
+        host = (host == null || host.length() == 0) ? "localhost" : host;
+        InetAddress addr = InetAddress.getByName(host);
+        
+        if (host.trim().equals("localhost") || addr.equals(InetAddress.getLocalHost())) {
+        	this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog);
+        }
+        else {
+        	this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog, addr);
+        }
+        this.serverSocket.setSoTimeout(2000);
+        
+        try {
+			setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(bind.getHost()), serverSocket.getLocalPort(), bind.getPath(),
+					bind.getQuery(), bind.getFragment()));
+		} catch (URISyntaxException e) {
+			throw IOExceptionSupport.create(e);
+		}
+    }
+    
     /**
      * @return Returns the wireFormatFactory.
      */
@@ -168,19 +192,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
      * @return pretty print of this
      */
     public String toString() {
-        return ""+getLocation();
-    }
-
-    /**
-     * In cases where we construct ourselves with a zero port we need to
-     * regenerate the URI with the real physical port so that people can connect
-     * to us via discovery
-     * 
-     * @throws UnknownHostException
-     */
-    protected void updatePhysicalUri(URI bindAddr) throws URISyntaxException, UnknownHostException {
-        setLocation(new URI(bindAddr.getScheme(), bindAddr.getUserInfo(), resolveHostName(bindAddr.getHost()), serverSocket.getLocalPort(), bindAddr.getPath(),
-                bindAddr.getQuery(), bindAddr.getFragment()));
+        return ""+getBindLocation();
     }
 
     /**
@@ -196,26 +208,6 @@ public class TcpTransportServer extends TransportServerThreadSupport {
             result = InetAddress.getLocalHost().getHostName();
         }
         return result;
-    }
-
-    /**
-     * Factory method to create a new ServerSocket
-     * 
-     * @throws UnknownHostException
-     * @throws IOException
-     */
-    protected ServerSocket createServerSocket(URI bind, ServerSocketFactory factory) throws UnknownHostException, IOException {
-        ServerSocket answer = null;
-        String host = bind.getHost();
-        host = (host == null || host.length() == 0) ? "localhost" : host;
-        InetAddress addr = InetAddress.getByName(host);
-        if (host.trim().equals("localhost") || addr.equals(InetAddress.getLocalHost())) {
-            answer = factory.createServerSocket(bind.getPort(), backlog);
-        }
-        else {
-            answer = factory.createServerSocket(bind.getPort(), backlog, addr);
-        }
-        return answer;
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
