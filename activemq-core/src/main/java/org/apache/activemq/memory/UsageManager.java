@@ -140,6 +140,9 @@ public class UsageManager {
         }
     }
 
+    /**
+     * Sets the memory limit in bytes
+     */
     public void setLimit(long limit) {
         if(percentUsageMinDelta < 0 ) {
             throw new IllegalArgumentException("percentUsageMinDelta must be greater or equal to 0");
@@ -150,6 +153,20 @@ public class UsageManager {
         }
     }
     
+    /**
+     * Sets the memory limit in megabytes
+     */
+    public void setLimitMb(long limitMb) {
+        setLimitKb(1024 * limitMb);
+    }
+    
+    /**
+     * Sets the memory limit in kilobytes
+     */
+    public void setLimitKb(long limitKb) {
+        setLimit(1024 * limitKb);
+    }
+
     /*
     * Sets the minimum number of percentage points the usage has to change before a UsageListener
     * event is fired by the manager.
