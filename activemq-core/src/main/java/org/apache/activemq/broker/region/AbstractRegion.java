@@ -154,6 +154,12 @@ abstract public class AbstractRegion implements Region {
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         log.debug("Adding consumer: "+info.getConsumerId());
 
+        ActiveMQDestination destination = info.getDestination();
+        if (destination != null && ! destination.isPattern() && ! destination.isComposite()) {
+            // lets auto-create the destination
+            lookup(context, destination);
+        }
+        
         Subscription sub = createSubscription(context, info);
 
         // We may need to add some destinations that are in persistent store but not active 
