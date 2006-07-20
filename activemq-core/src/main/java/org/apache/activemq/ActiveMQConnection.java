@@ -529,52 +529,56 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void close() throws JMSException {
         checkClosed();
 
-        // If we were running, lets stop first.
-        stop();
+        try {
+            // If we were running, lets stop first.
+            stop();
 
-        synchronized (this) {
-            if (!closed.get()) {
-                closing.set(true);
+            synchronized (this) {
+                if (!closed.get()) {
+                    closing.set(true);
 
-                if( advisoryConsumer!=null ) {
-                    advisoryConsumer.dispose();
-                    advisoryConsumer=null;
-                }
+                    if (advisoryConsumer != null) {
+                        advisoryConsumer.dispose();
+                        advisoryConsumer = null;
+                    }
 
-                for (Iterator i = this.sessions.iterator(); i.hasNext();) {
-                    ActiveMQSession s = (ActiveMQSession) i.next();
-                    s.dispose();
-                }
-                for (Iterator i = this.connectionConsumers.iterator(); i.hasNext();) {
-                    ActiveMQConnectionConsumer c = (ActiveMQConnectionConsumer) i.next();
-                    c.dispose();
-                }
-                for (Iterator i = this.inputStreams.iterator(); i.hasNext();) {
-                    ActiveMQInputStream c = (ActiveMQInputStream) i.next();
-                    c.dispose();
-                }
-                for (Iterator i = this.outputStreams.iterator(); i.hasNext();) {
-                    ActiveMQOutputStream c = (ActiveMQOutputStream) i.next();
-                    c.dispose();
-                }
-                
-                
-                if (isConnectionInfoSentToBroker) {
-                    syncSendPacket(info.createRemoveCommand(),closeTimeout);
-                }
+                    for (Iterator i = this.sessions.iterator(); i.hasNext();) {
+                        ActiveMQSession s = (ActiveMQSession) i.next();
+                        s.dispose();
+                    }
+                    for (Iterator i = this.connectionConsumers.iterator(); i.hasNext();) {
+                        ActiveMQConnectionConsumer c = (ActiveMQConnectionConsumer) i.next();
+                        c.dispose();
+                    }
+                    for (Iterator i = this.inputStreams.iterator(); i.hasNext();) {
+                        ActiveMQInputStream c = (ActiveMQInputStream) i.next();
+                        c.dispose();
+                    }
+                    for (Iterator i = this.outputStreams.iterator(); i.hasNext();) {
+                        ActiveMQOutputStream c = (ActiveMQOutputStream) i.next();
+                        c.dispose();
+                    }
 
-                asyncSendPacket(new ShutdownInfo());
-                ServiceSupport.dispose(this.transport);
+                    if (isConnectionInfoSentToBroker) {
+                        syncSendPacket(info.createRemoveCommand(), closeTimeout);
+                    }
 
-                started.set(false);
+                    asyncSendPacket(new ShutdownInfo());
+                    ServiceSupport.dispose(this.transport);
 
-                // TODO : ActiveMQConnectionFactory.onConnectionClose() not
-                // yet implemented.
-                // factory.onConnectionClose(this);
-                
-                closed.set(true);
-                closing.set(false);
+                    started.set(false);
+
+                    // TODO : ActiveMQConnectionFactory.onConnectionClose() not
+                    // yet implemented.
+                    // factory.onConnectionClose(this);
+
+                    closed.set(true);
+                    closing.set(false);
+                }
             }
+        }
+        finally {
+            factoryStats.removeConnection(this);
         }
     }
 
