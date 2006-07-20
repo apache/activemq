@@ -37,6 +37,8 @@ import org.apache.activemq.advisory.ConsumerListener;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,6 +50,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
  */
 public class NetworkReconnectTest extends TestCase {
 
+	protected static final Log log = LogFactory.getLog(NetworkReconnectTest.class);
+	
 	private BrokerService producerBroker;
 	private BrokerService consumerBroker;
 	private ActiveMQConnectionFactory producerConnectionFactory;
@@ -182,6 +186,11 @@ public class NetworkReconnectTest extends TestCase {
 	}
 
 	protected void setUp() throws Exception {
+		
+		log.info("===============================================================================");
+		log.info("Running Test Case: "+getName());
+		log.info("===============================================================================");
+		
 		producerConnectionFactory = createProducerConnectionFactory();
 		consumerConnectionFactory = createConsumerConnectionFactory();
 		destination = new ActiveMQQueue("RECONNECT.TEST.QUEUE");
@@ -296,7 +305,7 @@ public class NetworkReconnectTest extends TestCase {
 			if( consumerCounter.get() > 0 ) {
 				return;
 			}
-			Thread.sleep(50);
+			Thread.sleep(100);
 		}
 		fail("The consumer did not arrive.");
 	}
@@ -306,7 +315,7 @@ public class NetworkReconnectTest extends TestCase {
 			if( consumerCounter.get() == 0 ) {
 				return;
 			}
-			Thread.sleep(50);
+			Thread.sleep(100);
 		}
 		fail("The consumer did not leave.");
 	}
