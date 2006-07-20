@@ -21,14 +21,14 @@ import java.io.IOException;
  * 
  * @version $Revision: 1.2 $
  */
-final class IndexItem implements Item{
+ class IndexItem implements Item{
     
     static final int INDEX_SIZE=51;
     //used by linked list
     IndexItem next;
     IndexItem prev;
     
-    private long offset=POSITION_NOT_SET;
+    protected long offset=POSITION_NOT_SET;
     private long previousItem=POSITION_NOT_SET;
     private long nextItem=POSITION_NOT_SET;
     private boolean active=true;
@@ -261,5 +261,18 @@ final class IndexItem implements Item{
         ", previousItem="+previousItem+", nextItem="+nextItem
         ;
         return result;
+    }
+    
+    public boolean equals(Object obj){
+        boolean result = false;
+        if (obj != null && obj instanceof IndexItem){
+            IndexItem other = (IndexItem)obj;
+            result = other.offset == this.offset;
+        }
+        return result;
+    }
+    
+    public int hashCode(){
+        return (int)offset;
     }
 }

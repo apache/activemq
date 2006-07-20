@@ -30,13 +30,13 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-final class ListContainerImpl extends BaseContainerImpl implements ListContainer{
+public final class ListContainerImpl extends BaseContainerImpl implements ListContainer{
     private static final Log log=LogFactory.getLog(ListContainerImpl.class);
     protected Marshaller marshaller=new ObjectMarshaller();
 
-    protected ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager)
+    protected ListContainerImpl(ContainerId id,IndexItem root,IndexManager rootIndexManager,IndexManager indexManager,DataManager dataManager)
                     throws IOException{
-        super(id,root,indexManager,dataManager);
+        super(id,root,rootIndexManager,indexManager,dataManager);
     }
 
     /*
@@ -50,6 +50,7 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
             synchronized(mutex){
                 if(!loaded){
                     loaded=true;
+                    init();
                     try{
                         long nextItem=root.getNextItem();
                         while(nextItem!=Item.POSITION_NOT_SET){
@@ -101,8 +102,9 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
                         Object o1=other.get(i);
                         Object o2=get(i);
                         result=o1==o2||(o1!=null&&o2!=null&&o1.equals(o2));
-                        if(!result)
+                        if(!result){
                             break;
+                        }
                     }
                 }
             }
@@ -178,15 +180,13 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
         load();
         Object result=null;
         synchronized(mutex){
-            IndexItem item=(IndexItem) list.getLast();
-            if(item!=null){
-                result=getValue(item);
-                int index=list.indexOf(item);
-                IndexItem prev=index>0?(IndexItem) list.get(index-1):root;
+            IndexItem last=list.getLast();
+            if(last!=null){
+                result=getValue(last);
+                IndexItem prev=list.getPrevEntry(last);
                 IndexItem next=null;
                 list.removeLast();
-                delete(item,prev,next);
-                item=null;
+                delete(last,prev,next);
             }
         }
         return result;
@@ -310,10 +310,9 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
 
     protected void remove(IndexItem item){
         synchronized(mutex){
-            int index=list.indexOf(item);
-            IndexItem prev=index>0?(IndexItem) list.get(index-1):root;
-            IndexItem next=index<(list.size()-1)?(IndexItem) list.get(index+1):null;
-            list.remove(index);
+            IndexItem prev = list.getPrevEntry(item);
+            IndexItem next = list.getNextEntry(item);
+            list.remove(item);
             delete(item,prev,next);
         }
     }
@@ -416,7 +415,7 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
     public void clear(){
         checkClosed();
         synchronized(mutex){
-            list.clear();
+            super.clear();
             doClear();
         }
     }
@@ -533,7 +532,7 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
                 result=getValue(item);
                 IndexItem prev=list.getPrevEntry(item);
                 prev=prev!=null?prev:root;
-                IndexItem next=list.getNextEntry(prev);
+                IndexItem next=list.getNextEntry(item);
                 list.remove(index);
                 delete(item,prev,next);
             }
@@ -649,13 +648,13 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
                 IndexItem next=list.getNextEntry(prev);
                 prev.setNextItem(index.getOffset());
                 index.setPreviousItem(prev.getOffset());
-                indexManager.updateIndex(prev);
+                updateIndex(prev);
                 if(next!=null){
                     next.setPreviousItem(index.getOffset());
                     index.setNextItem(next.getOffset());
-                    indexManager.updateIndex(next);
+                    updateIndex(next);
                 }
-                indexManager.updateIndex(index);
+                updateIndex(index);
             }
         }catch(IOException e){
             log.error("Failed to write "+value,e);
@@ -675,13 +674,13 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
                 IndexItem next=list.getNextEntry(prev);
                 prev.setNextItem(index.getOffset());
                 index.setPreviousItem(prev.getOffset());
-                indexManager.updateIndex(prev);
+                updateIndex(prev);
                 if(next!=null){
                     next.setPreviousItem(index.getOffset());
                     index.setNextItem(next.getOffset());
-                    indexManager.updateIndex(next);
+                    updateIndex(next);
                 }
-                indexManager.updateIndex(index);
+                updateIndex(index);
             }
         }catch(IOException e){
             log.error("Failed to write "+value,e);
@@ -713,13 +712,13 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
                 }
                 prev.setNextItem(index.getOffset());
                 index.setPreviousItem(prev.getOffset());
-                indexManager.updateIndex(prev);
+                updateIndex(prev);
                 if(next!=null){
                     next.setPreviousItem(index.getOffset());
                     index.setNextItem(next.getOffset());
-                    indexManager.updateIndex(next);
+                    updateIndex(next);
                 }
-                indexManager.updateIndex(index);
+                updateIndex(index);
             }
         }catch(IOException e){
             log.error("Failed to insert "+value,e);
@@ -740,5 +739,24 @@ final class ListContainerImpl extends BaseContainerImpl implements ListContainer
             }
         }
         return result;
+    }
+
+    /**
+     * @return a string representation of this collection.
+     */
+    public String toString(){
+        StringBuffer result=new StringBuffer();
+        result.append("[");
+        Iterator i=iterator();
+        boolean hasNext=i.hasNext();
+        while(hasNext){
+            Object o=i.next();
+            result.append(String.valueOf(o));
+            hasNext=i.hasNext();
+            if(hasNext)
+                result.append(", ");
+        }
+        result.append("]");
+        return result.toString();
     }
 }

@@ -15,7 +15,7 @@ import junit.framework.TestCase;
 
 public class MapContainerTest extends TestCase{
     
-    protected String name;
+    protected String name = "test";
     protected Store store;
     protected MapContainer container;
     protected Map testMap;

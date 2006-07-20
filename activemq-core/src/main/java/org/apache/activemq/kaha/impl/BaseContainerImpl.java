@@ -28,23 +28,59 @@ public abstract class BaseContainerImpl{
     private static final Log log=LogFactory.getLog(BaseContainerImpl.class);
     protected IndexItem root;
     protected IndexLinkedList list;
+    protected IndexManager rootIndexManager; // IndexManager that contains the root
     protected IndexManager indexManager;
     protected DataManager dataManager;
     protected ContainerId containerId;
     protected boolean loaded=false;
     protected boolean closed=false;
+    protected boolean initialized = false;
     protected final Object mutex=new Object();
 
-    protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager){
+    protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager rootIndexManager,IndexManager indexManager,DataManager dataManager){
         this.containerId=id;
         this.root=root;
+        this.rootIndexManager = rootIndexManager;
         this.indexManager=indexManager;
         this.dataManager=dataManager;
-        this.list=new IndexLinkedList(root);
+        
     }
-    
+
     ContainerId getContainerId(){
         return containerId;
+    }
+    
+    public void init(){
+        if (!initialized){
+            synchronized(mutex){
+                if (!initialized){
+                    initialized= true;
+                    if (this.list == null){
+                        this.list=new DiskIndexLinkedList(indexManager,root);
+                    }
+                }
+            }
+        }
+    }
+    
+    protected void clear(){
+        if (list != null){
+            list.clear();
+        }
+    }
+    
+    /**
+     * @return the list
+     */
+    public IndexLinkedList getList(){
+        return list;
+    }
+
+    /**
+     * @param list the list to set
+     */
+    public void setList(IndexLinkedList list){
+        this.list=list;
     }
 
     public abstract void unload();
@@ -53,7 +89,6 @@ public abstract class BaseContainerImpl{
 
     public abstract int size();
 
-    public abstract void clear();
 
     protected abstract Object getValue(IndexItem currentItem);
 
@@ -114,7 +149,7 @@ public abstract class BaseContainerImpl{
                         nextItem=item.getNextItem();
                     }
                     root.setNextItem(Item.POSITION_NOT_SET);
-                    indexManager.updateIndex(root);
+                    updateIndex(root);
                     for(int i=0;i<list.size();i++){
                         IndexItem item=(IndexItem) list.get(i);
                         dataManager.removeInterestInFile(item.getKeyFile());
@@ -139,11 +174,11 @@ public abstract class BaseContainerImpl{
             if(next!=null){
                 prev.setNextItem(next.getOffset());
                 next.setPreviousItem(prev.getOffset());
-                indexManager.updateIndex(next);
+                updateIndex(next);
             }else{
                 prev.setNextItem(Item.POSITION_NOT_SET);
             }
-            indexManager.updateIndex(prev);
+            updateIndex(prev);
             indexManager.freeIndex(key);
         }catch(IOException e){
             log.error("Failed to delete "+key,e);
@@ -156,4 +191,18 @@ public abstract class BaseContainerImpl{
             throw new RuntimeStoreException("The store is closed");
         }
     }
+    
+    protected void updateIndex(IndexItem item) throws IOException{
+        IndexManager im = isRoot(item) ? rootIndexManager : indexManager;
+        im.updateIndex(item);
+            
+    }
+    
+    protected final boolean isRoot(IndexItem item){
+       // return item != null && root != null && (root == item || root.getOffset() == item.getOffset());
+        return item != null && root != null && root == item;
+    }
+
+   
+    
 }

@@ -162,24 +162,39 @@ public class StoreTest extends TestCase{
             testList.add("value:"+i);
         }
         String listId = "testList";
-        String mapId = "testMap";
-        MapContainer mapContainer = store.getMapContainer(mapId);
-        mapContainer.load();
+        String mapId1 = "testMap";
+        String mapId2 = "testMap2";
+        MapContainer mapContainer1 = store.getMapContainer(mapId1);
+        mapContainer1.load();
+        mapContainer1.putAll(testMap);
+        
+        MapContainer mapContainer2 = store.getMapContainer(mapId2,mapId2);
+        mapContainer2.load();
+        mapContainer2.putAll(testMap);
+        
         ListContainer listContainer = store.getListContainer(listId);
         listContainer.load();
-        mapContainer.putAll(testMap);
+       
         listContainer.addAll(testList);
         store.close();
         store = getStore();
-        mapContainer = store.getMapContainer(mapId);
-        mapContainer.load();
+        mapContainer1 = store.getMapContainer(mapId1);
+        mapContainer1.load();
+        mapContainer2 = store.getMapContainer(mapId2,mapId2);
+        mapContainer2.load();
         listContainer = store.getListContainer(listId);
         listContainer.load();
         for (Iterator i = testMap.keySet().iterator(); i.hasNext();){
             Object key = i.next();
             Object value = testMap.get(key);
-            assertTrue(mapContainer.containsKey(key));
-            assertEquals(value,mapContainer.get(key));
+            assertTrue(mapContainer1.containsKey(key));
+            assertEquals(value,mapContainer1.get(key));
+        }
+        for (Iterator i = testMap.keySet().iterator(); i.hasNext();){
+            Object key = i.next();
+            Object value = testMap.get(key);
+            assertTrue(mapContainer2.containsKey(key));
+            assertEquals(value,mapContainer2.get(key));
         }
         assertEquals(testList.size(),listContainer.size());
         for (Iterator i = testList.iterator(), j = listContainer.iterator(); i.hasNext();){
@@ -195,8 +210,7 @@ public class StoreTest extends TestCase{
     protected void setUp() throws Exception{
         super.setUp();
         name = System.getProperty("basedir", ".")+"/target/activemq-data/store-test.db";
-        store = getStore();
-        
+        store = getStore();        
     }
 
     protected void tearDown() throws Exception{
