@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import org.apache.activemq.kaha.MapContainer;
@@ -39,8 +38,8 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
     protected Marshaller keyMarshaller=new ObjectMarshaller();
     protected Marshaller valueMarshaller=new ObjectMarshaller();
 
-    protected MapContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager){
-        super(id,root,indexManager,dataManager);
+    protected MapContainerImpl(ContainerId id,IndexItem root,IndexManager rootIndexManager,IndexManager indexManager,DataManager dataManager){
+        super(id,root,rootIndexManager,indexManager,dataManager);
     }
 
     /*
@@ -53,6 +52,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
         if(!loaded){
             synchronized(mutex){
                 if(!loaded){
+                    init();
                     loaded=true;
                     try{
                         long nextItem=root.getNextItem();
@@ -72,6 +72,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
                 }
             }
         }
+        
     }
 
     /*
@@ -255,9 +256,10 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
             if(item!=null){
                 map.remove(key);
                 valueToKeyMap.remove(item);
+                // ensure we have the upto date item
+                item=list.getEntry(item);
                 result=getValue(item);
                 IndexItem prev=list.getPrevEntry(item);
-                prev=prev!=null?prev:root;
                 IndexItem next=list.getNextEntry(item);
                 list.remove(item);
                 delete(item,prev,next);
@@ -309,7 +311,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
             synchronized(mutex){
                 map.clear();
                 valueToKeyMap.clear();
-                list.clear();// going to re-use this
+                super.clear();
                 doClear();
             }
         }
@@ -349,13 +351,18 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
                 DataItem data=dataManager.storeDataItem(valueMarshaller,value);
                 index.setValueData(data);
             }
-            IndexItem last=list.isEmpty()?null:(IndexItem) list.getLast();
-            last=last==null?root:last;
-            long prev=last.getOffset();
-            index.setPreviousItem(prev);
-            indexManager.updateIndex(index);
-            last.setNextItem(index.getOffset());
-            indexManager.updateIndex(last);
+            IndexItem prev=list.getLast();
+            prev=prev!=null?prev:list.getRoot();
+            IndexItem next=list.getNextEntry(prev);
+            prev.setNextItem(index.getOffset());
+            index.setPreviousItem(prev.getOffset());
+            updateIndex(prev);
+            if(next!=null){
+                next.setPreviousItem(index.getOffset());
+                index.setNextItem(next.getOffset());
+                updateIndex(next);
+            }
+            updateIndex(index);
         }catch(IOException e){
             log.error("Failed to write "+key+" , "+value,e);
             throw new RuntimeStoreException(e);

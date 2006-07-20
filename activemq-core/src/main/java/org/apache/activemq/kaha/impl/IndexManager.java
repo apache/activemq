@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
@@ -25,8 +24,9 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-final class IndexManager {
+final class IndexManager{
     private static final Log log=LogFactory.getLog(IndexManager.class);
+    private static final String NAME_PREFIX="index-";
     private final String name;
     private File file;
     private RandomAccessFile indexFile;
@@ -35,12 +35,12 @@ final class IndexManager {
     private LinkedList freeList=new LinkedList();
     private long length=0;
 
-    IndexManager(File directory, String name, String mode, DataManager redoLog ) throws IOException{
-        this.name = name;
-        file=new File(directory,"index-"+name);
-;       indexFile=new RandomAccessFile(file,mode);
+    IndexManager(File directory,String name,String mode,DataManager redoLog) throws IOException{
+        this.name=name;
+        file=new File(directory,NAME_PREFIX+name);
+        indexFile=new RandomAccessFile(file,mode);
         reader=new StoreIndexReader(indexFile);
-        writer=new StoreIndexWriter(indexFile, name, redoLog);
+        writer=new StoreIndexWriter(indexFile,name,redoLog);
         long offset=0;
         while((offset+IndexItem.INDEX_SIZE)<=indexFile.length()){
             IndexItem index=reader.readItem(offset);
@@ -53,7 +53,7 @@ final class IndexManager {
         length=offset;
     }
 
-    synchronized boolean isEmpty() throws IOException{
+    synchronized boolean isEmpty(){
         return freeList.isEmpty()&&length==0;
     }
 
@@ -71,12 +71,12 @@ final class IndexManager {
     synchronized void updateIndex(IndexItem index) throws IOException{
         writer.storeItem(index);
     }
-    
-    public void redo(RedoStoreIndexItem redo) throws IOException {
+
+    public void redo(final RedoStoreIndexItem redo) throws IOException{
         writer.redoStoreItem(redo);
     }
 
-    synchronized IndexItem createNewIndex() throws IOException{
+    synchronized IndexItem createNewIndex(){
         IndexItem result=getNextFreeIndex();
         if(result==null){
             // allocate one
@@ -109,7 +109,7 @@ final class IndexManager {
         return file.delete();
     }
 
-    private IndexItem getNextFreeIndex() throws IOException{
+    private IndexItem getNextFreeIndex(){
         IndexItem result=null;
         if(!freeList.isEmpty()){
             result=(IndexItem) freeList.removeLast();
@@ -126,8 +126,8 @@ final class IndexManager {
         this.length=value;
     }
 
-    public String getName() {
-        return name;
+    
+    public String toString(){
+        return "IndexManager:("+NAME_PREFIX+name+")";
     }
-
 }

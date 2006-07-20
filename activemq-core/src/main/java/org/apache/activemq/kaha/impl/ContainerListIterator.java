@@ -36,7 +36,7 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * @see java.util.ListIterator#hasPrevious()
      */
     public boolean hasPrevious(){
-        return list.getPrevEntry(currentItem) != null;
+        return list.getPrevEntry(nextItem) != null;
     }
 
     /*
@@ -45,8 +45,8 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * @see java.util.ListIterator#previous()
      */
     public Object previous(){
-        currentItem = list.getPrevEntry(currentItem);
-        return currentItem != null ? container.getValue(currentItem) : null;
+        nextItem = list.getPrevEntry(nextItem);
+        return nextItem != null ? container.getValue(nextItem) : null;
     }
 
     /*
@@ -56,8 +56,8 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      */
     public int nextIndex(){
         int result = -1;
-        if (currentItem != null){
-            IndexItem next = list.getNextEntry(currentItem);
+        if (nextItem != null){
+            IndexItem next = list.getNextEntry(nextItem);
             if (next != null){
                 result = container.getInternalList().indexOf(next);
             }
@@ -74,8 +74,8 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      */
     public int previousIndex(){
         int result = -1;
-        if (currentItem != null){
-            IndexItem prev = list.getPrevEntry(currentItem);
+        if (nextItem != null){
+            IndexItem prev = list.getPrevEntry(nextItem);
             if (prev != null){
                 result = container.getInternalList().indexOf(prev);
             }
@@ -93,7 +93,7 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      */
     public void set(Object o){
         IndexItem item=((ListContainerImpl) container).internalSet(previousIndex()+1,o);
-        currentItem=item;
+        nextItem=item;
     }
 
     /*
@@ -103,6 +103,6 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      */
     public void add(Object o){
         IndexItem item=((ListContainerImpl) container).internalSet(previousIndex()+1,o);
-        currentItem=item;
+        nextItem=item;
     }
 }

@@ -77,4 +77,8 @@ public class ContainerId implements Externalizable{
         dataContainerName=in.readUTF();
         key=in.readObject();
     }
+    
+    public String toString(){
+        return "CID{"+dataContainerName + ":" + key + "}";
+    }
 }

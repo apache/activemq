@@ -23,12 +23,12 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.Store;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 /**
  * Optimized Store writer
@@ -38,7 +38,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 public class KahaStore implements Store{
     
     private static final String DEFAULT_CONTAINER_NAME = "kaha";
-    
+    private static final Log log=LogFactory.getLog(KahaStore.class);
     private File directory;
 
     private IndexRootContainer mapsContainer;
@@ -48,6 +48,7 @@ public class KahaStore implements Store{
     
     private Map dataManagers = new ConcurrentHashMap();
     private Map indexManagers = new ConcurrentHashMap();
+    private IndexManager rootIndexManager; //contains all the root indexes
     
     private boolean closed=false;
     private String name;
@@ -115,19 +116,30 @@ public class KahaStore implements Store{
         initialize();
         clear();
         boolean result=true;
-        
-        for (Iterator iter = indexManagers.values().iterator(); iter.hasNext();) {
-            IndexManager im = (IndexManager) iter.next();
-            result &= im.delete();
+        for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
+            IndexManager im=(IndexManager) iter.next();
+            result&=im.delete();
             iter.remove();
         }
-        
-        for (Iterator iter = dataManagers.values().iterator(); iter.hasNext();) {
-            DataManager dm = (DataManager) iter.next();
-            result &= dm.delete();
+        for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
+            DataManager dm=(DataManager) iter.next();
+            result&=dm.delete();
             iter.remove();
         }
-        
+        // now delete all the files - containers that don't use the standard DataManager
+        // and IndexManager will not have initialized the files - so these will be left around
+        // unless we do this
+        if(directory!=null&&directory.isDirectory()){
+            File[] files=directory.listFiles();
+            if(files!=null){
+                for(int i=0;i<files.length;i++){
+                    File file=files[i];
+                    if(!file.isDirectory()){
+                        result&=file.delete();
+                    }
+                }
+            }
+        }
         initialized=false;
         return result;
     }
@@ -158,7 +170,7 @@ public class KahaStore implements Store{
             if( root == null ) {
                 root=mapsContainer.addRoot(containerId);
             }
-            result=new MapContainerImpl(containerId,root,im,dm);
+            result=new MapContainerImpl(containerId,root,rootIndexManager,im,dm);
             result.expressDataInterest();
             maps.put(containerId.getKey(),result);
             
@@ -203,7 +215,7 @@ public class KahaStore implements Store{
             if( root == null ) {
                 root=listsContainer.addRoot(containerId);
             }
-            result=new ListContainerImpl(containerId,root,im,dm);
+            result=new ListContainerImpl(containerId,root,rootIndexManager,im,dm);
             result.expressDataInterest();
             lists.put(containerId.getKey(),result);
         }
@@ -237,24 +249,25 @@ public class KahaStore implements Store{
             initialized=true;
             directory=new File(name);
             directory.mkdirs();
+            log.info("Kaha Store using data directory " + directory);
             
             DataManager defaultDM = getDataManager(DEFAULT_CONTAINER_NAME);
-            IndexManager defaultIM = getIndexManager(defaultDM, DEFAULT_CONTAINER_NAME);
+            rootIndexManager = getIndexManager(defaultDM, DEFAULT_CONTAINER_NAME);
             
             IndexItem mapRoot=new IndexItem();
             IndexItem listRoot=new IndexItem();
-            if(defaultIM.isEmpty()){
+            if(rootIndexManager.isEmpty()){
                 mapRoot.setOffset(0);
-                defaultIM.updateIndex(mapRoot);
+                rootIndexManager.updateIndex(mapRoot);
                 listRoot.setOffset(IndexItem.INDEX_SIZE);
-                defaultIM.updateIndex(listRoot);
-                defaultIM.setLength(IndexItem.INDEX_SIZE*2);
+                rootIndexManager.updateIndex(listRoot);
+                rootIndexManager.setLength(IndexItem.INDEX_SIZE*2);
             }else{
-                mapRoot=defaultIM.getIndex(0);
-                listRoot=defaultIM.getIndex(IndexItem.INDEX_SIZE);
+                mapRoot=rootIndexManager.getIndex(0);
+                listRoot=rootIndexManager.getIndex(IndexItem.INDEX_SIZE);
             }
-            mapsContainer=new IndexRootContainer(mapRoot,defaultIM,defaultDM);
-            listsContainer=new IndexRootContainer(listRoot,defaultIM,defaultDM);
+            mapsContainer=new IndexRootContainer(mapRoot,rootIndexManager,defaultDM);
+            listsContainer=new IndexRootContainer(listRoot,rootIndexManager,defaultDM);
 
             for (Iterator i = dataManagers.values().iterator(); i.hasNext();){
                 DataManager dm = (DataManager) i.next();
