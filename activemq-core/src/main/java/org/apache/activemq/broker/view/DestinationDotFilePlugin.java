@@ -22,6 +22,8 @@ import org.apache.activemq.broker.BrokerPlugin;
  * A <a href="http://www.graphviz.org/">DOT</a> 
  * file creator plugin which creates a DOT file showing the current topic & queue hierarchies.
  * 
+ * @org.apache.xbean.XBean
+ * 
  * @version $Revision: $
  */
 public class DestinationDotFilePlugin implements BrokerPlugin {
