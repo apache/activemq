@@ -70,6 +70,11 @@ public class WireFormatNegotiator extends TransportFilter {
         }
     }
     
+    public void stop() throws Exception {
+    	super.stop();
+        readyCountDownLatch.countDown();
+    }
+    
     public void oneway(Command command) throws IOException {
         try {
             if( !readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS) ) 
