@@ -1,7 +1,7 @@
 <!-- START SNIPPET: xbean -->
 <beans>
   
-  <broker useJmx="true" xmlns="http://activemq.org/config/1.0>
+  <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
   
     <!--  Use the following to set the broker memory limit (in bytes)
   	<memoryManager>  
