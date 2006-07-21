@@ -17,6 +17,7 @@
 package org.apache.activemq.test;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
@@ -27,6 +28,8 @@ import org.apache.activemq.demo.DefaultQueueSender;
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+
+import java.net.URI;
 
 /**
  * A helper class which can be handy for running a broker in your IDE from the
@@ -41,19 +44,20 @@ public class Main {
      */
     public static void main(String[] args) {
         String brokerURI = "broker:(tcp://localhost:61616,stomp://localhost:61613)?persistent=false&useJmx=true";
-        if (args.length > 0) {
-            brokerURI = args[0];
-        }
         try {
-            // TODO - this seems to break interceptors for some reason
-            // BrokerService broker = BrokerFactory.createBroker(new
-            // URI(brokerURI));
-            BrokerService broker = new BrokerService();
-            broker.setPersistent(false);
-            broker.setUseJmx(true);
-            broker.setPlugins(new BrokerPlugin[] { /*new DestinationDotFilePlugin(), */ new ConnectionDotFilePlugin() });
-            broker.addConnector("tcp://localhost:61616");
-            broker.addConnector("stomp://localhost:61613");
+            BrokerService broker = null;
+            if (args.length > 0) {
+                brokerURI = args[0];
+                broker = BrokerFactory.createBroker(new URI(brokerURI));
+            }
+            else {
+                broker = new BrokerService();
+                broker.setPersistent(false);
+                broker.setUseJmx(true);
+                broker.setPlugins(new BrokerPlugin[] { new ConnectionDotFilePlugin() });
+                broker.addConnector("tcp://localhost:61616");
+                broker.addConnector("stomp://localhost:61613");
+            }
             broker.start();
 
             // lets create a dummy couple of consumers
