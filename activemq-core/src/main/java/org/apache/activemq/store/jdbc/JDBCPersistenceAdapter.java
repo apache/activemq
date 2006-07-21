@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Set;
-
-import javax.sql.DataSource;
+import edu.emory.mathcs.backport.java.util.concurrent.ScheduledFuture;
+import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 import org.apache.activeio.command.WireFormat;
 import org.apache.activeio.util.FactoryFinder;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -40,10 +40,12 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ScheduledFuture;
-import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * A {@link PersistenceAdapter} implementation using JDBC for persistence
@@ -57,19 +59,23 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
  * 
  * @version $Revision: 1.9 $
  */
-public class JDBCPersistenceAdapter extends DataSourceSupport implements PersistenceAdapter {
+public class JDBCPersistenceAdapter extends DataSourceSupport implements PersistenceAdapter, BrokerServiceAware {
 
     private static final Log log = LogFactory.getLog(JDBCPersistenceAdapter.class);
     private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/store/jdbc/");
 
     private WireFormat wireFormat = new OpenWireFormat();
+    private BrokerService brokerService;
     private Statements statements;
     private JDBCAdapter adapter;
     private MemoryTransactionStore transactionStore;
     private ScheduledThreadPoolExecutor clockDaemon;
     private ScheduledFuture clockTicket;
-    int cleanupPeriod = 1000 * 60 * 5;
+    private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
+    private boolean useDatabaseLock = true;
+    private int lockKeepAlivePeriod = 0;
+    private DatabaseLocker databaseLocker;
 
     public JDBCPersistenceAdapter() {
     }
@@ -156,6 +162,16 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         } finally {
             transactionContext.commit();
         }
+        
+        if (isUseDatabaseLock()) {
+            DatabaseLocker service = getDatabaseLocker();
+            if (service == null) {
+                log.warn("No databaseLocker configured for the JDBC Persistence Adapter");
+            }
+            else {
+                service.start();
+            }
+        }
 
         cleanup();
 
@@ -174,6 +190,10 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             clockTicket.cancel(true);
             clockTicket = null;
             clockDaemon.shutdown();
+        }
+        DatabaseLocker service = getDatabaseLocker();
+        if (service != null) {
+            service.stop();
         }
     }
 
@@ -225,6 +245,36 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             setAdapter(createAdapter());
         }
         return adapter;
+    }
+
+    
+    public DatabaseLocker getDatabaseLocker() throws IOException {
+        if (databaseLocker == null) {
+            databaseLocker = createDatabaseLocker();
+            if (lockKeepAlivePeriod > 0) {
+                getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
+                    public void run() {
+                        databaseLockKeepAlive();
+                    }
+                }, lockKeepAlivePeriod, lockKeepAlivePeriod, TimeUnit.MILLISECONDS);
+            }
+        }
+        return databaseLocker;
+    }
+
+    /**
+     * Sets the database locker strategy to use to lock the database on startup
+     */
+    public void setDatabaseLocker(DatabaseLocker databaseLocker) {
+        this.databaseLocker = databaseLocker;
+    }
+    
+    public BrokerService getBrokerService() {
+        return brokerService;
+    }
+
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
     }
 
     /**
@@ -342,6 +392,15 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         this.useExternalMessageReferences = useExternalMessageReferences;
     }
     
+    
+    public boolean isUseDatabaseLock() {
+        return useDatabaseLock;
+    }
+
+    public void setUseDatabaseLock(boolean useDatabaseLock) {
+        this.useDatabaseLock = useDatabaseLock;
+    }
+
     static public void log(String msg, SQLException e) {
         String s = msg+e.getMessage();
         while( e.getNextException() != null ) {
@@ -368,4 +427,37 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void setUsageManager(UsageManager usageManager) {
     }
 
+
+    protected void databaseLockKeepAlive() {
+        boolean stop = false;
+        try {
+            DatabaseLocker locker = getDatabaseLocker();
+            if (locker != null) {
+                if (!locker.keepAlive()) {
+                    stop = true;
+                }
+            }
+        }
+        catch (IOException e) {
+            log.error("Failed to get database when trying keepalive: " + e, e);
+        }
+        if (stop) {
+            stopBroker();
+        }
+    }
+
+    protected void stopBroker() {
+        // we can no longer keep the lock so lets fail
+        log.info("No longer able to keep the exclusive lock so giving up being a master");
+        try {
+            brokerService.stop();
+        }
+        catch (Exception e) {
+            log.warn("Failed to stop broker");
+        }
+    }
+
+    protected DatabaseLocker createDatabaseLocker() throws IOException {
+        return new DefaultDatabaseLocker(getDataSource(), getStatements());
+    }
 }

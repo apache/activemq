@@ -27,6 +27,7 @@ public class Statements {
     private String tablePrefix = "";
     protected String messageTableName = "ACTIVEMQ_MSGS";
     protected String durableSubAcksTableName = "ACTIVEMQ_ACKS";
+    protected String lockTableName = "ACTIVEMQ_LOCK";
 
     protected String binaryDataType = "BLOB";
     protected String containerNameDataType = "VARCHAR(250)";
@@ -57,6 +58,9 @@ public class Statements {
     private String deleteOldMessagesStatement;
     private String[] createSchemaStatements;
     private String[] dropSchemaStatements;
+    private String lockCreateStatement;
+    private String lockUpdateStatement;
+    private boolean useLockCreateWhereClause;
 
     public String[] getCreateSchemaStatements() {
         if (createSchemaStatements == null) {
@@ -75,7 +79,11 @@ public class Statements {
                     "CREATE TABLE " + getFullAckTableName() + "(" + "CONTAINER " + containerNameDataType + " NOT NULL"
                             + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
                             + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
-                            + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", };
+                            + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
+                    "CREATE TABLE " + getFullLockTableName() + "( ID " + longDataType + ", TIME " + longDataType 
+                            + ", BROKER_NAME " + stringIdDataType + ", PRIMARY KEY (ID) )",
+                    "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)", 
+            };
         }
         return createSchemaStatements;
     }
@@ -220,11 +228,29 @@ public class Statements {
     public String getDeleteOldMessagesStatement() {
         if (deleteOldMessagesStatement == null) {
             deleteOldMessagesStatement = "DELETE FROM " + getFullMessageTableName()
-                    + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?) OR ID <= " + "( SELECT min(" + getFullAckTableName()
-                    + ".LAST_ACKED_ID) " + "FROM " + getFullAckTableName() + " WHERE " + getFullAckTableName()
-                    + ".CONTAINER=" + getFullMessageTableName() + ".CONTAINER)";
+            + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?) OR ID <= " + "( SELECT min(" + getFullAckTableName()
+            + ".LAST_ACKED_ID) " + "FROM " + getFullAckTableName() + " WHERE " + getFullAckTableName()
+            + ".CONTAINER=" + getFullMessageTableName() + ".CONTAINER)";
         }
         return deleteOldMessagesStatement;
+    }
+    
+    public String getLockCreateStatement() {
+        if (lockCreateStatement == null) {
+            lockCreateStatement = "SELECT * FROM " + getFullLockTableName();
+            if (useLockCreateWhereClause) {
+                lockCreateStatement += " WHERE ID = 1";
+            }
+            lockCreateStatement += " FOR UPDATE";
+        }
+        return lockCreateStatement;
+    }
+    
+    public String getLockUpdateStatement() {
+        if (lockUpdateStatement == null) {
+            lockUpdateStatement = "UPDATE " + getFullLockTableName() + " SET time = ? WHERE ID = 1";
+        }
+        return lockUpdateStatement;
     }
 
     public String getFullMessageTableName() {
@@ -234,7 +260,12 @@ public class Statements {
     public String getFullAckTableName() {
         return getTablePrefix() + getDurableSubAcksTableName();
     }
+    
+    public String getFullLockTableName() {
+        return getTablePrefix() + getLockTableName();
+    }
 
+    
     /**
      * @return Returns the containerNameDataType.
      */
@@ -338,6 +369,14 @@ public class Statements {
      */
     public void setDurableSubAcksTableName(String durableSubAcksTableName) {
         this.durableSubAcksTableName = durableSubAcksTableName;
+    }
+    
+    public String getLockTableName() {
+        return lockTableName;
+    }
+
+    public void setLockTableName(String lockTableName) {
+        this.lockTableName = lockTableName;
     }
 
     public String getLongDataType() {
@@ -444,4 +483,19 @@ public class Statements {
         this.updateMessageStatement = updateMessageStatment;
     }
 
+    public boolean isUseLockCreateWhereClause() {
+        return useLockCreateWhereClause;
+    }
+
+    public void setUseLockCreateWhereClause(boolean useLockCreateWhereClause) {
+        this.useLockCreateWhereClause = useLockCreateWhereClause;
+    }
+
+    public void setLockCreateStatement(String lockCreateStatement) {
+        this.lockCreateStatement = lockCreateStatement;
+    }
+
+    public void setLockUpdateStatement(String lockUpdateStatement) {
+        this.lockUpdateStatement = lockUpdateStatement;
+    }
 }
