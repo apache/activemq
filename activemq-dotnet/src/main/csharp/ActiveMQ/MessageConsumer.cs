@@ -127,7 +127,9 @@ namespace ActiveMQ
                 IMessage message = dispatcher.DequeueNoWait();
                 if (message != null)
                 {
-                    Listener(message);
+                   //here we add the code that if do acknowledge action.
+                   message = AutoAcknowledge(message);
+                   Listener(message);
                 }
                 else
                 {
