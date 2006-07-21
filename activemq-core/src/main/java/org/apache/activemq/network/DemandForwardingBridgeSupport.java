@@ -269,6 +269,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 ConsumerInfo destinationInfo  = new ConsumerInfo(remoteSessionInfo,2);
                 destinationInfo.setDestination(AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC);
                 destinationInfo.setPrefetchSize(prefetchSize);
+                destinationInfo.setDispatchAsync(dispatchAsync);
                 remoteBroker.oneway(destinationInfo);
                 startedLatch.countDown();
                 
