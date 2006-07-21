@@ -136,13 +136,13 @@ namespace transport{
          * @throws UnsupportedOperationException if this method is not implemented
          * by this transport.
          */
-        virtual void oneway( Command* command ) throw(CommandIOException, exceptions::UnsupportedOperationException);
+        virtual void oneway( Command* command ) throw( CommandIOException, exceptions::UnsupportedOperationException );
         
         /**
          * Not supported by this class - throws an exception.
          * @throws UnsupportedOperationException.
          */
-        virtual Response* request( Command* command ) throw(CommandIOException, exceptions::UnsupportedOperationException){
+        virtual Response* request( Command* command ) throw( CommandIOException, exceptions::UnsupportedOperationException ){
             throw exceptions::UnsupportedOperationException( __FILE__, __LINE__, "IOTransport::request() - unsupported operation" );
         }
         

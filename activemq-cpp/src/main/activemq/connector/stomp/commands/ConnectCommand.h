@@ -39,7 +39,7 @@ namespace commands{
                 initialize( getFrame() );
         }
         ConnectCommand( StompFrame* frame ) : 
-            AbstractCommand<transport::Command>(frame) {
+            AbstractCommand<transport::Command>( frame ) {
                 validate( getFrame() );
         }
         virtual ~ConnectCommand(void) {};

@@ -19,10 +19,10 @@
 #include <errno.h>
 
 #ifdef unix
-	#include <errno.h> // EINTR
+    #include <errno.h> // EINTR
     extern int errno;
 #else
-	#include <process.h> // _endthreadex
+    #include <process.h> // _endthreadex
 #endif
 
 #include <activemq/exceptions/ActiveMQException.h>
@@ -45,17 +45,17 @@ static struct ThreadStaticInitializer {
 ////////////////////////////////////////////////////////////////////////////////
 Thread::Thread()
 {
-	task = this;
-	started = false;
-	joined = false;
+    task = this;
+    started = false;
+    joined = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 Thread::Thread( Runnable* task )
 {
-	this->task = task;
-	started = false;
-	joined = false;
+    this->task = task;
+    started = false;
+    joined = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +72,8 @@ void Thread::start() throw ( exceptions::ActiveMQException )
     }
     
 #ifdef unix
-	
-	pthread_attr_init (&attributes);
+    
+    pthread_attr_init (&attributes);
     pthread_attr_setdetachstate (&attributes, PTHREAD_CREATE_JOINABLE);
     int err = pthread_create (
         &this->threadHandle,
@@ -81,7 +81,7 @@ void Thread::start() throw ( exceptions::ActiveMQException )
         runCallback,
         this);
     if (err != 0) {
-		throw exceptions::ActiveMQException( __FILE__, __LINE__,
+        throw exceptions::ActiveMQException( __FILE__, __LINE__,
             "Coud not start thread");
     }
     
@@ -91,13 +91,13 @@ void Thread::start() throw ( exceptions::ActiveMQException )
     this->threadHandle = 
         (HANDLE)_beginthreadex(NULL, 0, runCallback, this, 0, &threadId);
     if (this->threadHandle == NULL) {
-		throw exceptions::ActiveMQException( __FILE__, __LINE__,
+        throw exceptions::ActiveMQException( __FILE__, __LINE__,
             "Coud not start thread");
     }
     
 #endif
 
-	// Mark the thread as started.
+    // Mark the thread as started.
     started = true;
 }
 
@@ -105,11 +105,11 @@ void Thread::start() throw ( exceptions::ActiveMQException )
 void Thread::join() throw( exceptions::ActiveMQException )
 {
     if (!this->started) {
-		throw exceptions::ActiveMQException( __FILE__, __LINE__,
+        throw exceptions::ActiveMQException( __FILE__, __LINE__,
             "Thread::join() called without having called Thread::start()");
     }
     if (!this->joined) {
-    	
+        
 #ifdef unix
         pthread_join(this->threadHandle, NULL);
 #else
@@ -121,16 +121,16 @@ void Thread::join() throw( exceptions::ActiveMQException )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Thread::sleep(int millisecs)
+void Thread::sleep( int millisecs )
 {
 #ifdef unix
     struct timespec rec, rem;
     rec.tv_sec = millisecs / 1000;
     rec.tv_nsec = (millisecs % 1000) * 1000000;
     while( nanosleep( &rec, &rem ) == -1 ){
-    	if( errno != EINTR ){
-    		break;
-    	}
+        if( errno != EINTR ){
+            break;
+        }
     }
     
 #else
@@ -154,9 +154,9 @@ void*
 #else
 unsigned int WINAPI
 #endif
-Thread::runCallback (void* param)
+Thread::runCallback( void* param )
 {
-	// Get the instance.
+    // Get the instance.
     Thread* thread = (Thread*)param;
     
     // Invoke run on the task.

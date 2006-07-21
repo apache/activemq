@@ -19,23 +19,23 @@
 
 namespace activemq{
 namespace concurrent{
-	
-	/**
-	 * Interface for a runnable object - defines a task
-	 * that can be run by a thread.
-	 */
-	class Runnable{
-	public:
-	
-		virtual ~Runnable(){}
-		
-		/**
-		 * Run method - called by the Thread class in the context
-		 * of the thread.
-		 */
-		virtual void run() = 0;
-	};
-	
+    
+    /**
+     * Interface for a runnable object - defines a task
+     * that can be run by a thread.
+     */
+    class Runnable{
+    public:
+    
+        virtual ~Runnable(){}
+        
+        /**
+         * Run method - called by the Thread class in the context
+         * of the thread.
+         */
+        virtual void run() = 0;
+    };
+    
 }}
 
 #endif /*ACTIVEMQ_CONCURRENT_RUNNABLE_H_*/

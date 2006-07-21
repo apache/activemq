@@ -30,78 +30,78 @@
 namespace activemq{
 namespace transport{
   
-   // Forward declarations.
-   class CommandListener;
-   class CommandReader;
-   class CommandWriter;
-   class TransportExceptionListener;
+    // Forward declarations.
+    class CommandListener;
+    class CommandReader;
+    class CommandWriter;
+    class TransportExceptionListener;
      
-   /**
-    * Interface for a transport layer for command objects.  Callers can
-    * send oneway messages or make synchronous requests.  Non-response
-    * messages will be delivered to the specified listener object upon
-    * receipt.
-    */
-   class Transport
-   :
-      public cms::Startable,
-      public cms::Closeable
-   {
-   public:
+    /**
+     * Interface for a transport layer for command objects.  Callers can
+     * send oneway messages or make synchronous requests.  Non-response
+     * messages will be delivered to the specified listener object upon
+     * receipt.
+     */
+    class Transport
+    :
+        public cms::Startable,
+        public cms::Closeable
+    {
+    public:
      
-      virtual ~Transport(){}
+        virtual ~Transport(){}
         
-      /**
-       * Sends a one-way command.  Does not wait for any response from the
-       * broker.
-       * @param command the command to be sent.
-       * @throws CommandIOException if an exception occurs during writing of
-       * the command.
-       * @throws UnsupportedOperationException if this method is not implemented
-       * by this transport.
-       */
-      virtual void oneway( Command* command ) 
-         throw(CommandIOException, 
-               exceptions::UnsupportedOperationException) = 0;
+        /**
+         * Sends a one-way command.  Does not wait for any response from the
+         * broker.
+         * @param command the command to be sent.
+         * @throws CommandIOException if an exception occurs during writing of
+         * the command.
+         * @throws UnsupportedOperationException if this method is not implemented
+         * by this transport.
+         */
+        virtual void oneway( Command* command ) 
+            throw( CommandIOException, 
+                   exceptions::UnsupportedOperationException ) = 0;
   
-      /**
-       * Sends the given command to the broker and then waits for the response.
-       * @param command the command to be sent.
-       * @return the response from the broker.
-       * @throws CommandIOException if an exception occurs during the read of the
-       * command.
-       * @throws UnsupportedOperationException if this method is not implemented
-       * by this transport.
-       */
-      virtual Response* request( Command* command ) 
-        throw(CommandIOException, 
-              exceptions::UnsupportedOperationException) = 0;
+        /**
+         * Sends the given command to the broker and then waits for the response.
+         * @param command the command to be sent.
+         * @return the response from the broker.
+         * @throws CommandIOException if an exception occurs during the read of the
+         * command.
+         * @throws UnsupportedOperationException if this method is not implemented
+         * by this transport.
+         */
+        virtual Response* request( Command* command ) 
+            throw( CommandIOException, 
+                   exceptions::UnsupportedOperationException ) = 0;
      
-      /**
-       * Assigns the command listener for non-response commands.
-       * @param listener the listener.
-       */
-      virtual void setCommandListener( CommandListener* listener ) = 0;
+        /**
+         * Assigns the command listener for non-response commands.
+         * @param listener the listener.
+         */
+        virtual void setCommandListener( CommandListener* listener ) = 0;
      
-      /**
-       * Sets the command reader.
-       * @param reader the object that will be used for reading command objects.
-       */
-      virtual void setCommandReader( CommandReader* reader ) = 0;
+        /**
+         * Sets the command reader.
+         * @param reader the object that will be used for reading command objects.
+         */
+        virtual void setCommandReader( CommandReader* reader ) = 0;
         
-      /**
-       * Sets the command writer.
-       * @param writer the object that will be used for writing command objects.
-       */
-      virtual void setCommandWriter( CommandWriter* writer ) = 0;
+        /**
+         * Sets the command writer.
+         * @param writer the object that will be used for writing command objects.
+         */
+        virtual void setCommandWriter( CommandWriter* writer ) = 0;
      
-      /**
-       * Sets the observer of asynchronous exceptions from this transport.
-       * @param listener the listener of transport exceptions.
-       */
-      virtual void setTransportExceptionListener( 
-        TransportExceptionListener* listener ) = 0;
-   };
+        /**
+         * Sets the observer of asynchronous exceptions from this transport.
+         * @param listener the listener of transport exceptions.
+         */
+        virtual void setTransportExceptionListener( 
+            TransportExceptionListener* listener ) = 0;
+    };
     
 }}
 

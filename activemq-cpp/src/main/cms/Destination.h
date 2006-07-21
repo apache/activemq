@@ -18,6 +18,8 @@
 #ifndef _CMS_DESTINATION_H_
 #define _CMS_DESTINATION_H_
 
+#include <activemq/util/Properties.h>
+
 #include <string>
 
 namespace cms{
@@ -76,6 +78,14 @@ namespace cms{
          */
         virtual void copy( const cms::Destination& source ) = 0;
 
+        /**
+         * Retrieve any properties that might be part of the destination
+         * that was specified.  This is a deviation from the JMS spec
+         * but necessary due to C++ restrictions.  
+         * @return const reference to a properties object.
+         */
+        virtual const activemq::util::Properties& getProperties(void) const = 0;
+        
     };
 }
 

@@ -50,14 +50,14 @@ namespace transport{
         /**
          * Locks the object.
          */
-        virtual void lock() throw(exceptions::ActiveMQException){
+        virtual void lock() throw( exceptions::ActiveMQException ){
             mutex.lock();
         }
 
         /**
          * Unlocks the object.
          */
-        virtual void unlock() throw(exceptions::ActiveMQException){
+        virtual void unlock() throw( exceptions::ActiveMQException ){
             mutex.unlock();
         }
     
@@ -66,7 +66,7 @@ namespace transport{
          * by a call to Notify.  Must have this object locked before
          * calling.
          */
-        virtual void wait() throw(exceptions::ActiveMQException){
+        virtual void wait() throw( exceptions::ActiveMQException ){
             mutex.wait();
         }
     
@@ -78,8 +78,8 @@ namespace transport{
          * @param time in millisecsonds to wait, or WAIT_INIFINITE
          * @throws ActiveMQException
          */
-        virtual void wait(unsigned long millisecs) 
-            throw(exceptions::ActiveMQException)
+        virtual void wait( unsigned long millisecs ) 
+            throw( exceptions::ActiveMQException )
         {
             mutex.wait( millisecs );
         }
@@ -89,7 +89,7 @@ namespace transport{
          * up and continue.  Must have this object locked before
          * calling.
          */
-        virtual void notify() throw(exceptions::ActiveMQException){
+        virtual void notify() throw( exceptions::ActiveMQException ){
             mutex.notify();
         }
     
@@ -98,7 +98,7 @@ namespace transport{
          * up and continue.  Must have this object locked before
          * calling.
          */
-        virtual void notifyAll() throw(exceptions::ActiveMQException){ 
+        virtual void notifyAll() throw( exceptions::ActiveMQException ){ 
             mutex.notifyAll(); 
         }
         

@@ -39,6 +39,11 @@ void ActiveMQException::buildMessage(const char* format, va_list& vargs)
             
             // Guessed size was enough. Assign the string.
             message.assign (buffer, written);
+            
+            // assign isn't passing ownership, just copying, delete
+            // the allocated buffer.
+            delete buffer;
+            
             break;
         }
                 

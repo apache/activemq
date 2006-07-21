@@ -21,21 +21,24 @@
 #include <cms/CMSException.h>
 
 namespace cms{
-	
-	/**
-	 * Interface for a class that implements the close method.
-	 */
-	class Closeable{
-		
-	public:
-	
-		virtual ~Closeable(void){}
-		
-		/**
-		 * Closes this object and deallocates the appropriate resources.
-		 */
-		virtual void close() throw( CMSException ) = 0;
-	};
+    
+    /**
+     * Interface for a class that implements the close method.
+     */
+    class Closeable{
+        
+    public:
+    
+        virtual ~Closeable(void){}
+        
+        /**
+         * Closes this object and deallocates the appropriate resources.
+         * The object is generally no longer usable after calling close.
+         * @throws CMSException
+         */
+        virtual void close() throw( CMSException ) = 0;
+
+    };
 }
 
 #endif /*CMS_CLOSEABLE_H*/

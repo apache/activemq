@@ -68,6 +68,14 @@ namespace commands{
             setBytes( msg, strlen(msg) + 1, false );
         }
 
+        /**
+         * Sets the message contents.
+         * @param msg The message buffer.
+         */
+        virtual void setText( const std::string& msg ) throw( cms::CMSException ) {
+            setBytes( msg.c_str(), msg.length() + 1, false );
+        }
+
     };
 
 }}}}

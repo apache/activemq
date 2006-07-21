@@ -21,8 +21,8 @@
 namespace activemq{
 namespace transport{
   
-  class Command{
-  public:
+    class Command{
+    public:
   
         virtual ~Command(void){}
         
@@ -50,7 +50,7 @@ namespace transport{
          */
         virtual bool isResponseRequired() const = 0;
         
-  };
+    };
     
 }}
 

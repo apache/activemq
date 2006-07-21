@@ -24,41 +24,43 @@
 namespace activemq{
 namespace io{
 
-   /*
-    * Writer interface for an object that wraps around an output
-    * stream 
-    */
-   class Writer
-   {
-   public:
+    /*
+     * Writer interface for an object that wraps around an output
+     * stream 
+     */
+    class Writer
+    {
+    public:
    
-      virtual ~Writer(){};
+        virtual ~Writer(){};
        
-      /**
-       * Sets the target output stream.
-       */
-      virtual void setOutputStream( OutputStream* os ) = 0;
+        /**
+         * Sets the target output stream.
+         * @param Outputstream to use
+         */
+        virtual void setOutputStream( OutputStream* os ) = 0;
        
-      /**
-       * Gets the target output stream.
-       */
-      virtual OutputStream* getOutputStream() = 0;
+        /**
+         * Gets the target output stream.
+         * @returns the output stream currently being used
+         */
+        virtual OutputStream* getOutputStream() = 0;
              
-      /**
-       * Writes a byte array to the output stream.
-       * @param buffer a byte array
-       * @param count the number of bytes in the array to write.
-       * @throws IOException thrown if an error occurs.
-       */
-      virtual void write(const unsigned char* buffer, int count) throw(IOException) = 0;
+        /**
+         * Writes a byte array to the output stream.
+         * @param buffer a byte array
+         * @param count the number of bytes in the array to write.
+         * @throws IOException thrown if an error occurs.
+         */
+        virtual void write( const unsigned char* buffer, int count ) throw( IOException ) = 0;
        
-       /**
-        * Writes a byte to the output stream.
-        * @param v The value to be written.
-        * @throws IOException thrown if an error occurs.
-        */
-       virtual void writeByte(unsigned char v) throw(IOException) = 0;
-   };
+         /**
+          * Writes a byte to the output stream.
+          * @param v The value to be written.
+          * @throws IOException thrown if an error occurs.
+          */
+         virtual void writeByte( unsigned char v ) throw( IOException ) = 0;
+    };
 
 }}
 

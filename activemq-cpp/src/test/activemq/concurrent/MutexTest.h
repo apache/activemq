@@ -184,11 +184,18 @@ namespace concurrent{
       
          bool done;
          Mutex* mutex;
+         Mutex* started;
+         Mutex* completed;
          
       public:
      
          int value;
-         MyNotifiedThread(Mutex* mutex){ this->mutex = mutex; done = false; }
+         MyNotifiedThread(Mutex* mutex, Mutex* started, Mutex* completed ){ 
+            this->mutex = mutex; 
+            this->started = started;
+            this->completed = completed;
+            this->done = false; 
+         }
          virtual ~MyNotifiedThread(){}
          virtual void lock() throw(exceptions::ActiveMQException){
              mutex->lock();
@@ -215,9 +222,19 @@ namespace concurrent{
             {
                done = false;
                synchronized(this)            
-               {                  
+               {
+                  synchronized( started )
+                  {
+                     started->notify();
+                  }
+                  
                   this->wait();
                   done = true;
+
+                  synchronized( completed )
+                  {
+                     completed->notify();
+                  }
                }
             }
             catch(exceptions::ActiveMQException& ex)
@@ -401,17 +418,28 @@ namespace concurrent{
         {
             try{
                 Mutex mutex;
+                Mutex started;
+                Mutex completed;
+
                 const int numThreads = 30;
                 MyNotifiedThread* threads[numThreads];
              
                 // Create and start all the threads.
                 for( int ix=0; ix<numThreads; ++ix ){
-                    threads[ix] = new MyNotifiedThread( &mutex );
+                    threads[ix] = new MyNotifiedThread( &mutex, &started, &completed );
                     threads[ix]->start();
                 }
              
-                // Sleep so all the threads can get to the wait.
-                Thread::sleep( 1000 );
+                synchronized( &started )
+                {
+                    int count = 0;
+                    
+                    while( count < ( numThreads ) )
+                    {
+                        started.wait( 30 );
+                        count++;
+                    }
+                }
              
                 synchronized(&mutex)
                 {
@@ -438,8 +466,16 @@ namespace concurrent{
                     }
                 }
              
-                // Sleep to give the threads time to wake up.
-                Thread::sleep( 1000 );
+                synchronized( &started )
+                {
+                    int count = 0;
+                    
+                    while( count < ( numThreads ) )
+                    {
+                        started.wait( 30 );
+                        count++;
+                    }
+                }
              
                 int numComplete = 0;
                 for( int ix=0; ix<numThreads; ++ix ){
@@ -458,6 +494,11 @@ namespace concurrent{
                 {
                     mutex.notifyAll();
                 }
+
+                // Delete all the threads.
+                for( int ix=0; ix<numThreads; ++ix ){
+                    delete threads[ix];
+                }
                                 
             }catch( exceptions::ActiveMQException& ex ){
                 ex.setMark( __FILE__, __LINE__ );
@@ -468,18 +509,28 @@ namespace concurrent{
         {
             try{
                 Mutex mutex;
+                Mutex started;
+                Mutex completed;
              
                 const int numThreads = 100;
                 MyNotifiedThread* threads[numThreads];
              
                 // Create and start all the threads.
                 for( int ix=0; ix<numThreads; ++ix ){
-                    threads[ix] = new MyNotifiedThread( &mutex );
+                    threads[ix] = new MyNotifiedThread( &mutex, &started, &completed );
                     threads[ix]->start();
                 }
              
-                // Sleep so all the threads can get to the wait.
-                Thread::sleep( 1000 );
+                synchronized( &started )
+                {
+                    int count = 0;
+                    
+                    while( count < ( numThreads ) )
+                    {
+                        started.wait( 30 );
+                        count++;
+                    }
+                }
              
                 for( int ix=0; ix<numThreads; ++ix )
                 {
@@ -494,8 +545,16 @@ namespace concurrent{
                    mutex.notifyAll();
                 }
              
-                // Sleep to give the threads time to wake up.
-                Thread::sleep( 1000 );
+                synchronized( &completed )
+                {
+                    int count = 0;
+                    
+                    while( count < ( numThreads ) )
+                    {
+                        completed.wait( 30 );
+                        count++;
+                    }
+                }
              
                 int numComplete = 0;
                 for( int ix=0; ix<numThreads; ++ix ){
@@ -506,6 +565,12 @@ namespace concurrent{
                 printf("numComplete: %d, numThreads: %d\n", numComplete, numThreads );
                 CPPUNIT_ASSERT( numComplete == numThreads );
              
+                // Delete all the threads.
+                for( int ix=0; ix<numThreads; ++ix ){
+                    threads[ix]->join();
+                    delete threads[ix];
+                }
+
             }catch( exceptions::ActiveMQException& ex ){
                 ex.setMark( __FILE__, __LINE__ );
             }
@@ -554,6 +619,12 @@ namespace concurrent{
                     }
                     CPPUNIT_ASSERT( threads[ix]->done == true );            
                 }
+
+                // Delete all the threads.
+                for( int ix=0; ix<numThreads; ++ix ){
+                    delete threads[ix];
+                }
+
             }catch( exceptions::ActiveMQException& ex ){
                 ex.setMark( __FILE__, __LINE__ );
             }

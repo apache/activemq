@@ -25,97 +25,97 @@ using namespace activemq::io;
 using namespace activemq::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-BufferedSocket::BufferedSocket(Socket* socket,
-                               unsigned int inputBufferSize,
-                               unsigned int outputBufferSize,
-                               bool own)
+BufferedSocket::BufferedSocket( Socket* socket,
+                                unsigned int inputBufferSize,
+                                unsigned int outputBufferSize,
+                                bool own )
 {
-   if(socket == NULL)
-   {
-      throw IllegalArgumentException(
-         __FILE__, __LINE__,
-         "BufferedSocket::BufferedSocket - Constructed with NULL Socket");
-   }
+    if(socket == NULL)
+    {
+        throw IllegalArgumentException(
+            __FILE__, __LINE__,
+            "BufferedSocket::BufferedSocket - Constructed with NULL Socket");
+    }
    
-   this->socket = socket;
-   this->inputBufferSize = inputBufferSize;
-   this->outputBufferSize = outputBufferSize;
-   this->own = own;
+    this->socket = socket;
+    this->inputBufferSize = inputBufferSize;
+    this->outputBufferSize = outputBufferSize;
+    this->own = own;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 BufferedSocket::~BufferedSocket(void)
 {
-   try
-   {
-      if(outputStream)
-      {
-         // Ensure all data is written
-         outputStream->flush();
-      }
+    try
+    {
+        if( outputStream )
+        {
+            // Ensure all data is written
+            outputStream->flush();
+        }
 
-      // Close the socket      
-      socket->close();
+        // Close the socket      
+        socket->close();
          
-      // if we own it, delete it.
-      if(own)
-      {
-         delete socket;
-      }
+        // if we own it, delete it.
+        if( own )
+        {
+            delete socket;
+        }
       
-      // Clean up our streams.
-      delete inputStream;
-      delete outputStream;
-   }
-   AMQ_CATCH_NOTHROW( ActiveMQException )
-   AMQ_CATCHALL_NOTHROW( )
+        // Clean up our streams.
+        delete inputStream;
+        delete outputStream;
+    }
+    AMQ_CATCH_NOTHROW( ActiveMQException )
+    AMQ_CATCHALL_NOTHROW( )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void BufferedSocket::connect( const char* host, const int port ) 
-   throw( SocketException )
+    throw( SocketException )
 {
-   try
-   {      
-      if( socket->isConnected() )
-      {
-         throw SocketException( __FILE__, __LINE__, 
-               "BufferedSocket::connect() - socket already connected" );
-      }
+    try
+    {      
+        if( socket->isConnected() )
+        {
+            throw SocketException( __FILE__, __LINE__, 
+                 "BufferedSocket::connect() - socket already connected" );
+        }
 
-      // Connect the socket.
-      socket->connect( host, port );
+        // Connect the socket.
+        socket->connect( host, port );
 
-      // Now create the buffered streams that wrap around the socket.
-      inputStream = new BufferedInputStream( 
-         socket->getInputStream(), inputBufferSize );
-      outputStream = new BufferedOutputStream( 
-         socket->getOutputStream(), outputBufferSize );
-   }
-   AMQ_CATCH_RETHROW( SocketException )
-   AMQ_CATCH_EXCEPTION_CONVERT( ActiveMQException, SocketException )
-   AMQ_CATCHALL_THROW( SocketException )   
+        // Now create the buffered streams that wrap around the socket.
+        inputStream = new BufferedInputStream( 
+            socket->getInputStream(), inputBufferSize );
+        outputStream = new BufferedOutputStream( 
+            socket->getOutputStream(), outputBufferSize );
+    }
+    AMQ_CATCH_RETHROW( SocketException )
+    AMQ_CATCH_EXCEPTION_CONVERT( ActiveMQException, SocketException )
+    AMQ_CATCHALL_THROW( SocketException )   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void BufferedSocket::close(void) throw( cms::CMSException )
 {
-   try
-   {
-      // Ensure all data writen
-      outputStream->flush();
+    try
+    {
+        // Ensure all data writen
+        outputStream->flush();
       
-      // Close the Socket
-      socket->close();
+        // Close the Socket
+        socket->close();
       
-      // Remove old stream, recreate if reconnected
-      delete inputStream;
-      delete outputStream;
+        // Remove old stream, recreate if reconnected
+        delete inputStream;
+        delete outputStream;
       
-      inputStream = NULL;
-      outputStream = NULL;
-   }
-   AMQ_CATCH_RETHROW( SocketException )
-   AMQ_CATCH_EXCEPTION_CONVERT( ActiveMQException, SocketException )
-   AMQ_CATCHALL_THROW( SocketException )   
+        inputStream = NULL;
+        outputStream = NULL;
+    }
+    AMQ_CATCH_RETHROW( SocketException )
+    AMQ_CATCH_EXCEPTION_CONVERT( ActiveMQException, SocketException )
+    AMQ_CATCHALL_THROW( SocketException )   
 }

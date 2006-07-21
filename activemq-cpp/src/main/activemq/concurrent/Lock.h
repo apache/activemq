@@ -18,106 +18,105 @@
 #ifndef ACTIVEMQ_CONCURRENT_LOCK_H
 #define ACTIVEMQ_CONCURRENT_LOCK_H
 
-// Includes.
 #include <activemq/concurrent/Synchronizable.h>
 
 namespace activemq{
 namespace concurrent{
     
-  /**
-   * A wrapper class around a given synchronization mechanism that
-   * provides automatic release upon destruction.
-   * @author  Nathan Mittler
-   */
-  class Lock
-  {
-  private:       // Data
-
     /**
-     * Flag to indicate whether or not this object has locked the
-     * sync object.
+     * A wrapper class around a given synchronization mechanism that
+     * provides automatic release upon destruction.
+     * @author  Nathan Mittler
      */
-    bool locked;
+    class Lock
+    {
+    private:       // Data
 
-    /**
-     * The synchronizable object to lock/unlock.
-     */
-    Synchronizable* syncObject;
+        /**
+         * Flag to indicate whether or not this object has locked the
+         * sync object.
+         */
+        bool locked;
+
+        /**
+         * The synchronizable object to lock/unlock.
+         */
+        Synchronizable* syncObject;
     
-  public:        // Interface
+    public:        // Interface
 
-    /**
-     * Constructor - initializes the object member and locks
-     * the object if desired.
-     * @param   object   The sync object to control
-     * @param   intiallyLocked  If true, the object will automatically
-     * be locked.
-     */
-	Lock( Synchronizable* object, const bool intiallyLocked = true )
-	{
-        try{
-    		syncObject = object;
-    		locked = false;
-    		
-    		if( intiallyLocked )
-    	    {
-    	      lock();
-    	    }
+        /**
+         * Constructor - initializes the object member and locks
+         * the object if desired.
+         * @param   object   The sync object to control
+         * @param   intiallyLocked  If true, the object will automatically
+         * be locked.
+         */
+        Lock( Synchronizable* object, const bool intiallyLocked = true )
+        {
+            try{
+                syncObject = object;
+                locked = false;
+            
+                if( intiallyLocked )
+                {
+                    lock();
+                }
+            }
+            AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
+            AMQ_CATCHALL_THROW( exceptions::ActiveMQException )
         }
-        AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
-        AMQ_CATCHALL_THROW( exceptions::ActiveMQException )
-	}
-
-    /**
-     * Destructor - Unlocks the object if it is locked.
-     */
-    virtual ~Lock()
-    {
-        try{
-    	    if( locked )
-    	    {
-    	      syncObject->unlock();
-    	    } 
+    
+        /**
+         * Destructor - Unlocks the object if it is locked.
+         */
+        virtual ~Lock()
+        {
+            try{
+                if( locked )
+                {
+                  syncObject->unlock();
+                } 
+            }
+            AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
+            AMQ_CATCHALL_THROW( exceptions::ActiveMQException )      
         }
-        AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
-        AMQ_CATCHALL_THROW( exceptions::ActiveMQException )      
-  	}
 
-    /**
-     * Locks the object.
-     */
-    void lock()
-    {
-        try{
-    	    syncObject->lock();
-            locked = true;
+        /**
+         * Locks the object.
+         */
+        void lock()
+        {
+            try{
+                syncObject->lock();
+                locked = true;
+            }
+            AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
+            AMQ_CATCHALL_THROW( exceptions::ActiveMQException )
         }
-        AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
-        AMQ_CATCHALL_THROW( exceptions::ActiveMQException )
-	}
 
-    /**
-     * Unlocks the object.
-     */
-    void unlock()
-    {
-        try{
-           if(locked)
-           {
-              syncObject->unlock();
-              locked = false;
-           }
+        /**
+         * Unlocks the object.
+         */
+        void unlock()
+        {
+            try{
+                 if(locked)
+                 {
+                     syncObject->unlock();
+                     locked = false;
+                 }
+            }
+            AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
+            AMQ_CATCHALL_THROW( exceptions::ActiveMQException )
         }
-        AMQ_CATCH_RETHROW( exceptions::ActiveMQException )
-        AMQ_CATCHALL_THROW( exceptions::ActiveMQException )
-  	}
 
-    /**
-     * Indicates whether or not the object is locked.
-     * @return  true if the object is locked, otherwise false.
-     */
-    bool isLocked() const{ return locked; }  
-  };
+        /**
+         * Indicates whether or not the object is locked.
+         * @return  true if the object is locked, otherwise false.
+         */
+        bool isLocked() const{ return locked; }  
+    };
 
 }}
 

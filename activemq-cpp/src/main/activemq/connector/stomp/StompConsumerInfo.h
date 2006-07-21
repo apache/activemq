@@ -45,7 +45,8 @@ namespace stomp{
             consumerId = 0;
             destination = NULL;
         }
-    	virtual ~StompConsumerInfo(void) { delete destination; }
+        
+        virtual ~StompConsumerInfo(void) { delete destination; }
 
         /**
          * Gets this message consumer's message selector expression.

@@ -27,66 +27,66 @@
 namespace activemq{
 namespace connector{
 
-   /**
-    * Lookup Map for Connector Factories.  Use the Connector name to
-    * find the associated factory.  This class does not take ownership
-    * of the stored factories, they must be deallocated somewhere.
-    */
-   class ConnectorFactoryMap
-   {
-   public:
+    /**
+     * Lookup Map for Connector Factories.  Use the Connector name to
+     * find the associated factory.  This class does not take ownership
+     * of the stored factories, they must be deallocated somewhere.
+     */
+    class ConnectorFactoryMap
+    {
+    public:
       
-      /**
-       * Gets a singleton instance of this class.
-       */
-      static ConnectorFactoryMap* getInstance(void);
+        /**
+         * Gets a singleton instance of this class.
+         */
+        static ConnectorFactoryMap* getInstance(void);
 
-      /**
-       * Registers a new Connector Factory with this map
-       * @param name to associate the factory with
-       * @param factory to store.
-       */
-      void registerConnectorFactory(const std::string& name, 
-                                    ConnectorFactory* factory);
+        /**
+         * Registers a new Connector Factory with this map
+         * @param name to associate the factory with
+         * @param factory to store.
+        */
+        void registerConnectorFactory( const std::string& name, 
+                                       ConnectorFactory* factory );
       
-      /**
-       * Unregisters a Connector Factory with this map
-       * @param name of the factory to remove
-       */
-      void unregisterConnectorFactory(const std::string& name);
+        /**
+         * Unregisters a Connector Factory with this map
+         * @param name of the factory to remove
+         */
+        void unregisterConnectorFactory( const std::string& name );
 
-      /**
-       * Lookup the named factory in the Map
-       * @param the factory name to lookup
-       * @return the factory assciated with the name, or NULL
-       */
-      ConnectorFactory* lookup(const std::string& name);
+        /**
+         * Lookup the named factory in the Map
+         * @param the factory name to lookup
+         * @return the factory assciated with the name, or NULL
+         */
+        ConnectorFactory* lookup( const std::string& name );
       
-      /**
-       * Fetch a list of factory names that this Map contains
-       * @param vector object to receive the list
-       * @returns count of factories.
-       */
-      std::size_t getFactoryNames(std::vector<std::string>& factoryList);
+        /**
+         * Fetch a list of factory names that this Map contains
+         * @param vector object to receive the list
+         * @returns count of factories.
+         */
+        std::size_t getFactoryNames( std::vector< std::string >& factoryList );
 
-   private:
+    private:
    
-      // Hidden Contrustor, prevents instantiation
-      ConnectorFactoryMap() {};
+        // Hidden Contrustor, prevents instantiation
+        ConnectorFactoryMap() {};
       
-      // Hidden Destructor.
-      virtual ~ConnectorFactoryMap() {};
+        // Hidden Destructor.
+        virtual ~ConnectorFactoryMap() {};
  
-       // Hidden Copy Constructore
-      ConnectorFactoryMap(const ConnectorFactoryMap& factoryMap);
+        // Hidden Copy Constructore
+        ConnectorFactoryMap( const ConnectorFactoryMap& factoryMap );
       
-      // Hidden Assignment operator
-      ConnectorFactoryMap operator=(const ConnectorFactoryMap& factoryMap);
+        // Hidden Assignment operator
+        ConnectorFactoryMap operator=( const ConnectorFactoryMap& factoryMap );
 
-      // Map of Factories
-      std::map<std::string, ConnectorFactory*> factoryMap;
+        // Map of Factories
+        std::map< std::string, ConnectorFactory* > factoryMap;
       
-   };
+    };
 
 }}
 

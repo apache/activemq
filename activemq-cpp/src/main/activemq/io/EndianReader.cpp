@@ -35,37 +35,35 @@ EndianReader::EndianReader( InputStream* is )
 
 ////////////////////////////////////////////////////////////////////////////////
 EndianReader::~EndianReader()
-{
-    // no-op
-}
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
-unsigned char EndianReader::readByte() throw(IOException)
+unsigned char EndianReader::readByte() throw( IOException )
 {
     unsigned char value ;
 
     // Read a single byte
-    read(&value, sizeof(unsigned char)) ;
-    return value ;
+    read(&value, sizeof(unsigned char));
+    return value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-double EndianReader::readDouble() throw(IOException)
+double EndianReader::readDouble() throw( IOException )
 {
-    double value ;
+    double value;
 
     // Read a double and convert from big endian to little endian if necessary
-    read((unsigned char*)&value, sizeof(double) ) ;
+    read( (unsigned char*)&value, sizeof( double ) );
     return Endian::byteSwap(value) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float EndianReader::readFloat() throw(IOException)
+float EndianReader::readFloat() throw( IOException )
 {
     float value ;
 
     // Read a float and convert from big endian to little endian if necessary
-    read((unsigned char*)&value, sizeof(float)) ;
+    read( (unsigned char*)&value, sizeof( float ) );
     return Endian::byteSwap(value) ;
 }
 
@@ -85,18 +83,18 @@ uint32_t EndianReader::readUInt32() throw(IOException)
     uint32_t value;
 
     // Read an int and convert from big endian to little endian if necessary
-    read((unsigned char*)&value, sizeof(value)) ;
-    return Endian::byteSwap(value) ;
+    read( (unsigned char*)&value, sizeof( value ) );
+    return Endian::byteSwap(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 uint64_t EndianReader::readUInt64() throw(IOException)
 {
-    uint64_t value ;
+    uint64_t value;
 
     // Read a long long and convert from big endian to little endian if necessary
-    read((unsigned char*)&value, sizeof(value)) ;
-    return Endian::byteSwap(value) ;
+    read( (unsigned char*)&value, sizeof( value ) );
+    return Endian::byteSwap(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +116,7 @@ uint64_t EndianReader::readUInt64() throw(IOException)
 }*/
 
 ////////////////////////////////////////////////////////////////////////////////
-int EndianReader::read(unsigned char* buffer, int count) throw(IOException){
+int EndianReader::read( unsigned char* buffer, int count ) throw( IOException ){
 	
 	if( inputStream == NULL ){
 		throw IOException( __FILE__, __LINE__, 

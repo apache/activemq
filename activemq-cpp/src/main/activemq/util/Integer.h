@@ -27,15 +27,15 @@ namespace util{
     {
     public:
 
-    	Integer(void) {}
-    	virtual ~Integer(void) {}
+        Integer(void) {}
+        virtual ~Integer(void) {}
 
         /**
          * Parses the String passed and extracts an int.
          * @param String to parse
          * @return int value
          */
-        static int parseInt(const std::string& value){
+        static int parseInt( const std::string& value ){
             int ret = 0;
             std::istringstream istream(value);
             istream.clear();
@@ -48,7 +48,7 @@ namespace util{
          * @param int to convert
          * @return string representation
          */
-        static std::string toString(int value){
+        static std::string toString( int value ){
             std::ostringstream ostream;
             ostream << value;
             return ostream.str();

@@ -1,4 +1,5 @@
 SRCDIR = src
+OUTDIR = out
 MAKESUPPORT_HOME = $(PWD)
 
 OFILES = \
@@ -31,6 +32,7 @@ OFILES = \
 	$(OUTDIR)/main/activemq/core/ActiveMQProducer.o \
 	$(OUTDIR)/main/activemq/core/ActiveMQConsumer.o \
 	$(OUTDIR)/main/activemq/core/ActiveMQTransaction.o \
+	$(OUTDIR)/main/activemq/core/ActiveMQConstants.o \
 	\
 	$(OUTDIR)/main/activemq/io/EndianReader.o \
 	$(OUTDIR)/main/activemq/io/EndianWriter.o \
@@ -62,6 +64,7 @@ OFILES = \
 OTESTFILES = \
     $(OUTDIR)/test/main.o \
     \
+    $(OUTDIR)/test/activemq/core/ActiveMQDestinationTest.o \
     $(OUTDIR)/test/activemq/core/ActiveMQConnectionFactoryTest.o \
     $(OUTDIR)/test/activemq/core/ActiveMQConnectionTest.o \
     $(OUTDIR)/test/activemq/core/ActiveMQSessionTest.o \
@@ -130,10 +133,16 @@ OINTEGRATIONFILES = \
 	$(OUTDIR)/test-integration/integration/simple/SimpleTester.o \
 	$(OUTDIR)/test-integration/integration/transactional/TransactionTester.o \
 	$(OUTDIR)/test-integration/integration/common/AbstractTester.o \
-	$(OUTDIR)/test-integration/integration/common/IntegrationCommon.o
+	$(OUTDIR)/test-integration/integration/common/IntegrationCommon.o \
+	$(OUTDIR)/test-integration/integration/various/SimpleRollbackTest.o
+	
 
-LIBFILE = $(OUTDIR)/activemq.a
-TESTEXE = $(OUTDIR)/activemqTest
+# Increment this to get a build specific library.
+VERSION = 0_0_2
+
+LIBRARY_NAME   = activemq-cpp-$(VERSION)
+LIBFILE        = $(OUTDIR)/lib$(LIBRARY_NAME).a
+TESTEXE        = $(OUTDIR)/activemqTest
 INTEGRATIONEXE = $(OUTDIR)/activemqIntegrationTests
 
 DEFINES          =

@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <cms/Destination.h>
+#include <activemq/core/ActiveMQDestination.h>
 
 namespace activemq{
 namespace connector{
@@ -32,26 +32,25 @@ namespace stomp{
      * one of Topic, Queue, TemporaryTopic, or TemporaryQueue.
      */
     template <typename T>
-    class StompDestination : public T
+    class StompDestination : public core::ActiveMQDestination<T>
     {
-    private:
-    
-        // Destination type
-        cms::Destination::DestinationType destType;
-        
-        // Name of the Destination
-        std::string name;
-        
     public:
 
-    	StompDestination(void) {}
+        /**
+         * Copy Consturctor
+         * @param CMS Dest to Copy, must be a compatible type
+         */
+    	StompDestination( const cms::Destination* source ) :
+            core::ActiveMQDestination<T>( source ) {}
         
+        /**
+         * Custom Constructor
+         * @param string destination name plus any params
+         * @param type of destination this represents.
+         */
     	StompDestination( const std::string& name,
-                          cms::Destination::DestinationType type )
-        {
-            this->name = name;
-            this->destType = type;
-        }
+                          cms::Destination::DestinationType type ) :
+            core::ActiveMQDestination<T>( name, type ){}
 
         virtual ~StompDestination(void) {}
 
@@ -61,15 +60,7 @@ namespace stomp{
          * @return name
          */
         virtual std::string toProviderString(void) const {
-            return getPrefix() + name;
-        }
-        
-        /**
-         * Retrieve the Destination Type for this Destination
-         * @return The Destination Type
-         */
-        virtual cms::Destination::DestinationType getDestinationType(void) const {
-            return destType;
+            return getPrefix() + core::ActiveMQDestination<T>::getName();
         }
         
         /**
@@ -78,16 +69,7 @@ namespace stomp{
          * @return string name
          */
         virtual std::string toString(void) const {
-            return name;
-        }
-
-        /**
-         * Copies the contents of the given Destinastion object to this one.
-         * @param source The source Destination object.
-         */
-        virtual void copy( const cms::Destination& source ) {
-            this->destType = source.getDestinationType();
-            this->name = source.toString();
+            return core::ActiveMQDestination<T>::getName();
         }
 
     protected:

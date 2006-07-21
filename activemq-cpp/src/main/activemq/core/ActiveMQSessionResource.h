@@ -26,7 +26,7 @@ namespace core{
     {
     public:
     
-    	virtual ~ActiveMQSessionResource(void) {}
+        virtual ~ActiveMQSessionResource(void) {}
     
         /**
          * Retrieve the Connector resource that is associated with

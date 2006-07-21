@@ -35,6 +35,7 @@ namespace cms{
          * Stops this service.
          */
         virtual void stop() throw( CMSException ) = 0;
+        
     };
 }
 

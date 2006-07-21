@@ -42,7 +42,7 @@ public:
     virtual void run() {
         try {
             // Create a ConnectionFactory
-            ActiveMQConnectionFactory* connectionFactory = new ActiveMQConnectionFactory("127.0.0.1:61613");
+            ActiveMQConnectionFactory* connectionFactory = new ActiveMQConnectionFactory("tcp://127.0.0.1:61613");
 
             // Create a Connection
             connection = connectionFactory->createConnection();
@@ -143,7 +143,7 @@ public:
         try {
 
             // Create a ConnectionFactory
-            ActiveMQConnectionFactory* connectionFactory = new ActiveMQConnectionFactory("127.0.0.1:61613");
+            ActiveMQConnectionFactory* connectionFactory = new ActiveMQConnectionFactory("tcp://127.0.0.1:61613");
 
             // Create a Connection
             connection = connectionFactory->createConnection();

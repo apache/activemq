@@ -38,15 +38,17 @@ namespace marshal{
             // Sync to expected output
             connectedCommand.setSessionId( "test" );
 
+            StompTopic myTopic( "a" );
+
             // Sync to expected output
-            textCommand.setCMSDestination( StompTopic("a") );
+            textCommand.setCMSDestination( &myTopic );
             textCommand.setCMSMessageId( "123" );
             textCommand.getProperties().setProperty( 
                 "sampleProperty", "testvalue" );
             textCommand.setText( "testMessage" );
 
             // Sync to expected output
-            bytesCommand.setCMSDestination( StompTopic("a") );
+            bytesCommand.setCMSDestination( &myTopic );
             bytesCommand.setCMSMessageId( "123" );
             bytesCommand.getProperties().setProperty( 
                 "sampleProperty", "testvalue" );

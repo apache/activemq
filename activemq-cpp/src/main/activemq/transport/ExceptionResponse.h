@@ -24,12 +24,12 @@
 namespace activemq{
 namespace transport{
   
-  /**
-   * A response object that indicates an error occurred at the
-   * broker.
-   */
-  class ExceptionResponse : public Response{        
-  public:
+    /**
+     * A response object that indicates an error occurred at the
+     * broker.
+     */
+    class ExceptionResponse : public Response{        
+    public:
   
         virtual ~ExceptionResponse(){}
         
@@ -38,7 +38,7 @@ namespace transport{
          */
         virtual const BrokerError* getException() const = 0;
         
-  };
+    };
     
 }}
 

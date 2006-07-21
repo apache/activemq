@@ -51,7 +51,7 @@ namespace commands{
         virtual const char* getDestination(void) const{
             return getPropertyValue( 
                 CommandConstants::toString( 
-                    CommandConstants::HEADER_DESTINATION) );
+                    CommandConstants::HEADER_DESTINATION ) );
         }
       
         /**
@@ -60,7 +60,7 @@ namespace commands{
         virtual void setDestination( const std::string& dest ){
             setPropertyValue( 
                 CommandConstants::toString( 
-                    CommandConstants::HEADER_DESTINATION) ,
+                    CommandConstants::HEADER_DESTINATION ),
                 dest );
         }
       

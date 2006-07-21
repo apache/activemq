@@ -36,12 +36,12 @@ namespace network{
         SocketException( const SocketException& ex ){
             *(ActiveMQException*)this = ex;
         }
-	    SocketException(const char* file, const int lineNumber, 
-            const char* msg, ...)
+	    SocketException( const char* file, const int lineNumber, 
+                         const char* msg, ...)
 	    {
-	        va_list vargs ;
-            va_start(vargs, msg) ;
-            buildMessage(msg, vargs) ;
+	        va_list vargs;
+            va_start(vargs, msg);
+            buildMessage(msg, vargs);
             
             // Set the first mark for this exception.
             setMark( file, lineNumber );
@@ -57,7 +57,8 @@ namespace network{
         }
         
 	    virtual ~SocketException(){}
-	} ;
+        
+	};
 
 }}
 

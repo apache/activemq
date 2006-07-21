@@ -35,43 +35,41 @@ EndianWriter::EndianWriter( OutputStream* os )
 
 ////////////////////////////////////////////////////////////////////////////////
 EndianWriter::~EndianWriter()
-{
-    // no-op
-}
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
-void EndianWriter::writeByte(unsigned char value) throw(IOException)
+void EndianWriter::writeByte( unsigned char value ) throw( IOException )
 {
     // Write a single byte
-    write(&value, sizeof(unsigned char));
+    write( &value, sizeof(unsigned char) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void EndianWriter::writeDouble(double v) throw(IOException)
+void EndianWriter::writeDouble( double v ) throw( IOException )
 {
     // Write a double, byteswap if necessary
     double value = Endian::byteSwap(v);
-    write((unsigned char*)&value, sizeof(value));
+    write( (unsigned char*)&value, sizeof(value) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void EndianWriter::writeFloat(float v) throw(IOException)
+void EndianWriter::writeFloat( float v ) throw( IOException )
 {
     // Write a float, byteswap if necessary
     float value = Endian::byteSwap(v);
-    write((unsigned char*)&value, sizeof(value));
+    write( (unsigned char*)&value, sizeof(value) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void EndianWriter::writeUInt16(uint16_t v) throw(IOException)
+void EndianWriter::writeUInt16( uint16_t v ) throw( IOException )
 {
     // Write a short, byteswap if necessary
     uint16_t value = Endian::byteSwap(v) ;
-    write((unsigned char*)&value, sizeof(value));
+    write( (unsigned char*)&value, sizeof(value) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void EndianWriter::writeUInt32(uint32_t v) throw(IOException)
+void EndianWriter::writeUInt32( uint32_t v ) throw( IOException )
 {
     // Write an int, byteswap if necessary
     uint32_t value = Endian::byteSwap(v);
@@ -79,11 +77,11 @@ void EndianWriter::writeUInt32(uint32_t v) throw(IOException)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void EndianWriter::writeUInt64(uint64_t v) throw(IOException)
+void EndianWriter::writeUInt64( uint64_t v ) throw( IOException )
 {
     // Write a long long, byteswap if necessary
     uint64_t value = Endian::byteSwap(v);
-    write((unsigned char*)&value, sizeof(value));
+    write( (unsigned char*)&value, sizeof(value) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +101,7 @@ void EndianWriter::writeUInt64(uint64_t v) throw(IOException)
 }*/
 
 ////////////////////////////////////////////////////////////////////////////////
-void EndianWriter::write(const unsigned char* buffer, int count) throw(IOException){
+void EndianWriter::write( const unsigned char* buffer, int count ) throw( IOException ){
 	
 	if( outputStream == NULL ){
 		throw IOException( __FILE__, __LINE__, 

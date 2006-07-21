@@ -28,9 +28,6 @@ namespace connector{
     {
     public:
 
-        /**
-         * Destructor
-         */
    	    virtual ~SessionInfo(void) {}
         
         /**

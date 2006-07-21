@@ -22,17 +22,17 @@ using namespace activemq::util;
 using namespace activemq::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-StringTokenizer::StringTokenizer(const std::string& str, 
-                                 const std::string& delim, 
-                                 bool returnDelims)
+StringTokenizer::StringTokenizer( const std::string& str, 
+                                  const std::string& delim, 
+                                  bool returnDelims )
 {
-   // store off the data
-   this->str = str;
-   this->delim = delim;
-   this->returnDelims = returnDelims;
+    // store off the data
+    this->str = str;
+    this->delim = delim;
+    this->returnDelims = returnDelims;
    
-   // Start and the beginning
-   pos = 0;
+    // Start and the beginning
+    pos = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,31 +43,31 @@ StringTokenizer::~StringTokenizer(void)
 ////////////////////////////////////////////////////////////////////////////////
 int StringTokenizer::countTokens(void) const
 {
-   int count = 0;
-   string::size_type localPos = pos;
-   string::size_type lastPos  = pos;
+    int count = 0;
+    string::size_type localPos = pos;
+    string::size_type lastPos  = pos;
 
-   while(localPos != string::npos)
-   {
-      if(returnDelims && str.find_first_of(delim, localPos) == localPos)
-      {
-         count += 1;
-         localPos += 1;
+    while(localPos != string::npos)
+    {
+        if(returnDelims && str.find_first_of(delim, localPos) == localPos)
+        {
+            count += 1;
+            localPos += 1;
 
-         continue;
-      }
+            continue;
+        }
 
-      // Find first token by spanning the fist non-delimiter, to the
-      // next delimiter, skipping any delimiters that are at the curret
-      // location.
-      lastPos  = str.find_first_not_of(delim, localPos);
-      localPos = str.find_first_of(delim, lastPos);
+        // Find first token by spanning the fist non-delimiter, to the
+        // next delimiter, skipping any delimiters that are at the curret
+        // location.
+        lastPos  = str.find_first_not_of(delim, localPos);
+        localPos = str.find_first_of(delim, lastPos);
 
-      if(lastPos != string::npos)
-      {
-         count++;
-      }
-   }
+        if(lastPos != string::npos)
+        {
+            count++;
+        }
+    }
 
 	return count;
 }
@@ -75,60 +75,60 @@ int StringTokenizer::countTokens(void) const
 ////////////////////////////////////////////////////////////////////////////////
 bool StringTokenizer::hasMoreTokens(void) const
 {
-   string::size_type nextpos = 
-      returnDelims ? str.find_first_of(delim, pos) :
-                     str.find_first_not_of(delim, pos);
+    string::size_type nextpos = 
+        returnDelims ? str.find_first_of(delim, pos) :
+                       str.find_first_not_of(delim, pos);
 
-   return (nextpos != string::npos);
+    return (nextpos != string::npos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string StringTokenizer::nextToken(void)
    throw ( exceptions::NoSuchElementException )
 {
-   if(pos == string::npos)
-   {
-      throw NoSuchElementException(
-         __FILE__, __LINE__,
-         "StringTokenizer::nextToken - No more Tokens available");
-   }
+    if(pos == string::npos)
+    {
+        throw NoSuchElementException(
+            __FILE__, __LINE__,
+            "StringTokenizer::nextToken - No more Tokens available");
+    }
 
-   if(returnDelims)
-   {
-      // if char at current pos is a delim return it and advance pos
-      if(str.find_first_of(delim, pos) == pos)
-      {
-         return str.substr(pos++, 1);
-      }
-   }
+    if(returnDelims)
+    {
+        // if char at current pos is a delim return it and advance pos
+        if(str.find_first_of(delim, pos) == pos)
+        {
+            return str.substr(pos++, 1);
+        }
+    }
 
-   // Skip delimiters at beginning.
-   string::size_type lastPos = str.find_first_not_of(delim, pos);
+    // Skip delimiters at beginning.
+    string::size_type lastPos = str.find_first_not_of(delim, pos);
    
-   // Find the next delimiter in the string, the charactors in between
-   // will be the token to return.  If this returns string::npos then
-   // there are no more delimiters in the string.
-   pos = str.find_first_of(delim, lastPos);
+    // Find the next delimiter in the string, the charactors in between
+    // will be the token to return.  If this returns string::npos then
+    // there are no more delimiters in the string.
+    pos = str.find_first_of(delim, lastPos);
 
-   if(string::npos != lastPos)
-   {
-      // Found a token, count it, if the pos of the next delim is npos
-      // then we set length to copy to npos so that all the remianing
-      // portion of the string is copied, otherwise we set it to the 
-      return str.substr(lastPos, 
-                        pos == string::npos ? pos : pos-lastPos);
-   }
-   else
-   {
-      throw NoSuchElementException(
-         __FILE__, __LINE__,
-         "StringTokenizer::nextToken - No more Tokens available");
-   }
+    if(string::npos != lastPos)
+    {
+        // Found a token, count it, if the pos of the next delim is npos
+        // then we set length to copy to npos so that all the remianing
+        // portion of the string is copied, otherwise we set it to the 
+        return str.substr( lastPos, 
+                           pos == string::npos ? pos : pos-lastPos );
+    }
+    else
+    {
+        throw NoSuchElementException(
+            __FILE__, __LINE__,
+            "StringTokenizer::nextToken - No more Tokens available");
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string StringTokenizer::nextToken(const std::string& delim)
-   throw ( exceptions::NoSuchElementException )
+std::string StringTokenizer::nextToken( const std::string& delim )
+    throw ( exceptions::NoSuchElementException )
 {
     this->delim = delim;
 
@@ -136,13 +136,13 @@ std::string StringTokenizer::nextToken(const std::string& delim)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-unsigned int StringTokenizer::toArray(std::vector<std::string>& array)
+unsigned int StringTokenizer::toArray( std::vector<std::string>& array )
 {
     int count = 0;
 
     while(hasMoreTokens())
     {
-        array.push_back(nextToken());
+        array.push_back( nextToken() );
         count++;
     }
 
@@ -150,9 +150,9 @@ unsigned int StringTokenizer::toArray(std::vector<std::string>& array)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StringTokenizer::reset(const std::string& str,
-                            const std::string& delim,
-                            bool returnDelims)
+void StringTokenizer::reset( const std::string& str,
+                             const std::string& delim,
+                             bool returnDelims )
 {
     if(str != "")
     {

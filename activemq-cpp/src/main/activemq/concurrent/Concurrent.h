@@ -51,11 +51,11 @@ namespace concurrent{
 
 #define WAIT_INFINITE  0xFFFFFFFF
 
-#define synchronized(W)                                                     \
-      if(false){}                                                           \
-      else                                                                  \
-      for(activemq::concurrent::Lock lock_W(W);                                                    \
-          lock_W.isLocked(); lock_W.unlock())
+#define synchronized(W)                                               \
+        if(false){}                                                   \
+        else                                                          \
+        for(activemq::concurrent::Lock lock_W(W);                     \
+            lock_W.isLocked(); lock_W.unlock())
 
 }}
 

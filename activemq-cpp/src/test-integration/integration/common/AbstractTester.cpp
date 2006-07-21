@@ -89,7 +89,7 @@ unsigned int AbstractTester::produceTextMessages(
             stream << text << ix << ends;
             textMsg->setText( stream.str().c_str() );        
             stream.str("");  
-            producer.send( *textMsg );
+            producer.send( textMsg );
             doSleep();
             ++realCount;
         }
@@ -125,7 +125,7 @@ unsigned int AbstractTester::produceBytesMessages(
 
         unsigned int realCount = 0;
         for( unsigned int ix=0; ix<count; ++ix ){                
-            producer.send( *bytesMsg ); 
+            producer.send( bytesMsg ); 
             doSleep();
             ++realCount;
         }
@@ -167,15 +167,15 @@ void AbstractTester::onException( const cms::CMSException& error )
     CPPUNIT_ASSERT( AbstractTester );
 }
 
-void AbstractTester::onMessage( const cms::Message& message )
+void AbstractTester::onMessage( const cms::Message* message )
 {
-    try
+    // Got a text message.
+    const cms::TextMessage* txtMsg = 
+        dynamic_cast<const cms::TextMessage*>(message);
+        
+    if( txtMsg != NULL )
     {
-        // Got a text message.
-        const cms::TextMessage& txtMsg = 
-            dynamic_cast<const cms::TextMessage&>(message);
-            
-        std::string text = txtMsg.getText();
+        std::string text = txtMsg->getText();
 
 //            printf("received text msg: %s\n", txtMsg.getText() );
 
@@ -189,18 +189,16 @@ void AbstractTester::onMessage( const cms::Message& message )
 
         return;
     }
-    catch( std::bad_cast& ex )
-    {}
     
-    try
-    {
-        // Got a bytes msg.
-        const cms::BytesMessage& bytesMsg = 
-            dynamic_cast<const cms::BytesMessage&>(message);
+    // Got a bytes msg.
+    const cms::BytesMessage* bytesMsg = 
+        dynamic_cast<const cms::BytesMessage*>(message);
 
-        const unsigned char* bytes = bytesMsg.getBodyBytes();
+    if( bytesMsg != NULL )
+    {
+        const unsigned char* bytes = bytesMsg->getBodyBytes();
         
-        string transcode( (const char*)bytes, bytesMsg.getBodyLength() );
+        string transcode( (const char*)bytes, bytesMsg->getBodyLength() );
 
         //printf("received bytes msg: " );
         //int numBytes = bytesMsg.getBodyLength();
@@ -218,10 +216,5 @@ void AbstractTester::onMessage( const cms::Message& message )
         }
 
         return;
-    }
-    catch( std::bad_cast& ex )
-    {
-        bool AbstractTester = false;
-        CPPUNIT_ASSERT( AbstractTester );
     }
 }

@@ -20,6 +20,7 @@
 #include <cms/MessageProducer.h>
 #include <cms/Message.h>
 #include <cms/Destination.h>
+#include <cms/DeliveryMode.h>
 
 #include <activemq/core/ActiveMQSessionResource.h>
 #include <activemq/connector/ProducerInfo.h>
@@ -35,7 +36,7 @@ namespace core{
     private:
    
         // Delivery Mode of this Producer
-        cms::Message::DeliveryMode deliveryMode;
+        int deliveryMode;
       
         // Disable the Message Id
         bool disableMsgId;
@@ -63,9 +64,6 @@ namespace core{
         ActiveMQProducer( connector::ProducerInfo* producerInfo,
                           ActiveMQSession* session );
 
-        /**
-         * Destructor
-         */
         virtual ~ActiveMQProducer(void);
 
         /**
@@ -73,21 +71,21 @@ namespace core{
          * @param a Message Object Pointer
          * @throws CMSException
          */
-        virtual void send( cms::Message& message ) throw ( cms::CMSException );
+        virtual void send( cms::Message* message ) throw ( cms::CMSException );
       
         /**
          * Sends the message to the designated destination.
          * @param a Message Object Pointer
          * @throws CMSException
          */
-        virtual void send( const cms::Destination& destination,
-                           cms::Message& message) throw ( cms::CMSException );
+        virtual void send( const cms::Destination* destination,
+                           cms::Message* message ) throw ( cms::CMSException );
 
         /** 
          * Sets the delivery mode for this Producer
          * @param The DeliveryMode
          */
-        virtual void setDeliveryMode(cms::Message::DeliveryMode mode) {
+        virtual void setDeliveryMode( int mode ) {
             deliveryMode = mode; 
         }
       
@@ -95,7 +93,7 @@ namespace core{
          * Gets the delivery mode for this Producer
          * @return The DeliveryMode
          */
-        virtual cms::Message::DeliveryMode getDeliveryMode(void) const {
+        virtual int getDeliveryMode(void) const {
             return deliveryMode; 
         }
       

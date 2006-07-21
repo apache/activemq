@@ -59,9 +59,9 @@ namespace connector{
             {
                 // UnRegister it in the map.
                 ConnectorFactoryMap::getInstance()->
-                    unregisterConnectorFactory(name);
+                    unregisterConnectorFactory( name );
             
-                if(manageLifetime)
+                if( manageLifetime )
                 {
                     delete factory;
                 }

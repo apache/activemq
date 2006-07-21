@@ -29,9 +29,6 @@ namespace connector{
     {
     public:
 
-        /**
-         * Destructor
-         */
         virtual ~ConsumerInfo(void) {}
       
         /**

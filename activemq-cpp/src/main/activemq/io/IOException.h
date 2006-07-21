@@ -22,30 +22,31 @@
 namespace activemq{
 namespace io{
 
-	/*
-	 * Signals that an I/O exception of some sort has occurred.
-	 */
-	class IOException : public exceptions::ActiveMQException
-	{
-	public:
-	    IOException(){}
+    /*
+     * Signals that an I/O exception of some sort has occurred.
+     */
+    class IOException : public exceptions::ActiveMQException
+    {
+    public:
+
+        IOException(){}
         IOException( const exceptions::ActiveMQException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
         IOException( const IOException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
-	    IOException(const char* file, const int lineNumber,
-            const char* msg, ...)
-	    {
-	        va_list vargs ;
-            va_start(vargs, msg) ;
-            buildMessage(msg, vargs) ;
+        IOException( const char* file, const int lineNumber,
+                     const char* msg, ... )
+        {
+            va_list vargs;
+            va_start( vargs, msg );
+            buildMessage( msg, vargs );
             
             // Set the first mark for this exception.
             setMark( file, lineNumber );
-	    }
-	    
+        }
+        
         /**
          * Clones this exception.  This is useful for cases where you need
          * to preserve the type of the original exception as well as the message.
@@ -55,9 +56,9 @@ namespace io{
             return new IOException( *this );
         }
         
-	    virtual ~IOException(){}
-	    
-	};
+        virtual ~IOException(){}
+        
+    };
 
 }}
 

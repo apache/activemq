@@ -24,15 +24,15 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 BufferedOutputStream::BufferedOutputStream( OutputStream* stream )
 {
-	// Default to 1k buffer.
-	init( stream, 1024 );
+    // Default to 1k buffer.
+    init( stream, 1024 );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 BufferedOutputStream::BufferedOutputStream( OutputStream* stream, 
-	const int bufSize )
+    const int bufSize )
 {
-	init( stream, bufSize );
+    init( stream, bufSize );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,75 +47,74 @@ BufferedOutputStream::~BufferedOutputStream()
 
 ////////////////////////////////////////////////////////////////////////////////
 void BufferedOutputStream::init( OutputStream* stream, const int bufSize ){
-	
-	this->stream = stream;
-	this->bufferSize = bufSize;
-	
-	buffer = new unsigned char[bufSize];
-	head = tail = 0;
+    
+    this->stream = stream;
+    this->bufferSize = bufSize;
+    
+    buffer = new unsigned char[bufSize];
+    head = tail = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void BufferedOutputStream::close() throw(cms::CMSException){
-	
-	// Flush this stream.
-	flush();	
-	
-	// Close the delegate stream.
-	stream->close();
+void BufferedOutputStream::close() throw( cms::CMSException ){
+    
+    // Flush this stream.
+    flush();    
+    
+    // Close the delegate stream.
+    stream->close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void BufferedOutputStream::emptyBuffer() throw (IOException){
-	
-	if( head != tail ){
-		stream->write( buffer+head, tail-head );
-	}
-	head = tail = 0;
+void BufferedOutputStream::emptyBuffer() throw ( IOException ){
+    
+    if( head != tail ){
+        stream->write( buffer+head, tail-head );
+    }
+    head = tail = 0;
 }
-		
+        
 ////////////////////////////////////////////////////////////////////////////////
-void BufferedOutputStream::flush() throw (IOException){
-	
-	// Empty the contents of the buffer to the output stream.
-	emptyBuffer();
-	
-	// Flush the output stream.
-	stream->flush();
+void BufferedOutputStream::flush() throw ( IOException ){
+    
+    // Empty the contents of the buffer to the output stream.
+    emptyBuffer();
+    
+    // Flush the output stream.
+    stream->flush();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void BufferedOutputStream::write( const unsigned char c ) throw (IOException){
-	
-	if( tail >= bufferSize ){
-		emptyBuffer();
-	}
-	
-	buffer[tail++] = c;	
+void BufferedOutputStream::write( const unsigned char c ) throw ( IOException ){
+    
+    if( tail >= bufferSize ){
+        emptyBuffer();
+    }
+    
+    buffer[tail++] = c; 
 }
 
-////////////////////////////////////////////////////////////////////////////////		
+////////////////////////////////////////////////////////////////////////////////        
 void BufferedOutputStream::write( const unsigned char* buffer, const int len ) 
-	throw (IOException)
-{		
-	// Iterate until all the data is written.
-	for( int pos=0; pos < len; ){
-		
-		if( tail >= bufferSize ){
-			emptyBuffer();
-		}
-	
-		// Get the number of bytes left to write.
-		int bytesToWrite = min( bufferSize-tail, len-pos );
-		
-		// Copy the data.
-		memcpy( this->buffer+tail, buffer+pos, bytesToWrite );
-		
-		// Increase the tail position.
-		tail += bytesToWrite;
-		
-		// Decrease the number of bytes to write.
-		pos += bytesToWrite;	
-	}	
+    throw ( IOException )
+{       
+    // Iterate until all the data is written.
+    for( int pos=0; pos < len; ){
+        
+        if( tail >= bufferSize ){
+            emptyBuffer();
+        }
+    
+        // Get the number of bytes left to write.
+        int bytesToWrite = min( bufferSize-tail, len-pos );
+        
+        // Copy the data.
+        memcpy( this->buffer+tail, buffer+pos, bytesToWrite );
+        
+        // Increase the tail position.
+        tail += bytesToWrite;
+        
+        // Decrease the number of bytes to write.
+        pos += bytesToWrite;    
+    }   
 }
-

@@ -78,10 +78,10 @@ void DurableTester::test()
         // Create CMS Object for Comms
         cms::Topic* topic = session->createTopic("mytopic");
         cms::MessageConsumer* consumer = 
-            session->createDurableConsumer( *topic, subName, "" );            
+            session->createDurableConsumer( topic, subName, "" );            
         consumer->setMessageListener( this );
         cms::MessageProducer* producer = 
-            session->createProducer( *topic );
+            session->createProducer( topic );
 
         unsigned int sent;
 
@@ -100,7 +100,7 @@ void DurableTester::test()
         // Send some text messages
         sent += this->produceTextMessages( *producer, 3 );
 
-        consumer = session->createDurableConsumer( *topic, subName, "" );            
+        consumer = session->createDurableConsumer( topic, subName, "" );            
 
         // Send some text messages
         sent += this->produceTextMessages( *producer, 3 );

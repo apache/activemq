@@ -53,7 +53,7 @@
       </activation>
       
       <properties>
-	    <compiler.options>-frtti -pthread -O3 -DNDEBUG -D_REENTRANT</compiler.options>
+	    <compiler.options>-frtti -O3 -DNDEBUG -D_REENTRANT</compiler.options>
   	  </properties>
   	  
     </profile>
@@ -68,7 +68,7 @@
       </activation>
       
       <properties>
-	    <compiler.options>-frtti -g -pthread -DDEBUG -D_DEBUG -D_REENTRANT</compiler.options>
+	    <compiler.options>-frtti -g -DDEBUG -D_DEBUG -D_REENTRANT</compiler.options>
   	  </properties>
   	  
     </profile>

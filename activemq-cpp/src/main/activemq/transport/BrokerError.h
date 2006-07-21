@@ -24,12 +24,12 @@
 namespace activemq{
 namespace transport{
   
-  /**
-   * A distributed exception that implies that an error occurred at
-   * the broker.
-   */
-  class BrokerError : public exceptions::ActiveMQException{        
-  public:
+    /**
+     * A distributed exception that implies that an error occurred at
+     * the broker.
+     */
+    class BrokerError : public exceptions::ActiveMQException{        
+    public:
   
         BrokerError(){};
         BrokerError( const exceptions::ActiveMQException& ex ){
@@ -60,7 +60,7 @@ namespace transport{
         
         virtual ~BrokerError(){}
         
-  };
+    };
     
 }}
 

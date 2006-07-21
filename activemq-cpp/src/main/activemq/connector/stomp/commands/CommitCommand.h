@@ -40,7 +40,7 @@ namespace commands{
                 initialize( getFrame() );
         }
         CommitCommand( StompFrame* frame ) : 
-            AbstractCommand<transport::Command>(frame) {
+            AbstractCommand<transport::Command>( frame ) {
                 validate( getFrame() );
         }
         virtual ~CommitCommand(void) {}

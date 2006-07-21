@@ -56,7 +56,7 @@ using namespace integration;
 using namespace integration::transactional;
 using namespace integration::common;
 
-TransactionTester::TransactionTester() : AbstractTester( cms::Session::Transactional )
+TransactionTester::TransactionTester() : AbstractTester( cms::Session::SESSION_TRANSACTED )
 {}
 
 TransactionTester::~TransactionTester()
@@ -76,10 +76,10 @@ void TransactionTester::test()
         // Create CMS Object for Comms
         cms::Topic* topic = session->createTopic("mytopic");
         cms::MessageConsumer* consumer = 
-            session->createConsumer( *topic );            
+            session->createConsumer( topic );            
         consumer->setMessageListener( this );
         cms::MessageProducer* producer = 
-            session->createProducer( *topic );
+            session->createProducer( topic );
 
         // Send some text messages
         this->produceTextMessages( 
@@ -105,11 +105,11 @@ void TransactionTester::test()
         // Send some text messages
         this->produceTextMessages( 
             *producer, IntegrationCommon::defaultMsgCount );
-            
+
         session->rollback();
 
         // Wait till we get all the messages
-        waitForMessages( IntegrationCommon::defaultMsgCount * 2 );
+        waitForMessages( IntegrationCommon::defaultMsgCount );
 
         printf("received: %d\n", numReceived );
         CPPUNIT_ASSERT( 

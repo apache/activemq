@@ -23,65 +23,65 @@
 namespace activemq{
 namespace network{
 
-	/**
-	 * A server socket class (for testing purposes).
-	 */
-	class ServerSocket
-	{
-	public:
-	
-	    typedef Socket::SocketHandle SocketHandle;
-	    
-	private:
-	
-	    SocketHandle socketHandle;
-	    
-	public:
-	
-	    /** 
-	     * Constructor.
-	     * Creates a non-bound server socket.
-	     */
-	    ServerSocket();
-	
-	    /**
-	     * Destructor.
-	     * Releases socket handle if close() hasn't been called.
-	     */
-	    virtual ~ServerSocket();
-	    
-	public:
-	
-	    /**
-	     * Bind and listen to given IP/dns and port.
-	     * @param host IP address or host name.
-	     * @param port TCP port between 1..655535
-	     */
-	    virtual void bind (const char* host, int port) throw (SocketException);
-	
-	    /**
-	     * Bind and listen to given IP/dns and port.
-	     * @param host IP address or host name.
-	     * @param port TCP port between 1..655535
-	     * @param backlog Size of listen backlog.
-	     */
-	    virtual void bind (const char* host, int port, int backlog) throw (SocketException);
-	
-	    /**
-	     * Blocks until a client connects to the bound socket.
-	     * @return new socket. Never returns NULL.
-	     */
-	    virtual Socket* accept () throw (SocketException);
-	
-	    /**
-	     * Closes the server socket.
-	     */
-	    virtual void close() throw(cms::CMSException);
-	
-	    /**
-	     * @return true of the server socket is bound.
-	     */ 
-	    virtual bool isBound() const;
+    /**
+     * A server socket class (for testing purposes).
+     */
+    class ServerSocket
+    {
+    public:
+    
+        typedef Socket::SocketHandle SocketHandle;
+        
+    private:
+    
+        SocketHandle socketHandle;
+        
+    public:
+    
+        /** 
+         * Constructor.
+         * Creates a non-bound server socket.
+         */
+        ServerSocket();
+    
+        /**
+         * Destructor.
+         * Releases socket handle if close() hasn't been called.
+         */
+        virtual ~ServerSocket();
+        
+    public:
+    
+        /**
+         * Bind and listen to given IP/dns and port.
+         * @param host IP address or host name.
+         * @param port TCP port between 1..655535
+         */
+        virtual void bind( const char* host, int port ) throw ( SocketException );
+    
+        /**
+         * Bind and listen to given IP/dns and port.
+         * @param host IP address or host name.
+         * @param port TCP port between 1..655535
+         * @param backlog Size of listen backlog.
+         */
+        virtual void bind( const char* host, int port, int backlog ) throw ( SocketException );
+    
+        /**
+         * Blocks until a client connects to the bound socket.
+         * @return new socket. Never returns NULL.
+         */
+        virtual Socket* accept () throw ( SocketException );
+    
+        /**
+         * Closes the server socket.
+         */
+        virtual void close() throw( cms::CMSException );
+    
+        /**
+         * @return true of the server socket is bound.
+         */ 
+        virtual bool isBound() const;
        
    protected:
 
@@ -94,18 +94,19 @@ namespace network{
               SocketException* socketInitError;
               
               void clear(){
-               if( socketInitError != NULL ){
-                  delete socketInitError;
-               }
-               socketInitError = NULL;
+                  if( socketInitError != NULL ){
+                      delete socketInitError;
+                  }
+                  socketInitError = NULL;
               }
               
           public:
-              SocketException* getSocketInitError () {
+          
+              SocketException* getSocketInitError() {
                   return socketInitError;
               }
               StaticServerSocketInitializer();
-              virtual ~StaticServerSocketInitializer ();
+              virtual ~StaticServerSocketInitializer();
                       
           };
           static StaticServerSocketInitializer staticSocketInitializer;

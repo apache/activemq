@@ -65,8 +65,8 @@ namespace commands{
             CPPUNIT_ASSERT( std::string( cmd.getTransactionId() ) == 
                             "ID:123456" );
             StompTopic topic("testTopic");
-            cmd.setCMSDestination( topic );
-            CPPUNIT_ASSERT( cmd.getCMSDestination().toString() == 
+            cmd.setCMSDestination( &topic );
+            CPPUNIT_ASSERT( cmd.getCMSDestination()->toString() == 
                             "testTopic" );
             
             StompFrame* frame = cmd.marshal().clone();
@@ -98,12 +98,12 @@ namespace commands{
             CPPUNIT_ASSERT( std::string( cmd.getCMSCorrelationId() ) == 
                             "ID:1234567" );
             CPPUNIT_ASSERT( cmd.getCMSDeliveryMode() == 
-                            cms::Message::PERSISTANT );
-            cmd.setCMSDeliveryMode( cms::Message::NONPERSISTANT );
+                            cms::DeliveryMode::PERSISTANT );
+            cmd.setCMSDeliveryMode( cms::DeliveryMode::NON_PERSISTANT );
             CPPUNIT_ASSERT( cmd.getCMSDeliveryMode() == 
-                            cms::Message::NONPERSISTANT );
-            cmd.setCMSDestination( topic );
-            CPPUNIT_ASSERT( cmd.getCMSDestination().toString() == 
+                            cms::DeliveryMode::NON_PERSISTANT );
+            cmd.setCMSDestination( &topic );
+            CPPUNIT_ASSERT( cmd.getCMSDestination()->toString() == 
                             "testTopic" );
             CPPUNIT_ASSERT( cmd.getCMSExpiration() == 0 );
             cmd.setCMSExpiration( 123 );

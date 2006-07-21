@@ -103,7 +103,7 @@
 // Macros and helpers for endian conversion
 namespace activemq{
 namespace util{
-	
+    
 /*#ifdef IFR_IS_BIGENDIAN
 inline unsigned int       htoni   (unsigned int i)        { return i; }
 inline unsigned long long htonll  (unsigned long long ll) { return ll; }
@@ -117,18 +117,18 @@ inline double             ntohd   (double d)              { return d; }
 
 inline unsigned int htoni (unsigned int i) {
   return ( i << 8  ) & 0xFF00 |
-	     ( i >> 8  ) & 0x00FF;
+         ( i >> 8  ) & 0x00FF;
 }
 inline unsigned long long htonll (unsigned long long ll) {
   return
     ( ll << 56 ) & 0xFF00000000000000ULL |
-	( ll << 40 ) & 0x00FF000000000000ULL |
-	( ll << 24 ) & 0x0000FF0000000000ULL |
-	( ll << 8  ) & 0x000000FF00000000ULL |
+    ( ll << 40 ) & 0x00FF000000000000ULL |
+    ( ll << 24 ) & 0x0000FF0000000000ULL |
+    ( ll << 8  ) & 0x000000FF00000000ULL |
     ( ll >> 8  ) & 0x00000000FF000000ULL |
-	( ll >> 24 ) & 0x0000000000FF0000ULL |
-	( ll >> 40 ) & 0x000000000000FF00ULL |
-	( ll >> 56 ) & 0x00000000000000FFULL;
+    ( ll >> 24 ) & 0x0000000000FF0000ULL |
+    ( ll >> 40 ) & 0x000000000000FF00ULL |
+    ( ll >> 56 ) & 0x00000000000000FFULL;
 }
 
 
@@ -145,53 +145,53 @@ inline unsigned long long ntohll  (unsigned long long ll) { return htonll (ll); 
 inline float              ntohf   (float f)               { return htonf (f); }
 inline double             ntohd   (double d)              { return htond (d); }
 */
-	class Endian{
-	public:
-	
-		static void byteSwap(unsigned char* data, int dataLength) {
-			
-			#ifdef IFR_IS_BIGENDIAN
-				return;
-			#endif
-			
-		    for (int i = 0; i<dataLength/2; i++) {
-				unsigned char temp = data[i];
-				data[i] = data[dataLength-1-i];
-				data[dataLength-1-i] = temp;
-		    }
-		}
-		
-		static uint8_t byteSwap( uint8_t value ){
-			byteSwap( (unsigned char*)&value, sizeof( value ) );
-			return value;
-		}
-		
-		static uint16_t byteSwap( uint16_t value ){
-			byteSwap( (unsigned char*)&value, sizeof( value ) );
-			return value;
-		}
-		
-		static uint32_t byteSwap( uint32_t value ){
-			byteSwap( (unsigned char*)&value, sizeof( value ) );
-			return value;
-		}
-		
-		static uint64_t byteSwap( uint64_t value ){
-			byteSwap( (unsigned char*)&value, sizeof( value ) );
-			return value;
-		}
-		
-		static float byteSwap( float value ){
-			byteSwap( (unsigned char*)&value, sizeof( value ) );
-			return value;
-		}
-		
-		static double byteSwap( double value ){
-			byteSwap( (unsigned char*)&value, sizeof( value ) );
-			return value;
-		}
-	};
-	
+    class Endian{
+    public:
+    
+        static void byteSwap(unsigned char* data, int dataLength) {
+            
+            #ifdef IFR_IS_BIGENDIAN
+                return;
+            #endif
+            
+            for (int i = 0; i<dataLength/2; i++) {
+                unsigned char temp = data[i];
+                data[i] = data[dataLength-1-i];
+                data[dataLength-1-i] = temp;
+            }
+        }
+        
+        static uint8_t byteSwap( uint8_t value ){
+            byteSwap( (unsigned char*)&value, sizeof( value ) );
+            return value;
+        }
+        
+        static uint16_t byteSwap( uint16_t value ){
+            byteSwap( (unsigned char*)&value, sizeof( value ) );
+            return value;
+        }
+        
+        static uint32_t byteSwap( uint32_t value ){
+            byteSwap( (unsigned char*)&value, sizeof( value ) );
+            return value;
+        }
+        
+        static uint64_t byteSwap( uint64_t value ){
+            byteSwap( (unsigned char*)&value, sizeof( value ) );
+            return value;
+        }
+        
+        static float byteSwap( float value ){
+            byteSwap( (unsigned char*)&value, sizeof( value ) );
+            return value;
+        }
+        
+        static double byteSwap( double value ){
+            byteSwap( (unsigned char*)&value, sizeof( value ) );
+            return value;
+        }
+    };
+    
 //#endif // IFR_IS_BIGENDIAN
 
 }}

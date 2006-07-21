@@ -25,39 +25,40 @@
 namespace activemq{
 namespace io{
 
-	/**
-	 * Base interface for an output stream.
-	 */
-	class OutputStream 
-	: 
-		public cms::Closeable,
-		public concurrent::Synchronizable
-	{
-	public:
-	
-		virtual ~OutputStream(){}
-		
-		/**
-		 * Writes a single byte to the output stream.
-		 * @param c the byte.
-		 * @throws IOException thrown if an error occurs.
-		 */
-		virtual void write( const unsigned char c ) throw (IOException) = 0;
-		
-		/**
-		 * Writes an array of bytes to the output stream.
-		 * @param buffer The array of bytes to write.
-		 * @param len The number of bytes from the buffer to be written.
-		 * @throws IOException thrown if an error occurs.
-		 */
-		virtual void write( const unsigned char* buffer, const int len ) throw (IOException) = 0;
-		
-		/**
-		 * Flushes any pending writes in this output stream.
-		 */
-		virtual void flush() throw (IOException) = 0;
-	};
-		
+    /**
+     * Base interface for an output stream.
+     */
+    class OutputStream 
+    : 
+        public cms::Closeable,
+        public concurrent::Synchronizable
+    {
+    public:
+    
+        virtual ~OutputStream(){}
+        
+        /**
+         * Writes a single byte to the output stream.
+         * @param c the byte.
+         * @throws IOException thrown if an error occurs.
+         */
+        virtual void write( const unsigned char c ) throw ( IOException ) = 0;
+        
+        /**
+         * Writes an array of bytes to the output stream.
+         * @param buffer The array of bytes to write.
+         * @param len The number of bytes from the buffer to be written.
+         * @throws IOException thrown if an error occurs.
+         */
+        virtual void write( const unsigned char* buffer, const int len ) 
+            throw ( IOException ) = 0;
+        
+        /**
+         * Flushes any pending writes in this output stream.
+         */
+        virtual void flush() throw ( IOException ) = 0;
+    };
+        
 }}
 
 #endif /*ACTIVEMQ_IO_OUTPUTSTREAM_H*/

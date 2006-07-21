@@ -29,6 +29,7 @@
 #include <activemq/connector/stomp/StompCommandListener.h>
 #include <activemq/connector/stomp/StompSessionManager.h>
 #include <activemq/connector/stomp/commands/CommandConstants.h>
+#include <activemq/core/ActiveMQConstants.h>
 #include <activemq/exceptions/IllegalArgumentException.h>
 
 namespace activemq{
@@ -57,7 +58,7 @@ namespace stomp{
 
         // Maps Command Ids to listener that are interested        
         typedef std::map< commands::CommandConstants::CommandId, 
-                          StompCommandListener*> CmdListenerMap;
+                          StompCommandListener* > CmdListenerMap;
         
     private:
     
@@ -192,20 +193,30 @@ namespace stomp{
          */
         virtual std::string getClientId(void) const {
             return properties.getProperty( 
-                commands::CommandConstants::toString( 
-                    commands::CommandConstants::HEADER_CLIENT_ID ), "" );
+                core::ActiveMQConstants::toString( 
+                    core::ActiveMQConstants::PARAM_CLIENTID ), "" );
         }
         
-        virtual std::string getLogin(void) const {
+        /**
+         * Gets the Username for this connection, if this
+         * connection has been closed, then this method returns ""
+         * @return Username String
+         */
+        virtual std::string getUsername(void) const {
             return properties.getProperty( 
-                commands::CommandConstants::toString( 
-                    commands::CommandConstants::HEADER_LOGIN ), "" );
+                core::ActiveMQConstants::toString( 
+                    core::ActiveMQConstants::PARAM_USERNAME ), "" );
         }
         
+        /**
+         * Gets the Password for this connection, if this
+         * connection has been closed, then this method returns ""
+         * @return Password String
+         */
         virtual std::string getPassword(void) const {
             return properties.getProperty( 
-                commands::CommandConstants::toString( 
-                    commands::CommandConstants::HEADER_PASSWORD ), "" );
+                core::ActiveMQConstants::toString( 
+                    core::ActiveMQConstants::PARAM_PASSWORD ), "" );
         }
 
         /**
@@ -215,7 +226,7 @@ namespace stomp{
          * @throws InvalidStateException if the Transport is not set
          */
         virtual transport::Transport& getTransport(void) const 
-            throw (exceptions::InvalidStateException ) {
+            throw ( exceptions::InvalidStateException ) {
 
             if( transport == NULL ) {
                 throw exceptions::InvalidStateException(
@@ -234,7 +245,7 @@ namespace stomp{
          * @throws ConnectorException
          */
         virtual SessionInfo* createSession(
-            cms::Session::AcknowledgeMode ackMode) 
+            cms::Session::AcknowledgeMode ackMode ) 
                 throw( ConnectorException );
       
         /** 
@@ -245,9 +256,9 @@ namespace stomp{
          * @throws ConnectorException
          */
         virtual ConsumerInfo* createConsumer(
-            cms::Destination* destination, 
+            const cms::Destination* destination, 
             SessionInfo* session,
-            const std::string& selector = "")
+            const std::string& selector = "" )
                 throw ( ConnectorException );
          
         /** 
@@ -262,11 +273,11 @@ namespace stomp{
          * @throws ConnectorException
          */
         virtual ConsumerInfo* createDurableConsumer(
-            cms::Topic* topic, 
+            const cms::Topic* topic, 
             SessionInfo* session,
             const std::string& name,
             const std::string& selector = "",
-            bool noLocal = false)
+            bool noLocal = false )
                 throw ( ConnectorException );
 
         /** 
@@ -277,7 +288,7 @@ namespace stomp{
          * @throws ConnectorException
          */
         virtual ProducerInfo* createProducer(
-            cms::Destination* destination, 
+            const cms::Destination* destination, 
             SessionInfo* session)
                 throw ( ConnectorException );
 
@@ -311,7 +322,7 @@ namespace stomp{
          * @throws ConnectorException
          */
         virtual cms::TemporaryTopic* createTemporaryTopic(
-            SessionInfo* session)
+            SessionInfo* session )
                 throw ( ConnectorException );
           
         /**
@@ -322,7 +333,7 @@ namespace stomp{
          * @throws ConnectorException
          */
         virtual cms::TemporaryQueue* createTemporaryQueue(
-            SessionInfo* session)
+            SessionInfo* session )
                 throw ( ConnectorException );
 
         /**
@@ -351,7 +362,7 @@ namespace stomp{
          */
         virtual void acknowledge( const SessionInfo* session,
                                   const cms::Message* message,
-                                  AckType ackType)
+                                  AckType ackType )
             throw ( ConnectorException );
 
         /**
@@ -360,7 +371,7 @@ namespace stomp{
          * @throws ConnectorException
          */
         virtual TransactionInfo* startTransaction(
-            SessionInfo* session) 
+            SessionInfo* session ) 
                 throw ( ConnectorException );
          
         /**
@@ -369,8 +380,8 @@ namespace stomp{
          * @param Session Information
          * @throws ConnectorException
          */
-        virtual void commit(TransactionInfo* transaction, 
-                            SessionInfo* session)
+        virtual void commit( TransactionInfo* transaction, 
+                             SessionInfo* session )
             throw ( ConnectorException );
 
         /**
@@ -379,8 +390,8 @@ namespace stomp{
          * @param Session Information
          * @throws ConnectorException
          */
-        virtual void rollback(TransactionInfo* transaction, 
-                              SessionInfo* session)
+        virtual void rollback( TransactionInfo* transaction, 
+                               SessionInfo* session )
             throw ( ConnectorException );
 
         /**
@@ -391,7 +402,7 @@ namespace stomp{
          */
         virtual cms::Message* createMessage(
             SessionInfo* session,
-            TransactionInfo* transaction)
+            TransactionInfo* transaction )
                 throw ( ConnectorException );
 
         /**
@@ -402,7 +413,7 @@ namespace stomp{
          */
         virtual cms::BytesMessage* createBytesMessage(
             SessionInfo* session,
-            TransactionInfo* transaction)
+            TransactionInfo* transaction )
                 throw ( ConnectorException );
 
         /**
@@ -413,7 +424,7 @@ namespace stomp{
          */
         virtual cms::TextMessage* createTextMessage(
             SessionInfo* session,
-            TransactionInfo* transaction)
+            TransactionInfo* transaction )
                 throw ( ConnectorException );
 
         /**
@@ -424,7 +435,7 @@ namespace stomp{
          */
         virtual cms::MapMessage* createMapMessage(
             SessionInfo* session,
-            TransactionInfo* transaction)
+            TransactionInfo* transaction )
                 throw ( ConnectorException );
 
         /** 
@@ -448,7 +459,7 @@ namespace stomp{
          * @param listener the observer.
          */
         virtual void setConsumerMessageListener(
-            ConsumerMessageListener* listener)
+            ConsumerMessageListener* listener )
         {
             this->messageListener = listener;
             
@@ -463,7 +474,7 @@ namespace stomp{
          * @param ExceptionListener the observer.
          */
         virtual void setExceptionListener(
-            cms::ExceptionListener* listener)
+            cms::ExceptionListener* listener )
         {
             this->exceptionListener = listener;
         }
@@ -520,8 +531,8 @@ namespace stomp{
         
     private:
     
-        unsigned int getNextProducerId( void );
-        unsigned int getNextTransactionId( void );
+        unsigned int getNextProducerId(void);
+        unsigned int getNextTransactionId(void);
 
         // Check for Connected State and Throw an exception if not.
         void enforceConnected( void ) throw ( ConnectorException );

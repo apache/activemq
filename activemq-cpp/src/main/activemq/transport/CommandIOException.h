@@ -24,8 +24,8 @@
 namespace activemq{
 namespace transport{
   
-  class CommandIOException : public io::IOException{
-  public:
+    class CommandIOException : public io::IOException{
+    public:
 
         CommandIOException(){};
         CommandIOException( const exceptions::ActiveMQException& ex ){
@@ -34,12 +34,12 @@ namespace transport{
         CommandIOException( const CommandIOException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
-        CommandIOException(const char* file, const int lineNumber, 
-            const char* msg, ...)
+        CommandIOException( const char* file, const int lineNumber, 
+                            const char* msg, ... )
         {
-            va_list vargs ;
-            va_start(vargs, msg) ;
-            buildMessage(msg, vargs) ;
+            va_list vargs;
+            va_start( vargs, msg );
+            buildMessage( msg, vargs );
             
             // Set the first mark for this exception.
             setMark( file, lineNumber );
@@ -55,7 +55,7 @@ namespace transport{
         }
         
         virtual ~CommandIOException(){}
-  };
+    };
     
 }}
 

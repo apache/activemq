@@ -169,7 +169,7 @@ namespace core{
                 
                 session.setSessionId( 1 );
                 session.setConnectionId( "TEST:123" );
-                session.setAckMode( cms::Session::AutoAcknowledge );
+                session.setAckMode( cms::Session::AUTO_ACKNOWLEDGE );
                 
                 consumer.setConsumerId( 1 );
                 consumer.setSessionInfo( &session );
@@ -180,9 +180,8 @@ namespace core{
 
                 connector::stomp::commands::TextMessageCommand* cmd = 
                     new connector::stomp::commands::TextMessageCommand;
-
-                cmd->setCMSDestination( 
-                    connector::stomp::StompTopic( "test" ) );
+                connector::stomp::StompTopic topic1( "test" );
+                cmd->setCMSDestination( &topic1 );
                 
                 connector::ConsumerMessageListener* consumerListener = 
                     dynamic_cast< connector::ConsumerMessageListener* >( 
@@ -212,8 +211,8 @@ namespace core{
 
                 cmd = new connector::stomp::commands::TextMessageCommand;
 
-                cmd->setCMSDestination( 
-                    connector::stomp::StompTopic( "test" ) );
+                connector::stomp::StompTopic topic2( "test" );
+                cmd->setCMSDestination( &topic2 );
 
                 consumerListener->onConsumerMessage( &consumer, cmd );
                 CPPUNIT_ASSERT( msgListener.messages.size() == 1 );
@@ -221,12 +220,20 @@ namespace core{
                 connection.removeMessageListener( 1 );                
                 msgListener.messages.clear();
 
+                session1->close();
+                session2->close();
+                session3->close();
                 connection.close();
 
                 consumerListener->onConsumerMessage( &consumer, cmd );
                 CPPUNIT_ASSERT( exListener.caughtOne == true );
 
                 delete cmd;
+                
+                delete session1;
+                delete session2;
+                delete session3;
+                
             }
             catch(...)
             {

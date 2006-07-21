@@ -41,7 +41,7 @@ namespace commands{
                 initialize( getFrame() );
         }
         BytesMessageCommand( StompFrame* frame ) : 
-            StompMessage< cms::BytesMessage >(frame) {
+            StompMessage< cms::BytesMessage >( frame ) {
                 validate( getFrame() );
         }
     	virtual ~BytesMessageCommand(void) {}

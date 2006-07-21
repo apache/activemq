@@ -103,6 +103,13 @@ namespace commands{
          * @return Stomp CommandId enum
          */
         virtual CommandConstants::CommandId getStompCommandId(void) const = 0;
+        
+        /**
+         * Retrieves the Properties that are part of this command
+         * @return const reference to a properties object
+         */
+        virtual util::Properties& getProperties(void) = 0;
+        virtual const util::Properties& getProperties(void) const = 0;
 
     };
 

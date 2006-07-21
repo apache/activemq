@@ -79,10 +79,10 @@ void SimpleTester::test()
         // Create CMS Object for Comms
         cms::Topic* topic = session->createTopic("mytopic");
         cms::MessageConsumer* consumer = 
-            session->createConsumer( *topic );            
+            session->createConsumer( topic );            
         consumer->setMessageListener( this );
         cms::MessageProducer* producer = 
-            session->createProducer( *topic );
+            session->createProducer( topic );
 
         // Send some text messages
         this->produceTextMessages( 

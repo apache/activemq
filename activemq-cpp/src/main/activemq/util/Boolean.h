@@ -27,15 +27,15 @@ namespace util{
     {
     public:
 
-    	Boolean(void) {}
-    	virtual ~Boolean(void) {}
+        Boolean(void) {}
+        virtual ~Boolean(void) {}
 
         /**
          * Parses the String passed and extracts an bool.
          * @param String to parse
          * @return bool value
          */
-        static int parseBoolean(const std::string& value){
+        static int parseBoolean( const std::string& value ){
             bool ret = 0;
             std::istringstream istream(value);
             istream.clear();
@@ -48,7 +48,7 @@ namespace util{
          * @param bool to convert
          * @return string representation
          */
-        static std::string toString(bool value){
+        static std::string toString( bool value ){
             std::ostringstream ostream;
             ostream << std::boolalpha << value;
             return ostream.str();

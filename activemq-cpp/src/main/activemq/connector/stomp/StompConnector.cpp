@@ -52,7 +52,7 @@ StompConnector::StompConnector( Transport* transport,
                                 const util::Properties& properties )
     throw ( IllegalArgumentException )
 {
-    if(transport == NULL)
+    if( transport == NULL )
     {
         throw IllegalArgumentException(
             __FILE__, __LINE__,
@@ -64,8 +64,8 @@ StompConnector::StompConnector( Transport* transport,
     this->exceptionListener = NULL;
     this->messageListener = NULL;
     this->sessionManager = NULL;
-    this->nextProducerId = 0;
-    this->nextTransactionId = 0;
+    this->nextProducerId = 1;
+    this->nextTransactionId = 1;
     this->properties.copy( &properties );
     
     // Observe the transport for events.
@@ -96,7 +96,7 @@ StompConnector::~StompConnector(void)
 ////////////////////////////////////////////////////////////////////////////////
 unsigned int StompConnector::getNextProducerId(void)
 {
-    synchronized(&mutex)
+    synchronized( &mutex )
     {
         return nextProducerId++;
     }
@@ -107,7 +107,7 @@ unsigned int StompConnector::getNextProducerId(void)
 ////////////////////////////////////////////////////////////////////////////////
 unsigned int StompConnector::getNextTransactionId(void)
 {
-    synchronized(&mutex)
+    synchronized( &mutex )
     {
         return nextTransactionId++;
     }
@@ -138,7 +138,7 @@ void StompConnector::addCmdListener(
 void StompConnector::removeCmdListener( 
     commands::CommandConstants::CommandId commandId )
 {
-    cmdListenerMap.erase(commandId);
+    cmdListenerMap.erase( commandId );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ void StompConnector::connect(void)
         ConnectCommand cmd;
 
         // Encode User Name and Password and Client ID
-        string login = getLogin();
+        string login = getUsername();
         if( login.length() > 0 ){
             cmd.setLogin( login );
         }        
@@ -216,6 +216,8 @@ void StompConnector::connect(void)
         
         if( dynamic_cast< ExceptionResponse* >( response ) != NULL )
         {
+            delete response;
+            
             throw StompConnectorException(
                 __FILE__, __LINE__,
                 "StompConnector::connect - Failed on Connect Request" );
@@ -226,6 +228,8 @@ void StompConnector::connect(void)
 
         if( connected == NULL )
         {
+            delete response;
+
             throw StompConnectorException(
                 __FILE__, __LINE__,
                 "StompConnector::connect - "
@@ -281,7 +285,7 @@ void StompConnector::disconnect(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 SessionInfo* StompConnector::createSession(
-    cms::Session::AcknowledgeMode ackMode) 
+    cms::Session::AcknowledgeMode ackMode ) 
         throw( ConnectorException )
 {
     try
@@ -296,9 +300,9 @@ SessionInfo* StompConnector::createSession(
 
 ////////////////////////////////////////////////////////////////////////////////
 ConsumerInfo* StompConnector::createConsumer(
-    cms::Destination* destination, 
+    const cms::Destination* destination, 
     SessionInfo* session,
-    const std::string& selector)
+    const std::string& selector )
         throw ( ConnectorException )
 {
     try
@@ -314,11 +318,11 @@ ConsumerInfo* StompConnector::createConsumer(
 
 ////////////////////////////////////////////////////////////////////////////////
 ConsumerInfo* StompConnector::createDurableConsumer(
-    cms::Topic* topic, 
+    const cms::Topic* topic, 
     SessionInfo* session,
     const std::string& name,
     const std::string& selector,
-    bool noLocal)
+    bool noLocal )
         throw ( ConnectorException )
 {
     try
@@ -334,8 +338,8 @@ ConsumerInfo* StompConnector::createDurableConsumer(
 
 ////////////////////////////////////////////////////////////////////////////////
 ProducerInfo* StompConnector::createProducer(
-    cms::Destination* destination, 
-    SessionInfo* session)
+    const cms::Destination* destination, 
+    SessionInfo* session )
         throw ( ConnectorException )
 {
     try
@@ -355,30 +359,30 @@ ProducerInfo* StompConnector::createProducer(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cms::Topic* StompConnector::createTopic(const std::string& name, 
-                                        SessionInfo* session)
+cms::Topic* StompConnector::createTopic( const std::string& name, 
+                                         SessionInfo* session )
     throw ( ConnectorException )
 {
     try
     {
         enforceConnected();
         
-        return new StompTopic(name);
+        return new StompTopic( name );
     }
     AMQ_CATCH_RETHROW( ConnectorException )
     AMQ_CATCHALL_THROW( ConnectorException );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cms::Queue* StompConnector::createQueue(const std::string& name, 
-                                        SessionInfo* session)
+cms::Queue* StompConnector::createQueue( const std::string& name, 
+                                         SessionInfo* session )
     throw ( ConnectorException )
 {
     try
     {
         enforceConnected();
         
-        return new StompQueue(name);
+        return new StompQueue( name );
     }
     AMQ_CATCH_RETHROW( ConnectorException )
     AMQ_CATCHALL_THROW( ConnectorException );
@@ -386,7 +390,7 @@ cms::Queue* StompConnector::createQueue(const std::string& name,
 
 ////////////////////////////////////////////////////////////////////////////////
 cms::TemporaryTopic* StompConnector::createTemporaryTopic(
-    SessionInfo* session)
+    SessionInfo* session )
         throw ( ConnectorException )
 {
     try
@@ -401,7 +405,7 @@ cms::TemporaryTopic* StompConnector::createTemporaryTopic(
 
 ////////////////////////////////////////////////////////////////////////////////
 cms::TemporaryQueue* StompConnector::createTemporaryQueue(
-    SessionInfo* session)
+    SessionInfo* session )
         throw ( ConnectorException )
 {
     try
@@ -416,7 +420,7 @@ cms::TemporaryQueue* StompConnector::createTemporaryQueue(
 
 ////////////////////////////////////////////////////////////////////////////////
 void StompConnector::send(cms::Message* message, 
-                          ProducerInfo* producerInfo) 
+                          ProducerInfo* producerInfo ) 
     throw ( ConnectorException )
 {
     try
@@ -434,7 +438,7 @@ void StompConnector::send(cms::Message* message,
                 "Message is not a valid stomp type.");
         }
 
-        if( session->getAckMode() == cms::Session::Transactional )
+        if( session->getAckMode() == cms::Session::SESSION_TRANSACTED )
         {
             StompCommand* stompCommand = 
                 dynamic_cast< StompCommand* >( message );
@@ -460,19 +464,19 @@ void StompConnector::send(cms::Message* message,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StompConnector::send(std::list<cms::Message*>& messages,
-                          ProducerInfo* producerInfo) 
+void StompConnector::send( std::list<cms::Message*>& messages,
+                           ProducerInfo* producerInfo ) 
     throw ( ConnectorException )
 {
     try
     {
         enforceConnected();
         
-        list<cms::Message*>::const_iterator itr = messages.begin();
+        list< cms::Message* >::const_iterator itr = messages.begin();
         
-        for(; itr != messages.end(); ++itr)
+        for( ; itr != messages.end(); ++itr )
         {
-            this->send(*itr, producerInfo);
+            this->send( *itr, producerInfo );
         }
     }
     AMQ_CATCH_RETHROW( ConnectorException )
@@ -491,7 +495,7 @@ void StompConnector::acknowledge( const SessionInfo* session,
         
         // Auto to Stomp means don't do anything, so we drop it here
         // for client acknowledge we have to send and ack.  
-        if( session->getAckMode() == cms::Session::ClientAcknowledge )
+        if( session->getAckMode() == cms::Session::CLIENT_ACKNOWLEDGE )
         {
             AckCommand cmd;
 
@@ -505,7 +509,7 @@ void StompConnector::acknowledge( const SessionInfo* session,
 
             cmd.setMessageId( message->getCMSMessageId() );
 
-            if( session->getAckMode() == cms::Session::Transactional )
+            if( session->getAckMode() == cms::Session::SESSION_TRANSACTED )
             {
                 cmd.setTransactionId( 
                     Integer::toString( 
@@ -521,7 +525,7 @@ void StompConnector::acknowledge( const SessionInfo* session,
 
 ////////////////////////////////////////////////////////////////////////////////
 TransactionInfo* StompConnector::startTransaction(
-    SessionInfo* session) 
+    SessionInfo* session ) 
         throw ( ConnectorException )
 {
     try
@@ -548,8 +552,8 @@ TransactionInfo* StompConnector::startTransaction(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StompConnector::commit(TransactionInfo* transaction, 
-                            SessionInfo* session)
+void StompConnector::commit( TransactionInfo* transaction, 
+                             SessionInfo* session )
     throw ( ConnectorException )
 {
     try
@@ -568,8 +572,8 @@ void StompConnector::commit(TransactionInfo* transaction,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StompConnector::rollback(TransactionInfo* transaction, 
-                              SessionInfo* session)
+void StompConnector::rollback( TransactionInfo* transaction, 
+                               SessionInfo* session )
     throw ( ConnectorException )
 {
     try
@@ -590,7 +594,7 @@ void StompConnector::rollback(TransactionInfo* transaction,
 ////////////////////////////////////////////////////////////////////////////////
 cms::Message* StompConnector::createMessage(
     SessionInfo* session,
-    TransactionInfo* transaction)
+    TransactionInfo* transaction )
         throw ( ConnectorException )
 {
     try
@@ -614,7 +618,7 @@ cms::Message* StompConnector::createMessage(
 ////////////////////////////////////////////////////////////////////////////////
 cms::BytesMessage* StompConnector::createBytesMessage(
     SessionInfo* session,
-    TransactionInfo* transaction)
+    TransactionInfo* transaction )
         throw ( ConnectorException )
 {
     try
@@ -638,7 +642,7 @@ cms::BytesMessage* StompConnector::createBytesMessage(
 ////////////////////////////////////////////////////////////////////////////////
 cms::TextMessage* StompConnector::createTextMessage(
     SessionInfo* session,
-    TransactionInfo* transaction)
+    TransactionInfo* transaction )
         throw ( ConnectorException )
 {
     try
@@ -662,7 +666,7 @@ cms::TextMessage* StompConnector::createTextMessage(
 ////////////////////////////////////////////////////////////////////////////////
 cms::MapMessage* StompConnector::createMapMessage(
     SessionInfo* session,
-    TransactionInfo* transaction)
+    TransactionInfo* transaction )
         throw ( ConnectorException )
 {
     try
@@ -676,7 +680,7 @@ cms::MapMessage* StompConnector::createMapMessage(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StompConnector::unsubscribe(const std::string& name)
+void StompConnector::unsubscribe( const std::string& name )
     throw ( ConnectorException )
 {
     try
@@ -723,7 +727,7 @@ void StompConnector::onCommand( transport::Command* command )
     {
         StompCommand* stompCommand = dynamic_cast< StompCommand* >(command);
 
-        if(stompCommand == NULL)
+        if( stompCommand == NULL )
         {
             fire( ConnectorException(
                 __FILE__, __LINE__,
@@ -777,18 +781,21 @@ void StompConnector::onStompCommand( commands::StompCommand* command )
     try
     {        
         ErrorCommand* error = 
-            dynamic_cast<ErrorCommand*>(command);
+            dynamic_cast<ErrorCommand*>( command );
         
-        if(error != NULL)
+        if( error != NULL )
         {
             fire( StompConnectorException(
-                __FILE__, __LINE__,
-                (string( "StompConnector::onStompCommand - " ) + 
-                error->getErrorMessage() ).c_str() ) );
+                  __FILE__, __LINE__,
+                  ( string( "StompConnector::onStompCommand - " ) + 
+                            error->getErrorMessage() ).c_str() ) );
                 
             // Shutdown
             close();
         }
+        
+        // command is done here, delete it.
+        delete command;
     }
     AMQ_CATCH_RETHROW( StompConnectorException )
     AMQ_CATCHALL_THROW( StompConnectorException );

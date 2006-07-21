@@ -16,12 +16,12 @@
  */
  
 #if (defined(unix) || defined(__APPLE__)) && !defined(__CYGWIN__)
-   #include <sys/poll.h>
-   #include <sys/socket.h>
-   #include <errno.h>
-   extern int errno;
+    #include <sys/poll.h>
+    #include <sys/socket.h>
+    #include <errno.h>
+    extern int errno;
 #else
-   #include <Winsock2.h>
+    #include <Winsock2.h>
 #endif
 
 #include <activemq/network/SocketInputStream.h>
@@ -50,7 +50,7 @@ SocketInputStream::~SocketInputStream()
 int SocketInputStream::available() const{
    
    
-#if (defined(unix) || defined(__APPLE__)) && !defined(__CYGWIN__)
+#if defined(unix) && !defined(__CYGWIN__)
     
     // Poll the socket for input.
     pollfd fd;
@@ -121,7 +121,7 @@ int SocketInputStream::read( unsigned char* buffer, const int bufferSize ) throw
             
                 // If the socket was temporarily unavailable - just try again.
                 int errorCode = ::WSAGetLastError();
-                if( errorCode == WSAEWOULDBLOCK ){
+                if( errorCode == WSAEWOULDBLOCK || errorCode == WSAETIMEDOUT ){
                     continue;
                 }
           

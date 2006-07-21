@@ -22,24 +22,15 @@
 
 #include <cms/Destination.h>
 #include <cms/CMSException.h>
+#include <cms/DeliveryMode.h>
 
 namespace cms{
    
     /**
      * Root of all messages.
      */
-    class Message{ 
-    public:
-
-        /**
-         * Enumeration value for Message Delivery Mode   
-         */
-        enum DeliveryMode
-        {
-            PERSISTANT,
-            NONPERSISTANT
-        };
-         
+    class Message
+    {         
     public:
    
         virtual ~Message(void){}
@@ -75,31 +66,31 @@ namespace cms{
          * Sets the Correlation Id used by this message
          * @param String representing the correlation id.
          */
-        virtual void setCMSCorrelationId(const std::string& correlationId) = 0;
+        virtual void setCMSCorrelationId( const std::string& correlationId ) = 0;
 
         /**
          * Sets the DeliveryMode for this message
          * @return DeliveryMode enumerated value.
          */
-        virtual DeliveryMode getCMSDeliveryMode(void) const = 0;
+        virtual int getCMSDeliveryMode(void) const = 0;
 
         /**
          * Sets the DeliveryMode for this message
          * @param DeliveryMode enumerated value.
          */
-        virtual void setCMSDeliveryMode(DeliveryMode mode) = 0;
+        virtual void setCMSDeliveryMode( int mode ) = 0;
       
         /**
          * Gets the Destination for this Message, returns a
          * @return Destination object
          */
-        virtual const Destination& getCMSDestination(void) const = 0;
+        virtual const Destination* getCMSDestination(void) const = 0;
       
         /**
          * Sets the Destination for this message
          * @param Destination Object
          */
-        virtual void setCMSDestination(const Destination& destination) = 0;
+        virtual void setCMSDestination( const Destination* destination ) = 0;
       
         /**
          * Gets the Expiration Time for this Message
@@ -111,7 +102,7 @@ namespace cms{
          * Sets the Expiration Time for this message
          * @param time value
          */
-        virtual void setCMSExpiration(long expireTime) = 0;
+        virtual void setCMSExpiration( long expireTime ) = 0;
       
         /**
          * Gets the CMS Message Id for this Message
@@ -123,7 +114,7 @@ namespace cms{
          * Sets the CMS Message Id for this message
          * @param time value
          */
-        virtual void setCMSMessageId(const std::string& id) = 0;
+        virtual void setCMSMessageId( const std::string& id ) = 0;
       
         /**
          * Gets the Priority Value for this Message
@@ -135,7 +126,7 @@ namespace cms{
          * Sets the Priority Value for this message
          * @param priority value
          */
-        virtual void setCMSPriority(int priority) = 0;
+        virtual void setCMSPriority( int priority ) = 0;
 
         /**
          * Gets the Redelivered Flag for this Message
@@ -147,7 +138,7 @@ namespace cms{
          * Sets the Redelivered Flag for this message
          * @param redelivered value
          */
-        virtual void setCMSRedelivered(bool redelivered) = 0;
+        virtual void setCMSRedelivered( bool redelivered ) = 0;
 
         /**
          * Gets the CMS Reply To Address for this Message
@@ -159,7 +150,7 @@ namespace cms{
          * Sets the CMS Reply To Address for this message
          * @param Reply To value
          */
-        virtual void setCMSReplyTo(const std::string& id) = 0;
+        virtual void setCMSReplyTo( const std::string& id ) = 0;
 
         /**
          * Gets the Time Stamp for this Message
@@ -171,7 +162,7 @@ namespace cms{
          * Sets the Time Stamp for this message
          * @param time stamp value
          */
-        virtual void setCMSTimeStamp(long timeStamp) = 0;
+        virtual void setCMSTimeStamp( long timeStamp ) = 0;
 
         /**
          * Gets the CMS Message Type for this Message
@@ -183,7 +174,7 @@ namespace cms{
          * Sets the CMS Message Type for this message
          * @param type value
          */
-        virtual void setCMSMessageType(const std::string& type) = 0;
+        virtual void setCMSMessageType( const std::string& type ) = 0;
     };
 }
 

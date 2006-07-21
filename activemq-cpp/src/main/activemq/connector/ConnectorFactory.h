@@ -36,10 +36,11 @@ namespace connector{
         /** 
          * Creates a connector
          * @param The Properties that the new connector is configured with
+         * @param the Transport that the connector should use
          */
         virtual Connector* createConnector(
             const activemq::util::Properties& properties,
-            activemq::transport::Transport*   transport) = 0;
+            activemq::transport::Transport*   transport ) = 0;
 
    };
 

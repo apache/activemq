@@ -28,77 +28,77 @@
 namespace activemq{
 namespace concurrent{
 
-   class ThreadPool;
+    class ThreadPool;
 
-   class PooledThread : public Thread, public cms::Stoppable
-   {
-   private:
+    class PooledThread : public Thread, public cms::Stoppable
+    {
+    private:
    
-      // Is this thread currently processing something
-      bool busy;
+        // Is this thread currently processing something
+        bool busy;
       
-      // Boolean flag indicating thread should stop
-      bool done;
+        // Boolean flag indicating thread should stop
+        bool done;
       
-      // Listener for Task related events
-      PooledThreadListener* listener;
+        // Listener for Task related events
+        PooledThreadListener* listener;
       
-      // The thread pool this Pooled Thread is Servicing
-      ThreadPool* pool;
+        // The thread pool this Pooled Thread is Servicing
+        ThreadPool* pool;
 
-      // Logger Init
-      LOGCMS_DECLARE(logger);
+        // Logger Init
+        LOGCMS_DECLARE(logger);
       
-   public:
+     public:
    
-      /**
-       * Constructor
-       */
-   	PooledThread(ThreadPool* pool);
+        /**
+         * Constructor
+         */
+        PooledThread(ThreadPool* pool);
 
-      /**
-       * Destructor
-       */
-   	virtual ~PooledThread(void);
+        /**
+         * Destructor
+         */
+        virtual ~PooledThread(void);
 
-      /**
-       * Run Method for this object waits for something to be
-       * enqueued on the ThreadPool and then grabs it and calls 
-       * its run method.
-       */
-      virtual void run(void);
+        /**
+         * Run Method for this object waits for something to be
+         * enqueued on the ThreadPool and then grabs it and calls 
+         * its run method.
+         */
+        virtual void run(void);
       
-      /**
-       * Stops the Thread, thread will complete its task if currently
-       * running one, and then die.  Does not block.
-       */
-      virtual void stop(void) throw ( cms::CMSException );
+        /**
+         * Stops the Thread, thread will complete its task if currently
+         * running one, and then die.  Does not block.
+         */
+        virtual void stop(void) throw ( cms::CMSException );
       
-      /**
-       * Checks to see if the thread is busy, if busy it means
-       * that this thread has taken a task from the ThreadPool's
-       * queue and is processing it.
-       */
-      virtual bool isBusy(void) { return busy; }
-      
-      /**
-       * Adds a listener to this <code>PooledThread</code> to be
-       * notified when this thread starts and completes a task.
-       */
-      virtual void setPooledThreadListener(PooledThreadListener* listener)
-      {
-         this->listener = listener;
-      }
+        /**
+         * Checks to see if the thread is busy, if busy it means
+         * that this thread has taken a task from the ThreadPool's
+         * queue and is processing it.
+         */
+        virtual bool isBusy(void) { return busy; }
 
-      /**
-       * Removes a listener for this <code>PooledThread</code> to be
-       * notified when this thread starts and completes a task.
-       */
-      virtual PooledThreadListener* getPooledThreadListener(void)
-      {
-         return this->listener;
-      }
-   };
+        /**
+         * Adds a listener to this <code>PooledThread</code> to be
+         * notified when this thread starts and completes a task.
+         */
+        virtual void setPooledThreadListener(PooledThreadListener* listener)
+        {
+            this->listener = listener;
+        }
+
+        /**
+         * Removes a listener for this <code>PooledThread</code> to be
+         * notified when this thread starts and completes a task.
+         */
+        virtual PooledThreadListener* getPooledThreadListener(void)
+        {
+            return this->listener;
+        }
+    };
 
 }}
 

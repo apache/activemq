@@ -57,14 +57,16 @@ namespace stomp{
             connectedCommand.setSessionId( "test" );
 
             // Sync to expected output
-            textCommand.setCMSDestination( StompTopic("a") );
+            StompTopic topic1("a");
+            textCommand.setCMSDestination( &topic1 );
             textCommand.setCMSMessageId( "123" );
             textCommand.getProperties().setProperty( 
                 "sampleProperty", "testvalue" );
             textCommand.setText( "testMessage" );
 
             // Sync to expected output
-            bytesCommand.setCMSDestination( StompTopic("a") );
+            StompTopic topic2("a");
+            bytesCommand.setCMSDestination( &topic2 );
             bytesCommand.setCMSMessageId( "123" );
             bytesCommand.getProperties().setProperty( 
                 "sampleProperty", "testvalue" );

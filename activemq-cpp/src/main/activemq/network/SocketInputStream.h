@@ -57,57 +57,57 @@ namespace network{
         /**
          * Locks the object.
          */
-        virtual void lock() throw(exceptions::ActiveMQException){
+        virtual void lock() throw( exceptions::ActiveMQException ){
             mutex.lock();
         }
    
-      /**
-       * Unlocks the object.
-       */
-      virtual void unlock() throw(exceptions::ActiveMQException){   
-         mutex.unlock();
-      }
+        /**
+         * Unlocks the object.
+         */
+        virtual void unlock() throw( exceptions::ActiveMQException ){   
+            mutex.unlock();
+        }
        
-      /**
-       * Waits on a signal from this object, which is generated
-       * by a call to Notify.  Must have this object locked before
-       * calling.
-       */
-      virtual void wait() throw(exceptions::ActiveMQException){
-         mutex.wait();
-      }
+        /**
+         * Waits on a signal from this object, which is generated
+         * by a call to Notify.  Must have this object locked before
+         * calling.
+         */
+        virtual void wait() throw( exceptions::ActiveMQException ){
+            mutex.wait();
+        }
     
-      /**
-       * Waits on a signal from this object, which is generated
-       * by a call to Notify.  Must have this object locked before
-       * calling.  This wait will timeout after the specified time
-       * interval.
-       * @param time in millisecsonds to wait, or WAIT_INIFINITE
-       * @throws ActiveMQException
-       */
-      virtual void wait(unsigned long millisecs) 
-         throw(exceptions::ActiveMQException) {
+        /**
+         * Waits on a signal from this object, which is generated
+         * by a call to Notify.  Must have this object locked before
+         * calling.  This wait will timeout after the specified time
+         * interval.
+         * @param time in millisecsonds to wait, or WAIT_INIFINITE
+         * @throws ActiveMQException
+         */
+        virtual void wait( unsigned long millisecs ) 
+            throw( exceptions::ActiveMQException ) {
          
-         mutex.wait(millisecs);
-      }
+            mutex.wait( millisecs );
+        }
 
-      /**
-       * Signals a waiter on this object that it can now wake
-       * up and continue.  Must have this object locked before
-       * calling.
-       */
-      virtual void notify() throw(exceptions::ActiveMQException){
-         mutex.notify();
-      }
+        /**
+         * Signals a waiter on this object that it can now wake
+         * up and continue.  Must have this object locked before
+         * calling.
+         */
+        virtual void notify() throw( exceptions::ActiveMQException ){
+            mutex.notify();
+        }
         
-      /**
-       * Signals the waiters on this object that it can now wake
-       * up and continue.  Must have this object locked before
-       * calling.
-       */
-      virtual void notifyAll() throw(exceptions::ActiveMQException){
-         mutex.notifyAll();
-      }
+        /**
+         * Signals the waiters on this object that it can now wake
+         * up and continue.  Must have this object locked before
+         * calling.
+         */
+        virtual void notifyAll() throw( exceptions::ActiveMQException ){
+            mutex.notifyAll();
+        }
 	    
 	    /**
 	     * Polls instantaneously to see if data is available on 
@@ -121,7 +121,7 @@ namespace network{
 		 * @return The next byte.
 		 * @throws IOException thrown if an error occurs.
 		 */
-		virtual unsigned char read() throw (io::IOException);
+		virtual unsigned char read() throw ( io::IOException );
 		
 		/**
 		 * Reads an array of bytes from the buffer.
@@ -136,7 +136,8 @@ namespace network{
 		 * Close - does nothing.  It is the responsibility of the owner
 		 * of the socket object to close it.
 		 */
-		virtual void close() throw(cms::CMSException){}	
+		virtual void close() throw( cms::CMSException ){}
+        
 	};
 	
 }}

@@ -18,7 +18,7 @@ namespace common{
     public:
     
     	AbstractTester( cms::Session::AcknowledgeMode ackMode = 
-                            cms::Session::AutoAcknowledge );
+                            cms::Session::AUTO_ACKNOWLEDGE );
     	virtual ~AbstractTester();
     
         virtual void doSleep(void);
@@ -33,7 +33,7 @@ namespace common{
         virtual void waitForMessages( unsigned int count );
 
         virtual void onException( const cms::CMSException& error );
-        virtual void onMessage( const cms::Message& message );
+        virtual void onMessage( const cms::Message* message );
 
     public:
         

@@ -96,7 +96,7 @@ namespace concurrent{
             lock_owner = 0;
             lock_count = 0;
         }
-      
+
         /**
          * Destructor - destroys the mutex object.
          */

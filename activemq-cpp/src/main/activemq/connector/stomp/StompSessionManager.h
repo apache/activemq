@@ -25,6 +25,7 @@
 #include <activemq/connector/ConnectorException.h>
 #include <activemq/connector/stomp/StompCommandListener.h>
 #include <activemq/connector/ConsumerMessageListener.h>
+#include <activemq/connector/stomp/commands/SubscribeCommand.h>
 
 namespace activemq{
 namespace connector{
@@ -44,8 +45,8 @@ namespace stomp{
     private:
     
         // Map Types
-        typedef std::map<unsigned int, ConsumerInfo*>  ConsumerMap;
-        typedef std::map<std::string, ConsumerMap>     DestinationMap;        
+        typedef std::map< unsigned int, ConsumerInfo* > ConsumerMap;
+        typedef std::map< std::string, ConsumerMap >    DestinationMap;        
 
     private:
     
@@ -85,7 +86,7 @@ namespace stomp{
          * @return new SessionInfo object
          */
         virtual connector::SessionInfo* createSession(
-            cms::Session::AcknowledgeMode ackMode)
+            cms::Session::AcknowledgeMode ackMode )
                 throw ( exceptions::ActiveMQException );
 
         /**
@@ -108,10 +109,10 @@ namespace stomp{
          * @return new ConsumerInfo object.
          */
         virtual connector::ConsumerInfo* createConsumer(
-            cms::Destination* destination, 
+            const cms::Destination* destination, 
             SessionInfo* session,
-            const std::string& selector)
-                throw( ConnectorException );
+            const std::string& selector )
+                throw( StompConnectorException );
 
         /**
          * Creates a new durable consumer to the specified session, will 
@@ -126,12 +127,12 @@ namespace stomp{
          * @return new ConsumerInfo object.
          */
         virtual connector::ConsumerInfo* createDurableConsumer(
-            cms::Destination* destination, 
+            const cms::Destination* destination, 
             SessionInfo* session,
             const std::string& name,
             const std::string& selector,
             bool noLocal )
-                throw ( ConnectorException );
+                throw ( StompConnectorException );
 
         /**
          * Removes the Consumer from the session, will unsubscrive if the
@@ -142,7 +143,7 @@ namespace stomp{
          * @throws ConnectorException
          */            
         virtual void removeConsumer( connector::ConsumerInfo* consumer )
-            throw( ConnectorException );
+            throw( StompConnectorException );
 
         /** 
          * Sets the listener of consumer messages.
@@ -162,7 +163,19 @@ namespace stomp{
          * @throw ConnterException
          */
         virtual void onStompCommand( commands::StompCommand* command ) 
-            throw ( StompConnectorException );    
+            throw ( StompConnectorException );
+            
+    protected: 
+    
+        /**
+         * Sets Subscribe Command options from the properties of a 
+         * destination object.
+         * @param The destination that we are subscribing to.
+         * @param The pending Subscribe command
+         */
+        virtual void setSubscribeOptions( const cms::Destination* dest,
+                                          commands::SubscribeCommand& command )
+            throw ( StompConnectorException );
             
     protected:
     

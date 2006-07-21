@@ -30,8 +30,18 @@ namespace stomp{
     {
     public:
 
-        StompTopic(void) : StompDestination<cms::Topic>() {}
+        /**
+         * Copy Consturctor
+         * @param CMS Dest to Copy, must be a compatible type
+         */
+        StompTopic( const cms::Destination* source ) : 
+            StompDestination< cms::Topic >( source ) {}
 
+        /**
+         * Custom Constructor
+         * @param string destination name plus any params
+         * @param type of destination this represents.
+         */
         StompTopic(const std::string& name) : 
             StompDestination< cms::Topic >( name, cms::Destination::TOPIC )
         {}

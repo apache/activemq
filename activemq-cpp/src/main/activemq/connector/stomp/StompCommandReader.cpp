@@ -35,14 +35,14 @@ StompCommandReader::StompCommandReader(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-StompCommandReader::StompCommandReader(InputStream* is)
+StompCommandReader::StompCommandReader( InputStream* is )
 {
     inputStream = is;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 Command* StompCommandReader::readCommand(void) 
-    throw (CommandIOException)
+    throw ( CommandIOException )
 {
     try
     {
@@ -70,53 +70,53 @@ Command* StompCommandReader::readCommand(void)
 void StompCommandReader::readStompCommand( StompFrame& frame ) 
    throw ( StompConnectorException )
 {  
-	while( true ) 
-	{
-	    // Clean up the mess.
-	    buffer.clear();
+    while( true ) 
+    {
+        // Clean up the mess.
+        buffer.clear();
 
-	    // Read the command;
-	    readStompHeaderLine();
+        // Read the command;
+        readStompHeaderLine();
 
         // Ignore all white space before the command.
         int offset=-1;
         for( size_t ix = 0; ix < buffer.size()-1; ++ix )
         {
-        	// Find the first non space character
-        	char b = buffer[ix];
+            // Find the first non space character
+            char b = buffer[ix];
             switch ( b ) 
             {
-            	case '\n':
-            	case '\t':
-            	case '\r':
-            		break;
-            	  
-	            default:
-		            offset = ix;
-		            break; 
+                case '\n':
+                case '\t':
+                case '\r':
+                    break;
+                  
+                default:
+                    offset = ix;
+                    break; 
             } 
             
-	        if( offset != -1 )
-	        {
-	        	break;
-	        }            
+            if( offset != -1 )
+            {
+                break;
+            }            
         }
-	
-	    if( offset >= 0 )
-	    {
-		    // Set the command in the frame - copy the memory.
-		    frame.setCommand( reinterpret_cast<char*>(&buffer[offset]) );
-			break;
-	    }
-	
-	}
+    
+        if( offset >= 0 )
+        {
+            // Set the command in the frame - copy the memory.
+            frame.setCommand( reinterpret_cast<char*>(&buffer[offset]) );
+            break;
+        }
+    
+    }
     // Clean up the mess.
     buffer.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void StompCommandReader::readStompHeaders( StompFrame& frame ) 
-   throw (StompConnectorException)
+   throw ( StompConnectorException )
 {
     // Read the command;
     bool endOfHeaders = false;
@@ -173,7 +173,7 @@ void StompCommandReader::readStompHeaders( StompFrame& frame )
 
 ////////////////////////////////////////////////////////////////////////////////
 int StompCommandReader::readStompHeaderLine(void) 
-    throw (StompConnectorException)
+    throw ( StompConnectorException )
 {
     int count = 0;
   
@@ -223,10 +223,10 @@ void StompCommandReader::readStompBody( StompFrame& frame )
         content_length = strtoul(
             length.c_str(), 
             &stopped_string, 
-            10);
+            10 );
      }
 
-     if(content_length != 0)
+     if( content_length != 0 )
      {
         // For this case its assumed that content length indicates how 
         // much to read.  We reserve space in the buffer for it to 
@@ -271,7 +271,7 @@ void StompCommandReader::readStompBody( StompFrame& frame )
         
             content_length++;
 
-            if(byte != '\0')
+            if( byte != '\0' )
             {            
                 continue;
             }
@@ -283,7 +283,7 @@ void StompCommandReader::readStompBody( StompFrame& frame )
     if( content_length != 0 )
     {
         char* cpyBody = new char[content_length];
-        memcpy(cpyBody, &buffer[0], content_length);
+        memcpy( cpyBody, &buffer[0], content_length );
 
         // Set the body contents in the frame - copy the memory
         frame.setBody( cpyBody, content_length );
@@ -294,8 +294,8 @@ void StompCommandReader::readStompBody( StompFrame& frame )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-int StompCommandReader::read(unsigned char* buffer, int count) 
-   throw(io::IOException)
+int StompCommandReader::read( unsigned char* buffer, int count ) 
+   throw( io::IOException )
 {
     if( inputStream == NULL )
     {
@@ -312,9 +312,9 @@ int StompCommandReader::read(unsigned char* buffer, int count)
     // pause in hopes that some more data will show up.
     while( true )
     {
-        head += inputStream->read(&buffer[head], count - head);
+        head += inputStream->read( &buffer[head], count - head );
       
-        if(head == count)
+        if( head == count )
         {
             return count;
         }
@@ -325,7 +325,7 @@ int StompCommandReader::read(unsigned char* buffer, int count)
 }
  
 ////////////////////////////////////////////////////////////////////////////////
-unsigned char StompCommandReader::readByte(void) throw(io::IOException)
+unsigned char StompCommandReader::readByte(void) throw( io::IOException )
 {
     if( inputStream == NULL )
     {
@@ -335,6 +335,6 @@ unsigned char StompCommandReader::readByte(void) throw(io::IOException)
     }
    
     unsigned char c = 0;
-    inputStream->read(&c, 1);
+    inputStream->read( &c, 1 );
     return c;
 }

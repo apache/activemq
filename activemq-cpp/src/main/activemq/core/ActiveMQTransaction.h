@@ -107,10 +107,7 @@ namespace core{
                              ActiveMQSession* session,
                              const util::Properties& properties );
     
-        /**
-         * Destructor
-         */
-    	virtual ~ActiveMQTransaction(void);
+        virtual ~ActiveMQTransaction(void);
                                   
         /**
          * Adds the Message as a part of the Transaction for the specified

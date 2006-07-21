@@ -18,16 +18,19 @@
 #include "StompSessionManager.h"
 
 #include <activemq/core/ActiveMQMessage.h>
+#include <activemq/core/ActiveMQConstants.h>
 #include <activemq/concurrent/Concurrent.h>
 #include <activemq/connector/stomp/StompSessionInfo.h>
 #include <activemq/connector/stomp/StompConsumerInfo.h>
 #include <activemq/connector/stomp/commands/SubscribeCommand.h>
 #include <activemq/connector/stomp/commands/UnsubscribeCommand.h>
 #include <activemq/connector/stomp/StompSelector.h>
+#include <activemq/util/Properties.h>
 
 using namespace std;
 using namespace activemq;
 using namespace activemq::core;
+using namespace activemq::util;
 using namespace activemq::exceptions;
 using namespace activemq::transport;
 using namespace activemq::connector;
@@ -65,7 +68,7 @@ StompSessionManager::~StompSessionManager(void)
 ////////////////////////////////////////////////////////////////////////////////
 unsigned int StompSessionManager::getNextSessionId(void)
 {
-    synchronized(&mutex)
+    synchronized( &mutex )
     {
         return nextSessionId++;
     }
@@ -76,7 +79,7 @@ unsigned int StompSessionManager::getNextSessionId(void)
 ////////////////////////////////////////////////////////////////////////////////
 unsigned int StompSessionManager::getNextConsumerId(void)
 {
-    synchronized(&mutex)
+    synchronized( &mutex )
     {
         return nextConsumerId++;
     }
@@ -86,7 +89,7 @@ unsigned int StompSessionManager::getNextConsumerId(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 connector::SessionInfo* StompSessionManager::createSession(
-    cms::Session::AcknowledgeMode ackMode) 
+    cms::Session::AcknowledgeMode ackMode ) 
         throw ( exceptions::ActiveMQException )
 {
     try
@@ -94,7 +97,7 @@ connector::SessionInfo* StompSessionManager::createSession(
         SessionInfo* session = new StompSessionInfo();
         
         // Init data
-        session->setAckMode(ackMode);
+        session->setAckMode( ackMode );
         session->setConnectionId( connectionId );
         session->setSessionId( getNextSessionId() );
         
@@ -114,10 +117,10 @@ void StompSessionManager::removeSession(
     
 ////////////////////////////////////////////////////////////////////////////////
 connector::ConsumerInfo* StompSessionManager::createConsumer(
-    cms::Destination* destination, 
+    const cms::Destination* destination, 
     SessionInfo* session,
-    const std::string& selector)
-        throw( ConnectorException )
+    const std::string& selector )
+        throw( StompConnectorException )
 {
     try
     {
@@ -127,45 +130,53 @@ connector::ConsumerInfo* StompSessionManager::createConsumer(
         return createDurableConsumer( 
             destination, session, "", selector, false );    
     }
-    AMQ_CATCH_RETHROW( ConnectorException )
-    AMQ_CATCHALL_THROW( ConnectorException )
+    AMQ_CATCH_RETHROW( StompConnectorException )
+    AMQ_CATCHALL_THROW( StompConnectorException )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 connector::ConsumerInfo* StompSessionManager::createDurableConsumer(
-    cms::Destination* destination, 
+    const cms::Destination* destination, 
     SessionInfo* session,
     const std::string& name,
     const std::string& selector,
     bool noLocal )
-        throw ( ConnectorException )
+        throw ( StompConnectorException )
 {
     try
     {
-        synchronized(&mutex)
+        synchronized( &mutex )
         {
             // Find the right mapping to consumers        
             ConsumerMap& consumerMap = 
                 destinationMap[ destination->toString() ];
-            
+
             // We only need to send a sub request if there are no active 
             // consumers on this destination.  
             if( consumerMap.empty() )
             {
                 // Send the request to the Broker
                 SubscribeCommand cmd;
-                
-                if( session->getAckMode() == cms::Session::ClientAcknowledge )
+
+                if( session->getAckMode() == cms::Session::CLIENT_ACKNOWLEDGE )
                 {
                     cmd.setAckMode( CommandConstants::ACK_CLIENT );
                 }
                 cmd.setDestination( destination->toProviderString() );
-                cmd.setNoLocal( noLocal );
+                
+                if( noLocal == true ) 
+                {
+                    cmd.setNoLocal( noLocal );
+                }
 
                 if( name != "" )
                 {
                     cmd.setSubscriptionName( name );
                 }
+                
+                // Grab any options from the destination and set them
+                // for this subscription.
+                setSubscribeOptions( destination, cmd );
                 
                 // The Selector is set on the first subscribe on this dest,
                 // and if another consumer is created on this destination
@@ -198,18 +209,18 @@ connector::ConsumerInfo* StompSessionManager::createDurableConsumer(
         
         return NULL;
     }
-    AMQ_CATCH_RETHROW( ConnectorException )
-    AMQ_CATCHALL_THROW( ConnectorException )
+    AMQ_CATCH_RETHROW( StompConnectorException )
+    AMQ_CATCHALL_THROW( StompConnectorException )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void StompSessionManager::removeConsumer(
-    connector::ConsumerInfo* consumer)
-        throw( ConnectorException )
+    connector::ConsumerInfo* consumer )
+        throw( StompConnectorException )
 {
     try
     {
-        synchronized(&mutex)
+        synchronized( &mutex )
         {
             DestinationMap::iterator itr = 
                 destinationMap.find( consumer->getDestination().toString() );
@@ -238,8 +249,8 @@ void StompSessionManager::removeConsumer(
             }    
         }
     }
-    AMQ_CATCH_RETHROW( ConnectorException )
-    AMQ_CATCHALL_THROW( ConnectorException )
+    AMQ_CATCH_RETHROW( StompConnectorException )
+    AMQ_CATCHALL_THROW( StompConnectorException )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -265,10 +276,10 @@ void StompSessionManager::onStompCommand( commands::StompCommand* command )
                 "No Message Listener Registered." );
         }
                 
-        synchronized(&mutex)
+        synchronized( &mutex )
         {
             DestinationMap::iterator itr = 
-                destinationMap.find( message->getCMSDestination().toString() );
+                destinationMap.find( message->getCMSDestination()->toString() );
 
             if( itr == destinationMap.end() )
             {
@@ -280,7 +291,7 @@ void StompSessionManager::onStompCommand( commands::StompCommand* command )
 
             // If we only have 1 consumer, we don't need to clone the original
             // message.
-            if(itr->second.size() == 1)
+            if( itr->second.size() == 1 )
             {
                 ConsumerInfo* consumerInfo = itr->second.begin()->second;
                 
@@ -301,7 +312,7 @@ void StompSessionManager::onStompCommand( commands::StompCommand* command )
             // message.
             ConsumerMap::iterator c_itr = itr->second.begin();
             
-            for(; c_itr != itr->second.end(); ++c_itr )
+            for( ; c_itr != itr->second.end(); ++c_itr )
             {
                 ConsumerInfo* consumerInfo = c_itr->second;
                 
@@ -318,6 +329,113 @@ void StompSessionManager::onStompCommand( commands::StompCommand* command )
             // We got here which means that we sent copies, so remove
             // the original.
             delete command;
+        }
+    }
+    AMQ_CATCH_RETHROW( StompConnectorException )
+    AMQ_CATCH_EXCEPTION_CONVERT( ActiveMQException, StompConnectorException )
+    AMQ_CATCHALL_THROW( StompConnectorException )
+}
+
+void StompSessionManager::setSubscribeOptions( const cms::Destination* dest,
+                                               SubscribeCommand& command )
+    throw ( StompConnectorException )
+{
+    try
+    {
+        // Get the properties of this destination
+        const Properties& destProperties = dest->getProperties(); 
+
+        if( destProperties.isEmpty() )
+        {
+            // Nothing to do, so save some work and quit now.
+            return;
+        }
+
+        std::string noLocalStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CONSUMER_NOLOCAL );
+
+        if( destProperties.getProperty( noLocalStr, "false" ) == "true" )
+        {
+            command.setNoLocal(
+                Boolean::parseBoolean( 
+                    destProperties.getProperty( noLocalStr ) ) );
+        }
+
+        std::string selectorStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CONSUMER_SELECTOR );
+
+        if( destProperties.hasProperty( selectorStr ) )
+        {
+            command.setMessageSelector(
+                destProperties.getProperty( selectorStr ) );
+        }
+
+        std::string priorityStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CONSUMER_PRIORITY );
+
+        if( destProperties.hasProperty( priorityStr ) )
+        {
+            command.setPriority(
+                Integer::parseInt( 
+                    destProperties.getProperty( priorityStr ) ) );
+        }
+
+        std::string dispatchAsyncStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CONSUMER_DISPATCHASYNC );
+        
+        if( destProperties.hasProperty( dispatchAsyncStr ) )
+        {
+            command.setDispatchAsync(
+                Boolean::parseBoolean( 
+                    destProperties.getProperty( dispatchAsyncStr ) ) );
+        }
+
+        std::string exclusiveStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CONSUMER_EXCLUSIVE );
+        
+        if( destProperties.hasProperty( exclusiveStr ) )
+        {
+            command.setExclusive(
+                Boolean::parseBoolean( 
+                    destProperties.getProperty( exclusiveStr ) ) );
+        }
+
+        std::string maxPendingMsgLimitStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CUNSUMER_MAXPENDINGMSGLIMIT );
+        
+        if( destProperties.hasProperty( maxPendingMsgLimitStr ) )
+        {
+            command.setMaxPendingMsgLimit(
+                Integer::parseInt( 
+                    destProperties.getProperty( maxPendingMsgLimitStr ) ) );
+        }
+ 
+        std::string prefetchSizeStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CONSUMER_PREFECTCHSIZE );
+        
+        if( destProperties.hasProperty( prefetchSizeStr ) )
+        {
+            command.setPrefetchSize(
+                Integer::parseInt( 
+                    destProperties.getProperty( prefetchSizeStr ) ) );
+        }
+
+        std::string retroactiveStr = 
+            ActiveMQConstants::toString(
+                ActiveMQConstants::CONSUMER_RETROACTIVE );
+        
+        if( destProperties.hasProperty( retroactiveStr ) )
+        {
+            command.setRetroactive(
+                Boolean::parseBoolean( 
+                    destProperties.getProperty( retroactiveStr ) ) );
         }
     }
     AMQ_CATCH_RETHROW( StompConnectorException )
