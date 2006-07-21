@@ -21,21 +21,22 @@
 #include <cms/CMSException.h>
 
 namespace cms{
-	
-	/**
-	 * Interface for a class that implements the start method.
-	 */
-	class Startable{
-		
-	public:
-	
-		virtual ~Startable(){}
-		
-		/**
-		 * Starts the service.
-		 */
-		virtual void start() throw( CMSException ) = 0;
-	};
+    
+    /**
+     * Interface for a class that implements the start method.
+     */
+    class Startable{
+        
+    public:
+    
+        virtual ~Startable(){}
+        
+        /**
+         * Starts the service.
+         */
+        virtual void start() throw( CMSException ) = 0;
+        
+    };
 }
 
 #endif /*CMS_STARTABLE_H*/

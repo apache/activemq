@@ -91,6 +91,7 @@
 		                <fileName>ActiveMQProducer.cpp</fileName>
 		                <fileName>ActiveMQSession.cpp</fileName>
 		                <fileName>ActiveMQTransaction.cpp</fileName>
+		                <fileName>ActiveMQConstants.cpp</fileName>
 		              </fileNames>
 		            </source>
 		            <source>

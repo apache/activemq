@@ -31,7 +31,16 @@ namespace stomp{
             if( connectCommand != NULL ){
                 commands::ConnectedCommand* resp = new commands::ConnectedCommand();
                 resp->setCorrelationId( connectCommand->getCommandId() );
-                resp->setSessionId( sessionId );
+
+                if( connectCommand->getClientId() == NULL )
+                {
+                    resp->setSessionId( sessionId );
+                }
+                else
+                {
+                    resp->setSessionId( connectCommand->getClientId() );
+                }
+
                 return resp;                
             }
             

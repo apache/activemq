@@ -38,7 +38,7 @@ namespace transport{
          * @param boolean indicating if this object manages the lifetime of 
          *        the factory that is being registered.
          */
-        TransportFactoryMapRegistrar(const std::string& name, 
+        TransportFactoryMapRegistrar( const std::string& name, 
                                       TransportFactory*  factory,
                                       bool               manageLifetime = true)
         {       
@@ -58,9 +58,9 @@ namespace transport{
             {
                 // UnRegister it in the map.
                 TransportFactoryMap::getInstance().
-                    unregisterTransportFactory(name);
+                    unregisterTransportFactory( name );
             
-                if(manageLifetime)
+                if( manageLifetime )
                 {
                     delete factory;
                 }

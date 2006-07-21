@@ -29,10 +29,10 @@ using namespace activemq::exceptions;
 using namespace activemq::concurrent;
 
 ////////////////////////////////////////////////////////////////////////////////
-ActiveMQConsumer::ActiveMQConsumer(connector::ConsumerInfo* consumerInfo,
-                                   ActiveMQSession* session)
+ActiveMQConsumer::ActiveMQConsumer( connector::ConsumerInfo* consumerInfo,
+                                    ActiveMQSession* session )
 {
-    if(session == NULL || consumerInfo == NULL)
+    if( session == NULL || consumerInfo == NULL )
     {
         throw NullPointerException(
             __FILE__, __LINE__,
@@ -54,7 +54,7 @@ ActiveMQConsumer::~ActiveMQConsumer(void)
     {
         // Dispose of the Consumer Info, this should stop us from getting
         // any more messages.
-        session->onDestroySessionResource(this);
+        session->onDestroySessionResource( this );
         
         // Stop the asynchronous message processin thread if it's
         // running.
@@ -85,11 +85,11 @@ cms::Message* ActiveMQConsumer::receive(void) throw ( cms::CMSException )
 {
     try
     {
-        synchronized(&msgQueue)
+        synchronized( &msgQueue )
         {
             // Check for empty in case of spurious wakeup, or race to
             // queue lock.
-            while(!shutdown && msgQueue.empty())
+            while( !shutdown && msgQueue.empty() )
             {
                 msgQueue.wait();
             }
@@ -123,12 +123,12 @@ cms::Message* ActiveMQConsumer::receive(void) throw ( cms::CMSException )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-cms::Message* ActiveMQConsumer::receive(int millisecs) 
+cms::Message* ActiveMQConsumer::receive( int millisecs ) 
     throw ( cms::CMSException )
 {
     try
     {
-        synchronized(&msgQueue)
+        synchronized( &msgQueue )
         {
             // Check for empty, and wait if its not
             if( msgQueue.empty() ){
@@ -166,9 +166,9 @@ cms::Message* ActiveMQConsumer::receiveNoWait(void)
 {
     try
     {
-        synchronized(&msgQueue)
+        synchronized( &msgQueue )
         {
-            if(!msgQueue.empty())
+            if( !msgQueue.empty() )
             {
                 // Fetch the Message then copy it so it can be handed off
                 // to the user.
@@ -192,11 +192,11 @@ cms::Message* ActiveMQConsumer::receiveNoWait(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ActiveMQConsumer::setMessageListener(cms::MessageListener* listener)
+void ActiveMQConsumer::setMessageListener( cms::MessageListener* listener )
 {
     try
     {
-        synchronized(&listenerLock)
+        synchronized( &listenerLock )
         {
             this->listener = listener;
         }
@@ -220,7 +220,7 @@ void ActiveMQConsumer::acknowledgeMessage( const ActiveMQMessage* message )
         // Delegate the Ack to the Session, we cast away copnstness since
         // in a transactional session we might need to redeliver this
         // message and update its data.
-        session->acknowledge(this, const_cast< ActiveMQMessage*>( message ) );
+        session->acknowledge( this, const_cast< ActiveMQMessage*>( message ) );
     }
     AMQ_CATCH_RETHROW( ActiveMQException )
     AMQ_CATCHALL_THROW( ActiveMQException )
@@ -231,18 +231,18 @@ void ActiveMQConsumer::run(void)
 {
     try
     {
-        while(!shutdown)
+        while( !shutdown )
         {
             Message* message = NULL;
 
-            synchronized(&msgQueue)
+            synchronized( &msgQueue )
             {
                 
                 // Gaurd against spurious wakeup or race to sync lock
                 // also if the listner has been unregistered we don't
                 // have anyone to notify, so we wait till a new one is
                 // registered, and then we will deliver the backlog
-                while(msgQueue.empty() || listener == NULL)
+                while( msgQueue.empty() || listener == NULL )
                 {
                     if( shutdown )
                     {
@@ -252,7 +252,7 @@ void ActiveMQConsumer::run(void)
                 }
                 
                 // don't want to process messages if we are shutting down.
-                if(shutdown)
+                if( shutdown )
                 {
                     return;
                 }
@@ -275,18 +275,18 @@ void ActiveMQConsumer::run(void)
     {
         cms::ExceptionListener* listener = session->getExceptionListener();
         
-        if(listener != NULL)
+        if( listener != NULL )
         {
             listener->onException( ActiveMQException(
                 __FILE__, __LINE__,
                 "ActiveMQConsumer::run - "
-                "MessageListener threw an unknown Exception, recovering..."));
+                "MessageListener threw an unknown Exception, recovering..." ) );
         }
     }        
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ActiveMQConsumer::dispatch(ActiveMQMessage* message) 
+void ActiveMQConsumer::dispatch( ActiveMQMessage* message ) 
     throw ( cms::CMSException )
 {
     try
@@ -294,19 +294,19 @@ void ActiveMQConsumer::dispatch(ActiveMQMessage* message)
         // If the Session is in ClientAcknowledge mode, then we set the 
         // handler in the message to this object and send it out.  Otherwise
         // we ack it here for all the other Modes.
-        if(session->getAcknowledgeMode() == Session::ClientAcknowledge)
+        if( session->getAcknowledgeMode() == Session::CLIENT_ACKNOWLEDGE )
         {
             // Register ourself so that we can handle the Message's
             // acknowledge method.
-            message->setAckHandler(this);
+            message->setAckHandler( this );
         }
         else
         {
-            session->acknowledge(this, message);
+            session->acknowledge( this, message );
         }
 
         // No listener, so we queue it
-        synchronized(&msgQueue)
+        synchronized( &msgQueue )
         {
             msgQueue.push( dynamic_cast< cms::Message* >( message ) );
             msgQueue.notifyAll();
@@ -321,9 +321,9 @@ void ActiveMQConsumer::purgeMessages(void)
 {
     try
     {
-        synchronized(&msgQueue)
+        synchronized( &msgQueue )
         {
-            while(!msgQueue.empty())
+            while( !msgQueue.empty() )
             {
                 // destroy these messages if this is not a transacted
                 // session, if it is then the tranasction will clean 
@@ -361,13 +361,13 @@ void ActiveMQConsumer::notifyListener( Message* message ){
     try
     {
         MessageListener* listener = NULL;
-        synchronized(&listenerLock)
+        synchronized( &listenerLock )
         {
             listener = getMessageListener();                
         }
         if(listener != NULL)
         {
-            listener->onMessage(*message);
+            listener->onMessage( message );
         }
     }        
     AMQ_CATCH_RETHROW( ActiveMQException )
@@ -398,14 +398,14 @@ void ActiveMQConsumer::startThread(){
     try
     {
         // Start the thread, if it's not already started.
-        if(listenerThread == NULL)
+        if( listenerThread == NULL )
         {
-            listenerThread = new Thread(this);        
+            listenerThread = new Thread( this );        
             listenerThread->start();                        
         }
         
         // notify the Queue so that any pending messages get delivered
-        synchronized(&msgQueue)
+        synchronized( &msgQueue )
         {
             msgQueue.notifyAll();
         }
@@ -423,7 +423,7 @@ void ActiveMQConsumer::stopThread(){
         
         // if the thread is running signal it to quit and then
         // wait for run to return so thread can die
-        if(listenerThread != NULL)
+        if( listenerThread != NULL )
         {                        
             synchronized( &msgQueue )
             {

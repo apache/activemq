@@ -39,7 +39,7 @@ TcpTransport::TcpTransport( const activemq::util::Properties& properties,
         // Create the IO device we will be communicating over the
         // wire with.  This may need to change if we add more types
         // of sockets, such as SSL.  
-        socket = SocketFactory::createSocket(properties);
+        socket = SocketFactory::createSocket( properties );
 
         // Cast it to an IO transport so we can wire up the socket
         // input and output streams.

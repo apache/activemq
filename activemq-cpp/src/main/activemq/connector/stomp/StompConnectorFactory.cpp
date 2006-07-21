@@ -31,10 +31,10 @@ using namespace activemq::connector::stomp;
 ////////////////////////////////////////////////////////////////////////////////
 Connector* StompConnectorFactory::createConnector(
     const activemq::util::Properties& properties,
-    activemq::transport::Transport* transport)
+    activemq::transport::Transport* transport )
 {
     return dynamic_cast<Connector*>(
-        new StompConnector(transport, properties));
+        new StompConnector( transport, properties ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +43,7 @@ ConnectorFactory& StompConnectorFactory::getInstance(void)
     // Create a static instance of the registrar and return a reference to
     // its internal instance of this class.
     static ConnectorFactoryMapRegistrar registrar(
-        "stomp", new StompConnectorFactory());
+        "stomp", new StompConnectorFactory() );
 
     return registrar.getFactory();
 }

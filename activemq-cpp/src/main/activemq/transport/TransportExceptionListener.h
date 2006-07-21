@@ -23,26 +23,27 @@
 namespace activemq{
 namespace transport{
   
-   // Forward declarations.
-   class Transport;
+    // Forward declarations.
+    class Transport;
   
-   /**
-    * A listener of asynchronous exceptions from a command transport object.
-    */
-   class TransportExceptionListener{
-   public:
+    /**
+     * A listener of asynchronous exceptions from a command transport object.
+     */
+    class TransportExceptionListener{
+    public:
         
-      virtual ~TransportExceptionListener(){}
+        virtual ~TransportExceptionListener(){}
         
-      /**
-       * Event handler for an exception from a command transport.
-       * @param source The source of the exception
-       * @param ex The exception.
-       */
-      virtual void onTransportException( 
-         Transport* source, 
-         const exceptions::ActiveMQException& ex ) = 0;
-  };
+        /**
+         * Event handler for an exception from a command transport.
+         * @param source The source of the exception
+         * @param ex The exception.
+         */
+        virtual void onTransportException( 
+            Transport* source, 
+            const exceptions::ActiveMQException& ex ) = 0;
+            
+    };
     
 }}
 

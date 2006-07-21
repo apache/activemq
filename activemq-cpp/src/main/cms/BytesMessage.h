@@ -26,9 +26,6 @@ namespace cms{
       
     public:
    
-        /**
-         * Destructor
-         */
         virtual ~BytesMessage(){}
 
         /**

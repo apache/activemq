@@ -25,36 +25,38 @@
 namespace cms
 {
 
-   class ConnectionFactory
-   {
-   public:
+    /**
+     * Defines the interface for a factory that creates connection objects
+     */
+    class ConnectionFactory
+    {
+    public:
 
-      /**
-       * Destructor
-       */
-   	virtual ~ConnectionFactory(void) {}
+        virtual ~ConnectionFactory(void) {}
 
-      /**
-       * Creates a connection with the default user identity. The 
-       * connection is created in stopped mode. No messages will be 
-       * delivered until the Connection.start method is explicitly 
-       * called. 
-       * @throws CMSException
-       */
-      virtual Connection* createConnection(void) throw ( CMSException ) = 0;
+        /**
+         * Creates a connection with the default user identity. The 
+         * connection is created in stopped mode. No messages will be 
+         * delivered until the Connection.start method is explicitly 
+         * called. 
+         * @return Pointer to a connection object, caller owns the pointer
+         * @throws CMSException
+         */
+        virtual Connection* createConnection(void) throw ( CMSException ) = 0;
 
-      /**
-       * Creates a connection with the specified user identity. The 
-       * connection is created in stopped mode. No messages will be 
-       * delivered until the Connection.start method is explicitly called.
-       * @throw CMSException.
-       */
-      virtual Connection* createConnection(const std::string& username,
-                                           const std::string& password,
-                                           const std::string& clientId) 
-                                              throw ( CMSException ) = 0;
+        /**
+         * Creates a connection with the specified user identity. The 
+         * connection is created in stopped mode. No messages will be 
+         * delivered until the Connection.start method is explicitly called.
+         * @return Pointer to a connection object, caller owns the pointer
+         * @throw CMSException.
+         */
+        virtual Connection* createConnection( const std::string& username,
+                                              const std::string& password,
+                                              const std::string& clientId) 
+                                                  throw ( CMSException ) = 0;
 
-   };
+    };
 
 }
 

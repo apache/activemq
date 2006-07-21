@@ -23,8 +23,8 @@
 namespace activemq{
 namespace transport{
   
-  class Response : public Command{
-  public:
+    class Response : public Command{
+    public:
   
         virtual ~Response(void) {}
         
@@ -40,7 +40,7 @@ namespace transport{
          */
         virtual void setCorrelationId( const unsigned int corrId ) = 0;
         
-  };
+    };
     
 }}
 

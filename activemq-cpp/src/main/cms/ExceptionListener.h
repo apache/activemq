@@ -22,22 +22,19 @@
 
 namespace cms{
 
-   class ExceptionListener
-   {
-   public:
+    class ExceptionListener
+    {
+    public:
    
-      /**
-       * Destructor
-       */
-      virtual ~ExceptionListener(void) {}
+        virtual ~ExceptionListener(void) {}
    
-      /**
-       * Called when an exception occurs.
-       * @param Exception Object that occurred.
-       */
-      virtual void onException(const cms::CMSException& ex) = 0;
+        /**
+         * Called when an exception occurs.
+         * @param Exception Object that occurred.
+         */
+        virtual void onException(const cms::CMSException& ex) = 0;
       
-   };
+    };
 
 }
 

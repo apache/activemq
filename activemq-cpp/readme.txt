@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-ActiveMQ CPP Library   - Version 0.0.1
+ActiveMQ CPP Library
 --------------------------------------------------------------------------
 
 This library provides a JMS like interface to an ActiveMQ broker in c++.

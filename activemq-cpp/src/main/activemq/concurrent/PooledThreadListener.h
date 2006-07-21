@@ -22,44 +22,43 @@
 namespace activemq{
 namespace concurrent{
 
-   //forward declare
-   class PooledThread;
+    class PooledThread;
 
-   class PooledThreadListener
-   {
-   public:
+    class PooledThreadListener
+    {
+    public:
 
-      /**
-       * Destructor
-       */
-   	virtual ~PooledThreadListener(void) {}
-      
-      /**
-       * Called by a pooled thread when it is about to begin
-       * executing a new task.
-       * @param Pointer to the Pooled Thread that is making this call
-       */
-      virtual void onTaskStarted(PooledThread* thread) = 0;
+        /**
+         * Destructor
+         */
+        virtual ~PooledThreadListener(void) {}
+
+        /**
+         * Called by a pooled thread when it is about to begin
+         * executing a new task.
+         * @param Pointer to the Pooled Thread that is making this call
+         */
+        virtual void onTaskStarted(PooledThread* thread) = 0;
        
-      /**
-       * Called by a pooled thread when it has completed a task
-       * and is going back to waiting for another task to run
-       * @param Pointer the the Pooled Thread that is making this call.
-       */
-      virtual void onTaskCompleted(PooledThread* thread) = 0;
+        /**
+         * Called by a pooled thread when it has completed a task
+         * and is going back to waiting for another task to run
+         * @param Pointer the the Pooled Thread that is making this call.
+         */
+        virtual void onTaskCompleted(PooledThread* thread) = 0;
       
-      /**
-       * Called by a pooled thread when it has encountered an exception
-       * while running a user task, after receiving this notification
-       * the callee should assume that the PooledThread is now no longer
-       * running.
-       * @param Pointer to the Pooled Thread that is making this call
-       * @param The Exception that occured.
-       */
-      virtual void onTaskException(PooledThread* thread, 
-                                   exceptions::ActiveMQException& ex) = 0;
+        /**
+         * Called by a pooled thread when it has encountered an exception
+         * while running a user task, after receiving this notification
+         * the callee should assume that the PooledThread is now no longer
+         * running.
+         * @param Pointer to the Pooled Thread that is making this call
+         * @param The Exception that occured.
+         */
+        virtual void onTaskException( PooledThread* thread, 
+                                      exceptions::ActiveMQException& ex) = 0;
        
-   };
+    };
 
 }}
 

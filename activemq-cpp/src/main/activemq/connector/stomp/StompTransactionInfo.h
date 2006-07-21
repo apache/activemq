@@ -37,16 +37,13 @@ namespace stomp{
     public:
 
         /**
-         * TransactionInfo Constructor
+         * Default Constructor
          */
         StompTransactionInfo(void) {
             transactionId = 0;
             session = NULL;
         }
 
-        /**
-         * Destructor
-         */
         virtual ~StompTransactionInfo(void) {}
 
         /**

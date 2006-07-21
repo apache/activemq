@@ -34,7 +34,7 @@ namespace util{
     {
     public:
 
-    	virtual ~Number(void) {}
+        virtual ~Number(void) {}
         
     };
 

@@ -62,7 +62,8 @@ CommandConstants::StaticInitializer::StaticInitializer(){
     stompHeaders[HEADER_RESPONSEID] = "response-id";
     stompHeaders[HEADER_EXPIRES] = "expires";
     stompHeaders[HEADER_PERSISTANT] = "persistent";
-    stompHeaders[HEADER_PRIORITY] = "priority";
+    stompHeaders[HEADER_JMSPRIORITY] = "priority";
+    stompHeaders[HEADER_CONSUMERPRIORITY] = "activemq.priority";
     stompHeaders[HEADER_REPLYTO] = "reply-to";
     stompHeaders[HEADER_TYPE] = "type";
     stompHeaders[HEADER_AMQMSGTYPE] = "amq-msg-type";
@@ -74,7 +75,7 @@ CommandConstants::StaticInitializer::StaticInitializer(){
     stompHeaders[HEADER_MAXPENDINGMSGLIMIT] = "activemq.maximumPendingMessageLimit";
     stompHeaders[HEADER_NOLOCAL] = "activemq.noLocal";
     stompHeaders[HEADER_PREFETCHSIZE] = "activemq.prefetchSize";
-    stompHeaders[HEADER_PRIORITY] = "activemq.priority";
+    stompHeaders[HEADER_CONSUMERPRIORITY] = "activemq.priority";
     stompHeaders[HEADER_RETROACTIVE] = "activemq.retroactive";
     stompHeaders[HEADER_SUBSCRIPTIONNAME] = "activemq.subscriptionName";
     stompHeaders[HEADER_TIMESTAMP] = "timestamp";

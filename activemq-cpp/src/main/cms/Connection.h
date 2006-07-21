@@ -34,41 +34,41 @@ namespace cms
     {
     public:
 
-        /**
-         * Destructor
-         */
         virtual ~Connection(void) {}
 
         /**
          * Creates a new Session to work for this Connection
+         * @throws CMSException
          */
         virtual Session* createSession(void) throw ( CMSException ) = 0;
-      
+
         /**
          * Creates a new Session to work for this Connection using the
          * specified acknowledgment mode
          * @param the Acknowledgement Mode to use.
+         * @throws CMSException
          */
-        virtual Session* createSession(Session::AcknowledgeMode ackMode) 
+        virtual Session* createSession( Session::AcknowledgeMode ackMode ) 
             throw ( CMSException ) = 0;
-         
+
         /**
          * Get the Client Id for this session
+         * @return Client Id String
          */
         virtual std::string getClientId(void) const = 0;      
-         
+
         /**
          * Gets the registered Exception Listener for this connection
          * @return pointer to an exception listnener or NULL
          */
         virtual ExceptionListener* getExceptionListener(void) const = 0;
-      
+
         /**
          * Sets the registed Exception Listener for this connection
          * @param pointer to and <code>ExceptionListener</code>
          */
-        virtual void setExceptionListener(ExceptionListener* listener) = 0;
-      
+        virtual void setExceptionListener( ExceptionListener* listener ) = 0;
+
     };
 
 }

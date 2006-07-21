@@ -37,8 +37,10 @@ namespace connector{
          * @param consumer the target consumer of the dispatch.
          * @param msg the message to be dispatched.
          */
-        virtual void onConsumerMessage( ConsumerInfo* consumer,
+        virtual void onConsumerMessage( 
+            ConsumerInfo* consumer,
             core::ActiveMQMessage* msg ) = 0;
+            
     };
         
 }}

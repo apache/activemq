@@ -41,9 +41,9 @@ namespace cms{
          * It is considered a programming error for this method to throw and
          * exception.
          * 
-         * @param Message object reference
+         * @param Message object const pointer recipient does not own.
          */
-        virtual void onMessage( const Message& message ) = 0;
+        virtual void onMessage( const Message* message ) = 0;
 
     };
     

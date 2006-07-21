@@ -34,6 +34,7 @@ ActiveMQConnection::ActiveMQConnection(ActiveMQConnectionData* connectionData)
 {
     this->connectionData = connectionData;
     this->started = false;
+    this->closed = false;
     this->exceptionListener = NULL;
 
     // We want to be the sink for all messages from the Connector
@@ -57,7 +58,7 @@ cms::Session* ActiveMQConnection::createSession(void)
 {
     try
     {
-        return this->createSession( Session::AutoAcknowledge );
+        return this->createSession( Session::AUTO_ACKNOWLEDGE );
     }
     AMQ_CATCH_RETHROW( ActiveMQException )
     AMQ_CATCHALL_THROW( ActiveMQException )
@@ -90,10 +91,20 @@ void ActiveMQConnection::close(void) throw ( cms::CMSException )
 {
     try
     {
+        if( closed )
+        {
+            return;
+        }
+
         // Once current deliveries are done this stops the delivery 
         // of any new messages.
         started = false;
-    
+        closed = true;
+
+        // Shutdown connector and transport
+        connectionData->getConnector()->close();
+        connectionData->getTransport()->close();
+
         // Destroy the connection data
         delete connectionData;
         connectionData = NULL;
@@ -124,7 +135,7 @@ void ActiveMQConnection::addMessageListener( const unsigned int consumerId,
                                              ActiveMQMessageListener* listener )
 {
     // Place in Map
-    synchronized(&mutex)
+    synchronized( &mutex )
     {
         consumers[consumerId] = listener;
     }
@@ -134,7 +145,7 @@ void ActiveMQConnection::addMessageListener( const unsigned int consumerId,
 void ActiveMQConnection::removeMessageListener( const unsigned int consumerId )
 {
     // Remove from Map
-    synchronized(&mutex)
+    synchronized( &mutex )
     {
         consumers.erase( consumerId );
     }
@@ -175,9 +186,9 @@ void ActiveMQConnection::onConsumerMessage( connector::ConsumerInfo* consumer,
         }
         
         // Started, so lock map and dispatch the message.
-        synchronized(&mutex)
+        synchronized( &mutex )
         {
-            if(consumers.find(consumer->getConsumerId()) != consumers.end())
+            if(consumers.find( consumer->getConsumerId()) != consumers.end() )
             {
                 consumers[consumer->getConsumerId()]->
                     onActiveMQMessage( message );

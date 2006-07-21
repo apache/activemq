@@ -30,7 +30,7 @@ namespace marshal{
     {
     public:
 
-    	virtual ~Marshalable(void) {}
+        virtual ~Marshalable(void) {}
 
         /**
          * Marshals the command to a stomp frame.

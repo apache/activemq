@@ -24,59 +24,56 @@
 namespace cms
 {
 
-   class MessageConsumer
-   {
-   public:
+    class MessageConsumer
+    {
+    public:
 
-      /**
-       * Destructor
-       */
-      virtual ~MessageConsumer(void) {}
+        virtual ~MessageConsumer(void) {}
       
-      /**
-       * Synchronously Receive a Message
-       * @return new message
-       * @throws CMSException
-       */
-      virtual Message* receive(void) throw ( CMSException ) = 0;
+        /**
+         * Synchronously Receive a Message
+         * @return new message
+         * @throws CMSException
+         */
+        virtual Message* receive(void) throw ( CMSException ) = 0;
 
-      /**
-       * Synchronously Receive a Message, time out after defined interval.
-       * Returns null if nothing read.
-       * @return new message
-       * @throws CMSException
-       */
-      virtual Message* receive(int millisecs) throw ( CMSException ) = 0;
+        /**
+         * Synchronously Receive a Message, time out after defined interval.
+         * Returns null if nothing read.
+         * @return new message
+         * @throws CMSException
+         */
+        virtual Message* receive( int millisecs ) throw ( CMSException ) = 0;
 
-      /**
-       * Receive a Message, does not wait if there isn't a new message
-       * to read, returns NULL if nothing read.
-       * @return new message
-       * @throws CMSException
-       */
-      virtual Message* receiveNoWait(void) throw ( CMSException ) = 0;
+        /**
+         * Receive a Message, does not wait if there isn't a new message
+         * to read, returns NULL if nothing read.
+         * @return new message
+         * @throws CMSException
+         */
+        virtual Message* receiveNoWait(void) throw ( CMSException ) = 0;
 
-      /**
-       * Sets the MessageListener that this class will send notifs on
-       * @param MessageListener interface pointer
-       */
-      virtual void setMessageListener(MessageListener* listener) = 0;
+        /**
+         * Sets the MessageListener that this class will send notifs on
+         * @param MessageListener interface pointer
+         */
+        virtual void setMessageListener( MessageListener* listener ) = 0;
       
-      /**
-       * Gets the MessageListener that this class will send notifs on
-       * @param MessageListener interface pointer
-       */
-      virtual MessageListener* getMessageListener(void) const = 0;
+        /**
+         * Gets the MessageListener that this class will send notifs on
+         * @param MessageListener interface pointer
+         */
+        virtual MessageListener* getMessageListener(void) const = 0;
       
-      /**
-       * Gets this message consumer's message selector expression.
-       * @return This Consumer's selector expression or "".
-       * @throws cms::CMSException
-       */
-      virtual std::string getMessageSelector(void) const 
-        throw ( cms::CMSException ) = 0;
+        /**
+         * Gets this message consumer's message selector expression.
+         * @return This Consumer's selector expression or "".
+         * @throws cms::CMSException
+         */
+        virtual std::string getMessageSelector(void) const 
+            throw ( cms::CMSException ) = 0;
             
-   };
+    };
 
 }
 

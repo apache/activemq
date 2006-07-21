@@ -68,6 +68,8 @@ namespace stomp{
             biStream.setByteArray( 
                 (const unsigned char*)textStr, 83 );
 
+            delete command;
+            
             command = reader.readCommand();
 
             CPPUNIT_ASSERT( command != NULL );
@@ -84,6 +86,8 @@ namespace stomp{
             biStream.setByteArray( 
                 (const unsigned char*)bytesStr, 98 );
 
+            delete command;
+
             command = reader.readCommand();
 
             CPPUNIT_ASSERT( command != NULL );
@@ -99,6 +103,7 @@ namespace stomp{
                 (int)bytesMessage->getBodyLength() );
             CPPUNIT_ASSERT( bytesText == "123456789" );
 
+            delete command;
         }
         
     };

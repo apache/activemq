@@ -41,7 +41,7 @@ ActiveMQTransaction::ActiveMQTransaction( ActiveMQConnection* connection,
 {
     try
     {
-        if(connection == NULL || session == NULL)
+        if( connection == NULL || session == NULL )
         {
             throw NullPointerException(
                 __FILE__, __LINE__,
@@ -56,9 +56,9 @@ ActiveMQTransaction::ActiveMQTransaction( ActiveMQConnection* connection,
             
         // convert from property Strings to int.
         redeliveryDelay = Integer::parseInt( 
-            properties.getProperty("transaction.redeliveryDelay", "25") );
+            properties.getProperty( "transaction.redeliveryDelay", "25" ) );
         maxRedeliveries = Integer::parseInt( 
-            properties.getProperty("transaction.maxRedeliveryCount", "5") );
+            properties.getProperty( "transaction.maxRedeliveryCount", "5" ) );
 
         // Start a new Transaction
         transactionInfo = connection->getConnectionData()->
@@ -76,16 +76,16 @@ ActiveMQTransaction::~ActiveMQTransaction(void)
         // Inform the connector we are rolling back before we close so that
         // the provider knows we didn't complete this transaction
         connection->getConnectionData()->getConnector()->
-            rollback(transactionInfo, session->getSessionInfo());
+            rollback( transactionInfo, session->getSessionInfo() );
 
         // Clean up
         clearTransaction();
         
         // Must allow all the tasks to complete before we destruct otherwise
         // the callbacks will cause an exception.
-        synchronized(&tasksDone)
+        synchronized( &tasksDone )
         {
-            while(taskCount != 0)
+            while( taskCount != 0 )
             {
                 tasksDone.wait(1000);
                 
@@ -102,24 +102,24 @@ void ActiveMQTransaction::clearTransaction(void)
 {
     try
     {
-        if(transactionInfo != NULL)
+        if( transactionInfo != NULL )
         {
             // Dispose of the ProducerInfo
             connection->getConnectionData()->
-                getConnector()->destroyResource(transactionInfo);
+                getConnector()->destroyResource( transactionInfo );
         }
 
-        synchronized(&rollbackLock)
+        synchronized( &rollbackLock )
         {
             // If there are any messages that are being transacted, then 
             // they die once and for all here.
             RollbackMap::iterator itr = rollbackMap.begin();
             
-            for(; itr != rollbackMap.end(); ++itr)
+            for( ; itr != rollbackMap.end(); ++itr )
             {
                 MessageList::iterator msgItr = itr->second.begin();
                 
-                for(; msgItr != itr->second.end(); ++msgItr)
+                for( ; msgItr != itr->second.end(); ++msgItr )
                 {
                    delete *msgItr;
                 }
@@ -136,10 +136,10 @@ void ActiveMQTransaction::clearTransaction(void)
 void ActiveMQTransaction::addToTransaction( ActiveMQMessage* message,
                                             ActiveMQMessageListener* listener )
 {
-    synchronized(&rollbackLock)
+    synchronized( &rollbackLock )
     {
         // Store in the Multi Map
-        rollbackMap[listener].push_back(message);
+        rollbackMap[listener].push_back( message );
     }
 }
 
@@ -151,7 +151,7 @@ void ActiveMQTransaction::removeFromTransaction(
     {
         // Delete all the messages, then remove the consumer's entry from
         // the Rollback Map.
-        synchronized(&rollbackLock)
+        synchronized( &rollbackLock )
         {
             RollbackMap::iterator rb_itr = rollbackMap.find( listener );
             
@@ -162,13 +162,13 @@ void ActiveMQTransaction::removeFromTransaction(
             
             MessageList::iterator itr = rb_itr->second.begin();
             
-            for(; itr != rollbackMap[listener].end(); ++itr)
+            for( ; itr != rollbackMap[listener].end(); ++itr )
             {
                delete *itr;
             }
             
             // Erase the entry from the map
-            rollbackMap.erase(listener);
+            rollbackMap.erase( listener );
         }
     }
     AMQ_CATCH_RETHROW( ActiveMQException )
@@ -180,7 +180,7 @@ void ActiveMQTransaction::commit(void) throw ( exceptions::ActiveMQException )
 {
     try
     {    
-        if(this->transactionInfo == NULL)
+        if( this->transactionInfo == NULL )
         {
             throw InvalidStateException(
                 __FILE__, __LINE__,
@@ -208,7 +208,7 @@ void ActiveMQTransaction::rollback(void) throw ( exceptions::ActiveMQException )
 {
     try
     {    
-        if(this->transactionInfo == NULL)
+        if( this->transactionInfo == NULL )
         {
             throw InvalidStateException(
                 __FILE__, __LINE__,
@@ -222,7 +222,7 @@ void ActiveMQTransaction::rollback(void) throw ( exceptions::ActiveMQException )
 
         // Dispose of the ProducerInfo
         connection->getConnectionData()->
-            getConnector()->destroyResource(transactionInfo);
+            getConnector()->destroyResource( transactionInfo );
 
         // Start a new Transaction
         transactionInfo = connection->getConnectionData()->
@@ -235,7 +235,7 @@ void ActiveMQTransaction::rollback(void) throw ( exceptions::ActiveMQException )
         //  doesn't have to wait on this method to complete an release its
         //  mutex so it can dispatch new messages.  That would however requre
         //  copying the whole map over to the thread.
-        synchronized(&rollbackLock)
+        synchronized( &rollbackLock )
         {
             RollbackMap::iterator itr = rollbackMap.begin();
             
@@ -247,7 +247,7 @@ void ActiveMQTransaction::rollback(void) throw ( exceptions::ActiveMQException )
                                       session,
                                       itr->second,
                                       maxRedeliveries,
-                                      redeliveryDelay) , this));
+                                      redeliveryDelay ) , this ) );
 
                 // Count the tasks started.
                 taskCount++;
@@ -273,9 +273,9 @@ void ActiveMQTransaction::onTaskComplete( Runnable* task )
         
         taskCount--;
         
-        if(taskCount == 0)
+        if( taskCount == 0 )
         {
-            synchronized(&tasksDone)
+            synchronized( &tasksDone )
             {
                 tasksDone.notifyAll();
             }
@@ -292,12 +292,12 @@ void ActiveMQTransaction::onTaskException( Runnable* task,
     try
     {
         // Delegate
-        onTaskComplete(task);
+        onTaskComplete( task );
         
         // Route the Error
         ExceptionListener* listener = connection->getExceptionListener();
         
-        if(listener != NULL)
+        if( listener != NULL )
         {
             listener->onException( ex );
         }
@@ -313,20 +313,20 @@ void ActiveMQTransaction::RollbackTask::run(void)
     {        
         MessageList::iterator itr = messages.begin();
 
-        for(; itr != messages.end(); ++itr)
+        for( ; itr != messages.end(); ++itr )
         {
-            (*itr)->setRedeliveryCount((*itr)->getRedeliveryCount() + 1);
+            ( *itr )->setRedeliveryCount( ( *itr )->getRedeliveryCount() + 1 );
             
             // Redeliver Messages at some point in the future
-            Thread::sleep(redeliveryDelay);
+            Thread::sleep( redeliveryDelay );
             
-            if((*itr)->getRedeliveryCount() >= maxRedeliveries)
+            if( ( *itr )->getRedeliveryCount() >= maxRedeliveries )
             {
                 // Poison Ack the Message, we give up processing this one
                 connection->getConnectionData()->getConnector()->
                     acknowledge( 
                         session->getSessionInfo(), 
-                        dynamic_cast< Message* >(*itr), 
+                        dynamic_cast< Message* >( *itr ), 
                         Connector::PoisonAck );
 
                 // Won't redeliver this so we kill it here.
@@ -335,7 +335,7 @@ void ActiveMQTransaction::RollbackTask::run(void)
                 return;
             }
             
-            listener->onActiveMQMessage(*itr);
+            listener->onActiveMQMessage( *itr );
         }
     }
     AMQ_CATCH_RETHROW( ActiveMQException )

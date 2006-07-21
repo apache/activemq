@@ -36,17 +36,14 @@ namespace core{
     {
     public:
 
-        /**
-         * Destructor
-         */
-    	virtual ~ActiveMQMessage(void) {}
+        virtual ~ActiveMQMessage(void) {}
 
         /**
          * Sets the Acknowledgement Handler that this Message will use
          * when the Acknowledge method is called.
          * @param ActiveMQAckHandler
          */
-        virtual void setAckHandler(ActiveMQAckHandler* handler) = 0;
+        virtual void setAckHandler( ActiveMQAckHandler* handler ) = 0;
         
         /**
          * Gets the number of times this message has been redelivered.
@@ -59,7 +56,7 @@ namespace core{
          * redelivered
          * @param redelivery count
          */
-        virtual void setRedeliveryCount(int count) = 0;
+        virtual void setRedeliveryCount( int count ) = 0;
 
     };
 

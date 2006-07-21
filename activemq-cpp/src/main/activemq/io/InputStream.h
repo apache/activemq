@@ -24,43 +24,44 @@
 
 namespace activemq{
 namespace io{
-	
-	/**
-	 * Base interface for an input stream.
-	 */
-	class InputStream 
-	: 
-		public cms::Closeable,
-		public concurrent::Synchronizable
-	{
-		
-	public:
-	
-		virtual ~InputStream(){}
-		
-		/**
-	     * Indcates the number of bytes avaialable.
-	     * @return the number of bytes available on this input stream.
-	     */
-		virtual int available() const = 0;
-		
-		/**
-		 * Reads a single byte from the buffer.
-		 * @return The next byte.
-		 * @throws IOException thrown if an error occurs.
-		 */
-		virtual unsigned char read() throw (IOException) = 0;
-		
-		/**
-		 * Reads an array of bytes from the buffer.
-		 * @param buffer (out) the target buffer.
-		 * @param bufferSize the size of the output buffer.
-		 * @return The number of bytes read.
-		 * @throws IOException thrown if an error occurs.
-		 */
-		virtual int read( unsigned char* buffer, const int bufferSize ) throw (IOException) = 0;
-	};
-	
+    
+    /**
+     * Base interface for an input stream.
+     */
+    class InputStream 
+    : 
+        public cms::Closeable,
+        public concurrent::Synchronizable
+    {
+        
+    public:
+    
+        virtual ~InputStream(){}
+        
+        /**
+         * Indcates the number of bytes avaialable.
+         * @return the number of bytes available on this input stream.
+         */
+        virtual int available() const = 0;
+        
+        /**
+         * Reads a single byte from the buffer.
+         * @return The next byte.
+         * @throws IOException thrown if an error occurs.
+         */
+        virtual unsigned char read() throw ( IOException ) = 0;
+        
+        /**
+         * Reads an array of bytes from the buffer.
+         * @param buffer (out) the target buffer.
+         * @param bufferSize the size of the output buffer.
+         * @return The number of bytes read.
+         * @throws IOException thrown if an error occurs.
+         */
+        virtual int read( unsigned char* buffer, const int bufferSize ) 
+            throw ( IOException ) = 0;
+    };
+    
 }}
 
 #endif /*ACTIVEMQ_IO_INPUTSTREAM_H_*/

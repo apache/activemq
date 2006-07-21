@@ -30,19 +30,19 @@ LOGCMS_INITIALIZE(logger, PooledThread, "com.activemq.concurrent.PooledThread");
 ////////////////////////////////////////////////////////////////////////////////
 PooledThread::PooledThread(ThreadPool* pool)
 {
-   if(pool == NULL)
-   {
-      throw exceptions::IllegalArgumentException( __FILE__, __LINE__, 
-        "PooledThread::PooledThread");
-   }
+    if(pool == NULL)
+    {
+        throw exceptions::IllegalArgumentException( __FILE__, __LINE__, 
+            "PooledThread::PooledThread");
+    }
    
-   busy = false;
-   done = false;
+    busy = false;
+    done = false;
 
-   listener = NULL;
+    listener = NULL;
    
-   // Store our Pool.
-   this->pool = pool;
+    // Store our Pool.
+    this->pool = pool;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,109 +53,109 @@ PooledThread::~PooledThread()
 ////////////////////////////////////////////////////////////////////////////////
 void PooledThread::run(void) 
 {
-   ThreadPool::Task task;
+    ThreadPool::Task task;
 
-   try
-   {
-      while(!done)
-      {
-         //LOGCMS_DEBUG(logger, "PooledThread::run - Entering deQ");
+    try
+    {
+        while(!done)
+        {
+            //LOGCMS_DEBUG(logger, "PooledThread::run - Entering deQ");
 
-         // Blocks until there something to be done
-         task = pool->deQueueTask();
+            // Blocks until there something to be done
+            task = pool->deQueueTask();
 
-         //LOGCMS_DEBUG(logger, "PooledThread::run - Exited deQ");
+            //LOGCMS_DEBUG(logger, "PooledThread::run - Exited deQ");
          
-         // Check if the Done Flag is set, in case it happened while we
-         // were waiting for a task
-         if(done)
-         {
-            break;
-         }
+            // Check if the Done Flag is set, in case it happened while we
+            // were waiting for a task
+            if(done)
+            {
+                break;
+            }
          
-         // If we got here and the runnable was null then something
-         // bad must have happened.  Throw an Exception and bail.
-         if(!task.first)
-         {
-            throw exceptions::ActiveMQException( __FILE__, __LINE__, 
-               "PooledThread::run - Retrieive NULL task from Pool.");
-         }
+            // If we got here and the runnable was null then something
+            // bad must have happened.  Throw an Exception and bail.
+            if(!task.first)
+            {
+                throw exceptions::ActiveMQException( __FILE__, __LINE__, 
+                    "PooledThread::run - Retrieive NULL task from Pool.");
+            }
                   
-         // Got some work to do, so set flag to busy
-         busy = true;
+            // Got some work to do, so set flag to busy
+            busy = true;
          
-         // Inform a listener that we are going to start
-         if(listener)
-         {
+            // Inform a listener that we are going to start
+            if(listener)
+            {
+                /*LOGCMS_DEBUG(logger, 
+                   "PooledThread::run - Inform Listener we are starting");*/
+                listener->onTaskStarted(this);
+            }
+         
+            // Perform the work
+            task.first->run();
+         
             /*LOGCMS_DEBUG(logger, 
-               "PooledThread::run - Inform Listener we are starting");*/
-            listener->onTaskStarted(this);
-         }
-         
-         // Perform the work
-         task.first->run();
-         
-         /*LOGCMS_DEBUG(logger, 
-            "PooledThread::run - Inform Task Listener we are done");*/
+                "PooledThread::run - Inform Task Listener we are done");*/
 
-         // Notify the Task listener that we are done
-         task.second->onTaskComplete(task.first);
+            // Notify the Task listener that we are done
+            task.second->onTaskComplete(task.first);
 
-         // Inform a listener that we are going to stop and wait
-         // for a new task
-         if(listener)
-         {
-            /*LOGCMS_DEBUG(logger, 
-               "PooledThread::run - Inform Listener we are done");*/
-            listener->onTaskCompleted(this);
-         }
+            // Inform a listener that we are going to stop and wait
+            // for a new task
+            if(listener)
+            {
+                /*LOGCMS_DEBUG(logger, 
+                    "PooledThread::run - Inform Listener we are done");*/
+                listener->onTaskCompleted(this);
+            }
 
-         // Set flag to inactive, we will wait for work
-         busy = false;   
-      }
-   }
-   catch(exceptions::ActiveMQException& ex)
-   {
-      ex.setMark( __FILE__, __LINE__ );
+            // Set flag to inactive, we will wait for work
+            busy = false;   
+        }
+    }
+    catch( exceptions::ActiveMQException& ex )
+    {
+        ex.setMark( __FILE__, __LINE__ );
       
-      // Notify the Task owner
-      if(task.first && task.second)
-      {
-         task.second->onTaskException(task.first, ex);
-      }
+        // Notify the Task owner
+        if(task.first && task.second)
+        {
+            task.second->onTaskException(task.first, ex);
+        }
 
-      busy = false;
+        busy = false;
       
-      // Notify the PooledThreadListener
-      if(listener)
-      {
-         listener->onTaskException(this, ex);
-      }
-   }
-   catch(...)
-   {
-      exceptions::ActiveMQException ex(
-         __FILE__, __LINE__, 
-         "PooledThread::run - Caught Unknown Exception");
+        // Notify the PooledThreadListener
+        if(listener)
+        {
+            listener->onTaskException(this, ex);
+        }
+    }
+    catch(...)
+    {
+        exceptions::ActiveMQException ex(
+            __FILE__, __LINE__, 
+            "PooledThread::run - Caught Unknown Exception");
          
-      // Notify the Task owner
-      if(task.first && task.second)
-      {
-         task.second->onTaskException(task.first, ex);
-      }
+        // Notify the Task owner
+        if(task.first && task.second)
+        {
+            task.second->onTaskException(task.first, ex);
+        }
 
-      busy = false;
+        busy = false;
 
-      // Notify the PooledThreadListener
-      if(listener)
-      {
-         listener->onTaskException(this, ex);
-      }
-   }
+        // Notify the PooledThreadListener
+        if(listener)
+        {
+            listener->onTaskException(this, ex);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void PooledThread::stop(void) throw ( cms::CMSException )
 {
-   done = true;
+    done = true;
 }

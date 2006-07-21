@@ -27,15 +27,15 @@ namespace util{
     {
     public:
 
-    	Long(void) {}
-    	virtual ~Long(void) {}
+        Long(void) {}
+        virtual ~Long(void) {}
 
         /**
          * Parses the String passed and extracts an long.
          * @param String to parse
          * @return long value
          */
-        static long parseLong(const std::string& value){
+        static long parseLong( const std::string& value ){
             long ret = 0;
             std::istringstream istream(value);
             istream.clear();
@@ -48,7 +48,7 @@ namespace util{
          * @param long to convert
          * @return string representation
          */
-        static std::string toString(long value){
+        static std::string toString( long value ){
             std::ostringstream ostream;
             ostream << value;
             return ostream.str();

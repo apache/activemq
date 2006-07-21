@@ -57,7 +57,7 @@ namespace core{
         concurrent::Mutex listenerLock;
         
         // Message Queue
-        util::Queue<cms::Message*> msgQueue;
+        util::Queue< cms::Message* > msgQueue;
         
         // Thread to notif a listener if one is added
         concurrent::Thread* listenerThread;
@@ -71,12 +71,9 @@ namespace core{
         /**
          * Constructor
          */
-        ActiveMQConsumer(connector::ConsumerInfo* consumerInfo,
-                         ActiveMQSession* session);
+        ActiveMQConsumer( connector::ConsumerInfo* consumerInfo,
+                          ActiveMQSession* session );
 
-        /**
-         * Destructor
-         */
         virtual ~ActiveMQConsumer(void);
 
     public:  // Interface Implementation
@@ -94,7 +91,7 @@ namespace core{
          * @return new message
          * @throws CMSException
          */
-        virtual cms::Message* receive(int millisecs) throw ( cms::CMSException );
+        virtual cms::Message* receive( int millisecs ) throw ( cms::CMSException );
 
         /**
          * Receive a Message, does not wait if there isn't a new message
@@ -108,7 +105,7 @@ namespace core{
          * Sets the MessageListener that this class will send notifs on
          * @param MessageListener interface pointer
          */
-        virtual void setMessageListener(cms::MessageListener* listener);
+        virtual void setMessageListener( cms::MessageListener* listener );
 
         /**
          * Gets the MessageListener that this class will send notifs on
@@ -178,7 +175,7 @@ namespace core{
          * @param cms::Message pointer to the message to dispatch
          * @throw cms::CMSException
          */
-        virtual void dispatch(ActiveMQMessage* message) 
+        virtual void dispatch( ActiveMQMessage* message ) 
             throw ( cms::CMSException );
 
         /**
@@ -220,6 +217,7 @@ namespace core{
          * Stops the asynchronous message processing thread if it's started.
          */
         void stopThread();
+
     };
 
 }}

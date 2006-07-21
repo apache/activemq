@@ -4,7 +4,6 @@
 #include <cms/MessageListener.h>
 #include <cms/ExceptionListener.h>
 
-
 namespace integration{
 namespace common{
 

@@ -23,64 +23,64 @@
 namespace activemq{
 namespace concurrent{
     
-   /**
-    * The interface for all synchronizable objects (that is, objects
-    * that can be locked and unlocked).
-    */
-   class Synchronizable
-   {
-   public:        // Abstract Interface
+    /**
+     * The interface for all synchronizable objects (that is, objects
+     * that can be locked and unlocked).
+     */
+    class Synchronizable
+    {
+    public:
 
-	  virtual ~Synchronizable(){}
-	
-      /**
-       * Locks the object.
-       * @throws ActiveMQException
-       */
-      virtual void lock() throw(exceptions::ActiveMQException) = 0;
-
-      /**
-       * Unlocks the object.
-       * @throws ActiveMQException
-       */
-      virtual void unlock() throw(exceptions::ActiveMQException) = 0;
+        virtual ~Synchronizable(){}
     
-      /**
-       * Waits on a signal from this object, which is generated
-       * by a call to Notify.  Must have this object locked before
-       * calling.
-       * @throws ActiveMQException
-       */
-      virtual void wait() throw(exceptions::ActiveMQException) = 0;
-    
-      /**
-       * Waits on a signal from this object, which is generated
-       * by a call to Notify.  Must have this object locked before
-       * calling.  This wait will timeout after the specified time
-       * interval.
-       * @param time in millisecsonds to wait, or WAIT_INIFINITE
-       * @throws ActiveMQException
-       */
-      virtual void wait(unsigned long millisecs) 
-         throw(exceptions::ActiveMQException) = 0;
+        /**
+         * Locks the object.
+         * @throws ActiveMQException
+         */
+        virtual void lock() throw(exceptions::ActiveMQException) = 0;
 
-      /**
-       * Signals a waiter on this object that it can now wake
-       * up and continue.  Must have this object locked before
-       * calling.
-       * @throws ActiveMQException
-       */
-      virtual void notify() throw(exceptions::ActiveMQException) = 0;
+        /**
+         * Unlocks the object.
+         * @throws ActiveMQException
+         */
+        virtual void unlock() throw(exceptions::ActiveMQException) = 0;
     
-      /**
-       * Signals the waiters on this object that it can now wake
-       * up and continue.  Must have this object locked before
-       * calling.
-       * @throws ActiveMQException
-       */
-      virtual void notifyAll() throw(exceptions::ActiveMQException) = 0;
+        /**
+         * Waits on a signal from this object, which is generated
+         * by a call to Notify.  Must have this object locked before
+         * calling.
+         * @throws ActiveMQException
+         */
+        virtual void wait() throw(exceptions::ActiveMQException) = 0;
+    
+        /**
+         * Waits on a signal from this object, which is generated
+         * by a call to Notify.  Must have this object locked before
+         * calling.  This wait will timeout after the specified time
+         * interval.
+         * @param time in millisecsonds to wait, or WAIT_INIFINITE
+         * @throws ActiveMQException
+         */
+        virtual void wait(unsigned long millisecs) 
+            throw(exceptions::ActiveMQException) = 0;
 
-   }; 
+        /**
+         * Signals a waiter on this object that it can now wake
+         * up and continue.  Must have this object locked before
+         * calling.
+         * @throws ActiveMQException
+         */
+        virtual void notify() throw( exceptions::ActiveMQException ) = 0;
+    
+        /**
+         * Signals the waiters on this object that it can now wake
+         * up and continue.  Must have this object locked before
+         * calling.
+         * @throws ActiveMQException
+         */
+        virtual void notifyAll() throw( exceptions::ActiveMQException ) = 0;
+
+    }; 
 
 }}
 

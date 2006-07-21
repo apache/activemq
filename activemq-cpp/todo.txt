@@ -6,6 +6,9 @@ Client Side:
 * investigate the 999 (1000) messages bug in the broker
 
 
+* Make the enumerations have consistant case                (DONE)
+* Create a DeliveryMode class with enum values              (DONE)
+* rename Session::Transactional to SESSION_TRANSACTED       (DONE)
 * integration test against real AMQ broker                  (DONE)
 * finish unit testing of core api                           (DONE)
 * refactoring of core API                                   (DONE)

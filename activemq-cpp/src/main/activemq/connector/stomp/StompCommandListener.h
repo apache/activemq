@@ -33,7 +33,7 @@ namespace stomp{
     {
     public:
     
-    	virtual ~StompCommandListener(void) {}
+        virtual ~StompCommandListener(void) {}
     
         /**
          * Process the Stomp Command

@@ -65,6 +65,8 @@ namespace stomp{
                 core::ActiveMQMessage* msg )
             {
                 consumers.push_back( consumer );
+
+                delete msg;
             }
         };
 
@@ -77,20 +79,20 @@ namespace stomp{
             StompConnector connector( &transport, properties );
             connector.start();
             
-            SessionInfo* info1 = connector.createSession( cms::Session::AutoAcknowledge );
-            CPPUNIT_ASSERT( info1->getAckMode() == cms::Session::AutoAcknowledge );
+            SessionInfo* info1 = connector.createSession( cms::Session::AUTO_ACKNOWLEDGE );
+            CPPUNIT_ASSERT( info1->getAckMode() == cms::Session::AUTO_ACKNOWLEDGE );
             CPPUNIT_ASSERT( info1->getConnectionId() == connectionId );
             
-            SessionInfo* info2 = connector.createSession( cms::Session::DupsOkAcknowledge );
-            CPPUNIT_ASSERT( info2->getAckMode() == cms::Session::DupsOkAcknowledge );
+            SessionInfo* info2 = connector.createSession( cms::Session::DUPS_OK_ACKNOWLEDGE );
+            CPPUNIT_ASSERT( info2->getAckMode() == cms::Session::DUPS_OK_ACKNOWLEDGE );
             CPPUNIT_ASSERT( info2->getConnectionId() == connectionId );
             
-            SessionInfo* info3 = connector.createSession( cms::Session::ClientAcknowledge );
-            CPPUNIT_ASSERT( info3->getAckMode() == cms::Session::ClientAcknowledge );
+            SessionInfo* info3 = connector.createSession( cms::Session::CLIENT_ACKNOWLEDGE );
+            CPPUNIT_ASSERT( info3->getAckMode() == cms::Session::CLIENT_ACKNOWLEDGE );
             CPPUNIT_ASSERT( info3->getConnectionId() == connectionId );
             
-            SessionInfo* info4 = connector.createSession( cms::Session::Transactional );
-            CPPUNIT_ASSERT( info4->getAckMode() == cms::Session::Transactional );
+            SessionInfo* info4 = connector.createSession( cms::Session::SESSION_TRANSACTED );
+            CPPUNIT_ASSERT( info4->getAckMode() == cms::Session::SESSION_TRANSACTED );
             CPPUNIT_ASSERT( info4->getConnectionId() == connectionId );
             
             connector.destroyResource( info1 );
@@ -109,7 +111,7 @@ namespace stomp{
             StompConnector connector( &transport, properties );
             connector.start();
             
-            SessionInfo* info1 = connector.createSession( cms::Session::AutoAcknowledge );
+            SessionInfo* info1 = connector.createSession( cms::Session::AUTO_ACKNOWLEDGE );
             std::string sel1 = "";
             StompTopic dest1( "dummy.topic.1" );
             ConsumerInfo* cinfo1 = connector.createConsumer( &dest1, info1, sel1 );
@@ -117,7 +119,7 @@ namespace stomp{
             CPPUNIT_ASSERT( cinfo1->getDestination().toString() == dest1.toString() );
             CPPUNIT_ASSERT( cinfo1->getMessageSelector() == sel1 );
             
-            SessionInfo* info2 = connector.createSession( cms::Session::DupsOkAcknowledge );
+            SessionInfo* info2 = connector.createSession( cms::Session::DUPS_OK_ACKNOWLEDGE );
             std::string sel2 = "mysel2";
             StompTopic dest2( "dummy.topic.2" );
             ConsumerInfo* cinfo2 = connector.createConsumer( &dest2, info2, sel2 );
@@ -125,7 +127,7 @@ namespace stomp{
             CPPUNIT_ASSERT( cinfo2->getDestination().toString() == dest2.toString() );
             CPPUNIT_ASSERT( cinfo2->getMessageSelector() == sel2 );
             
-            SessionInfo* info3 = connector.createSession( cms::Session::ClientAcknowledge );
+            SessionInfo* info3 = connector.createSession( cms::Session::CLIENT_ACKNOWLEDGE );
             std::string sel3 = "mysel3";
             StompQueue dest3( "dummy.queue.1" );
             ConsumerInfo* cinfo3 = connector.createConsumer( &dest3, info3, sel3 );
@@ -133,7 +135,7 @@ namespace stomp{
             CPPUNIT_ASSERT( cinfo3->getDestination().toString() == dest3.toString() );
             CPPUNIT_ASSERT( cinfo3->getMessageSelector() == sel3 );
             
-            SessionInfo* info4 = connector.createSession( cms::Session::Transactional );
+            SessionInfo* info4 = connector.createSession( cms::Session::SESSION_TRANSACTED );
             std::string sel4 = "";
             StompTopic dest4( "dummy.queue.2" );
             ConsumerInfo* cinfo4 = connector.createConsumer( &dest4, info4, sel4 );
@@ -161,25 +163,25 @@ namespace stomp{
             StompConnector connector( &transport, properties );
             connector.start();
             
-            SessionInfo* info1 = connector.createSession( cms::Session::AutoAcknowledge );
+            SessionInfo* info1 = connector.createSession( cms::Session::AUTO_ACKNOWLEDGE );
             StompTopic dest1( "dummy.topic.1" );
             ProducerInfo* pinfo1 = connector.createProducer( &dest1, info1 );
             CPPUNIT_ASSERT( pinfo1->getSessionInfo() == info1 );
             CPPUNIT_ASSERT( pinfo1->getDestination().toString() == dest1.toString() );
             
-            SessionInfo* info2 = connector.createSession( cms::Session::DupsOkAcknowledge );
+            SessionInfo* info2 = connector.createSession( cms::Session::DUPS_OK_ACKNOWLEDGE );
             StompTopic dest2( "dummy.topic.2" );
             ProducerInfo* pinfo2 = connector.createProducer( &dest2, info2 );
             CPPUNIT_ASSERT( pinfo2->getSessionInfo() == info2 );
             CPPUNIT_ASSERT( pinfo2->getDestination().toString() == dest2.toString() );
             
-            SessionInfo* info3 = connector.createSession( cms::Session::ClientAcknowledge );
+            SessionInfo* info3 = connector.createSession( cms::Session::CLIENT_ACKNOWLEDGE );
             StompQueue dest3( "dummy.queue.1" );
             ProducerInfo* pinfo3 = connector.createProducer( &dest3, info3 );
             CPPUNIT_ASSERT( pinfo3->getSessionInfo() == info3 );
             CPPUNIT_ASSERT( pinfo3->getDestination().toString() == dest3.toString() );
             
-            SessionInfo* info4 = connector.createSession( cms::Session::Transactional );
+            SessionInfo* info4 = connector.createSession( cms::Session::SESSION_TRANSACTED );
             StompTopic dest4( "dummy.queue.2" );
             ProducerInfo* pinfo4 = connector.createProducer( &dest4, info4 );
             CPPUNIT_ASSERT( pinfo4->getSessionInfo() == info4 );
@@ -208,16 +210,16 @@ namespace stomp{
             StompTopic dest1( "dummy.topic" );
             StompTopic dest2( "dummy.topic2" );
             
-            SessionInfo* info1 = connector.createSession( cms::Session::AutoAcknowledge );
+            SessionInfo* info1 = connector.createSession( cms::Session::AUTO_ACKNOWLEDGE );
             ConsumerInfo* cinfo1 = connector.createConsumer( &dest1, info1, "" );
             
-            SessionInfo* info2 = connector.createSession( cms::Session::DupsOkAcknowledge );
+            SessionInfo* info2 = connector.createSession( cms::Session::DUPS_OK_ACKNOWLEDGE );
             ConsumerInfo* cinfo2 = connector.createConsumer( &dest1, info2, "" );
             
-            SessionInfo* info3 = connector.createSession( cms::Session::ClientAcknowledge );
+            SessionInfo* info3 = connector.createSession( cms::Session::CLIENT_ACKNOWLEDGE );
             ConsumerInfo* cinfo3 = connector.createConsumer( &dest2, info3, "" );
             
-            SessionInfo* info4 = connector.createSession( cms::Session::Transactional );
+            SessionInfo* info4 = connector.createSession( cms::Session::SESSION_TRANSACTED );
             ConsumerInfo* cinfo4 = connector.createConsumer( &dest2, info4, "" );
             
             MyMessageListener listener;
@@ -285,13 +287,13 @@ namespace stomp{
             MyCommandListener cmdListener;
             transport.setOutgoingCommandListener( &cmdListener );
             
-            SessionInfo* info1 = connector->createSession( cms::Session::AutoAcknowledge );
+            SessionInfo* info1 = connector->createSession( cms::Session::AUTO_ACKNOWLEDGE );
             ConsumerInfo* cinfo1 = connector->createConsumer( &dest1, info1, "" );                    
             CPPUNIT_ASSERT( cmdListener.cmd != NULL );
             
             cmdListener.cmd = NULL;
             
-            SessionInfo* info2 = connector->createSession( cms::Session::DupsOkAcknowledge );
+            SessionInfo* info2 = connector->createSession( cms::Session::DUPS_OK_ACKNOWLEDGE );
             ConsumerInfo* cinfo2 = connector->createConsumer( &dest1, info2, "" );
             CPPUNIT_ASSERT( cmdListener.cmd == NULL );
             

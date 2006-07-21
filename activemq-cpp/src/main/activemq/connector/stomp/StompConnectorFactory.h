@@ -26,9 +26,6 @@ namespace stomp{
 
     class StompConnectorFactory : public connector::ConnectorFactory
     {
-    private:
-
-
     public:
    
         virtual ~StompConnectorFactory(void) {}
@@ -39,7 +36,7 @@ namespace stomp{
          */
         virtual Connector* createConnector(
             const activemq::util::Properties& properties,
-            activemq::transport::Transport* transport);
+            activemq::transport::Transport* transport );
 
         /**
          * Returns an instance of this Factory by reference

@@ -35,7 +35,7 @@ StompCommandWriter::StompCommandWriter(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-StompCommandWriter::StompCommandWriter(OutputStream* os)
+StompCommandWriter::StompCommandWriter( OutputStream* os )
 {
     outputStream = os;
 }
@@ -103,8 +103,8 @@ void StompCommandWriter::writeCommand( const Command* command )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StompCommandWriter::write(const unsigned char* buffer, int count) 
-    throw(IOException)
+void StompCommandWriter::write( const unsigned char* buffer, int count ) 
+    throw( IOException )
 {
     if( outputStream == NULL )
     {
@@ -117,7 +117,7 @@ void StompCommandWriter::write(const unsigned char* buffer, int count)
 }
  
 ////////////////////////////////////////////////////////////////////////////////
-void StompCommandWriter::writeByte(unsigned char v) throw(IOException)
+void StompCommandWriter::writeByte( unsigned char v ) throw( IOException )
 {
     if( outputStream == NULL )
     {
@@ -130,8 +130,8 @@ void StompCommandWriter::writeByte(unsigned char v) throw(IOException)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StompCommandWriter::write(const char* buffer, int count) 
-   throw(io::IOException)
+void StompCommandWriter::write( const char* buffer, int count ) 
+   throw( io::IOException )
 {
-    write(reinterpret_cast<const unsigned char*>(buffer), count);
+    write( reinterpret_cast<const unsigned char*>( buffer ), count );
 }

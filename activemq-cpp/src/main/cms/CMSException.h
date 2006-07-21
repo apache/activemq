@@ -24,28 +24,27 @@
 #include <iostream>
 
 namespace cms{
-	
-	/**
-	 * This class represents an error that has occurred in 
-	 * cms.
-	 */
-	class CMSException{
-		
-	public:
-		
-		/**
-		 * Destruction
-		 */
-		virtual ~CMSException(){}
-		
-		/**
+    
+    /**
+     * This class represents an error that has occurred in 
+     * cms.
+     */
+    class CMSException{
+        
+    public:
+        
+        virtual ~CMSException(){}
+        
+        /**
          * Gets the cause of the error.
-		 */
-		virtual const char* getMessage() const = 0;
+         * @return string errors message
+         */
+        virtual const char* getMessage() const = 0;
         
         /**
          * Provides the stack trace for every point where
          * this exception was caught, marked, and rethrown.
+         * @return vector containing stack trace strings
          */
         virtual std::vector< std::pair< std::string, int> > getStackTrace() const = 0;
         
@@ -59,7 +58,8 @@ namespace cms{
          * @param stream the target output stream.
          */
         virtual void printStackTrace( std::ostream& stream ) const = 0;
-	};
+        
+    };
 
 }
 

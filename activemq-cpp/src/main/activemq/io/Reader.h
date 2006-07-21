@@ -24,42 +24,44 @@
 namespace activemq{
 namespace io{
 
-	/*
-	 * Reader interface that wraps around an input stream and provides
-	 * an interface for extracting the data from the input stream.
-	 */
-	class Reader
-	{
-	public:
-	
-	    virtual ~Reader(){};
-	
-		/**
-		 * Sets the target input stream.
-		 */
-		virtual void setInputStream( InputStream* is ) = 0;
-		
-		/**
-		 * Gets the target input stream.
-		 */
-	    virtual InputStream* getInputStream() = 0;
-	    
-	    /**
-	     * Attempts to read an array of bytes from the stream.
-	     * @param buffer The target byte buffer.
-	     * @param count The number of bytes to read.
-	     * @return The number of bytes read.
-	     * @throws IOException thrown if an error occurs.
-	     */
-	    virtual int read(unsigned char* buffer, int count) throw(IOException) = 0;
-	    
-	    /**
-	     * Attempts to read a byte from the input stream
-	     * @return The byte.
-	     * @throws IOException thrown if an error occurs.
-	     */
-	    virtual unsigned char readByte() throw(IOException) = 0;
-	} ;
+    /*
+     * Reader interface that wraps around an input stream and provides
+     * an interface for extracting the data from the input stream.
+     */
+    class Reader
+    {
+    public:
+    
+        virtual ~Reader(){};
+    
+        /**
+         * Sets the target input stream.
+         */
+        virtual void setInputStream( InputStream* is ) = 0;
+        
+        /**
+         * Gets the target input stream.
+         */
+        virtual InputStream* getInputStream() = 0;
+        
+        /**
+         * Attempts to read an array of bytes from the stream.
+         * @param buffer The target byte buffer.
+         * @param count The number of bytes to read.
+         * @return The number of bytes read.
+         * @throws IOException thrown if an error occurs.
+         */
+        virtual int read( unsigned char* buffer, int count ) 
+            throw( IOException ) = 0;
+        
+        /**
+         * Attempts to read a byte from the input stream
+         * @return The byte.
+         * @throws IOException thrown if an error occurs.
+         */
+        virtual unsigned char readByte() throw( IOException ) = 0;
+        
+    };
 
 }}
 

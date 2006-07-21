@@ -53,7 +53,7 @@ namespace stomp{
         /**
          * Deafult Constructor
          */
-    	StompCommandReader( void );
+        StompCommandReader( void );
 
         /**
          * Constructor.
@@ -61,24 +61,21 @@ namespace stomp{
          */
         StompCommandReader( io::InputStream* is );
 
-        /**
-         * Destructor
-         */
-    	virtual ~StompCommandReader(void) {}
+        virtual ~StompCommandReader(void) {}
 
         /**
          * Reads a command from the given input stream.
          * @return The next command available on the stream.
          * @throws CommandIOException if a problem occurs during the read.
          */
-        virtual transport::Command* readCommand( void ) 
+        virtual transport::Command* readCommand(void) 
             throw ( transport::CommandIOException );
 
         /**
          * Sets the target input stream.
          * @param Target Input Stream
          */
-        virtual void setInputStream(io::InputStream* is){
+        virtual void setInputStream( io::InputStream* is ){
             inputStream = is;
         }
       
@@ -86,7 +83,7 @@ namespace stomp{
          * Gets the target input stream.
          * @return Target Input Stream
          */
-        virtual io::InputStream* getInputStream( void ){
+        virtual io::InputStream* getInputStream(void){
             return inputStream;
         }
 
@@ -97,7 +94,7 @@ namespace stomp{
          * @return The number of bytes read.
          * @throws IOException thrown if an error occurs.
          */
-        virtual int read(unsigned char* buffer, int count) 
+        virtual int read( unsigned char* buffer, int count ) 
             throw( io::IOException );
        
         /**
@@ -130,7 +127,7 @@ namespace stomp{
          * @return number of bytes read, zero if there was a problem.
          * @throws StompConnectorException
          */
-        int readStompHeaderLine( void ) throw ( StompConnectorException );
+        int readStompHeaderLine(void) throw ( StompConnectorException );
 
         /**
          * Reads the Stomp Body from the Wire and store it in the frame.

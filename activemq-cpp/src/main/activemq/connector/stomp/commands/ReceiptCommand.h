@@ -40,7 +40,7 @@ namespace commands{
                 initialize( getFrame() );
         }
         ReceiptCommand( StompFrame* frame ) : 
-            AbstractCommand<transport::Response>(frame) {
+            AbstractCommand<transport::Response>( frame ) {
                 validate( getFrame() );
         }
         virtual ~ReceiptCommand(void) {}
@@ -60,7 +60,7 @@ namespace commands{
         virtual void setReceiptId( const std::string& id ){
             setPropertyValue( 
                 CommandConstants::toString( 
-                    CommandConstants::HEADER_RECEIPTID),
+                    CommandConstants::HEADER_RECEIPTID ),
                 id );
         }
 

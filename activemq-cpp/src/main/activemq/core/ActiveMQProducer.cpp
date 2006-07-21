@@ -26,14 +26,14 @@ using namespace activemq::connector;
 using namespace activemq::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-ActiveMQProducer::ActiveMQProducer(connector::ProducerInfo* producerInfo,
-                                   ActiveMQSession* session)
+ActiveMQProducer::ActiveMQProducer( connector::ProducerInfo* producerInfo,
+                                    ActiveMQSession* session )
 {
-    if(session == NULL || producerInfo == NULL)
+    if( session == NULL || producerInfo == NULL )
     {
         throw NullPointerException(
             __FILE__, __LINE__,
-            "ActiveMQProducer::ActiveMQProducer - Init with NULL Session");
+            "ActiveMQProducer::ActiveMQProducer - Init with NULL Session" );
     }
     
     // Init Producer Data
@@ -41,7 +41,7 @@ ActiveMQProducer::ActiveMQProducer(connector::ProducerInfo* producerInfo,
     this->producerInfo = producerInfo;
 
     // Default the Delivery options
-    deliveryMode      = cms::Message::PERSISTANT;
+    deliveryMode      = cms::DeliveryMode::PERSISTANT;
     disableMsgId      = false;
     disableTimestamps = false;
     priority          = 4;
@@ -54,37 +54,37 @@ ActiveMQProducer::~ActiveMQProducer(void)
     try
     {
         // Dispose of the ProducerInfo
-        session->onDestroySessionResource(this);
+        session->onDestroySessionResource( this );
     }
     AMQ_CATCH_NOTHROW( ActiveMQException )
     AMQ_CATCHALL_NOTHROW( )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ActiveMQProducer::send(cms::Message& message) 
+void ActiveMQProducer::send( cms::Message* message ) 
     throw ( cms::CMSException )
 {
     try
     {
-        send(producerInfo->getDestination(), message);
+        send( &producerInfo->getDestination(), message );
     }
     AMQ_CATCH_RETHROW( ActiveMQException )
     AMQ_CATCHALL_THROW( ActiveMQException )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ActiveMQProducer::send(const cms::Destination& destination,
-                            cms::Message& message) throw ( cms::CMSException )
+void ActiveMQProducer::send( const cms::Destination* destination,
+                             cms::Message* message) throw ( cms::CMSException )
 {
     try
     {
         // configure the message
-        message.setCMSDestination(destination);
-        message.setCMSDeliveryMode(deliveryMode);
-        message.setCMSPriority(priority);
-        message.setCMSExpiration(timeToLive);
+        message->setCMSDestination( destination );
+        message->setCMSDeliveryMode( deliveryMode );
+        message->setCMSPriority( priority );
+        message->setCMSExpiration( timeToLive );
 
-        session->send(&message, this);
+        session->send( message, this );
     }
     AMQ_CATCH_RETHROW( ActiveMQException )
     AMQ_CATCHALL_THROW( ActiveMQException )

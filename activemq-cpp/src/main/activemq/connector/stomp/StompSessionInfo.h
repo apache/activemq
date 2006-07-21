@@ -44,18 +44,12 @@ namespace stomp{
         
     public:
 
-        /**
-         * Constructor
-         */
         StompSessionInfo(void)
         {
             sessionId = 0;
-            ackMode = cms::Session::AutoAcknowledge;
+            ackMode = cms::Session::AUTO_ACKNOWLEDGE;
         }
 
-        /**
-         * Destructor
-         */
         virtual ~StompSessionInfo(void) {}
 
         /**

@@ -29,7 +29,7 @@ TransportFactory& TcpTransportFactory::getInstance(void)
 {
     // Create the one and only instance of the registrar
     static TransportFactoryMapRegistrar registrar(
-        "tcp", new TcpTransportFactory());
+        "tcp", new TcpTransportFactory() );
         
     return registrar.getFactory();
 }

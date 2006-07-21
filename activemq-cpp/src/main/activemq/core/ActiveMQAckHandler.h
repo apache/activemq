@@ -32,7 +32,7 @@ namespace core{
     {
     public:
     
-    	virtual ~ActiveMQAckHandler(void) {};
+        virtual ~ActiveMQAckHandler(void) {};
     
         /**
          * Method called to acknowledge the message passed

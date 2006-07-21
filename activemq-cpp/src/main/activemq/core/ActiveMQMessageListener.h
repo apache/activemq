@@ -29,7 +29,7 @@ namespace core{
     {
     public:
 
-    	virtual ~ActiveMQMessageListener(void) {}
+        virtual ~ActiveMQMessageListener(void) {}
 
         /**
          * Called asynchronously when a new message is received, the message

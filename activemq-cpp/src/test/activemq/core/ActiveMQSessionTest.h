@@ -112,15 +112,15 @@ namespace core{
                 messages.clear();
             }
             
-            virtual void onMessage( const cms::Message& message )
+            virtual void onMessage( const cms::Message* message )
             {
                 synchronized( &mutex )
                 {
                     if( ack ){
-                        message.acknowledge();
+                        message->acknowledge();
                     }
 
-                    messages.push_back( message.clone() );
+                    messages.push_back( message->clone() );
 
                     mutex.notifyAll();
                 }
@@ -186,7 +186,7 @@ namespace core{
 
             // Init Message
             msg->setText( message.c_str() );
-            msg->setCMSDestination( destination );
+            msg->setCMSDestination( &destination );
             msg->setCMSMessageId( "Id: 123456" );
 
             // Send the Message
@@ -219,9 +219,9 @@ namespace core{
 
             // Create a consumer
             cms::MessageConsumer* consumer1 = 
-                session->createConsumer( *topic1 );
+                session->createConsumer( topic1 );
             cms::MessageConsumer* consumer2 = 
-                session->createConsumer( *topic2 );
+                session->createConsumer( topic2 );
 
             CPPUNIT_ASSERT( consumer1 != NULL );                
             CPPUNIT_ASSERT( consumer2 != NULL );
@@ -277,6 +277,9 @@ namespace core{
             CPPUNIT_ASSERT( text1 == "This is a Test 1" );
             CPPUNIT_ASSERT( text2 == "This is a Test 2" );
 
+            delete topic1;
+            delete topic2;
+
             delete consumer1;
             delete consumer2;
 
@@ -292,7 +295,7 @@ namespace core{
             
             // Create an Auto Ack Session
             cms::Session* session = connection->createSession( 
-                cms::Session::ClientAcknowledge );
+                cms::Session::CLIENT_ACKNOWLEDGE );
 
             // Create a Topic
             cms::Topic* topic1 = session->createTopic( "TestTopic1");
@@ -303,9 +306,9 @@ namespace core{
 
             // Create a consumer
             cms::MessageConsumer* consumer1 = 
-                session->createConsumer( *topic1 );
+                session->createConsumer( topic1 );
             cms::MessageConsumer* consumer2 = 
-                session->createConsumer( *topic2 );
+                session->createConsumer( topic2 );
 
             CPPUNIT_ASSERT( consumer1 != NULL );                
             CPPUNIT_ASSERT( consumer2 != NULL );
@@ -365,6 +368,9 @@ namespace core{
             CPPUNIT_ASSERT( text1 == "This is a Test 1" );
             CPPUNIT_ASSERT( text2 == "This is a Test 2" );
 
+            delete topic1;
+            delete topic2;
+
             delete consumer1;
             delete consumer2;
 
@@ -380,7 +386,7 @@ namespace core{
             
             // Create an Auto Ack Session
             cms::Session* session = connection->createSession( 
-                cms::Session::Transactional );
+                cms::Session::SESSION_TRANSACTED );
 
             // Create a Topic
             cms::Topic* topic1 = session->createTopic( "TestTopic1");
@@ -391,9 +397,9 @@ namespace core{
 
             // Create a consumer
             cms::MessageConsumer* consumer1 = 
-                session->createConsumer( *topic1 );
+                session->createConsumer( topic1 );
             cms::MessageConsumer* consumer2 = 
-                session->createConsumer( *topic2 );
+                session->createConsumer( topic2 );
 
             CPPUNIT_ASSERT( consumer1 != NULL );                
             CPPUNIT_ASSERT( consumer2 != NULL );
@@ -544,6 +550,9 @@ namespace core{
             }
 
             CPPUNIT_ASSERT( msgListener2.messages.size() == msgCount );
+
+            delete topic1;
+            delete topic2;
 
             delete consumer1;
             delete consumer2;

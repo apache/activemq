@@ -62,7 +62,7 @@ namespace commands{
 
         StompMessage(void) :
             AbstractCommand< transport::Command >(),
-            ackHandler( NULL ) { dest = new StompTopic(); }
+            ackHandler( NULL ) { dest = NULL; }
         StompMessage( StompFrame* frame ) : 
             AbstractCommand< transport::Command >( frame ),
             ackHandler( NULL )
@@ -112,55 +112,57 @@ namespace commands{
          * of this consumed message.
          */
         virtual void acknowledge(void) const throw( cms::CMSException ) {
-            if(ackHandler != NULL) ackHandler->acknowledgeMessage(this);
+            if(ackHandler != NULL) ackHandler->acknowledgeMessage( this );
         }
 
         /**
          * Sets the DeliveryMode for this message
          * @return DeliveryMode enumerated value.
          */
-        virtual cms::Message::DeliveryMode getCMSDeliveryMode(void) const {
+        virtual int getCMSDeliveryMode(void) const {
             if(!getFrame().getProperties().hasProperty( 
                    CommandConstants::toString( 
                        CommandConstants::HEADER_PERSISTANT ) ) ) {
-                return cms::Message::PERSISTANT;
+                return cms::DeliveryMode::PERSISTANT;
             }
             
-            return (cms::Message::DeliveryMode)(
-                util::Integer::parseInt( getPropertyValue( 
-                    CommandConstants::toString( 
-                        CommandConstants::HEADER_PERSISTANT ) ) ) );
+            return util::Integer::parseInt( getPropertyValue( 
+                       CommandConstants::toString( 
+                           CommandConstants::HEADER_PERSISTANT ) ) );
         }
 
         /**
          * Sets the DeliveryMode for this message
          * @param DeliveryMode enumerated value.
          */
-        virtual void setCMSDeliveryMode(cms::Message::DeliveryMode mode) {
+        virtual void setCMSDeliveryMode( int mode ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_PERSISTANT ) ,
-                util::Integer::toString((int)mode) );
+                util::Integer::toString( mode ) );
         }
       
         /**
          * Gets the Destination for this Message
-         * @return Destination object
+         * @return Destination object can be NULL
          */
-        virtual const cms::Destination& getCMSDestination(void) const{
-            return *dest;
+        virtual const cms::Destination* getCMSDestination(void) const{
+            return dest;
         }
               
         /**
          * Sets the Destination for this message
          * @param Destination Object
          */
-        virtual void setCMSDestination(const cms::Destination& destination) {
-            dest->copy( destination );
-            setPropertyValue( 
-                CommandConstants::toString( 
-                    CommandConstants::HEADER_DESTINATION ),
-                dest->toProviderString() );
+        virtual void setCMSDestination( const cms::Destination* destination ) {
+            if( destination != NULL )
+            {
+                dest = destination->clone();
+                setPropertyValue( 
+                    CommandConstants::toString( 
+                        CommandConstants::HEADER_DESTINATION ),
+                    dest->toProviderString() );
+            }
         }
         
         /**
@@ -177,7 +179,7 @@ namespace commands{
          * Sets the Expiration Time for this message
          * @param time value
          */
-        virtual void setCMSExpiration(long expireTime) {
+        virtual void setCMSExpiration( long expireTime ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_EXPIRES) ,
@@ -198,7 +200,7 @@ namespace commands{
          * Sets the CMS Message Id for this message
          * @param time value
          */
-        virtual void setCMSMessageId(const std::string& id) {
+        virtual void setCMSMessageId( const std::string& id ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_MESSAGEID ),
@@ -212,17 +214,17 @@ namespace commands{
         virtual int getCMSPriority(void) const {
             return util::Integer::parseInt( getPropertyValue( 
                 CommandConstants::toString( 
-                    CommandConstants::HEADER_PRIORITY ), "0" ) );
+                    CommandConstants::HEADER_JMSPRIORITY ), "0" ) );
         }
       
         /**
          * Sets the Priority Value for this message
          * @param priority value
          */
-        virtual void setCMSPriority(int priority) {
+        virtual void setCMSPriority( int priority ) {
             setPropertyValue( 
                 CommandConstants::toString( 
-                    CommandConstants::HEADER_PRIORITY),
+                    CommandConstants::HEADER_JMSPRIORITY),
                 util::Integer::toString( priority ) );
         }
 
@@ -241,7 +243,7 @@ namespace commands{
          * Sets the Redelivered Flag for this message
          * @param redelivered value
          */
-        virtual void setCMSRedelivered(bool redelivered) {
+        virtual void setCMSRedelivered( bool redelivered ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_REDELIVERED ),
@@ -262,7 +264,7 @@ namespace commands{
          * Sets the CMS Reply To Address for this message
          * @param Reply To value
          */
-        virtual void setCMSReplyTo(const std::string& id) {
+        virtual void setCMSReplyTo( const std::string& id ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_REPLYTO ),
@@ -283,7 +285,7 @@ namespace commands{
          * Sets the Time Stamp for this message
          * @param time stamp value
          */
-        virtual void setCMSTimeStamp(long timeStamp) {
+        virtual void setCMSTimeStamp( long timeStamp ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_TIMESTAMP ),
@@ -304,7 +306,7 @@ namespace commands{
          * Sets the CMS Message Type for this message
          * @param type value
          */
-        virtual void setCMSMessageType(const std::string& type) {
+        virtual void setCMSMessageType( const std::string& type ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_TYPE ),
@@ -318,7 +320,7 @@ namespace commands{
          * when the Acknowledge method is called.
          * @param ActiveMQAckHandler
          */
-        virtual void setAckHandler(core::ActiveMQAckHandler* handler) {
+        virtual void setAckHandler( core::ActiveMQAckHandler* handler ) {
             this->ackHandler = handler;
         }
         
@@ -338,7 +340,7 @@ namespace commands{
          * redelivered
          * @param redelivery count
          */
-        virtual void setRedeliveryCount(int count) {
+        virtual void setRedeliveryCount( int count ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_REDELIVERYCOUNT ),

@@ -44,7 +44,7 @@ namespace commands{
                 initialize( getFrame() );
         }
         AckCommand( StompFrame* frame ) : 
-            AbstractCommand<transport::Command>(frame) {
+            AbstractCommand<transport::Command>( frame ) {
                 validate( getFrame() );
         }
         virtual ~AckCommand(void) {}

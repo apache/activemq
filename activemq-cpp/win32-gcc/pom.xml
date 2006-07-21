@@ -53,7 +53,7 @@
       </activation>
       
       <properties>
-	    <compiler.options>-frtti -pthread -O3 -DNDEBUG -D_REENTRANT -D_WIN32 -DWINVER=0x0502 -DWIN32_LEAN_AND_MEAN</compiler.options>
+	    <compiler.options>-frtti -O3 -DNDEBUG -D_REENTRANT -D_WIN32 -DWINVER=0x0502 -DWIN32_LEAN_AND_MEAN</compiler.options>
   	  </properties>
   	  
     </profile>
@@ -68,7 +68,7 @@
       </activation>
       
       <properties>
-	    <compiler.options>-frtti -g -pthread -DDEBUG -D_DEBUG -D_REENTRANT -D_WIN32 -DWINVER=0x0502 -DWIN32_LEAN_AND_MEAN</compiler.options>
+	    <compiler.options>-frtti -g -DDEBUG -D_DEBUG -D_REENTRANT -D_WIN32 -DWINVER=0x0502 -DWIN32_LEAN_AND_MEAN</compiler.options>
   	  </properties>
   	  
     </profile>

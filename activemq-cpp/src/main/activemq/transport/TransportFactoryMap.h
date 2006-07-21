@@ -46,10 +46,10 @@ namespace transport{
         virtual ~TransportFactoryMap() {};
  
         // Hidden Copy Constructore
-        TransportFactoryMap(const TransportFactoryMap& factoryMap){};
+        TransportFactoryMap( const TransportFactoryMap& factoryMap ){};
       
         // Hidden Assignment operator
-        TransportFactoryMap& operator=(const TransportFactoryMap& factoryMap){ 
+        TransportFactoryMap& operator=( const TransportFactoryMap& factoryMap ){ 
             return *this;
         }     
         
@@ -66,7 +66,7 @@ namespace transport{
          * @param factory to store.
          */
         void registerTransportFactory( const std::string& name, 
-            TransportFactory* factory );
+                                       TransportFactory* factory );
         
         /**
          * Unregisters a Transport Factory with this map
@@ -86,7 +86,7 @@ namespace transport{
          * @param vector object to receive the list
          * @returns count of factories.
          */
-        std::size_t getFactoryNames(std::vector<std::string>& factoryList);
+        std::size_t getFactoryNames( std::vector<std::string>& factoryList );
         
     };
     

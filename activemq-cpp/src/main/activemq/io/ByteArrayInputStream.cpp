@@ -24,14 +24,14 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 ByteArrayInputStream::ByteArrayInputStream()
 {
-   pos = buffer.end();
+    pos = buffer.end();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ByteArrayInputStream::ByteArrayInputStream( const unsigned char* buffer,
                                             int bufferSize )
 {
-   setByteArray( buffer, bufferSize );
+    setByteArray( buffer, bufferSize );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,54 +43,54 @@ ByteArrayInputStream::~ByteArrayInputStream(void)
 void ByteArrayInputStream::setByteArray( const unsigned char* buffer,
                                          int bufferSize )
 {
-   // Remove old data
-   this->buffer.clear();
+    // Remove old data
+    this->buffer.clear();
    
-   // Copy data to internal buffer.
-   for( int ix = 0; ix < bufferSize; ++ix )
-   {
-      this->buffer.push_back(buffer[ix]);
-   }
+    // Copy data to internal buffer.
+    for( int ix = 0; ix < bufferSize; ++ix )
+    {
+        this->buffer.push_back(buffer[ix]);
+    }
    
-   // Begin at the Beginning.
-   pos = this->buffer.begin();
+    // Begin at the Beginning.
+    pos = this->buffer.begin();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ByteArrayInputStream::close() throw(cms::CMSException){
-	
-	// Close the delegate stream.
-	buffer.clear();
+void ByteArrayInputStream::close() throw( cms::CMSException ){
+    
+    // Close the delegate stream.
+    buffer.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-unsigned char ByteArrayInputStream::read() throw (IOException)
+unsigned char ByteArrayInputStream::read() throw ( IOException )
 {
-   if(pos != buffer.end())
-   {
-      return *(pos++);
-   }
+    if(pos != buffer.end())
+    {
+        return *(pos++);
+    }
    
-   throw IOException( __FILE__, __LINE__, 
-      "ByteArrayInputStream::read: Out of Data");
+    throw IOException( __FILE__, __LINE__, 
+        "ByteArrayInputStream::read: Out of Data");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 int ByteArrayInputStream::read( unsigned char* buffer, 
-	                             const int bufferSize ) 
-                                   throw (IOException)
+                                const int bufferSize ) 
+                                   throw ( IOException )
 {
-   int ix = 0;
+     int ix = 0;
    
-   for( ; ix < bufferSize; ++ix, ++pos)
-   {
-      if(pos == this->buffer.end())
-      {        
-         break;
-      }
+     for( ; ix < bufferSize; ++ix, ++pos)
+     {
+        if(pos == this->buffer.end())
+        {        
+            break;
+        }
       
-      buffer[ix] = *(pos);
-   }
+        buffer[ix] = *(pos);
+    }
    
-   return ix;
+    return ix;
 }

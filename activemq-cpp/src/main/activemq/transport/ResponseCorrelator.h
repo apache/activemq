@@ -74,7 +74,7 @@ namespace transport{
         /**
          * Returns the next available command id.
          */
-        unsigned int getNextCommandId() throw (exceptions::ActiveMQException){
+        unsigned int getNextCommandId() throw ( exceptions::ActiveMQException ){
             
             try{
                 synchronized( &commandIdMutex ){
@@ -143,7 +143,7 @@ namespace transport{
          * by this transport.
          */
         virtual void oneway( Command* command ) 
-            throw(CommandIOException, exceptions::UnsupportedOperationException)
+            throw( CommandIOException, exceptions::UnsupportedOperationException )
         {
             
             try{
@@ -171,7 +171,7 @@ namespace transport{
          * @throws CommandIOException if an error occurs with the request.
          */
         virtual Response* request( Command* command ) 
-            throw(CommandIOException, exceptions::UnsupportedOperationException)
+            throw( CommandIOException, exceptions::UnsupportedOperationException )
         {
             
             try{
@@ -243,7 +243,7 @@ namespace transport{
             
             // Let's see if the incoming command is a response.
             Response* response = 
-               dynamic_cast<Response*>(command);
+               dynamic_cast<Response*>( command );
                
             if( response == NULL ){
                 
@@ -271,7 +271,7 @@ namespace transport{
                 
                 // If it's an exception response, notify the exception listener.
                 ExceptionResponse* exResp = 
-                    dynamic_cast<ExceptionResponse*>(response);
+                    dynamic_cast<ExceptionResponse*>( response );
                 if( exResp != NULL ){
                     const BrokerError* error = exResp->getException();
                     fire( *error );

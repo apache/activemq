@@ -22,24 +22,24 @@
 #include <cms/CMSException.h>
 
 namespace cms{
-	
-	/**
-	 * An interface encapsulating a provider-specific queue name.
-	 */
-	class Queue : public Destination{
-		
-	public:
-	
-		virtual ~Queue(void){}
-		
-		/**
-		 * Gets the name of this queue.
-		 * @return The queue name.
-		 */
-		virtual std::string getQueueName() const 
+    
+    /**
+     * An interface encapsulating a provider-specific queue name.
+     */
+    class Queue : public Destination{
+        
+    public:
+    
+        virtual ~Queue(void){}
+        
+        /**
+         * Gets the name of this queue.
+         * @return The queue name.
+         */
+        virtual std::string getQueueName() const 
             throw( CMSException ) = 0;
 
-	};
+    };
 
 }
 

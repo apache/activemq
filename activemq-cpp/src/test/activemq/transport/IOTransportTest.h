@@ -53,6 +53,7 @@ namespace transport{
             virtual void onCommand( Command* command ){
                 const MyCommand* cmd = dynamic_cast<const MyCommand*>(command);
                 str += cmd->c;
+                delete command;
             }
         };
         

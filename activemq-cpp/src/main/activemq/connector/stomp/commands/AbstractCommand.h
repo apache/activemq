@@ -113,13 +113,24 @@ namespace commands{
         AbstractCommand(void){ 
             frame = new StompFrame;
         }
-        AbstractCommand(StompFrame* frame){ 
+        AbstractCommand( StompFrame* frame ){ 
             this->frame = frame;
         }
         virtual ~AbstractCommand(void){
             destroyFrame();
         }
         
+        /**
+         * Gets the properties map for this command.
+         * @return Reference to a Properties object
+         */
+        virtual util::Properties& getProperties(void){
+            return getFrame().getProperties();
+        }   
+        virtual const util::Properties& getProperties(void) const{
+            return getFrame().getProperties();
+        }   
+
         /**
          * Sets the Command Id of this Message
          * @param Command Id

@@ -22,42 +22,44 @@
 namespace activemq{
 namespace connector{
 
-   /*
-    * Signals that an Connector exception of some sort has occurred.
-    */
-   class ConnectorException : public exceptions::ActiveMQException
-   {
-   public:
+    /*
+     * Signals that an Connector exception of some sort has occurred.
+     */
+    class ConnectorException : public exceptions::ActiveMQException
+    {
+    public:
    
-      ConnectorException() {}
-      ConnectorException( const exceptions::ActiveMQException& ex ){
-        *(ActiveMQException*)this = ex;
-      }
-      ConnectorException( const ConnectorException& ex ){
-        *(exceptions::ActiveMQException*)this = ex;
-      }
-      ConnectorException(const char* file, const int lineNumber, 
-        const char* msg, ...)
-      {
-          va_list vargs ;
-          va_start(vargs, msg) ;
-          buildMessage(msg, vargs) ;
+        ConnectorException() {}
+        ConnectorException( const exceptions::ActiveMQException& ex ){
+            *(ActiveMQException*)this = ex;
+        }
+        ConnectorException( const ConnectorException& ex ){
+            *(exceptions::ActiveMQException*)this = ex;
+        }
+        ConnectorException( const char* file, 
+                            const int lineNumber, 
+                            const char* msg, ... )
+        {
+            va_list vargs;
+            va_start( vargs, msg );
+            buildMessage( msg, vargs );
             
-          // Set the first mark for this exception.
-          setMark( file, lineNumber );
-      }
+            // Set the first mark for this exception.
+            setMark( file, lineNumber );
+        }
       
-      /**
-       * Clones this exception.  This is useful for cases where you need
-       * to preserve the type of the original exception as well as the message.
-       * All subclasses should override.
-       */
-      virtual exceptions::ActiveMQException* clone() const{
-          return new ConnectorException( *this );
-      }
-   	  virtual ~ConnectorException() {}
+        /**
+         * Clones this exception.  This is useful for cases where you need
+         * to preserve the type of the original exception as well as the message.
+         * All subclasses should override.
+         */
+        virtual exceptions::ActiveMQException* clone() const{
+            return new ConnectorException( *this );
+        }
+        
+   	    virtual ~ConnectorException() {}
    
-   };
+    };
 
 }}
 

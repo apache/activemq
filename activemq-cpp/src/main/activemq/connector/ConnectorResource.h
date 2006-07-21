@@ -14,10 +14,8 @@ namespace connector{
     {
     public:
 
-        /**
-         * Destructor
-         */
         virtual ~ConnectorResource() {}
+
     };
 
 }}
