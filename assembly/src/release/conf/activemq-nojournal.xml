@@ -4,19 +4,11 @@
   <!-- Allows us to use system properties as variables in this configuration file -->
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
   
-  <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
+  <broker xmlns="http://activemq.org/config/1.0">
   
-    <!--  Use the following to set the broker memory limit (in bytes)
     <memoryManager>  
-        <usageManager id="memory-manager" limit="1048576"/>
+      <usageManager id="memory-manager" limitMb="50"/>
     </memoryManager>
-    -->
-    
-    <!-- Use the following to configure how ActiveMQ is exposed in JMX
-    <managementContext>
-       <managementContext connectorPort="1099" jmxDomainName="org.apache.activemq"/>
-    </managementContext>
-    -->
 
     <!-- In ActiveMQ 4, you can setup destination policies -->  
     <destinationPolicy>
@@ -36,11 +28,11 @@
   
   
     <persistenceAdapter>
-        <journaledJDBC journalLogFiles="5" dataDirectory="${activemq.home}/activemq-data"/>
-      <!-- To use a different datasource, use the following syntax : -->
-      <!-- 
-      <journaledJDBC journalLogFiles="5" dataDirectory="../activemq-data" dataSource="#postgres-ds"/>
-       -->
+        <jdbcPersistenceAdapter dataDirectory="activemq-data"/>
+
+        <!-- 
+        <jdbcPersistenceAdapter dataDirectory="activemq-data" dataSource="#oracle-ds"/>
+        --> 
     </persistenceAdapter>
   
     <transportConnectors>
@@ -49,9 +41,12 @@
     </transportConnectors>
     
     <networkConnectors>
-      <!-- by default just auto discover the other brokers -->
+      <!-- auto discover the other brokers 
+      
       <networkConnector name="default" uri="multicast://default"/>
-      <!--
+      
+      or use static hosts
+      
       <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)" failover="true"/>
       -->
     </networkConnectors>
@@ -84,15 +79,16 @@
     <property name="poolPreparedStatements" value="true"/>
   </bean>
   -->  
-      
-  <!-- Embedded Derby DataSource Sample Setup -->
-  <!-- 
-  <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
-    <property name="databaseName" value="derbydb"/>
-    <property name="createDatabase" value="create"/>
+   
+  <!-- Oracle DataSource Sample Setup -->
+  <!--
+  <bean id="oracle-ds" class="oracle.jdbc.pool.OracleDataSource">
+    <property name="URL" value="jdbc:oracle:thin:@localhost:1521:AMQDB"/>
+    <property name="user" value="scott"/>
+    <property name="password" value="tiger"/>
   </bean>
-  -->  
-  
+  -->
+      
   <!-- Embedded Derby DataSource Sample Setup -->
   <!-- 
   <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
