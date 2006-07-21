@@ -558,6 +558,7 @@ public class BrokerService implements Service, Serializable {
     public PersistenceAdapter getPersistenceAdapter() throws IOException {
         if (persistenceAdapter == null) {
             persistenceAdapter = createPersistenceAdapter();
+            configureService(persistenceAdapter);
         }
         return persistenceAdapter;
     }
@@ -771,6 +772,54 @@ public class BrokerService implements Service, Serializable {
         getPersistenceAdapter().deleteAllMessages();
     }
 
+    public boolean isDeleteAllMessagesOnStartup() {
+        return deleteAllMessagesOnStartup;
+    }
+
+    /**
+     * Sets whether or not all messages are deleted on startup - mostly only
+     * useful for testing.
+     */
+    public void setDeleteAllMessagesOnStartup(boolean deletePersistentMessagesOnStartup) {
+        this.deleteAllMessagesOnStartup = deletePersistentMessagesOnStartup;
+    }
+
+    public URI getVmConnectorURI() {
+        if (vmConnectorURI == null) {
+            try {
+                vmConnectorURI = new URI("vm://" + getBrokerName());
+            }
+            catch (URISyntaxException e) {
+            }
+        }
+        return vmConnectorURI;
+    }
+
+    public void setVmConnectorURI(URI vmConnectorURI) {
+        this.vmConnectorURI = vmConnectorURI;
+    }
+
+    /**
+     * @return Returns the shutdownOnMasterFailure.
+     */
+    public boolean isShutdownOnMasterFailure(){
+        return shutdownOnMasterFailure;
+    }
+
+    /**
+     * @param shutdownOnMasterFailure The shutdownOnMasterFailure to set.
+     */
+    public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure){
+        this.shutdownOnMasterFailure=shutdownOnMasterFailure;
+    }
+
+    public boolean isKeepDurableSubsActive() {
+        return keepDurableSubsActive;
+    }
+
+    public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
+        this.keepDurableSubsActive = keepDurableSubsActive;
+    }
     // Implementation methods
     // -------------------------------------------------------------------------
     /**
@@ -1132,52 +1181,13 @@ public class BrokerService implements Service, Serializable {
         connector.start();
     }
 
-    public boolean isDeleteAllMessagesOnStartup() {
-        return deleteAllMessagesOnStartup;
-    }
-
     /**
-     * Sets whether or not all messages are deleted on startup - mostly only
-     * useful for testing.
+     * Perform any custom dependency injection
      */
-    public void setDeleteAllMessagesOnStartup(boolean deletePersistentMessagesOnStartup) {
-        this.deleteAllMessagesOnStartup = deletePersistentMessagesOnStartup;
-    }
-
-    public URI getVmConnectorURI() {
-        if (vmConnectorURI == null) {
-            try {
-                vmConnectorURI = new URI("vm://" + getBrokerName());
-            }
-            catch (URISyntaxException e) {
-            }
+    protected void configureService(Object service) {
+        if (service instanceof BrokerServiceAware) {
+            BrokerServiceAware serviceAware = (BrokerServiceAware) service;
+            serviceAware.setBrokerService(this);
         }
-        return vmConnectorURI;
-    }
-
-    public void setVmConnectorURI(URI vmConnectorURI) {
-        this.vmConnectorURI = vmConnectorURI;
-    }
-
-    /**
-     * @return Returns the shutdownOnMasterFailure.
-     */
-    public boolean isShutdownOnMasterFailure(){
-        return shutdownOnMasterFailure;
-    }
-
-    /**
-     * @param shutdownOnMasterFailure The shutdownOnMasterFailure to set.
-     */
-    public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure){
-        this.shutdownOnMasterFailure=shutdownOnMasterFailure;
-    }
-
-    public boolean isKeepDurableSubsActive() {
-        return keepDurableSubsActive;
-    }
-
-    public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
-        this.keepDurableSubsActive = keepDurableSubsActive;
     }
 }
