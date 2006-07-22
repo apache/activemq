@@ -71,6 +71,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
 
     public void stop() throws Exception {
         if (connection != null) {
+            connection.rollback();
             connection.close();
         }
     }
