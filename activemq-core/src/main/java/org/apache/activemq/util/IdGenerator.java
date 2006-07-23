@@ -49,7 +49,7 @@ public class IdGenerator{
 			try {
 				hostName = InetAddress.getLocalHost().getHostName();
 				ServerSocket ss = new ServerSocket(0);
-				stub=hostName + "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
+				stub="-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
 				Thread.sleep(100);
 				ss.close();
 			}catch(Exception ioe){
@@ -57,7 +57,7 @@ public class IdGenerator{
 			}
 		}else{
             hostName="localhost";
-			stub = hostName + "-1-" +System.currentTimeMillis() +"-";
+			stub = "-1-" +System.currentTimeMillis() +"-";
 		}
 		UNIQUE_STUB = stub;
 	}
@@ -84,7 +84,7 @@ public class IdGenerator{
 	}
     
     public IdGenerator(){
-        this("ID:");
+        this("ID:" + hostName);
     }
 	
 	/**

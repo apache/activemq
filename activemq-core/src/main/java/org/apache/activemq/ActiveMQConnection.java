@@ -101,7 +101,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     private static final Log log = LogFactory.getLog(ActiveMQConnection.class);
     private static final IdGenerator connectionIdGenerator = new IdGenerator();
-    private static final IdGenerator clientIdGenerator = new IdGenerator();
 
     public static final String DEFAULT_USER = ActiveMQConnectionFactory.DEFAULT_USER;
     public static final String DEFAULT_PASSWORD = ActiveMQConnectionFactory.DEFAULT_PASSWORD;
@@ -130,9 +129,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean useRetroactiveConsumer;
     private int closeTimeout = 15000;
     
-    private final JMSConnectionStatsImpl stats;
-    private final JMSStatsImpl factoryStats;
     private final Transport transport;
+    private final IdGenerator clientIdGenerator;
+    private final JMSStatsImpl factoryStats;
+    private final JMSConnectionStatsImpl stats;
+    
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean closing = new AtomicBoolean(false);
     private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -167,9 +168,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @param password
      * @throws Exception 
      */
-    protected ActiveMQConnection(final Transport transport, JMSStatsImpl factoryStats)
+    protected ActiveMQConnection(final Transport transport, IdGenerator clientIdGenerator, JMSStatsImpl factoryStats)
             throws Exception {
        
+        this.transport = transport;
+        this.clientIdGenerator = clientIdGenerator;
+        this.factoryStats = factoryStats;
+        
         // Configure a single threaded executor who's core thread can timeout if idle
         asyncConnectionThread = new ThreadPoolExecutor(1,1,5,TimeUnit.SECONDS, new LinkedBlockingQueue(), new ThreadFactory() {
             public Thread newThread(Runnable r) {
@@ -183,11 +188,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.info.setManageable(true);
         this.connectionSessionId = new SessionId(info.getConnectionId(), -1);
         
-        this.transport = transport;
         this.transport.setTransportListener(this);
 
         this.stats = new JMSConnectionStatsImpl(sessions, this instanceof XAConnection);
-        this.factoryStats = factoryStats;
         this.factoryStats.addConnection(this);
     }
 
@@ -1229,6 +1232,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         ConsumerId consumerId = new ConsumerId(new SessionId(info.getConnectionId(), -1),consumerIdGenerator.getNextSequenceId());
         advisoryConsumer = new AdvisoryConsumer(this, consumerId);        
     }
+
 
     /**
      * @return Returns the useAsyncSend.
