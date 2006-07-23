@@ -796,6 +796,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             // Transacted or Client ack: Deliver the next message.
                             afterMessageIsConsumed(md, false);
                         }
+                        log.warn("Exception while processing message: " + e, e);
                     }
                 } else {
                     unconsumedMessages.enqueue(md);
