@@ -80,7 +80,7 @@ public class ActiveMQXAConnectionFactory extends ActiveMQConnectionFactory imple
     }
 
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
-        ActiveMQXAConnection connection = new ActiveMQXAConnection(transport, stats);
+        ActiveMQXAConnection connection = new ActiveMQXAConnection(transport, getClientIdGenerator(), stats);
         return connection;
     }
 }

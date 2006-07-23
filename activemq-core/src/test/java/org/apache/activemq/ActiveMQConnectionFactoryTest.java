@@ -29,6 +29,24 @@ import org.apache.activemq.broker.TransportConnector;
 
 public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     
+    public void testUseURIToSetUseClientIDPrefixOnConnectionFactory() throws URISyntaxException, JMSException {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?jms.clientIDPrefix=Cheese");
+        assertEquals("Cheese", cf.getClientIDPrefix());
+
+        ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        try {
+            connection.start();
+
+            String clientID = connection.getClientID();
+            log.info("Got client ID: " + clientID);
+
+            assertTrue("should start with Cheese! but was: " + clientID, clientID.startsWith("Cheese"));
+        }
+        finally {
+            connection.close();
+        }
+    }
+    
     public void testUseURIToSetOptionsOnConnectionFactory() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?jms.useAsyncSend=true");
         assertTrue(cf.isUseAsyncSend());

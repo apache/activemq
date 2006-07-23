@@ -27,6 +27,7 @@ import javax.jms.XATopicSession;
 
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.IdGenerator;
 
 /**
  * The XAConnection interface extends the capability of Connection by providing
@@ -49,15 +50,8 @@ import org.apache.activemq.transport.Transport;
  */
 public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicConnection, XAQueueConnection, XAConnection {
 
-    /**
-     * @param transport
-     * @param theUserName
-     * @param thePassword
-     * @param factoryStats
-     * @throws Exception 
-     */
-    protected ActiveMQXAConnection(Transport transport, JMSStatsImpl factoryStats) throws Exception {
-        super(transport, factoryStats);
+    protected ActiveMQXAConnection(Transport transport, IdGenerator clientIdGenerator, JMSStatsImpl factoryStats) throws Exception {
+        super(transport, clientIdGenerator, factoryStats);
     }
 
     public XASession createXASession() throws JMSException {
