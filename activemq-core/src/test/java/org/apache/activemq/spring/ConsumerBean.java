@@ -21,12 +21,15 @@ import javax.jms.MessageListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConsumerBean implements MessageListener {
+import junit.framework.Assert;
+
+public class ConsumerBean extends Assert implements MessageListener {
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
             .getLog(ConsumerBean.class);
-    
+
     private List messages = new ArrayList();
     private Object semaphore;
+    private boolean verbose;
 
     /**
      * Constructor.
@@ -37,6 +40,7 @@ public class ConsumerBean implements MessageListener {
 
     /**
      * Constructor, initialized semaphore object.
+     * 
      * @param semaphore
      */
     public ConsumerBean(Object semaphore) {
@@ -54,10 +58,14 @@ public class ConsumerBean implements MessageListener {
 
     /**
      * Method implemented from MessageListener interface.
+     * 
      * @param message
      */
     public synchronized void onMessage(Message message) {
         messages.add(message);
+        if (verbose) {
+            log.info("Received: " + message);
+        }
         synchronized (semaphore) {
             semaphore.notifyAll();
         }
@@ -88,6 +96,7 @@ public class ConsumerBean implements MessageListener {
 
     /**
      * Used to wait for a message to arrive given a particular message count.
+     * 
      * @param messageCount
      */
     public void waitForMessagesToArrive(int messageCount) {
@@ -113,8 +122,26 @@ public class ConsumerBean implements MessageListener {
         log.info("End of wait for " + end + " millis");
     }
 
+    public void assertMessagesArrived(int total) {
+        waitForMessagesToArrive(total);
+        synchronized (this) {
+            int count = messages.size();
+
+            assertEquals("Messages received", total, count);
+        }
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
     /**
      * Identifies if the message is empty.
+     * 
      * @return
      */
     protected boolean hasReceivedMessage() {
@@ -123,6 +150,7 @@ public class ConsumerBean implements MessageListener {
 
     /**
      * Identifies if the message count has reached the total size of message.
+     * 
      * @param messageCount
      * @return
      */
