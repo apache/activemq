@@ -213,7 +213,6 @@ public class ForwardingBridge implements Bridge {
                 final MessageDispatch md = (MessageDispatch) command;
                 Message message = md.getMessage();
                 message.setProducerId(producerInfo.getProducerId());
-                message.setDestination( md.getDestination() );
                 
                 if( message.getOriginalTransactionId()==null )
                     message.setOriginalTransactionId(message.getTransactionId());
