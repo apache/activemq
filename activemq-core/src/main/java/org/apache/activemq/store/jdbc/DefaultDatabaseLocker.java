@@ -46,14 +46,13 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     }
 
     public void start() throws Exception {
-        log.debug("Attempting to acquire exclusive lock on the database");
-        
         connection = dataSource.getConnection();
         connection.setAutoCommit(false);
         
         PreparedStatement statement = connection.prepareStatement(statements.getLockCreateStatement());
         while (true) {
             try {
+                log.info("Attempting to acquire the exclusive lock to become the Master broker");
                 boolean answer = statement.execute();
                 if (answer) {
                     break;
@@ -62,7 +61,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
             catch (Exception e) {
                 log.error("Failed to acquire lock: " + e, e);
             }
-            log.info("Sleeping for " + sleepTime + " milli(s) before trying again to get the lock...");
+            log.debug("Sleeping for " + sleepTime + " milli(s) before trying again to get the lock...");
             Thread.sleep(sleepTime);
         }
         
