@@ -109,7 +109,6 @@
     </distributionManagement>
 
     <modules>
-
         <module>activecluster</module>
         <module>activemq-jaas</module>
         <module>activemq-core</module>
@@ -120,16 +119,11 @@
         <module>activemq-web-demo</module>
         <module>activemq-web-console</module>
         <module>activemq-optional</module>
-        <!--
-        <module>activemq-gbean</module>
-        <module>activemq-gbean-management</module>
-        -->
-        <!--module>activemq-systest</module -->
         <module>maven-bundle-plugin</module>
         <module>assembly</module>
         <module>activeio</module>
+        <!--module>activemq-systest</module -->
         <!-- module>activecluster</module -->
-
     </modules>
 
     <scm>
