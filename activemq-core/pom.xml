@@ -280,6 +280,10 @@
 
             <!-- TODO move to optional module...  -->
             <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
+
+            <!-- This test only works on machines which have ssh propertly configured -->
+            <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
+
           </excludes>
         </configuration>
       </plugin>
