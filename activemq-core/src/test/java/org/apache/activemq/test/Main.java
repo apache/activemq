@@ -54,14 +54,18 @@ public class Main {
                 broker = new BrokerService();
                 broker.setPersistent(false);
                 broker.setUseJmx(true);
+                broker.getManagementContext().setCreateConnector(false);
                 broker.setPlugins(new BrokerPlugin[] { new ConnectionDotFilePlugin() });
                 broker.addConnector("tcp://localhost:61616");
                 broker.addConnector("stomp://localhost:61613");
             }
             broker.start();
 
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
+            factory.setClientIDPrefix("testClient");
+            
             // lets create a dummy couple of consumers
-            Connection connection = new ActiveMQConnectionFactory().createConnection();
+            Connection connection = factory.createConnection();
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageConsumer consumer1 = session.createConsumer(new ActiveMQQueue("Orders.IBM"));
