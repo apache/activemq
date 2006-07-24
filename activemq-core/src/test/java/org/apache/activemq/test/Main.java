@@ -21,7 +21,6 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
-import org.apache.activemq.broker.view.DestinationDotFilePlugin;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.demo.DefaultQueueSender;
 
