@@ -103,10 +103,7 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
 
     protected void checkStarted(Command command) throws IOException {
         if (!isStarted()) {
-            // we might try to shut down the transport before it was ever started in some test cases
-            if (!(command instanceof ShutdownInfo || command instanceof RemoveInfo)) {
-                throw new IOException("The transport " + this + " of type: " + getClass().getName() + " is not running.");
-            }
+			throw new IOException("The transport is not running.");
         }
     }
 
