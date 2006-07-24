@@ -62,6 +62,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.usecases.VirtualTopicPubSubTest;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
@@ -122,6 +123,7 @@ public class BrokerService implements Service, Serializable {
     private AtomicBoolean started = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
     private boolean keepDurableSubsActive=true;
+    private boolean useVirtualTopics=true;
     private BrokerId brokerId;
 
     /**
@@ -820,6 +822,20 @@ public class BrokerService implements Service, Serializable {
     public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
         this.keepDurableSubsActive = keepDurableSubsActive;
     }
+    
+    public boolean isUseVirtualTopics() {
+        return useVirtualTopics;
+    }
+
+    /**
+     * Sets whether or not
+     * <a href="http://incubator.apache.org/activemq/virtual-destinations.html">Virtual Topics</a>
+     * should be supported.
+     */
+    public void setUseVirtualTopics(boolean useVirtualTopics) {
+        this.useVirtualTopics = useVirtualTopics;
+    }
+
     // Implementation methods
     // -------------------------------------------------------------------------
     /**
@@ -1012,6 +1028,9 @@ public class BrokerService implements Service, Serializable {
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);
+        }
+        if (isUseVirtualTopics()) {
+            broker = new VirtualTopicBroker(broker);
         }
         broker = new CompositeDestinationBroker(broker);
         if (isPopulateJMSXUserID()) {
