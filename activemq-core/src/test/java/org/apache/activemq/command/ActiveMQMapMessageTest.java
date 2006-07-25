@@ -18,6 +18,7 @@ package org.apache.activemq.command;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 
@@ -77,9 +78,17 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
-        msg.onSend();
-        msg.setContent(msg.getContent());
-
+        // Test with a 1Meg String
+        StringBuffer bigSB = new StringBuffer(1024*1024);
+        for( int i=0; i < 1024*1024; i++ ) {
+            bigSB.append((char)'a'+i%26);
+        }
+        String bigString = bigSB.toString();
+        
+        msg.setString("bigString", bigString);
+        
+        msg = (ActiveMQMapMessage) msg.copy();
+        
         assertEquals(msg.getBoolean("boolean"), true);
         assertEquals(msg.getByte("byte"), (byte) 1);
         assertEquals(msg.getBytes("bytes").length, 1);
@@ -91,6 +100,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         assertEquals(msg.getObject("object"), "stringObj");
         assertEquals(msg.getShort("short"), (short) 1);
         assertEquals(msg.getString("string"), "string");
+        assertEquals(msg.getString("bigString"), bigString);
     }
 
     public void testGetBoolean() throws JMSException {
@@ -101,8 +111,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.clearBody();
         msg.setString(name, "true");
         
-        msg.onSend();
-        msg.setContent(msg.getContent());
+        msg = (ActiveMQMapMessage) msg.copy();
         
         assertTrue(msg.getBoolean(name));
     }
@@ -110,7 +119,7 @@ public class ActiveMQMapMessageTest extends TestCase {
     public void testGetByte() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setByte(this.name, (byte) 1);
-        msg.setReadOnlyBody(true);
+        msg = (ActiveMQMapMessage) msg.copy();
         assertTrue(msg.getByte(this.name) == (byte) 1);
     }
 
@@ -118,7 +127,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         try {
             msg.setShort(this.name, (short) 1);
-            msg.setReadOnlyBody(true);
+            msg = (ActiveMQMapMessage) msg.copy();
             assertTrue(msg.getShort(this.name) == (short) 1);
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -130,7 +139,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         try {
             msg.setChar(this.name, 'a');
-            msg.setReadOnlyBody(true);
+            msg = (ActiveMQMapMessage) msg.copy();
             assertTrue(msg.getChar(this.name) == 'a');
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -142,7 +151,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         try {
             msg.setInt(this.name, 1);
-            msg.setReadOnlyBody(true);
+            msg = (ActiveMQMapMessage) msg.copy();
             assertTrue(msg.getInt(this.name) == 1);
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -154,7 +163,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         try {
             msg.setLong(this.name, 1);
-            msg.setReadOnlyBody(true);
+            msg = (ActiveMQMapMessage) msg.copy();
             assertTrue(msg.getLong(this.name) == 1);
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -166,7 +175,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         try {
             msg.setFloat(this.name, 1.5f);
-            msg.setReadOnlyBody(true);
+            msg = (ActiveMQMapMessage) msg.copy();
             assertTrue(msg.getFloat(this.name) == 1.5f);
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -178,7 +187,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         try {
             msg.setDouble(this.name, 1.5);
-            msg.setReadOnlyBody(true);
+            msg = (ActiveMQMapMessage) msg.copy();
             assertTrue(msg.getDouble(this.name) == 1.5);
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -191,8 +200,8 @@ public class ActiveMQMapMessageTest extends TestCase {
         try {
             String str = "test";
             msg.setString(this.name, str);
-            msg.setReadOnlyBody(true);
-            assertTrue(msg.getString(this.name) == str);
+            msg = (ActiveMQMapMessage) msg.copy();
+            assertEquals(msg.getString(this.name), str);
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
             assertTrue(false);
@@ -207,8 +216,8 @@ public class ActiveMQMapMessageTest extends TestCase {
             System.arraycopy(bytes1, 0, bytes2, 0, 2);
             msg.setBytes(this.name, bytes1);
             msg.setBytes(this.name + "2", bytes1, 0, 2);
-            msg.setReadOnlyBody(true);
-            assertTrue(msg.getBytes(this.name) == bytes1);
+            msg = (ActiveMQMapMessage) msg.copy();
+            assertTrue( Arrays.equals(msg.getBytes(this.name), bytes1));
             assertEquals(msg.getBytes(this.name + "2").length, bytes2.length);
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -244,8 +253,7 @@ public class ActiveMQMapMessageTest extends TestCase {
             fail("object formats should be correct");
         }
         
-        msg.onSend();
-        msg.setContent(msg.getContent());
+        msg = (ActiveMQMapMessage) msg.copy();
 
         assertTrue(msg.getObject("boolean") instanceof Boolean);
         assertEquals(msg.getObject("boolean"), booleanValue);
@@ -302,8 +310,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
-        msg.onSend();
-        msg.setContent(msg.getContent());
+        msg = (ActiveMQMapMessage) msg.copy();
 
         Enumeration mapNamesEnum = msg.getMapNames();
         ArrayList mapNamesList = Collections.list(mapNamesEnum);
@@ -328,8 +335,7 @@ public class ActiveMQMapMessageTest extends TestCase {
 
         mapMessage.setString("exists", "test");
         
-        mapMessage.onSend();
-        mapMessage.setContent(mapMessage.getContent());
+        mapMessage = (ActiveMQMapMessage) mapMessage.copy();
 
         assertTrue(mapMessage.itemExists("exists"));
         assertFalse(mapMessage.itemExists("doesntExist"));
@@ -348,8 +354,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         mapMessage.clearBody();
         mapMessage.setString("String", "String");
         
-        mapMessage.onSend();
-        mapMessage.setContent(mapMessage.getContent());
+        mapMessage = (ActiveMQMapMessage) mapMessage.copy();
 
         mapMessage.getString("String");            
     }
