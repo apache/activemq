@@ -134,17 +134,11 @@
     <module>activemq-web</module>
     <module>activemq-web-demo</module>
     <module>activemq-optional</module>
-    <module>activemq-gbean</module>
-    <module>activemq-gbean-management</module>
-    <!--module>activemq-systest</module -->
     <module>maven-bundle-plugin</module>
     <!--
     <module>assembly</module>
     -->
-
-<!--
     <module>activeio</module>
--->
     <!-- module>activecluster</module -->
 
   </modules> 
