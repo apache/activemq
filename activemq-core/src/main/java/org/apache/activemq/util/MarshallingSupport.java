@@ -175,12 +175,6 @@ public class MarshallingSupport {
         case BIG_STRING_TYPE:
             value = readUTF8(in);
             break;
-        case MAP_TYPE:
-            value = unmarshalPrimitiveMap(in);
-            break;
-        case LIST_TYPE:
-            value = unmarshalPrimitiveList(in);
-            break;
         }
         return value;
     }
