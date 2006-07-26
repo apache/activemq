@@ -93,7 +93,7 @@ int ByteArrayOutputStream::write(const char* buf, int index, int length) throw(I
     for( int i = index ; i < length ; i++, offset++ )
     {
         // Check for EOF offset
-        if( offset > bodySize )
+        if( offset >= bodySize )
             expandBody() ;
 
         body[offset] = buf[i] ;
