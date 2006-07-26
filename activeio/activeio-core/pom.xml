@@ -20,7 +20,7 @@
   <parent>
     <groupId>incubator-activemq</groupId>
     <artifactId>activeio</artifactId>
-    <version>3.0-beta3</version>
+    <version>3.0-beta4</version>
   </parent>
 
   <artifactId>activeio-core</artifactId>

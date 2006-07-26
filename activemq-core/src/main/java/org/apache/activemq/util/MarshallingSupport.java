@@ -46,6 +46,7 @@ public class MarshallingSupport {
     public static final byte FLOAT_TYPE              = 8;
     public static final byte STRING_TYPE             = 9;
     public static final byte BYTE_ARRAY_TYPE         = 10;
+    public static final byte BIG_STRING_TYPE         = 13;
 
     static  public void marshalPrimitiveMap(HashMap map, DataOutputStream out) throws IOException {
         if( map == null ) {
@@ -121,8 +122,17 @@ public class MarshallingSupport {
             out.writeInt(((byte[])value).length);
             out.write(((byte[])value));
         } else if( value.getClass() == String.class ) {
-            out.writeByte(STRING_TYPE);
-            out.writeUTF((String)value);
+            String s = (String)value;
+            
+            // If it's too big, out.writeUTF may not able able to write it out.
+            if( s.length() < Short.MAX_VALUE/4 ) {
+                out.writeByte(STRING_TYPE);
+                out.writeUTF((String)value);
+            } else {
+                out.writeByte(BIG_STRING_TYPE);
+                writeUTF8(out, s);
+            }
+            
         } else {
             throw new IOException("Object is not a primitive: "+value);
         }
@@ -161,6 +171,9 @@ public class MarshallingSupport {
             break;
         case STRING_TYPE:
             value = in.readUTF();
+            break;
+        case BIG_STRING_TYPE:
+            value = readUTF8(in);
             break;
         }
         return value;

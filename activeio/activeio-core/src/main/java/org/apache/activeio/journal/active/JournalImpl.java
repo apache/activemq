@@ -86,7 +86,8 @@ final public class JournalImpl implements Journal {
     private ByteBufferPacketPool packetPool;
     private long overflowNotificationTime = System.currentTimeMillis();
     private Packet markPacket = new ByteArrayPacket(new byte[Location.SERIALIZED_SIZE]);
-
+    private boolean doingNotification=false;
+    
     public JournalImpl(File logDirectory) throws IOException {
         this(new LogFileManager(logDirectory));
     }
@@ -267,13 +268,17 @@ final public class JournalImpl implements Journal {
 
         // See if we need to issue an overflow notification.
         if (eventListener != null && file.isPastHalfActive()
-                && overflowNotificationTime + OVERFLOW_RENOTIFICATION_DELAY < System.currentTimeMillis()) {
-
-            // We need to send an overflow notification to free up
-            // some logFiles.
-            Location safeSpot = file.getFirstRecordLocationOfSecondActiveLogFile();
-            eventListener.overflowNotification(safeSpot);
-            overflowNotificationTime = System.currentTimeMillis();
+                && overflowNotificationTime + OVERFLOW_RENOTIFICATION_DELAY < System.currentTimeMillis() && !doingNotification ) {
+            doingNotification = true;
+            try {
+                // We need to send an overflow notification to free up
+                // some logFiles.
+                Location safeSpot = file.getFirstRecordLocationOfSecondActiveLogFile();
+                eventListener.overflowNotification(safeSpot);
+                overflowNotificationTime = System.currentTimeMillis();
+            } finally {
+                doingNotification = false;
+            }
         }
 
         // Is it time to roll over?

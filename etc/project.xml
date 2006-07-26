@@ -29,7 +29,7 @@
   <name>ActiveMQ</name>
   <id>activemq</id>
   <groupId>incubator-activemq</groupId>
-  <currentVersion>4.0.2-SNAPSHOT</currentVersion>
+  <currentVersion>4.0.2</currentVersion>
 
   <organization>
     <name>Apache Software Foundation</name>
