@@ -29,9 +29,9 @@
         <version>2</version>
     </parent>
 
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.1-incubator-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>ActiveMQ</name>
 
@@ -203,7 +203,7 @@
             </dependency>
             <dependency>
                 <groupId>${pom.groupId}</groupId>
-                <artifactId>incubator-activemq</artifactId>
+                <artifactId>org.apache.activemq</artifactId>
                 <version>${pom.version}</version>
             </dependency>
 

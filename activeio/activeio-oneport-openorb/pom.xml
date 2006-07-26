@@ -18,7 +18,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activeio</artifactId>
     <version>3.0-SNAPSHOT</version>
   </parent>
@@ -31,12 +31,12 @@
     <!-- Required Dependencies -->
 
     <dependency>
-      <groupId>incubator-activemq</groupId>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>activeio-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>incubator-activemq</groupId>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>

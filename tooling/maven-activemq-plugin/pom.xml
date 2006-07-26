@@ -4,14 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>incubator-activemq</groupId>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-parent</artifactId>
-        <version>4.1-SNAPSHOT</version>
+        <version>4.1-incubator-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
 
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>maven-activemq-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <name>ActiveMQ :: StartUp Plugin</name>
@@ -23,15 +23,15 @@
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>incubator-activemq</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>incubator-activemq</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-console</artifactId>
         </dependency>
         <dependency>
-            <groupId>incubator-activemq</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>activeio-core</artifactId>
         </dependency>
         <dependency>

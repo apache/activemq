@@ -70,9 +70,9 @@
          <include>backport-util-concurrent:backport-util-concurrent</include>
          <include>commons-logging:commons-logging</include>
          <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
-         <include>incubator-activemq:activemq-core</include>
-         <include>incubator-activemq:activeio-core</include>
-         <include>incubator-activemq:activemq-console</include>         
+         <include>${pom.groupId}:activemq-core</include>
+         <include>${pom.groupId}:activeio-core</include>
+         <include>${pom.groupId}:activemq-console</include>         
          <include>mx4j:mx4j</include>         
          <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
          <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
@@ -83,10 +83,10 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>incubator-activemq:activemq-rar</include>
-         <include>incubator-activemq:activemq-optional</include>
-         <include>incubator-activemq:activecluster</include>
-         <include>incubator-activemq:activemq-web</include>
+         <include>${pom.groupId}:activemq-rar</include>
+         <include>${pom.groupId}:activemq-optional</include>
+         <include>${pom.groupId}:activecluster</include>
+         <include>${pom.groupId}:activemq-web</include>
          <include>commons-beanutils:commons-beanutils</include>
          <include>commons-collections:commons-collections</include>
          <include>commons-httpclient:commons-httpclient</include>
