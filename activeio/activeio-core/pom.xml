@@ -18,7 +18,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activeio</artifactId>
     <version>3.0-SNAPSHOT</version>
   </parent>

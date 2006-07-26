@@ -22,9 +22,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.1-incubator-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-core</artifactId>
@@ -64,7 +64,7 @@
     <!-- Optional Dependencies -->
     <!-- =============================== -->
     <dependency>
-      <groupId>incubator-activemq</groupId>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
@@ -303,7 +303,7 @@
       <!-- Use Gram to Gernerate the OpenWire Marshallers -->
       <!--
         <plugin>
-        <groupId>incubator-activemq</groupId>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>maven-gram-plugin</artifactId>
         <version>${pom.version}</version>
         <configuration>
@@ -324,7 +324,7 @@
         </configuration>
         <dependencies>
         <dependency>
-        <groupId>incubator-activemq</groupId>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-openwire-generator</artifactId>
         <version>${pom.version}</version>
         </dependency>

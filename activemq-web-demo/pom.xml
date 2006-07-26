@@ -24,9 +24,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.1-incubator-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-web-demo</artifactId>
@@ -83,7 +83,7 @@
       <artifactId>activeio-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>incubator-activemq</groupId>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>

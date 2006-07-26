@@ -24,12 +24,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.1-incubator-SNAPSHOT</version>
   </parent>
 
-  <artifactId>incubator-activemq</artifactId>
+  <artifactId>apache-activemq</artifactId>
   <packaging>jar</packaging>
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
@@ -271,7 +271,7 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>incubator-activemq</groupId>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>${pom.version}</version>
         <executions>
@@ -322,7 +322,7 @@
         </executions>
       </plugin>
       <!-- plugin>
-        <groupId>incubator-activemq</groupId>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>maven-activemq-plugin</artifactId>
         <version>${pom.version}</version>
         <configuration>

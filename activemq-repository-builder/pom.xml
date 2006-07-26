@@ -22,9 +22,9 @@
   <modelVersion>4.0.0</modelVersion>
   
   <parent>
-    <groupId>incubator-activemq</groupId>
+    <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.1-incubator-SNAPSHOT</version>
   </parent>
   
   <artifactId>activemq-repository-builder</artifactId>
@@ -35,7 +35,7 @@
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>incubator-activemq</artifactId>
+      <artifactId>org.apache.activemq</artifactId>
     </dependency>
   </dependencies>
 
