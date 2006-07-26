@@ -217,20 +217,26 @@ p<IMessage> MessageConsumer::autoAcknowledge(p<IMessage> message)
 {
     try
     {
-        // Is the message an ActiveMQMessage? (throws bad_cast otherwise)
-        p<ActiveMQMessage> activeMessage = p_dyncast<ActiveMQMessage> (message) ;
+        if( message != NULL )
+        {
+            // Is the message an ActiveMQMessage? (throws bad_cast otherwise)
+            p<ActiveMQMessage> activeMessage = 
+                p_dyncast<ActiveMQMessage> (message);
+    
+            // Register the handler for client acknowledgment
+            activeMessage->setAcknowledger( smartify(this) );
 
-        // Register the handler for client acknowledgment
-        activeMessage->setAcknowledger( smartify(this) ) ;
-
-        if( acknowledgementMode != ClientAckMode )
-            doAcknowledge(activeMessage) ;
+            if( acknowledgementMode != ClientAckMode )
+                doAcknowledge(activeMessage);
+        }         
     }
     catch( bad_cast& bc )
     {
         // ignore
     }
-    return message ;
+
+    // Return the message even if NULL, caller must determine what to do.
+    return message;
 }
 
 /*
