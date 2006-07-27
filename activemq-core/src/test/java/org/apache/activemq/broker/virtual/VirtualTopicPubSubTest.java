@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.usecases;
+package org.apache.activemq.broker.virtual;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -42,7 +42,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
         ConsumerBean messageList = new ConsumerBean();
         messageList.setVerbose(true);
         
-        String queueAName = "Consumer.A.VirtualTopic.TEST";
+        String queueAName = getVirtualTopicConsumerName();
         // create consumer 'cluster'
         ActiveMQQueue queue1 = new ActiveMQQueue(queueAName);
         ActiveMQQueue queue2 = new ActiveMQQueue(queueAName);
@@ -55,7 +55,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
         c2.setMessageListener(messageList);
 
         // create topic producer
-        MessageProducer producer = session.createProducer(new ActiveMQTopic("VirtualTopic.TEST"));
+        MessageProducer producer = session.createProducer(new ActiveMQTopic(getVirtualTopicName()));
         assertNotNull(producer);
 
         int total = 10;
@@ -64,6 +64,16 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
         }
         
         messageList.assertMessagesArrived(total);
+    }
+
+
+    protected String getVirtualTopicName() {
+        return "VirtualTopic.TEST";
+    }
+
+
+    protected String getVirtualTopicConsumerName() {
+        return "Consumer.A.VirtualTopic.TEST";
     }
 
 

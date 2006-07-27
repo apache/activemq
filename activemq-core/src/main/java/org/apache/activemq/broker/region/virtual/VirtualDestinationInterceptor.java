@@ -32,6 +32,8 @@ import java.util.Set;
  * href="http://incubator.apache.org/activemq/virtual-destinations.html">Virtual
  * Topics</a>.
  * 
+ * @org.apache.xbean.XBean
+ * 
  * @version $Revision$
  */
 public class VirtualDestinationInterceptor implements DestinationInterceptor {
