@@ -1202,16 +1202,41 @@ public class BrokerService implements Service, Serializable {
      */
     protected void startDestinations() throws Exception {
         if (destinations != null) {
-            ConnectionContext context = new ConnectionContext();
-            context.setBroker(getBroker());
-
+            ConnectionContext adminConnectionContext = getAdminConnectionContext();
+            
             for (int i = 0; i < destinations.length; i++) {
                 ActiveMQDestination destination = destinations[i];
-                getBroker().addDestination(context, destination);
+                getBroker().addDestination(adminConnectionContext, destination);
             }
         }
     }
+    
+    /**
+     * Returns the broker's administration connection context used for configuring the broker
+     * at startup
+     */
+    public ConnectionContext getAdminConnectionContext() throws Exception {
+        ConnectionContext adminConnectionContext = getBroker().getAdminConnectionContext();
+        if (adminConnectionContext == null) {
+            adminConnectionContext = createAdminConnectionContext();
+            getBroker().setAdminConnectionContext(adminConnectionContext);
+        }
+        return adminConnectionContext;
+    }
+    
+    /**
+     * Factory method to create the new administration connection context object.
+     * Note this method is here rather than inside a default broker implementation to
+     * ensure that the broker reference inside it is the outer most interceptor
+     */
+    protected ConnectionContext createAdminConnectionContext() throws Exception {
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(getBroker());
+        return context;
+    }
 
+
+    
     /**
      * Start all transport and network connections, proxies and bridges
      * @throws Exception

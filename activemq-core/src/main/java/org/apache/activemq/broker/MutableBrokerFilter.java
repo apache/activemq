@@ -229,4 +229,12 @@ public class MutableBrokerFilter implements Broker {
        return getNext().isFaultTolerantConfiguration();
     }
 
+    public ConnectionContext getAdminConnectionContext() {
+        return getNext().getAdminConnectionContext();
+    }
+
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+        getNext().setAdminConnectionContext(adminConnectionContext);
+    }
+
 }

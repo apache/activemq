@@ -38,7 +38,8 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 
 /**
- * Implementation of the broker where all it's methods throw an BrokerStoppedException.
+ * Implementation of the broker where all it's methods throw an
+ * BrokerStoppedException.
  * 
  * @version $Revision$
  */
@@ -47,9 +48,9 @@ public class ErrorBroker implements Broker {
     private final String message;
 
     public ErrorBroker(String message) {
-        this.message=message;
+        this.message = message;
     }
-    
+
     public Map getDestinationMap() {
         return Collections.EMPTY_MAP;
     }
@@ -58,13 +59,13 @@ public class ErrorBroker implements Broker {
         return Collections.EMPTY_SET;
     }
 
-    public Broker getAdaptor(Class type){
-        if (type.isInstance(this)){
+    public Broker getAdaptor(Class type) {
+        if (type.isInstance(this)) {
             return this;
         }
         return null;
     }
-    
+
     public BrokerId getBrokerId() {
         throw new BrokerStoppedException(this.message);
     }
@@ -72,7 +73,7 @@ public class ErrorBroker implements Broker {
     public String getBrokerName() {
         throw new BrokerStoppedException(this.message);
     }
-	
+
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         throw new BrokerStoppedException(this.message);
     }
@@ -169,52 +170,57 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void addBroker(Connection connection,BrokerInfo info){
+    public void addBroker(Connection connection, BrokerInfo info) {
         throw new BrokerStoppedException(this.message);
-        
+
     }
-    
-    public void removeBroker(Connection connection,BrokerInfo info){
+
+    public void removeBroker(Connection connection, BrokerInfo info) {
         throw new BrokerStoppedException(this.message);
     }
 
-    public BrokerInfo[] getPeerBrokerInfos(){
+    public BrokerInfo[] getPeerBrokerInfos() {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public void processDispatch(MessageDispatch messageDispatch){
+
+    public void processDispatch(MessageDispatch messageDispatch) {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
+
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public boolean isSlaveBroker(){
+
+    public boolean isSlaveBroker() {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public boolean isStopped(){
+
+    public boolean isStopped() {
         return true;
     }
-    
-    public Set getDurableDestinations(){
+
+    public Set getDurableDestinations() {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         throw new BrokerStoppedException(this.message);
-        
     }
 
-    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         throw new BrokerStoppedException(this.message);
-        
     }
 
-    public boolean isFaultTolerantConfiguration(){
+    public boolean isFaultTolerantConfiguration() {
         throw new BrokerStoppedException(this.message);
     }
-    
-   
+
+    public ConnectionContext getAdminConnectionContext() {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+        throw new BrokerStoppedException(this.message);
+    }
+
 }

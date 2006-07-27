@@ -42,18 +42,18 @@ import java.util.Set;
  * 
  * @version $Revision$
  */
-public class EmptyBroker implements Broker{
+public class EmptyBroker implements Broker {
 
-    public BrokerId getBrokerId(){
+    public BrokerId getBrokerId() {
         return null;
     }
 
-    public String getBrokerName(){
+    public String getBrokerName() {
         return null;
     }
-    
-    public Broker getAdaptor(Class type){
-        if (type.isInstance(this)){
+
+    public Broker getAdaptor(Class type) {
+        if (type.isInstance(this)) {
             return this;
         }
         return null;
@@ -67,152 +67,159 @@ public class EmptyBroker implements Broker{
         return Collections.EMPTY_SET;
     }
 
-    public void addConnection(ConnectionContext context,ConnectionInfo info) throws Exception{
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
     }
 
-    public void removeConnection(ConnectionContext context,ConnectionInfo info,Throwable error) throws Exception{
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
 
     }
 
-    public void addSession(ConnectionContext context,SessionInfo info) throws Exception{
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
 
     }
 
-    public void removeSession(ConnectionContext context,SessionInfo info) throws Exception{
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
 
     }
 
-    public void addProducer(ConnectionContext context,ProducerInfo info) throws Exception{
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
 
     }
 
-    public void removeProducer(ConnectionContext context,ProducerInfo info) throws Exception{
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
 
     }
 
-    public Connection[] getClients() throws Exception{
+    public Connection[] getClients() throws Exception {
 
         return null;
     }
 
-    public ActiveMQDestination[] getDestinations() throws Exception{
+    public ActiveMQDestination[] getDestinations() throws Exception {
 
         return null;
     }
 
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception{
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
 
         return null;
     }
 
-    public void beginTransaction(ConnectionContext context,TransactionId xid) throws Exception{
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
 
     }
 
-    public int prepareTransaction(ConnectionContext context,TransactionId xid) throws Exception{
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
 
         return 0;
     }
 
-    public void rollbackTransaction(ConnectionContext context,TransactionId xid) throws Exception{
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
 
     }
 
-    public void commitTransaction(ConnectionContext context,TransactionId xid,boolean onePhase) throws Exception{
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
 
     }
 
-    public void forgetTransaction(ConnectionContext context,TransactionId transactionId) throws Exception{
+    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
 
     }
 
-    public Destination addDestination(ConnectionContext context,ActiveMQDestination destination) throws Exception{
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
 
         return null;
     }
 
-    public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout) throws Exception{
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
 
     }
 
-    public Subscription addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         return null;
     }
 
-    public void removeConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
 
     }
 
-    public void removeSubscription(ConnectionContext context,RemoveSubscriptionInfo info) throws Exception{
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
 
     }
 
-    public void send(ConnectionContext context,Message message) throws Exception{
+    public void send(ConnectionContext context, Message message) throws Exception {
 
     }
 
-    public void acknowledge(ConnectionContext context,MessageAck ack) throws Exception{
+    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
 
     }
 
-    public void gc(){
+    public void gc() {
 
     }
 
-    public void start() throws Exception{
+    public void start() throws Exception {
 
     }
 
-    public void stop() throws Exception{
+    public void stop() throws Exception {
 
     }
 
-    public void addBroker(Connection connection,BrokerInfo info){
-        
-    }
-    
-    public void removeBroker(Connection connection,BrokerInfo info){
-       
+    public void addBroker(Connection connection, BrokerInfo info) {
+
     }
 
-    public BrokerInfo[] getPeerBrokerInfos(){
+    public void removeBroker(Connection connection, BrokerInfo info) {
+
+    }
+
+    public BrokerInfo[] getPeerBrokerInfos() {
         return null;
     }
-    
+
     /**
      * Notifiy the Broker that a dispatch has happened
+     * 
      * @param messageDispatch
      */
-    public void processDispatch(MessageDispatch messageDispatch){
-        
+    public void processDispatch(MessageDispatch messageDispatch) {
+
     }
-    
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
-        
+
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
+
     }
-    
-    public boolean isSlaveBroker(){
+
+    public boolean isSlaveBroker() {
         return false;
     }
-    
-    public boolean isStopped(){
+
+    public boolean isStopped() {
         return false;
     }
-    
-    public Set getDurableDestinations(){
+
+    public Set getDurableDestinations() {
         return null;
     }
 
-    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
     }
 
-    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{        
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
     }
 
-    public boolean isFaultTolerantConfiguration(){
+    public boolean isFaultTolerantConfiguration() {
         return false;
     }
-    
-   
+
+    public ConnectionContext getAdminConnectionContext() {
+        return null;
+    }
+
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+    }
+
 }

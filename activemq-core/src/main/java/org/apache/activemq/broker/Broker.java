@@ -238,4 +238,14 @@ public interface Broker extends Region, Service {
      * @return true if fault tolerant
      */
     public boolean isFaultTolerantConfiguration();
+
+    /**
+     * @return the connection context used to make administration operations on startup or via JMX MBeans
+     */
+    public abstract ConnectionContext getAdminConnectionContext();
+
+    /**
+     * Sets the default administration connection context used when configuring the broker on startup or via JMX
+     */
+    public abstract void setAdminConnectionContext(ConnectionContext adminConnectionContext);
 }
