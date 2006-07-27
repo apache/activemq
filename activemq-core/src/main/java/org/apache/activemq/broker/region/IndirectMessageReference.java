@@ -146,6 +146,7 @@ public class IndirectMessageReference implements MessageReference {
     
     synchronized public void drop() {
         dropped=true;
+        lockOwner = null;
         if( !persistent && message!=null ) {
             message.decrementReferenceCount();
             message=null;
@@ -156,7 +157,7 @@ public class IndirectMessageReference implements MessageReference {
         if( !regionDestination.lock(this, subscription) )
             return false;        
         synchronized (this) {
-            if( lockOwner!=null && lockOwner!=subscription )
+            if( dropped || (lockOwner!=null && lockOwner!=subscription) )
                 return false;
             lockOwner = subscription;
             return true;
