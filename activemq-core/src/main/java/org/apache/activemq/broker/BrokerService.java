@@ -33,8 +33,11 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.ProxyConnectorView;
+import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
+import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.virtual.*;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.ConnectionFilter;
@@ -124,6 +127,7 @@ public class BrokerService implements Service, Serializable {
     private boolean keepDurableSubsActive=true;
     private boolean useVirtualTopics=true;
     private BrokerId brokerId;
+    private DestinationInterceptor[] destinationInterceptors;
 
     /**
      * Adds a new transport connector for the given bind address
@@ -1004,19 +1008,43 @@ public class BrokerService implements Service, Serializable {
         // broker
         getPersistenceAdapter().setUsageManager(getMemoryManager());
         getPersistenceAdapter().start();
+        
+        DestinationInterceptor destinationInterceptor = null;
+        if (destinationInterceptors != null) {
+            destinationInterceptor = new CompositeDestinationInterceptor(destinationInterceptors);
+        }
+        else {
+            destinationInterceptor = createDefaultDestinationInterceptor();
+        }
+        
 		RegionBroker regionBroker = null;
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getMemoryManager(),
-                    getPersistenceAdapter());
+                    getPersistenceAdapter(), destinationInterceptor);
         }
         else {
-			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter());
+			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter(), destinationInterceptor);
         }
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
 		regionBroker.setBrokerName(getBrokerName());
 		return regionBroker;
 	}
+
+    /**
+     * Create the default destination interceptor
+     */
+    protected DestinationInterceptor createDefaultDestinationInterceptor() {
+        if (! isUseVirtualTopics()) {
+            return null;
+        }
+        VirtualDestinationInterceptor answer = new VirtualDestinationInterceptor();
+        VirtualTopic virtualTopic = new VirtualTopic();
+        virtualTopic.setName("VirtualTopic.>");
+        VirtualDestination[] virtualDestinations = { virtualTopic };
+        answer.setVirtualDestinations(virtualDestinations);
+        return answer;
+    }
 
     /**
      * Strategy method to add interceptors to the broker
@@ -1027,9 +1055,6 @@ public class BrokerService implements Service, Serializable {
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);
-        }
-        if (isUseVirtualTopics()) {
-            broker = new VirtualTopicBroker(broker);
         }
         broker = new CompositeDestinationBroker(broker);
         if (isPopulateJMSXUserID()) {

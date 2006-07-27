@@ -42,7 +42,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
         ConsumerBean messageList = new ConsumerBean();
         messageList.setVerbose(true);
         
-        String queueAName = "ActiveMQ.Virtual.A.TEST";
+        String queueAName = "Consumer.A.VirtualTopic.TEST";
         // create consumer 'cluster'
         ActiveMQQueue queue1 = new ActiveMQQueue(queueAName);
         ActiveMQQueue queue2 = new ActiveMQQueue(queueAName);
@@ -55,7 +55,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
         c2.setMessageListener(messageList);
 
         // create topic producer
-        MessageProducer producer = session.createProducer(new ActiveMQTopic("TEST"));
+        MessageProducer producer = session.createProducer(new ActiveMQTopic("VirtualTopic.TEST"));
         assertNotNull(producer);
 
         int total = 10;
