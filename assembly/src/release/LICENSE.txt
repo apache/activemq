@@ -208,7 +208,7 @@ of them optional, with separate copyright notices and license terms. Your
 use of the source code for the these subcomponents is subject to the terms 
 and conditions of the following licenses. 
 
-For the backport-util-concurrent.jar:
+For the backport-util-concurrent library:
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
 <html><head><title>Creative Commons Public Domain</title>
@@ -252,7 +252,7 @@ been invented or conceived.</p>
 </div>
 </body></html>
 
-For the mx4j.jar:
+For the mx4j, mx4j-remote, and mx4j-tools library:
 
          The MX4J License, Version 1.0
 
@@ -306,7 +306,7 @@ For the mx4j.jar:
          MX4J, please see
          <a href="http://mx4j.sourceforge.net" target="_top">the MX4J website</a>.
 
-For the jetty.jar:
+For the jetty and jetty-util library:
 
 
                                  Apache License
@@ -511,7 +511,7 @@ For the jetty.jar:
    See the License for the specific language governing permissions and
    limitations under the License.
 
-For the xmlpull.jar:
+For the xmlpull library:
 
 XMLPULL API IS FREE
 -------------------
@@ -529,7 +529,7 @@ Initial authors:
 
 2001-12-12
 
-For the spring.jar:
+For the spring library:
 
                                  Apache License
                            Version 2.0, January 2004
@@ -733,7 +733,7 @@ For the spring.jar:
    See the License for the specific language governing permissions and
    limitations under the License.
 
-For the xstream.jar:
+For the xstream library:
 
 (BSD Style License)
 
