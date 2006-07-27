@@ -80,7 +80,7 @@ public class Statements {
                             + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
                             + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
                             + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
-                    "CREATE TABLE " + getFullLockTableName() + "( ID " + longDataType + ", TIME " + longDataType 
+                    "CREATE TABLE " + getFullLockTableName() + "( ID " + longDataType + " NOT NULL, TIME " + longDataType 
                             + ", BROKER_NAME " + stringIdDataType + ", PRIMARY KEY (ID) )",
                     "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)", 
             };
