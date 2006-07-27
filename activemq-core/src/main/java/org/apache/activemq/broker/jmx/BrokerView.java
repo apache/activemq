@@ -179,8 +179,29 @@ public class BrokerView implements BrokerViewMBean {
         broker.removeSubscription(context, info);
     }
     
-    static public ConnectionContext getConnectionContext(Broker broker) {
-        return broker.getAdminConnectionContext();
+    
+    /**
+     * Returns the broker's administration connection context used for configuring the broker
+     * at startup
+     */
+    public static ConnectionContext getConnectionContext(Broker broker) {
+        ConnectionContext adminConnectionContext = broker.getAdminConnectionContext();
+        if (adminConnectionContext == null) {
+            adminConnectionContext = createAdminConnectionContext(broker);
+            broker.setAdminConnectionContext(adminConnectionContext);
+        }
+        return adminConnectionContext;
+    }
+    
+    /**
+     * Factory method to create the new administration connection context object.
+     * Note this method is here rather than inside a default broker implementation to
+     * ensure that the broker reference inside it is the outer most interceptor
+     */
+    protected static ConnectionContext createAdminConnectionContext(Broker broker) {
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(broker);
+        return context;
     }
 
 }
