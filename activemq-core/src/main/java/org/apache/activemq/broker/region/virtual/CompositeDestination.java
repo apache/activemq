@@ -27,11 +27,12 @@ import java.util.Collection;
 public abstract class CompositeDestination implements VirtualDestination {
 
     private String name;
-    private Collection forwardDestinations;
+    private Collection forwardTo;
     private boolean forwardOnly = true;
+    private boolean copyMessage = true;
 
     public Destination intercept(Destination destination) {
-        return new CompositeDestinationInterceptor(destination, getForwardDestinations(), isForwardOnly());
+        return new CompositeDestinationInterceptor(destination, getForwardTo(), isForwardOnly(), isCopyMessage());
     }
 
     public String getName() {
@@ -45,15 +46,15 @@ public abstract class CompositeDestination implements VirtualDestination {
         this.name = name;
     }
 
-    public Collection getForwardDestinations() {
-        return forwardDestinations;
+    public Collection getForwardTo() {
+        return forwardTo;
     }
 
     /**
      * Sets the list of destinations to forward to
      */
-    public void setForwardDestinations(Collection forwardDestinations) {
-        this.forwardDestinations = forwardDestinations;
+    public void setForwardTo(Collection forwardDestinations) {
+        this.forwardTo = forwardDestinations;
     }
 
     public boolean isForwardOnly() {
@@ -68,4 +69,18 @@ public abstract class CompositeDestination implements VirtualDestination {
     public void setForwardOnly(boolean forwardOnly) {
         this.forwardOnly = forwardOnly;
     }
+
+    public boolean isCopyMessage() {
+        return copyMessage;
+    }
+
+    /**
+     * Sets whether a copy of the message will be sent to each destination.
+     * Defaults to true so that the forward destination is set as the
+     * destination of the message
+     */
+    public void setCopyMessage(boolean copyMessage) {
+        this.copyMessage = copyMessage;
+    }
+
 }

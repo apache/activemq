@@ -35,7 +35,7 @@ import org.springframework.jms.core.JmsTemplate;
  * 
  * @version $Revision: 1.1 $
  */
-public class EmbeddedBrokerTestSupport extends TestCase {
+public abstract class EmbeddedBrokerTestSupport extends TestCase {
 
     protected static final Log log = LogFactory.getLog(EmbeddedBrokerTestSupport.class);
     
