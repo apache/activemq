@@ -180,9 +180,7 @@ public class BrokerView implements BrokerViewMBean {
     }
     
     static public ConnectionContext getConnectionContext(Broker broker) {
-        ConnectionContext context = new ConnectionContext();
-        context.setBroker(broker);
-        return context;
+        return broker.getAdminConnectionContext();
     }
 
 }

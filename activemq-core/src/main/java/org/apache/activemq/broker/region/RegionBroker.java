@@ -85,6 +85,7 @@ public class RegionBroker implements Broker {
     private Map clientIdSet = new HashMap(); // we will synchronize access
     protected  PersistenceAdapter adaptor;
     private final DestinationInterceptor destinationInterceptor;
+    private ConnectionContext adminConnectionContext;
         
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, DestinationInterceptor destinationInterceptor) throws IOException {
         this.brokerService = brokerService;
@@ -533,5 +534,11 @@ public class RegionBroker implements Broker {
         return destinationInterceptor;
     }
 
-
+    public ConnectionContext getAdminConnectionContext() {
+        return adminConnectionContext;
+    }
+ 
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+        this.adminConnectionContext = adminConnectionContext;
+    }
 }

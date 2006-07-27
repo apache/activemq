@@ -213,9 +213,16 @@ public class BrokerFilter implements Broker {
         
     }
 
-
     public boolean isFaultTolerantConfiguration(){
         return next.isFaultTolerantConfiguration();
     }
 
+    public ConnectionContext getAdminConnectionContext() {
+        return next.getAdminConnectionContext();
+    }
+
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+        next.setAdminConnectionContext(adminConnectionContext);
+    }
+    
 }
