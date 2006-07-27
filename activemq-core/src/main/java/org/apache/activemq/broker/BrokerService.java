@@ -38,6 +38,7 @@ import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.virtual.*;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.ConnectionFilter;
@@ -128,6 +129,7 @@ public class BrokerService implements Service, Serializable {
     private boolean useVirtualTopics=true;
     private BrokerId brokerId;
     private DestinationInterceptor[] destinationInterceptors;
+    private ActiveMQDestination[] destinations;
 
     /**
      * Adds a new transport connector for the given bind address
@@ -355,6 +357,8 @@ public class BrokerService implements Service, Serializable {
 
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
 
+            startDestinations();
+            
             addShutdownHook();
             if (deleteAllMessagesOnStartup) {
                 deleteAllMessages();
@@ -833,10 +837,21 @@ public class BrokerService implements Service, Serializable {
     /**
      * Sets whether or not
      * <a href="http://incubator.apache.org/activemq/virtual-destinations.html">Virtual Topics</a>
-     * should be supported.
+     * should be supported by defaut if they have not been explicitly configured.
      */
     public void setUseVirtualTopics(boolean useVirtualTopics) {
         this.useVirtualTopics = useVirtualTopics;
+    }
+    
+    public DestinationInterceptor[] getDestinationInterceptors() {
+        return destinationInterceptors;
+    }
+
+    /**
+     * Sets the destination interceptors to use
+     */
+    public void setDestinationInterceptors(DestinationInterceptor[] destinationInterceptors) {
+        this.destinationInterceptors = destinationInterceptors;
     }
 
     // Implementation methods
@@ -1169,7 +1184,23 @@ public class BrokerService implements Service, Serializable {
             System.err.println("Failed to shut down: " + e);
         }
     }
-    
+
+    /**
+     * Starts any configured destinations on startup
+     *
+     */
+    protected void startDestinations() throws Exception {
+        if (destinations != null) {
+            ConnectionContext context = new ConnectionContext();
+            context.setBroker(getBroker());
+
+            for (int i = 0; i < destinations.length; i++) {
+                ActiveMQDestination destination = destinations[i];
+                getBroker().addDestination(context, destination);
+            }
+        }
+    }
+
     /**
      * Start all transport and network connections, proxies and bridges
      * @throws Exception
