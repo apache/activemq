@@ -35,16 +35,24 @@ public class CompositeDestinationInterceptor extends DestinationFilter {
 
     private Collection forwardDestinations;
     private boolean forwardOnly;
+    private boolean copyMessage;
 
-    public CompositeDestinationInterceptor(Destination next, Collection forwardDestinations, boolean forwardOnly) {
+    public CompositeDestinationInterceptor(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean copyMessage) {
         super(next);
         this.forwardDestinations = forwardDestinations;
         this.forwardOnly = forwardOnly;
+        this.copyMessage = copyMessage;
     }
 
     public void send(ConnectionContext context, Message message) throws Exception {
         for (Iterator iter = forwardDestinations.iterator(); iter.hasNext();) {
             ActiveMQDestination destination = (ActiveMQDestination) iter.next();
+
+            if (copyMessage) {
+                message = message.copy();
+                message.setDestination(destination);
+            }
+
             send(context, message, destination);
         }
         if (!forwardOnly) {
