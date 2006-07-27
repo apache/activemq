@@ -837,7 +837,7 @@ public class BrokerService implements Service, Serializable {
     /**
      * Sets whether or not
      * <a href="http://incubator.apache.org/activemq/virtual-destinations.html">Virtual Topics</a>
-     * should be supported by defaut if they have not been explicitly configured.
+     * should be supported by default if they have not been explicitly configured.
      */
     public void setUseVirtualTopics(boolean useVirtualTopics) {
         this.useVirtualTopics = useVirtualTopics;
@@ -852,6 +852,17 @@ public class BrokerService implements Service, Serializable {
      */
     public void setDestinationInterceptors(DestinationInterceptor[] destinationInterceptors) {
         this.destinationInterceptors = destinationInterceptors;
+    }
+    
+    public ActiveMQDestination[] getDestinations() {
+        return destinations;
+    }
+
+    /**
+     * Sets the destinations which should be loaded/created on startup
+     */
+    public void setDestinations(ActiveMQDestination[] destinations) {
+        this.destinations = destinations;
     }
 
     // Implementation methods
