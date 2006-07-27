@@ -19,6 +19,18 @@
 
   <broker brokerName="broker2" persistent="false" useShutdownHook="false" useJmx="false">
 
+    <!-- disabling the subscription recovery policy allows us take memory leaks easier -->
+    <destinationPolicy>
+      <policyMap>
+        <policyEntries>
+          <policyEntry topic=">">
+            <subscriptionRecoveryPolicy>
+              <noSubscriptionRecoveryPolicy />
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+      </policyEntries></policyMap>
+    </destinationPolicy>
+    
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61617"/>
       <transportConnector uri="vm://broker2"/>

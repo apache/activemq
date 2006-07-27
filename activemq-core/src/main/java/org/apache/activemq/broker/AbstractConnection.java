@@ -389,6 +389,13 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
     public Response processBrokerInfo(BrokerInfo info) {
+    	
+    	// We only expect to get one broker info command per connection
+    	if( this.brokerInfo!=null ) {
+    		log.warn("Unexpected extra broker info command received: "+info);
+    	}
+    	
+        this.brokerInfo = info;
         broker.addBroker(this, info);
         return null;
     }

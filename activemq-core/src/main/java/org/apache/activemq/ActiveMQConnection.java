@@ -535,6 +535,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             if (!closed.get()) {
                 closing.set(true);
 
+                this.factoryStats.removeConnection(this);
+                
                 if( advisoryConsumer!=null ) {
                     advisoryConsumer.dispose();
                     advisoryConsumer=null;
