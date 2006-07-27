@@ -84,10 +84,11 @@ public class RegionBroker implements Broker {
     private String brokerName;
     private Map clientIdSet = new HashMap(); // we will synchronize access
     protected  PersistenceAdapter adaptor;
-
+    private final DestinationInterceptor destinationInterceptor;
         
-    public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter) throws IOException {
+    public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, DestinationInterceptor destinationInterceptor) throws IOException {
         this.brokerService = brokerService;
+        this.destinationInterceptor = destinationInterceptor;
         this.sequenceGenerator.setLastSequenceId( adapter.getLastMessageBrokerSequenceId() );
         this.adaptor = adapter;//weird - both are valid spellings ...
         queueRegion = createQueueRegion(memoryManager, taskRunnerFactory, adapter);
@@ -528,7 +529,9 @@ public class RegionBroker implements Broker {
         this.keepDurableSubsActive = keepDurableSubsActive;
     }
 
-    
+    public DestinationInterceptor getDestinationInterceptor() {
+        return destinationInterceptor;
+    }
 
 
 }

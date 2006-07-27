@@ -75,6 +75,13 @@ abstract public class AbstractRegion implements Region {
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         log.debug("Adding destination: "+destination);
         Destination dest = createDestination(context, destination);
+        
+        // intercept if there is a valid interceptor defined
+        DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
+        if (destinationInterceptor != null) {
+            dest = destinationInterceptor.intercept(dest);
+        }
+        
         dest.start();
         synchronized(destinationsMutex){
             destinations.put(destination,dest);
@@ -293,7 +300,7 @@ abstract public class AbstractRegion implements Region {
     protected abstract Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws Exception;
     abstract protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
 
-    public boolean isAutoCreateDestinations() {
+    public boolean isAutoCreateDestinations() { 
         return autoCreateDestinations;
     }
 
