@@ -41,6 +41,7 @@
     <property name="build.debug" value="true" />
     <property name="build.dir"
       value="${project::get-base-directory()}/build/${framework::get-target-framework()}.${platform::get-name()}/${project.name}-${project.version}-${project.config}" />
+    <property name="site.dir" value="../../activemq-site/nms/ndoc" />
   </target>
 
   <target name="release" description="Perform a 'release' build">
@@ -200,9 +201,9 @@
       -->
     </csc>
   </target>
-  
+
   <target name="doc" depends="build-main">
-    <ndoc>
+    <ndoc failonerror="false">
       <assemblies basedir="${build.dir}">
         <include name="bin/${project.name}.dll" />
       </assemblies>
@@ -219,12 +220,12 @@
           <property name="SplitTOCs" value="False" />
           <property name="DefaulTOC" value="" />
           <!--
-          <property name="ShowVisualBasic" value="True" />
-          <property name="ShowMissingSummaries" value="True" />
-          <property name="ShowMissingRemarks" value="True" />
-          <property name="ShowMissingParams" value="True" />
-          <property name="ShowMissingReturns" value="True" />
-          <property name="ShowMissingValues" value="True" />
+            <property name="ShowVisualBasic" value="True" />
+            <property name="ShowMissingSummaries" value="True" />
+            <property name="ShowMissingRemarks" value="True" />
+            <property name="ShowMissingParams" value="True" />
+            <property name="ShowMissingReturns" value="True" />
+            <property name="ShowMissingValues" value="True" />
           -->
           <property name="DocumentInternals" value="False" />
           <property name="DocumentProtected" value="True" />
@@ -236,8 +237,17 @@
         </documenter>
       </documenters>
     </ndoc>
+
+    <echo>Copying documentation to ${site.dir}</echo>
+    <mkdir dir="${site.dir}" />
+
+    <copy todir="${site.dir}">
+      <fileset basedir="${build.dir}/doc/ndoc_msdn_temp">
+        <include name="*.*" />
+      </fileset>
+    </copy>
   </target>
-  
+
 
   <target name="build-test" depends="create-common-assemblyinfo, build-main">
     <csc target="library" define="${current.build.defines}" warnaserror="false" debug="${build.debug}"
