@@ -1,0 +1,5 @@
+<namespaces>
+    <namespace name="NMS">
+        The <b>NMS</b> namespace defines the .Net Message System API which is an interface to messaging systems rather like JMS is for Java.
+    </namespace>
+</namespaces>
