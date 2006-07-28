@@ -15,10 +15,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans">
+<beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="slave" persistent="false" useJmx="false" masterConnectorURI="tcp://localhost:62001" deleteAllMessagesOnStartup="true"  xmlns="http://activemq.org/config/1.0>
+  <broker brokerName="slave" persistent="false" useJmx="false" masterConnectorURI="tcp://localhost:62001" deleteAllMessagesOnStartup="true"  xmlns="http://activemq.org/config/1.0">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:62002"/>
     </transportConnectors>
