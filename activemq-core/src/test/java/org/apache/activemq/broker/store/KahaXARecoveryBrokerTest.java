@@ -22,7 +22,7 @@ import junit.framework.Test;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.XARecoveryBrokerTest;
-import org.apache.activemq.store.kahadaptor.KahaPersistentAdaptor;
+import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
@@ -50,7 +50,7 @@ public class KahaXARecoveryBrokerTest extends XARecoveryBrokerTest {
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService broker = new BrokerService();
        
-        KahaPersistentAdaptor adaptor = new KahaPersistentAdaptor(new File( System.getProperty("basedir", ".")+"/target/activemq-data/kaha-store.db"));
+        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File( System.getProperty("basedir", ".")+"/target/activemq-data/kaha-store.db"));
         broker.setPersistenceAdapter(adaptor);
         broker.addConnector("tcp://localhost:0");
         return broker;

@@ -19,7 +19,7 @@ package org.apache.activemq.perf;
 
 import java.io.File;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistentAdaptor;
+import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 /**
  * @version $Revision: 1.3 $
  */
@@ -37,7 +37,7 @@ public class KahaDurableTopicTest extends SimpleDurableTopicTest {
     */
     
     protected void configureBroker(BrokerService answer) throws Exception{
-        KahaPersistentAdaptor adaptor = new KahaPersistentAdaptor(new File("activemq-data/perfTest"));
+        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("activemq-data/perfTest"));
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
