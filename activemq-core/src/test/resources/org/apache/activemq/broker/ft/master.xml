@@ -24,7 +24,7 @@
     </transportConnectors>
 
     <persistenceAdapter>
-      <kahaPersistentAdaptor dir = "${basedir}/target/activemq-data/master"/>
+      <kahaPersistenceAdapter dir = "${basedir}/target/activemq-data/master"/>
     </persistenceAdapter>
   </broker>
 

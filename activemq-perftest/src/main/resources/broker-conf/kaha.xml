@@ -3,7 +3,7 @@
   
   <broker useJmx="false" brokerName="kahaBroker" start="false" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
     <persistenceAdapter>
-       <kahaPersistentAdaptor dir="target/kaha-data"/>
+       <kahaPersistenceAdapter dir="target/kaha-data"/>
     </persistenceAdapter>
   
     <transportConnectors>

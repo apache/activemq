@@ -43,9 +43,9 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 public class KahaTransactionStore implements TransactionStore{
     private Map transactions=new ConcurrentHashMap();
     private Map prepared;
-    private KahaPersistentAdaptor adaptor;
+    private KahaPersistenceAdapter adaptor;
 
-    KahaTransactionStore(KahaPersistentAdaptor adaptor,Map preparedMap){
+    KahaTransactionStore(KahaPersistenceAdapter adaptor,Map preparedMap){
         this.adaptor=adaptor;
         this.prepared=preparedMap;
     }

@@ -22,7 +22,7 @@ import java.net.URISyntaxException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicTransactionTest;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistentAdaptor;
+import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.test.JmsResourceProvider;
 /**
  * Test failover for Queues
@@ -39,7 +39,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
         // this will create the main (or master broker)
         broker=createBroker();
         broker.start();
-        KahaPersistentAdaptor adaptor=new KahaPersistentAdaptor(new File("activemq-data/slave"));
+        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter(new File("activemq-data/slave"));
         slave = new BrokerService();
         slave.setBrokerName("slave");
         slave.setPersistenceAdapter(adaptor);
@@ -66,7 +66,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
     protected BrokerService createBroker() throws Exception,URISyntaxException{
         BrokerService broker=new BrokerService();
         broker.setBrokerName("master");
-        KahaPersistentAdaptor adaptor=new KahaPersistentAdaptor(new File("activemq-data/master"));
+        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter(new File("activemq-data/master"));
         broker.setPersistenceAdapter(adaptor);
         broker.addConnector("tcp://localhost:62001");
         broker.setDeleteAllMessagesOnStartup(true);

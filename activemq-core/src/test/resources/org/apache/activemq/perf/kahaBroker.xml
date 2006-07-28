@@ -23,7 +23,7 @@
       <transportConnector uri="tcp://localhost:61616"/>
     </transportConnectors>
     <persistenceAdapter>
-      <kahaPersistentAdaptor dir = "activemq-data"/>
+      <kahaPersistenceAdapter dir = "activemq-data"/>
     </persistenceAdapter>
   </broker>
 
