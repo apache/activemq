@@ -187,7 +187,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
 
         brokers = new BrokerService[BROKER_COUNT];
         for (int i=0; i<BROKER_COUNT; i++) {
-            brokers[i] = createBroker("xbean:multicast-broker-" + (i+1)+ ".xml");
+            brokers[i] = createBroker("org/apache/activemq/usecases/multicast-broker-" + (i+1)+ ".xml");
             brokers[i].start();
         }
 
@@ -198,7 +198,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     protected void createAutoAssignMulticastBrokerNetwork() throws Exception {
         brokers = new BrokerService[BROKER_COUNT];
         for (int i=0; i<BROKER_COUNT; i++) {
-            brokers[i] = createBroker("xbean:multicast-broker-auto.xml");
+            brokers[i] = createBroker("org/apache/activemq/usecases/multicast-broker-auto.xml");
             brokers[i].start();
         }
 
