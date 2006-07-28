@@ -240,8 +240,6 @@
             <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
 
             <!--  these seem to fail only in m2 -->
-            <exclude>**/QueueMasterSlaveTest.*</exclude>
-            <exclude>**/TopicMasterSlaveTest.*</exclude>
             <exclude>**/TransactedTopicMasterSlaveTest.*</exclude>
 
             <!-- Kaha in flux - removing tests -->
