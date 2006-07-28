@@ -119,6 +119,17 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         copy.readOnlyBody = readOnlyBody;
         copy.compressed = compressed;
         copy.recievedByDFBridge = recievedByDFBridge;
+        
+        copy.arrival = arrival;
+        copy.connection = connection;
+        copy.regionDestination = regionDestination;
+        copy.cachedWireFormat = cachedWireFormat;
+        copy.cachedWireFormatData = cachedWireFormatData;
+        copy.brokerPath = brokerPath;
+
+        // lets not copy the following fields
+        //copy.targetConsumerId = targetConsumerId;
+        //copy.referenceCount = referenceCount;
     }
         
     public Object getProperty(String name) throws IOException {
