@@ -28,6 +28,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
@@ -209,12 +210,18 @@ public class RegionBroker implements Broker {
         synchronized (clientIdSet) {
             ConnectionInfo oldValue = (ConnectionInfo) clientIdSet.get(clientId);
             // we may be removing the duplicate connection, not the first connection to be created
-            if (oldValue == info) {
-                clientIdSet.remove(clientId);
+            // so lets check that their connection IDs are the same
+            if (oldValue != null) {
+                if (isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
+                    clientIdSet.remove(clientId);
+                }
             }
         }
-
         connections.remove(context.getConnection());
+    }
+
+    protected boolean isEqual(ConnectionId connectionId, ConnectionId connectionId2) {
+        return connectionId == connectionId2 || (connectionId != null && connectionId.equals(connectionId2));
     }
 
     public Connection[] getClients() throws Exception {
