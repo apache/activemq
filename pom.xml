@@ -50,6 +50,15 @@
                 </configuration>
             </notifier>
         </notifiers>
+        
+        <notifier>
+          <type>irc</type>
+          <configuration>
+            <host>irc.codehaus.org</host>
+            <port>6667</port>
+            <channel>#activemq</channel>
+          </configuration>
+        </notifier>           
     </ciManagement>
 
     <mailingLists>
