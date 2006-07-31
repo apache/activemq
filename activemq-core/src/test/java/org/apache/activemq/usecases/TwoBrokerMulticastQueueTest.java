@@ -61,10 +61,14 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void tearDown() throws Exception {
-        for (int i=0; i<BROKER_COUNT; i++) {
-            brokers[i].stop();
+        if (brokers != null) {
+            for (int i=0; i<BROKER_COUNT; i++) {
+                if (brokers[i] != null) {
+                    brokers[i].stop();
+                }
+            }
+            super.tearDown();
         }
-        super.tearDown();
     }
 
     private void doSendReceiveTest() throws Exception {
