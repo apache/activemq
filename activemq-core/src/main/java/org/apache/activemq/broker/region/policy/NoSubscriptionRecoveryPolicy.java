@@ -25,7 +25,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 
 /**
- * This is the default Topic recovery policy which does not recover any messages.
+ * This SubscriptionRecoveryPolicy disable recovery of messages.
  * 
  * @org.apache.xbean.XBean
  * 
