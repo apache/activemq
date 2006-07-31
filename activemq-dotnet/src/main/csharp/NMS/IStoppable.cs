@@ -17,7 +17,7 @@
 namespace NMS
 {
 	/// <summary>
-	/// Implemented by NMS objects that can be started.
+	/// A lifecycle for NMS objects to indicate they can be stopped
 	/// </summary>
 	public interface IStoppable
 	{

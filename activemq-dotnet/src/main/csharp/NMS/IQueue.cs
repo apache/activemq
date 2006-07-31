@@ -17,7 +17,8 @@
 namespace NMS
 {
 	/// <summary>
-	/// Summary description for IQueue.
+	/// Represents a queue in a message broker. A message sent to a queue is delivered
+        /// to at most one consumer on the queue.
 	/// </summary>
 	public interface IQueue : IDestination
 	{
