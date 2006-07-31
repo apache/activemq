@@ -297,36 +297,34 @@
       </plugin>
 
       <!-- Use Gram to Gernerate the OpenWire Marshallers -->
-      <!--
-        <plugin>
+      <plugin>
         <groupId>org.apache.activemq</groupId>
         <artifactId>maven-gram-plugin</artifactId>
         <version>${pom.version}</version>
         <configuration>
-        <scripts>
-        GenerateJavaMarshalling.groovy:
-        GenerateJavaTests.groovy:
-        GenerateCSharpMarshalling.groovy:
-        GenerateCSharpClasses.groovy:
-        GenerateCppMarshallingClasses.groovy:
-        GenerateCppMarshallingHeaders.groovy:
-        GenerateCppHeaders.groovy:
-        GenerateCppClasses.groovy:
-        GenerateCMarshalling.groovy:
-        </scripts>
-        <groovyProperties>
-        <version>1</version>
-        </groovyProperties>
+          <scripts>
+            GenerateJavaMarshalling.groovy:
+            GenerateJavaTests.groovy:
+            GenerateCSharpMarshalling.groovy:
+            GenerateCSharpClasses.groovy:
+            GenerateCppMarshallingClasses.groovy:
+            GenerateCppMarshallingHeaders.groovy:
+            GenerateCppHeaders.groovy:
+            GenerateCppClasses.groovy:
+            GenerateCMarshalling.groovy:
+          </scripts>
+          <groovyProperties>
+            <version>1</version>
+          </groovyProperties>
         </configuration>
         <dependencies>
-        <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-openwire-generator</artifactId>
-        <version>${pom.version}</version>
-        </dependency>
+          <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-openwire-generator</artifactId>
+            <version>${pom.version}</version>
+          </dependency>
         </dependencies>
-        </plugin>
-      -->
+      </plugin>
 
       <plugin>
         <groupId>org.apache.xbean</groupId>
