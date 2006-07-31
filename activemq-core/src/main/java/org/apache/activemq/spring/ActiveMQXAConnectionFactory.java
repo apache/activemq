@@ -25,6 +25,8 @@ import org.springframework.beans.factory.InitializingBean;
  * so that connections created have client IDs related to your Spring.xml file for
  * easier comprehension from <a href="http://incubator.apache.org/activemq/jmx.html">JMX</a>.
  * 
+ * @org.apache.xbean.XBean element="xaConnectionFactory"
+ * 
  * @version $Revision: $
  */
 public class ActiveMQXAConnectionFactory extends org.apache.activemq.ActiveMQXAConnectionFactory implements InitializingBean, BeanNameAware {

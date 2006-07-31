@@ -23,7 +23,10 @@ import org.apache.commons.logging.LogFactory;
 
 
 /**
- * Defines the pretech message policies for different types of consumers
+ * Defines the prefetch message policies for different types of consumers
+ * 
+ * @org.apache.xbean.XBean element="prefetchPolicy"
+ * 
  * @version $Revision: 1.3 $
  */
 public class ActiveMQPrefetchPolicy implements Serializable {

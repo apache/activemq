@@ -28,7 +28,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
 /**
- * This implementation of {@link SubscriptionRecoveryPolicy} will only keep the last message.
+ * This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed count 
+ * of last messages.
  * 
  * @org.apache.xbean.XBean
  * 
