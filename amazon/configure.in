@@ -1,0 +1,9 @@
+AC_INIT(amq_corelib/CoreLib.h)
+AM_INIT_AUTOMAKE(amq_openwirecpp, 0.1.2)
+AC_PROG_LIBTOOL
+
+AC_PROG_CXX
+
+AC_STDC_HEADERS
+
+AC_OUTPUT([Makefile amq_corelib/Makefile amq_brokersession/Makefile amq_transport/Makefile amq_examples/Makefile amq_examples/bs_async_recv/Makefile amq_examples/bs_send/Makefile amq_examples/bs_sync_recv/Makefile amq_examples/cl_send/Makefile command/Makefile marshal/Makefile])
