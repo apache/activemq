@@ -62,7 +62,7 @@ final public class SyncToAsyncChannelServer implements AsyncChannelServer, Runna
         }
 
         // Can we just just undo the adaptor
-        if( channel.getClass() == SyncToAsyncChannel.class ) {
+        if( channel.getClass() == AsyncToSyncChannelServer.class ) {
             return ((AsyncToSyncChannelServer)channel).getAsyncChannelServer();
         }
         
