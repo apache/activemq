@@ -16,6 +16,9 @@
  */
 namespace NMS
 {
+	/// <summary>
+	/// Represents the type of the destination such as a queue or topic.
+	/// </summary>
 	public enum DestinationType
 	{
 		Queue,
@@ -26,7 +29,7 @@ namespace NMS
 	
 	
 	/// <summary>
-	/// Summary description for Destination.
+	/// A base interface for destinations such as queues or topics
 	/// </summary>
 	public interface IDestination
 	{

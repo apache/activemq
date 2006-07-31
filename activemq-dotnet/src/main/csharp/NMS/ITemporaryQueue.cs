@@ -17,7 +17,8 @@
 namespace NMS
 {
 	/// <summary>
-	/// Summary description for ITemporaryQueue.
+	/// Represents a temporary queue which exists for the duration 
+        /// of the IConnection which created it.
 	/// </summary>
 	public interface ITemporaryQueue : IDestination
 	{

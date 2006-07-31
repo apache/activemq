@@ -16,6 +16,9 @@
  */
 namespace NMS
 {
+	/// <summary>
+	/// The mode used to acknowledge messages after they are consumed
+	/// </summary>
 	public enum AcknowledgementMode
     {
 		/**

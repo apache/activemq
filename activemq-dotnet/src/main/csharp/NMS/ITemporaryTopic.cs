@@ -17,7 +17,8 @@
 namespace NMS
 {
 	/// <summary>
-	/// Summary description for TemporaryTopic.
+	/// Represents a temporary topic which exists for the duration 
+        /// of the IConnection which created it.
 	/// </summary>
 	public interface ITemporaryTopic : IDestination
 	{
