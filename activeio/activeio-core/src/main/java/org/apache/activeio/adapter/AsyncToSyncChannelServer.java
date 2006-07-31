@@ -58,7 +58,7 @@ final public class AsyncToSyncChannelServer implements SyncChannelServer, Accept
         }
 
         // Can we just just undo the adaptor
-        if( channel.getClass() == SyncToAsyncChannel.class ) {
+        if( channel.getClass() == SyncToAsyncChannelServer.class ) {
             return ((SyncToAsyncChannelServer)channel).getSynchChannelServer();
         }
         
