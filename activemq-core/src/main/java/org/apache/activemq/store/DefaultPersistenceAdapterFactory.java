@@ -159,6 +159,14 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         jdbcPersistenceAdapter.setStatements(statements);
     }
 
+    public boolean isUseDatabaseLock() {
+        return jdbcPersistenceAdapter.isUseDatabaseLock();
+    }
+
+    public void setUseDatabaseLock(boolean useDatabaseLock) {
+        jdbcPersistenceAdapter.setUseDatabaseLock(useDatabaseLock);
+    }
+
     /**
      * @throws IOException
      */
