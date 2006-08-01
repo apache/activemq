@@ -41,7 +41,7 @@ namespace marshal{
         /**
          * Marshall a Stomp Frame to a Stomp Command, the frame is now
          * owned by this Command, caller should not use the frame again.
-         * @param Frame to Marshall
+         * @param frame Frame to Marshall
          * @return Newly Marshaled Stomp Message
          * @throws MarshalException
          */
@@ -52,7 +52,7 @@ namespace marshal{
          * Marshal a Stomp Command to a Stom Frame, if the command that
          * is past is not castable to a Stomp Command an Exception will
          * be thrown
-         * @param The Stomp Command to Marshal
+         * @param command The Stomp Command to Marshal
          * @return newly Marshaled Stomp Frame
          * @throws MarshalException
          */

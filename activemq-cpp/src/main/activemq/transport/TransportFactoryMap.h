@@ -76,17 +76,17 @@ namespace transport{
         
         /**
          * Lookup the named factory in the Map
-         * @param the factory name to lookup
+         * @param name the factory name to lookup
          * @return the factory assciated with the name, or NULL
          */
         TransportFactory* lookup( const std::string& name );
         
         /**
          * Fetch a list of factory names that this Map contains
-         * @param vector object to receive the list
+         * @param factoryList vector object to receive the list
          * @returns count of factories.
          */
-        std::size_t getFactoryNames( std::vector<std::string>& factoryList );
+        std::size_t getFactoryNames( std::vector< std::string >& factoryList );
         
     };
     

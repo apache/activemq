@@ -45,18 +45,15 @@ namespace core{
         std::string brokerURL;
 
     public:
-      
-        /**
-         * Constructor
-         */
+
    	    ActiveMQConnectionFactory(void);
 
         /**
          * Constructor
-         * @param the URL of the Broker we are connecting to.
+         * @param url the URL of the Broker we are connecting to.
          * @param username to authenticate with, defaults to ""
          * @param password to authenticate with, defaults to ""
-         * @param client Id to assign to connection, defaults to ""
+         * @param clientId to assign to connection, defaults to ""
          */
         ActiveMQConnectionFactory( const std::string& url,
                                    const std::string& username = "",
@@ -70,6 +67,7 @@ namespace core{
          * connection is created in stopped mode. No messages will be 
          * delivered until the Connection.start method is explicitly 
          * called. 
+         * @returns a Connection Pointer
          * @throws CMSException
          */
         virtual cms::Connection* createConnection(void) throw ( cms::CMSException );
@@ -78,6 +76,9 @@ namespace core{
          * Creates a connection with the specified user identity. The 
          * connection is created in stopped mode. No messages will be 
          * delivered until the Connection.start method is explicitly called.
+         * @param username to authenticate with, defaults to ""
+         * @param password to authenticate with, defaults to ""
+         * @param clientId to assign to connection, defaults to ""
          * @throw CMSException.
          */
         virtual cms::Connection* createConnection( const std::string& username,
@@ -160,8 +161,8 @@ namespace core{
         /**
          * Parses the properties out of the provided Broker URI and sets
          * them in the passed Properties Object.
-         * @param a Broker URI to parse
-         * @param a Properties object to set the parsed values in
+         * @param URI a Broker URI to parse
+         * @param properties a Properties object to set the parsed values in
          * @throws IllegalArgumentException if the passed URI is invalid
          */
         virtual void parseURL( const std::string& URI, 

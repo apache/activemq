@@ -32,19 +32,19 @@ namespace concurrent{
         /**
          * Called when a queued task has completed, the task that
          * finished is passed along for user consumption
-         * @param Runnable Pointer to the task that finished
+         * @param task Runnable Pointer to the task that finished
          */
-        virtual void onTaskComplete(Runnable* task) = 0;
+        virtual void onTaskComplete( Runnable* task ) = 0;
        
         /**
          * Called when a queued task has thrown an exception while
          * being run.  The Callee should assume that this was an 
          * unrecoverable exeption and that this task is now defunct.
-         * @param Runnable Pointer to the task
-         * @param The ActiveMQException that was thrown.
+         * @param task Runnable Pointer to the task
+         * @param ex The ActiveMQException that was thrown.
          */
         virtual void onTaskException( Runnable* task, 
-                                      exceptions::ActiveMQException& ex) = 0;
+                                      exceptions::ActiveMQException& ex ) = 0;
        
     };
 

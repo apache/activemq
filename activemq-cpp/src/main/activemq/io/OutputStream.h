@@ -55,6 +55,7 @@ namespace io{
         
         /**
          * Flushes any pending writes in this output stream.
+         * @throws IOException
          */
         virtual void flush() throw ( IOException ) = 0;
     };

@@ -35,13 +35,13 @@ namespace connector{
         /** 
          * Constructor for this class
          * @param name of the factory to register
-         * @param the factory
-         * @param boolean indicating if this object manages the lifetime of 
-         *        the factory that is being registered.
+         * @param factory the factory
+         * @param manageLifetime boolean indicating if this object manages the 
+         * lifetime of the factory that is being registered.
          */
         ConnectorFactoryMapRegistrar( const std::string& name, 
-                                      ConnectorFactory*  factory,
-                                      bool               manageLifetime = true )
+                                      ConnectorFactory* factory,
+                                      bool manageLifetime = true )
         {       
             // Register it in the map.
             ConnectorFactoryMap::getInstance()->

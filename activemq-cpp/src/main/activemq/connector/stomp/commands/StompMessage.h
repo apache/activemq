@@ -98,7 +98,7 @@ namespace commands{
 
         /**
          * Sets the Correlation Id used by this message
-         * @param String representing the correlation id.
+         * @param correlationId String representing the correlation id.
          */
         virtual void setCMSCorrelationId(const std::string& correlationId) {
             setPropertyValue( 
@@ -110,6 +110,7 @@ namespace commands{
         /**
          * Acknowledges all consumed messages of the session 
          * of this consumed message.
+         * @throws CMSException
          */
         virtual void acknowledge(void) const throw( cms::CMSException ) {
             if(ackHandler != NULL) ackHandler->acknowledgeMessage( this );
@@ -133,7 +134,7 @@ namespace commands{
 
         /**
          * Sets the DeliveryMode for this message
-         * @param DeliveryMode enumerated value.
+         * @param mode DeliveryMode enumerated value.
          */
         virtual void setCMSDeliveryMode( int mode ) {
             setPropertyValue( 
@@ -152,7 +153,7 @@ namespace commands{
               
         /**
          * Sets the Destination for this message
-         * @param Destination Object
+         * @param destination Destination Object
          */
         virtual void setCMSDestination( const cms::Destination* destination ) {
             if( destination != NULL )
@@ -177,7 +178,7 @@ namespace commands{
       
         /**
          * Sets the Expiration Time for this message
-         * @param time value
+         * @param expireTime time value
          */
         virtual void setCMSExpiration( long expireTime ) {
             setPropertyValue( 
@@ -198,7 +199,7 @@ namespace commands{
       
         /**
          * Sets the CMS Message Id for this message
-         * @param time value
+         * @param id time value
          */
         virtual void setCMSMessageId( const std::string& id ) {
             setPropertyValue( 
@@ -219,7 +220,7 @@ namespace commands{
       
         /**
          * Sets the Priority Value for this message
-         * @param priority value
+         * @param priority priority value
          */
         virtual void setCMSPriority( int priority ) {
             setPropertyValue( 
@@ -241,7 +242,7 @@ namespace commands{
       
         /**
          * Sets the Redelivered Flag for this message
-         * @param redelivered value
+         * @param redelivered redelivered value
          */
         virtual void setCMSRedelivered( bool redelivered ) {
             setPropertyValue( 
@@ -262,7 +263,7 @@ namespace commands{
 
         /**
          * Sets the CMS Reply To Address for this message
-         * @param Reply To value
+         * @param id Reply To value
          */
         virtual void setCMSReplyTo( const std::string& id ) {
             setPropertyValue( 
@@ -283,7 +284,7 @@ namespace commands{
       
         /**
          * Sets the Time Stamp for this message
-         * @param time stamp value
+         * @param timeStamp time stamp value
          */
         virtual void setCMSTimeStamp( long timeStamp ) {
             setPropertyValue( 
@@ -304,7 +305,7 @@ namespace commands{
       
         /**
          * Sets the CMS Message Type for this message
-         * @param type value
+         * @param type type value
          */
         virtual void setCMSMessageType( const std::string& type ) {
             setPropertyValue( 
@@ -318,7 +319,7 @@ namespace commands{
         /**
          * Sets the Acknowledgement Handler that this Message will use
          * when the Acknowledge method is called.
-         * @param ActiveMQAckHandler
+         * @param handler ActiveMQAckHandler
          */
         virtual void setAckHandler( core::ActiveMQAckHandler* handler ) {
             this->ackHandler = handler;
@@ -338,7 +339,7 @@ namespace commands{
         /**
          * Sets the count of the number of times this message has been 
          * redelivered
-         * @param redelivery count
+         * @param count redelivery count
          */
         virtual void setRedeliveryCount( int count ) {
             setPropertyValue( 
@@ -352,7 +353,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -363,7 +364,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const

@@ -32,7 +32,9 @@ namespace stomp{
    
         /** 
          * Creates a StompConnector
-         * @param The Properties that the new connector is configured with
+         * @param properties The Properties that the new connector is 
+         * configured with
+         * @param transport the Transport instance this connector uses.
          */
         virtual Connector* createConnector(
             const activemq::util::Properties& properties,

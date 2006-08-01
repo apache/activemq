@@ -47,6 +47,7 @@ namespace commands{
 
         /**
          * Get the Session Id
+         * @return the mew Sessoin Id String
          */      
         virtual const char* getSessionId() const {
             return getPropertyValue( 
@@ -56,6 +57,7 @@ namespace commands{
       
         /**
          * Set the Session Id
+         * @param session string containing the session id
          */
         virtual void setSessionId( const std::string& session ) {
             setPropertyValue( 
@@ -69,7 +71,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -80,7 +82,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const

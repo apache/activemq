@@ -34,9 +34,9 @@ namespace transport{
         /** 
          * Constructor for this class
          * @param name of the factory to register
-         * @param the factory
-         * @param boolean indicating if this object manages the lifetime of 
-         *        the factory that is being registered.
+         * @param factory responsible for creating the transport
+         * @param manageLifetime boolean indicating if this object manages the 
+         *        lifetime of the factory that is being registered.
          */
         TransportFactoryMapRegistrar( const std::string& name, 
                                       TransportFactory*  factory,

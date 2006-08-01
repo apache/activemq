@@ -96,14 +96,14 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame the Frame to init
          */
         virtual void initialize( StompFrame& frame ) = 0;
 
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame the Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const = 0;
@@ -133,7 +133,7 @@ namespace commands{
 
         /**
          * Sets the Command Id of this Message
-         * @param Command Id
+         * @param id Command Id
          */
         virtual void setCommandId( const unsigned int id ){
             setPropertyValue(
@@ -156,7 +156,7 @@ namespace commands{
         
         /**
          * Set if this Message requires a Response
-         * @param true if response is required
+         * @param required true if response is required
          */
         virtual void setResponseRequired( const bool required ) {
         }
@@ -185,7 +185,7 @@ namespace commands{
 
         /**
          * Sets the Correlation Id if this Command
-         * @param Id
+         * @param corrId Id
          */
         virtual void setCorrelationId( const unsigned int corrId ) {
             setPropertyValue(
@@ -206,7 +206,7 @@ namespace commands{
       
         /**
          * Set the Transaction Id of this Command
-         * @param the Id of the Transaction
+         * @param id the Id of the Transaction
          */
         virtual void setTransactionId( const std::string& id ){
             setPropertyValue( 
@@ -255,7 +255,7 @@ namespace commands{
 
         /**
          * Returns a char array of bytes that are contained in the message
-         * @param pointer to array of bytes.
+         * @return pointer to array of bytes.
          */
         virtual const char* getBytes(void) const{
             return getFrame().getBody();
@@ -266,8 +266,9 @@ namespace commands{
          * the content length flag indicates if the Content Length header
          * should be set.
          * @param bytes to store
-         * @param number of bytes to pull from the bytes buffer
-         * @param true if the content length header should be set
+         * @param numBytes number of bytes to pull from the bytes buffer
+         * @param setContentLength true if the content length header should 
+         * be set
          */
         virtual void setBytes( const char* bytes, 
                                const unsigned long numBytes,

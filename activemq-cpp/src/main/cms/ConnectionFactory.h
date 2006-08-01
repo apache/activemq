@@ -48,6 +48,9 @@ namespace cms
          * Creates a connection with the specified user identity. The 
          * connection is created in stopped mode. No messages will be 
          * delivered until the Connection.start method is explicitly called.
+         * @param username - name to login with
+         * @param password - password to authenticate with
+         * @param clientId - User provided Client Id 
          * @return Pointer to a connection object, caller owns the pointer
          * @throw CMSException.
          */

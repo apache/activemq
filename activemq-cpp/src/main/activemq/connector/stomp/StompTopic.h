@@ -39,10 +39,9 @@ namespace stomp{
 
         /**
          * Custom Constructor
-         * @param string destination name plus any params
-         * @param type of destination this represents.
+         * @param name string destination name plus any params
          */
-        StompTopic(const std::string& name) : 
+        StompTopic( const std::string& name ) : 
             StompDestination< cms::Topic >( name, cms::Destination::TOPIC )
         {}
 

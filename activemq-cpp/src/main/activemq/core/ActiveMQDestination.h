@@ -45,7 +45,7 @@ namespace core{
 
         /**
          * Copy Consturctor
-         * @param CMS Dest to Copy, must be a compatible type
+         * @param source CMS Dest to Copy, must be a compatible type
          */
         ActiveMQDestination( const cms::Destination* source ){
             this->copy( *source );
@@ -53,8 +53,8 @@ namespace core{
 
         /**
          * Custom Constructor
-         * @param string destination name plus any params
-         * @param type of destination this represents.
+         * @param dest string destination name plus any params
+         * @param destType type of destination this represents.
          */
         ActiveMQDestination( const std::string& dest,
                              cms::Destination::DestinationType destType )
@@ -124,7 +124,7 @@ namespace core{
         /**
          * Copy the contents of the given properties object to this
          * objects Properties object.  Existing values are erased.
-         * @param Properties to copy to this object.
+         * @param properties the Properties to copy to this object.
          */
         virtual void setProperties( const util::Properties& properties ){
             this->properties.copy( &properties );
@@ -142,9 +142,9 @@ namespace core{
         /**
          * Sets the Destination Name minus any optional params that can
          * be appended to the destination with an ?
-         * @param destination name minus params
+         * @param name destination name minus params
          */
-        virtual void setName( const std::string& ) {
+        virtual void setName( const std::string& name ) {
             this->name = name;
         }
         
@@ -158,7 +158,7 @@ namespace core{
         
         /**
          * Set the Destination Type for this Destination
-         * @param The Destination Type
+         * @param destType The Destination Type
          */
         virtual void setDestinationType( cms::Destination::DestinationType destType ) {
             this->destType = destType;

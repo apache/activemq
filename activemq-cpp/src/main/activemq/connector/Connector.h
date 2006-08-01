@@ -324,6 +324,7 @@ namespace connector{
          */
         virtual void setExceptionListener(
             cms::ExceptionListener* listener ) = 0;
+
     };
 
 }}

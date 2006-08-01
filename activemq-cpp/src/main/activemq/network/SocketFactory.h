@@ -52,7 +52,7 @@ namespace network{
         /**
          * Creates and returns a Socket dervied Object based on the values
          * defined in the Properties Object that is passed in.
-         * @param a IProperties pointer.
+         * @param properties a IProperties pointer.
          * @throws SocketException.
          */
         static Socket* createSocket( const util::Properties& properties )

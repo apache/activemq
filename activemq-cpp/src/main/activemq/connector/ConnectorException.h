@@ -29,13 +29,33 @@ namespace connector{
     {
     public:
    
+        /**
+         * Default Constructor
+         */
         ConnectorException() {}
+
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy
+         */
         ConnectorException( const exceptions::ActiveMQException& ex ){
             *(ActiveMQException*)this = ex;
         }
+
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy, which is an instance of this type
+         */
         ConnectorException( const ConnectorException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
+
+        /**
+         * Consturctor
+         * @param file name of the file were the exception occured.
+         * @param lineNumber line where the exception occured
+         * @param msg the message that was generated
+         */
         ConnectorException( const char* file, 
                             const int lineNumber, 
                             const char* msg, ... )

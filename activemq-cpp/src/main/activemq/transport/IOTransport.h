@@ -92,6 +92,7 @@ namespace transport{
     
         /**
          * Notify the excpetion listener
+         * @param ex the exception to send
          */
         void fire( exceptions::ActiveMQException& ex ){
 
@@ -105,6 +106,7 @@ namespace transport{
         
         /**
          * Notify the command listener.
+         * @param command the command the send
          */
         void fire( Command* command ){
             
@@ -117,14 +119,7 @@ namespace transport{
         
     public:
   
-        /**
-         * Constructor.
-         */
         IOTransport();
-        
-        /**
-         * Destructor - calls close().
-         */
         virtual ~IOTransport();
         
         /**
@@ -140,6 +135,8 @@ namespace transport{
         
         /**
          * Not supported by this class - throws an exception.
+         * @param command the command to be sent.
+         * @returns the response to the command sent.
          * @throws UnsupportedOperationException.
          */
         virtual Response* request( Command* command ) throw( CommandIOException, exceptions::UnsupportedOperationException ){

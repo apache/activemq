@@ -419,8 +419,8 @@ cms::TemporaryQueue* StompConnector::createTemporaryQueue(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void StompConnector::send(cms::Message* message, 
-                          ProducerInfo* producerInfo ) 
+void StompConnector::send( cms::Message* message, 
+                           ProducerInfo* producerInfo ) 
     throw ( ConnectorException )
 {
     try

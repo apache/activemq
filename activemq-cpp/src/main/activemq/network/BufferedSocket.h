@@ -53,6 +53,13 @@ namespace network{
 
     public:
 
+        /**
+         * Constructs a new Buffered socket object
+         * @param socket the socket to buffer
+         * @param inputBufferSize size of the input buffer
+         * @param outputBufferSize size of the output buffer
+         * @param own does this object own the passed socket
+         */
         BufferedSocket( Socket* socket, 
                         unsigned int inputBufferSize = 1000,
                         unsigned int outputBufferSize = 1000,

@@ -64,19 +64,19 @@ namespace cms{
 
         /**
          * Sets the Correlation Id used by this message
-         * @param String representing the correlation id.
+         * @param correlationId - String representing the correlation id.
          */
         virtual void setCMSCorrelationId( const std::string& correlationId ) = 0;
 
         /**
-         * Sets the DeliveryMode for this message
+         * Gets the DeliveryMode for this message
          * @return DeliveryMode enumerated value.
          */
         virtual int getCMSDeliveryMode(void) const = 0;
 
         /**
          * Sets the DeliveryMode for this message
-         * @param DeliveryMode enumerated value.
+         * @param mode - DeliveryMode enumerated value.
          */
         virtual void setCMSDeliveryMode( int mode ) = 0;
       
@@ -88,7 +88,7 @@ namespace cms{
       
         /**
          * Sets the Destination for this message
-         * @param Destination Object
+         * @param destination - Destination Object
          */
         virtual void setCMSDestination( const Destination* destination ) = 0;
       
@@ -100,7 +100,7 @@ namespace cms{
       
         /**
          * Sets the Expiration Time for this message
-         * @param time value
+         * @param expireTime - time value
          */
         virtual void setCMSExpiration( long expireTime ) = 0;
       
@@ -112,7 +112,7 @@ namespace cms{
       
         /**
          * Sets the CMS Message Id for this message
-         * @param time value
+         * @param id - time value
          */
         virtual void setCMSMessageId( const std::string& id ) = 0;
       
@@ -124,7 +124,7 @@ namespace cms{
       
         /**
          * Sets the Priority Value for this message
-         * @param priority value
+         * @param priority - priority value for this message
          */
         virtual void setCMSPriority( int priority ) = 0;
 
@@ -136,7 +136,7 @@ namespace cms{
       
         /**
          * Sets the Redelivered Flag for this message
-         * @param redelivered value
+         * @param redelivered - boolean redelivered value
          */
         virtual void setCMSRedelivered( bool redelivered ) = 0;
 
@@ -148,7 +148,7 @@ namespace cms{
       
         /**
          * Sets the CMS Reply To Address for this message
-         * @param Reply To value
+         * @param id - Reply To value
          */
         virtual void setCMSReplyTo( const std::string& id ) = 0;
 
@@ -160,7 +160,7 @@ namespace cms{
       
         /**
          * Sets the Time Stamp for this message
-         * @param time stamp value
+         * @param timeStamp - integer time stamp value
          */
         virtual void setCMSTimeStamp( long timeStamp ) = 0;
 
@@ -172,7 +172,7 @@ namespace cms{
       
         /**
          * Sets the CMS Message Type for this message
-         * @param type value
+         * @param type - message type value string
          */
         virtual void setCMSMessageType( const std::string& type ) = 0;
     };

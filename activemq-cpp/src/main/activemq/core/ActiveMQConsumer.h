@@ -88,7 +88,8 @@ namespace core{
         /**
          * Synchronously Receive a Message, time out after defined interval.
          * Returns null if nothing read.
-         * @return new message
+         * @param millisecs the time in milliseconds to wait before returning
+         * @return new message or null on timeout
          * @throws CMSException
          */
         virtual cms::Message* receive( int millisecs ) throw ( cms::CMSException );
@@ -103,7 +104,7 @@ namespace core{
 
         /**
          * Sets the MessageListener that this class will send notifs on
-         * @param MessageListener interface pointer
+         * @param listener MessageListener interface pointer
          */
         virtual void setMessageListener( cms::MessageListener* listener );
 
@@ -125,7 +126,7 @@ namespace core{
           
         /**
          * Method called to acknowledge the message passed
-         * @param Message to Acknowlegde
+         * @param message the Message to Acknowlegde
          * @throw CMSException
          */
         virtual void acknowledgeMessage( const ActiveMQMessage* message )
@@ -149,7 +150,7 @@ namespace core{
          * Called asynchronously when a new message is received, the message
          * that is passed is now the property of the callee, and the caller
          * will disavowe all knowledge of the message, i.e Callee must delete.
-         * @param Message object pointer
+         * @param message object pointer
          */
         virtual void onActiveMQMessage( ActiveMQMessage* message ) 
             throw ( exceptions::ActiveMQException );
@@ -172,8 +173,8 @@ namespace core{
          * called from the context of another thread.  This will enqueue a
          * message on the Consumers Queue, or notify a listener if one is
          * currently registered.
-         * @param cms::Message pointer to the message to dispatch
-         * @throw cms::CMSException
+         * @param message cms::Message pointer to the message to dispatch
+         * @throws cms::CMSException
          */
         virtual void dispatch( ActiveMQMessage* message ) 
             throw ( cms::CMSException );
@@ -197,11 +198,13 @@ namespace core{
         /**
          * Destroys the message if the session is transacted, otherwise
          * does nothing.
+         * @param message the message to destroy
          */
         virtual void destroyMessage( cms::Message* message );
 
         /**
          * Notifies the listener of a message.
+         * @param message the message to pass to the listener
          */
         void notifyListener( cms::Message* message );
         

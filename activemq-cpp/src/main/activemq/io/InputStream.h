@@ -55,11 +55,12 @@ namespace io{
          * Reads an array of bytes from the buffer.
          * @param buffer (out) the target buffer.
          * @param bufferSize the size of the output buffer.
-         * @return The number of bytes read.
+         * @return The number of bytes read or -1 if EOS is detected
          * @throws IOException thrown if an error occurs.
          */
         virtual int read( unsigned char* buffer, const int bufferSize ) 
             throw ( IOException ) = 0;
+
     };
     
 }}

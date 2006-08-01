@@ -71,8 +71,17 @@ namespace concurrent{
        
     public:
       
+        /**
+         * default Constructor
+         */
         Thread();
-        Thread( Runnable* task );     
+        
+        /**
+         * Constructor
+         * @param task the Runnable that this thread manages
+         */
+        Thread( Runnable* task );    
+         
         virtual ~Thread();
    
         /** 
@@ -88,10 +97,6 @@ namespace concurrent{
         /**
          * Wait til the thread exits. This is when the run()
          * method has returned or has thrown an exception.
-         * If an exception was thrown in the run() method,
-         * join() will return the thrown exception. Otherwise
-         * (if run() returned normally), join() will
-         * return NULL.
          */
         virtual void join() throw ( exceptions::ActiveMQException );
        
@@ -107,6 +112,7 @@ namespace concurrent{
          *   
          * Note that this method is a static method that applies to the
          * calling thread and not to the thread object.
+         * @param millisecs time in milliseconds to sleep
          */
         static void sleep( int millisecs );
        

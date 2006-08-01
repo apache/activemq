@@ -28,7 +28,7 @@ namespace transport{
         
         /**
          * Sets the Command Id of this Message
-         * @param Command Id
+         * @param id Command Id
          */
         virtual void setCommandId( const unsigned int id ) = 0;
 
@@ -40,7 +40,7 @@ namespace transport{
         
         /**
          * Set if this Message requires a Response
-         * @param true if response is required
+         * @param required true if response is required
          */
         virtual void setResponseRequired( const bool required ) = 0;
 

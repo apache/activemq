@@ -29,13 +29,33 @@ namespace io{
     {
     public:
 
+        /**
+         * Default Constructor
+         */
         IOException(){}
+
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy
+         */
         IOException( const exceptions::ActiveMQException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
+        
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy, which is an instance of this type
+         */
         IOException( const IOException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
+
+        /**
+         * Consturctor
+         * @param file name of the file were the exception occured.
+         * @param lineNumber line where the exception occured
+         * @param msg the message that was generated
+         */
         IOException( const char* file, const int lineNumber,
                      const char* msg, ... )
         {

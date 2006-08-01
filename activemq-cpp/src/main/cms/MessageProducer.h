@@ -34,15 +34,12 @@ namespace cms
     {
     public:
 
-        /**
-         * Destructor
-         */
         virtual ~MessageProducer(void) {}
       
         /**
          * Sends the message to the default producer destination, but does
          * not take ownership of the message, caller must still destroy it.
-         * @param a Message Object Pointer
+         * @param message - a Message Object Pointer
          * @throws CMSException
          */
         virtual void send( Message* message ) throw ( CMSException ) = 0;
@@ -50,7 +47,8 @@ namespace cms
         /**
          * Sends the message to the designated destination, but does
          * not take ownership of the message, caller must still destroy it.
-         * @param a Message Object Pointer
+         * @param destination - a Message Object Pointer
+         * @param message - the message to send to the destination
          * @throws CMSException
          */
         virtual void send( const Destination* destination,
@@ -58,7 +56,7 @@ namespace cms
 
         /** 
          * Sets the delivery mode for this Producer
-         * @param The DeliveryMode
+         * @param mode - The DeliveryMode
          */
         virtual void setDeliveryMode( int mode ) = 0;
       
@@ -70,31 +68,31 @@ namespace cms
       
         /**
          * Sets if Message Ids are disbled for this Producer
-         * @param boolean indicating enable / disable (true / false)
+         * @param value - boolean indicating enable / disable (true / false)
          */
         virtual void setDisableMessageId( bool value ) = 0;
       
         /**
-         * Sets if Message Ids are disbled for this Producer
-         * @param boolean indicating enable / disable (true / false)
+         * Gets if Message Ids are disbled for this Producer
+         * @return boolean indicating enable / disable (true / false)
          */
         virtual bool getDisableMessageId(void) const = 0;
 
         /**
          * Sets if Message Time Stamps are disbled for this Producer
-         * @param boolean indicating enable / disable (true / false)
+         * @param value - boolean indicating enable / disable (true / false)
          */
         virtual void setDisableMessageTimeStamp( bool value ) = 0;
       
         /**
-         * Sets if Message Time Stamps are disbled for this Producer
-         * @param boolean indicating enable / disable (true / false)
+         * Gets if Message Time Stamps are disbled for this Producer
+         * @return boolean indicating enable / disable (true / false)
          */
         virtual bool getDisableMessageTimeStamp(void) const = 0;
       
         /**
          * Sets the Priority that this Producers sends messages at
-         * @param int value for Priority level
+         * @param priority - int value for Priority level
          */
         virtual void setPriority( int priority ) = 0;
       
@@ -106,7 +104,7 @@ namespace cms
       
         /**
          * Sets the Time to Live that this Producers sends messages with
-         * @param int value for time to live
+         * @param time - int value for time to live
          */
         virtual void setTimeToLive( int time ) = 0;
       

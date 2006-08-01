@@ -36,7 +36,7 @@ namespace transport{
 
         /**
          * Sets the Correlation Id if this Command
-         * @param Id
+         * @param corrId
          */
         virtual void setCorrelationId( const unsigned int corrId ) = 0;
         

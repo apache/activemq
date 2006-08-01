@@ -102,6 +102,9 @@ namespace core{
     
         /**
          * Constructor
+         * @param connection - Connection to the Broker
+         * @param session - the session that contains this transaction
+         * @param properties - configuratoin parameters for this object
          */
     	ActiveMQTransaction( ActiveMQConnection* connection,
                              ActiveMQSession* session,
@@ -112,8 +115,8 @@ namespace core{
         /**
          * Adds the Message as a part of the Transaction for the specified
          * ActiveMQConsumer.
-         * @param ActiveMQMessage
-         * @param ActiveMQMessageListener
+         * @param message - Message to Transact
+         * @param listener - Listener to redeliver to on Rollback
          */
         virtual void addToTransaction( ActiveMQMessage* message,
                                        ActiveMQMessageListener* listener );
@@ -122,7 +125,7 @@ namespace core{
          * Removes the ActiveMQMessageListener and all of its transacted 
          * messages from the Transaction, this is usually only done when 
          * a ActiveMQMessageListener is destroyed.
-         * @param consumer who is to be removed.
+         * @param listener - consumer who is to be removed.
          */
         virtual void removeFromTransaction( ActiveMQMessageListener* listener );
         
@@ -159,7 +162,7 @@ namespace core{
 
         /**
          * Sets the Transction Id
-         * @param unsigned int Id
+         * @param id - unsigned int Id
          */
         virtual void setTransactionId( const unsigned int id ) {
             transactionInfo->setTransactionId( id );
@@ -175,7 +178,7 @@ namespace core{
 
         /**
          * Gets the Session Info that this transaction is attached too
-         * @return SessionnInfo pointer
+         * @param session - SessionnInfo pointer
          */
         virtual void setSessionInfo( const connector::SessionInfo* session ) {
             transactionInfo->setSessionInfo( session );
@@ -187,7 +190,7 @@ namespace core{
          * Called when a queued task has completed, the task that
          * finished is passed along for user consumption.  The task is
          * deleted and the count of outstanding tasks is reduced.
-         * @param Runnable Pointer to the task that finished
+         * @param task - Runnable Pointer to the task that finished
          */
         virtual void onTaskComplete( concurrent::Runnable* task );
            
@@ -197,8 +200,8 @@ namespace core{
           * unrecoverable exeption and that this task is now defunct.
           * Deletes the Task and notifies the connection that the
           * exception has occurred.  Reduce the outstanding task count.
-          * @param Runnable Pointer to the task
-          * @param The ActiveMQException that was thrown.
+          * @param task - Runnable Pointer to the task
+          * @param ex - The ActiveMQException that was thrown.
           */
          virtual void onTaskException( concurrent::Runnable* task, 
                                        exceptions::ActiveMQException& ex );

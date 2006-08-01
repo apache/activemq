@@ -98,10 +98,10 @@ namespace concurrent{
          * Queue a task to be completed by one of the Pooled Threads.
          * tasks are serviced as soon as a <code>PooledThread</code>
          * is available to run it.
-         * @param object that derives from Runnable
+         * @param task object that derives from Runnable
          * @throws ActiveMQException
          */
-        virtual void queueTask(Task task) 
+        virtual void queueTask( Task task ) 
             throw ( exceptions::ActiveMQException );
 
         /**
@@ -138,7 +138,7 @@ namespace concurrent{
          * number of threads in the pool, then only MAX threads are 
          * reservved.  If the size is smaller than the number of threads
          * currently in the pool, than nothing is done.
-         * @param number of threads to reserve.
+         * @param size the number of threads to reserve.
          */
         virtual void reserve( unsigned long size );
       
@@ -152,6 +152,7 @@ namespace concurrent{
          * Sets the Max number of threads this pool can contian. 
          * if this value is smaller than the current size of the
          * pool nothing is done.
+         * @param maxThreads total number of threads that can be pooled
          */
         virtual void setMaxThreads( unsigned long maxThreads );
       
@@ -165,7 +166,7 @@ namespace concurrent{
         /**
          * Sets the Max number of Threads that can be allocated at a time
          * when the Thread Pool determines that more Threads are needed.  
-         * @param Max Thread Block Size
+         * @param blockSize Max Thread Block Size
          */
         virtual void setBlockSize( unsigned long blockSize );
       
@@ -176,7 +177,9 @@ namespace concurrent{
          * after and be available again.  This is informational only.
          * @return totoal free threads
          */
-        virtual unsigned long getFreeThreadCount(void) const { return freeThreads; }
+        virtual unsigned long getFreeThreadCount(void) const { 
+            return freeThreads; 
+        }
 
     public: // PooledThreadListener Callbacks
       
@@ -185,7 +188,7 @@ namespace concurrent{
          * executing a new task.  This will decrement the available
          * threads counter so that this object knows when there are
          * no more free threads and must create new ones.
-         * @param Pointer to the Pooled Thread that is making this call
+         * @param thread Pointer to the Pooled Thread that is making this call
          */
         virtual void onTaskStarted( PooledThread* thread );
        
@@ -193,7 +196,7 @@ namespace concurrent{
          * Called by a pooled thread when it has completed a task
          * and is going back to waiting for another task to run,
          * this will increment the free threads counter.
-         * @param Pointer the the Pooled Thread that is making this call.
+         * @param thread Pointer the the Pooled Thread that is making this call.
          */
         virtual void onTaskCompleted( PooledThread* thread );
 
@@ -202,11 +205,11 @@ namespace concurrent{
          * while running a user task, after receiving this notification
          * the callee should assume that the PooledThread is now no longer
          * running.
-         * @param Pointer to the Pooled Thread that is making this call
-         * @param The Exception that occured.
+         * @param thread Pointer to the Pooled Thread that is making this call
+         * @param ex The Exception that occured.
          */
         virtual void onTaskException( PooledThread* thread, 
-                                      exceptions::ActiveMQException& ex);
+                                      exceptions::ActiveMQException& ex );
 
     public:   // Statics
 
@@ -214,14 +217,16 @@ namespace concurrent{
          * Return the one and only Thread Pool instance.
          * @return The Thread Pool Pointer
          */
-        static ThreadPool* getInstance(void) { return &instance; }
+        static ThreadPool* getInstance(void) { 
+            return &instance;
+        }
 
     private:
    
         /**
          * Allocates the requested ammount of Threads, won't exceed
          * <code>maxThreads</code>.
-         * @param the number of threads to create
+         * @param count the number of threads to create
          */
         void AllocateThreads( unsigned long count ); 
 

@@ -47,6 +47,7 @@ namespace commands{
 
         /**
          * Get the receipt id
+         * @returns the message id
          */      
         virtual const char* getReceiptId(void) const{
             return getPropertyValue( 
@@ -56,6 +57,7 @@ namespace commands{
 
         /**
          * Set the receipt id
+         * @param id the receipt id
          */
         virtual void setReceiptId( const std::string& id ){
             setPropertyValue( 
@@ -69,7 +71,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -80,7 +82,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const
