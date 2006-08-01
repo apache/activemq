@@ -58,7 +58,8 @@ namespace concurrent{
          * by a call to Notify.  Must have this object locked before
          * calling.  This wait will timeout after the specified time
          * interval.
-         * @param time in millisecsonds to wait, or WAIT_INIFINITE
+         * @param millisecs the time in millisecsonds to wait, or 
+         * WAIT_INIFINITE
          * @throws ActiveMQException
          */
         virtual void wait(unsigned long millisecs) 

@@ -48,9 +48,9 @@ namespace core{
         /**
          * Creates a new Connection Data object, passing it the data that
          * it will manage for the parent connection object.
-         * @param A connector instance
-         * @param A Socket instance
-         * @param A Transport instance
+         * @param connector an connector instance
+         * @param transport an <code>Transport</code> instance
+         * @param properties an IPoperties instance
          * @throw IllegalArgumentException if an element is NULL
          */
         ActiveMQConnectionData( connector::Connector* connector,

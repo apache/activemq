@@ -41,7 +41,7 @@ namespace core{
         /**
          * Sets the Acknowledgement Handler that this Message will use
          * when the Acknowledge method is called.
-         * @param ActiveMQAckHandler
+         * @param handler ActiveMQAckHandler to call
          */
         virtual void setAckHandler( ActiveMQAckHandler* handler ) = 0;
         
@@ -54,7 +54,7 @@ namespace core{
         /**
          * Sets the count of the number of times this message has been 
          * redelivered
-         * @param redelivery count
+         * @param count the redelivery count
          */
         virtual void setRedeliveryCount( int count ) = 0;
 

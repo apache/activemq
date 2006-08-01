@@ -32,17 +32,16 @@ namespace stomp{
 
         /**
          * Copy Consturctor
-         * @param CMS Dest to Copy, must be a compatible type
+         * @param source CMS Dest to Copy, must be a compatible type
          */
     	StompQueue( const cms::Destination* source ) : 
             StompDestination< cms::Queue >( source ) {}
 
         /**
          * Custom Constructor
-         * @param string destination name plus any params
-         * @param type of destination this represents.
+         * @param name string destination name plus any params
          */
-        StompQueue(const std::string& name) : 
+        StompQueue( const std::string& name ) : 
             StompDestination< cms::Queue >( name, cms::Destination::QUEUE )
         {}
 

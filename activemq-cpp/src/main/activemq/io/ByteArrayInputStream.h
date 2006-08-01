@@ -54,8 +54,8 @@ namespace io{
       
         /**
          * Constructor
-         * @param initial byte array to use to read from
-         * @param the size of the buffer
+         * @param buffer initial byte array to use to read from
+         * @param bufferSize the size of the buffer
          */
         ByteArrayInputStream( const unsigned char* buffer,
                               int bufferSize );
@@ -65,8 +65,8 @@ namespace io{
         /** 
          * Sets the data that this reader uses, replaces any existing
          * data and resets to beginning of the buffer.
-         * @param initial byte array to use to read from
-         * @param the size of the buffer
+         * @param buffer initial byte array to use to read from
+         * @param bufferSize the size of the buffer
          */
         virtual void setByteArray( const unsigned char* buffer,
                                    int bufferSize );
@@ -77,7 +77,7 @@ namespace io{
          * calling.
          * @throws ActiveMQException
          */
-        virtual void lock() throw(exceptions::ActiveMQException){
+        virtual void lock() throw( exceptions::ActiveMQException ){
             mutex.lock();
         }
     
@@ -85,7 +85,7 @@ namespace io{
          * Unlocks the object.
          * @throws ActiveMQException
          */
-        virtual void unlock() throw(exceptions::ActiveMQException){ 
+        virtual void unlock() throw( exceptions::ActiveMQException ){ 
             mutex.unlock();
         }
         
@@ -95,7 +95,7 @@ namespace io{
          * calling.
          * @throws ActiveMQException
          */
-        virtual void wait() throw(exceptions::ActiveMQException){
+        virtual void wait() throw( exceptions::ActiveMQException ){
             mutex.wait();
         }
     
@@ -104,10 +104,11 @@ namespace io{
          * by a call to Notify.  Must have this object locked before
          * calling.  This wait will timeout after the specified time
          * interval.
-         * @param time in millisecsonds to wait, or WAIT_INIFINITE
+         * @param millisecs the time in millisecsonds to wait, or 
+         * WAIT_INIFINITE
          * @throws ActiveMQException
          */
-        virtual void wait(unsigned long millisecs) throw(exceptions::ActiveMQException){
+        virtual void wait( unsigned long millisecs ) throw( exceptions::ActiveMQException ){
             mutex.wait(millisecs);
         }
 
@@ -117,7 +118,7 @@ namespace io{
          * calling.
          * @throws ActiveMQException
          */
-        virtual void notify() throw(exceptions::ActiveMQException){
+        virtual void notify() throw( exceptions::ActiveMQException ){
             mutex.notify();
         }
          
@@ -127,7 +128,7 @@ namespace io{
          * calling.
          * @throws ActiveMQException
          */
-        virtual void notifyAll() throw(exceptions::ActiveMQException){
+        virtual void notifyAll() throw( exceptions::ActiveMQException ){
             mutex.notifyAll();
         }
        
@@ -138,7 +139,7 @@ namespace io{
          * input stream.
          */
         virtual int available() const{   
-            return distance(pos, buffer.end());
+            return distance( pos, buffer.end() );
         }
             
         /**
@@ -146,7 +147,7 @@ namespace io{
          * @return The next byte.
          * @throws IOException thrown if an error occurs.
          */
-        virtual unsigned char read() throw (IOException);
+        virtual unsigned char read() throw ( IOException );
       
         /**
          * Reads an array of bytes from the buffer.

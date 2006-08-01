@@ -39,7 +39,7 @@ namespace connector{
         
         /**
          * Sets this message consumer's message selector expression.
-         * @param This Consumer's selector expression or "".
+         * @param selector This Consumer's selector expression or "".
          */
         virtual void setMessageSelector( const std::string& selector ) = 0;        
 
@@ -51,7 +51,7 @@ namespace connector{
         
         /**
          * Sets the ID that is assigned to this consumer
-         * @return string value of the Consumer Id.
+         * @return id string value of the Consumer Id.
          */
         virtual void setConsumerId( const unsigned int id ) = 0;
         
@@ -63,7 +63,7 @@ namespace connector{
         
         /**
          * Sets the destination that this Consumer is listening on
-         * @param Destination
+         * @param destination Destination
          */
         virtual void setDestination( const cms::Destination& destination ) = 0;
 
@@ -75,7 +75,7 @@ namespace connector{
 
         /**
          * Gets the Session Info that this consumer is attached too
-         * @return SessionnInfo pointer
+         * @return session SessionnInfo pointer
          */
         virtual void setSessionInfo( const SessionInfo* session ) = 0;
 

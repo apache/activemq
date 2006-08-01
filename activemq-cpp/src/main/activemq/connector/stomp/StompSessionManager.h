@@ -82,7 +82,7 @@ namespace stomp{
         /**
          * Creates a new Session and returns a SessionInfo object whose
          * lifetime is the property of the caller.
-         * @param the ackMode of the session.
+         * @param ackMode the ackMode of the session.
          * @return new SessionInfo object
          */
         virtual connector::SessionInfo* createSession(
@@ -93,7 +93,7 @@ namespace stomp{
          * removes the specified Session from the Manager, all data that
          * is associated with session consumers is now lost.  The session
          * is not deleted here, it is the owner's responsibility.
-         * @param the session info for the session to remove.
+         * @param session the session info for the session to remove.
          */
         virtual void removeSession( connector::SessionInfo* session )
             throw ( exceptions::ActiveMQException );
@@ -119,11 +119,11 @@ namespace stomp{
          * subscribe to the destination if another consumer hasn't already 
          * been subbed to that destination.  The returned consumer is the 
          * owned by the caller and not deleted by this class.
-         * @param Topic to subscribe to
+         * @param destination Topic to subscribe to
          * @param session to associate with
-         * @param Subscription Name
+         * @param name Subscription Name
          * @param selector string
-         * @param Should we be notified of messages we send.
+         * @param noLocal Should we be notified of messages we send.
          * @return new ConsumerInfo object.
          */
         virtual connector::ConsumerInfo* createDurableConsumer(
@@ -139,7 +139,7 @@ namespace stomp{
          * consumer is the only one listeneing on this destination.  The
          * Consumer is not deleted, just unassociated from the Manager
          * caller is responsible for managing the lifetime.
-         * @param the ConsumerInfo for the consumer to remove
+         * @param consumer the ConsumerInfo for the consumer to remove
          * @throws ConnectorException
          */            
         virtual void removeConsumer( connector::ConsumerInfo* consumer )
@@ -170,10 +170,10 @@ namespace stomp{
         /**
          * Sets Subscribe Command options from the properties of a 
          * destination object.
-         * @param The destination that we are subscribing to.
-         * @param The pending Subscribe command
+         * @param destination The destination that we are subscribing to.
+         * @param command The pending Subscribe command
          */
-        virtual void setSubscribeOptions( const cms::Destination* dest,
+        virtual void setSubscribeOptions( const cms::Destination* destination,
                                           commands::SubscribeCommand& command )
             throw ( StompConnectorException );
             

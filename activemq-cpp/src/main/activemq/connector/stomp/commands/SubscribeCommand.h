@@ -58,18 +58,18 @@ namespace commands{
       
         /**
          * Set the destination
-         * @param the destination Name String
+         * @param destination the destination Name String
          */
-        virtual void setDestination( const std::string& dest ){
+        virtual void setDestination( const std::string& destination ){
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_DESTINATION ),
-                dest );
+                destination );
         }
 
         /** 
          * Set the Ack Mode of this Subscription
-         * @param mode setting.
+         * @param mode Ack mode setting.
          */
         virtual void setAckMode( const CommandConstants::AckMode mode ){
             setPropertyValue( 
@@ -92,7 +92,7 @@ namespace commands{
         /**
          * Sets the Message Selector that is associated with this
          * subscribe request
-         * @param selector string
+         * @param selector Destination selector string
          */
         virtual void setMessageSelector( const std::string& selector ) {
             setPropertyValue( 
@@ -115,7 +115,7 @@ namespace commands{
         /**
          * Sets the Subscription Name that is associated with this
          * subscribe request
-         * @param Subscription Name
+         * @param name Subscription Name
          */
         virtual void setSubscriptionName( const std::string& name ) {
             setPropertyValue( 
@@ -150,7 +150,7 @@ namespace commands{
         /**
          * Sets whether or not locally sent messages should be ignored for 
          * subscriptions. Set to true to filter out locally sent messages
-         * @param NoLocal value
+         * @param noLocal No Local delivery value
          */
         virtual void setNoLocal( bool noLocal ) {
             setPropertyValue( 
@@ -174,7 +174,7 @@ namespace commands{
         /**
          * Sets whether or not the broker is to dispatch messages in an 
          * asynchronous manner. Set to true if you want Async.
-         * @param true for async dispatch mode
+         * @param dispatchAsync true for async dispatch mode
          */
         virtual void setDispatchAsync( bool dispatchAsync ) {
             setPropertyValue( 
@@ -198,7 +198,7 @@ namespace commands{
         /**
          * Sets whether or not this consumer is an exclusive consumer for
          * this destination.
-         * @param true if in exclusive mode
+         * @param exclusive true if in exclusive mode
          */
         virtual void setExclusive( bool exclusive ) {
             setPropertyValue( 
@@ -228,7 +228,7 @@ namespace commands{
          * messages - we can set a maximum pending limit which once a slow 
          * consumer backs up to this high water mark we begin to discard 
          * old messages
-         * @param Max value
+         * @param limit Max Pending value
          */
         virtual void setMaxPendingMsgLimit( int limit ) {
             setPropertyValue( 
@@ -258,7 +258,7 @@ namespace commands{
          * messages are dispatched until the client acknowledges a message. 
          * Set to 1 for very fair distribution of messages across consumers
          * where processing messages can be slow
-         * @param prefetch size value
+         * @param size prefetch size value
          */
         virtual void setPrefetchSize( int size ) {
             setPropertyValue( 
@@ -282,7 +282,7 @@ namespace commands{
         /**
          * Sets the priority of the consumer so that dispatching can be 
          * weighted in priority order
-         * @param prioirty level
+         * @param priority message prioirty level
          */
         virtual void setPriority( int priority ) {
             setPropertyValue( 
@@ -306,7 +306,7 @@ namespace commands{
         /**
          * Set For non-durable topics if this subscription is set to be 
          * retroactive
-         * @param true if in retroactive mode
+         * @param retroactive true if in retroactive mode
          */
         virtual void setRetroactive( bool retroactive ) {
             setPropertyValue( 
@@ -320,7 +320,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -337,8 +337,8 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
-         * @returns true if frame is valid
+         * @param frame Frame to validate
+         * @returns frame true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const
         {

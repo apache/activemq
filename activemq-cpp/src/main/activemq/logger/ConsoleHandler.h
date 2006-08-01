@@ -23,64 +23,58 @@
 namespace activemq{
 namespace logger{
 
-   /**
-    * This Handler publishes log records to System.err. By default the
-    * SimpleFormatter is used to generate brief summaries.
-    * 
-    * Configuration: By default each ConsoleHandler is initialized using 
-    * the following LogManager configuration properties. If properties are
-    * not defined (or have invalid values) then the specified default 
-    * values are used.
-    *
-    * ConsoleHandler.level specifies the default level for the Handler 
-    *  (defaults to Level.INFO).
-    * ConsoleHandler.filter specifies the name of a Filter class to use 
-    *  (defaults to no Filter).
-    * ConsoleHandler.formatter specifies the name of a Formatter class to 
-    *  use (defaults to SimpleFormatter).
-    */
-   class ConsoleHandler
-   {
-   private:
+    /**
+     * This Handler publishes log records to System.err. By default the
+     * SimpleFormatter is used to generate brief summaries.
+     * 
+     * Configuration: By default each ConsoleHandler is initialized using 
+     * the following LogManager configuration properties. If properties are
+     * not defined (or have invalid values) then the specified default 
+     * values are used.
+     *
+     * ConsoleHandler.level specifies the default level for the Handler 
+     *  (defaults to Level.INFO).
+     * ConsoleHandler.filter specifies the name of a Filter class to use 
+     *  (defaults to no Filter).
+     * ConsoleHandler.formatter specifies the name of a Formatter class to 
+     *  use (defaults to SimpleFormatter).
+     */
+    class ConsoleHandler
+    {
+    private:
    
-      // The Standard Error Stream to log to
-      io::StandardErrorOutputStream stream;
+        // The Standard Error Stream to log to
+        io::StandardErrorOutputStream stream;
       
-      // The default Simple Formatter
-      SimpleFormatter formatter;
+        // The default Simple Formatter
+        SimpleFormatter formatter;
    
-   public:
+    public:
    
-      /**
-       * Constructor
-       */
-      ConsoleHandler(void) : StreamHandler(&stream, &formatter)
-      {
-         // Defaults level to Info
-         setLevel(Level.INFO);
-      }
+        ConsoleHandler(void) : StreamHandler(&stream, &formatter)
+        {
+            // Defaults level to Info
+            setLevel(Level.INFO);
+        }
       
-      /**
-       * Destructor
-       */
-      virtual ~ConsoleHandler(void) {}
+        virtual ~ConsoleHandler(void) {}
       
-      /**
-       * Close the current output stream.
-       * <p>
-       * Override the StreamHandler close to flush the Std Err stream
-       * but doesn't close.
-       * @throw CMSException
-       */
-      virtual void close(void) throw ( cms::CMSException )
-      {
-         if(getOutputStream())
-         {
-            getOutputStream->flush();
-         }
-      }      
+        /**
+         * Close the current output stream.
+         * <p>
+         * Override the StreamHandler close to flush the Std Err stream
+         * but doesn't close.
+         * @throw CMSException
+         */
+        virtual void close(void) throw ( cms::CMSException )
+        {
+            if(getOutputStream())
+            {
+                getOutputStream->flush();
+            }
+        }      
 
-   };
+    };
 
 }}
 

@@ -47,6 +47,7 @@ namespace commands{
         
         /**
          * Get the destination
+         * @returns the Destination as a string
          */      
         virtual const char* getDestination(void) const{
             return getPropertyValue( 
@@ -56,12 +57,13 @@ namespace commands{
       
         /**
          * Set the destination
+         * @param destination the destiantion as a String
          */
-        virtual void setDestination( const std::string& dest ){
+        virtual void setDestination( const std::string& destination ){
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_DESTINATION ),
-                dest );
+                destination );
         }
       
     protected:
@@ -69,7 +71,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -80,7 +82,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const

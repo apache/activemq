@@ -42,9 +42,16 @@ namespace transport{
 
     public:
 
+        /**
+         * Constructor
+         * @param properties the configuration properties for this transport
+         * @param next the next transport in the chain
+         * @param own indicates if this transport owns the next.
+         */
     	TcpTransport( const activemq::util::Properties& properties,
                       Transport* next, 
                       const bool own = true );
+                      
     	virtual ~TcpTransport(void);
 
     };

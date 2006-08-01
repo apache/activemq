@@ -71,6 +71,7 @@ namespace util{
       
         /**
          * Check to see if the Property exists in the set
+         * @param name the name of the property to check
          * @return true if property exists, false otherwise.
          */
         virtual bool hasProperty( const std::string& name ) const = 0;

@@ -49,6 +49,7 @@ namespace transport{
         
         /**
          * Locks the object.
+         * @throws ActiveMQException
          */
         virtual void lock() throw( exceptions::ActiveMQException ){
             mutex.lock();
@@ -56,6 +57,7 @@ namespace transport{
 
         /**
          * Unlocks the object.
+         * @throws ActiveMQException
          */
         virtual void unlock() throw( exceptions::ActiveMQException ){
             mutex.unlock();
@@ -65,6 +67,7 @@ namespace transport{
          * Waits on a signal from this object, which is generated
          * by a call to Notify.  Must have this object locked before
          * calling.
+         * @throws ActiveMQException
          */
         virtual void wait() throw( exceptions::ActiveMQException ){
             mutex.wait();
@@ -75,7 +78,7 @@ namespace transport{
          * by a call to Notify.  Must have this object locked before
          * calling.  This wait will timeout after the specified time
          * interval.
-         * @param time in millisecsonds to wait, or WAIT_INIFINITE
+         * @param millisecs time in millisecsonds to wait, or WAIT_INIFINITE
          * @throws ActiveMQException
          */
         virtual void wait( unsigned long millisecs ) 
@@ -88,6 +91,7 @@ namespace transport{
          * Signals a waiter on this object that it can now wake
          * up and continue.  Must have this object locked before
          * calling.
+         * @throws ActiveMQException
          */
         virtual void notify() throw( exceptions::ActiveMQException ){
             mutex.notify();
@@ -97,6 +101,7 @@ namespace transport{
          * Signals the waiters on this object that it can now wake
          * up and continue.  Must have this object locked before
          * calling.
+         * @throws ActiveMQException
          */
         virtual void notifyAll() throw( exceptions::ActiveMQException ){ 
             mutex.notifyAll(); 
@@ -104,6 +109,7 @@ namespace transport{
         
         /**
          * Getters for the response property.
+         * @return the response object for the request
          */
         virtual const Response* getResponse() const{
             return response;
@@ -114,6 +120,7 @@ namespace transport{
         
         /**
          * Setter for the response property.
+         * @param response the response object for the request.
          */
         virtual void setResponse( Response* response ){
             this->response = response;

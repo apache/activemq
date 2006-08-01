@@ -38,15 +38,15 @@ namespace stomp{
 
         /**
          * Copy Consturctor
-         * @param CMS Dest to Copy, must be a compatible type
+         * @param source CMS Dest to Copy, must be a compatible type
          */
     	StompDestination( const cms::Destination* source ) :
             core::ActiveMQDestination<T>( source ) {}
         
         /**
          * Custom Constructor
-         * @param string destination name plus any params
-         * @param type of destination this represents.
+         * @param name string destination name plus any params
+         * @param type the type of destination this represents.
          */
     	StompDestination( const std::string& name,
                           cms::Destination::DestinationType type ) :
@@ -57,7 +57,7 @@ namespace stomp{
         /**
          * Retrieves the name of this destination, plus the stomp
          * destination decorator
-         * @return name
+         * @return name in a format that is used by the broker
          */
         virtual std::string toProviderString(void) const {
             return getPrefix() + core::ActiveMQDestination<T>::getName();
@@ -66,7 +66,7 @@ namespace stomp{
         /**
          * Converts the Destination Name into a String minus the 
          * stomp decorator
-         * @return string name
+         * @return string name of the desintation
          */
         virtual std::string toString(void) const {
             return core::ActiveMQDestination<T>::getName();

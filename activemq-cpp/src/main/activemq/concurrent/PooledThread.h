@@ -53,12 +53,10 @@ namespace concurrent{
    
         /**
          * Constructor
+         * @param pool the parant ThreadPool object
          */
-        PooledThread(ThreadPool* pool);
+        PooledThread( ThreadPool* pool );
 
-        /**
-         * Destructor
-         */
         virtual ~PooledThread(void);
 
         /**
@@ -71,6 +69,7 @@ namespace concurrent{
         /**
          * Stops the Thread, thread will complete its task if currently
          * running one, and then die.  Does not block.
+         * @throws CMSException
          */
         virtual void stop(void) throw ( cms::CMSException );
       
@@ -78,14 +77,16 @@ namespace concurrent{
          * Checks to see if the thread is busy, if busy it means
          * that this thread has taken a task from the ThreadPool's
          * queue and is processing it.
+         * @returns true if the Thread is busy
          */
         virtual bool isBusy(void) { return busy; }
 
         /**
          * Adds a listener to this <code>PooledThread</code> to be
          * notified when this thread starts and completes a task.
+         * @param listener the listener to send notifications to.
          */
-        virtual void setPooledThreadListener(PooledThreadListener* listener)
+        virtual void setPooledThreadListener( PooledThreadListener* listener )
         {
             this->listener = listener;
         }
@@ -93,6 +94,7 @@ namespace concurrent{
         /**
          * Removes a listener for this <code>PooledThread</code> to be
          * notified when this thread starts and completes a task.
+         * @return a pointer to this thread's listener or NULL
          */
         virtual PooledThreadListener* getPooledThreadListener(void)
         {

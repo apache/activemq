@@ -58,7 +58,7 @@ namespace stomp{
         
         /**
          * Sets this message consumer's message selector expression.
-         * @param This Consumer's selector expression or "".
+         * @param selector This Consumer's selector expression or "".
          */
         virtual void setMessageSelector( const std::string& selector ) {
             this->selector = selector;
@@ -74,7 +74,7 @@ namespace stomp{
         
         /**
          * Sets the ID that is assigned to this consumer
-         * @return string value of the Consumer Id.
+         * @param id value of the Consumer Id.
          */
         virtual void setConsumerId( const unsigned int id ) {
             this->consumerId = id;
@@ -82,7 +82,7 @@ namespace stomp{
         
         /**
          * Gets the Destination that this Consumer is subscribed on
-         * @return Destination
+         * @return Destination this consumer is attached to
          */
         virtual const cms::Destination& getDestination(void) const {
             return *destination;
@@ -90,7 +90,7 @@ namespace stomp{
         
         /**
          * Sets the destination that this Consumer is listening on
-         * @param Destination
+         * @param destination Destination this consumer is attached to
          */
         virtual void setDestination( const cms::Destination& destination ) {
             this->destination = destination.clone();
@@ -106,7 +106,7 @@ namespace stomp{
         
         /**
          * Gets the Session Info that this consumer is attached too
-         * @return SessionnInfo pointer
+         * @param session SessionnInfo for this consumer
          */
         virtual void setSessionInfo( const SessionInfo* session ) {
             this->session = session;

@@ -28,18 +28,15 @@ namespace logger{
    {
    public:
       
-      /**
-       * Constructor
-       */
       LogWriter(void);
-      
-      /**
-       * Destructor
-       */
       virtual ~LogWriter(void);
 
       /**
        * Writes a message to the output destination
+       * @param file
+       * @param line
+       * @param prefix
+       * @param message
        */
       virtual void log(const std::string& file,
                        const int          line,
@@ -48,6 +45,7 @@ namespace logger{
       
       /**
        * Writes a message to the output destination
+       * @param message
        */
       virtual void log(const std::string& message);
 

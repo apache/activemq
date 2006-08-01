@@ -35,6 +35,7 @@ namespace transport{
         
         /**
          * Gets the error from the broker.
+         * @returns the error provided from the broker
          */
         virtual const BrokerError* getException() const = 0;
         

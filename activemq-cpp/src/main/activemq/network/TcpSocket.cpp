@@ -84,7 +84,7 @@ TcpSocket::TcpSocket() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TcpSocket::TcpSocket( Socket::SocketHandle socketHandle ){
+TcpSocket::TcpSocket( SocketHandle socketHandle ){
     this->socketHandle = socketHandle;
    
     inputStream = new SocketInputStream( socketHandle );

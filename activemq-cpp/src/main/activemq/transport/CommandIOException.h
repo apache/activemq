@@ -27,13 +27,33 @@ namespace transport{
     class CommandIOException : public io::IOException{
     public:
 
+        /**
+         * Default Constructor
+         */
         CommandIOException(){};
+        
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy
+         */
         CommandIOException( const exceptions::ActiveMQException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
+        
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy, which is an instance of this type
+         */
         CommandIOException( const CommandIOException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
+        
+        /**
+         * Consturctor
+         * @param file name of the file were the exception occured.
+         * @param lineNumber line where the exception occured
+         * @param msg the message that was generated
+         */
         CommandIOException( const char* file, const int lineNumber, 
                             const char* msg, ... )
         {
@@ -49,6 +69,7 @@ namespace transport{
          * Clones this exception.  This is useful for cases where you need
          * to preserve the type of the original exception as well as the message.
          * All subclasses should override.
+         * @return cloned version of this exception
          */
         virtual exceptions::ActiveMQException* clone() const{
             return new CommandIOException( *this );

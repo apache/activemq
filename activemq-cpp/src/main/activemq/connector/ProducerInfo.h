@@ -40,9 +40,9 @@ namespace connector{
     
         /**
          * Sets the Default Destination for this Producer
-         * @param reference to a destination, copied internally
+         * @param destination reference to a destination, copied internally
          */
-        virtual void setDestination( const cms::Destination& dest ) = 0;
+        virtual void setDestination( const cms::Destination& destination ) = 0;
 
         /**
          * Gets the ID that is assigned to this Producer
@@ -52,7 +52,7 @@ namespace connector{
         
         /**
          * Sets the ID that is assigned to this Producer
-         * @return string value of the Producer Id.
+         * @return id string value of the Producer Id.
          */
         virtual void setProducerId( const unsigned int id ) = 0;
 
@@ -64,7 +64,7 @@ namespace connector{
 
         /**
          * Gets the Session Info that this consumer is attached too
-         * @return SessionnInfo pointer
+         * @param session SessionnInfo pointer
          */
         virtual void setSessionInfo( const SessionInfo* session ) = 0;
 

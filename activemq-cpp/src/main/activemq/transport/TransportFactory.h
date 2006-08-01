@@ -35,7 +35,7 @@ namespace transport{
         
         /**
          * Creates a Transport instance.
-         * @param Properties Object that will hold transport values
+         * @param properties Object that will hold transport values
          */
         virtual Transport* createTransport(
             const activemq::util::Properties& properties ) = 0;

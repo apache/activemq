@@ -40,7 +40,7 @@ namespace connector{
         /**
          * Sets the Connection Id of the Connection that this consumer is
          * using to receive its messages.
-         * @param string value of the connection id
+         * @param id string value of the connection id
          */
         virtual void setConnectionId( const std::string& id ) = 0;
         
@@ -52,13 +52,13 @@ namespace connector{
 
         /**
          * Sets the Session Id for this Session
-         * @param integral id value for this session
+         * @param id integral id value for this session
          */
         virtual void setSessionId( const unsigned int id ) = 0;
 
         /**
          * Sets the Ack Mode of this Session Info object
-         * @param Ack Mode
+         * @param ackMode Ack Mode
          */
         virtual void setAckMode(cms::Session::AcknowledgeMode ackMode) = 0;
         
@@ -79,7 +79,7 @@ namespace connector{
         /**
          * Sets the current transaction info for this session, this is nit
          * used when the session is not transacted.
-         * @param Transaction Id
+         * @param transaction Transaction Id
          */        
         virtual void setTransactionInfo( const TransactionInfo* transaction ) = 0;
         

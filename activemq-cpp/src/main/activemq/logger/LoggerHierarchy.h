@@ -24,14 +24,7 @@ namespace logger{
     {
     public:
 
-        /**
-         * Default Constructor
-         */
     	LoggerHierarchy(void);
-
-        /**
-         * Destructor
-         */
     	virtual ~LoggerHierarchy(void);
 
     };

@@ -30,34 +30,55 @@ namespace stomp{
     {
     public:
    
-      StompConnectorException() {}
-      StompConnectorException( const exceptions::ActiveMQException& ex ){
-        *(ActiveMQException*)this = ex;
-      }
-      StompConnectorException( const StompConnectorException& ex ){
-        *(exceptions::ActiveMQException*)this = ex;
-      }
-      StompConnectorException(const char* file, const int lineNumber, 
-        const char* msg, ...)
-      {
-          va_list vargs;
-          va_start( vargs, msg );
-          buildMessage( msg, vargs );
+        /**
+         * Default Constructor
+         */
+        StompConnectorException() {}
+
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy
+         */
+        StompConnectorException( const exceptions::ActiveMQException& ex ){
+            *( ActiveMQException* )this = ex;
+        }
+
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy, which is an instance of this type
+         */
+        StompConnectorException( const StompConnectorException& ex ){
+            *( exceptions::ActiveMQException* )this = ex;
+        }
+
+        /**
+         * Consturctor
+         * @param file name of the file were the exception occured.
+         * @param lineNumber line where the exception occured
+         * @param msg the message that was generated
+         */
+        StompConnectorException( const char* file, 
+                                 const int lineNumber, 
+                                 const char* msg, ... )
+        {
+            va_list vargs;
+            va_start( vargs, msg );
+            buildMessage( msg, vargs );
             
-          // Set the first mark for this exception.
-          setMark( file, lineNumber );
-      }
+            // Set the first mark for this exception.
+            setMark( file, lineNumber );
+        }
       
-      /**
-       * Clones this exception.  This is useful for cases where you need
-       * to preserve the type of the original exception as well as the message.
-       * All subclasses should override.
-       */
-      virtual exceptions::ActiveMQException* clone() const{
-          return new StompConnectorException( *this );
-      }
+        /**
+         * Clones this exception.  This is useful for cases where you need
+         * to preserve the type of the original exception as well as the message.
+         * All subclasses should override.
+         */
+        virtual exceptions::ActiveMQException* clone() const{
+            return new StompConnectorException( *this );
+        }
       
-      virtual ~StompConnectorException() {}
+        virtual ~StompConnectorException() {}
 
     };
 

@@ -50,7 +50,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame the Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -61,7 +61,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame the Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const

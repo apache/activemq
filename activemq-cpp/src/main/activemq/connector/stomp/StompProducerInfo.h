@@ -33,15 +33,15 @@ namespace stomp{
         unsigned int producerId;
 
         // Default Destination
-        cms::Destination* dest;
+        cms::Destination* destination;
         
         // Session that this producer is attached to - we do not own this
         const SessionInfo* session;
         
     public:
 
-    	StompProducerInfo(void) { dest = NULL; }
-    	virtual ~StompProducerInfo(void) { delete dest; }
+    	StompProducerInfo(void) { destination = NULL; }
+    	virtual ~StompProducerInfo(void) { delete destination; }
 
         /**
          * Retrieves the default destination that this producer
@@ -49,15 +49,15 @@ namespace stomp{
          * @return Destionation, owned by this object
          */
         virtual const cms::Destination& getDestination(void) const {
-            return *dest;
+            return *destination;
         }
 
         /**
          * Sets the Default Destination for this Producer
-         * @param reference to a destination, copied internally
+         * @param destination reference to a destination, copied internally
          */
-        virtual void setDestination( const cms::Destination& dest ) {
-            this->dest = dest.clone();
+        virtual void setDestination( const cms::Destination& destination ) {
+            this->destination = destination.clone();
         }
 
         /**
@@ -70,7 +70,7 @@ namespace stomp{
         
         /**
          * Sets the ID that is assigned to this Producer
-         * @return string value of the Producer Id.
+         * @return id string value of the Producer Id.
          */
         virtual void setProducerId( const unsigned int id ) {
             this->producerId = id;
@@ -86,7 +86,7 @@ namespace stomp{
 
         /**
          * Gets the Session Info that this consumer is attached too
-         * @return SessionnInfo pointer
+         * @return session SessionnInfo pointer
          */
         virtual void setSessionInfo( const SessionInfo* session ) {
             this->session = session;

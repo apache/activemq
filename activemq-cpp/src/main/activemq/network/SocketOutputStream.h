@@ -50,7 +50,7 @@ namespace network{
 
         /**
          * Enables Debugging of Socket Data
-         * @param true to enable
+         * @param debug true to enable
          */      
         virtual void setDebug( const bool debug ){
             this->debug = debug;
@@ -87,7 +87,7 @@ namespace network{
          * by a call to Notify.  Must have this object locked before
          * calling.  This wait will timeout after the specified time
          * interval.
-         * @param time in millisecsonds to wait, or WAIT_INIFINITE
+         * @param millisecs time in millisecsonds to wait, or WAIT_INIFINITE
          * @throws ActiveMQException
          */
         virtual void wait( unsigned long millisecs ) 

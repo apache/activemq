@@ -61,6 +61,7 @@ namespace network{
         /** 
          * Construct a connected or bound socket based on given
          * socket handle.
+         * @param socketHandle a socket handle to wrap in the object
          */
         TcpSocket( SocketHandle socketHandle );
        

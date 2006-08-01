@@ -56,7 +56,7 @@ namespace commands{
       
         /**
          * Set the login
-         * @param password string value
+         * @param login username string value
          */
         virtual void setLogin( const std::string& login ){
             setPropertyValue( 
@@ -77,7 +77,7 @@ namespace commands{
       
         /**
          * Set the password
-         * @param passwrod string value
+         * @param password the passwrod string value
          */
         virtual void setPassword( const std::string& password ){
             setPropertyValue( 
@@ -98,7 +98,7 @@ namespace commands{
       
         /**
          * Set the Client Id
-         * @param client id string value
+         * @param clientId client id string value
          */
         virtual void setClientId( const std::string& clientId ){
             setPropertyValue( 
@@ -112,7 +112,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -123,7 +123,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const

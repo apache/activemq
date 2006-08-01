@@ -36,7 +36,7 @@ namespace core{
     
         /**
          * Method called to acknowledge the message passed
-         * @param Message to Acknowlegde
+         * @param message Message to Acknowlegde
          * @throw CMSException
          */
         virtual void acknowledgeMessage( const ActiveMQMessage* message )

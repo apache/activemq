@@ -56,7 +56,7 @@ namespace stomp{
 
         /**
          * Sets the Transction Id
-         * @param unsigned int Id
+         * @param id unsigned int Id
          */
         virtual void setTransactionId( const unsigned int id ) {
             this->transactionId = id;
@@ -72,7 +72,7 @@ namespace stomp{
         
         /**
          * Gets the Session Info that this Transction is attached too
-         * @return SessionnInfo pointer
+         * @return session SessionnInfo pointer
          */
         virtual void setSessionInfo( const SessionInfo* session ) {
             this->session = session;

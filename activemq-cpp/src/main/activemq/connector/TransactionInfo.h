@@ -38,7 +38,7 @@ namespace connector{
 
         /**
          * Sets the Transction Id
-         * @param unsigned int Id
+         * @param id unsigned int Id
          */
         virtual void setTransactionId( const unsigned int id ) = 0;
 
@@ -50,7 +50,7 @@ namespace connector{
 
         /**
          * Gets the Session Info that this transaction is attached too
-         * @return SessionnInfo pointer
+         * @return session SessionnInfo pointer
          */
         virtual void setSessionInfo( const SessionInfo* session ) = 0;
 

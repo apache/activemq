@@ -50,12 +50,17 @@ namespace network{
 		 */
 		virtual ~SocketInputStream();
 		
+        /**
+         * Enables socket level output of the recieved data
+         * @param debug true to turn on debugging
+         */
         virtual void setDebug( const bool debug ){
             this->debug = debug;
         }
         
         /**
          * Locks the object.
+         * @throws ActiveMQException
          */
         virtual void lock() throw( exceptions::ActiveMQException ){
             mutex.lock();
@@ -63,6 +68,7 @@ namespace network{
    
         /**
          * Unlocks the object.
+         * @throws ActiveMQException
          */
         virtual void unlock() throw( exceptions::ActiveMQException ){   
             mutex.unlock();
@@ -72,6 +78,7 @@ namespace network{
          * Waits on a signal from this object, which is generated
          * by a call to Notify.  Must have this object locked before
          * calling.
+         * @throws ActiveMQException
          */
         virtual void wait() throw( exceptions::ActiveMQException ){
             mutex.wait();
@@ -82,7 +89,7 @@ namespace network{
          * by a call to Notify.  Must have this object locked before
          * calling.  This wait will timeout after the specified time
          * interval.
-         * @param time in millisecsonds to wait, or WAIT_INIFINITE
+         * @param millisecs time in millisecsonds to wait, or WAIT_INIFINITE
          * @throws ActiveMQException
          */
         virtual void wait( unsigned long millisecs ) 
@@ -95,6 +102,7 @@ namespace network{
          * Signals a waiter on this object that it can now wake
          * up and continue.  Must have this object locked before
          * calling.
+         * @throws ActiveMQException
          */
         virtual void notify() throw( exceptions::ActiveMQException ){
             mutex.notify();
@@ -104,6 +112,7 @@ namespace network{
          * Signals the waiters on this object that it can now wake
          * up and continue.  Must have this object locked before
          * calling.
+         * @throws ActiveMQException
          */
         virtual void notifyAll() throw( exceptions::ActiveMQException ){
             mutex.notifyAll();
@@ -135,6 +144,7 @@ namespace network{
 		/**
 		 * Close - does nothing.  It is the responsibility of the owner
 		 * of the socket object to close it.
+         * @throws CMSException
 		 */
 		virtual void close() throw( cms::CMSException ){}
         

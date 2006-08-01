@@ -64,6 +64,7 @@ namespace transport{
     
         /**
          * Notify the excpetion listener
+         * @param ex - the exception to send to listeners
          */
         void fire( const exceptions::ActiveMQException& ex ){
 
@@ -77,6 +78,7 @@ namespace transport{
         
         /**
          * Notify the command listener.
+         * @param command - the command to send to the listener
          */
         void fire( Command* command ){
             
@@ -91,6 +93,8 @@ namespace transport{
   
         /**
          * Constructor.
+         * @param next - the next Transport in the chain
+         * @param own - true if this filter owns the next and should delete it
          */
         TransportFilter( Transport* next, const bool own = true ){
             
@@ -105,9 +109,6 @@ namespace transport{
             next->setTransportExceptionListener( this );
         }
         
-        /**
-         * Destructor - calls close().
-         */
         virtual ~TransportFilter(){
             
             if( own ){
@@ -119,7 +120,7 @@ namespace transport{
         
         /**
          * Event handler for the receipt of a command.
-         * @param command the received command object.
+         * @param command - the received command object.
          */
         virtual void onCommand( Command* command ){
             fire( command );
@@ -149,6 +150,7 @@ namespace transport{
         
         /**
          * Not supported by this class - throws an exception.
+         * @param command the command that is sent as a request
          * @throws UnsupportedOperationException.
          */
         virtual Response* request( Command* command ) throw(CommandIOException, exceptions::UnsupportedOperationException){

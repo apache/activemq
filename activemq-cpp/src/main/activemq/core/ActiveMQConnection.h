@@ -74,13 +74,15 @@ namespace core{
    
         /**
          * Creates a new Session to work for this Connection
+         * @throws CMSException
          */
         virtual cms::Session* createSession(void) throw ( cms::CMSException );
       
         /**
          * Creates a new Session to work for this Connection using the
          * specified acknowledgment mode
-         * @param the Acknowledgement Mode to use.
+         * @param ackMode the Acknowledgement Mode to use.
+         * @throws CMSException
          */
         virtual cms::Session* createSession( cms::Session::AcknowledgeMode ackMode ) 
             throw ( cms::CMSException );
@@ -108,7 +110,7 @@ namespace core{
       
         /**
          * Sets the registed Exception Listener for this connection
-         * @param pointer to and <code>ExceptionListener</code>
+         * @param listener pointer to and <code>ExceptionListener</code>
          */
         virtual void setExceptionListener( cms::ExceptionListener* listener ){
             exceptionListener = listener; };
@@ -137,15 +139,15 @@ namespace core{
          * Adds the ActiveMQMessageListener to the Mapping of Consumer Id's
          * to listeners, all message to that id will be routed to the given
          * listener
-         * @param Consumer Id String
-         * @param ActiveMQMessageListener Pointer
+         * @param consumerId Consumer Id String
+         * @param listener ActiveMQMessageListener Pointer
          */
         virtual void addMessageListener( const unsigned int consumerId,
                                          ActiveMQMessageListener* listener ); 
       
         /**
          * Remove the Listener for the specified Consumer Id
-         * @param Consumer Id string
+         * @param consumerId Consumer Id string
          */
         virtual void removeMessageListener( const unsigned int consumerId );
 
@@ -153,6 +155,7 @@ namespace core{
    
         /**
          * Notify the excpetion listener
+         * @param ex the exception to fire
          */
         void fire( exceptions::ActiveMQException& ex )
         {
@@ -169,7 +172,7 @@ namespace core{
         /**
          * Called to dispatch a message to a particular consumer.
          * @param consumer the target consumer of the dispatch.
-         * @param msg the message to be dispatched.
+         * @param message the message to be dispatched.
          */
         virtual void onConsumerMessage( connector::ConsumerInfo* consumer,
                                         core::ActiveMQMessage* message );

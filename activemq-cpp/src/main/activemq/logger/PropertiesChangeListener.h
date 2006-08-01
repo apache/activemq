@@ -28,20 +28,17 @@ namespace logger{
    {
    public:
    
-      /**
-       * Destructor
-       */
       virtual ~PropertiesChangeListener() {}
       
       /**
        * Change Event, called when a property is changed
-       * @param Name of the Property
-       * @param Old Value of the Property
-       * @param New Value of the Property
+       * @param name - Name of the Property
+       * @param oldValue - Old Value of the Property
+       * @param newValue - New Value of the Property
        */
-      virtual void onPropertyChanged(const std::string& name,
-                                     const std::string& oldValue,
-                                     const std::string& newValue) = 0;
+      virtual void onPropertyChanged( const std::string& name,
+                                      const std::string& oldValue,
+                                      const std::string& newValue ) = 0;
 
    };
 

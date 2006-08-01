@@ -47,6 +47,7 @@ namespace commands{
 
         /**
          * Get the error message
+         * @return the error message string
          */      
         virtual const char* getErrorMessage(void) const {
             return getPropertyValue( 
@@ -56,17 +57,18 @@ namespace commands{
       
         /**
          * Set the error message
+         * @param message the error message string
          */
-        virtual void setErrorMessage( const std::string& title ) {
+        virtual void setErrorMessage( const std::string& message ) {
             setPropertyValue( 
                 CommandConstants::toString( 
                     CommandConstants::HEADER_MESSAGE),
-                title );
+                message );
         }
 
         /**
          * Set the Text associated with this Error
-         * @param Error Message
+         * @param text Detailed Error Message
          */
         virtual void setErrorDetails( const std::string& text ) {
             setBytes( text.c_str(), text.length() + 1 );
@@ -74,7 +76,7 @@ namespace commands{
 
         /**
          * Get the Text associated with this Error
-         * @return Error Message
+         * @return Error Message String
          */
         virtual const char* getErrorDetails(void) const {
             return getBytes();
@@ -85,7 +87,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to init the
          * frame with data appropriate for the command type.
-         * @param Frame to init
+         * @param frame Frame to init
          */
         virtual void initialize( StompFrame& frame )
         {
@@ -96,7 +98,7 @@ namespace commands{
         /**
          * Inheritors are required to override this method to validate 
          * the passed stomp frame before it is marshalled or unmarshaled
-         * @param Frame to validate
+         * @param frame Frame to validate
          * @returns true if frame is valid
          */
         virtual bool validate( const StompFrame& frame ) const

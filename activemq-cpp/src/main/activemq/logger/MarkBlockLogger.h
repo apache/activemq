@@ -22,49 +22,46 @@
 namespace activemq{
 namespace logger{
 
-   /**
-    * Defines a class that can be used to mark the entry and exit from
-    * scoped blocks.
-    * <p>
-    * Create an instance of this class at the start of a scoped block,
-    * passing it the logger to use and the name of the block.  The block
-    * entry and exit will be marked using the scope name, logger to the
-    * logger at the MARKBLOCK log level.
-    */
-   class MarkBlockLogger
-   {
-   private:
+    /**
+     * Defines a class that can be used to mark the entry and exit from
+     * scoped blocks.
+     * <p>
+     * Create an instance of this class at the start of a scoped block,
+     * passing it the logger to use and the name of the block.  The block
+     * entry and exit will be marked using the scope name, logger to the
+     * logger at the MARKBLOCK log level.
+     */
+    class MarkBlockLogger
+    {
+    private:
    
-      // Pointer to the Logger to use for Logging
-      Logger* logger;
+        // Pointer to the Logger to use for Logging
+        Logger* logger;
       
-      // Block Name to Log
-      std::string blockName;
+        // Block Name to Log
+        std::string blockName;
       
-   public:
+    public:
 
-      /**
-       * Constructor - Marks Block entry
-       * @param Logger to use
-       * @param Block name
-       */
-      MarkBlockLogger(Logger* logger, const std::string& blockName)
-      {
-         this->logger = logger;
-         this->blockName = blockName;
+        /**
+         * Constructor - Marks Block entry
+         * @param logger Logger to use
+         * @param blockName Block name
+         */
+        MarkBlockLogger(Logger* logger, const std::string& blockName)
+        {
+            this->logger = logger;
+            this->blockName = blockName;
          
-         logger.mark(blockName + " - Entered");
-      }
+            logger.mark(blockName + " - Entered");
+        }
 
-      /**
-       * Destructor - Marks Block Exit
-       */
-      virtual ~MarkBlockLogger(void)
-      {
-         logger->mark(blockName + " - Exited");
-      }
+        virtual ~MarkBlockLogger(void)
+        {
+            logger->mark(blockName + " - Exited");
+        }
 
-   };
+    };
 
 }}
 

@@ -59,8 +59,8 @@ namespace commands{
 
         /**
          * sets the bytes given to the message body.  
-         * @param Byte Buffer to copy
-         * @param Number of bytes in Buffer to copy
+         * @param buffer Byte Buffer to copy
+         * @param numBytes Number of bytes in Buffer to copy
          * @throws CMSException
          */
         virtual void setBodyBytes( const unsigned char* buffer, 
@@ -78,7 +78,8 @@ namespace commands{
          * @return const pointer to a byte buffer
          */
         virtual const unsigned char* getBodyBytes(void) const {
-            return reinterpret_cast<const unsigned char*>( this->getBytes() );
+            return reinterpret_cast<const unsigned char*>( 
+                this->getBytes() );
         }
       
         /**

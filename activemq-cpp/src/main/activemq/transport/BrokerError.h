@@ -31,13 +31,33 @@ namespace transport{
     class BrokerError : public exceptions::ActiveMQException{        
     public:
   
+        /**
+         * Default Constructor
+         */
         BrokerError(){};
+
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy
+         */
         BrokerError( const exceptions::ActiveMQException& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
+
+        /**
+         * Copy Constructor
+         * @param ex the exception to copy, which is an instance of this type
+         */
         BrokerError( const BrokerError& ex ){
             *(exceptions::ActiveMQException*)this = ex;
         }
+
+        /**
+         * Consturctor
+         * @param file name of the file were the exception occured.
+         * @param lineNumber line where the exception occured
+         * @param msg the message that was generated
+         */
         BrokerError(const char* file, const int lineNumber, 
             const char* msg, ...)
         {
@@ -53,6 +73,7 @@ namespace transport{
          * Clones this exception.  This is useful for cases where you need
          * to preserve the type of the original exception as well as the message.
          * All subclasses should override.
+         * @returns a cloned copy of this exception
          */
         virtual exceptions::ActiveMQException* clone() const{
             return new BrokerError( *this );

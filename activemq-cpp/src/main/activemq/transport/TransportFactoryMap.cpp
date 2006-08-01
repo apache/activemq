@@ -31,20 +31,21 @@ TransportFactoryMap& TransportFactoryMap::getInstance(void)
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
-void TransportFactoryMap::registerTransportFactory( const string& name, 
+void TransportFactoryMap::registerTransportFactory( 
+    const std::string& name, 
     TransportFactory* factory )
 {
     factoryMap[name] = factory;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void TransportFactoryMap::unregisterTransportFactory( const string& name ){
+void TransportFactoryMap::unregisterTransportFactory( const std::string& name ){
     factoryMap.erase( name );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TransportFactory* TransportFactoryMap::lookup( const string& name ){
-    
+TransportFactory* TransportFactoryMap::lookup( const std::string& name )
+{
     map<string, TransportFactory*>::const_iterator itr = 
     factoryMap.find(name);
 
@@ -58,7 +59,9 @@ TransportFactory* TransportFactoryMap::lookup( const string& name ){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-size_t TransportFactoryMap::getFactoryNames( vector< string >& factoryList ){
+size_t TransportFactoryMap::getFactoryNames( 
+    std::vector< std::string >& factoryList )
+{    
     map<string, TransportFactory*>::const_iterator itr =
     factoryMap.begin();
   

@@ -93,6 +93,8 @@ namespace transport{
   
         /**
          * Constructor.
+         * @param next the next transport in the chain
+         * @param own indicates if this transport owns the next
          */
         ResponseCorrelator( Transport* next, const bool own = true )
         :
@@ -107,9 +109,6 @@ namespace transport{
             closed = true;
         }
         
-        /**
-         * Destructor - calls close().
-         */
         virtual ~ResponseCorrelator(){
             
             // Close the transport and destroy it.
@@ -121,6 +120,7 @@ namespace transport{
         
         /**
          * Gets the maximum wait time for a response in milliseconds.
+         * @return max time that a response can take
          */
         virtual unsigned long getMaxResponseWaitTime() const{
             return maxResponseWaitTime;
@@ -128,6 +128,7 @@ namespace transport{
         
         /**
          * Sets the maximum wait time for a response in milliseconds.
+         * @param milliseconds the max time that a response can take.
          */
         virtual void setMaxResponseWaitTime( const unsigned long milliseconds ){
             maxResponseWaitTime = milliseconds;

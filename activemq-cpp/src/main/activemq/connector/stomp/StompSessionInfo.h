@@ -64,7 +64,7 @@ namespace stomp{
         /**
          * Sets the Connection Id of the Connection that this consumer is
          * using to receive its messages.
-         * @param string value of the connection id
+         * @param id string value of the connection id
          */
         virtual void setConnectionId( const std::string& id ){
             connectionId = id;
@@ -80,7 +80,7 @@ namespace stomp{
 
         /**
          * Sets the Session Id for this Session
-         * @param integral id value for this session
+         * @param id integral id value for this session
          */
         virtual void setSessionId( const unsigned int id ) {
             this->sessionId = id;
@@ -88,7 +88,7 @@ namespace stomp{
 
         /**
          * Sets the Ack Mode of this Session Info object
-         * @param Ack Mode
+         * @param ackMode Ack Mode
          */
         virtual void setAckMode(cms::Session::AcknowledgeMode ackMode) {
             this->ackMode = ackMode;
@@ -115,7 +115,7 @@ namespace stomp{
         /**
          * Sets the current transaction info for this session, this is nit
          * used when the session is not transacted.
-         * @param Transaction Id
+         * @param transaction Transaction Id
          */        
         virtual void setTransactionInfo( const TransactionInfo* transaction ) {
             this->transaction = transaction;

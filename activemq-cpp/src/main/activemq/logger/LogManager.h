@@ -138,15 +138,12 @@ namespace logger{
 
     public:
 
-        /**
-         * Destructor
-         */
         virtual ~LogManager();
 
         /**
          * Sets the Properties this LogManager should use to configure
          * its loggers.  Once set a properties change event is fired.
-         * @param Properties Pointer to read the configuration from
+         * @param properties Pointer to read the configuration from
          */
         virtual void setProperties( const util::Properties* properties );
 
@@ -161,7 +158,7 @@ namespace logger{
 
         /**
          * Gets the value of a named property of this LogManager
-         * @param Name of the Property to retrieve
+         * @param name of the Property to retrieve
          * @return the value of the property
          */
         virtual std::string getProperty( const std::string& name ) {
@@ -171,13 +168,14 @@ namespace logger{
         /**
          * Adds a change listener for LogManager Properties, adding the same
          * instance of a change event listener does nothing.
-         * @param PropertyChangeListener
+         * @param listener a PropertyChangeListener
          */
         virtual void addPropertyChangeListener( 
             PropertyChangeListener* listener );
 
         /**
          * Removes a properties change listener from the LogManager.
+         * @param listener a PropertyChangeListener
          */
         virtual void removePropertyChangeListener(
             PropertyChangeListener* listener );
@@ -186,14 +184,14 @@ namespace logger{
          * Retrieves or creates a new Logger using the name specified
          * a new logger inherits the configuration of the logger's 
          * parent if there is no configuration data for the logger.
-         * @param The name of the Logger.
+         * @param name The name of the Logger.
          */
         virtual Logger* getLogger( const std::string& name );
 
         /**
          * Gets a list of known Logger Names from this Manager
-         * @param STL Vector to hold string logger names
-         * @return count of how many loggers were inserted
+         * @param names STL Vector to hold string logger names
+         * @return names count of how many loggers were inserted
          */
         virtual int getLoggerNames( const std::vector<std::string>& names );
 
@@ -221,16 +219,17 @@ namespace logger{
         /**
          * Constructor, hidden to protect against direct instantiation
          */
-        LogManager( void )
-        {}
+        LogManager( void ) {}
 
         /**
          * Copy Constructo
+         * @param manager the Manager to copy
          */
         LogManager( const LogManager& manager );
 
         /**
          * Assignment operator
+         * @param manager the manager to assign from
          */
         void operator=( const LogManager& manager );
 

@@ -63,7 +63,7 @@ namespace stomp{
         
         /**
          * Sets the command for this stomp frame.
-         * @param command The command to be set.
+         * @param cmd command The command to be set.
          */
         void setCommand( const std::string& cmd ){
             this->command = cmd;
@@ -78,6 +78,7 @@ namespace stomp{
         
         /**
          * Gets access to the header properties for this frame.
+         * @return the Properties object owned by this Frame
          */
         util::Properties& getProperties(void){ return properties; }
         const util::Properties& getProperties(void) const { 
