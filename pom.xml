@@ -131,6 +131,8 @@
         <module>activemq-web-console</module>
         <module>activemq-optional</module>
         <module>maven-bundle-plugin</module>
+        <module>maven-gram-plugin</module>
+        <module>activemq-openwire-generator</module>
         <module>assembly</module>
         <module>activeio</module>
         <!--module>activemq-systest</module -->
@@ -943,6 +945,6 @@
         <xmlbeans-version>2.0.0-beta1</xmlbeans-version>
         <xmlpull-version>1.1.3.4d_b4_min</xmlpull-version>
         <xstream-version>1.1.2</xstream-version>
-        <xbean-version>2.5</xbean-version>
+        <xbean-version>2.6-SNAPSHOT</xbean-version>
     </properties>
 </project>
