@@ -541,19 +541,15 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     public Response processAddConnection(ConnectionInfo info) throws Exception {
         // Setup the context.
-        String clientId = info.getClientId();
-        ConnectionContext context = new ConnectionContext();
+        ConnectionContext context = new ConnectionContext(info);
         context.setConnection(this);
         context.setBroker(broker);
         context.setConnector(connector);
         context.setTransactions(new ConcurrentHashMap());
-        context.setClientId(clientId);
-        context.setUserName(info.getUserName());
-        context.setConnectionId(info.getConnectionId());
         context.setWireFormatInfo(wireFormatInfo);
         this.manageable = info.isManageable();
         connectionStates.put(info.getConnectionId(), new ConnectionState(info, context));
-       
+        
         
         broker.addConnection(context, info);
         if (info.isManageable() && broker.isFaultTolerantConfiguration()){

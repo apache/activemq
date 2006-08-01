@@ -21,6 +21,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
@@ -54,6 +55,15 @@ public class ConnectionContext {
     
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     
+    public ConnectionContext() {
+    }
+    
+    public ConnectionContext(ConnectionInfo info) {
+        setClientId(info.getClientId());
+        setUserName(info.getUserName());
+        setConnectionId(info.getConnectionId());
+    }
+
     public SecurityContext getSecurityContext() {
         return securityContext;
     }
