@@ -34,13 +34,10 @@ import org.apache.commons.logging.LogFactory;
 public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     private Log log = LogFactory.getLog(LoggingBrokerPlugin.class);
-    private Log sendLog;
-    private Log ackLog;
+    private Log sendLog = LogFactory.getLog(LoggingBrokerPlugin.class.getName()+".Send");
+    private Log ackLog = LogFactory.getLog(LoggingBrokerPlugin.class.getName()+".Ack");
 
     public void send(ConnectionContext context, Message messageSend) throws Exception {
-        if (sendLog == null) {
-            sendLog = createLog("Send");
-        }
         if (sendLog.isInfoEnabled()) {
             sendLog.info("Sending: " + messageSend);
         }
@@ -48,9 +45,6 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
-        if (ackLog == null) {
-            ackLog = createLog("Ack");
-        }
         if (ackLog.isInfoEnabled()) {
             ackLog.info("Acknowledge: " + ack);
         }
@@ -81,16 +75,6 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     public void setSendLog(Log sendLog) {
         this.sendLog = sendLog;
-    }
-
-    // Implementation methods
-    // -------------------------------------------------------------------------
-
-    /**
-     * Lazily creates a new child log
-     */
-    protected Log createLog(String name) {
-        return LogFactory.getLog(log.toString() + "." + name);
     }
 
 }
