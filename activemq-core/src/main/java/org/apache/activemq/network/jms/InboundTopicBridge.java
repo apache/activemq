@@ -28,12 +28,14 @@ package org.apache.activemq.network.jms;
 public class InboundTopicBridge extends TopicBridge{
        
     String inboundTopicName;
+    String localTopicName;
     /**
      * Constructor that takes a foriegn destination as an argument
      * @param inboundTopicName
      */
     public  InboundTopicBridge(String  inboundTopicName){
         this.inboundTopicName = inboundTopicName;
+        this.localTopicName = inboundTopicName;
     }
     
     /**
@@ -50,10 +52,27 @@ public class InboundTopicBridge extends TopicBridge{
     }
 
     /**
-     * @param outboundTopicName The outboundTopicName to set.
+     * @param inboundTopicName 
      */
     public void setInboundTopicName(String inboundTopicName){
         this.inboundTopicName=inboundTopicName;
+        if(this.localTopicName==null){
+            this.localTopicName = inboundTopicName;
+        }
+    }
+
+    /**
+     * @return the localTopicName
+     */
+    public String getLocalTopicName(){
+        return localTopicName;
+    }
+
+    /**
+     * @param localTopicName the localTopicName to set
+     */
+    public void setLocalTopicName(String localTopicName){
+        this.localTopicName=localTopicName;
     }
     
 }
