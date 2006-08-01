@@ -113,7 +113,7 @@ public class SpringTest extends TestCase {
         String config = "spring-jndi.xml";
         assertSenderConfig(config);
     }
-
+    
     /**
      * Spring configured test where in the connection context is set to use
      * an embedded broker. Configuration file is /resources/spring-embedded.xml
@@ -123,6 +123,11 @@ public class SpringTest extends TestCase {
      */
     public void testSenderWithSpringXmlEmbeddedBrokerConfiguredViaXml() throws Exception {
         String config = "spring-embedded.xml";
+        assertSenderConfig(config);
+    }
+    
+    public void testSenderWithSpringXmlUsingSpring2NamespacesWithEmbeddedBrokerConfiguredViaXml() throws Exception {
+        String config = "spring-embedded-xbean.xml";
         assertSenderConfig(config);
     }
     
