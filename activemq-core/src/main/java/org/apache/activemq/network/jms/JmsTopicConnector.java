@@ -265,8 +265,9 @@ public class JmsTopicConnector extends JmsConnector{
             TopicSession localSession = localTopicConnection.createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
             for(int i=0;i<inboundTopicBridges.length;i++){
                 InboundTopicBridge bridge=inboundTopicBridges[i];
+                String localTopicName=bridge.getLocalTopicName();          
+                Topic activemqTopic=createActiveMQTopic(localSession,localTopicName);
                 String topicName=bridge.getInboundTopicName();
-                Topic activemqTopic=createActiveMQTopic(localSession,topicName);
                 Topic foreignTopic=createForeignTopic(outboundSession,topicName);
                 bridge.setConsumerTopic(foreignTopic);
                 bridge.setProducerTopic(activemqTopic);
@@ -289,8 +290,9 @@ public class JmsTopicConnector extends JmsConnector{
             TopicSession localSession = localTopicConnection.createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
             for(int i=0;i<outboundTopicBridges.length;i++){
                 OutboundTopicBridge bridge=outboundTopicBridges[i];
+                String localTopicName=bridge.getLocalTopicName();
+                Topic activemqTopic=createActiveMQTopic(localSession,localTopicName);
                 String topicName=bridge.getOutboundTopicName();
-                Topic activemqTopic=createActiveMQTopic(localSession,topicName);
                 Topic foreignTopic=createForeignTopic(outboundSession,topicName);
                 bridge.setConsumerTopic(activemqTopic);
                 bridge.setProducerTopic(foreignTopic);

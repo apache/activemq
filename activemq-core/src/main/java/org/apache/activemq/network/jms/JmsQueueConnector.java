@@ -263,8 +263,9 @@ public class JmsQueueConnector extends JmsConnector{
             QueueSession localSession = localQueueConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
             for(int i=0;i<inboundQueueBridges.length;i++){
                 InboundQueueBridge bridge=inboundQueueBridges[i];
-                String queueName=bridge.getInboundQueueName();
-                Queue activemqQueue=createActiveMQQueue(localSession,queueName);
+                String localQueueName=bridge.getLocalQueueName();
+                Queue activemqQueue=createActiveMQQueue(localSession,localQueueName);
+                String queueName = bridge.getInboundQueueName();
                 Queue foreignQueue=createForeignQueue(outboundSession,queueName);
                 bridge.setConsumerQueue(foreignQueue);
                 bridge.setProducerQueue(activemqQueue);
@@ -287,8 +288,9 @@ public class JmsQueueConnector extends JmsConnector{
             QueueSession localSession = localQueueConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
             for(int i=0;i<outboundQueueBridges.length;i++){
                 OutboundQueueBridge bridge=outboundQueueBridges[i];
+                String localQueueName=bridge.getLocalQueueName();              
+                Queue activemqQueue=createActiveMQQueue(localSession,localQueueName);
                 String queueName=bridge.getOutboundQueueName();
-                Queue activemqQueue=createActiveMQQueue(localSession,queueName);
                 Queue foreignQueue=createForeignQueue(outboundSession,queueName);
                 bridge.setConsumerQueue(activemqQueue);
                 bridge.setProducerQueue(foreignQueue);

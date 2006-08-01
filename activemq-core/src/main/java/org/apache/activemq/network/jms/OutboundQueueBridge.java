@@ -28,12 +28,14 @@ package org.apache.activemq.network.jms;
 public class OutboundQueueBridge extends QueueBridge{
        
     String outboundQueueName;
+    String localQueueName;
     /**
      * Constructor that takes a foreign destination as an argument
      * @param outboundQueueName
      */
     public  OutboundQueueBridge(String  outboundQueueName){
         this.outboundQueueName = outboundQueueName;
+        this.localQueueName = outboundQueueName;
     }
     
     /**
@@ -54,6 +56,23 @@ public class OutboundQueueBridge extends QueueBridge{
      */
     public void setOutboundQueueName(String outboundQueueName){
         this.outboundQueueName=outboundQueueName;
+        if (this.localQueueName==null){
+            this.localQueueName=outboundQueueName;
+        }
+    }
+
+    /**
+     * @return the localQueueName
+     */
+    public String getLocalQueueName(){
+        return localQueueName;
+    }
+
+    /**
+     * @param localQueueName the localQueueName to set
+     */
+    public void setLocalQueueName(String localQueueName){
+        this.localQueueName=localQueueName;
     }
     
 }
