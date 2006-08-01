@@ -24,6 +24,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
@@ -39,7 +41,7 @@ import java.net.URI;
  * 
  * @version $Revision: 1.1 $
  */
-public class BrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
+public class BrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean, ApplicationContextAware {
     private static final Log log = LogFactory.getLog(BrokerFactoryBean.class);
 
     static {
@@ -50,6 +52,7 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     private XBeanBrokerService broker;
     private boolean start = false;
     private ResourceXmlApplicationContext context;
+    private ApplicationContext parentContext;
 
     public BrokerFactoryBean() {
     }
@@ -70,11 +73,15 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
         return true;
     }
 
+    public void setApplicationContext(ApplicationContext parentContext) throws BeansException {
+        this.parentContext = parentContext;
+    }
+    
     public void afterPropertiesSet() throws Exception {
         if (config == null) {
             throw new IllegalArgumentException("config property must be set");
         }
-        context = new ResourceXmlApplicationContext(config);
+        context = new ResourceXmlApplicationContext(config, parentContext);
 
         try {
             broker = (XBeanBrokerService) context.getBean("broker");
@@ -130,5 +137,6 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     public void setStart(boolean start) {
         this.start = start;
     }
+
 
 }
