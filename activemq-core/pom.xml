@@ -303,15 +303,9 @@
         <version>${pom.version}</version>
         <configuration>
           <scripts>
-            GenerateJavaMarshalling.groovy:
-            GenerateJavaTests.groovy:
-            GenerateCSharpMarshalling.groovy:
-            GenerateCSharpClasses.groovy:
-            GenerateCppMarshallingClasses.groovy:
-            GenerateCppMarshallingHeaders.groovy:
-            GenerateCppHeaders.groovy:
-            GenerateCppClasses.groovy:
-            GenerateCMarshalling.groovy:
+            GenerateJavaMarshalling.groovy: GenerateJavaTests.groovy: GenerateCSharpMarshalling.groovy:
+            GenerateCSharpClasses.groovy: GenerateCppMarshallingClasses.groovy: GenerateCppMarshallingHeaders.groovy:
+            GenerateCppHeaders.groovy: GenerateCppClasses.groovy: GenerateCMarshalling.groovy:
           </scripts>
           <groovyProperties>
             <version>1</version>
@@ -324,23 +318,6 @@
             <version>${pom.version}</version>
           </dependency>
         </dependencies>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.xbean</groupId>
-        <artifactId>maven-xbean-plugin</artifactId>
-        <version>2.5</version>
-        <executions>
-          <execution>
-            <configuration>
-              <namespace>http://activemq.org/config/1.0</namespace>
-              <schema>target/activemq.xsd</schema>
-            </configuration>
-            <goals>
-              <goal>mapping</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>
@@ -362,6 +339,49 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.xbean</groupId>
+        <artifactId>maven-xbean-plugin</artifactId>
+        <version>2.5</version>
+        <executions>
+          <execution>
+            <configuration>
+              <namespace>http://activemq.org/config/1.0</namespace>
+              <schema>target/activemq.xsd</schema>
+            </configuration>
+            <goals>
+              <goal>mapping</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--  lets ensure that the XSD gets deployed  -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>${basedir}/target/activemq.xsd</file>
+                  <type>xsd</type>
+                </artifact>
+                <artifact>
+                  <file>${basedir}/target/activemq.xsd.html</file>
+                  <type>xsd.html</type>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
