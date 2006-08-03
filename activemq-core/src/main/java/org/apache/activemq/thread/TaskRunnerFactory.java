@@ -18,6 +18,7 @@
 package org.apache.activemq.thread;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
+import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
 import edu.emory.mathcs.backport.java.util.concurrent.SynchronousQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
@@ -37,7 +38,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
  */
 public class TaskRunnerFactory {
 
-    private Executor executor;
+    private ExecutorService executor;
     private int maxIterationsPerRun;
     private String name;
     private int priority;
@@ -61,9 +62,14 @@ public class TaskRunnerFactory {
         } else {
             executor = createDefaultExecutor();
         }
-    
     }
 
+    public void shutdown() {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
+    }
+    
     public TaskRunner createTaskRunner(Task task, String name) {
         if( executor!=null ) {
             return new PooledTaskRunner(executor, task, maxIterationsPerRun);
@@ -72,8 +78,7 @@ public class TaskRunnerFactory {
         }
     }
     
-    protected Executor createDefaultExecutor() {
-        
+    protected ExecutorService createDefaultExecutor() {
         ThreadPoolExecutor rc = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, name);
@@ -84,7 +89,6 @@ public class TaskRunnerFactory {
         });
         rc.allowCoreThreadTimeOut(true);
         return rc;
-            
     }
 
 }

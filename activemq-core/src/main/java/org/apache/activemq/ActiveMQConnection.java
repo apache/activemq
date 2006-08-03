@@ -97,7 +97,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 public class ActiveMQConnection implements Connection, TopicConnection, QueueConnection, StatsCapable, Closeable,  StreamConnection, TransportListener {
 
-    public static final TaskRunnerFactory SESSION_TASK_RUNNER = new TaskRunnerFactory("ActiveMQ Session Task",ThreadPriorities.INBOUND_CLIENT_SESSION,true,1000);
+    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task",ThreadPriorities.INBOUND_CLIENT_SESSION,true,1000);
     private final ThreadPoolExecutor asyncConnectionThread;
 
     private static final Log log = LogFactory.getLog(ActiveMQConnection.class);
@@ -572,9 +572,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
                     started.set(false);
 
-                    // TODO : ActiveMQConnectionFactory.onConnectionClose() not
-                    // yet implemented.
+                    // TODO if we move the TaskRunnerFactory to the connection factory
+                    // then we may need to call
                     // factory.onConnectionClose(this);
+                    sessionTaskRunner.shutdown();
 
                     closed.set(true);
                     closing.set(false);
@@ -856,6 +857,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void removeTransportListener(TransportListener transportListener) {
         transportListeners.remove(transportListener);
     }
+    
+    public TaskRunnerFactory getSessionTaskRunner() {
+        return sessionTaskRunner;
+    }
+
+    public void setSessionTaskRunner(TaskRunnerFactory sessionTaskRunner) {
+        this.sessionTaskRunner = sessionTaskRunner;
+    }
+
     
     // Implementation methods
     // -------------------------------------------------------------------------
