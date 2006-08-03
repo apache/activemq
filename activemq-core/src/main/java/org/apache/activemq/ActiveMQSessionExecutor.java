@@ -102,7 +102,7 @@ public class ActiveMQSessionExecutor implements Task {
         if( !messageQueue.isRunning() ) {
             messageQueue.start();
             if( session.isSessionAsyncDispatch() || dispatchedBySessionPool ) {
-                taskRunner = ActiveMQConnection.SESSION_TASK_RUNNER.createTaskRunner(this, "ActiveMQ Session: "+session.getSessionId());
+                taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this, "ActiveMQ Session: "+session.getSessionId());
             }
             wakeup();
         }
