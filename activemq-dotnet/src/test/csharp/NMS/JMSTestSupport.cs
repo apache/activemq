@@ -155,7 +155,7 @@ namespace NMS
 		
 		protected virtual IConnectionFactory CreateConnectionFactory()
 		{
-			return new ActiveMQ.ConnectionFactory(new Uri("tcp://localhost:61616"));
+			return new ActiveMQ.ConnectionFactory(new Uri("tcp://localhost:61616?logging=true"));
 		}
 		
 		protected virtual IConnection CreateConnection()
@@ -169,13 +169,13 @@ namespace NMS
 		
 		protected virtual IMessageProducer CreateProducer()
 		{
-			IMessageProducer producer = Session.CreateProducer(destination);
+			IMessageProducer producer = Session.CreateProducer(Destination);
 			return producer;
 		}
 		
 		protected virtual IMessageConsumer CreateConsumer()
 		{
-			IMessageConsumer consumer = Session.CreateConsumer(destination);
+			IMessageConsumer consumer = Session.CreateConsumer(Destination);
 			return consumer;
 		}
         
