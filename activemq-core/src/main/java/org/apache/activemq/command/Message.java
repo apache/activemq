@@ -125,7 +125,9 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         copy.regionDestination = regionDestination;
         copy.cachedWireFormat = cachedWireFormat;
         copy.cachedWireFormatData = cachedWireFormatData;
-        copy.brokerPath = brokerPath;
+        //copying the broker path breaks networks - if a consumer re-uses a consumed
+        //message and forwards it on
+        //copy.brokerPath = brokerPath;
 
         // lets not copy the following fields
         //copy.targetConsumerId = targetConsumerId;
