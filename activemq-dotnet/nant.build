@@ -282,10 +282,17 @@
 
   <target name="build" depends="build-test"></target>
 
-  <target name="test" depends="build-test">
+  <target name="test" depends="build-test" description="Runs all the NUnit test cases">
     <nunit2>
       <formatter type="Plain" />
       <test assemblyname="${build.dir}/bin/${project.name}.test.dll"></test>
+    </nunit2>
+  </target>
+
+  <target name="test-case" depends="build-test" description="Run a specific NUnit test case using the 'test' variable">
+    <nunit2>
+      <formatter type="Plain" />
+      <test assemblyname="${build.dir}/bin/${project.name}.test.dll" testname="${test}"></test>
     </nunit2>
   </target>
 
