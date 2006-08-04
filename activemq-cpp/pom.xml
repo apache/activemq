@@ -3,21 +3,26 @@
   
   <modelVersion>4.0.0</modelVersion>
 
+<!-- 
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
     <version>4.1-incubator-SNAPSHOT</version>
   </parent>
-    
+ -->
+     
    <groupId>org.apache.activemq</groupId>
   <name>ActiveMQ :: CPP :: Parent</name>
   <artifactId>activemq-cpp-parent</artifactId>
   <packaging>pom</packaging>
-  
+
+  <!-- these should be deleted when using a parent pom-->
+  <version>1.0-SNAPSHOT</version>
+    
       <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/activemq-cpp</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk/activemq-cpp</developerConnection>
-        <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/activemq-cpp/</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
+        <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/</url>
     </scm>
     
   <build> 		  
