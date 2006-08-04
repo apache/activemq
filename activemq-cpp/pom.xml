@@ -2,15 +2,18 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   
   <modelVersion>4.0.0</modelVersion>
-  
-  <groupId>activemq</groupId>
+
+  <parent>
+    <groupId>org.apache.activemq</groupId>
+    <artifactId>activemq-parent</artifactId>
+    <version>4.1-incubator-SNAPSHOT</version>
+  </parent>
+    
+   <groupId>org.apache.activemq</groupId>
   <name>ActiveMQ :: CPP :: Parent</name>
   <artifactId>activemq-cpp-parent</artifactId>
   <packaging>pom</packaging>
   
-  <!-- these should be deleted when using a parent pom-->
-  <version>1.0-SNAPSHOT</version>
- 
   <build> 		  
 	  <pluginManagement>
 		  <plugins>
