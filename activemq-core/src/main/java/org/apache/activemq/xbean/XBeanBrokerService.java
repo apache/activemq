@@ -22,14 +22,17 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
 /**
- * Represents a running broker service which consists of a number of transport
+ * An ActiveMQ Message Broker. It consists of a number of transport
  * connectors, network connectors and a bunch of properties which can be used to
  * configure the broker as its lazily created.
  * 
- * @org.apache.xbean.XBean element="broker" rootElement="true" description="An ActiveMQ
- *                  Message Broker which consists of a number of transport
- *                  connectors, network connectors and a persistence adaptor"
- * 
+ * @org.apache.xbean.XBean element="broker" rootElement="true"
+ * @org.apache.xbean.Defaults {code:xml} 
+ * <broker test="foo.bar">
+ *   lets.
+ *   see what it includes.
+ * </broker>   
+ * {code}
  * @version $Revision: 1.1 $
  */
 public class XBeanBrokerService extends BrokerService implements InitializingBean, DisposableBean {
