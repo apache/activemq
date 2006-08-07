@@ -78,7 +78,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents a running broker service which consists of a number of transport
+ * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a number of transport
  * connectors, network connectors and a bunch of properties which can be used to
  * configure the broker as its lazily created.
  *
@@ -701,6 +701,8 @@ public class BrokerService implements Service, Serializable {
     /**
      * Sets the transport connectors which this broker will listen on for new
      * clients
+     * 
+     * @org.apache.xbean.Property nestedType="org.apache.activemq.broker.TransportConnector"
      */
     public void setTransportConnectors(List transportConnectors) throws Exception {
         for (Iterator iter = transportConnectors.iterator(); iter.hasNext();) {
@@ -720,6 +722,8 @@ public class BrokerService implements Service, Serializable {
     /**
      * Sets the network connectors which this broker will use to connect to
      * other brokers in a federated network
+     * 
+     * @org.apache.xbean.Property nestedType="org.apache.activemq.network.NetworkConnector"
      */
     public void setNetworkConnectors(List networkConnectors) throws Exception {
         for (Iterator iter = networkConnectors.iterator(); iter.hasNext();) {
