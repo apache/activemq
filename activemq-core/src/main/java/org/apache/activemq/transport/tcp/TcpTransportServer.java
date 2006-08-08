@@ -74,15 +74,19 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         String host = bind.getHost();
         host = (host == null || host.length() == 0) ? "localhost" : host;
         InetAddress addr = InetAddress.getByName(host);
-        
-        if (host.trim().equals("localhost") || addr.equals(InetAddress.getLocalHost())) {
-        	this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog);
+
+        try {
+            if (host.trim().equals("localhost") || addr.equals(InetAddress.getLocalHost())) {
+                this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog);
+            }
+            else {
+                this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog, addr);
+            }
+            this.serverSocket.setSoTimeout(2000);
         }
-        else {
-        	this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog, addr);
+        catch (IOException e) {
+            throw IOExceptionSupport.create("Failed to bind to server socket: " + bind + " due to: " + e, e);
         }
-        this.serverSocket.setSoTimeout(2000);
-        
         try {
 			setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(bind.getHost()), serverSocket.getLocalPort(), bind.getPath(),
 					bind.getQuery(), bind.getFragment()));
