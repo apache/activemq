@@ -242,8 +242,8 @@ public class ActiveMQEndpointWorker {
             reconnectDelay = this.reconnectDelay;
             // Only log errors if the server is really down.. And not a temp failure.
             if (reconnectDelay == MAX_RECONNECT_DELAY) {
-                log.info("Endpoint connection to JMS broker failed: " + error.getMessage());
-                log.info("Endpoint will try to reconnect to the JMS broker in "+(MAX_RECONNECT_DELAY/1000)+" seconds");
+                log.error("Endpoint connection to JMS broker failed: " + error.getMessage());
+                log.error("Endpoint will try to reconnect to the JMS broker in "+(MAX_RECONNECT_DELAY/1000)+" seconds");
             }
         }
         try {
