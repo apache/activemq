@@ -1,0 +1,16 @@
+<!-- START SNIPPET: xbean -->
+<beans>
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
+  <broker brokerName="broker" persistent="false" useJmx="false" xmlns="http://activemq.org/config/1.0">
+     <transportConnectors>
+      <transportConnector uri="tcp://localhost:61616"/>
+    </transportConnectors>
+
+    <persistenceAdapter>
+      <kahaPersistenceAdapter dir = "${activemq.home}/activemq-data"/>
+    </persistenceAdapter>
+  </broker>
+
+</beans>
+<!-- END SNIPPET: xbean -->
