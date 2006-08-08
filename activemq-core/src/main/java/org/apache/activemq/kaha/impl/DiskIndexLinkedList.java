@@ -24,10 +24,10 @@ import java.io.IOException;
  * @version $Revision$
  */
 class DiskIndexLinkedList implements IndexLinkedList{
-    private IndexManager indexManager;
-    private transient IndexItem root;
-    private transient IndexItem last;
-    private transient int size=0;
+    protected IndexManager indexManager;
+    protected transient IndexItem root;
+    protected transient IndexItem last;
+    protected transient int size=0;
 
     /**
      * Constructs an empty list.
@@ -43,7 +43,6 @@ class DiskIndexLinkedList implements IndexLinkedList{
 
     void setRoot(IndexItem e){
         this.root=e;
-        System.err.println("SET ROOT = "+e);
     }
 
     /**
