@@ -190,7 +190,10 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         if (clockTicket != null) {
             clockTicket.cancel(true);
             clockTicket = null;
+        }
+        if (clockDaemon != null) {
             clockDaemon.shutdown();
+            clockDaemon = null;
         }
         DatabaseLocker service = getDatabaseLocker();
         if (service != null) {
