@@ -1,0 +1,20 @@
+<!-- START SNIPPET: example -->
+<beans>
+
+  <broker brokerName="broker" persistent="false" useJmx="false" xmlns="http://activemq.org/config/1.0">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:62001"/>
+    </transportConnectors>
+
+    <networkConnectors>
+      <!-- This broker will connect to the brokers specified in networkConnector uri -->
+      <networkConnector uri="static:(tcp://localhost:62002,tcp://localhost:62003)" failover="true"/>
+    </networkConnectors>
+
+    <persistenceAdapter>
+      <memoryPersistenceAdapter/>
+    </persistenceAdapter>
+  </broker>
+
+</beans>
+<!-- END SNIPPET: example -->

@@ -1,0 +1,14 @@
+<!-- START SNIPPET: xbean -->
+<beans xmlns="http://activemq.org/config/1.0">
+  
+  <broker useJmx="false" brokerName="memoryBroker">
+    <persistenceAdapter>
+       <memoryPersistenceAdapter/>
+    </persistenceAdapter>
+    
+    <transportConnectors>
+       <transportConnector name="default" uri="vm://localhost"/>
+    </transportConnectors>
+  </broker>
+</beans>
+

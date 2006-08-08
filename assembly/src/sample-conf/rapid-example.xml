@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns:amq="http://activemq.org/config/1.0">
+
+    <amq:broker brokerName="rapidBroker" start="false" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
+
+        <amq:transportConnectors>
+            <amq:transportConnector uri="tcp://localhost:61616"/>
+        </amq:transportConnectors>
+
+        <amq:persistenceAdapter>
+            <amq:rapidPersistenceAdapter>
+                <constructor-arg index="0">
+                    <ref bean="myJournalImpl"/>
+                </constructor-arg>
+
+                <constructor-arg index="1">
+                    <bean id="myTaskRunnerFactory" class="org.apache.activemq.thread.TaskRunnerFactory"/>
+                </constructor-arg>
+            </amq:rapidPersistenceAdapter>
+        </amq:persistenceAdapter>
+    </amq:broker>
+
+    <!-- The journal implementation that will be used -->
+    <bean id="myJournalImpl" class="org.apache.activeio.journal.active.JournalImpl">
+        <constructor-arg index="0">
+            <bean id="myFile" class="java.io.File">
+                <constructor-arg index="0">
+                    <value>target/rapid-data</value>
+                </constructor-arg>
+            </bean>
+        </constructor-arg>
+    </bean>
+
+</beans>

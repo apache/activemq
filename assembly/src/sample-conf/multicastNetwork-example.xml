@@ -1,0 +1,19 @@
+<!-- START SNIPPET: example -->
+<beans>
+
+  <broker name="b1" persistent="false" useJmx="false" xmlns="http://activemq.org/config/1.0">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:61001" discoveryUri="multicast://default"/>
+    </transportConnectors>
+
+    <networkConnectors>
+      <networkConnector uri="multicast://default"/>
+    </networkConnectors>
+
+    <persistenceAdapter>
+      <memoryPersistenceAdapter/>
+    </persistenceAdapter>
+  </broker>
+
+</beans>
+<!-- END SNIPPET: example -->
