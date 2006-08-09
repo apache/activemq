@@ -36,7 +36,7 @@ public interface MessageEvictionStrategy {
      * @throws IOException if an exception occurs such as reading a message content (but should not ever happen
      * as usually all the messages will be in RAM when this method is called).
      */
-    MessageReference evictMessage(LinkedList messages) throws IOException;
+    MessageReference[] evictMessages(LinkedList messages) throws IOException;
 
     /**
      * REturns the high water mark on which we will eagerly evict expired messages from RAM

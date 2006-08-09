@@ -32,7 +32,7 @@ import java.util.LinkedList;
  */
 public class OldestMessageWithLowestPriorityEvictionStrategy extends MessageEvictionStrategySupport {
 
-    public MessageReference evictMessage(LinkedList messages) throws IOException {
+    public MessageReference[] evictMessages(LinkedList messages) throws IOException {
         byte lowestPriority = Byte.MAX_VALUE;
         int pivot = 0;
         Iterator iter = messages.iterator();
@@ -44,6 +44,6 @@ public class OldestMessageWithLowestPriorityEvictionStrategy extends MessageEvic
                 pivot = i;
             }
         }
-        return (MessageReference) messages.remove(pivot);
+        return new MessageReference[] {(MessageReference) messages.remove(pivot)};
     }
 }

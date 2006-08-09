@@ -31,7 +31,7 @@ import java.util.LinkedList;
  */
 public class OldestMessageEvictionStrategy extends MessageEvictionStrategySupport  {
 
-    public MessageReference evictMessage(LinkedList messages) {
-        return (MessageReference) messages.removeFirst();
+    public MessageReference[] evictMessages(LinkedList messages) {
+        return new MessageReference[] {(MessageReference) messages.removeFirst()};
     }
 }

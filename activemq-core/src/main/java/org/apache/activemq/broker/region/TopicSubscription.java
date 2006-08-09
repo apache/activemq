@@ -94,11 +94,21 @@ public class TopicSubscription extends AbstractSubscription{
 
                         // lets discard old messages as we are a slow consumer
                         while (!matched.isEmpty() && matched.size() > maximumPendingMessages) {
-                            MessageReference oldMessage = messageEvictionStrategy.evictMessage(matched);
-                            oldMessage.decrementReferenceCount();
-                            discarded++;
-                            if (log.isDebugEnabled()) {
-                                log.debug("Discarding message " + oldMessage);
+                            MessageReference[] oldMessages = messageEvictionStrategy.evictMessages(matched);
+                            int messagesToEvict = oldMessages.length;
+                            for(int i = 0; i < messagesToEvict; i++) {
+                            	oldMessages[i].decrementReferenceCount();
+                                discarded++;
+                                if (log.isDebugEnabled()) {
+                                    log.debug("Discarding message " + oldMessages[i]);
+                                }
+							}
+                            
+                            // lets avoid an infinite loop if we are given a bad eviction strategy
+                            // for a bad strategy lets just not evict
+                            if (messagesToEvict == 0) {
+                                log.warn("No messages to evict returned from eviction strategy: " + messageEvictionStrategy);
+                                break;
                             }
                         }
                     }
