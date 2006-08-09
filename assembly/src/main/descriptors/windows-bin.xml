@@ -77,6 +77,7 @@
          <include>mx4j:mx4j</include>         
          <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
          <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
+         <include>${pom.groupId}:activemq-web</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -87,7 +88,6 @@
          <include>${pom.groupId}:activemq-rar</include>
          <include>${pom.groupId}:activemq-optional</include>
          <include>${pom.groupId}:activecluster</include>
-         <include>${pom.groupId}:activemq-web</include>
          <include>commons-beanutils:commons-beanutils</include>
          <include>commons-collections:commons-collections</include>
          <include>commons-httpclient:commons-httpclient</include>
