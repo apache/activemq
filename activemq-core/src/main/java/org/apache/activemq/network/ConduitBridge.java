@@ -66,7 +66,8 @@ public class ConduitBridge extends DemandForwardingBridge{
             DemandSubscription ds = (DemandSubscription)i.next();
             if (filter.matches(ds.getLocalInfo().getDestination())){
                 //add the interest in the subscription
-                ds.add(ds.getRemoteInfo().getConsumerId());
+                //ds.add(ds.getRemoteInfo().getConsumerId());
+                ds.add(info.getConsumerId());
                 matched = true;
                 //continue - we want interest to any existing DemandSubscriptions
             }
