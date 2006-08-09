@@ -17,15 +17,12 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.group.MessageGroupHashBucket;
+import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
+import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.broker.region.group.MessageGroupSet;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
@@ -47,7 +44,11 @@ import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -68,7 +69,6 @@ public class Queue implements Destination {
 
     private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
-    private int messageGroupHashBucketCount = 1024;
 
     protected long garbageSize = 0;
     protected long garbageSizeBeforeCollection = 1000;
@@ -76,7 +76,8 @@ public class Queue implements Destination {
     protected final MessageStore store;
     protected int highestSubscriptionPriority;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
-
+    private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
+    
     public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store,
             DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
         this.destination = destination;
@@ -364,7 +365,7 @@ public class Queue implements Destination {
 
     public MessageGroupMap getMessageGroupOwners() {
         if (messageGroupOwners == null) {
-            messageGroupOwners = new MessageGroupHashBucket(messageGroupHashBucketCount);
+            messageGroupOwners = getMessageGroupMapFactory().createMessageGroupMap();
         }
         return messageGroupOwners;
     }
@@ -385,14 +386,14 @@ public class Queue implements Destination {
         this.deadLetterStrategy = deadLetterStrategy;
     }
 
-    public int getMessageGroupHashBucketCount() {
-        return messageGroupHashBucketCount;
+    public MessageGroupMapFactory getMessageGroupMapFactory() {
+        return messageGroupMapFactory;
     }
 
-    public void setMessageGroupHashBucketCount(int messageGroupHashBucketCount) {
-        this.messageGroupHashBucketCount = messageGroupHashBucketCount;
+    public void setMessageGroupMapFactory(MessageGroupMapFactory messageGroupMapFactory) {
+        this.messageGroupMapFactory = messageGroupMapFactory;
     }
-    
+
     public void resetStatistics() {
         getDestinationStatistics().reset();
     }

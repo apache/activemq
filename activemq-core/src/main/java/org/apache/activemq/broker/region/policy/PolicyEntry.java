@@ -20,6 +20,8 @@ package org.apache.activemq.broker.region.policy;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
+import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
+import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,11 +42,11 @@ public class PolicyEntry extends DestinationMapEntry {
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy;
-    private int messageGroupHashBucketCount = 1024;
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
     private long memoryLimit;
-
+    private MessageGroupMapFactory messageGroupMapFactory;
+    
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
@@ -52,7 +54,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (deadLetterStrategy != null) {
             queue.setDeadLetterStrategy(deadLetterStrategy);
         }
-        queue.setMessageGroupHashBucketCount(messageGroupHashBucketCount);
+        queue.setMessageGroupMapFactory(getMessageGroupMapFactory());
         if( memoryLimit>0 ) {
             queue.getUsageManager().setLimit(memoryLimit);
         }
@@ -137,21 +139,6 @@ public class PolicyEntry extends DestinationMapEntry {
         this.deadLetterStrategy = deadLetterStrategy;
     }
 
-    public int getMessageGroupHashBucketCount() {
-        return messageGroupHashBucketCount;
-    }
-
-    /**
-     * Sets the number of hash buckets to use for the message group
-     * functionality. This is only applicable to using message groups to
-     * parallelize processing of a queue while preserving order across an
-     * individual JMSXGroupID header value. This value sets the number of hash
-     * buckets that will be used (i.e. the maximum possible concurrency).
-     */
-    public void setMessageGroupHashBucketCount(int messageGroupHashBucketCount) {
-        this.messageGroupHashBucketCount = messageGroupHashBucketCount;
-    }
-
     public PendingMessageLimitStrategy getPendingMessageLimitStrategy() {
         return pendingMessageLimitStrategy;
     }
@@ -189,4 +176,20 @@ public class PolicyEntry extends DestinationMapEntry {
         this.memoryLimit = memoryLimit;
     }
 
+    public MessageGroupMapFactory getMessageGroupMapFactory() {
+        if (messageGroupMapFactory == null) {
+            messageGroupMapFactory = new MessageGroupHashBucketFactory(); 
+        }
+        return messageGroupMapFactory;
+    }
+
+    /**
+     * Sets the factory used to create new instances of {MessageGroupMap} used to implement the 
+     * <a href="http://incubator.apache.org/activemq/message-groups.html">Message Groups</a> functionality.
+     */
+    public void setMessageGroupMapFactory(MessageGroupMapFactory messageGroupMapFactory) {
+        this.messageGroupMapFactory = messageGroupMapFactory;
+    }
+
+    
 }
