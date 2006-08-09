@@ -106,6 +106,7 @@
          <include>org.springframework:spring</include>
          <include>xstream:xstream</include>
          <include>xmlpull:xmlpull</include>
+         <include>activemq:jmdns</include>
       </includes>
     </dependencySet>
   </dependencySets>  
