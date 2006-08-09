@@ -66,6 +66,7 @@ public class TransportConnector implements Connector {
     private URI connectUri;
     private String name;
     private boolean disableAsyncDispatch=false;
+    private boolean enableStatusMonitor = true;
 
 
     /**
@@ -75,14 +76,21 @@ public class TransportConnector implements Connector {
         return connections;
     }
 
-    public TransportConnector() {
-        this.statusDector = new TransportStatusDetector(this);
+    public TransportConnector(){
     }
+    
 
-    public TransportConnector(Broker broker, TransportServer server) {
+    public TransportConnector(Broker broker,TransportServer server){
         this();
         setBroker(broker);
         setServer(server);
+        if (server!=null&&server.getConnectURI()!=null){
+            URI uri = server.getConnectURI();
+            if (uri != null && uri.getScheme().equals("vm")){
+                setEnableStatusMonitor(false);
+            }
+        }
+        
     }
 
     /**
@@ -207,7 +215,11 @@ public class TransportConnector implements Connector {
             da.registerService(getConnectUri().toString());
             da.start();
         }
-        this.statusDector.start();
+        if (enableStatusMonitor){
+            this.statusDector = new TransportStatusDetector(this);
+            this.statusDector.start();
+        }
+        
         log.info("Connector "+getName()+" Started");
     }
 
@@ -219,7 +231,10 @@ public class TransportConnector implements Connector {
         if (server != null) {
             ss.stop(server);
         }
-        this.statusDector.stop();
+        if (this.statusDector != null){
+            this.statusDector.stop();
+        }
+        
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
             TransportConnection c = (TransportConnection) iter.next();
             ss.stop(c);
@@ -314,4 +329,18 @@ public class TransportConnector implements Connector {
 	public void setDisableAsyncDispatch(boolean disableAsyncDispatch) {
 		this.disableAsyncDispatch = disableAsyncDispatch;
 	}
+
+    /**
+     * @return the enableStatusMonitor
+     */
+    public boolean isEnableStatusMonitor(){
+        return enableStatusMonitor;
+    }
+
+    /**
+     * @param enableStatusMonitor the enableStatusMonitor to set
+     */
+    public void setEnableStatusMonitor(boolean enableStatusMonitor){
+        this.enableStatusMonitor=enableStatusMonitor;
+    }
 }
