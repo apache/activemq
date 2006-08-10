@@ -141,4 +141,14 @@ public interface Store{
      * @throws IOException
      */
     public Set getListContainerIds() throws IOException;
+    
+    /**
+     * @return the maxDataFileLength
+     */
+    public long getMaxDataFileLength();
+
+    /**
+     * @param maxDataFileLength the maxDataFileLength to set
+     */
+    public void setMaxDataFileLength(long maxDataFileLength);
 }

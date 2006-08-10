@@ -53,6 +53,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     ConcurrentHashMap messageStores=new ConcurrentHashMap();
     private boolean useExternalMessageReferences;
     private OpenWireFormat wireFormat=new OpenWireFormat();
+    private long maxDataFileLength = 32 * 1024 * 1024;
     Store store;
 
     public KahaPersistenceAdapter(File dir) throws IOException{
@@ -61,6 +62,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         }
         String name=dir.getAbsolutePath()+File.separator+"kaha.db";
         store=StoreFactory.open(name,"rw");
+        store.setMaxDataFileLength(maxDataFileLength);
     }
 
     public Set getDestinations(){
@@ -176,4 +178,18 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
      *            The UsageManager that is controlling the broker's memory usage.
      */
     public void setUsageManager(UsageManager usageManager){}
+
+    /**
+     * @return the maxDataFileLength
+     */
+    public long getMaxDataFileLength(){
+        return maxDataFileLength;
+    }
+
+    /**
+     * @param maxDataFileLength the maxDataFileLength to set
+     */
+    public void setMaxDataFileLength(long maxDataFileLength){
+        this.maxDataFileLength=maxDataFileLength;
+    }
 }
