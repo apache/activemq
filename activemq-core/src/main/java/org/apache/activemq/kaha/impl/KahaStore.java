@@ -54,6 +54,7 @@ public class KahaStore implements Store{
     private String mode;
     private boolean initialized;
     private boolean logIndexChanges=false;
+    private long maxDataFileLength = DataManager.MAX_FILE_LENGTH;
 
     public KahaStore(String name,String mode) throws IOException{
         this.name=name;
@@ -279,6 +280,7 @@ public class KahaStore implements Store{
         DataManager dm = (DataManager) dataManagers.get(name);
         if (dm == null){
             dm = new DataManager(directory,name);
+            dm.setMaxFileLength(maxDataFileLength);
             recover(dm);
             dataManagers.put(name,dm);
         }
@@ -311,6 +313,20 @@ public class KahaStore implements Store{
 
     public void setLogIndexChanges(boolean logIndexChanges) {
         this.logIndexChanges = logIndexChanges;
+    }
+
+    /**
+     * @return the maxDataFileLength
+     */
+    public long getMaxDataFileLength(){
+        return maxDataFileLength;
+    }
+
+    /**
+     * @param maxDataFileLength the maxDataFileLength to set
+     */
+    public void setMaxDataFileLength(long maxDataFileLength){
+        this.maxDataFileLength=maxDataFileLength;
     }
 
 }

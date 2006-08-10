@@ -45,6 +45,7 @@ final class DataManager{
     private StoreDataReader reader;
     private StoreDataWriter writer;
     private DataFile currentWriteFile;
+    private long maxFileLength = MAX_FILE_LENGTH;
     Map fileMap=new HashMap();
 
     public static final int ITEM_HEAD_SIZE=5; // type + length
@@ -95,7 +96,7 @@ final class DataManager{
     }
 
     DataFile findSpaceForData(DataItem item) throws IOException{
-        if(currentWriteFile==null||((currentWriteFile.getLength()+item.getSize())>MAX_FILE_LENGTH)){
+        if(currentWriteFile==null||((currentWriteFile.getLength()+item.getSize())>maxFileLength)){
             int nextNum=currentWriteFile!=null?currentWriteFile.getNumber().intValue()+1:1;
             if(currentWriteFile!=null&&currentWriteFile.isUnused()){
                 removeDataFile(currentWriteFile);
@@ -259,5 +260,19 @@ final class DataManager{
 
     public void setRedoMarshaller(Marshaller redoMarshaller) {
         this.redoMarshaller = redoMarshaller;
+    }
+
+    /**
+     * @return the maxFileLength
+     */
+    public long getMaxFileLength(){
+        return maxFileLength;
+    }
+
+    /**
+     * @param maxFileLength the maxFileLength to set
+     */
+    public void setMaxFileLength(long maxFileLength){
+        this.maxFileLength=maxFileLength;
     }
 }
