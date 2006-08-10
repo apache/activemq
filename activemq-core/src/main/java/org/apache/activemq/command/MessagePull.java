@@ -43,6 +43,14 @@ public class MessagePull extends BaseCommand {
     }
 
     /**
+     * Configures a message pull from the consumer information
+     */
+    public void configure(ConsumerInfo info) {
+        setConsumerId(info.getConsumerId());
+        setDestination(info.getDestination());
+    }
+
+    /**
      * @openwire:property version=1 cache=true
      */
     public ConsumerId getConsumerId() {

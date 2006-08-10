@@ -163,6 +163,8 @@ public class MessageDispatchChannel {
     }
 
     public String toString() {
-        return list.toString();
+        synchronized(mutex) {
+            return list.toString();
+        }
     }
 }
