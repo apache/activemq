@@ -34,6 +34,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -323,6 +324,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     public void setMessageListener(MessageListener listener) throws JMSException {
         checkClosed();
+        if (info.getPrefetchSize() == 0) {
+            throw new JMSException("Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
+        }
         this.messageListener = listener;
         if (listener != null) {
             boolean wasRunning = session.isRunning();
@@ -411,6 +415,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *         this message consumer is concurrently closed
      */
     public Message receive() throws JMSException {
+        sendPullCommand();
         checkClosed();
         checkMessageListener();
         MessageDispatch md = dequeue(-1);
@@ -455,6 +460,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *         closed
      */
     public Message receive(long timeout) throws JMSException {
+        sendPullCommand();
         checkClosed();
         checkMessageListener();
         if (timeout == 0) {
@@ -584,6 +590,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     protected void checkClosed() throws IllegalStateException {
         if (unconsumedMessages.isClosed()) {
             throw new IllegalStateException("The Consumer is closed");
+        }
+    }
+    
+    /**
+     * If we have a zero prefetch specified then send a pull command to the broker to pull a message
+     * we are about to receive
+     *
+     */
+    protected void sendPullCommand() throws JMSException {
+        if (info.getPrefetchSize() == 0) {
+            MessagePull messagePull = new MessagePull();
+            messagePull.configure(info);
+            session.asyncSendPacket(messagePull);
         }
     }
 
