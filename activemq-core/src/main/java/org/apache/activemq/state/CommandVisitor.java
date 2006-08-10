@@ -28,6 +28,7 @@ import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -56,6 +57,7 @@ public interface CommandVisitor {
     
     Response processMessage(Message send) throws Exception;
     Response processMessageAck(MessageAck ack) throws Exception;
+    Response processMessagePull(MessagePull pull) throws Exception;
 
     Response processBeginTransaction(TransactionInfo info) throws Exception;
     Response processPrepareTransaction(TransactionInfo info) throws Exception;

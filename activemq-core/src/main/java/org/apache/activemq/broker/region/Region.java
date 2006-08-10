@@ -24,7 +24,9 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
 
 import java.util.Map;
 import java.util.Set;
@@ -108,6 +110,11 @@ public interface Region extends Service {
      */
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception;
     
+    /**
+     * Allows a consumer to pull a message from a queue
+     */
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception;
+
     /**
      * Process a notification of a dispatch - used by a Slave Broker
      * @param messageDispatchNotification

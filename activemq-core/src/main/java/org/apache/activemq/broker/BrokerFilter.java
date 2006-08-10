@@ -29,8 +29,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 
@@ -68,6 +70,10 @@ public class BrokerFilter implements Broker {
 
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         next.acknowledge(context, ack);
+    }
+
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
+        return next.messagePull(context, pull);
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {

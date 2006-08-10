@@ -33,8 +33,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 
@@ -221,6 +223,10 @@ public class ErrorBroker implements Broker {
     }
 
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public Response messagePull(ConnectionContext context, MessagePull pull) {
         throw new BrokerStoppedException(this.message);
     }
 

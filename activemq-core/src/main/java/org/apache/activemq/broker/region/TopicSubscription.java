@@ -36,6 +36,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.commons.logging.Log;
@@ -179,6 +181,11 @@ public class TopicSubscription extends AbstractSubscription{
             return;
         }
         throw new JMSException("Invalid acknowledgment: "+ack);
+    }
+
+    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
+        // not supported for topics
+        return null;
     }
 
     public int getPendingQueueSize(){

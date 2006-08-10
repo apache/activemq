@@ -44,6 +44,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -384,6 +385,10 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         return null;
     }
     
+    public Response processMessagePull(MessagePull pull) throws Exception {
+        return broker.messagePull(lookupConnectionState(pull.getConsumerId()).getContext(), pull);
+    }
+
     public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception{
         broker.processDispatchNotification(notification);
         return null;
