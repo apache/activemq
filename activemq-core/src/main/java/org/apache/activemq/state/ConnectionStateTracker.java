@@ -32,6 +32,7 @@ import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -278,6 +279,10 @@ public class ConnectionStateTracker implements CommandVisitor {
     public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception{
         return null;
     }
+    
+    public Response processMessagePull(MessagePull pull) throws Exception {
+        return null;
+    }
 
     public boolean isRestoreConsumers() {
         return restoreConsumers;
@@ -302,4 +307,5 @@ public class ConnectionStateTracker implements CommandVisitor {
     public void setRestoreSessions(boolean restoreSessions) {
         this.restoreSessions = restoreSessions;
     }
+        
 }

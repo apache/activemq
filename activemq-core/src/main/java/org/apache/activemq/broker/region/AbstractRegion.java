@@ -30,7 +30,9 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -254,12 +256,17 @@ abstract public class AbstractRegion implements Region {
     }
     
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
-        
         Subscription sub = (Subscription) subscriptions.get(ack.getConsumerId());
         if( sub==null )
             throw new IllegalArgumentException("The subscription does not exist: "+ack.getConsumerId());
         sub.acknowledge(context, ack);
-        
+    }
+
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
+        Subscription sub = (Subscription) subscriptions.get(pull.getConsumerId());
+        if( sub==null )
+            throw new IllegalArgumentException("The subscription does not exist: "+pull.getConsumerId());
+        return sub.pullMessage(context, pull);
     }
 
     protected Destination lookup(ConnectionContext context, ActiveMQDestination destination) throws Exception {

@@ -57,6 +57,7 @@ public interface CommandTypes {
     // and the server.
     //
     ///////////////////////////////////////////////////    
+    byte  MESSAGE_PULL                      = 20;
     byte  MESSAGE_DISPATCH                  = 21;
     byte  MESSAGE_ACK                       = 22;
     

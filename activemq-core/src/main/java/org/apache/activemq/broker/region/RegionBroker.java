@@ -36,8 +36,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.memory.UsageManager;
@@ -395,6 +397,26 @@ public class RegionBroker implements Broker {
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
             tempTopicRegion.acknowledge(context, ack);
             break;
+        default:
+            throw createUnknownDestinationTypeException(destination);
+        }
+    }
+
+    
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
+        ActiveMQDestination destination = pull.getDestination();
+        switch (destination.getDestinationType()) {
+        case ActiveMQDestination.QUEUE_TYPE:
+            return queueRegion.messagePull(context, pull);
+
+        case ActiveMQDestination.TOPIC_TYPE:
+            return topicRegion.messagePull(context, pull);
+
+        case ActiveMQDestination.TEMP_QUEUE_TYPE:
+            return tempQueueRegion.messagePull(context, pull);
+
+        case ActiveMQDestination.TEMP_TOPIC_TYPE:
+            return tempTopicRegion.messagePull(context, pull);
         default:
             throw createUnknownDestinationTypeException(destination);
         }

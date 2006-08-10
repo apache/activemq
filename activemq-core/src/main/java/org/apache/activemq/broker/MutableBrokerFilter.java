@@ -29,8 +29,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 
@@ -236,6 +238,10 @@ public class MutableBrokerFilter implements Broker {
 
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
         getNext().setAdminConnectionContext(adminConnectionContext);
+    }
+
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
+        return getNext().messagePull(context, pull);
     }
 
 }

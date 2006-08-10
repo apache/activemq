@@ -24,6 +24,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 import javax.jms.InvalidSelectorException;
@@ -50,6 +52,12 @@ public interface Subscription {
      */
     void acknowledge(ConnectionContext context, final MessageAck ack) throws Exception;
     
+
+    /**
+     * Allows a consumer to pull a message on demand
+     */
+    Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception;
+
     /**
      * Is the subscription interested in the message?
      * @param node 

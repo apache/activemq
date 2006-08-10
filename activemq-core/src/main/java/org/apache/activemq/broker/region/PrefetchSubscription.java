@@ -35,6 +35,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
@@ -62,6 +64,20 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         super(broker,context,info);
     }
 
+    
+    /**
+     * Allows a message to be pulled on demand by a client
+     */
+    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
+        if (getPrefetchSize() == 0) {
+            prefetchExtension++;
+            dispatchMatched();
+            
+            // TODO it might be nice one day to actually return the message itself
+        }
+        return null;
+    }
+    
     synchronized public void add(MessageReference node) throws Exception{
         enqueueCounter++;
         if(!isFull()){
