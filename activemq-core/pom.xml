@@ -320,13 +320,10 @@
         <version>${pom.version}</version>
         <configuration>
           <scripts>
-            :GenerateJavaMarshalling.groovy:
-          </scripts>
-          <!--
-           GenerateJavaTests.groovy: GenerateCSharpMarshalling.groovy:
+            :GenerateJavaMarshalling.groovy: GenerateJavaTests.groovy: GenerateCSharpMarshalling.groovy:
             GenerateCSharpClasses.groovy: GenerateCppMarshallingClasses.groovy: GenerateCppMarshallingHeaders.groovy:
             GenerateCppHeaders.groovy: GenerateCppClasses.groovy: GenerateCMarshalling.groovy:
-          -->
+          </scripts>
           <groovyProperties>
             <version>2</version>
           </groovyProperties>
