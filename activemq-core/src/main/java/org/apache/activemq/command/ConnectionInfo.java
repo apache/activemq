@@ -36,6 +36,7 @@ public class ConnectionInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean brokerMasterConnector;
     protected boolean manageable;
+    protected transient Object transportContext; 
     
     public ConnectionInfo() {        
     }    
@@ -142,5 +143,27 @@ public class ConnectionInfo extends BaseCommand {
     public void setManageable(boolean manageable){
         this.manageable=manageable;
     }
+    
+    /**
+	 * Transports may wish to associate additional data with the connection.  For
+	 * example, an SSL transport may use this field to attach the client certificates
+	 * used when the conection was established.
+     * 
+     * @return the transport context.
+     */
+	public Object getTransportContext() {
+		return transportContext;
+	}
+	
+	/**
+	 * Transports may wish to associate additional data with the connection.  For
+	 * example, an SSL transport may use this field to attach the client certificates
+	 * used when the conection was established.
+	 *  
+	 * @param transportContext value used to set the transport context
+	 */
+	public void setTransportContext(Object transportContext) {
+		this.transportContext = transportContext;
+	}
 
 }
