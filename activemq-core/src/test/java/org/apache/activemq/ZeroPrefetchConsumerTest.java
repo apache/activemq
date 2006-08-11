@@ -34,7 +34,7 @@ import javax.jms.Session;
  * 
  * @version $Revision$
  */
-public class ZeroPrefetchConsumerTest extends TestSupport {
+public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
     private static final Log log = LogFactory.getLog(ZeroPrefetchConsumerTest.class);
 
@@ -68,7 +68,7 @@ public class ZeroPrefetchConsumerTest extends TestSupport {
     }
 
     protected void setUp() throws Exception {
-        topic = false;
+        bindAddress = "tcp://localhost:61616";
         super.setUp();
 
         connection = createConnection();
@@ -82,7 +82,7 @@ public class ZeroPrefetchConsumerTest extends TestSupport {
     }
 
     protected Queue createQueue() {
-        return new ActiveMQQueue(getClass().getName() + "." + getName() + "?consumer.prefetchSize=0");
+        return new ActiveMQQueue(getDestinationString() + "?consumer.prefetchSize=0");
     }
 
 }
