@@ -68,9 +68,17 @@ public class TestSupport extends TestCase {
     }
 
     protected Destination createDestination() {
-        return createDestination(getClass().getName() + "." + getName());
+        return createDestination(getDestinationString());
     }
 
+    /**
+     * Returns the name of the destination used in this test case
+     */
+    protected String getDestinationString() {
+        return getClass().getName() + "." + getName();
+    }
+    
+    
     /**
      * @param messsage
      * @param firstSet
