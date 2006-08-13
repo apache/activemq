@@ -49,14 +49,14 @@ public:
             connection->start();
 
             // Create a Session
-            session = connection->createSession( Session::AutoAcknowledge );
+            session = connection->createSession( Session::AUTO_ACKNOWLEDGE );
 
             // Create the destination (Topic or Queue)
-            destination = session->createQueue("TEST.FOO");
+            destination = session->createQueue( "TEST.FOO" );
 
             // Create a MessageProducer from the Session to the Topic or Queue
-            producer = session->createProducer(*destination);
-            producer->setDeliveryMode( Message::NONPERSISTANT);
+            producer = session->createProducer( destination );
+            producer->setDeliveryMode( DeliveryMode::NON_PERSISTANT );
 
             // Stringify the thread id
             char threadIdStr[100];
@@ -70,12 +70,12 @@ public:
 
     	        // Tell the producer to send the message
         	    printf( "Sent message from thread %s\n", threadIdStr );
-            	producer->send(*message);
+            	producer->send( message );
             	
             	delete message;
             }
 			
-        }catch (CMSException& e) {
+        }catch ( CMSException& e ) {
             e.printStackTrace();
         }
     }
@@ -83,32 +83,32 @@ public:
 private:
 
     void cleanup(){
-    	
-    		// Close open resources.
-    		try{
-    			if( session != NULL ) session->close();
-    			if( connection != NULL ) connection->close();
-			}catch (CMSException& e) {}
-			
+    				
 			// Destroy resources.
 			try{                        
             	if( destination != NULL ) delete destination;
-			}catch (CMSException& e) {}
+			}catch ( CMSException& e ) {}
 			destination = NULL;
 			
 			try{
 	            if( producer != NULL ) delete producer;
-			}catch (CMSException& e) {}
+			}catch ( CMSException& e ) {}
 			producer = NULL;
 			
+    		// Close open resources.
+    		try{
+    			if( session != NULL ) session->close();
+    			if( connection != NULL ) connection->close();
+			}catch ( CMSException& e ) {}
+
 			try{
             	if( session != NULL ) delete session;
-			}catch (CMSException& e) {}
+			}catch ( CMSException& e ) {}
 			session = NULL;
 			
-			try{
+            try{
             	if( connection != NULL ) delete connection;
-			}catch (CMSException& e) {}
+			}catch ( CMSException& e ) {}
     		connection = NULL;
     }
 };
@@ -143,7 +143,8 @@ public:
         try {
 
             // Create a ConnectionFactory
-            ActiveMQConnectionFactory* connectionFactory = new ActiveMQConnectionFactory("tcp://127.0.0.1:61613");
+            ActiveMQConnectionFactory* connectionFactory = 
+                new ActiveMQConnectionFactory( "tcp://127.0.0.1:61613" );
 
             // Create a Connection
             connection = connectionFactory->createConnection();
@@ -153,13 +154,13 @@ public:
             connection->setExceptionListener(this);
 
             // Create a Session
-            session = connection->createSession( Session::AutoAcknowledge );
+            session = connection->createSession( Session::AUTO_ACKNOWLEDGE );
 
             // Create the destination (Topic or Queue)
-            destination = session->createQueue("TEST.FOO");
+            destination = session->createQueue( "TEST.FOO" );
 
             // Create a MessageConsumer from the Session to the Topic or Queue
-            consumer = session->createConsumer(*destination);
+            consumer = session->createConsumer( destination );
             
             consumer->setMessageListener( this );
             
@@ -171,17 +172,16 @@ public:
         }
     }
     
-    virtual void onMessage( const Message& message ){
+    virtual void onMessage( const Message* message ){
     	
         try
         {
-    	    const TextMessage& textMessage = dynamic_cast<const TextMessage&>(message);
-            string text = textMessage.getText();
+    	    const TextMessage* textMessage = 
+                dynamic_cast< const TextMessage* >( message );
+            string text = textMessage->getText();
             printf( "Received: %s\n", text.c_str() );
-        }
-        catch( std::bad_cast& ex )
-        {
-            printf( "Received something other than a text Message\n" );
+        } catch (CMSException& e) {
+            e.printStackTrace();
         }
     }
 
@@ -193,12 +193,6 @@ private:
 
     void cleanup(){
     	
-		// Close open resources.
-		try{
-			if( session != NULL ) session->close();
-			if( connection != NULL ) connection->close();
-		}catch (CMSException& e) {}
-		
 		// Destroy resources.
 		try{                        
         	if( destination != NULL ) delete destination;
@@ -210,7 +204,13 @@ private:
 		}catch (CMSException& e) {}
 		consumer = NULL;
 		
+		// Close open resources.
 		try{
+			if( session != NULL ) session->close();
+			if( connection != NULL ) connection->close();
+		}catch (CMSException& e) {}
+		
+        try{
         	if( session != NULL ) delete session;
 		}catch (CMSException& e) {}
 		session = NULL;
