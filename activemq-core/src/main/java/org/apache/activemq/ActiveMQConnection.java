@@ -1584,7 +1584,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public void setAsyncDispatch(boolean asyncDispatch) {
-        //this.asyncDispatch = asyncDispatch;
+        this.asyncDispatch = asyncDispatch;
     }
 
     public boolean isObjectMessageSerializationDefered() {
