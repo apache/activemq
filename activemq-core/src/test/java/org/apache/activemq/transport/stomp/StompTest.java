@@ -333,8 +333,7 @@ public class StompTest extends CombinationTestSupport {
         assertTrue(cl_matcher.find());
         assertEquals("5", cl_matcher.group(1));
 
-        Pattern null_type_pattern = Pattern.compile("type:\\s*null", Pattern.CASE_INSENSITIVE);
-        assertFalse(null_type_pattern.matcher(frame).find());
+        assertFalse(Pattern.compile("type:\\s*null", Pattern.CASE_INSENSITIVE).matcher(frame).find());
 
         frame =
             "DISCONNECT\n" +
