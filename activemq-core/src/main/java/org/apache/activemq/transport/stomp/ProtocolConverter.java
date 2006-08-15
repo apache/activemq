@@ -546,15 +546,21 @@ public class ProtocolConverter {
 		
         headers.put(Stomp.Headers.Message.DESTINATION, convertDestination(message.getDestination()));
         headers.put(Stomp.Headers.Message.MESSAGE_ID, message.getJMSMessageID());
-        headers.put(Stomp.Headers.Message.CORRELATION_ID, message.getJMSCorrelationID());
+        if (message.getJMSCorrelationID() != null) {
+            headers.put(Stomp.Headers.Message.CORRELATION_ID, message.getJMSCorrelationID());
+        }
         headers.put(Stomp.Headers.Message.EXPIRATION_TIME, ""+message.getJMSExpiration());
         if (message.getJMSRedelivered()) {
             headers.put(Stomp.Headers.Message.REDELIVERED, "true");
         }
         headers.put(Stomp.Headers.Message.PRORITY, ""+message.getJMSPriority());
-        headers.put(Stomp.Headers.Message.REPLY_TO, convertDestination(message.getJMSReplyTo()));
+        if (message.getJMSReplyTo() != null) {
+            headers.put(Stomp.Headers.Message.REPLY_TO, convertDestination(message.getJMSReplyTo()));
+        }
         headers.put(Stomp.Headers.Message.TIMESTAMP, ""+message.getJMSTimestamp());
-        headers.put(Stomp.Headers.Message.TYPE, message.getJMSType());
+        if (message.getJMSType() != null) {
+            headers.put(Stomp.Headers.Message.TYPE, message.getJMSType());
+        }
 
         // now lets add all the message headers
         Map properties = message.getProperties();
