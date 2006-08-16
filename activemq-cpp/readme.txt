@@ -73,7 +73,7 @@ platforms, but if you have problems, try that first.
 
 You can get the latest source via subversion:
 
-svn co https://svn.codehaus.org/mojo/trunk/mojo/maven-native
+svn co http://svn.codehaus.org/mojo/trunk/mojo/maven-native
 
 Once you have downloaded the source, install the plugin into your local
 repository via: mvn install
