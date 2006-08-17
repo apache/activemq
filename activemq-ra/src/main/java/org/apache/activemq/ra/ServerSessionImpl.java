@@ -155,7 +155,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     /**
      * @see java.lang.Runnable#run()
      */
-    synchronized public void run() {
+    public void run() {
         log.debug("Running"); 
         while (true) {
             log.debug("run loop start");            
