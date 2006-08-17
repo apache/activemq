@@ -41,8 +41,18 @@ namespace ActiveMQ
         private Dispatcher dispatcher = new Dispatcher();
         private int maximumRedeliveryCount = 10;
         private int redeliveryTimeout = 500;
+        private event MessageListener listener;
         
-        public event MessageListener Listener;
+        public event MessageListener Listener
+        {
+                add {
+                        listener += value;
+                        FireAsyncDispatchOfMessages();
+                }
+                remove {
+                        listener -= value;
+                }
+        }
         
         
         public MessageConsumer(Session session, ConsumerInfo info, AcknowledgementMode acknowledgementMode)
@@ -84,11 +94,16 @@ namespace ActiveMQ
         {
             dispatcher.Enqueue(message);
             
-            if (Listener != null)
+            if (listener != null)
             {
+                FireAsyncDispatchOfMessages();
+            }
+        }
+
+        protected void FireAsyncDispatchOfMessages() 
+        {
                 // lets dispatch to the thread pool for this connection for messages to be processed
                 ThreadPool.QueueUserWorkItem(new WaitCallback(session.DispatchAsyncMessages));
-            }
         }
         
         public IMessage Receive()
@@ -122,14 +137,14 @@ namespace ActiveMQ
         /// </summary>
         public void DispatchAsyncMessages()
         {
-            while (Listener != null)
+            while (listener != null)
             {
                 IMessage message = dispatcher.DequeueNoWait();
                 if (message != null)
                 {
                    //here we add the code that if do acknowledge action.
                    message = AutoAcknowledge(message);
-                   Listener(message);
+                   listener(message);
                 }
                 else
                 {
@@ -218,7 +233,7 @@ namespace ActiveMQ
             {
                 dispatcher.Redeliver(message);
                 
-                if (Listener != null)
+                if (listener != null)
                 {
                     // lets re-dispatch the message at some point in the future
                     Thread.Sleep(RedeliveryTimeout);

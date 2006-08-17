@@ -44,7 +44,6 @@ namespace NMS {
                 public void TestAsynchronousConsume()
                 {
 
-                        // lets create an async consumer
                         // START SNIPPET: demo
                         IMessageConsumer consumer = Session.CreateConsumer(this.Destination);
                         consumer.Listener += new MessageListener(OnMessage);
@@ -61,7 +60,43 @@ namespace NMS {
                 }
 
                 [ Test ]
-                public void textMessageSRExample()
+                public void TestCreateConsumerAfterSend()
+                {
+                        // now lets send a message
+                        IMessageProducer producer = CreateProducer();
+                        IMessage request = CreateMessage();
+                        request.NMSCorrelationID = "abc";
+                        request.NMSType = "Test";
+                        producer.Send(request);
+
+                        // lets create an async consumer
+                        IMessageConsumer consumer = Session.CreateConsumer(this.Destination);
+                        consumer.Listener += new MessageListener(OnMessage);
+                        
+                        WaitForMessageToArrive();
+                }
+
+                [ Test ]
+                public void TestCreateConsumerBeforeSendButAddListenerAfterSend()
+                {
+                        // lets create an async consumer
+                        IMessageConsumer consumer = Session.CreateConsumer(this.Destination);
+                        
+                        // now lets send a message
+                        IMessageProducer producer = CreateProducer();
+                        IMessage request = CreateMessage();
+                        request.NMSCorrelationID = "abc";
+                        request.NMSType = "Test";
+                        producer.Send(request);
+
+                        // now lets add the listener
+                        consumer.Listener += new MessageListener(OnMessage);
+                        
+                        WaitForMessageToArrive();
+                }
+
+                [ Test ]
+                public void TextMessageSRExample()
                 {
                         using (IConnection connection = Factory.CreateConnection())
                         {
