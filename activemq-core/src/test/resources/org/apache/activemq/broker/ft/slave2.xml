@@ -18,6 +18,7 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
+  <!-- START SNIPPET: example -->
   <broker brokerName="slave" persistent="false" useJmx="false"  deleteAllMessagesOnStartup="true"  xmlns="http://activemq.org/config/1.0">
   
     <transportConnectors>
@@ -32,5 +33,6 @@
       <kahaPersistenceAdapter dir = "${basedir}/target/activemq-data/slave"/>
     </persistenceAdapter>
   </broker>
+  <!-- END SNIPPET: example -->
 
 </beans>
