@@ -40,10 +40,10 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     protected void setUp() throws Exception{
         failureCount = super.messageCount/2;
         super.topic = isTopic();
-        BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/ft/master.xml"));
+        BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
         brokerFactory.afterPropertiesSet();
         master=brokerFactory.getBroker();
-        brokerFactory=new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/ft/slave.xml"));
+        brokerFactory=new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
         brokerFactory.afterPropertiesSet();
         slave=brokerFactory.getBroker();
         master.start();
@@ -52,6 +52,14 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         Thread.sleep(1000);
         super.setUp();
 
+    }
+
+    protected String getSlaveXml() {
+        return "org/apache/activemq/broker/ft/slave.xml";
+    }
+
+    protected String getMasterXml() {
+        return "org/apache/activemq/broker/ft/master.xml";
     }
 
     protected void tearDown() throws Exception{

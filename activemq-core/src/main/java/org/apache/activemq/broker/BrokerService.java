@@ -113,12 +113,13 @@ public class BrokerService implements Service, Serializable {
     private List proxyConnectors = new CopyOnWriteArrayList();
     private List registeredMBeanNames = new CopyOnWriteArrayList();
     private List jmsConnectors = new CopyOnWriteArrayList();
+    private Service[] services;
     private MasterConnector masterConnector;
+    private String masterConnectorURI;
     private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
     private String[] proxyConnectorURIs;
-    private String masterConnectorURI;
     private JmsConnector[] jmsBridgeConnectors; //these are Jms to Jms bridges to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
     private boolean advisorySupport = true;
@@ -280,24 +281,6 @@ public class BrokerService implements Service, Serializable {
         return null;
     }
     
-    public void initializeMasterConnector(URI remoteURI) throws Exception {
-        if (masterConnector != null){
-            throw new IllegalStateException("Can only be the Slave to one Master");
-        }
-        URI localURI = getVmConnectorURI();
-        TransportConnector connector = null;
-        if (!transportConnectors.isEmpty()){
-            connector = (TransportConnector)transportConnectors.get(0);
-        }
-        masterConnector = new MasterConnector(this,connector);
-        masterConnector.setLocalURI(localURI);
-        masterConnector.setRemoteURI(remoteURI);
-        
-        if (isUseJmx()) {
-            registerFTConnectorMBean(masterConnector);
-        }
-    }
-    
     /**
      * @return Returns the masterConnectorURI.
      */
@@ -370,15 +353,13 @@ public class BrokerService implements Service, Serializable {
             }
 
             getBroker().start();
-            if (masterConnectorURI!=null){
-                initializeMasterConnector(new URI(masterConnectorURI));
-                if (masterConnector!=null){
-                    masterConnector.start();
-                }
-            }
             
             startAllConnectors();
             
+            if (isUseJmx() && masterConnector != null) {
+                registerFTConnectorMBean(masterConnector);
+            }
+     
             brokerId = broker.getBrokerId();
             log.info("ActiveMQ JMS Message Broker (" + getBrokerName()+", "+brokerId+") started");
         }
@@ -388,6 +369,7 @@ public class BrokerService implements Service, Serializable {
         }
     }
 
+    
     public void stop() throws Exception {
         if (! started.compareAndSet(true, false)) {
             return;
@@ -398,10 +380,13 @@ public class BrokerService implements Service, Serializable {
         removeShutdownHook();
 
         ServiceStopper stopper = new ServiceStopper();
-        if (masterConnector != null){
-            masterConnector.stop();
+        
+        if (services != null) {
+            for (int i = 0; i < services.length; i++) {
+                Service service = services[i];
+                stopper.stop(service);
+            }
         }
-
         
         for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
             NetworkConnector connector = (NetworkConnector) iter.next();
@@ -417,8 +402,8 @@ public class BrokerService implements Service, Serializable {
             JmsConnector connector = (JmsConnector) iter.next();
             stopper.stop(connector);
         }
+        
         for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            
             TransportConnector connector = (TransportConnector) iter.next();
             stopper.stop(connector);
         }
@@ -657,6 +642,34 @@ public class BrokerService implements Service, Serializable {
     public void setJmsBridgeConnectors(JmsConnector[] jmsConnectors){
         this.jmsBridgeConnectors=jmsConnectors;
     }
+
+    public Service[] getServices() {
+        return services;
+    }
+
+    /**
+     * Sets the services associated with this broker such as a {@link MasterConnector}
+     */
+    public void setServices(Service[] services) {
+        this.services = services;
+    }
+
+    /**
+     * Adds a new service so that it will be started as part of the broker lifecycle
+     */
+    public void addService(Service service) {
+        if (services == null) {
+            services = new Service[] { service };
+        }
+        else {
+            int length = services.length;
+            Service[] temp = new Service[length + 1];
+            System.arraycopy(services, 1, temp, 1, length);
+            temp[length] = service;
+            services = temp;
+        }
+    }
+
 
     public boolean isUseLoggingForShutdownErrors() {
         return useLoggingForShutdownErrors;
@@ -903,7 +916,14 @@ public class BrokerService implements Service, Serializable {
                 addJmsConnector(jmsBridgeConnectors[i]);
             }
         }
-        
+        if (masterConnectorURI != null) {
+            if (masterConnector != null) {
+                throw new IllegalStateException("Cannot specify masterConnectorURI when a masterConnector is already registered via the services property");
+            }
+            else {
+                addService(new MasterConnector(masterConnectorURI));
+            }
+        }
     }
 
     protected void registerConnectorMBean(TransportConnector connector, ObjectName objectName) throws IOException, URISyntaxException {
@@ -1269,6 +1289,14 @@ public class BrokerService implements Service, Serializable {
                 JmsConnector connector = (JmsConnector) iter.next();
                 connector.start();
             }
+            
+            if (services != null) {
+                for (int i = 0; i < services.length; i++) {
+                    Service service = services[i];
+                    configureService(service);
+                    service.start();
+                }
+            }
         }
     }
 
@@ -1303,6 +1331,9 @@ public class BrokerService implements Service, Serializable {
         if (service instanceof BrokerServiceAware) {
             BrokerServiceAware serviceAware = (BrokerServiceAware) service;
             serviceAware.setBrokerService(this);
+        }
+        if (service instanceof MasterConnector) {
+            masterConnector = (MasterConnector) service;
         }
     }
 }
