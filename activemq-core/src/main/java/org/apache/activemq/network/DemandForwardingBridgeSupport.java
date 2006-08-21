@@ -100,6 +100,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected final ConcurrentHashMap subscriptionMapByRemoteId = new ConcurrentHashMap();
     protected final BrokerId localBrokerPath[] = new BrokerId[] { null };
     protected CountDownLatch startedLatch = new CountDownLatch(2);
+    protected CountDownLatch remoteBrokerNameKnownLatch = new CountDownLatch(1);
     protected boolean decreaseNetworkConsumerPriority;
     protected int networkTTL = 1;
     protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
@@ -212,6 +213,9 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected void startLocalBridge() throws Exception {
         if(localBridgeStarted.compareAndSet(false,true)){
             synchronized( this ) {
+            	
+        		remoteBrokerNameKnownLatch.await();
+
 	            localConnectionInfo=new ConnectionInfo();
 	            localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
 	            localClientId="NC_"+remoteBrokerName+"_inbound"+name;
