@@ -1,3 +1,20 @@
+## ---------------------------------------------------------------------------
+## Licensed to the Apache Software Foundation (ASF) under one or more
+## contributor license agreements.  See the NOTICE file distributed with
+## this work for additional information regarding copyright ownership.
+## The ASF licenses this file to You under the Apache License, Version 2.0
+## (the "License"); you may not use this file except in compliance with
+## the License.  You may obtain a copy of the License at
+## 
+## http://www.apache.org/licenses/LICENSE-2.0
+## 
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+## ---------------------------------------------------------------------------
+
 INCLUDES = -I../
 lib_LTLIBRARIES = libamq_marshal.la
 libamq_marshal_la_SOURCES = ActiveMQBytesMessageMarshaller.cpp ActiveMQDestinationMarshaller.cpp ActiveMQMapMessageMarshaller.cpp ActiveMQMessageMarshaller.cpp ActiveMQObjectMessageMarshaller.cpp ActiveMQQueueMarshaller.cpp ActiveMQStreamMessageMarshaller.cpp ActiveMQTempDestinationMarshaller.cpp ActiveMQTempQueueMarshaller.cpp ActiveMQTempTopicMarshaller.cpp ActiveMQTextMessageMarshaller.cpp ActiveMQTopicMarshaller.cpp BaseCommandMarshaller.cpp BrokerIdMarshaller.cpp BrokerInfoMarshaller.cpp ConnectionErrorMarshaller.cpp ConnectionIdMarshaller.cpp ConnectionInfoMarshaller.cpp ConsumerIdMarshaller.cpp ConsumerInfoMarshaller.cpp ControlCommandMarshaller.cpp DataArrayResponseMarshaller.cpp DataResponseMarshaller.cpp DestinationInfoMarshaller.cpp DiscoveryEventMarshaller.cpp ExceptionResponseMarshaller.cpp FlushCommandMarshaller.cpp IntegerResponseMarshaller.cpp JournalQueueAckMarshaller.cpp JournalTopicAckMarshaller.cpp JournalTraceMarshaller.cpp JournalTransactionMarshaller.cpp KeepAliveInfoMarshaller.cpp LastPartialCommandMarshaller.cpp LocalTransactionIdMarshaller.cpp MarshallerFactory.cpp MessageAckMarshaller.cpp MessageDispatchMarshaller.cpp MessageDispatchNotificationMarshaller.cpp MessageIdMarshaller.cpp MessageMarshaller.cpp NetworkBridgeFilterMarshaller.cpp PartialCommandMarshaller.cpp ProducerIdMarshaller.cpp ProducerInfoMarshaller.cpp RemoveInfoMarshaller.cpp RemoveSubscriptionInfoMarshaller.cpp ReplayCommandMarshaller.cpp ResponseMarshaller.cpp SessionIdMarshaller.cpp SessionInfoMarshaller.cpp ShutdownInfoMarshaller.cpp SubscriptionInfoMarshaller.cpp TransactionIdMarshaller.cpp TransactionInfoMarshaller.cpp WireFormatInfoMarshaller.cpp XATransactionIdMarshaller.cpp ProtocolFormat.cpp BaseDataStreamMarshaller.cpp BinaryWriter.cpp BufferWriter.cpp BooleanStream.cpp BinaryReader.cpp BufferReader.cpp ConnectionControlMarshaller.cpp ConsumerControlMarshaller.cpp
