@@ -87,11 +87,13 @@ public class PooledSession implements TopicSession, QueueSession {
             MessageConsumer consumer = (MessageConsumer) iter.next();
             consumer.close();
         }
+        consumers.clear();
         
         for (Iterator iter = browsers.iterator(); iter.hasNext();) {
             QueueBrowser browser = (QueueBrowser) iter.next();
             browser.close();
         }
+        browsers.clear();
 
         // maybe do a rollback?
         if (transactional) {
