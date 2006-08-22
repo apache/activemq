@@ -55,6 +55,8 @@ public abstract class NetworkConnector extends ServiceSupport {
     private boolean dispatchAsync = true;
     private String userName;
     private String password;
+    private boolean bridgeTempDestinations=false;
+    
     protected ConnectionFilter connectionFilter;
 
     public NetworkConnector() {
@@ -257,6 +259,8 @@ public abstract class NetworkConnector extends ServiceSupport {
         destsList = getStaticallyIncludedDestinations();
         dests = (ActiveMQDestination[]) destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
+        
+        result.setBridgeTempDestinations(bridgeTempDestinations);
 
         if (durableDestinations != null) {
             ActiveMQDestination[] dest = new ActiveMQDestination[durableDestinations.size()];
@@ -321,5 +325,13 @@ public abstract class NetworkConnector extends ServiceSupport {
 
 	public void setUserName(String userName) {
 		this.userName = userName;
+	}
+
+	public boolean isBridgeTempDestinations() {
+		return bridgeTempDestinations;
+	}
+
+	public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
+		this.bridgeTempDestinations = bridgeTempDestinations;
 	}
 }

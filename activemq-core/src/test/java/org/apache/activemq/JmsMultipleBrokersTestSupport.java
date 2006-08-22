@@ -62,8 +62,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     protected boolean persistentDelivery = true;
     protected boolean verbose = false;
 
-    protected void bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
-       bridgeBrokers(localBrokerName,remoteBrokerName,false,1);
+    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
+       return bridgeBrokers(localBrokerName,remoteBrokerName,false,1);
     }
     
     
@@ -74,18 +74,18 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         bridgeBrokers(localBroker, remoteBroker,dynamicOnly,1);
     }
     
-    protected void bridgeBrokers(String localBrokerName, String remoteBrokerName,boolean dynamicOnly, int networkTTL) throws Exception {
+    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName,boolean dynamicOnly, int networkTTL) throws Exception {
         BrokerService localBroker  = ((BrokerItem)brokers.get(localBrokerName)).broker;
         BrokerService remoteBroker = ((BrokerItem)brokers.get(remoteBrokerName)).broker;
 
-        bridgeBrokers(localBroker, remoteBroker,dynamicOnly,networkTTL);
+        return bridgeBrokers(localBroker, remoteBroker,dynamicOnly,networkTTL);
     }
     
    
 
     // Overwrite this method to specify how you want to bridge the two brokers
     // By default, bridge them using add network connector of the local broker and the first connector of the remote broker
-    protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker,boolean dynamicOnly, int networkTTL) throws Exception {
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker,boolean dynamicOnly, int networkTTL) throws Exception {
         List transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
@@ -94,11 +94,12 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
             localBroker.addNetworkConnector(connector);
+            MAX_SETUP_TIME = 2000;
+            return connector;
         } else {
             throw new Exception("Remote broker has no registered connectors.");
         }
 
-        MAX_SETUP_TIME = 2000;
     }
 
     // This will interconnect all brokes using multicast
