@@ -100,15 +100,18 @@
     <property name="poolPreparedStatements" value="true"/>
   </bean>
   -->  
-      
-  <!-- Embedded Derby DataSource Sample Setup -->
-  <!-- 
-  <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
-    <property name="databaseName" value="derbydb"/>
-    <property name="createDatabase" value="create"/>
+   
+  <!-- Oracle DataSource Sample Setup -->
+  <!--
+  <bean id="oracle-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+    <property name="url" value="jdbc:oracle:thin:@localhost:1521:AMQDB"/>
+    <property name="username" value="scott"/>
+    <property name="password" value="tiger"/>
+    <property name="poolPreparedStatements" value="true"/>
   </bean>
-  -->  
-  
+  -->
+        
   <!-- Embedded Derby DataSource Sample Setup -->
   <!-- 
   <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
