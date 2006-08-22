@@ -85,6 +85,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected int prefetchSize = 1000;
     protected boolean dispatchAsync;
     protected String destinationFilter = ">";
+    protected boolean bridgeTempDestinations = false;
     protected String name = "bridge";
     protected ConsumerInfo demandConsumerInfo;
     protected int demandConsumerDispatched;
@@ -240,7 +241,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
         if(remoteBridgeStarted.compareAndSet(false,true)) {
     
         	synchronized (this) {
-        		
+        		        		
             	if( remoteConnectionInfo!=null ) {
             		remoteBroker.oneway(remoteConnectionInfo.createRemoveCommand());
             	}
@@ -270,12 +271,16 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                                 +destinationFilter));
                 demandConsumerInfo.setPrefetchSize(prefetchSize);
                 remoteBroker.oneway(demandConsumerInfo);
-                //we want information about Destinations as well
-                ConsumerInfo destinationInfo  = new ConsumerInfo(remoteSessionInfo,2);
-                destinationInfo.setDestination(AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC);
-                destinationInfo.setPrefetchSize(prefetchSize);
-                destinationInfo.setDispatchAsync(dispatchAsync);
-                remoteBroker.oneway(destinationInfo);
+                
+                if( bridgeTempDestinations ) {
+	                //we want information about Destinations as well
+	                ConsumerInfo destinationInfo  = new ConsumerInfo(remoteSessionInfo,2);
+	                destinationInfo.setDestination(AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC);
+	                destinationInfo.setPrefetchSize(prefetchSize);
+	                destinationInfo.setDispatchAsync(dispatchAsync);
+	                remoteBroker.oneway(destinationInfo);
+                }
+                
                 startedLatch.countDown();
                 
                 if (!disposed){
@@ -729,6 +734,11 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     }
 
     protected boolean isPermissableDestination(ActiveMQDestination destination) {
+    	
+    	// Are we not bridging temp destinations?
+    	if( destination.isTemporary() && !bridgeTempDestinations )
+    		return false;
+    	
         DestinationFilter filter=DestinationFilter.parseFilter(destination);
         ActiveMQDestination[] dests = excludedDestinations;
         if(dests!=null&&dests.length>0){
@@ -861,6 +871,14 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 
 	public void setUserName(String userName) {
 		this.userName = userName;
+	}
+
+	public boolean isBridgeTempDestinations() {
+		return bridgeTempDestinations;
+	}
+
+	public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
+		this.bridgeTempDestinations = bridgeTempDestinations;
 	}
 
 }

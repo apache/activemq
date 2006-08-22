@@ -19,15 +19,19 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 import java.util.Iterator;
+
 import javax.jms.Connection;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
+
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.network.NetworkConnector;
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSupport{
     protected static final int MESSAGE_COUNT=100;
+    boolean enableTempDestinationBridging = true;
 
     /**
      * BrokerA -> BrokerB -> BrokerC
@@ -88,6 +92,17 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
                             .getTemporaryQueues().length);
         }
     }
+    
+    public void testTempDisable() throws Exception{
+    	enableTempDestinationBridging=false;
+    	try {
+    		testTempQueueCleanup();
+    	} catch (Throwable e) {
+    		// Expecting an error
+    		return;
+    	}
+    	fail("Test should have failed since temp queues are disabled.");
+    }
 
     public void setUp() throws Exception{
         super.setAutoFail(true);
@@ -96,4 +111,11 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=true"));
         createBroker(new URI("broker:(tcp://localhost:61618)/BrokerC?persistent=false&useJmx=true"));
     }
+
+    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL) throws Exception {
+    	NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName, dynamicOnly, networkTTL);
+    	connector.setBridgeTempDestinations(enableTempDestinationBridging);
+    	return connector;
+    }
+    
 }
