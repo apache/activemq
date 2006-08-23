@@ -40,6 +40,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     private final Statements statements;
     private long sleepTime = 1000;
     private Connection connection;
+    private boolean stopping;
 
     public DefaultDatabaseLocker(DataSource dataSource, Statements statements) {
         this.dataSource = dataSource;
@@ -47,6 +48,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     }
 
     public void start() throws Exception {
+        stopping = false;
         connection = dataSource.getConnection();
         connection.setAutoCommit(false);
         
@@ -60,6 +62,9 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 }
             }
             catch (Exception e) {
+                if (stopping) { 
+                    throw new Exception("Cannot start broker as being asked to shut down. Interupted attempt to acquire lock: " + e, e);
+                }
                 log.error("Failed to acquire lock: " + e, e);
             }
             log.debug("Sleeping for " + sleepTime + " milli(s) before trying again to get the lock...");
@@ -70,6 +75,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     }
 
     public void stop() throws Exception {
+        stopping = true;
         if (connection != null) {
             connection.rollback();
             connection.close();
