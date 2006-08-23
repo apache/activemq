@@ -63,7 +63,11 @@ import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.JMException;
+import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import java.io.File;
@@ -255,6 +259,18 @@ public class BrokerService implements Service, Serializable {
         return connector;
     }
     
+    /**
+     * Removes the given network connector without stopping it.
+     * The caller should call {@link NetworkConnector#stop()} to close the connector
+     */
+    public boolean removeNetworkConnector(NetworkConnector connector) {
+        boolean answer = networkConnectors.remove(connector);
+        if (answer) {
+            unregisterNetworkConnectorMBean(connector);
+        }
+        return answer;
+    }
+    
     public ProxyConnector addProxyConnector(ProxyConnector connector) throws Exception {
         URI uri = getVmConnectorURI();
         connector.setLocalUri(uri);
@@ -390,6 +406,7 @@ public class BrokerService implements Service, Serializable {
         
         for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
             NetworkConnector connector = (NetworkConnector) iter.next();
+            unregisterNetworkConnectorMBean(connector);
             stopper.stop(connector);
         }
 
@@ -945,9 +962,7 @@ public class BrokerService implements Service, Serializable {
         if (mbeanServer != null) {
             NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
             try {
-                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
-                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=NetworkConnector," + "NetworkConnectorName="
-                        + JMXSupport.encodeObjectNamePart(connector.getName()));
+                ObjectName objectName = createNetworkConnectorObjectName(connector);
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
             }
@@ -957,6 +972,30 @@ public class BrokerService implements Service, Serializable {
         }
     }
 
+    protected ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
+        return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
+                + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=NetworkConnector," + "NetworkConnectorName="
+                + JMXSupport.encodeObjectNamePart(connector.getName()));
+    }
+
+    protected void unregisterNetworkConnectorMBean(NetworkConnector connector) {
+        if (isUseJmx()) {
+            MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+            if (mbeanServer != null) {
+                try {
+                    ObjectName objectName = createNetworkConnectorObjectName(connector);
+                    if (registeredMBeanNames.contains(objectName)) {
+                        registeredMBeanNames.remove(objectName);
+                        mbeanServer.unregisterMBean(objectName);
+                    }
+                }
+                catch (Exception e) {
+                    log.error("Failed to unregister MBean: " + e, e);
+                }
+            }
+        }
+    }
+    
     protected void registerProxyConnectorMBean(ProxyConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         if (mbeanServer != null) {
