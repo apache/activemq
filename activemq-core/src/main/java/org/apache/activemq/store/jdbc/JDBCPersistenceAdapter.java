@@ -148,7 +148,6 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public void start() throws Exception {
-        
         getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
 
         TransactionContext transactionContext = getTransactionContext();
