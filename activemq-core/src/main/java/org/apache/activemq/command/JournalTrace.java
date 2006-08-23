@@ -30,6 +30,13 @@ public class JournalTrace implements DataStructure {
 
     private String message;
     
+    public JournalTrace() {
+    	
+    }
+    public JournalTrace(String message) {
+    	this.message = message;
+    }
+    
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
