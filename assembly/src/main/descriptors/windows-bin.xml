@@ -34,17 +34,6 @@
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
-      <excludes>
-        <exclude>bin/*</exclude>
-      </excludes>
-      <lineEnding>dos</lineEnding>
-    </fileSet>
-    <fileSet>
-      <directory>src/release/bin</directory>
-      <outputDirectory>/bin</outputDirectory>
-      <includes>
-        <include>*.bat</include>
-      </includes>
       <lineEnding>dos</lineEnding>
     </fileSet>
     <fileSet>
