@@ -224,7 +224,7 @@ public class FailoverTransport implements CompositeTransport {
             transportListener.transportInterupted();
         }
         synchronized (reconnectMutex) {
-            log.debug("Transport failed, starting up reconnect task", e);
+            log.info("Transport failed, attempting to automatically reconnect due to: " + e, e);
             if (connectedTransport != null) {
                 initialized = false;
                 ServiceSupport.dispose(connectedTransport);
