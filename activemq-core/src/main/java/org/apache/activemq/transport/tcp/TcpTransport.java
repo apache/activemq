@@ -64,6 +64,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected boolean trace;
     protected boolean useLocalHost = true;
     protected int minmumWireFormatVersion;
+    private Boolean keepAlive;
 
     /**
      * Connect to a remote Node - e.g. a Broker
@@ -206,11 +207,21 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void setConnectionTimeout(int connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
     }
-    
+
+    public Boolean getKeepAlive() {
+        return keepAlive;
+    }
+
+    /**
+     * Enable/disable TCP KEEP_ALIVE mode
+     */
+    public void setKeepAlive(Boolean keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
 
     // Implementation methods
     // -------------------------------------------------------------------------
-
     protected String resolveHostName(String host) throws UnknownHostException {
         String localName = InetAddress.getLocalHost().getHostName();
         if (localName != null && isUseLocalHost()) {
@@ -237,6 +248,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             log.debug("Cannot set socket buffer size. Reason: " + se, se);
         }
         sock.setSoTimeout(soTimeout);
+        
+        if (keepAlive != null) {
+            sock.setKeepAlive(keepAlive.booleanValue());
+        }
     }
 
     protected void doStart() throws Exception {
