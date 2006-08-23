@@ -16,7 +16,6 @@
  */
 using NMS;
 using System;
-using System.CodeDom.Compiler;
 
 namespace ActiveMQ.Commands
 {
