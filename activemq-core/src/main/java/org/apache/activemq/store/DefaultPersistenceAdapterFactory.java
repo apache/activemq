@@ -167,6 +167,14 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         jdbcPersistenceAdapter.setUseDatabaseLock(useDatabaseLock);
     }
 
+    public boolean isCreateTablesOnStartup() {
+        return jdbcPersistenceAdapter.isCreateTablesOnStartup();
+    }
+
+    public void setCreateTablesOnStartup(boolean createTablesOnStartup) {
+        jdbcPersistenceAdapter.setCreateTablesOnStartup(createTablesOnStartup);
+    }
+
     /**
      * @throws IOException
      */

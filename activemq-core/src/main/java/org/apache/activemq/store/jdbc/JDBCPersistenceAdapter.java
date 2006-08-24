@@ -77,6 +77,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private boolean useDatabaseLock = true;
     private int lockKeepAlivePeriod = 0;
     private DatabaseLocker databaseLocker;
+    private boolean createTablesOnStartup = true;
 
     public JDBCPersistenceAdapter() {
     }
@@ -150,17 +151,19 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void start() throws Exception {
         getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
 
-        TransactionContext transactionContext = getTransactionContext();
-        transactionContext.begin();
-        try {
+        if (isCreateTablesOnStartup()) {
+            TransactionContext transactionContext = getTransactionContext();
+            transactionContext.begin();
             try {
-                getAdapter().doCreateTables(transactionContext);
-            } catch (SQLException e) {
-                log.warn("Cannot create tables due to: " + e);
-                JDBCPersistenceAdapter.log("Failure Details: ",e);
+                try {
+                    getAdapter().doCreateTables(transactionContext);
+                } catch (SQLException e) {
+                    log.warn("Cannot create tables due to: " + e);
+                    JDBCPersistenceAdapter.log("Failure Details: ",e);
+                }
+            } finally {
+                transactionContext.commit();
             }
-        } finally {
-            transactionContext.commit();
         }
         
         if (isUseDatabaseLock()) {
@@ -395,7 +398,14 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         this.useExternalMessageReferences = useExternalMessageReferences;
     }
     
-    
+    public boolean isCreateTablesOnStartup() {
+        return createTablesOnStartup;
+    }
+
+    public void setCreateTablesOnStartup(boolean createTablesOnStartup) {
+        this.createTablesOnStartup = createTablesOnStartup;
+    }
+
     public boolean isUseDatabaseLock() {
         return useDatabaseLock;
     }
