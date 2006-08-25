@@ -17,6 +17,12 @@
  */
 package org.apache.activemq.network.jms;
 
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.activemq.Service;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -24,29 +30,26 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+import javax.naming.NamingException;
 
-import org.apache.activemq.Service;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 /**
  * A Destination bridge is used to bridge between to different JMS systems
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public abstract class DestinationBridge implements Service,MessageListener{
-    private static final Log log=LogFactory.getLog(DestinationBridge.class);
+public abstract class DestinationBridge implements Service, MessageListener {
+    private static final Log log = LogFactory.getLog(DestinationBridge.class);
     protected MessageConsumer consumer;
-    protected AtomicBoolean started=new AtomicBoolean(false);
+    protected AtomicBoolean started = new AtomicBoolean(false);
     protected JmsMesageConvertor jmsMessageConvertor;
     protected boolean doHandleReplyTo = true;
     protected JmsConnector jmsConnector;
+    private int maximumRetries = 10;
 
     /**
      * @return Returns the consumer.
      */
-    public MessageConsumer getConsumer(){
+    public MessageConsumer getConsumer() {
         return consumer;
     }
 
@@ -54,88 +57,110 @@ public abstract class DestinationBridge implements Service,MessageListener{
      * @param consumer
      *            The consumer to set.
      */
-    public void setConsumer(MessageConsumer consumer){
-        this.consumer=consumer;
+    public void setConsumer(MessageConsumer consumer) {
+        this.consumer = consumer;
     }
 
     /**
      * @param connector
      */
-    public void setJmsConnector(JmsConnector connector){
+    public void setJmsConnector(JmsConnector connector) {
         this.jmsConnector = connector;
     }
+
     /**
      * @return Returns the inboundMessageConvertor.
      */
-    public JmsMesageConvertor getJmsMessageConvertor(){
+    public JmsMesageConvertor getJmsMessageConvertor() {
         return jmsMessageConvertor;
     }
 
     /**
-     * @param jmsMessageConvertor 
+     * @param jmsMessageConvertor
      */
-    public void setJmsMessageConvertor(JmsMesageConvertor jmsMessageConvertor){
-        this.jmsMessageConvertor=jmsMessageConvertor;
+    public void setJmsMessageConvertor(JmsMesageConvertor jmsMessageConvertor) {
+        this.jmsMessageConvertor = jmsMessageConvertor;
     }
 
-   
-    protected Destination processReplyToDestination (Destination destination){
+    public int getMaximumRetries() {
+        return maximumRetries;
+    }
+
+    /**
+     * Sets the maximum number of retries if a send fails before closing the
+     * bridge
+     */
+    public void setMaximumRetries(int maximumRetries) {
+        this.maximumRetries = maximumRetries;
+    }
+
+    protected Destination processReplyToDestination(Destination destination) {
         return jmsConnector.createReplyToBridge(destination, getConnnectionForConsumer(), getConnectionForProducer());
     }
-    
-    public void start() throws Exception{
-        if(started.compareAndSet(false,true)){
-            MessageConsumer consumer=createConsumer();
+
+    public void start() throws Exception {
+        if (started.compareAndSet(false, true)) {
+            MessageConsumer consumer = createConsumer();
             consumer.setMessageListener(this);
             createProducer();
         }
     }
 
-    public void stop() throws Exception{
+    public void stop() throws Exception {
         started.set(false);
     }
-    
-    public void onMessage(Message message){
-    	if(started.get()&&message!=null){
-    		try{
-    			Message converted;
-    			if(doHandleReplyTo){
-    				Destination replyTo = message.getJMSReplyTo();
-    				if(replyTo != null){
-    					converted = jmsMessageConvertor.convert(message, processReplyToDestination(replyTo));
-    				} else {
-    					converted = jmsMessageConvertor.convert(message);
-    				}
-    			} else {
-    				message.setJMSReplyTo(null);
-    				converted = jmsMessageConvertor.convert(message);
-    			}				
-    			sendMessage(converted);
-    			message.acknowledge();
-    		}catch(JMSException e){
-    			log.error("failed to forward message: "+message,e);
-    			try{
-    				stop();
-    			}catch(Exception e1){
-    				log.warn("Failed to stop cleanly",e1);
-    			}
-    		}
-    	}
+
+    public void onMessage(Message message) {
+        if (started.get() && message != null) {
+            int attempt = 0;
+            try {
+                if (attempt > 0) {
+                    restartProducer();
+                }
+                Message converted;
+                if (doHandleReplyTo) {
+                    Destination replyTo = message.getJMSReplyTo();
+                    if (replyTo != null) {
+                        converted = jmsMessageConvertor.convert(message, processReplyToDestination(replyTo));
+                    }
+                    else {
+                        converted = jmsMessageConvertor.convert(message);
+                    }
+                }
+                else {
+                    message.setJMSReplyTo(null);
+                    converted = jmsMessageConvertor.convert(message);
+                }
+                sendMessage(converted);
+                message.acknowledge();
+            }
+            catch (Exception e) {
+                log.error("failed to forward message on attempt: " + (++attempt) + " reason: " + e + " message: " + message, e);
+                if (maximumRetries > 0 && attempt >= maximumRetries) {
+                    try {
+                        stop();
+                    }
+                    catch (Exception e1) {
+                        log.warn("Failed to stop cleanly", e1);
+                    }
+                }
+            }
+        }
     }
 
-    
     /**
      * @return Returns the doHandleReplyTo.
      */
-    protected boolean isDoHandleReplyTo(){
+    protected boolean isDoHandleReplyTo() {
         return doHandleReplyTo;
     }
 
     /**
-     * @param doHandleReplyTo The doHandleReplyTo to set.
+     * @param doHandleReplyTo
+     *            The doHandleReplyTo to set.
      */
-    protected void setDoHandleReplyTo(boolean doHandleReplyTo){
-        this.doHandleReplyTo=doHandleReplyTo;
+    protected void setDoHandleReplyTo(boolean doHandleReplyTo) {
+        this.doHandleReplyTo = doHandleReplyTo;
     }
 
     protected abstract MessageConsumer createConsumer() throws JMSException;
@@ -145,8 +170,17 @@ public abstract class DestinationBridge implements Service,MessageListener{
     protected abstract void sendMessage(Message message) throws JMSException;
 
     protected abstract Connection getConnnectionForConsumer();
-    
+
     protected abstract Connection getConnectionForProducer();
 
-    
+    protected void restartProducer() throws JMSException, NamingException {
+        try {
+            getConnectionForProducer().close();
+        }
+        catch (Exception e) {
+            log.debug("Ignoring failure to close producer connection: " + e, e);
+        }
+        jmsConnector.restartProducerConnection();
+        createProducer();
+    }
 }

@@ -17,6 +17,9 @@
  */
 package org.apache.activemq.network.jms;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -26,9 +29,6 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.naming.NamingException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 /**
  * A Bridge to other JMS Queue providers
  * 
@@ -186,7 +186,11 @@ public class JmsQueueConnector extends JmsConnector{
         this.outboundQueueConnectionFactory=foreignQueueConnectionFactory;
     }
 
-    
+    public void restartProducerConnection() throws NamingException, JMSException {
+        outboundQueueConnection = null;
+        initializeForeignQueueConnection();
+    }
+
     protected void initializeForeignQueueConnection() throws NamingException,JMSException{
         if(outboundQueueConnection==null){
             // get the connection factories

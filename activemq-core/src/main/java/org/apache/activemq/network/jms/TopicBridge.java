@@ -60,7 +60,6 @@ class TopicBridge extends DestinationBridge{
     protected MessageConsumer createConsumer() throws JMSException{
         // set up the consumer
         consumerSession=consumerConnection.createTopicSession(false,Session.CLIENT_ACKNOWLEDGE);
-        producerSession=producerConnection.createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer=null;
         if(consumerName!=null&&consumerName.length()>0){
             if(selector!=null&&selector.length()>0){
@@ -81,6 +80,7 @@ class TopicBridge extends DestinationBridge{
     
     
     protected MessageProducer createProducer() throws JMSException{
+        producerSession=producerConnection.createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createPublisher(null);
         return producer;
     }

@@ -56,12 +56,10 @@ class QueueBridge extends DestinationBridge{
         }
     }
     
-    
 
     protected MessageConsumer createConsumer() throws JMSException{
         // set up the consumer
         consumerSession=consumerConnection.createQueueSession(false,Session.CLIENT_ACKNOWLEDGE);
-        producerSession=producerConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer=null;
         
             if(selector!=null&&selector.length()>0){
@@ -74,6 +72,7 @@ class QueueBridge extends DestinationBridge{
     }
     
     protected MessageProducer createProducer() throws JMSException{
+        producerSession=producerConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createSender(null);
         return producer;
     }
