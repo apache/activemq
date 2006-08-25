@@ -20,6 +20,7 @@ package org.apache.activemq.broker.jmx;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -39,16 +40,56 @@ public class QueueView extends DestinationView implements QueueViewMBean{
         return OpenTypeSupport.convert(rc);
     }
 
-    public boolean removeMessage(String messageId){
-        return ((Queue) destination).removeMessage(messageId);
-    }
-
     public void purge(){
         ((Queue) destination).purge();
     }
 
-    public boolean copyMessageTo(String messageId, String destinationName) throws Exception {
-        return ((Queue) destination).copyMessageTo(BrokerView.getConnectionContext(broker.getContextBroker()), messageId, ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE));
+    public boolean removeMessage(String messageId) throws Exception{
+        return ((Queue) destination).removeMessage(messageId);
+    }
+
+    public int removeMatchingMessages(String selector) throws Exception {
+        return ((Queue) destination).removeMatchingMessages(selector);
     }
     
+    public int removeMatchingMessages(String selector, int maximumMessages) throws Exception {
+        return ((Queue) destination).removeMatchingMessages(selector, maximumMessages);
+    }
+    
+    public boolean copyMessageTo(String messageId, String destinationName) throws Exception {
+        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
+        return ((Queue) destination).copyMessageTo(context, messageId, toDestination);
+    }
+
+    public int copyMatchingMessagesTo(String selector, String destinationName) throws Exception {
+        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
+        return ((Queue) destination).copyMatchingMessagesTo(context, selector, toDestination);
+    }
+    
+    public int copyMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
+        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
+        return ((Queue) destination).copyMatchingMessagesTo(context, selector, toDestination, maximumMessages);
+    }
+    
+    public boolean moveMessageTo(String messageId, String destinationName) throws Exception {
+        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
+        return ((Queue) destination).moveMessageTo(context, messageId, toDestination);
+    }
+    
+    public int moveMatchingMessagesTo(String selector, String destinationName) throws Exception {
+        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
+        return ((Queue) destination).moveMatchingMessagesTo(context, selector, toDestination);
+    }
+    
+    public int moveMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
+        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
+        return ((Queue) destination).moveMatchingMessagesTo(context, selector, toDestination, maximumMessages);
+    }
+
 }

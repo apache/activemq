@@ -33,7 +33,6 @@ import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 public class QueueSubscription extends PrefetchSubscription implements LockOwner {
     

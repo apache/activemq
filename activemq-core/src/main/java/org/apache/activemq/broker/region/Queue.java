@@ -33,8 +33,10 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -43,6 +45,9 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,20 +82,21 @@ public class Queue implements Destination {
     protected int highestSubscriptionPriority;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
-    
-    public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store,
-            DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
+
+    public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
+            TaskRunnerFactory taskFactory) throws Exception {
         this.destination = destination;
         this.usageManager = new UsageManager(memoryManager);
         this.usageManager.setLimit(Long.MAX_VALUE);
         this.store = store;
 
-        // Let the store know what usage manager we are using so that he can flush messages to disk
+        // Let the store know what usage manager we are using so that he can
+        // flush messages to disk
         // when usage gets high.
-        if( store!=null ) {
+        if (store != null) {
             store.setUsageManager(usageManager);
         }
-        
+
         destinationStatistics.setParent(parentStats);
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
 
@@ -110,8 +116,8 @@ public class Queue implements Destination {
                 public void recoverMessageReference(String messageReference) throws Exception {
                     throw new RuntimeException("Should not be called.");
                 }
-                
-                public void finished(){
+
+                public void finished() {
                 }
             });
         }
@@ -164,13 +170,15 @@ public class Queue implements Destination {
                         if (sub.matches(node, msgContext)) {
                             sub.add(node);
                         }
-                    } catch (IOException e) {
+                    }
+                    catch (IOException e) {
                         log.warn("Could not load message: " + e, e);
                     }
                 }
             }
 
-        } finally {
+        }
+        finally {
             msgContext.clear();
             dispatchValve.turnOn();
         }
@@ -225,8 +233,9 @@ public class Queue implements Destination {
                             }
                         }
                     }
-                    
-                    // now lets dispatch from the copy of the collection to avoid deadlocks
+
+                    // now lets dispatch from the copy of the collection to
+                    // avoid deadlocks
                     for (Iterator iter = messagesToDispatch.iterator(); iter.hasNext();) {
                         IndirectMessageReference node = (IndirectMessageReference) iter.next();
                         node.incrementRedeliveryCounter();
@@ -239,7 +248,8 @@ public class Queue implements Destination {
                     msgContext.clear();
                 }
             }
-        } finally {
+        }
+        finally {
             dispatchValve.turnOn();
         }
 
@@ -250,9 +260,10 @@ public class Queue implements Destination {
         if (context.isProducerFlowControl()) {
             if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-            } else {
-            usageManager.waitForSpace();
-            }    
+            }
+            else {
+                usageManager.waitForSpace();
+            }
         }
 
         message.setRegionDestination(this);
@@ -269,10 +280,12 @@ public class Queue implements Destination {
                         dispatch(context, node, message);
                     }
                 });
-            } else {
+            }
+            else {
                 dispatch(context, node, message);
             }
-        } finally {
+        }
+        finally {
             node.decrementReferenceCount();
         }
     }
@@ -315,9 +328,10 @@ public class Queue implements Destination {
 
     public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
         if (store != null && node.isPersistent()) {
-            // the original ack may be a ranged ack, but we are trying to delete a specific 
+            // the original ack may be a ranged ack, but we are trying to delete
+            // a specific
             // message store here so we need to convert to a non ranged ack.
-            if( ack.getMessageCount() > 0 ) {
+            if (ack.getMessageCount() > 0) {
                 // Dup the ack
                 MessageAck a = new MessageAck();
                 ack.copy(a);
@@ -344,9 +358,8 @@ public class Queue implements Destination {
         synchronized (messages) {
             size = messages.size();
         }
-        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size()
-                + ", memory=" + usageManager.getPercentUsage() + "%, size=" + size + ", in flight groups="
-                + messageGroupOwners;
+        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size() + ", memory=" + usageManager.getPercentUsage()
+                + "%, size=" + size + ", in flight groups=" + messageGroupOwners;
     }
 
     public void start() throws Exception {
@@ -364,7 +377,7 @@ public class Queue implements Destination {
     public String getDestination() {
         return destination.getPhysicalName();
     }
-    
+
     public UsageManager getUsageManager() {
         return usageManager;
     }
@@ -443,8 +456,7 @@ public class Queue implements Destination {
     public void setMemoryLimit(long limit) {
         getUsageManager().setLimit(limit);
     }
-    
-    
+
     // Implementation methods
     // -------------------------------------------------------------------------
     private MessageReference createMessageReference(Message message) {
@@ -472,7 +484,8 @@ public class Queue implements Destination {
             msgContext.setMessageReference(node);
 
             dispatchPolicy.dispatch(context, node, msgContext, consumers);
-        } finally {
+        }
+        finally {
             msgContext.clear();
             dispatchValve.decrement();
         }
@@ -508,42 +521,17 @@ public class Queue implements Destination {
                         if (m != null) {
                             l.add(m);
                         }
-                    } finally {
+                    }
+                    finally {
                         r.decrementReferenceCount();
                     }
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                 }
             }
         }
 
         return (Message[]) l.toArray(new Message[l.size()]);
-    }
-
-    public boolean removeMessage(String messageId) {
-        synchronized (messages) {
-            ConnectionContext c = new ConnectionContext();
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                try {
-                    IndirectMessageReference r = (IndirectMessageReference) iter.next();
-                    if (messageId.equals(r.getMessageId().toString())) {
-                        
-                        // We should only delete messages that can be locked.
-                        if( r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER) )  {
-                            MessageAck ack = new MessageAck();
-                            ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-                            ack.setDestination(destination);
-                            ack.setMessageID(r.getMessageId());
-                            acknowledge(c, null, ack, r);
-                            r.drop();
-                            dropEvent();
-                            return true;
-                        }
-                    }
-                } catch (IOException e) {
-                }
-            }
-        }
-        return false;
     }
 
     public Message getMessage(String messageId) {
@@ -558,12 +546,14 @@ public class Queue implements Destination {
                             if (m != null) {
                                 return m;
                             }
-                        } finally {
+                        }
+                        finally {
                             r.decrementReferenceCount();
                         }
                         break;
                     }
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                 }
             }
         }
@@ -572,13 +562,13 @@ public class Queue implements Destination {
 
     public void purge() {
         synchronized (messages) {
-            ConnectionContext c = new ConnectionContext();
+            ConnectionContext c = createConnectionContext();
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
                 try {
                     IndirectMessageReference r = (IndirectMessageReference) iter.next();
-                    
+
                     // We should only delete messages that can be locked.
-                    if( r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER) )  {
+                    if (r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER)) {
                         MessageAck ack = new MessageAck();
                         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
                         ack.setDestination(destination);
@@ -587,7 +577,8 @@ public class Queue implements Destination {
                         r.drop();
                         dropEvent(true);
                     }
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                 }
             }
 
@@ -596,27 +587,207 @@ public class Queue implements Destination {
             gc();
         }
     }
+    
 
-    public boolean copyMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Exception {
+    /**
+     * Removes the message matching the given messageId
+     */
+    public boolean removeMessage(String messageId) throws Exception {
+        return removeMatchingMessages(createMessageIdFilter(messageId), 1) > 0;
+    }
+
+    /**
+     * Removes the messages matching the given selector
+     * 
+     * @return the number of messages removed
+     */
+    public int removeMatchingMessages(String selector) throws Exception {
+        return removeMatchingMessages(selector, -1);
+    }
+    
+    /**
+     * Removes the messages matching the given selector up to the maximum number of matched messages
+     * 
+     * @return the number of messages removed
+     */
+    public int removeMatchingMessages(String selector, int maximumMessages) throws Exception {
+        return removeMatchingMessages(createSelectorFilter(selector), maximumMessages);
+    }
+
+    /**
+     * Removes the messages matching the given filter up to the maximum number of matched messages
+     * 
+     * @return the number of messages removed
+     */
+    public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
+        int counter = 0;
         synchronized (messages) {
+            ConnectionContext c = createConnectionContext();
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                try {
-                    MessageReference r = (MessageReference) iter.next();
-                    if (messageId.equals(r.getMessageId().toString())) {
-                        r.incrementReferenceCount();
-                        try {
-                            Message m = r.getMessage();
-                            BrokerSupport.resend(context, m, dest);                            
-                        } finally {
-                            r.decrementReferenceCount();
-                        }                        
-                        return true;
+                IndirectMessageReference r = (IndirectMessageReference) iter.next();
+                if (filter.evaluate(c, r)) {
+                    // We should only delete messages that can be locked.
+                    if (lockMessage(r)) {
+                        removeMessage(c, r);
+                        if (++counter >= maximumMessages && maximumMessages > 0) {
+                            break;
+                        }
                     }
-                } catch (IOException e) {
                 }
             }
         }
-        return false;
+        return counter;
+    }
+
+    /**
+     * Copies the message matching the given messageId
+     */
+    public boolean copyMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Exception {
+        return copyMatchingMessages(context, createMessageIdFilter(messageId), dest, 1) > 0;
+    }
+    
+    /**
+     * Copies the messages matching the given selector
+     * 
+     * @return the number of messages copied
+     */
+    public int copyMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest) throws Exception {
+        return copyMatchingMessagesTo(context, selector, dest, -1);
+    }
+    
+    /**
+     * Copies the messages matching the given selector up to the maximum number of matched messages
+     * 
+     * @return the number of messages copied
+     */
+    public int copyMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest, int maximumMessages) throws Exception {
+        return copyMatchingMessages(context, createSelectorFilter(selector), dest, maximumMessages);
+    }
+
+    /**
+     * Copies the messages matching the given filter up to the maximum number of matched messages
+     * 
+     * @return the number of messages copied
+     */
+    public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
+        int counter = 0;
+        synchronized (messages) {
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                MessageReference r = (MessageReference) iter.next();
+                if (filter.evaluate(context, r)) {
+                    r.incrementReferenceCount();
+                    try {
+                        Message m = r.getMessage();
+                        BrokerSupport.resend(context, m, dest);
+                        if (++counter >= maximumMessages && maximumMessages > 0) {
+                            break;
+                        }
+                    }
+                    finally {
+                        r.decrementReferenceCount();
+                    }
+                }
+            }
+        }
+        return counter;
+    }
+
+    /**
+     * Moves the message matching the given messageId
+     */
+    public boolean moveMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Exception {
+        return moveMatchingMessagesTo(context, createMessageIdFilter(messageId), dest, 1) > 0;
+    }
+    
+    /**
+     * Moves the messages matching the given selector
+     * 
+     * @return the number of messages removed
+     */
+    public int moveMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest) throws Exception {
+        return moveMatchingMessagesTo(context, selector, dest, -1);
+    }
+    
+    /**
+     * Moves the messages matching the given selector up to the maximum number of matched messages
+     */
+    public int moveMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest, int maximumMessages) throws Exception {
+        return moveMatchingMessagesTo(context, createSelectorFilter(selector), dest, maximumMessages);
+    }
+
+    /**
+     * Moves the messages matching the given filter up to the maximum number of matched messages
+     */
+    public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
+        int counter = 0;
+        synchronized (messages) {
+            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                IndirectMessageReference r = (IndirectMessageReference) iter.next();
+                if (filter.evaluate(context, r)) {
+                    // We should only move messages that can be locked.
+                    if (lockMessage(r)) {
+                        r.incrementReferenceCount();
+                        try {
+                            Message m = r.getMessage();
+                            BrokerSupport.resend(context, m, dest);
+                            removeMessage(context, r);
+                            if (++counter >= maximumMessages && maximumMessages > 0) {
+                                break;
+                            }
+                        }
+                        finally {
+                            r.decrementReferenceCount();
+                        }
+                    }
+                }
+            }
+        }
+        return counter;
+    }
+
+    protected MessageReferenceFilter createMessageIdFilter(final String messageId) {
+        return new MessageReferenceFilter() {
+            public boolean evaluate(ConnectionContext context, MessageReference r) {
+                return messageId.equals(r.getMessageId().toString());
+            }
+        };
+    }
+    
+    protected MessageReferenceFilter createSelectorFilter(String selector) throws InvalidSelectorException {
+        final BooleanExpression selectorExpression = new SelectorParser().parse(selector);
+
+        return new MessageReferenceFilter() {
+            public boolean evaluate(ConnectionContext context, MessageReference r) throws JMSException {
+                MessageEvaluationContext messageEvaluationContext = context.getMessageEvaluationContext();
+                
+                messageEvaluationContext.setMessageReference(r);
+                if (messageEvaluationContext.getDestination() == null) {
+                    messageEvaluationContext.setDestination(getActiveMQDestination());
+                }
+                
+                return selectorExpression.matches(messageEvaluationContext);
+            }
+        };
+    }
+
+    protected void removeMessage(ConnectionContext c, IndirectMessageReference r) throws IOException {
+        MessageAck ack = new MessageAck();
+        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+        ack.setDestination(destination);
+        ack.setMessageID(r.getMessageId());
+        acknowledge(c, null, ack, r);
+        r.drop();
+        dropEvent();
+    }
+
+    protected boolean lockMessage(IndirectMessageReference r) {
+        return r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER);
+    }
+
+    protected ConnectionContext createConnectionContext() {
+        ConnectionContext answer = new ConnectionContext();
+        answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
+        return answer;
     }
 
 }
