@@ -207,6 +207,8 @@ public class IntrospectionSupport {
             return true;
         if( clazz == URI.class )
             return true;
+        if( clazz == Boolean.class )
+            return true;
         return false;
     }
 
