@@ -184,6 +184,7 @@ public class Queue implements Destination {
         // while
         // removing up a subscription.
         dispatchValve.turnOff();
+
         try {
 
             synchronized (consumers) {
@@ -246,8 +247,13 @@ public class Queue implements Destination {
 
     public void send(final ConnectionContext context, final Message message) throws Exception {
 
-        if (context.isProducerFlowControl())
+        if (context.isProducerFlowControl()) {
+            if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
+                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
+            } else {
             usageManager.waitForSpace();
+            }    
+        }
 
         message.setRegionDestination(this);
 
@@ -606,7 +612,5 @@ public class Queue implements Destination {
         }
         return false;
     }
-
-
 
 }
