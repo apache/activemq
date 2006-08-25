@@ -50,6 +50,11 @@ public class UsageManager {
     
     private final CopyOnWriteArrayList listeners = new CopyOnWriteArrayList();
     
+    private boolean sendFailIfNoSpace;
+
+    /** True if someone called setSendFailIfNoSpace() on this particular usage manager */
+    private boolean sendFailIfNoSpaceExplicitySet;
+
     public UsageManager() {
         this(null);
     }
@@ -206,6 +211,22 @@ public class UsageManager {
         }
     }
     
+    /**
+     * Sets whether or not a send() should fail if there is no space free. The default
+     * value is false which means to block the send() method until space becomes available
+     */
+    public void setSendFailIfNoSpace(boolean failProducerIfNoSpace) {
+        sendFailIfNoSpaceExplicitySet = true;
+        this.sendFailIfNoSpace = failProducerIfNoSpace;
+    }
+
+    public boolean isSendFailIfNoSpace() {
+        if (sendFailIfNoSpaceExplicitySet || parent == null) {
+            return sendFailIfNoSpace;
+        } else {
+            return parent.isSendFailIfNoSpace();
+        }
+    }
     
     private void setPercentUsage(int value) {
         int oldValue = percentUsage;
