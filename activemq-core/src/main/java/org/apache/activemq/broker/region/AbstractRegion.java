@@ -43,11 +43,11 @@ import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 
+ *
  * @version $Revision: 1.14 $
  */
 abstract public class AbstractRegion implements Region {
-    
+
     private static final Log log = LogFactory.getLog(AbstractRegion.class);
 
     protected final ConcurrentHashMap destinations = new ConcurrentHashMap();
@@ -60,7 +60,8 @@ abstract public class AbstractRegion implements Region {
     protected boolean autoCreateDestinations=true;
     protected final TaskRunnerFactory taskRunnerFactory;
     protected final Object destinationsMutex = new Object();
-    
+    protected final Map consumerChangeMutexMap = new HashMap();
+
     public AbstractRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
         this.broker = broker;
         this.destinationStatistics = destinationStatistics;
@@ -111,7 +112,7 @@ abstract public class AbstractRegion implements Region {
 
     public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout)
                     throws Exception{
-        
+
         // No timeout.. then try to shut down right way, fails if there are current subscribers.
         if( timeout == 0 ) {
             for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
@@ -121,19 +122,19 @@ abstract public class AbstractRegion implements Region {
                 }
             }
         }
-        
+
         if( timeout > 0 ) {
-            // TODO: implement a way to notify the subscribers that we want to take the down 
+            // TODO: implement a way to notify the subscribers that we want to take the down
             // the destination and that they should un-subscribe..  Then wait up to timeout time before
             // dropping the subscription.
-        
+
         }
 
         log.debug("Removing destination: "+destination);
         synchronized(destinationsMutex){
             Destination dest=(Destination) destinations.remove(destination);
             if(dest!=null){
-                
+
                 // timeout<0 or we timed out, we now force any remaining subscriptions to un-subscribe.
                 for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
                     Subscription sub=(Subscription) iter.next();
@@ -141,20 +142,20 @@ abstract public class AbstractRegion implements Region {
                         dest.removeSubscription(context, sub);
                     }
                 }
-                
+
                 destinationMap.removeAll(destination);
                 dest.dispose(context);
                 dest.stop();
-                
+
             }else{
                 log.debug("Destination doesn't exist: " + dest);
             }
         }
     }
-    
+
     /**
      * Provide an exact or wildcard lookup of destinations in the region
-     * 
+     *
      * @return a set of matching destination objects.
      */
     public Set getDestinations(ActiveMQDestination destination) {
@@ -162,7 +163,7 @@ abstract public class AbstractRegion implements Region {
             return destinationMap.get(destination);
         }
     }
-    
+
     public Map getDestinationMap() {
         synchronized(destinationsMutex){
             return new HashMap(destinations);
@@ -177,43 +178,66 @@ abstract public class AbstractRegion implements Region {
             // lets auto-create the destination
             lookup(context, destination);
         }
-        
-        Subscription sub = createSubscription(context, info);
 
-        // We may need to add some destinations that are in persistent store but not active 
-        // in the broker.
-        //
-        // TODO: think about this a little more.  This is good cause destinations are not loaded into 
-        // memory until a client needs to use the queue, but a management agent viewing the 
-        // broker will not see a destination that exists in persistent store.  We may want to
-        // eagerly load all destinations into the broker but have an inactive state for the
-        // destination which has reduced memory usage.
-        //
-        if( persistenceAdapter!=null ) {
-            Set inactiveDests = getInactiveDestinations();
-            for (Iterator iter = inactiveDests.iterator(); iter.hasNext();) {
-                ActiveMQDestination dest = (ActiveMQDestination) iter.next();
-                if( sub.matches(dest) ) {
-                    context.getBroker().addDestination(context, dest);
-                }
+        Object addGuard;
+        synchronized(consumerChangeMutexMap) {
+            addGuard = consumerChangeMutexMap.get(info.getConsumerId());
+            if (addGuard == null) {
+                addGuard = new Object();
+                consumerChangeMutexMap.put(info.getConsumerId(), addGuard);
             }
         }
-                
-        subscriptions.put(info.getConsumerId(), sub);
+        synchronized (addGuard) {
+            Object o = subscriptions.get(info.getConsumerId());
+            if (o != null) {
+                log.warn("A duplicate subscription was detected. Clients may be misbehaving. Later warnings you may see about subscription removal are a consequence of this.");
+                return (Subscription)o;
+            }
 
-        // Add the subscription to all the matching queues.
-        for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
-            Destination dest = (Destination) iter.next();            
-            dest.addSubscription(context, sub);
-        }        
+            Subscription sub = createSubscription(context, info);
 
-        if( info.isBrowser() ) {
-            ((QueueBrowserSubscription)sub).browseDone();
+            // We may need to add some destinations that are in persistent store but not active
+            // in the broker.
+            //
+            // TODO: think about this a little more.  This is good cause destinations are not loaded into
+            // memory until a client needs to use the queue, but a management agent viewing the
+            // broker will not see a destination that exists in persistent store.  We may want to
+            // eagerly load all destinations into the broker but have an inactive state for the
+            // destination which has reduced memory usage.
+            //
+            if( persistenceAdapter!=null ) {
+                Set inactiveDests = getInactiveDestinations();
+                for (Iterator iter = inactiveDests.iterator(); iter.hasNext();) {
+                    ActiveMQDestination dest = (ActiveMQDestination) iter.next();
+                    if( sub.matches(dest) ) {
+                        context.getBroker().addDestination(context, dest);
+                    }
+                }
+            }
+
+            subscriptions.put(info.getConsumerId(), sub);
+
+            // At this point we're done directly manipulating subscriptions,
+            // but we need to retain the synchronized block here. Consider
+            // otherwise what would happen if at this point a second
+            // thread added, then removed, as would be allowed with
+            // no mutex held. Remove is only essentially run once
+            // so everything after this point would be leaked.
+
+            // Add the subscription to all the matching queues.
+            for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
+                Destination dest = (Destination) iter.next();
+                dest.addSubscription(context, sub);
+            }
+
+            if( info.isBrowser() ) {
+                ((QueueBrowserSubscription)sub).browseDone();
+            }
+
+            return sub;
         }
-        
-        return sub;
     }
-    
+
     /**
      * Get all the Destinations that are in storage
      * @return Set of all stored destinations
@@ -230,26 +254,29 @@ abstract public class AbstractRegion implements Region {
         inactiveDests.removeAll( destinations.keySet() );
         return inactiveDests;
     }
-    
+
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-    	
+
         log.debug("Removing consumer: "+info.getConsumerId());
-        
+
         Subscription sub = (Subscription) subscriptions.remove(info.getConsumerId());
         if( sub==null )
             throw new IllegalArgumentException("The subscription does not exist: "+info.getConsumerId());
-        
+
         // remove the subscription from all the matching queues.
         for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
             Destination dest = (Destination) iter.next();
             dest.removeSubscription(context, sub);
         }
-        
+
         destroySubscription(sub);
-        
+
+        synchronized (consumerChangeMutexMap) {
+            consumerChangeMutexMap.remove(info.getConsumerId());
+        }
     }
 
-    protected void destroySubscription(Subscription sub) {        
+    protected void destroySubscription(Subscription sub) {
         sub.destroy();
     }
 
@@ -262,7 +289,7 @@ abstract public class AbstractRegion implements Region {
         Destination dest = lookup(context, messageSend.getDestination());
         dest.send(context, messageSend);
     }
-    
+
     public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
         Subscription sub = (Subscription) subscriptions.get(ack.getConsumerId());
         if( sub==null )
@@ -295,7 +322,7 @@ abstract public class AbstractRegion implements Region {
             return dest;
         }
     }
-    
+
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
         Subscription sub = (Subscription) subscriptions.get(messageDispatchNotification.getConsumerId());
         if (sub != null){
@@ -306,23 +333,23 @@ abstract public class AbstractRegion implements Region {
         for (Iterator iter = subscriptions.values().iterator(); iter.hasNext();) {
             Subscription sub = (Subscription) iter.next();
             sub.gc();
-        }        
+        }
         for (Iterator iter = destinations.values()  .iterator(); iter.hasNext();) {
             Destination dest = (Destination) iter.next();
             dest.gc();
-        }        
+        }
     }
 
     protected abstract Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws Exception;
     abstract protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
 
-    public boolean isAutoCreateDestinations() { 
+    public boolean isAutoCreateDestinations() {
         return autoCreateDestinations;
     }
 
     public void setAutoCreateDestinations(boolean autoCreateDestinations) {
         this.autoCreateDestinations = autoCreateDestinations;
     }
-    
+
 
 }

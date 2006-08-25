@@ -17,6 +17,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Broker;
@@ -33,6 +35,7 @@ public class BrokerView implements BrokerViewMBean {
     
     final ManagedRegionBroker broker;
 	private final BrokerService brokerService;
+    private final AtomicInteger sessionIdCounter = new AtomicInteger(0);
 
     public BrokerView(BrokerService brokerService, ManagedRegionBroker managedBroker) throws Exception {
         this.brokerService = brokerService;
@@ -156,7 +159,7 @@ public class BrokerView implements BrokerViewMBean {
         ConsumerInfo info = new ConsumerInfo();
         ConsumerId consumerId = new ConsumerId();
         consumerId.setConnectionId(clientId);
-        consumerId.setSessionId(0);
+        consumerId.setSessionId(sessionIdCounter.incrementAndGet());
         consumerId.setValue(0);
         info.setConsumerId(consumerId);
         info.setDestination(new ActiveMQTopic(topicName));
