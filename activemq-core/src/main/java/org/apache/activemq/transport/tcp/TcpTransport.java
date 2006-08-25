@@ -65,6 +65,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected boolean useLocalHost = true;
     protected int minmumWireFormatVersion;
     private Boolean keepAlive;
+    private Boolean tcpNoDelay;
 
     /**
      * Connect to a remote Node - e.g. a Broker
@@ -219,6 +220,17 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         this.keepAlive = keepAlive;
     }
 
+    public Boolean getTcpNoDelay() {
+        return tcpNoDelay;
+    }
+
+    /**
+     * Enable/disable the TCP_NODELAY option on the socket
+     */
+    public void setTcpNoDelay(Boolean tcpNoDelay) {
+        this.tcpNoDelay = tcpNoDelay;
+    }
+
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -251,6 +263,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         
         if (keepAlive != null) {
             sock.setKeepAlive(keepAlive.booleanValue());
+        }
+        if (tcpNoDelay != null) {
+            sock.setTcpNoDelay(tcpNoDelay.booleanValue());
         }
     }
 
