@@ -74,6 +74,58 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertQueueBrowseWorks();
         assertCreateAndDestroyDurableSubscriptions();
     }
+    
+    public void testMoveMessagesBySelector() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+        
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+        
+        QueueViewMBean queue = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        
+        String newDestination = "test.new.destination." + getClass() + "." + getName();
+        queue.moveMatchingMessagesTo("counter > 2", newDestination );
+        
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
+        
+        queue = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        
+        assertTrue("Should have at least one message in the queue: " + queueViewMBeanName, queue.getQueueSize() > 0);
+        
+        // now lets remove them by selector
+        queue.removeMatchingMessages("counter > 2");
+        
+        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+    }
+    
+    public void testCopyMessagesBySelector() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+        
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        String newDestination = "test.new.destination." + getClass() + "." + getName();
+        long queueSize = queue.getQueueSize();
+        queue.copyMatchingMessagesTo("counter > 2", newDestination);
+        
+        assertEquals("Should have same number of messages in the queue: " + queueViewMBeanName, queueSize, queueSize);
+        
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
+
+        queue = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        
+        log.info("Queue: " + queueViewMBeanName + " now has: " + queue.getQueueSize() + " message(s)");
+        
+        assertTrue("Should have at least one message in the queue: " + queueViewMBeanName, queue.getQueueSize() > 0);
+        
+        // now lets remove them by selector
+        queue.removeMatchingMessages("counter > 2");
+        
+        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+    }
+
 
     protected void assertQueueBrowseWorks() throws Exception {
         Integer mbeancnt = mbeanServer.getMBeanCount();
@@ -205,6 +257,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         MessageProducer producer = session.createProducer(destination);
         for (int i = 0; i < messageCount; i++) {
             Message message = session.createTextMessage("Message: " + i);
+            message.setIntProperty("counter", i);
             producer.send(message);
         }
         Thread.sleep(1000);
