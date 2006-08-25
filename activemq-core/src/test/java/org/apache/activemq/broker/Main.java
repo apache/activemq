@@ -20,6 +20,7 @@ package org.apache.activemq.broker;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.util.UDPTraceBrokerPlugin;
 import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
 import org.apache.activemq.broker.view.DestinationDotFilePlugin;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -52,7 +53,7 @@ public class Main {
             BrokerService broker = new BrokerService();
             broker.setPersistent(false);
             broker.setUseJmx(true);
-            broker.setPlugins(new BrokerPlugin[] { /*new DestinationDotFilePlugin(), */ new ConnectionDotFilePlugin() });
+            broker.setPlugins(new BrokerPlugin[] { new ConnectionDotFilePlugin(), new UDPTraceBrokerPlugin() });
             broker.addConnector("tcp://localhost:61616");
             broker.addConnector("stomp://localhost:61613");
             broker.start();
