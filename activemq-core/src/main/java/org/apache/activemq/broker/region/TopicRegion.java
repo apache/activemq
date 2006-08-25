@@ -105,6 +105,10 @@ public class TopicRegion extends AbstractRegion {
             else {
                 super.addConsumer(context, info);
                 sub = (DurableTopicSubscription) durableSubscriptions.get(key);
+                if (sub == null) {
+                    throw new JMSException("Cannot use the same consumerId: " + info.getConsumerId() + " for two different durable subscriptions clientID: "
+                            + key.getClientId() + " subscriberName: " + key.getSubscriptionName());
+                }
             }
             
             sub.activate(context, info);
