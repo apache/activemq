@@ -285,11 +285,15 @@ public class Queue implements Destination {
     }
 
     public void dropEvent() {
+        dropEvent(false);
+    }
+
+    public void dropEvent(boolean skipGc) {
         // TODO: need to also decrement when messages expire.
         destinationStatistics.getMessages().decrement();
         synchronized (messages) {
             garbageSize++;
-            if (garbageSize > garbageSizeBeforeCollection) {
+            if (!skipGc && garbageSize > garbageSizeBeforeCollection) {
                 gc();
             }
         }
@@ -532,7 +536,6 @@ public class Queue implements Destination {
                             acknowledge(c, null, ack, r);
                             r.drop();
                             dropEvent();
-                            iter.remove();
                             return true;
                         }
                     }
@@ -582,12 +585,15 @@ public class Queue implements Destination {
                         ack.setMessageID(r.getMessageId());
                         acknowledge(c, null, ack, r);
                         r.drop();
-                        dropEvent();
-                        iter.remove();
+                        dropEvent(true);
                     }
                 } catch (IOException e) {
                 }
             }
+
+            // Run gc() by hand. Had we run it in the loop it could be
+            // quite expensive.
+            gc();
         }
     }
 
