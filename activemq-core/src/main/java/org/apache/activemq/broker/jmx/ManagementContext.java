@@ -58,6 +58,7 @@ public class ManagementContext implements Service{
     private boolean createConnector=true;
     private boolean findTigerMbeanServer=false;
     private int connectorPort=1099;
+    private int rmiServerPort;
     private String connectorPath="/jmxrmi";
     private AtomicBoolean started=new AtomicBoolean(false);
     private JMXConnectorServer connectorServer;
@@ -292,14 +293,19 @@ public class ManagementContext implements Service{
                     }
                 }
             }
-            if(result==null&&createMBeanServer){
-                result=createMBeanServer();
+            if (result == null && createMBeanServer) {
+                result = createMBeanServer();
             }
-        }catch(NoClassDefFoundError e){
-            log.error("Couldnot load MBeanServer",e);
-        }catch(Throwable e){
+            else {
+                createConnector(result);
+            }
+        }
+        catch (NoClassDefFoundError e) {
+            log.error("Could not load MBeanServer", e);
+        }
+        catch (Throwable e) {
             // probably don't have access to system properties
-            log.error("Failed to initialize MBeanServer",e);
+            log.error("Failed to initialize MBeanServer", e);
         }
         return result;
     }
@@ -386,10 +392,15 @@ public class ManagementContext implements Service{
             log.debug("Failed to create local registry",e);
         }
         // Create the JMXConnectorServer
-        String serviceURL="service:jmx:rmi:///jndi/rmi://localhost:"+connectorPort+connectorPath;
+	String rmiServer = "";
+	if (rmiServerPort != 0) {
+	    // This is handy to use if you have a firewall and need to
+	    // force JMX to use fixed ports.
+	    rmiServer = "localhost:" + rmiServerPort;
+	}
+	String serviceURL = "service:jmx:rmi://"+rmiServer+"/jndi/rmi://localhost:"+connectorPort+connectorPath;
         JMXServiceURL url=new JMXServiceURL(serviceURL);
         connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,null,mbeanServer);
-        // log.info("JMX consoles can connect to serviceURL: " + serviceURL);
     }
 
     public String getConnectorPath(){
@@ -406,6 +417,14 @@ public class ManagementContext implements Service{
 
     public void setConnectorPort(int connectorPort){
         this.connectorPort=connectorPort;
+    }
+
+    public int getRmiServerPort(){
+        return rmiServerPort;
+    }
+
+    public void setRmiServerPort(int rmiServerPort){
+        this.rmiServerPort=rmiServerPort;
     }
 
     public boolean isCreateConnector(){
