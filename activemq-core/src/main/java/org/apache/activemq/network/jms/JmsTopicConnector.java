@@ -187,7 +187,11 @@ public class JmsTopicConnector extends JmsConnector{
         this.outboundTopicConnectionFactory=foreignTopicConnectionFactory;
     }
 
-    
+
+    public void restartProducerConnection() throws NamingException, JMSException {
+        outboundTopicConnection = null;
+        initializeForeignTopicConnection();
+    }
 
     protected void initializeForeignTopicConnection() throws NamingException,JMSException{
         if(outboundTopicConnection==null){
