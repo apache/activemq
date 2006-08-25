@@ -50,11 +50,7 @@ var amq =
             {
               for (var j = 0; j < responseElement.childNodes.length; j++)
               {
-                var child = responseElement.childNodes[j]
-                if (child.nodeType == 1)
-                {
-                  handler(child);
-                }
+                handler(responseElement.childNodes[j]);
 	      }
             }
           }
