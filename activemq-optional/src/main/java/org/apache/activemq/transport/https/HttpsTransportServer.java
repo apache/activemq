@@ -28,7 +28,9 @@ public class HttpsTransportServer extends HttpTransportServer {
 	private String keyStorePassword = System.getProperty( "javax.net.ssl.keyStorePassword" );
 	private String keyStore = System.getProperty( "javax.net.ssl.keyStore" );
 	private String keyStoreType = null;
-	private String certificateAlgorithm = null;
+	private String secureRandomCertficateAlgorithm = null;
+	private String trustCertificateAlgorithm = null;
+	private String keyCertificateAlgorithm = null;
 	private String protocol = null;
 	
 	public HttpsTransportServer( URI uri ) {
@@ -47,8 +49,14 @@ public class HttpsTransportServer extends HttpTransportServer {
 		if ( keyStoreType != null ) {
 			sslConnector.setKeystoreType( keyStoreType );
 		}
-		if ( certificateAlgorithm != null ) {
-			sslConnector.setAlgorithm( certificateAlgorithm );
+		if ( secureRandomCertficateAlgorithm != null ) {
+			sslConnector.setSecureRandomAlgorithm( secureRandomCertficateAlgorithm );
+		}
+		if ( keyCertificateAlgorithm != null ) {
+			sslConnector.setSslKeyManagerFactoryAlgorithm( keyCertificateAlgorithm );
+		}
+		if ( trustCertificateAlgorithm != null ) {
+			sslConnector.setSslTrustManagerFactoryAlgorithm( trustCertificateAlgorithm );
 		}
 		if ( protocol != null ) {
 			sslConnector.setProtocol( protocol );
@@ -62,14 +70,6 @@ public class HttpsTransportServer extends HttpTransportServer {
 	// Properties
 	//--------------------------------------------------------------------------------
 	
-	public String getCertificateAlgorithm() {
-		return certificateAlgorithm;
-	}
-
-	public void setCertificateAlgorithm( String certificateAlgorithm ) {
-		this.certificateAlgorithm = certificateAlgorithm;
-	}
-
 	public String getKeyStore() {
 		return keyStore;
 	}
@@ -108,6 +108,30 @@ public class HttpsTransportServer extends HttpTransportServer {
 
 	public void setProtocol( String protocol ) {
 		this.protocol = protocol;
+	}
+
+	public String getSecureRandomCertficateAlgorithm() {
+		return secureRandomCertficateAlgorithm;
+	}
+
+	public void setSecureRandomCertficateAlgorithm(String secureRandomCertficateAlgorithm) {
+		this.secureRandomCertficateAlgorithm = secureRandomCertficateAlgorithm;
+	}
+
+	public String getKeyCertificateAlgorithm() {
+		return keyCertificateAlgorithm;
+	}
+
+	public void setKeyCertificateAlgorithm(String keyCertificateAlgorithm) {
+		this.keyCertificateAlgorithm = keyCertificateAlgorithm;
+	}
+
+	public String getTrustCertificateAlgorithm() {
+		return trustCertificateAlgorithm;
+	}
+
+	public void setTrustCertificateAlgorithm(String trustCertificateAlgorithm) {
+		this.trustCertificateAlgorithm = trustCertificateAlgorithm;
 	}
 
 }
