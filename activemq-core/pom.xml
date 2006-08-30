@@ -359,7 +359,7 @@
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
-        <version>2.6-SNAPSHOT</version>
+       <version>2.5</version>
         <executions>
           <execution>
             <configuration>
