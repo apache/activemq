@@ -34,6 +34,8 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.ProxyConnectorView;
+import org.apache.activemq.broker.region.DestinationFactory;
+import org.apache.activemq.broker.region.DestinationFactoryImpl;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -111,6 +113,7 @@ public class BrokerService implements Service, Serializable {
     private UsageManager memoryManager;
     private PersistenceAdapter persistenceAdapter;
     private PersistenceAdapterFactory persistenceFactory;
+    private DestinationFactory destinationFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private List transportConnectors = new CopyOnWriteArrayList();
     private List networkConnectors = new CopyOnWriteArrayList();
@@ -530,6 +533,10 @@ public class BrokerService implements Service, Serializable {
 
     public void setPersistenceFactory(PersistenceAdapterFactory persistenceFactory) {
         this.persistenceFactory = persistenceFactory;
+    }
+
+    public void setDestinationFactory(DestinationFactory destinationFactory) {
+        this.destinationFactory = destinationFactory;
     }
 
     public boolean isPersistent() {
@@ -1106,16 +1113,20 @@ public class BrokerService implements Service, Serializable {
         else {
             destinationInterceptor = createDefaultDestinationInterceptor();
         }
-        
-		RegionBroker regionBroker = null;
+	RegionBroker regionBroker = null;
+	if (destinationFactory == null) {
+            destinationFactory = new DestinationFactoryImpl(getMemoryManager(), getTaskRunnerFactory(), getPersistenceAdapter());
+        }
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getMemoryManager(),
-                    getPersistenceAdapter(), destinationInterceptor);
+                    destinationFactory, destinationInterceptor);
         }
         else {
-			regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), getPersistenceAdapter(), destinationInterceptor);
+            regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), destinationFactory, destinationInterceptor);
         }
+        destinationFactory.setRegionBroker(regionBroker);
+        
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
 		regionBroker.setBrokerName(getBrokerName());
 		return regionBroker;
@@ -1375,4 +1386,5 @@ public class BrokerService implements Service, Serializable {
             masterConnector = (MasterConnector) service;
         }
     }
+   
 }
