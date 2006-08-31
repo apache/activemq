@@ -17,17 +17,16 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 
-import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -35,7 +34,6 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -57,8 +55,8 @@ public class TopicRegion extends AbstractRegion {
     private boolean keepDurableSubsActive=false;
 
     public TopicRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
-            PersistenceAdapter persistenceAdapter) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
+            DestinationFactory destinationFactory) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         
     }
 
@@ -160,14 +158,15 @@ public class TopicRegion extends AbstractRegion {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        TopicMessageStore store = null;
-        if (!AdvisorySupport.isAdvisoryTopic(destination)){
-            store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
-        }
+        Topic topic = (Topic) super.createDestination(context, destination);
+ 
+        recoverDurableSubscriptions(context, topic);
         
-        Topic topic = new Topic(destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
-        configureTopic(topic, destination);
-        
+        return topic;
+    }
+
+    private void recoverDurableSubscriptions(ConnectionContext context, Topic topic) throws IOException, JMSException, Exception {
+        TopicMessageStore store = (TopicMessageStore) topic.getMessageStore();
         // Eagerly recover the durable subscriptions
         if (store != null) {            
             SubscriptionInfo[] infos = store.getAllSubscriptions();
@@ -191,8 +190,6 @@ public class TopicRegion extends AbstractRegion {
                 topic.addSubscription(context, sub);
             }            
         }
-        
-        return topic;
     }
     
     private ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {

@@ -19,10 +19,10 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 
-import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.store.MessageStore;
 
 /**
  * Keeps track of a message that is flowing through the Broker.  This 
@@ -31,13 +31,13 @@ import org.apache.activemq.command.MessageId;
  * 
  * @version $Revision: 1.15 $
  */
-public class IndirectMessageReference implements MessageReference {
-    
-    public static final ActiveMQMessage END_OF_BROWSE_MARKER_MESSAGE = new ActiveMQMessage();
-    public static final IndirectMessageReference END_OF_BROWSE_MARKER = new IndirectMessageReference(END_OF_BROWSE_MARKER_MESSAGE);
+public class IndirectMessageReference implements QueueMessageReference {
 
     /** The destination that is managing the message */
     private final Destination regionDestination;
+    
+    private final MessageStore destinationStore;
+    
     /** The id of the message is always valid */
     private final MessageId messageId;
     /** Is the message persistent? */
@@ -63,23 +63,9 @@ public class IndirectMessageReference implements MessageReference {
     /** the expiration time of the message */
     private long expiration;
     
-    /**
-     * Only used by the END_OF_BROWSE_MARKER singleton
-     */
-    private IndirectMessageReference(ActiveMQMessage message) {
-        this.regionDestination=null;
-        this.message = message;
-        this.messageId=null;
-        this.persistent=false;
-        this.groupID = null;
-        this.groupSequence = 0;
-        this.targetConsumerId=null;
-        this.expiration = message.getExpiration();
-        this.cachedSize = message != null ? message.getSize() : 0;
-    }
-
-    public IndirectMessageReference(Destination destination, Message message) {
+    public IndirectMessageReference(Queue destination, MessageStore destinationStore, Message message) {
         this.regionDestination=destination;
+        this.destinationStore = destinationStore;
         this.message = message;
         this.messageId=message.getMessageId();
         this.persistent=message.isPersistent() && destination.getMessageStore()!=null;
@@ -106,10 +92,11 @@ public class IndirectMessageReference implements MessageReference {
         if( persistent && rc==1 ) {
             assert message == null;            
             try {
-                message = regionDestination.loadMessage(messageId);
+                message = destinationStore.getMessage(messageId);
                 if( message == null ) {
                     dropped = true;
                 } else {
+                    message.setRegionDestination(regionDestination);
                     message.incrementReferenceCount();
                 }
             } catch (IOException e) {

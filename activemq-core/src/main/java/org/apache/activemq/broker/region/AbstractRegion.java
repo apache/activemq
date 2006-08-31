@@ -35,7 +35,6 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,7 +53,7 @@ abstract public class AbstractRegion implements Region {
     protected final DestinationMap destinationMap = new DestinationMap();
     protected final ConcurrentHashMap subscriptions = new ConcurrentHashMap();
     protected final UsageManager memoryManager;
-    protected final PersistenceAdapter persistenceAdapter;
+    protected final DestinationFactory destinationFactory;
     protected final DestinationStatistics destinationStatistics;
     protected final RegionBroker broker;
     protected boolean autoCreateDestinations=true;
@@ -62,12 +61,18 @@ abstract public class AbstractRegion implements Region {
     protected final Object destinationsMutex = new Object();
     protected final Map consumerChangeMutexMap = new HashMap();
 
-    public AbstractRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+    public AbstractRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        if (broker == null) {
+            throw new IllegalArgumentException("null broker");
+        }
         this.broker = broker;
         this.destinationStatistics = destinationStatistics;
         this.memoryManager = memoryManager;
         this.taskRunnerFactory = taskRunnerFactory;
-        this.persistenceAdapter = persistenceAdapter;
+        if (broker == null) {
+            throw new IllegalArgumentException("null destinationFactory");
+        }
+        this.destinationFactory = destinationFactory;
     }
 
     public void start() throws Exception {
@@ -205,15 +210,14 @@ abstract public class AbstractRegion implements Region {
             // eagerly load all destinations into the broker but have an inactive state for the
             // destination which has reduced memory usage.
             //
-            if( persistenceAdapter!=null ) {
-                Set inactiveDests = getInactiveDestinations();
-                for (Iterator iter = inactiveDests.iterator(); iter.hasNext();) {
-                    ActiveMQDestination dest = (ActiveMQDestination) iter.next();
-                    if( sub.matches(dest) ) {
-                        context.getBroker().addDestination(context, dest);
-                    }
-                }
+            Set inactiveDests = getInactiveDestinations();
+            for (Iterator iter = inactiveDests.iterator(); iter.hasNext();) {
+            	ActiveMQDestination dest = (ActiveMQDestination) iter.next();
+            	if( sub.matches(dest) ) {
+            		context.getBroker().addDestination(context, dest);
+            	}
             }
+            
 
             subscriptions.put(info.getConsumerId(), sub);
 
@@ -243,14 +247,14 @@ abstract public class AbstractRegion implements Region {
      * @return Set of all stored destinations
      */
     public Set getDurableDestinations(){
-        return persistenceAdapter.getDestinations();
+        return destinationFactory.getDestinations();
     }
 
     /**
      * @return all Destinations that don't have active consumers
      */
     protected Set getInactiveDestinations() {
-        Set inactiveDests = persistenceAdapter.getDestinations();
+        Set inactiveDests = destinationFactory.getDestinations();
         inactiveDests.removeAll( destinations.keySet() );
         return inactiveDests;
     }
@@ -341,7 +345,10 @@ abstract public class AbstractRegion implements Region {
     }
 
     protected abstract Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws Exception;
-    abstract protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
+    
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+        return destinationFactory.createDestination(context, destination, destinationStatistics);
+    }
 
     public boolean isAutoCreateDestinations() {
         return autoCreateDestinations;

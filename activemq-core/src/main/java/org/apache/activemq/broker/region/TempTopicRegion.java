@@ -19,10 +19,7 @@ package org.apache.activemq.broker.region;
 
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -33,25 +30,9 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  */
 public class TempTopicRegion extends AbstractRegion {
 
-    public TempTopicRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, null);
+    public TempTopicRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         setAutoCreateDestinations(false);
-    }
-
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        final ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destination;
-        return new Topic(destination, null, memoryManager, destinationStatistics, taskRunnerFactory) {
-            
-            public void addSubscription(ConnectionContext context,Subscription sub) throws Exception {
-                // Only consumers on the same connection can consume from 
-                // the temporary destination
-                if( !tempDest.getConnectionId().equals( sub.getConsumerInfo().getConsumerId().getConnectionId() ) ) {
-                    throw new JMSException("Cannot subscribe to remote temporary destination: "+tempDest);
-                }
-                super.addSubscription(context, sub);
-            };
-            
-        };
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {

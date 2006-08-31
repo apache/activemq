@@ -25,6 +25,12 @@ import java.util.Set;
  * @version $Revision: 1.2 $
  */
 public interface Store{
+    
+    public final static Marshaller BytesMarshaller = new BytesMarshaller();
+    
+    public final static Marshaller ObjectMarshaller = new ObjectMarshaller();
+    
+    public final static Marshaller StringMarshaller = new StringMarshaller();
     /**
      * close the store
      * 

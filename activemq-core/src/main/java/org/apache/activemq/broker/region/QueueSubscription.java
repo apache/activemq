@@ -49,11 +49,13 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
      */
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
         
-        final IndirectMessageReference node = (IndirectMessageReference) n;
 
-        final Queue queue = (Queue)node.getRegionDestination();
-        queue.acknowledge(context, this, ack, node);
-        
+
+        final Destination q = n.getRegionDestination();
+        q.acknowledge(context, this, ack, n);
+
+        final QueueMessageReference node = (QueueMessageReference) n;
+        final Queue queue = (Queue)q;
         if( !ack.isInTransaction() ) {
             node.drop();            
             queue.dropEvent();
@@ -72,10 +74,9 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     }
     
     protected boolean canDispatch(MessageReference n) throws IOException {
-        IndirectMessageReference node = (IndirectMessageReference) n;
+        QueueMessageReference node = (QueueMessageReference) n;
         if( node.isAcked() )
             return false;
-        
         // Keep message groups together.
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
@@ -121,7 +122,6 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         } else {
             return node.lock(this);
         }
-        
     }
 
     /**

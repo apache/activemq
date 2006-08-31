@@ -22,21 +22,21 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 
 public class ManagedTopicRegion extends TopicRegion {
 
     private final ManagedRegionBroker regionBroker;
 
-    public ManagedTopicRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
+    public ManagedTopicRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         regionBroker = broker;
     }
 

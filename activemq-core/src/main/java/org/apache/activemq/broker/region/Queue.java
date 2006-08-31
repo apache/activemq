@@ -160,7 +160,7 @@ public class Queue implements Destination {
                 // subscription.
                 for (Iterator iter = messages.iterator(); iter.hasNext();) {
 
-                    IndirectMessageReference node = (IndirectMessageReference) iter.next();
+                    QueueMessageReference node = (QueueMessageReference) iter.next();
                     if (node.isDropped()) {
                         continue;
                     }
@@ -220,7 +220,7 @@ public class Queue implements Destination {
                     List messagesToDispatch = new ArrayList();
                     synchronized (messages) {
                         for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                            IndirectMessageReference node = (IndirectMessageReference) iter.next();
+                            QueueMessageReference node = (QueueMessageReference) iter.next();
                             if (node.isDropped()) {
                                 continue;
                             }
@@ -237,7 +237,7 @@ public class Queue implements Destination {
                     // now lets dispatch from the copy of the collection to
                     // avoid deadlocks
                     for (Iterator iter = messagesToDispatch.iterator(); iter.hasNext();) {
-                        IndirectMessageReference node = (IndirectMessageReference) iter.next();
+                        QueueMessageReference node = (QueueMessageReference) iter.next();
                         node.incrementRedeliveryCounter();
                         node.unlock();
                         msgContext.setMessageReference(node);
@@ -316,7 +316,7 @@ public class Queue implements Destination {
         synchronized (messages) {
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
                 // Remove dropped messages from the queue.
-                IndirectMessageReference node = (IndirectMessageReference) iter.next();
+                QueueMessageReference node = (QueueMessageReference) iter.next();
                 if (node.isDropped()) {
                     garbageSize--;
                     iter.remove();
@@ -345,7 +345,7 @@ public class Queue implements Destination {
         }
     }
 
-    public Message loadMessage(MessageId messageId) throws IOException {
+    Message loadMessage(MessageId messageId) throws IOException {
         Message msg = store.getMessage(messageId);
         if (msg != null) {
             msg.setRegionDestination(this);
@@ -460,7 +460,7 @@ public class Queue implements Destination {
     // Implementation methods
     // -------------------------------------------------------------------------
     private MessageReference createMessageReference(Message message) {
-        return new IndirectMessageReference(this, message);
+        return new IndirectMessageReference(this, store, message);
     }
 
     private void dispatch(ConnectionContext context, MessageReference node, Message message) throws Exception {
@@ -504,7 +504,7 @@ public class Queue implements Destination {
         return rc;
     }
 
-    public MessageStore getMessageStore() {
+    MessageStore getMessageStore() {
         return store;
     }
 
@@ -565,7 +565,7 @@ public class Queue implements Destination {
             ConnectionContext c = createConnectionContext();
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
                 try {
-                    IndirectMessageReference r = (IndirectMessageReference) iter.next();
+                    QueueMessageReference r = (QueueMessageReference) iter.next();
 
                     // We should only delete messages that can be locked.
                     if (r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER)) {

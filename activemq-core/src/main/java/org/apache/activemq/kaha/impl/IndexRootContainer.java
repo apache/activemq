@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.ObjectMarshaller;
+import org.apache.activemq.kaha.Store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +36,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 class IndexRootContainer {
     private static final Log log=LogFactory.getLog(IndexRootContainer.class);
-    protected static final Marshaller rootMarshaller = new ObjectMarshaller();
+    protected static final Marshaller rootMarshaller = Store.ObjectMarshaller;
     protected IndexItem root;
     protected IndexManager indexManager;
     protected DataManager dataManager;

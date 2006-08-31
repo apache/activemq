@@ -38,7 +38,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
     }
         
     protected boolean canDispatch(MessageReference node) {
-        return !((IndirectMessageReference)node).isAcked();
+        return !((QueueMessageReference)node).isAcked();
     }
     
     public String toString() {
@@ -53,11 +53,11 @@ public class QueueBrowserSubscription extends QueueSubscription {
 
     public void browseDone() throws Exception {
         browseDone = true;
-        add(IndirectMessageReference.END_OF_BROWSE_MARKER);
+        add(QueueMessageReference.END_OF_BROWSE_MARKER);
     }
     
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
-        if( node == IndirectMessageReference.END_OF_BROWSE_MARKER ) {
+        if( node == QueueMessageReference.END_OF_BROWSE_MARKER ) {
             MessageDispatch md = new MessageDispatch();
             md.setMessage(null);
             md.setConsumerId( info.getConsumerId() );
