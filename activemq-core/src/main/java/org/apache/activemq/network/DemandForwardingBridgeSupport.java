@@ -50,6 +50,7 @@ import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -143,7 +144,10 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 	                    synchronized( DemandForwardingBridgeSupport.this ) {
 		                    try{
 		                        localBroker.oneway(localConnectionInfo.createRemoveCommand());
-		                    }catch(IOException e){
+		                    }catch(TransportDisposedIOException td){
+                                log.debug("local broker is now disposed",td);
+                            }
+                            catch(IOException e){
 		                        log.warn("Caught exception from local start",e);
 		                    }
 	                    }
