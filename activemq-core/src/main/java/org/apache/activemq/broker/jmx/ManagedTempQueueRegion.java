@@ -22,6 +22,7 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TempQueueRegion;
@@ -34,8 +35,8 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
 
     private final ManagedRegionBroker regionBroker;
     
-    public ManagedTempQueueRegion(ManagedRegionBroker regionBroker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        super(regionBroker,destinationStatistics, memoryManager, taskRunnerFactory);
+    public ManagedTempQueueRegion(ManagedRegionBroker regionBroker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        super(regionBroker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         this.regionBroker = regionBroker;
     }
     

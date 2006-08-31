@@ -100,6 +100,20 @@ public interface ListContainer extends List{
      * @return true if successful
      */
     public boolean doRemove(int position);
-        
+    
+    /**
+     * @return the maximumCacheSize
+     */
+    public int getMaximumCacheSize();
+
+    /**
+     * @param maximumCacheSize the maximumCacheSize to set
+     */
+    public void setMaximumCacheSize(int maximumCacheSize);
+      
+    /**
+     * clear any cached values
+     */
+    public void clearCache();
     
 }

@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class BaseContainerImpl{
     private static final Log log=LogFactory.getLog(BaseContainerImpl.class);
     protected IndexItem root;
-    protected IndexLinkedList list;
+    protected IndexLinkedList indexList;
     protected IndexManager rootIndexManager; // IndexManager that contains the root
     protected IndexManager indexManager;
     protected DataManager dataManager;
@@ -59,8 +59,8 @@ public abstract class BaseContainerImpl{
             synchronized(mutex){
                 if (!initialized){
                     initialized= true;
-                    if (this.list == null){
-                        this.list=new DiskIndexLinkedList(indexManager,root);
+                    if (this.indexList == null){
+                        this.indexList=new DiskIndexLinkedList(indexManager,root);
                     }
                 }
             }
@@ -68,23 +68,23 @@ public abstract class BaseContainerImpl{
     }
     
     protected void clear(){
-        if (list != null){
-            list.clear();
+        if (indexList != null){
+            indexList.clear();
         }
     }
     
     /**
-     * @return the list
+     * @return the indexList
      */
     public IndexLinkedList getList(){
-        return list;
+        return indexList;
     }
 
     /**
-     * @param list the list to set
+     * @param indexList the indexList to set
      */
-    public void setList(IndexLinkedList list){
-        this.list=list;
+    public void setList(IndexLinkedList indexList){
+        this.indexList=indexList;
     }
 
     public abstract void unload();
@@ -99,7 +99,7 @@ public abstract class BaseContainerImpl{
     protected abstract void remove(IndexItem currentItem);
 
     protected final IndexLinkedList getInternalList(){
-        return list;
+        return indexList;
     }
 
     public final void close(){
@@ -143,24 +143,24 @@ public abstract class BaseContainerImpl{
         synchronized(mutex){
             loaded=true;
             synchronized(mutex){
-                List list=new ArrayList();
+                List indexList=new ArrayList();
                 try{
                     long nextItem=root.getNextItem();
                     while(nextItem!=Item.POSITION_NOT_SET){
                         IndexItem item=new IndexItem();
                         item.setOffset(nextItem);
-                        list.add(item);
+                        indexList.add(item);
                         nextItem=item.getNextItem();
                     }
                     root.setNextItem(Item.POSITION_NOT_SET);
                     updateIndex(root);
-                    for(int i=0;i<list.size();i++){
-                        IndexItem item=(IndexItem) list.get(i);
+                    for(int i=0;i<indexList.size();i++){
+                        IndexItem item=(IndexItem) indexList.get(i);
                         dataManager.removeInterestInFile(item.getKeyFile());
                         dataManager.removeInterestInFile(item.getValueFile());
                         indexManager.freeIndex(item);
                     }
-                    list.clear();
+                    indexList.clear();
                 }catch(IOException e){
                     log.error("Failed to clear Container "+getId(),e);
                     throw new RuntimeStoreException(e);

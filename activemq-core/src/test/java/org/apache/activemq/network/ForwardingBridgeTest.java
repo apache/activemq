@@ -48,7 +48,6 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
                 } );
     }    
     public void testAddConsumerThenSend() throws Exception {
-        
         // Start a producer on local broker 
         StubConnection connection1 = createConnection();
         ConnectionInfo connectionInfo1 = createConnectionInfo();
@@ -68,11 +67,12 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         connection2.send(sessionInfo2);
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo2, destination);        
         connection2.send(consumerInfo);
-        
+        Thread.sleep(1000);
         // Send the message to the local boker.
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         
         // Make sure the message was delivered via the remote.
+        
         Message m = receiveMessage(connection2);
         assertNotNull(m);
     }

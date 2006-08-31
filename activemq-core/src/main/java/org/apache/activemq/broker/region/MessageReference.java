@@ -49,6 +49,8 @@ public interface MessageReference {
     public ConsumerId getTargetConsumerId();
     public int getSize();
     public long getExpiration();
+    public String getGroupID();
+    public int getGroupSequence();
     
     /**
      * Returns true if this message is expired

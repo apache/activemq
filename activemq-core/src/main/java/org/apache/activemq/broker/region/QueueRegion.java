@@ -17,16 +17,10 @@
  */
 package org.apache.activemq.broker.region;
 
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 
 import javax.jms.InvalidSelectorException;
@@ -43,31 +37,13 @@ public class QueueRegion extends AbstractRegion {
     
 
     public QueueRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
-            PersistenceAdapter persistenceAdapter) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, persistenceAdapter);
+            DestinationFactory destinationFactory) {
+        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
     public String toString() {
         return "QueueRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + memoryManager.getPercentUsage()
                 + "%";
-    }
-
-    // Implementation methods
-    // -------------------------------------------------------------------------
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        MessageStore store = persistenceAdapter.createQueueMessageStore((ActiveMQQueue) destination);
-        Queue queue = new Queue(destination, memoryManager, store, destinationStatistics, taskRunnerFactory);
-        configureQueue(queue, destination);
-        return queue;
-    }
-
-    protected void configureQueue(Queue queue, ActiveMQDestination destination) {
-        if (broker.getDestinationPolicy() != null) {
-            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
-            if (entry != null) {
-                entry.configure(queue);
-            }
-        }
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {

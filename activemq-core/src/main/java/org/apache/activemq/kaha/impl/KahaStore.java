@@ -40,14 +40,14 @@ public class KahaStore implements Store{
     private static final Log log=LogFactory.getLog(KahaStore.class);
     private File directory;
 
-    private IndexRootContainer mapsContainer;
-    private IndexRootContainer listsContainer;
+    protected IndexRootContainer mapsContainer;
+    protected IndexRootContainer listsContainer;
     private Map lists=new ConcurrentHashMap();
     private Map maps=new ConcurrentHashMap();
     
     private Map dataManagers = new ConcurrentHashMap();
     private Map indexManagers = new ConcurrentHashMap();
-    private IndexManager rootIndexManager; //contains all the root indexes
+    protected IndexManager rootIndexManager; //contains all the root indexes
     
     private boolean closed=false;
     private String name;
@@ -221,7 +221,8 @@ public class KahaStore implements Store{
         }
         return result;
     }
-
+    
+    
     public void deleteListContainer(Object id) throws IOException{
         initialize();
         ListContainerImpl container=(ListContainerImpl) lists.remove(id);

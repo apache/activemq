@@ -28,6 +28,7 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.ObjectMarshaller;
 import org.apache.activemq.kaha.RuntimeStoreException;
+import org.apache.activemq.kaha.Store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
@@ -39,8 +40,8 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
     private static final Log log=LogFactory.getLog(MapContainerImpl.class);
     protected Map map=new HashMap();
     protected Map valueToKeyMap=new HashMap();
-    protected Marshaller keyMarshaller=new ObjectMarshaller();
-    protected Marshaller valueMarshaller=new ObjectMarshaller();
+    protected Marshaller keyMarshaller= Store.ObjectMarshaller;
+    protected Marshaller valueMarshaller=Store.ObjectMarshaller;
 
     protected MapContainerImpl(ContainerId id,IndexItem root,IndexManager rootIndexManager,IndexManager indexManager,DataManager dataManager){
         super(id,root,rootIndexManager,indexManager,dataManager);
@@ -66,7 +67,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
                             Object key=dataManager.readItem(keyMarshaller,data);
                             map.put(key,item);
                             valueToKeyMap.put(item,key);
-                            list.add(item);
+                            indexList.add(item);
                             nextItem=item.getNextItem();
                         }
                     }catch(IOException e){
@@ -91,7 +92,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
             synchronized(mutex){
                 map.clear();
                 valueToKeyMap.clear();
-                list.clear();
+                indexList.clear();
             }
         }
     }
@@ -165,15 +166,15 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
         load();
         boolean result=false;
         if(o!=null){
-            synchronized(list){
-                IndexItem item=list.getFirst();
+            synchronized(indexList){
+                IndexItem item=indexList.getFirst();
                 while(item!=null){
                     Object value=getValue(item);
                     if(value!=null&&value.equals(o)){
                         result=true;
                         break;
                     }
-                    item=list.getNextEntry(item);
+                    item=indexList.getNextEntry(item);
                 }
             }
         }
@@ -242,7 +243,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
             IndexItem item=write(key,value);
             map.put(key,item);
             valueToKeyMap.put(item,key);
-            list.add(item);
+            indexList.add(item);
         }
         return result;
     }
@@ -261,11 +262,11 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
                 map.remove(key);
                 valueToKeyMap.remove(item);
                 // ensure we have the upto date item
-                item=list.getEntry(item);
+                item=indexList.getEntry(item);
                 result=getValue(item);
-                IndexItem prev=list.getPrevEntry(item);
-                IndexItem next=list.getNextEntry(item);
-                list.remove(item);
+                IndexItem prev=indexList.getPrevEntry(item);
+                IndexItem next=indexList.getNextEntry(item);
+                indexList.remove(item);
                 delete(item,prev,next);
             }
         }
@@ -277,7 +278,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
         boolean result=false;
         if(o!=null){
             synchronized(mutex){
-                IndexItem item=list.getFirst();
+                IndexItem item=indexList.getFirst();
                 while(item!=null){
                     Object value=getValue(item);
                     if(value!=null&&value.equals(o)){
@@ -289,7 +290,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
                         }
                         break;
                     }
-                    item=list.getNextEntry(item);
+                    item=indexList.getNextEntry(item);
                 }
             }
         }
@@ -326,7 +327,7 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
     }
 
     protected IndexLinkedList getItemList(){
-        return list;
+        return indexList;
     }
 
     protected Object getValue(IndexItem item){
@@ -337,6 +338,22 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
                 result=dataManager.readItem(valueMarshaller,data);
             }catch(IOException e){
                 log.error("Failed to get value for "+item,e);
+                throw new RuntimeStoreException(e);
+            }
+        }
+        return result;
+    }
+    
+    
+    
+    protected Object getKey(IndexItem item){
+        Object result=null;
+        if(item!=null){
+            try{
+                DataItem data=item.getKeyDataItem();
+                result=dataManager.readItem(keyMarshaller,data);
+            }catch(IOException e){
+                log.error("Failed to get key for "+item,e);
                 throw new RuntimeStoreException(e);
             }
         }
@@ -355,9 +372,9 @@ final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
                 DataItem data=dataManager.storeDataItem(valueMarshaller,value);
                 index.setValueData(data);
             }
-            IndexItem prev=list.getLast();
-            prev=prev!=null?prev:list.getRoot();
-            IndexItem next=list.getNextEntry(prev);
+            IndexItem prev=indexList.getLast();
+            prev=prev!=null?prev:indexList.getRoot();
+            IndexItem next=indexList.getNextEntry(prev);
             prev.setNextItem(index.getOffset());
             index.setPreviousItem(prev.getOffset());
             updateIndex(prev);

@@ -23,9 +23,7 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageId;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.MessageStore;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -99,10 +97,6 @@ public class DestinationFilter implements Destination {
         return next.getMessagesCached();
     }
 
-    public MessageStore getMessageStore() {
-        return next.getMessageStore();
-    }
-
     public String getName() {
         return next.getName();
     }
@@ -113,10 +107,6 @@ public class DestinationFilter implements Destination {
 
     public UsageManager getUsageManager() {
         return next.getUsageManager();
-    }
-
-    public Message loadMessage(MessageId messageId) throws IOException {
-        return next.loadMessage(messageId);
     }
 
     public boolean lock(MessageReference node, LockOwner lockOwner) {

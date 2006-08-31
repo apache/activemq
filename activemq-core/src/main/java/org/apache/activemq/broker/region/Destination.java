@@ -25,9 +25,7 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageId;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.store.MessageStore;
 
 /**
  * 
@@ -43,7 +41,6 @@ public interface Destination extends Service {
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
     
     void gc();
-    Message loadMessage(MessageId messageId) throws IOException;
  
     ActiveMQDestination getActiveMQDestination();
     UsageManager getUsageManager();
@@ -51,7 +48,6 @@ public interface Destination extends Service {
     void dispose(ConnectionContext context) throws IOException;
     
     DestinationStatistics getDestinationStatistics();
-    MessageStore getMessageStore();
     DeadLetterStrategy getDeadLetterStrategy();
     
     public Message[] browse();

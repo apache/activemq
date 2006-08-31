@@ -87,20 +87,22 @@ public class RegionBroker implements Broker {
     private BrokerId brokerId;
     private String brokerName;
     private Map clientIdSet = new HashMap(); // we will synchronize access
-    protected  PersistenceAdapter adaptor;
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
+    protected DestinationFactory destinationFactory;
         
-    public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, PersistenceAdapter adapter, DestinationInterceptor destinationInterceptor) throws IOException {
+    public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
         this.brokerService = brokerService;
+        if (destinationFactory == null) {
+            throw new IllegalArgumentException("null destinationFactory");
+        }
+        this.sequenceGenerator.setLastSequenceId( destinationFactory.getLastMessageBrokerSequenceId() );
+        this.destinationFactory = destinationFactory;
+        queueRegion = createQueueRegion(memoryManager, taskRunnerFactory, destinationFactory);
+        topicRegion = createTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);
         this.destinationInterceptor = destinationInterceptor;
-        this.sequenceGenerator.setLastSequenceId( adapter.getLastMessageBrokerSequenceId() );
-        this.adaptor = adapter;//weird - both are valid spellings ...
-        queueRegion = createQueueRegion(memoryManager, taskRunnerFactory, adapter);
-        topicRegion = createTopicRegion(memoryManager, taskRunnerFactory, adapter);
-        
-        tempQueueRegion = createTempQueueRegion(memoryManager, taskRunnerFactory);
-        tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory);        
+        tempQueueRegion = createTempQueueRegion(memoryManager, taskRunnerFactory, destinationFactory);
+        tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);        
     }
     
     public Map getDestinationMap() {
@@ -147,20 +149,20 @@ public class RegionBroker implements Broker {
         return topicRegion;
     }
 
-    protected Region createTempTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        return new TempTopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory);
+    protected Region createTempTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new TempTopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    protected Region createTempQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory) {
-        return new TempQueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory);
+    protected Region createTempQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new TempQueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    protected Region createTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter adapter) {
-        return new TopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, adapter);
+    protected Region createTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new TopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    protected Region createQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter adapter) {
-        return new QueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, adapter);
+    protected Region createQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new QueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
     
     private static PersistenceAdapter createDefaultPersistenceAdapter(UsageManager memoryManager) throws IOException {
@@ -537,7 +539,7 @@ public class RegionBroker implements Broker {
     }
     
     public Set getDurableDestinations(){
-        return adaptor != null ? adaptor.getDestinations() : Collections.EMPTY_SET;
+        return destinationFactory.getDestinations();
     }
     
     public boolean isFaultTolerantConfiguration(){

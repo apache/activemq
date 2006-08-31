@@ -1,19 +1,15 @@
 /**
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
+ * 
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
+ * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
+ * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package org.apache.activemq.kaha.impl;
 
@@ -21,12 +17,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.Marshaller;
-import org.apache.activemq.kaha.ObjectMarshaller;
 import org.apache.activemq.kaha.RuntimeStoreException;
+import org.apache.activemq.kaha.Store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
@@ -34,12 +31,16 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-public final class ListContainerImpl extends BaseContainerImpl implements ListContainer{
+public class ListContainerImpl extends BaseContainerImpl implements ListContainer{
     private static final Log log=LogFactory.getLog(ListContainerImpl.class);
-    protected Marshaller marshaller=new ObjectMarshaller();
+    protected Marshaller marshaller=Store.ObjectMarshaller;
+    protected LinkedList cacheList=new LinkedList();
+    protected int offset=0;
+    protected int maximumCacheSize=100;
+    protected IndexItem lastCached;
 
-    protected ListContainerImpl(ContainerId id,IndexItem root,IndexManager rootIndexManager,IndexManager indexManager,DataManager dataManager)
-                    throws IOException{
+    protected ListContainerImpl(ContainerId id,IndexItem root,IndexManager rootIndexManager,IndexManager indexManager,
+                    DataManager dataManager) throws IOException{
         super(id,root,rootIndexManager,indexManager,dataManager);
     }
 
@@ -59,7 +60,8 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
                         long nextItem=root.getNextItem();
                         while(nextItem!=Item.POSITION_NOT_SET){
                             IndexItem item=indexManager.getIndex(nextItem);
-                            list.add(item);
+                            indexList.add(item);
+                            itemAdded(item,indexList.size()-1,getValue(item));
                             nextItem=item.getNextItem();
                         }
                     }catch(IOException e){
@@ -80,7 +82,8 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         checkClosed();
         if(loaded){
             loaded=false;
-            list.clear();
+            indexList.clear();
+            clearCache();
         }
     }
 
@@ -102,7 +105,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
             synchronized(mutex){
                 result=other.size()==size();
                 if(result){
-                    for(int i=0;i<list.size();i++){
+                    for(int i=0;i<indexList.size();i++){
                         Object o1=other.get(i);
                         Object o2=get(i);
                         result=o1==o2||(o1!=null&&o2!=null&&o1.equals(o2));
@@ -123,7 +126,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
      */
     public int size(){
         load();
-        return list.size();
+        return indexList.size();
     }
 
     /*
@@ -135,7 +138,8 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         IndexItem item=writeFirst(o);
         synchronized(mutex){
-            list.addFirst(item);
+            indexList.addFirst(item);
+            itemAdded(item,0,o);
         }
     }
 
@@ -148,7 +152,8 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         IndexItem item=writeLast(o);
         synchronized(mutex){
-            list.addLast(item);
+            indexList.addLast(item);
+            itemAdded(item,indexList.size()-1,o);
         }
     }
 
@@ -161,13 +166,14 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         Object result=null;
         synchronized(mutex){
-            IndexItem item=(IndexItem) list.getFirst();
+            IndexItem item=(IndexItem) indexList.getFirst();
             if(item!=null){
+                itemRemoved(0);
                 result=getValue(item);
-                int index=list.indexOf(item);
-                IndexItem prev=index>0?(IndexItem) list.get(index-1):root;
-                IndexItem next=index<(list.size()-1)?(IndexItem) list.get(index+1):null;
-                list.removeFirst();
+                int index=indexList.indexOf(item);
+                IndexItem prev=index>0?(IndexItem) indexList.get(index-1):root;
+                IndexItem next=index<(indexList.size()-1)?(IndexItem) indexList.get(index+1):null;
+                indexList.removeFirst();
                 delete(item,prev,next);
                 item=null;
             }
@@ -184,12 +190,13 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         Object result=null;
         synchronized(mutex){
-            IndexItem last=list.getLast();
+            IndexItem last=indexList.getLast();
             if(last!=null){
+                itemRemoved(indexList.size()-1);
                 result=getValue(last);
-                IndexItem prev=list.getPrevEntry(last);
+                IndexItem prev=indexList.getPrevEntry(last);
                 IndexItem next=null;
-                list.removeLast();
+                indexList.removeLast();
                 delete(last,prev,next);
             }
         }
@@ -203,7 +210,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
      */
     public boolean isEmpty(){
         load();
-        return list.isEmpty();
+        return indexList.isEmpty();
     }
 
     /*
@@ -216,14 +223,14 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         boolean result=false;
         if(o!=null){
             synchronized(mutex){
-                IndexItem next=list.getFirst();
+                IndexItem next=indexList.getFirst();
                 while(next!=null){
                     Object value=getValue(next);
                     if(value!=null&&value.equals(o)){
                         result=true;
                         break;
                     }
-                    next=list.getNextEntry(next);
+                    next=indexList.getNextEntry(next);
                 }
             }
         }
@@ -247,13 +254,13 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
      */
     public Object[] toArray(){
         load();
-        List tmp=new ArrayList(list.size());
+        List tmp=new ArrayList(indexList.size());
         synchronized(mutex){
-            IndexItem next=list.getFirst();
+            IndexItem next=indexList.getFirst();
             while(next!=null){
                 Object value=getValue(next);
                 tmp.add(value);
-                next=list.getNextEntry(next);
+                next=indexList.getNextEntry(next);
             }
         }
         return tmp.toArray();
@@ -266,13 +273,13 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
      */
     public Object[] toArray(Object[] a){
         load();
-        List tmp=new ArrayList(list.size());
+        List tmp=new ArrayList(indexList.size());
         synchronized(mutex){
-            IndexItem next=list.getFirst();
+            IndexItem next=indexList.getFirst();
             while(next!=null){
                 Object value=getValue(next);
                 tmp.add(value);
-                next=list.getNextEntry(next);
+                next=indexList.getNextEntry(next);
             }
         }
         return tmp.toArray(a);
@@ -298,15 +305,18 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         boolean result=false;
         synchronized(mutex){
-            IndexItem next=list.getFirst();
+            int pos=0;
+            IndexItem next=indexList.getFirst();
             while(next!=null){
                 Object value=getValue(next);
                 if(value!=null&&value.equals(o)){
                     remove(next);
+                    itemRemoved(pos);
                     result=true;
                     break;
                 }
-                next=list.getNextEntry(next);
+                next=indexList.getNextEntry(next);
+                pos++;
             }
         }
         return result;
@@ -314,9 +324,9 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
 
     protected void remove(IndexItem item){
         synchronized(mutex){
-            IndexItem prev = list.getPrevEntry(item);
-            IndexItem next = list.getNextEntry(item);
-            list.remove(item);
+            IndexItem prev=indexList.getPrevEntry(item);
+            IndexItem next=indexList.getNextEntry(item);
+            indexList.remove(item);
             delete(item,prev,next);
         }
     }
@@ -396,13 +406,13 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         List tmpList=new ArrayList();
         synchronized(mutex){
-            IndexItem next=list.getFirst();
+            IndexItem next=indexList.getFirst();
             while(next!=null){
                 Object o=getValue(next);
                 if(!c.contains(o)){
                     tmpList.add(o);
                 }
-                next=list.getNextEntry(next);
+                next=indexList.getNextEntry(next);
             }
         }
         for(Iterator i=tmpList.iterator();i.hasNext();){
@@ -421,6 +431,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         synchronized(mutex){
             super.clear();
             doClear();
+            clearCache();
         }
     }
 
@@ -431,12 +442,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
      */
     public Object get(int index){
         load();
-        Object result=null;
-        IndexItem item=(IndexItem) list.get(index);
-        if(item!=null){
-            result=getValue(item);
-        }
-        return result;
+        return getCachedItem(index);
     }
 
     /*
@@ -448,12 +454,13 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         Object result=null;
         synchronized(mutex){
-            IndexItem replace=list.isEmpty()?null:(IndexItem) list.get(index);
-            IndexItem prev=(list.isEmpty()||(index-1)<0)?null:(IndexItem) list.get(index-1);
-            IndexItem next=(list.isEmpty()||(index+1)>=size())?null:(IndexItem) list.get(index+1);
+            IndexItem replace=indexList.isEmpty()?null:(IndexItem) indexList.get(index);
+            IndexItem prev=(indexList.isEmpty()||(index-1)<0)?null:(IndexItem) indexList.get(index-1);
+            IndexItem next=(indexList.isEmpty()||(index+1)>=size())?null:(IndexItem) indexList.get(index+1);
             result=getValue(replace);
-            list.remove(index);
+            indexList.remove(index);
             delete(replace,prev,next);
+            itemRemoved(index);
             add(index,element);
         }
         return result;
@@ -461,11 +468,12 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
 
     protected IndexItem internalSet(int index,Object element){
         synchronized(mutex){
-            IndexItem replace=list.isEmpty()?null:(IndexItem) list.get(index);
-            IndexItem prev=(list.isEmpty()||(index-1)<0)?null:(IndexItem) list.get(index-1);
-            IndexItem next=(list.isEmpty()||(index+1)>=size())?null:(IndexItem) list.get(index+1);
-            list.remove(index);
+            IndexItem replace=indexList.isEmpty()?null:(IndexItem) indexList.get(index);
+            IndexItem prev=(indexList.isEmpty()||(index-1)<0)?null:(IndexItem) indexList.get(index-1);
+            IndexItem next=(indexList.isEmpty()||(index+1)>=size())?null:(IndexItem) indexList.get(index+1);
+            indexList.remove(index);
             delete(replace,prev,next);
+            itemRemoved(index);
             return internalAdd(index,element);
         }
     }
@@ -479,22 +487,24 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         synchronized(mutex){
             IndexItem item=insert(index,element);
-            list.add(index,item);
+            indexList.add(index,item);
+            itemAdded(item,index,element);
         }
     }
 
     protected IndexItem internalAdd(int index,Object element){
         synchronized(mutex){
             IndexItem item=insert(index,element);
-            list.add(index,item);
+            indexList.add(index,item);
+            itemAdded(item,index,element);
             return item;
         }
     }
 
     protected IndexItem internalGet(int index){
         synchronized(mutex){
-            if(index>=0&&index<list.size()){
-                return list.get(index);
+            if(index>=0&&index<indexList.size()){
+                return indexList.get(index);
             }
         }
         return null;
@@ -509,13 +519,14 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         boolean result=false;
         synchronized(mutex){
-            IndexItem item=list.get(index);
+            IndexItem item=indexList.get(index);
             if(item!=null){
                 result=true;
-                IndexItem prev=list.getPrevEntry(item);
+                IndexItem prev=indexList.getPrevEntry(item);
                 prev=prev!=null?prev:root;
-                IndexItem next=list.getNextEntry(prev);
-                list.remove(index);
+                IndexItem next=indexList.getNextEntry(prev);
+                indexList.remove(index);
+                itemRemoved(index);
                 delete(item,prev,next);
             }
         }
@@ -531,13 +542,14 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         Object result=null;
         synchronized(mutex){
-            IndexItem item=list.get(index);
+            IndexItem item=indexList.get(index);
             if(item!=null){
+                itemRemoved(index);
                 result=getValue(item);
-                IndexItem prev=list.getPrevEntry(item);
+                IndexItem prev=indexList.getPrevEntry(item);
                 prev=prev!=null?prev:root;
-                IndexItem next=list.getNextEntry(item);
-                list.remove(index);
+                IndexItem next=indexList.getNextEntry(item);
+                indexList.remove(index);
                 delete(item,prev,next);
             }
         }
@@ -555,7 +567,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         if(o!=null){
             synchronized(mutex){
                 int count=0;
-                IndexItem next=list.getFirst();
+                IndexItem next=indexList.getFirst();
                 while(next!=null){
                     Object value=getValue(next);
                     if(value!=null&&value.equals(o)){
@@ -563,7 +575,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
                         break;
                     }
                     count++;
-                    next=list.getNextEntry(next);
+                    next=indexList.getNextEntry(next);
                 }
             }
         }
@@ -580,8 +592,8 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         int result=-1;
         if(o!=null){
             synchronized(mutex){
-                int count=list.size()-1;
-                IndexItem next=list.getLast();
+                int count=indexList.size()-1;
+                IndexItem next=indexList.getLast();
                 while(next!=null){
                     Object value=getValue(next);
                     if(value!=null&&value.equals(o)){
@@ -589,7 +601,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
                         break;
                     }
                     count--;
-                    next=list.getPrevEntry(next);
+                    next=indexList.getPrevEntry(next);
                 }
             }
         }
@@ -603,7 +615,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
      */
     public ListIterator listIterator(){
         load();
-        return new ContainerListIterator(this,list,list.getRoot());
+        return new CachedContainerListIterator(this,0);
     }
 
     /*
@@ -613,14 +625,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
      */
     public ListIterator listIterator(int index){
         load();
-        IndexItem start=list.get(index);
-        if(start!=null){
-            start=list.getPrevEntry(start);
-        }
-        if(start==null){
-            start=root;
-        }
-        return new ContainerListIterator(this,list,start);
+        return new CachedContainerListIterator(this,index);
     }
 
     /*
@@ -632,10 +637,10 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         load();
         List result=new ArrayList();
         int count=fromIndex;
-        IndexItem next=list.get(fromIndex);
+        IndexItem next=indexList.get(fromIndex);
         while(next!=null&&count++<toIndex){
             result.add(getValue(next));
-            next=list.getNextEntry(next);
+            next=indexList.getNextEntry(next);
         }
         return result;
     }
@@ -647,9 +652,9 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
                 DataItem data=dataManager.storeDataItem(marshaller,value);
                 index=indexManager.createNewIndex();
                 index.setValueData(data);
-                IndexItem prev=list.getLast();
+                IndexItem prev=indexList.getLast();
                 prev=prev!=null?prev:root;
-                IndexItem next=list.getNextEntry(prev);
+                IndexItem next=indexList.getNextEntry(prev);
                 prev.setNextItem(index.getOffset());
                 index.setPreviousItem(prev.getOffset());
                 updateIndex(prev);
@@ -675,7 +680,7 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
                 index=indexManager.createNewIndex();
                 index.setValueData(data);
                 IndexItem prev=root;
-                IndexItem next=list.getNextEntry(prev);
+                IndexItem next=indexList.getNextEntry(prev);
                 prev.setNextItem(index.getOffset());
                 index.setPreviousItem(prev.getOffset());
                 updateIndex(prev);
@@ -705,14 +710,14 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
                 IndexItem next=null;
                 if(insertPos<=0){
                     prev=root;
-                    next=list.getNextEntry(root);
-                }else if(insertPos>=list.size()){
-                    prev=list.getLast();
+                    next=indexList.getNextEntry(root);
+                }else if(insertPos>=indexList.size()){
+                    prev=indexList.getLast();
                     next=null;
                 }else{
-                    prev=list.get(insertPos);
+                    prev=indexList.get(insertPos);
                     prev=prev!=null?prev:root;
-                    next=list.getNextEntry(prev);
+                    next=indexList.getNextEntry(prev);
                 }
                 prev.setNextItem(index.getOffset());
                 index.setPreviousItem(prev.getOffset());
@@ -763,4 +768,145 @@ public final class ListContainerImpl extends BaseContainerImpl implements ListCo
         result.append("]");
         return result.toString();
     }
+
+    protected void itemAdded(IndexItem item,int pos,Object value){
+        int cachePosition=pos-offset;
+        // if pos is before the cache offset
+        // we need to clear the cache
+        if(pos<offset){
+            clearCache();
+        }
+        if(cacheList.isEmpty()){
+            offset=pos;
+            cacheList.add(value);
+            lastCached=item;
+        }else if(cachePosition==cacheList.size()&&cachePosition<maximumCacheSize){
+            cacheList.add(value);
+            lastCached=item;
+        }else if(cachePosition>=0&&cachePosition<=cacheList.size()){
+            cacheList.add(cachePosition,value);
+            if(cacheList.size()>maximumCacheSize){
+                itemRemoved(cacheList.size()-1);
+            }
+        }
+    }
+
+    protected void itemRemoved(int pos){
+        int lastPosition=offset+cacheList.size()-1;
+        int cachePosition=pos-offset;
+        if(cachePosition>=0&&cachePosition<cacheList.size()){
+            if(cachePosition==lastPosition){
+                if(lastCached!=null){
+                    lastCached=indexList.getPrevEntry(lastCached);
+                }
+            }
+            cacheList.remove(pos);
+            if(cacheList.isEmpty()){
+                clearCache();
+            }
+        }
+    }
+
+    protected Object getCachedItem(int pos){
+        int cachePosition=pos-offset;
+        Object result=null;
+        if(cachePosition>=0&&cachePosition<cacheList.size()){
+            result=cacheList.get(cachePosition);
+        }
+        if(result==null){
+            if(cachePosition==cacheList.size()&&lastCached!=null){
+                IndexItem item=indexList.getNextEntry(lastCached);
+                if(item!=null){
+                    result=getValue(item);
+                    cacheList.add(result);
+                    lastCached=item;
+                    if(cacheList.size()>maximumCacheSize){
+                        itemRemoved(0);
+                    }
+                }
+            }else{
+                IndexItem item=indexList.get(pos);
+                if(item!=null){
+                    result=getValue(item);
+                    if(result!=null){
+                        // outside the cache window - so clear
+                        if(!cacheList.isEmpty()){
+                            clearCache();
+                        }
+                        offset=pos;
+                        cacheList.add(result);
+                        lastCached=item;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * clear any cached values
+     */
+    public void clearCache(){
+        cacheList.clear();
+        offset=0;
+        lastCached=null;
+    }
+
+    /**
+     * @return the cacheList
+     */
+    public LinkedList getCacheList(){
+        return cacheList;
+    }
+
+    /**
+     * @param cacheList the cacheList to set
+     */
+    public void setCacheList(LinkedList cacheList){
+        this.cacheList=cacheList;
+    }
+
+    /**
+     * @return the lastCached
+     */
+    public IndexItem getLastCached(){
+        return lastCached;
+    }
+
+    /**
+     * @param lastCached the lastCached to set
+     */
+    public void setLastCached(IndexItem lastCached){
+        this.lastCached=lastCached;
+    }
+
+    /**
+     * @return the maximumCacheSize
+     */
+    public int getMaximumCacheSize(){
+        return maximumCacheSize;
+    }
+
+    /**
+     * @param maximumCacheSize the maximumCacheSize to set
+     */
+    public void setMaximumCacheSize(int maximumCacheSize){
+        this.maximumCacheSize=maximumCacheSize;
+    }
+
+    /**
+     * @return the offset
+     */
+    public int getOffset(){
+        return offset;
+    }
+
+    /**
+     * @param offset the offset to set
+     */
+    public void setOffset(int offset){
+        this.offset=offset;
+    }
+    
+    
 }

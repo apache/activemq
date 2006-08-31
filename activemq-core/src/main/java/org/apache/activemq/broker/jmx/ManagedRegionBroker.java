@@ -42,6 +42,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFactory;
+import org.apache.activemq.broker.region.DestinationFactoryImpl;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Region;
@@ -89,9 +91,9 @@ public class ManagedRegionBroker extends RegionBroker {
     private Broker contextBroker;
 
     public ManagedRegionBroker(BrokerService brokerService,MBeanServer mbeanServer,ObjectName brokerObjectName,
-                    TaskRunnerFactory taskRunnerFactory,UsageManager memoryManager,PersistenceAdapter adapter, DestinationInterceptor destinationInterceptor)
+                    TaskRunnerFactory taskRunnerFactory,UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor)
                     throws IOException{
-        super(brokerService,taskRunnerFactory,memoryManager,adapter, destinationInterceptor);
+        super(brokerService,taskRunnerFactory,memoryManager, destinationFactory, destinationInterceptor);
         this.mbeanServer=mbeanServer;
         this.brokerObjectName=brokerObjectName;
     }
@@ -119,33 +121,39 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected Region createQueueRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory,
-                    PersistenceAdapter adapter){
-        return new ManagedQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,adapter);
+            DestinationFactory destinationFactory){
+        return new ManagedQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,destinationFactory);
     }
 
-    protected Region createTempQueueRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory){
-        return new ManagedTempQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory);
+    protected Region createTempQueueRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory){
+        return new ManagedTempQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory, destinationFactory);
     }
 
-    protected Region createTempTopicRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory){
-        return new ManagedTempTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory);
+    protected Region createTempTopicRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory){
+        return new ManagedTempTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory, destinationFactory);
     }
 
     protected Region createTopicRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory,
-                    PersistenceAdapter adapter){
-        return new ManagedTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,adapter);
+            DestinationFactory destinationFactory){
+        return new ManagedTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory, destinationFactory);
     }
 
     public void register(ActiveMQDestination destName,Destination destination){
+        // TODO refactor to allow views for custom destinations
         try{
             ObjectName objectName=createObjectName(destName);
             DestinationView view;
-            if(destination instanceof Queue){
+            if (destination instanceof Queue) {
                 view=new QueueView(this,(Queue) destination);
-            }else{
+            } else if (destination instanceof Topic){
                 view=new TopicView(this,(Topic) destination);
+            } else {
+                view = null;
+                log.warn("JMX View is not supported for custom destination: " + destination);
             }
-            registerDestination(objectName,destName,view);
+            if (view != null) {
+                registerDestination(objectName,destName,view);
+            }
         }catch(Exception e){
             log.error("Failed to register destination "+destName,e);
         }
@@ -288,13 +296,12 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected void buildExistingSubscriptions() throws Exception{
         Map subscriptions=new HashMap();
-        Set destinations=adaptor.getDestinations();
+        Set destinations=destinationFactory.getDestinations();
         if(destinations!=null){
             for(Iterator iter=destinations.iterator();iter.hasNext();){
                 ActiveMQDestination dest=(ActiveMQDestination) iter.next();
                 if(dest.isTopic()){
-                    TopicMessageStore store=adaptor.createTopicMessageStore((ActiveMQTopic) dest);
-                    SubscriptionInfo[] infos=store.getAllSubscriptions();
+                    SubscriptionInfo[] infos= destinationFactory.getAllDurableSubscriptions((ActiveMQTopic) dest);
                     if(infos!=null){
                         for(int i=0;i<infos.length;i++){
                             SubscriptionInfo info=infos[i];
@@ -356,10 +363,15 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected List getSubscriberMessages(SubscriptionView view){
+        //TODO It is very dangerous operation for big backlogs
+        if (!(destinationFactory instanceof DestinationFactoryImpl)) {
+            throw new RuntimeException("unsupported by " + destinationFactory);
+        }
+        PersistenceAdapter adapter = ((DestinationFactoryImpl)destinationFactory).getPersistenceAdapter(); 
         final List result=new ArrayList();
         try{
             ActiveMQTopic topic=new ActiveMQTopic(view.getDestinationName());
-            TopicMessageStore store=adaptor.createTopicMessageStore(topic);
+            TopicMessageStore store=adapter.createTopicMessageStore(topic);
             store.recover(new MessageRecoveryListener(){
                 public void recoverMessage(Message message) throws Exception{
                     result.add(message);
@@ -373,6 +385,7 @@ public class ManagedRegionBroker extends RegionBroker {
             log.error("Failed to browse messages for Subscription "+view,e);
         }
         return result;
+        
     }
 
     protected ObjectName[] getTopics(){
