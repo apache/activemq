@@ -310,7 +310,10 @@ public class TransportConnector implements Connector {
 
     public String getName(){
         if( name==null ){
-            name = getUri().toString();
+        	uri = getUri();
+        	if( uri != null ) {
+        		name = uri.toString();
+        	}
         }
         return name;
     }
@@ -319,7 +322,10 @@ public class TransportConnector implements Connector {
     }
 
     public String toString() {
-        return getName();
+        String rc = getName();
+        if( rc == null )
+        	rc = super.toString();
+        return rc;
     }
 
 	public boolean isDisableAsyncDispatch() {
