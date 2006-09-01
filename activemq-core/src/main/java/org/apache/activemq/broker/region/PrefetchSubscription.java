@@ -37,6 +37,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
@@ -58,7 +59,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     long enqueueCounter;
     long dispatchCounter;
     long dequeueCounter;
-    
+        
     public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info)
                     throws InvalidSelectorException{
         super(broker,context,info);
@@ -68,16 +69,51 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     /**
      * Allows a message to be pulled on demand by a client
      */
-    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
-        if (getPrefetchSize() == 0) {
+    synchronized public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
+    	// The slave should not deliver pull messages.  TODO: when the slave becomes a master,
+    	// He should send a NULL message to all the consumers to 'wake them up' in case 
+    	// they were waiting for a message.
+        if (getPrefetchSize() == 0 && !isSlaveBroker()) {
             prefetchExtension++;
-            dispatchMatched();
             
-            // TODO it might be nice one day to actually return the message itself
+            final long dispatchCounterBeforePull = dispatchCounter;
+        	dispatchMatched();
+        	
+        	// If there was nothing dispatched.. we may need to setup a timeout.
+        	if( dispatchCounterBeforePull == dispatchCounter ) {
+        		// imediate timeout used by receiveNoWait()
+        		if( pull.getTimeout() == -1 ) {
+        			// Send a NULL message.
+	            	add(QueueMessageReference.NULL_MESSAGE);
+	            	dispatchMatched();
+        		}
+        		if( pull.getTimeout() > 0 ) {
+	            	Scheduler.executeAfterDelay(new Runnable(){
+							public void run() {
+								pullTimeout(dispatchCounterBeforePull);
+							}
+						}, pull.getTimeout());
+        		}
+        	}
         }
         return null;
     }
     
+    /**
+     * Occurs when a pull times out.  If nothing has been dispatched
+     * since the timeout was setup, then send the NULL message.
+     */
+    synchronized private void pullTimeout(long dispatchCounterBeforePull) {    	
+    	if( dispatchCounterBeforePull == dispatchCounter ) {
+        	try {
+				add(QueueMessageReference.NULL_MESSAGE);
+				dispatchMatched();
+			} catch (Exception e) {
+				context.getConnection().serviceException(e);
+			}
+    	}
+	}
+        
     synchronized public void add(MessageReference node) throws Exception{
         enqueueCounter++;
         if(!isFull()){
@@ -311,9 +347,17 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         }
         // Make sure we can dispatch a message.
         if(canDispatch(node)&&!isSlaveBroker()){
-            dispatchCounter++;
+        	
             MessageDispatch md=createMessageDispatch(node,message);
-            dispatched.addLast(node);            
+
+            // NULL messages don't count... they don't get Acked.
+            if( node != QueueMessageReference.NULL_MESSAGE ) {
+        		dispatchCounter++;
+        		dispatched.addLast(node);            
+            } else {
+            	prefetchExtension=Math.max(0,prefetchExtension-1);
+            }
+            
             if(info.isDispatchAsync()){
                 md.setConsumer(new Runnable(){
                     public void run(){
@@ -335,8 +379,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
 
     synchronized protected void onDispatch(final MessageReference node,final Message message){
         if(node.getRegionDestination()!=null){
-            node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
-            context.getConnection().getStatistics().onMessageDequeue(message);
+        	if( node != QueueMessageReference.NULL_MESSAGE ) {
+	            node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
+	            context.getConnection().getStatistics().onMessageDequeue(message);
+        	}
             try{
                 dispatchMatched();
             }catch(IOException e){
@@ -365,12 +411,20 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      * @return
      */
     protected MessageDispatch createMessageDispatch(MessageReference node,Message message){
-        MessageDispatch md=new MessageDispatch();
-        md.setConsumerId(info.getConsumerId());
-        md.setDestination(node.getRegionDestination().getActiveMQDestination());
-        md.setMessage(message);
-        md.setRedeliveryCounter(node.getRedeliveryCounter());
-        return md;
+        if( node == QueueMessageReference.NULL_MESSAGE ) {
+            MessageDispatch md = new MessageDispatch();
+            md.setMessage(null);
+            md.setConsumerId( info.getConsumerId() );
+            md.setDestination( null );
+            return md;
+        } else {
+            MessageDispatch md=new MessageDispatch();
+            md.setConsumerId(info.getConsumerId());
+            md.setDestination(node.getRegionDestination().getActiveMQDestination());
+            md.setMessage(message);
+            md.setRedeliveryCounter(node.getRedeliveryCounter());
+            return md;
+        }
     }
 
     /**

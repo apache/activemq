@@ -17,16 +17,14 @@
  */
 package org.apache.activemq.broker.region;
 
-import javax.jms.InvalidSelectorException;
-
 import java.io.IOException;
+
+import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 public class QueueBrowserSubscription extends QueueSubscription {
@@ -53,19 +51,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
 
     public void browseDone() throws Exception {
         browseDone = true;
-        add(QueueMessageReference.END_OF_BROWSE_MARKER);
-    }
-    
-    protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
-        if( node == QueueMessageReference.END_OF_BROWSE_MARKER ) {
-            MessageDispatch md = new MessageDispatch();
-            md.setMessage(null);
-            md.setConsumerId( info.getConsumerId() );
-            md.setDestination( null );
-            return md;
-        } else {
-            return super.createMessageDispatch(node, message);
-        }
+        add(QueueMessageReference.NULL_MESSAGE);
     }
     
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {

@@ -25,7 +25,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 
 /**
- * Only used by the {@link QueueMessageReference#END_OF_BROWSE_MARKER} 
+ * Only used by the {@link QueueMessageReference#NULL_MESSAGE} 
  */
 final class EndOfBrowseMarkerQueueMessageReference implements
 		QueueMessageReference {
