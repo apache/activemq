@@ -381,6 +381,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     } else {
                         return null;
                     }
+                } else if ( md.getMessage()==null ) {
+                	return null;
                 } else if (md.getMessage().isExpired()) {
                     if (log.isDebugEnabled()) {
                         log.debug("Received expired message: " + md);
@@ -415,9 +417,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *         this message consumer is concurrently closed
      */
     public Message receive() throws JMSException {
-        sendPullCommand();
         checkClosed();
         checkMessageListener();
+        
+        sendPullCommand(-1);
         MessageDispatch md = dequeue(-1);
         if (md == null)
             return null;
@@ -454,22 +457,29 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * expires, and the call blocks indefinitely.
      * 
      * @param timeout
-     *            the timeout value (in milliseconds)
+     *            the timeout value (in milliseconds), a time out of zero never expires.
      * @return the next message produced for this message consumer, or null if
      *         the timeout expires or this message consumer is concurrently
      *         closed
      */
     public Message receive(long timeout) throws JMSException {
-        sendPullCommand();
         checkClosed();
         checkMessageListener();
         if (timeout == 0) {
             return this.receive();
 
         }
-
+        
+        sendPullCommand(timeout);
         while (timeout > 0) {
-            MessageDispatch md = dequeue(timeout);
+        	
+            MessageDispatch md;
+            if (info.getPrefetchSize() == 0) {
+            	md = dequeue(-1);  // We let the broker let us know when we timeout.
+            } else {
+            	md = dequeue(timeout);
+            }
+
             if (md == null)
                 return null;
 
@@ -492,7 +502,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public Message receiveNoWait() throws JMSException {
         checkClosed();
         checkMessageListener();
-        MessageDispatch md = dequeue(0);
+        sendPullCommand(-1);
+        
+        MessageDispatch md;
+        if (info.getPrefetchSize() == 0) {
+        	md = dequeue(-1);  // We let the broker let us know when we timeout.
+        } else {
+        	md = dequeue(0);
+        }
+        
         if (md == null)
             return null;
 
@@ -598,10 +616,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * we are about to receive
      *
      */
-    protected void sendPullCommand() throws JMSException {
+    protected void sendPullCommand(long timeout) throws JMSException {
         if (info.getPrefetchSize() == 0) {
             MessagePull messagePull = new MessagePull();
             messagePull.configure(info);
+            messagePull.setTimeout(timeout);            
             session.asyncSendPacket(messagePull);
         }
     }
