@@ -32,9 +32,6 @@
             <amq:transportConnector uri="tcp://localhost:61635"/>
             <amq:transportConnector uri="tcp://localhost:61636"/>
             <amq:transportConnector uri="tcp://localhost:61637"/>
-            <amq:transportConnector>
-                <property name="server" ref="myTransportServer"/>
-            </amq:transportConnector>
         </amq:transportConnectors>
 
         <amq:networkConnectors>
@@ -88,29 +85,5 @@
         </amq:persistenceAdapter>
 
     </amq:broker>
-
-    <!-- testing normal Spring stuff inside the same config file -->
-    <bean id="myTransportServer" class="org.apache.activemq.transport.activeio.ActiveIOTransportServer">
-        <constructor-arg index="0">
-            <bean id="brokerURI " class="java.net.URI">
-                <constructor-arg index="0">
-                    <value>ssl://localhost:61634</value>
-                </constructor-arg>
-            </bean>
-        </constructor-arg>
-
-        <constructor-arg index="1">
-            <map/>
-        </constructor-arg>
-
-        <property name="stopTimeout" value="5000"/>
-        <property name="wireFormatFactory">
-            <bean id="myWireFormatFactory" class="org.apache.activemq.openwire.OpenWireFormatFactory">
-                <property name="stackTraceEnabled" value="false"/>
-                <property name="tcpNoDelayEnabled" value="true"/>
-                <property name="cacheEnabled" value="false" />
-            </bean>
-        </property>
-    </bean>
 
 </beans>
