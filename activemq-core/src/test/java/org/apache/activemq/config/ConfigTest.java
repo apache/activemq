@@ -34,15 +34,12 @@ import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.activemq.transport.activeio.ActiveIOTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.wireformat.ObjectStreamWireFormat;
-import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -181,20 +178,6 @@ public class ConfigTest extends TestCase {
             assertTrue ("1st connector should be TcpTransportServer", ((TransportConnector)connectors.get(0)).getServer() instanceof TcpTransportServer);
             assertTrue ("2nd connector should be TcpTransportServer", ((TransportConnector)connectors.get(1)).getServer() instanceof TcpTransportServer);
             assertTrue ("3rd connector should be TcpTransportServer", ((TransportConnector)connectors.get(2)).getServer() instanceof TcpTransportServer);
-            assertTrue ("4th connector should be ActiveIOTransportServer", ((TransportConnector)connectors.get(3)).getServer() instanceof ActiveIOTransportServer);
-
-            // Check spring configured transport server (last transport connector only)
-            ActiveIOTransportServer myTransportServer = (ActiveIOTransportServer)((TransportConnector)connectors.get(3)).getServer();
-            assertEquals("URI should be ssl", "ssl://localhost:61634", myTransportServer.getConnectURI().toString());
-            assertEquals("Error transport server config (stopTimeout)", 5000, myTransportServer.getStopTimeout());
-
-            // Check spring configured wire format factory
-            WireFormat myWireFormat = myTransportServer.getWireFormatFactory().createWireFormat();
-            assertTrue("WireFormat should be OpenWireFormat", myWireFormat instanceof OpenWireFormat);
-            assertEquals("WireFormat Config Error (stackTraceEnabled)", false, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isStackTraceEnabled());
-            assertEquals("WireFormat Config Error (tcpNoDelayEnabled)", true, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isTcpNoDelayEnabled());
-            assertEquals("WireFormat Config Error (cacheEnabled)", false, ((OpenWireFormat)myWireFormat).getPreferedWireFormatInfo().isCacheEnabled());
-            log.info("Success");
 
             // Check network connectors
             System.out.print("Checking network connectors... ");
