@@ -36,6 +36,7 @@ import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -45,8 +46,11 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class DestinationView implements DestinationViewMBean {
+    private static final Log log = LogFactory.getLog(DestinationViewMBean.class);
     protected final Destination destination;
     protected final ManagedRegionBroker broker;
 
@@ -130,7 +134,7 @@ public class DestinationView implements DestinationViewMBean {
                 }
                 
             } catch(Throwable e) {
-                e.printStackTrace();
+                log.warn("exception browsing destination",e);
             }
         }
         
@@ -172,7 +176,7 @@ public class DestinationView implements DestinationViewMBean {
 
             }
             catch (Throwable e) {
-                e.printStackTrace();
+                log.warn("exception browsing destination",e);
             }
         }
         return answer;
@@ -210,7 +214,7 @@ public class DestinationView implements DestinationViewMBean {
                 }
                 rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
             } catch(Throwable e) {
-                e.printStackTrace();
+                log.warn("exception browsing destination",e);
             }
         }
         
