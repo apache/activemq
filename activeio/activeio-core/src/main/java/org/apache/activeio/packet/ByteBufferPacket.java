@@ -222,9 +222,13 @@ final public class ByteBufferPacket implements Packet {
         if( buffer.hasArray() ) {
             byte[] bs = buffer.array();
             return new ByteSequence(bs, buffer.position(), buffer.remaining());
+        } else {
+            byte[] bs = new byte[buffer.remaining()];
+        	int p = buffer.position();
+        	buffer.get(bs);
+        	buffer.position(p);
+        	return new ByteSequence(bs, 0, bs.length);
         }
-        // TODO: implement the direct case.
-        return null;
     }
     
     /**
