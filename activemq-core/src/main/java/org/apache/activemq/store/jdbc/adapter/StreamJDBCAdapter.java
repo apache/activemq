@@ -24,7 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.activeio.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayInputStream;
 
 /**
  * This JDBCAdapter inserts and extracts BLOB data using the 

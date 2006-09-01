@@ -28,10 +28,10 @@ import javax.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.ByteSequence;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * @version $Revision$

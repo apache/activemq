@@ -25,10 +25,10 @@ import java.util.Arrays;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.Packet;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.wireformat.WireFormat;
 
 public abstract class DataStructureTestSupport extends CombinationTestSupport {
     public boolean cacheEnabled;
@@ -158,7 +158,7 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
     }
 
     protected Object marshalAndUnmarshall(Object original, WireFormat wireFormat) throws IOException {
-        Packet packet = wireFormat.marshal(original);
+        ByteSequence packet = wireFormat.marshal(original);
         return wireFormat.unmarshal(packet);
     }
 

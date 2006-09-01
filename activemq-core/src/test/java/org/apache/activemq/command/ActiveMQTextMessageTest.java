@@ -26,7 +26,7 @@ import javax.jms.MessageNotWriteableException;
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
 
-import org.apache.activeio.packet.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 /**
  * @version $Revision$

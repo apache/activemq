@@ -17,9 +17,9 @@
  */
 package org.apache.activemq.transport.xstream;
 
-import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.MessageTest;
+import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,7 +34,7 @@ public class XStreamWireFormatTest extends MessageTest {
     public void assertBeanMarshalls(Object original) throws IOException {
         super.assertBeanMarshalls(original);
 
-        String xml = getXStreamWireFormat().toString((Command) original);
+        String xml = getXStreamWireFormat().marshalText((Command) original);
         log.info(original.getClass().getName() + " as XML is:");
         log.info(xml);
     }

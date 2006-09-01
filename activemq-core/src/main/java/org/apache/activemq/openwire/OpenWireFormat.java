@@ -23,19 +23,17 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import org.apache.activeio.adapter.PacketToInputStream;
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.ByteArrayPacket;
-import org.apache.activeio.packet.ByteSequence;
-import org.apache.activeio.packet.Packet;
-import org.apache.activeio.packet.PacketData;
-import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.MarshallAware;
 import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.ClassLoading;
 import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * 
@@ -115,7 +113,7 @@ final public class OpenWireFormat implements WireFormat {
         return version;
     }
     
-    public Packet marshal(Object command) throws IOException {
+    public ByteSequence marshal(Object command) throws IOException {
         
         if( cacheEnabled ) {
             runMarshallCacheEvictionSweep();
@@ -174,8 +172,9 @@ final public class OpenWireFormat implements WireFormat {
                     
                     if( !sizePrefixDisabled ) {
                         size = sequence.getLength()-4;
-                        ByteArrayPacket packet = new ByteArrayPacket(sequence);
-                        PacketData.writeIntBig(packet, size);
+                        int pos = sequence.offset;
+                        ByteSequenceData.writeIntBig(sequence, size);
+                        sequence.offset = pos;
                     }
                 }
                 
@@ -194,12 +193,11 @@ final public class OpenWireFormat implements WireFormat {
                 ma.setCachedMarshalledForm(this, sequence);
             }
         }
-        return new ByteArrayPacket(sequence);
+        return sequence;
     }
     
-    public Object unmarshal(Packet packet) throws IOException {
-        ByteSequence sequence = packet.asByteSequence();
-        DataInputStream dis = new DataInputStream(new PacketToInputStream(packet));
+    public Object unmarshal(ByteSequence sequence) throws IOException {
+        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(sequence));
         
         if( !sizePrefixDisabled ) {
             int size = dis.readInt();

@@ -22,11 +22,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.ByteArrayPacket;
-import org.apache.activeio.packet.Packet;
+
 import org.apache.activemq.command.BaseCommand;
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Marshall a Transaction
@@ -47,15 +47,13 @@ public class TransactionMarshaller implements Marshaller{
         for (int i = 0; i < list.size(); i++){
             TxCommand tx = (TxCommand) list.get(i);
             Object key = tx.getMessageStoreKey();
-            Packet packet = wireFormat.marshal(key);
-            byte[] data = packet.sliceAsBytes();
-            dataOut.writeInt(data.length);
-            dataOut.write(data);
+            ByteSequence packet = wireFormat.marshal(key);
+            dataOut.writeInt(packet.length);
+            dataOut.write(packet.data, packet.offset, packet.length);
             Object command = tx.getCommand();
             packet = wireFormat.marshal(command);
-            data = packet.sliceAsBytes();
-            dataOut.writeInt(data.length);
-            dataOut.write(data);
+            dataOut.writeInt(packet.length);
+            dataOut.write(packet.data, packet.offset, packet.length);
             
         }
        }
@@ -71,12 +69,12 @@ public class TransactionMarshaller implements Marshaller{
             int size = dataIn.readInt();
             byte[] data=new byte[size];
             dataIn.readFully(data);
-            Object key =  wireFormat.unmarshal(new ByteArrayPacket(data));
+            Object key =  wireFormat.unmarshal(new ByteSequence(data));
             command.setMessageStoreKey(key);
             size = dataIn.readInt();
             data=new byte[size];
             dataIn.readFully(data);
-            BaseCommand bc =  (BaseCommand) wireFormat.unmarshal(new ByteArrayPacket(data));
+            BaseCommand bc =  (BaseCommand) wireFormat.unmarshal(new ByteSequence(data));
             command.setCommand(bc);
             list.add(command);
         }

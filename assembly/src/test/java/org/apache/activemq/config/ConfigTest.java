@@ -22,8 +22,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.apache.activeio.command.DefaultWireFormat;
-import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.FixedSizedSubscriptionRecoveryPolicy;
@@ -43,6 +41,8 @@ import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.transport.activeio.ActiveIOTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.wireformat.ObjectStreamWireFormat;
+import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -132,7 +132,7 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have created an EmbeddedDataSource",
                     ((JDBCPersistenceAdapter)adapter).getDataSource() instanceof EmbeddedDataSource);
             assertTrue("Should have created a DefaultWireFormat",
-                    ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof DefaultWireFormat);
+                    ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof ObjectStreamWireFormat);
 
             log.info("Success");
         } finally {

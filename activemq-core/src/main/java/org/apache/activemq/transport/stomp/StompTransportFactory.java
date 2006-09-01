@@ -19,9 +19,9 @@ package org.apache.activemq.transport.stomp;
 
 import java.util.Map;
 
-import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> transport factory

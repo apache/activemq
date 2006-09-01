@@ -26,8 +26,8 @@ import javax.jms.TextMessage;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.activeio.util.ByteArrayInputStream;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.xpath.CachedXPathAPI;
 import org.w3c.dom.Document;
 import org.w3c.dom.traversal.NodeIterator;

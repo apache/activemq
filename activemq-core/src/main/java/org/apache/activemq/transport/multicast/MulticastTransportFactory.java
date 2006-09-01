@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
 
-import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.UdpTransportFactory;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A factory of multicast transport classes

@@ -23,11 +23,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.activeio.command.WireFormat;
 import org.apache.activeio.journal.InvalidRecordLocationException;
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.JournalEventListener;
 import org.apache.activeio.journal.RecordLocation;
+import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -54,7 +54,9 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -429,8 +431,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      */
     public DataStructure readCommand(RecordLocation location) throws IOException {
         try {
-            Packet data = journal.read(location);
-            return (DataStructure) wireFormat.unmarshal(data);
+        	Packet packet = journal.read(location);
+            return (DataStructure) wireFormat.unmarshal(toByteSequence(packet));
         }
         catch (InvalidRecordLocationException e) {
             throw createReadException(location, e);
@@ -460,7 +462,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         // While we have records in the journal.
         while ((pos = journal.getNextRecordLocation(pos)) != null) {
             Packet data = journal.read(pos);
-            DataStructure c = (DataStructure) wireFormat.unmarshal(data);
+            DataStructure c = (DataStructure) wireFormat.unmarshal(toByteSequence(data));
 
             if (c instanceof Message ) {
                 Message message = (Message) c;
@@ -586,7 +588,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      */
     public RecordLocation writeCommand(DataStructure command, boolean sync) throws IOException {
         if( started.get() )
-            return journal.write(wireFormat.marshal(command), sync);
+            return journal.write(toPacket(wireFormat.marshal(command)), sync);
         throw new IOException("closed");
     }
 
@@ -610,7 +612,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         try {
             JournalTrace trace = new JournalTrace();
             trace.setMessage("DELETED");
-            RecordLocation location = journal.write(wireFormat.marshal(trace), false);
+            RecordLocation location = journal.write(toPacket(wireFormat.marshal(trace)), false);
             journal.setMark(location, true);
             log.info("Journal deleted: ");
         } catch (IOException e) {
@@ -649,6 +651,15 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     public void setUseExternalMessageReferences(boolean enable) {
         if( enable )
             throw new IllegalArgumentException("The journal does not support message references.");
+    }
+    
+    public Packet toPacket(ByteSequence sequence) {
+    	return new ByteArrayPacket(new org.apache.activeio.packet.ByteSequence(sequence.data, sequence.offset, sequence.length));
+    }
+    
+    public ByteSequence toByteSequence(Packet packet) {
+    	org.apache.activeio.packet.ByteSequence sequence = packet.asByteSequence();
+    	return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
 
 }

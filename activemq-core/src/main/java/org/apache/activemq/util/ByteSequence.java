@@ -15,21 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.command;
 
-import java.io.IOException;
+package org.apache.activemq.util;
 
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.wireformat.WireFormat;
+public class ByteSequence {
+	
+    public byte[] data;
+    public int offset;
+    public int length;
 
-public interface MarshallAware {
+    public ByteSequence(byte data[]) {
+        this.data = data;
+        this.offset = 0;
+        this.length = data.length;            
+    }
 
-    public void beforeMarshall(WireFormat wireFormat) throws IOException;
-    public void afterMarshall(WireFormat wireFormat) throws IOException;
+    public ByteSequence(byte data[], int offset, int length) {
+        this.data = data;
+        this.offset = offset;
+        this.length = length;            
+    }
     
-    public void beforeUnmarshall(WireFormat wireFormat) throws IOException;
-    public void afterUnmarshall(WireFormat wireFormat) throws IOException;
-    
-    public void setCachedMarshalledForm(WireFormat wireFormat, ByteSequence data);
-    public ByteSequence getCachedMarshalledForm(WireFormat wireFormat);
+    public byte[] getData() {
+        return data;
+    }
+    public int getLength() {
+        return length;
+    }
+    public int getOffset() {
+        return offset;
+    }
+	public void setData(byte[] data) {
+		this.data = data;
+	}
+	public void setLength(int length) {
+		this.length = length;
+	}
+	public void setOffset(int offset) {
+		this.offset = offset;
+	}
+
 }

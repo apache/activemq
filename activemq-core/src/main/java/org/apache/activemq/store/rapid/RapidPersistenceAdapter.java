@@ -24,12 +24,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.activeio.command.WireFormat;
 import org.apache.activeio.journal.InvalidRecordLocationException;
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.JournalEventListener;
 import org.apache.activeio.journal.RecordLocation;
 import org.apache.activeio.journal.active.JournalImpl;
+import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -61,7 +61,9 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -96,7 +98,6 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
     
     private long checkpointInterval = 1000 * 60 * 5;
     private long lastCheckpointRequest = System.currentTimeMillis();
-    private long lastCleanup = System.currentTimeMillis();
     private int maxCheckpointWorkers = 10;
     private int maxCheckpointMessageAddSize = 5000;
 
@@ -445,7 +446,7 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
     public DataStructure readCommand(RecordLocation location) throws IOException {
         try {
             Packet data = journal.read(location);
-            return (DataStructure) wireFormat.unmarshal(data);
+            return (DataStructure) wireFormat.unmarshal(toByteSequence(data));
         }
         catch (InvalidRecordLocationException e) {
             throw createReadException(location, e);
@@ -475,7 +476,7 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
         // While we have records in the journal.
         while ((pos = journal.getNextRecordLocation(pos)) != null) {
             Packet data = journal.read(pos);
-            DataStructure c = (DataStructure) wireFormat.unmarshal(data);
+            DataStructure c = (DataStructure) wireFormat.unmarshal(toByteSequence(data));
 
             if (c instanceof Message ) {
                 Message message = (Message) c;
@@ -600,7 +601,7 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
      */
     public RecordLocation writeCommand(DataStructure command, boolean sync) throws IOException {
         if( started.get() )
-            return journal.write(wireFormat.marshal(command), sync);
+            return journal.write(toPacket(wireFormat.marshal(command)), sync);
         throw new IOException("closed");
     }
 
@@ -624,7 +625,7 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
         try {
             JournalTrace trace = new JournalTrace();
             trace.setMessage("DELETED");
-            RecordLocation location = journal.write(wireFormat.marshal(trace), false);
+            RecordLocation location = journal.write(toPacket(wireFormat.marshal(trace)), false);
             journal.setMark(location, true);
             log.info("Journal deleted: ");
         } catch (IOException e) {
@@ -668,6 +669,15 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
 
     public Store getStore() {
         return store;
+    }
+    
+    public Packet toPacket(ByteSequence sequence) {
+    	return new ByteArrayPacket(new org.apache.activeio.packet.ByteSequence(sequence.data, sequence.offset, sequence.length));
+    }
+    
+    public ByteSequence toByteSequence(Packet packet) {
+    	org.apache.activeio.packet.ByteSequence sequence = packet.asByteSequence();
+    	return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
 
 }

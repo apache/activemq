@@ -17,23 +17,25 @@
  */
 package org.apache.activemq.transport.http;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.transport.util.TextWireFormat;
-import org.apache.activemq.util.Callback;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.Callback;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
@@ -66,7 +68,7 @@ public class HttpTransport extends HttpTransportSupport {
             }
             
             HttpURLConnection connection = getSendConnection();
-            String text = getTextWireFormat().toString(command);
+            String text = getTextWireFormat().marshalText(command);
             Writer writer = new OutputStreamWriter(connection.getOutputStream());
             writer.write(text);
             writer.flush();
@@ -98,7 +100,18 @@ public class HttpTransport extends HttpTransportSupport {
                 }
                 else {
 //                    checkSession(connection);
-                    Command command = getTextWireFormat().readCommand(new DataInputStream(connection.getInputStream()));
+                	
+                	// Create a String for the UTF content
+                	InputStream is = connection.getInputStream();
+                	ByteArrayOutputStream baos = new ByteArrayOutputStream(connection.getContentLength()>0?connection.getContentLength():1024);
+                	int c=0;
+                	while( (c=is.read())>= 0 ) {
+                		baos.write(c);
+                	}
+                	ByteSequence sequence = baos.toByteSequence();
+                	String data = new String(sequence.data, sequence.offset, sequence.length, "UTF-8");
+                	
+                    Command command = (Command) getTextWireFormat().unmarshalText(data);
                     
                     if (command == null) {
                         log.warn("Received null packet from url: " + remoteUrl);

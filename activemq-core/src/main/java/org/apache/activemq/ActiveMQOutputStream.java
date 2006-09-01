@@ -26,7 +26,6 @@ import java.util.Map;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 
-import org.apache.activeio.Disposable;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;

@@ -20,7 +20,7 @@ package org.apache.activemq.broker;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.activeio.util.FactoryFinder;
+import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 
 /**

@@ -223,7 +223,7 @@
           <useFile>true</useFile>
           <argLine>-Xmx512M</argLine>
           <includes>
-            <include>**/*Test.*</include>
+            <include>**/*XTest.*</include>
           </includes>
           <excludes>
 

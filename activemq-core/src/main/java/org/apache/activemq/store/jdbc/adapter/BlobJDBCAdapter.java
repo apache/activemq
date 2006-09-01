@@ -28,8 +28,8 @@ import java.sql.SQLException;
 
 import javax.jms.JMSException;
 
-import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.store.jdbc.TransactionContext;
+import org.apache.activemq.util.ByteArrayOutputStream;
 
 
 /**

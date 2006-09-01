@@ -17,9 +17,9 @@
  */
 package org.apache.activemq.openwire;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.command.WireFormatFactory;
 import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.wireformat.WireFormatFactory;
 
 /**
  * @version $Revision$
