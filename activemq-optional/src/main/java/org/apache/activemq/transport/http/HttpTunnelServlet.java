@@ -99,7 +99,7 @@ public class HttpTunnelServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         // Read the command directly from the reader
-        Command command = wireFormat.readCommand(request.getReader());
+        Command command = (Command) wireFormat.unmarshalText(request.getReader());
 
         if (command instanceof WireFormatInfo) {
             WireFormatInfo info = (WireFormatInfo) command;

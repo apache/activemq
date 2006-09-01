@@ -22,11 +22,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 
-import org.apache.activeio.packet.ByteSequence;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.DataStreamMarshaller;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ClassLoading;
 
 abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {

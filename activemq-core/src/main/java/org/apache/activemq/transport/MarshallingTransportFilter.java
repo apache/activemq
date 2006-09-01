@@ -19,8 +19,8 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
-import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.wireformat.WireFormat;
 
 public class MarshallingTransportFilter extends TransportFilter {
 

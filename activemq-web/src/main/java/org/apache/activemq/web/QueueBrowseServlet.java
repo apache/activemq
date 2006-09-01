@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activeio.util.FactoryFinder;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.web.view.MessageRenderer;
 

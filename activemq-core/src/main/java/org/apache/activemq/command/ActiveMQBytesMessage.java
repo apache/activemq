@@ -35,12 +35,11 @@ import javax.jms.MessageFormatException;
 import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 
-import org.apache.activeio.packet.ByteArrayPacket;
-import org.apache.activeio.packet.ByteSequence;
-import org.apache.activeio.packet.PacketData;
-import org.apache.activeio.util.ByteArrayInputStream;
-import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
@@ -106,9 +105,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
                 dataOut.close();
                 ByteSequence bs = bytesOut.toByteSequence();
                 if( compressed ) {
-                    // Prefix the real length
-                    ByteArrayPacket packet = new ByteArrayPacket(bs);
-                    PacketData.writeIntBig(packet, length);
+                	int pos = bs.offset;
+                    ByteSequenceData.writeIntBig(bs, length);
+                    bs.offset = pos;
                 }
                 setContent(bs);
                 bytesOut = null;

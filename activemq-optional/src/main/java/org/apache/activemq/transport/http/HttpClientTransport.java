@@ -26,6 +26,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
@@ -73,7 +74,10 @@ public class HttpClientTransport extends HttpTransportSupport {
     	
         PostMethod httpMethod = new PostMethod(getRemoteUrl().toString());
         configureMethod(httpMethod);
-        httpMethod.setRequestBody(getTextWireFormat().toString(command));
+        String data = getTextWireFormat().marshalText(command);
+        byte[] bytes = data.getBytes("UTF-8");
+        httpMethod.setRequestBody(new ByteArrayInputStream(bytes));
+        
         try {
         	
             HttpClient client = getSendHttpClient();
@@ -126,9 +130,8 @@ public class HttpClientTransport extends HttpTransportSupport {
                 }
                 else {
 //                    checkSession(httpMethod);
-                	DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());
-                    
-                	Command command = getTextWireFormat().readCommand(stream);                    
+                	DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());                    
+                	Command command = (Command) getTextWireFormat().unmarshal(stream);                    
                     if (command == null) {
                         log.warn("Received null command from url: " + remoteUrl);
                     } else {

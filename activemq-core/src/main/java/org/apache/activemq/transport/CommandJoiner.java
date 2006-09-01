@@ -21,11 +21,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.apache.activeio.util.ByteArrayInputStream;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

@@ -22,8 +22,8 @@ import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 
-import org.apache.activeio.util.ByteArrayInputStream;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.xmlbeans.XmlObject;
 
 public class XMLBeansXPathEvaluator implements XPathExpression.XPathEvaluator {

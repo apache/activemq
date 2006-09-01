@@ -20,8 +20,6 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
@@ -29,7 +27,9 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * @version $Revision: 1.6 $
@@ -69,7 +69,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             adapter.doRecoverSubscription(c, destination, clientId, subscriptionName,
                     new JDBCMessageRecoveryListener() {
                         public void recoverMessage(long sequenceId, byte[] data) throws Exception {
-                            Message msg = (Message) wireFormat.unmarshal(new ByteArrayPacket(data));
+                            Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                             msg.getMessageId().setBrokerSequenceId(sequenceId);
                             listener.recoverMessage(msg);
                         }

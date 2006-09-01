@@ -26,8 +26,6 @@ import java.util.Map;
 import org.apache.activeio.Channel;
 import org.apache.activeio.ChannelFactory;
 import org.apache.activeio.adapter.SyncToAsyncChannel;
-import org.apache.activeio.command.AsyncChannelToAsyncCommandChannel;
-import org.apache.activeio.command.WireFormat;
 import org.apache.activeio.packet.async.AsyncChannel;
 import org.apache.activeio.stream.sync.socket.SocketMetadata;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -42,6 +40,7 @@ import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.wireformat.WireFormat;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 

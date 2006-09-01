@@ -20,10 +20,10 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.ByteArrayPacket;
-import org.apache.activeio.packet.Packet;
+
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Marshall a Message or a MessageReference
@@ -38,10 +38,9 @@ public class CommandMarshaller implements Marshaller{
     }
     
     public void writePayload(Object object,DataOutput dataOut) throws IOException{
-        Packet packet = wireFormat.marshal(object);
-        byte[] data = packet.sliceAsBytes();
-        dataOut.writeInt(data.length);
-        dataOut.write(data);
+        ByteSequence packet = wireFormat.marshal(object);
+        dataOut.writeInt(packet.length);
+        dataOut.write(packet.data, packet.offset, packet.length);
     }
 
    
@@ -49,6 +48,6 @@ public class CommandMarshaller implements Marshaller{
         int size=dataIn.readInt();
         byte[] data=new byte[size];
         dataIn.readFully(data);
-        return wireFormat.unmarshal(new ByteArrayPacket(data));
+        return wireFormat.unmarshal(new ByteSequence(data));
     }
 }

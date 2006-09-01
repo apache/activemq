@@ -27,8 +27,8 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.activeio.util.ByteArrayInputStream;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.ByteArrayInputStream;
 import org.xml.sax.InputSource;
 
 public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {

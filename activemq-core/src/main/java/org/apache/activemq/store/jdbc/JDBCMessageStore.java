@@ -20,9 +20,6 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.ByteArrayPacket;
-import org.apache.activeio.packet.Packet;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -31,7 +28,10 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * @version $Revision: 1.10 $
@@ -56,8 +56,8 @@ public class JDBCMessageStore implements MessageStore {
         // Serialize the Message..
         byte data[];
         try {
-            Packet packet = wireFormat.marshal(message);
-            data = packet.sliceAsBytes();
+            ByteSequence packet = wireFormat.marshal(message);
+            data = ByteSequenceData.toByteArray(packet);
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to broker message: " + message.getMessageId() + " in container: "
                     + e, e);
@@ -101,7 +101,7 @@ public class JDBCMessageStore implements MessageStore {
             if (data == null)
                 return null;
 
-            Message answer = (Message) wireFormat.unmarshal(new ByteArrayPacket(data));
+            Message answer = (Message) wireFormat.unmarshal(new ByteSequence(data));
             return answer;
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
@@ -153,7 +153,7 @@ public class JDBCMessageStore implements MessageStore {
             c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
                 public void recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    Message msg = (Message) wireFormat.unmarshal(new ByteArrayPacket(data));
+                    Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                     msg.getMessageId().setBrokerSequenceId(sequenceId);
                     listener.recoverMessage(msg);
                 }

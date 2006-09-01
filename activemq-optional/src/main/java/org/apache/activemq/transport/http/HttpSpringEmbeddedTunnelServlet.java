@@ -29,7 +29,10 @@ import org.springframework.core.io.ClassPathResource;
  * @version $Revision$
  */
 public class HttpSpringEmbeddedTunnelServlet extends HttpEmbeddedTunnelServlet {
-    /**
+
+	private static final long serialVersionUID = -6568661997192814908L;
+
+	/**
      * Factory method to create a new broker
      */
     protected BrokerService createBroker() throws Exception {

@@ -21,10 +21,10 @@ import java.io.IOException;
 
 import junit.framework.Test;
 
-import org.apache.activeio.command.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Runs against the broker but marshals all request and response commands.

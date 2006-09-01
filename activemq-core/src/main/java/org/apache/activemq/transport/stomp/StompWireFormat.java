@@ -24,12 +24,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.activeio.adapter.PacketInputStream;
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.ByteArrayPacket;
-import org.apache.activeio.packet.ByteSequence;
-import org.apache.activeio.packet.Packet;
-import org.apache.activeio.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Implements marshalling and unmarsalling the <a href="http://stomp.codehaus.org/">Stomp</a> protocol.
@@ -46,16 +44,16 @@ public class StompWireFormat implements WireFormat {
     
 	private int version=1;
 
-	public Packet marshal(Object command) throws IOException {
+	public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         marshal(command, dos);
         dos.close();
-        return new ByteArrayPacket(baos.toByteSequence());
+        return baos.toByteSequence();
     }
 
-    public Object unmarshal(Packet packet) throws IOException {
-        PacketInputStream stream = new PacketInputStream(packet);
+    public Object unmarshal(ByteSequence packet) throws IOException {
+        ByteArrayInputStream stream = new ByteArrayInputStream(packet);
         DataInputStream dis = new DataInputStream(stream);
         return unmarshal(dis);
     }

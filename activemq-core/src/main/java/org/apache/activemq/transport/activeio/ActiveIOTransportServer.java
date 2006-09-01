@@ -25,14 +25,14 @@ import java.util.Map;
 import org.apache.activeio.AcceptListener;
 import org.apache.activeio.Channel;
 import org.apache.activeio.ChannelFactory;
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.command.WireFormatFactory;
 import org.apache.activeio.packet.async.AsyncChannelServer;
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.wireformat.WireFormatFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.Executor;
 import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;

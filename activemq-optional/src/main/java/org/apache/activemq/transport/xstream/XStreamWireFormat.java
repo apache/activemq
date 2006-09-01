@@ -17,19 +17,11 @@
  */
 package org.apache.activemq.transport.xstream;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.Reader;
 
-import javax.jms.JMSException;
-
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.packet.Packet;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.wireformat.WireFormat;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -44,23 +36,6 @@ public class XStreamWireFormat extends TextWireFormat {
     private XStream xStream;
     private int version;
 
-    public void marshal(Object command, DataOutputStream out) throws IOException {
-        String text = getXStream().toXML(command);
-        out.writeUTF(text);
-    }
-
-    public Packet marshal(Object command) throws IOException {
-        return null;
-    }
-
-    public Object unmarshal(DataInputStream arg0) throws IOException {
-        return null;
-    }
-
-    public Object unmarshal(Packet arg0) throws IOException {
-        return null;
-    }
-
     public int getVersion() {
         return version;
     }
@@ -69,43 +44,21 @@ public class XStreamWireFormat extends TextWireFormat {
         this.version = version;
     }
 
-    public Packet readPacket(DataInput in) throws IOException {
-        String text = in.readUTF();
-        return (Packet) getXStream().fromXML(text);
-    }
-
-    public Packet readPacket(int firstByte, DataInput in) throws IOException {
-        String text = in.readUTF();
-        return (Packet) getXStream().fromXML(text);
-    }
-
-    public Packet writePacket(Packet packet, DataOutput out) throws IOException, JMSException {
-        String text = getXStream().toXML(packet);
-        out.writeUTF(text);
-        return null;
-    }
 
     public WireFormat copy() {
         return new XStreamWireFormat();
     }
 
-    public String toString(Packet packet) {
-        return getXStream().toXML(packet);
-    }
 
-    public Packet fromString(String xml) {
-        return (Packet) getXStream().fromXML(xml);
-    }
-
-    public Command readCommand(String text) {
+    public Object unmarshalText(String text) {
         return (Command) getXStream().fromXML(text);
     }
     
-    public Command readCommand(Reader reader) {
+    public Object unmarshalText(Reader reader) {
         return (Command) getXStream().fromXML(reader);
     }
 
-    public String toString(Command command) {
+	public String marshalText(Object command) {
         return getXStream().toXML(command);
     }
 
@@ -146,4 +99,5 @@ public class XStreamWireFormat extends TextWireFormat {
         return new XStream();
     }
 
+	
 }

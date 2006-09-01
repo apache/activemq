@@ -35,10 +35,10 @@ import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 import javax.jms.StreamMessage;
 
-import org.apache.activeio.packet.ByteSequence;
-import org.apache.activeio.util.ByteArrayInputStream;
-import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**

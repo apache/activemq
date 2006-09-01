@@ -18,11 +18,14 @@
 package org.apache.activemq.transport.util;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activemq.command.Command;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Adds the extra methods available to text based wire format implementations
@@ -31,14 +34,31 @@ import org.apache.activemq.command.Command;
  */
 public abstract class TextWireFormat implements WireFormat {
 
-    public abstract Command readCommand(String text);
-    
-    public abstract Command readCommand(Reader reader);
+    public abstract Object unmarshalText(String text);    
+    public abstract Object unmarshalText(Reader reader);
+    public abstract String marshalText(Object command);
 
-    public abstract String toString(Command command);
-
-    public Command readCommand(DataInputStream in) throws IOException {
-        String text = in.readUTF();
-        return readCommand(text);
+    public void marshal(Object command, DataOutputStream out) throws IOException {
+        out.writeUTF(marshalText(command));
     }
+
+    public Object unmarshal(DataInputStream in) throws IOException {
+        String text = in.readUTF();
+        return unmarshalText(text);
+	}
+    
+	public ByteSequence marshal(Object command) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        marshal(command, dos);
+        dos.close();
+        return baos.toByteSequence();
+    }
+
+    public Object unmarshal(ByteSequence packet) throws IOException {
+        ByteArrayInputStream stream = new ByteArrayInputStream(packet);
+        DataInputStream dis = new DataInputStream(stream);
+        return unmarshal(dis);
+    }
+
 }

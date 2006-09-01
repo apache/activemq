@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import junit.framework.Test;
 
-import org.apache.activeio.packet.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 public class MessageSendTest extends DataStructureTestSupport {
 

@@ -35,7 +35,6 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.activeio.packet.ByteSequence;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -57,6 +56,7 @@ import org.apache.activemq.openwire.v1.ActiveMQTextMessageTest;
 import org.apache.activemq.openwire.v1.BrokerInfoTest;
 import org.apache.activemq.openwire.v1.MessageAckTest;
 import org.apache.activemq.test.TestSupport;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

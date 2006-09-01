@@ -17,8 +17,8 @@
  */
 package org.apache.activemq.transport.xstream;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.command.WireFormatFactory;
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.wireformat.WireFormatFactory;
 
 /**
  * 

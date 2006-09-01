@@ -28,10 +28,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 
-import org.apache.activeio.command.WireFormat;
-import org.apache.activeio.command.WireFormatFactory;
-import org.apache.activeio.packet.ByteSequence;
-import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.BrokerId;
@@ -40,6 +36,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.JournalTrace;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.wireformat.WireFormatFactory;
 
 /**
  * A Broker interceptor which allows you to trace all operations to a UDP socket.

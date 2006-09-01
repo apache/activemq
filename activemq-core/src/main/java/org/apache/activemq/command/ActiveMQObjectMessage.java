@@ -25,23 +25,20 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.lang.reflect.Proxy;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 
-import org.apache.activeio.packet.ByteSequence;
-import org.apache.activeio.util.ByteArrayInputStream;
-import org.apache.activeio.util.ByteArrayOutputStream;
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.util.ClassLoading;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
@@ -66,7 +63,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * @see javax.jms.TextMessage
  */
 public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage {
-    static final private ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader(); //TODO verify classloader
+    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader(); //TODO verify classloader
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_OBJECT_MESSAGE;
 
     protected transient Serializable object;
@@ -162,7 +159,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                     is = new InflaterInputStream(is);
                 }
                 DataInputStream dataIn = new DataInputStream(is);
-                ObjectInputStreamExt objIn = new ObjectInputStreamExt(dataIn);
+                ClassLoadingAwareObjectInputStream objIn = new ClassLoadingAwareObjectInputStream(dataIn);
                 try {
                     object = (Serializable) objIn.readObject();
                 } catch (ClassNotFoundException ce) {
@@ -189,39 +186,5 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         } catch (JMSException e) {
         }
         return super.toString();
-    }
-
-    static public class ObjectInputStreamExt extends ObjectInputStream {
-
-        public ObjectInputStreamExt(InputStream in) throws IOException {
-            super(in);
-        }
-
-        protected Class resolveClass(ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            return load(classDesc.getName(), cl);
-        }
-
-        protected Class resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            Class[] cinterfaces = new Class[interfaces.length];
-            for (int i = 0; i < interfaces.length; i++)
-                cinterfaces[i] = load(interfaces[i], cl);
-
-            try {
-                return Proxy.getProxyClass(cinterfaces[0].getClassLoader(), cinterfaces);
-            } catch (IllegalArgumentException e) {
-                throw new ClassNotFoundException(null, e);
-            }
-        }
-
-        private Class load(String className, ClassLoader cl) throws ClassNotFoundException {
-            try {
-                return ClassLoading.loadClass(className, cl);
-            } catch ( ClassNotFoundException e ) {
-                return ClassLoading.loadClass(className, ACTIVEMQ_CLASSLOADER);
-            }
-        }
-
     }
 }

@@ -26,7 +26,6 @@ import javax.jms.Message;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageProducer;
 
-import org.apache.activeio.Disposable;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
