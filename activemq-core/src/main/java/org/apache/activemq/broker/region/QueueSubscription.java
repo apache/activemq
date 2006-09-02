@@ -17,6 +17,9 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
@@ -28,11 +31,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-
-import java.io.IOException;
 
 public class QueueSubscription extends PrefetchSubscription implements LockOwner {
     

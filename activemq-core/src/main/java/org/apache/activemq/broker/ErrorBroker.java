@@ -39,6 +39,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.kaha.Store;
 
 /**
  * Implementation of the broker where all it's methods throw an
@@ -227,6 +228,10 @@ public class ErrorBroker implements Broker {
     }
 
     public Response messagePull(ConnectionContext context, MessagePull pull) {
+        throw new BrokerStoppedException(this.message);
+    }
+    
+    public Store getTempDataStore() {
         throw new BrokerStoppedException(this.message);
     }
 

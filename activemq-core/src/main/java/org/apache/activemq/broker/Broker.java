@@ -33,6 +33,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.kaha.Store;
 
 /**
  * The Message Broker which routes messages,
@@ -251,4 +252,12 @@ public interface Broker extends Region, Service {
      * Sets the default administration connection context used when configuring the broker on startup or via JMX
      */
     public abstract void setAdminConnectionContext(ConnectionContext adminConnectionContext);
+    
+    
+    /**
+     * @return the broker's temp data store
+     * @throws Exception
+     */
+    
+    public Store getTempDataStore();
 }

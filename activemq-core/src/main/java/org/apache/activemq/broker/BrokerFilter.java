@@ -35,6 +35,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.kaha.Store;
 
 import java.util.Map;
 import java.util.Set;
@@ -231,5 +232,10 @@ public class BrokerFilter implements Broker {
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
         next.setAdminConnectionContext(adminConnectionContext);
     }
+
+    public Store getTempDataStore() {
+        return next.getTempDataStore();
+    }
+    
     
 }

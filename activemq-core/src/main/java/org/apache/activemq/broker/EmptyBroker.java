@@ -35,6 +35,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.kaha.Store;
 
 import java.util.Collections;
 import java.util.Map;
@@ -227,6 +228,10 @@ public class EmptyBroker implements Broker {
 
     
     public Response messagePull(ConnectionContext context, MessagePull pull) {
+        return null;
+    }
+    
+    public Store getTempDataStore() {
         return null;
     }
 

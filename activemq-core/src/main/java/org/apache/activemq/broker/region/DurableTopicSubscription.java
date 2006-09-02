@@ -19,17 +19,16 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.Iterator;
-
 import javax.jms.InvalidSelectorException;
-
+import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.SubscriptionKey;
-
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 
 public class DurableTopicSubscription extends PrefetchSubscription {
@@ -41,7 +40,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     private boolean active=false;
     
     public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive) throws InvalidSelectorException {
-        super(broker,context, info);
+        //super(broker,context, info, new FilePendingMessageCursor(context.getClientId() + info.getConsumerId().toString(),broker.getTempDataStore()));
+        super(broker,context,info);
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
     }
@@ -102,7 +102,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             }
             if( keepDurableSubsActive ) {
             	synchronized(pending) {
-            		pending.addFirst(node);
+            		pending.addMessageFirst(node);
             	}
             } else {
                 node.decrementReferenceCount();
@@ -112,10 +112,11 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         
         if( !keepDurableSubsActive ) {
         	synchronized(pending) {
-	            for (Iterator iter = pending.iterator(); iter.hasNext();) {
-	                MessageReference node = (MessageReference) iter.next();
+                pending.reset();
+	            while(pending.hasNext()) {
+	                MessageReference node = pending.next();
 	                node.decrementReferenceCount();
-	                iter.remove();
+	                pending.remove();
 	            }
         	}
         }
@@ -189,8 +190,9 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     synchronized public void destroy() {
     	
     	synchronized(pending) {
-	        for (Iterator iter = pending.iterator(); iter.hasNext();) {
-	            MessageReference node = (MessageReference) iter.next();
+            pending.reset();
+	        while(pending.hasNext()) {
+	            MessageReference node = pending.next();
 	            node.decrementReferenceCount();
 	        }
 	        pending.clear();
