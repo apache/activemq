@@ -42,6 +42,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.kaha.Store;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
@@ -572,5 +573,9 @@ public class RegionBroker implements Broker {
  
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
         this.adminConnectionContext = adminConnectionContext;
+    }
+    
+    public Store getTempDataStore() {
+        return brokerService.getTempDataStore();
     }
 }

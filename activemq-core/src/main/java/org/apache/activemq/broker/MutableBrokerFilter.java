@@ -35,6 +35,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.kaha.Store;
 
 import java.util.Map;
 import java.util.Set;
@@ -242,6 +243,10 @@ public class MutableBrokerFilter implements Broker {
 
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         return getNext().messagePull(context, pull);
+    }
+    
+    public Store getTempDataStore() {
+        return getNext().getTempDataStore();
     }
 
 }

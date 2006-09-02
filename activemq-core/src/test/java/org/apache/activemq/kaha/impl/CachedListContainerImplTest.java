@@ -31,7 +31,9 @@ public class CachedListContainerImplTest extends TestCase{
     protected int MAX_CACHE_SIZE=10;
 
     protected KahaStore getStore() throws IOException{
-        return new KahaStore(name,"rw");
+        KahaStore store = new KahaStore(name,"rw");
+        store.initialize();
+        return store;
     }
 
     public void testAdds() throws Exception{

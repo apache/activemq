@@ -17,9 +17,19 @@
  */
 package org.apache.activemq.broker;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
@@ -34,15 +44,19 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.ProxyConnectorView;
+import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationFactoryImpl;
-import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.region.virtual.*;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
+import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
+import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
+import org.apache.activemq.kaha.Store;
+import org.apache.activemq.kaha.StoreFactory;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.ConnectionFilter;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
@@ -64,24 +78,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.management.InstanceNotFoundException;
-import javax.management.JMException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a number of transport
@@ -105,6 +103,7 @@ public class BrokerService implements Service, Serializable {
     private boolean shutdownOnMasterFailure = false;
     private String brokerName = "localhost";
     private File dataDirectory;
+    private File tmpDataDirectory;
     private Broker broker;
     private BrokerView adminView;
     private ManagementContext managementContext;
@@ -139,6 +138,7 @@ public class BrokerService implements Service, Serializable {
     private BrokerId brokerId;
     private DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
+    private Store tempDataStore;
 
     /**
      * Adds a new transport connector for the given bind address
@@ -530,6 +530,24 @@ public class BrokerService implements Service, Serializable {
     public void setDataDirectory(File dataDirectory) {
         this.dataDirectory = dataDirectory;
     }
+    
+    /**
+     * @return the tmpDataDirectory
+     */
+    public File getTmpDataDirectory(){
+        if (tmpDataDirectory == null) {
+            tmpDataDirectory = new File(getDataDirectory(), "tmp_storage");
+        }
+        return tmpDataDirectory;
+    }
+
+    /**
+     * @param tmpDataDirectory the tmpDataDirectory to set
+     */
+    public void setTmpDataDirectory(File tmpDataDirectory){
+        this.tmpDataDirectory=tmpDataDirectory;
+    }
+    
 
     public void setPersistenceFactory(PersistenceAdapterFactory persistenceFactory) {
         this.persistenceFactory = persistenceFactory;
@@ -906,6 +924,29 @@ public class BrokerService implements Service, Serializable {
     public void setDestinations(ActiveMQDestination[] destinations) {
         this.destinations = destinations;
     }
+    
+    /**
+     * @return the tempDataStore
+     */
+    public Store getTempDataStore() {
+        if (tempDataStore == null){
+            String name = getTmpDataDirectory().getPath();
+            try {
+            StoreFactory.delete(name);
+            tempDataStore = StoreFactory.open(name,"rw");
+            }catch(IOException e){
+                throw new RuntimeException(e);
+            }
+        }
+        return tempDataStore;
+    }
+
+    /**
+     * @param tempDataStore the tempDataStore to set
+     */
+    public void setTempDataStore(Store tempDataStore){
+        this.tempDataStore=tempDataStore;
+    }   
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -1386,5 +1427,6 @@ public class BrokerService implements Service, Serializable {
             masterConnector = (MasterConnector) service;
         }
     }
-   
+
+    
 }

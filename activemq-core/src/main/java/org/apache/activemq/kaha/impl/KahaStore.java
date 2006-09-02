@@ -59,7 +59,8 @@ public class KahaStore implements Store{
     public KahaStore(String name,String mode) throws IOException{
         this.name=name;
         this.mode=mode;
-        initialize();
+        directory=new File(name);
+        directory.mkdirs();
     }
 
     public synchronized void close() throws IOException{
@@ -113,22 +114,22 @@ public class KahaStore implements Store{
     }
 
     public synchronized boolean delete() throws IOException{
-        initialize();
-        clear();
         boolean result=true;
-        for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
-            IndexManager im=(IndexManager) iter.next();
-            result&=im.delete();
-            iter.remove();
+        if (initialized){
+            clear();
+            
+            for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
+                IndexManager im=(IndexManager) iter.next();
+                result&=im.delete();
+                iter.remove();
+            }
+            for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
+                DataManager dm=(DataManager) iter.next();
+                result&=dm.delete();
+                iter.remove();
+            }
         }
-        for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
-            DataManager dm=(DataManager) iter.next();
-            result&=dm.delete();
-            iter.remove();
-        }
-        // now delete all the files - containers that don't use the standard DataManager
-        // and IndexManager will not have initialized the files - so these will be left around
-        // unless we do this
+       
         if(directory!=null&&directory.isDirectory()){
             File[] files=directory.listFiles();
             if(files!=null){
@@ -248,10 +249,8 @@ public class KahaStore implements Store{
     		throw new IOException("Store has been closed.");
         if(!initialized){
             initialized=true;
-            directory=new File(name);
-            directory.mkdirs();
-            log.info("Kaha Store using data directory " + directory);
             
+            log.info("Kaha Store using data directory " + directory);
             DataManager defaultDM = getDataManager(DEFAULT_CONTAINER_NAME);
             rootIndexManager = getIndexManager(defaultDM, DEFAULT_CONTAINER_NAME);
             

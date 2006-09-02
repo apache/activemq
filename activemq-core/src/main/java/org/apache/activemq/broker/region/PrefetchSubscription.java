@@ -20,12 +20,14 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
-
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
-
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerControl;
@@ -50,7 +52,7 @@ import org.apache.commons.logging.LogFactory;
 abstract public class PrefetchSubscription extends AbstractSubscription{
     
     static private final Log log=LogFactory.getLog(PrefetchSubscription.class);
-    final protected LinkedList pending=new LinkedList();
+    final protected PendingMessageCursor pending;
     final protected LinkedList dispatched=new LinkedList();
     
     protected int prefetchExtension=0;
@@ -59,10 +61,16 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     long enqueueCounter;
     long dispatchCounter;
     long dequeueCounter;
-        
-    public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info)
-                    throws InvalidSelectorException{
+    
+    public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info, PendingMessageCursor cursor)
+                    throws  InvalidSelectorException{
         super(broker,context,info);
+        pending = cursor;
+    }
+    
+    public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info)
+    throws  InvalidSelectorException{
+       this(broker,context,info,new VMPendingMessageCursor()); 
     }
 
     
@@ -77,8 +85,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             prefetchExtension++;
             
             final long dispatchCounterBeforePull = dispatchCounter;
-        	dispatchMatched();
-        	
+            dispatchMatched();
+            
         	// If there was nothing dispatched.. we may need to setup a timeout.
         	if( dispatchCounterBeforePull == dispatchCounter ) {
         		// imediate timeout used by receiveNoWait()
@@ -86,7 +94,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         			// Send a NULL message.
 	            	add(QueueMessageReference.NULL_MESSAGE);
 	            	dispatchMatched();
-        		}
+        }
         		if( pull.getTimeout() > 0 ) {
 	            	Scheduler.executeAfterDelay(new Runnable(){
 							public void run() {
@@ -124,17 +132,18 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 if( pending.isEmpty() ) {
                     log.debug("Prefetch limit.");
                 }
-                pending.addLast(node);
+                pending.addMessageLast(node);
             }
         }
     }
 
     synchronized public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
         synchronized(pending){
-            for(Iterator i=pending.iterator();i.hasNext();){
-                MessageReference node=(MessageReference) i.next();
+            pending.reset();
+            while(pending.hasNext()){
+                MessageReference node=pending.next();
                 if(node.getMessageId().equals(mdn.getMessageId())){
-                    i.remove();
+                    pending.remove();
                     createMessageDispatch(node,node.getMessage());
                     dispatched.addLast(node);
                     return;
@@ -329,9 +338,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         if(!dispatching){
             dispatching=true;
             try{
-                for(Iterator iter=pending.iterator();iter.hasNext()&&!isFull();){
-                    MessageReference node=(MessageReference) iter.next();
-                    iter.remove();
+                pending.reset();
+                while(pending.hasNext()&&!isFull()){
+                    MessageReference node=pending.next();
+                    pending.remove();
                     dispatch(node);
                 }
             }finally{
@@ -352,8 +362,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
 
             // NULL messages don't count... they don't get Acked.
             if( node != QueueMessageReference.NULL_MESSAGE ) {
-        		dispatchCounter++;
-        		dispatched.addLast(node);            
+            dispatchCounter++;
+            dispatched.addLast(node);            
             } else {
             	prefetchExtension=Math.max(0,prefetchExtension-1);
             }
@@ -380,8 +390,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     synchronized protected void onDispatch(final MessageReference node,final Message message){
         if(node.getRegionDestination()!=null){
         	if( node != QueueMessageReference.NULL_MESSAGE ) {
-	            node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
-	            context.getConnection().getStatistics().onMessageDequeue(message);
+            node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
+            context.getConnection().getStatistics().onMessageDequeue(message);
         	}
             try{
                 dispatchMatched();
@@ -412,19 +422,19 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      */
     protected MessageDispatch createMessageDispatch(MessageReference node,Message message){
         if( node == QueueMessageReference.NULL_MESSAGE ) {
-            MessageDispatch md = new MessageDispatch();
+        MessageDispatch md=new MessageDispatch();
             md.setMessage(null);
-            md.setConsumerId( info.getConsumerId() );
+        md.setConsumerId(info.getConsumerId());
             md.setDestination( null );
             return md;
         } else {
             MessageDispatch md=new MessageDispatch();
             md.setConsumerId(info.getConsumerId());
-            md.setDestination(node.getRegionDestination().getActiveMQDestination());
-            md.setMessage(message);
-            md.setRedeliveryCounter(node.getRedeliveryCounter());
-            return md;
-        }
+        md.setDestination(node.getRegionDestination().getActiveMQDestination());
+        md.setMessage(message);
+        md.setRedeliveryCounter(node.getRedeliveryCounter());
+        return md;
+    }
     }
 
     /**
