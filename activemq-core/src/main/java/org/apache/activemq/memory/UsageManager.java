@@ -103,10 +103,12 @@ public class UsageManager {
             return;
         if(parent!=null)
             parent.increaseUsage(value);
+        int percentUsage;
         synchronized(usageMutex) {
             usage+=value;
-            setPercentUsage(caclPercentUsage());
+            percentUsage = caclPercentUsage();  
         }
+        setPercentUsage(percentUsage);
     }
     
     /**
@@ -119,10 +121,12 @@ public class UsageManager {
             return;
         if(parent!=null)
             parent.decreaseUsage(value);
+        int percentUsage;
         synchronized(usageMutex) {
             usage-=value;
-            setPercentUsage(caclPercentUsage());
+            percentUsage = caclPercentUsage();  
         }
+        setPercentUsage(percentUsage);
     }
     
     public boolean isFull() {
@@ -153,10 +157,12 @@ public class UsageManager {
         if(percentUsageMinDelta < 0 ) {
             throw new IllegalArgumentException("percentUsageMinDelta must be greater or equal to 0");
         }
+        int percentUsage;
         synchronized (usageMutex) {
             this.limit = limit;
-            setPercentUsage(caclPercentUsage());
+            percentUsage = caclPercentUsage();
         }
+        setPercentUsage(percentUsage);
     }
     
     /**
@@ -199,10 +205,12 @@ public class UsageManager {
         if(percentUsageMinDelta < 1) {
             throw new IllegalArgumentException("percentUsageMinDelta must be greater than 0");
         }
+        int percentUsage;
         synchronized (usageMutex) {
             this.percentUsageMinDelta = percentUsageMinDelta;
-            setPercentUsage(caclPercentUsage());
-        }
+            percentUsage = caclPercentUsage();  
+        } 
+        setPercentUsage(percentUsage);
     }
 
     public long getUsage() {
