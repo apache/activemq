@@ -27,7 +27,7 @@ import org.apache.activemq.command.MessageId;
 /**
  * Only used by the {@link QueueMessageReference#NULL_MESSAGE} 
  */
-final class EndOfBrowseMarkerQueueMessageReference implements
+final class NullMessageReference implements
 		QueueMessageReference {
 
 	private ActiveMQMessage message = new ActiveMQMessage();
@@ -50,7 +50,7 @@ final class EndOfBrowseMarkerQueueMessageReference implements
 	}
 
 	public boolean lock(LockOwner subscription) {
-		throw new RuntimeException("not implemented");
+		return true;
 	}
 
 	public void setAcked(boolean b) {
@@ -58,7 +58,6 @@ final class EndOfBrowseMarkerQueueMessageReference implements
 	}
 
 	public void unlock() {
-		throw new RuntimeException("not implemented");
 	}
 
 	public int decrementReferenceCount() {
@@ -70,11 +69,11 @@ final class EndOfBrowseMarkerQueueMessageReference implements
 	}
 
 	public String getGroupID() {
-		throw new RuntimeException("not implemented");
+		return null;
 	}
 
 	public int getGroupSequence() {
-		throw new RuntimeException("not implemented");
+		return 0;
 	}
 
 	public Message getMessage() throws IOException {
