@@ -25,7 +25,7 @@ package org.apache.activemq.broker.region;
  */
 public interface QueueMessageReference extends MessageReference {
 
-    public static final QueueMessageReference NULL_MESSAGE = new EndOfBrowseMarkerQueueMessageReference();
+    public static final QueueMessageReference NULL_MESSAGE = new NullMessageReference();
 
     public boolean isAcked();
     
