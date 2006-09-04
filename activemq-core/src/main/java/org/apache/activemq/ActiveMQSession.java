@@ -1344,6 +1344,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         try {
             executor.execute(messageDispatch);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             connection.onAsyncException(e);
         }
     }

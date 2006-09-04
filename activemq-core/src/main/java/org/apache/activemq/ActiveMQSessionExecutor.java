@@ -114,6 +114,7 @@ public class ActiveMQSessionExecutor implements Task {
                 taskRunner.shutdown();
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
         }
     }

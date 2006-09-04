@@ -81,6 +81,7 @@ public class WireFormatNegotiator extends TransportFilter {
             if( !readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS) ) 
             	throw new IOException("Wire format negociation timeout: peer did not send his wire format.");
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new InterruptedIOException();
         }
         super.oneway(command);

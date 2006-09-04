@@ -112,6 +112,7 @@ public class FailoverTransport implements CompositeTransport {
                 handleTransportFailure(error);
             }
             catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 transportListener.onException(new InterruptedIOException());
             }
         }
@@ -345,6 +346,7 @@ public class FailoverTransport implements CompositeTransport {
                                 reconnectMutex.wait(1000);
                             }
                             catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
                                 log.debug("Interupted: " + e, e);
                             }
                         }
@@ -394,6 +396,7 @@ public class FailoverTransport implements CompositeTransport {
             }
         }
         catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             // Some one may be trying to stop our thread.
             throw new InterruptedIOException();
         }

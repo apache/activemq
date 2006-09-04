@@ -394,6 +394,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
         }
     }

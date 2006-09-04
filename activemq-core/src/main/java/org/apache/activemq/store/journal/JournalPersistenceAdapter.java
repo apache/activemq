@@ -307,6 +307,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             }
         }
         catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             log.warn("Request to start checkpoint failed: " + e, e);
         }
     }
