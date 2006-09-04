@@ -55,7 +55,7 @@ public abstract class NetworkConnector extends ServiceSupport {
     private boolean dispatchAsync = true;
     private String userName;
     private String password;
-    private boolean bridgeTempDestinations=false;
+    private boolean bridgeTempDestinations=true;
     
     protected ConnectionFilter connectionFilter;
 

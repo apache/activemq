@@ -407,6 +407,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
 				try {
 					Thread.sleep(BIND_ATTEMPT_DELAY);
 				} catch (InterruptedException e1) {
+                    Thread.currentThread().interrupt();
 					throw e;
 				}
 			}			

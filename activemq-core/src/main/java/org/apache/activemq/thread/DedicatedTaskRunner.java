@@ -98,6 +98,7 @@ class DedicatedTaskRunner implements TaskRunner {
             
         } catch (InterruptedException e) {
             // Someone really wants this thread to die off.
+            Thread.currentThread().interrupt();
         } finally {
             // Make sure we notify any waiting threads that thread 
             // has terminated.
