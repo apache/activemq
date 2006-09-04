@@ -53,6 +53,7 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
     private boolean useQuickJournal=false;
     private File journalArchiveDirectory;
     private boolean failIfJournalIsLocked=false;
+    private int journalThreadPriority = Thread.MAX_PRIORITY;
     private JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
     
     public PersistenceAdapter createPersistenceAdapter() throws IOException {
@@ -107,7 +108,7 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
 
     public TaskRunnerFactory getTaskRunnerFactory() {
         if( taskRunnerFactory == null ) {
-            taskRunnerFactory = new TaskRunnerFactory();
+            taskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", journalThreadPriority, true, 1000);
         }
         return taskRunnerFactory;
     }
@@ -177,6 +178,14 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
     public void setCreateTablesOnStartup(boolean createTablesOnStartup) {
         jdbcPersistenceAdapter.setCreateTablesOnStartup(createTablesOnStartup);
     }
+    
+    public int getJournalThreadPriority(){
+        return journalThreadPriority;
+    }
+
+    public void setJournalThreadPriority(int journalThreadPriority){
+        this.journalThreadPriority=journalThreadPriority;
+    }
 
     /**
      * @throws IOException
@@ -200,5 +209,7 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
             }
         }
     }
+
+    
 
 }
