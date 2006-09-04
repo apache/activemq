@@ -114,13 +114,17 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
     private boolean useExternalMessageReferences;
 
 
-    private final Runnable periodicCheckpointTask = new Runnable() {
-        public void run() {
-            if( System.currentTimeMillis()>lastCheckpointRequest+checkpointInterval ) {
-                checkpoint(false, true);
-            }
-        }
-    };
+    private final Runnable periodicCheckpointTask  = createPeriodicCheckpointTask(); 
+    	
+    final Runnable createPeriodicCheckpointTask() {
+    	return new Runnable() {
+    		public void run() {
+	            if( System.currentTimeMillis()>lastCheckpointRequest+checkpointInterval ) {
+	                checkpoint(false, true);
+	            }
+	        }
+	    };
+    }
     
     public RapidPersistenceAdapter(Journal journal, TaskRunnerFactory taskRunnerFactory) throws IOException {
 

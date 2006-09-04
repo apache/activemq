@@ -107,13 +107,17 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     
     private AtomicBoolean started = new AtomicBoolean(false);
 
-    private final Runnable periodicCheckpointTask = new Runnable() {
-        public void run() {
-            if( System.currentTimeMillis()>lastCheckpointRequest+checkpointInterval ) {
-                checkpoint(false, true);
-            }
-        }
-    };
+    private final Runnable periodicCheckpointTask = createPeriodicCheckpointTask(); 
+    	
+    final Runnable createPeriodicCheckpointTask() {
+    	return new Runnable() {
+	        public void run() {
+	            if( System.currentTimeMillis()>lastCheckpointRequest+checkpointInterval ) {
+	                checkpoint(false, true);
+	            }
+	        }
+	    };
+    }
     
     public JournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
 

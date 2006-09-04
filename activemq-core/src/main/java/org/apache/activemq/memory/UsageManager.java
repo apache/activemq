@@ -151,7 +151,11 @@ public class UsageManager {
     }
 
     /**
-     * Sets the memory limit in bytes
+     * Sets the memory limit in bytes.
+     * 
+     * When set using XBean, you can use values such as: "20 mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setLimit(long limit) {
         if(percentUsageMinDelta < 0 ) {
@@ -165,20 +169,6 @@ public class UsageManager {
         setPercentUsage(percentUsage);
     }
     
-    /**
-     * Sets the memory limit in megabytes
-     */
-    public void setLimitMb(long limitMb) {
-        setLimitKb(1024 * limitMb);
-    }
-    
-    /**
-     * Sets the memory limit in kilobytes
-     */
-    public void setLimitKb(long limitKb) {
-        setLimit(1024 * limitKb);
-    }
-
     /*
     * Sets the minimum number of percentage points the usage has to change before a UsageListener
     * event is fired by the manager.

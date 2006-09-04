@@ -22,9 +22,9 @@
   
   <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
   
-    <!--  Use the following to set the broker memory limit (in bytes)
+    <!--  Use the following to set the broker memory limit 
     <memoryManager>  
-        <usageManager id="memory-manager" limit="1048576"/>
+        <usageManager id="memory-manager" limit="20 MB"/>
     </memoryManager>
     -->
     

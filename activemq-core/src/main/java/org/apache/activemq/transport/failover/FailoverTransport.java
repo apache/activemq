@@ -80,55 +80,59 @@ public class FailoverTransport implements CompositeTransport {
     private long reconnectDelay = initialReconnectDelay;
     private Exception connectionFailure;
 
-    private final TransportListener myTransportListener = new TransportListener() {
-        public void onCommand(Command command) {
-            if (command == null) {
-                return;
-            }
-            if (command.isResponse()) {
-                requestMap.remove(new Integer(((Response) command).getCorrelationId()));
-            }
-            if (!initialized){
-                if (command.isBrokerInfo()){
-                    BrokerInfo info = (BrokerInfo)command;
-                    BrokerInfo[] peers = info.getPeerBrokerInfos();
-                    if (peers!= null){
-                        for (int i =0; i < peers.length;i++){
-                            String brokerString = peers[i].getBrokerURL();
-                            add(brokerString);
-                        }
-                    }
-                initialized = true;
-                }
-                
-            }
-            if (transportListener != null) {
-                transportListener.onCommand(command);
-            }
-        }
-
-        public void onException(IOException error) {
-            try {
-                handleTransportFailure(error);
-            }
-            catch (InterruptedException e) {
-                transportListener.onException(new InterruptedIOException());
-            }
-        }
-        
-        public void transportInterupted(){
-            if (transportListener != null){
-                transportListener.transportInterupted();
-            }
-        }
-
-        public void transportResumed(){
-            if(transportListener != null){
-                transportListener.transportResumed();
-            }
-        }
-    };
-
+    private final TransportListener myTransportListener = createTransportListener();
+    
+    TransportListener createTransportListener() {
+    	return new TransportListener() {
+	        public void onCommand(Command command) {
+	            if (command == null) {
+	                return;
+	            }
+	            if (command.isResponse()) {
+	                requestMap.remove(new Integer(((Response) command).getCorrelationId()));
+	            }
+	            if (!initialized){
+	                if (command.isBrokerInfo()){
+	                    BrokerInfo info = (BrokerInfo)command;
+	                    BrokerInfo[] peers = info.getPeerBrokerInfos();
+	                    if (peers!= null){
+	                        for (int i =0; i < peers.length;i++){
+	                            String brokerString = peers[i].getBrokerURL();
+	                            add(brokerString);
+	                        }
+	                    }
+	                initialized = true;
+	                }
+	                
+	            }
+	            if (transportListener != null) {
+	                transportListener.onCommand(command);
+	            }
+	        }
+	
+	        public void onException(IOException error) {
+	            try {
+	                handleTransportFailure(error);
+	            }
+	            catch (InterruptedException e) {
+	                transportListener.onException(new InterruptedIOException());
+	            }
+	        }
+	        
+	        public void transportInterupted(){
+	            if (transportListener != null){
+	                transportListener.transportInterupted();
+	            }
+	        }
+	
+	        public void transportResumed(){
+	            if(transportListener != null){
+	                transportListener.transportResumed();
+	            }
+	        }
+	    };
+    }
+    
     public FailoverTransport() throws InterruptedIOException {
 
         // Setup a task that is used to reconnect the a connection async.

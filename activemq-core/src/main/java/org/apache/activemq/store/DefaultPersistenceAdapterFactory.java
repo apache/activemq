@@ -82,6 +82,9 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         return journalLogFileSize;
     }
 
+    /**
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
     public void setJournalLogFileSize(int journalLogFileSize) {
         this.journalLogFileSize = journalLogFileSize;
     }
