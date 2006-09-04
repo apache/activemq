@@ -28,7 +28,7 @@
                 <property name="cleanupPeriod" value="60000"/>
                 <property name="dataSource" ref="embedded-ds"/>
                 <property name="wireFormat">
-                    <bean id="myWireFormat" class="org.apache.activeio.command.DefaultWireFormat"/>
+                    <bean id="myWireFormat" class="org.apache.activemq.wireformat.ObjectStreamWireFormat"/>
                 </property>
             </amq:jdbcPersistenceAdapter>
         </amq:persistenceAdapter>
