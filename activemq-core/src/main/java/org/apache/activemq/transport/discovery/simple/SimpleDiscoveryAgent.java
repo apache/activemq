@@ -138,6 +138,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 		                    	
 		                        sleepMutex.wait(event.reconnectDelay);
 		                    }catch(InterruptedException ie){
+                                Thread.currentThread().interrupt();
 		                       return;
 		                    }
 		                }

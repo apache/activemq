@@ -312,6 +312,7 @@ public class QuickJournalPersistenceAdapter implements PersistenceAdapter, Journ
             }
         }
         catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             log.warn("Request to start checkpoint failed: " + e, e);
         }
     }

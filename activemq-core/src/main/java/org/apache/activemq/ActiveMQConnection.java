@@ -1409,6 +1409,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         try {
             brokerInfoReceived.await();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
         }
     }

@@ -86,7 +86,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected int prefetchSize = 1000;
     protected boolean dispatchAsync;
     protected String destinationFilter = ">";
-    protected boolean bridgeTempDestinations = false;
+    protected boolean bridgeTempDestinations = true;
     protected String name = "bridge";
     protected ConsumerInfo demandConsumerInfo;
     protected int demandConsumerDispatched;
@@ -271,20 +271,13 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 // Listen to consumer advisory messages on the remote broker to determine demand.
                 demandConsumerInfo=new ConsumerInfo(remoteSessionInfo,1);
                 demandConsumerInfo.setDispatchAsync(dispatchAsync);
-                demandConsumerInfo.setDestination(new ActiveMQTopic(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX
-                                +destinationFilter));
-                demandConsumerInfo.setPrefetchSize(prefetchSize);
-                remoteBroker.oneway(demandConsumerInfo);
-                
+                String advisoryTopic = AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX+destinationFilter;
                 if( bridgeTempDestinations ) {
-	                //we want information about Destinations as well
-	                ConsumerInfo destinationInfo  = new ConsumerInfo(remoteSessionInfo,2);
-	                destinationInfo.setDestination(AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC);
-	                destinationInfo.setPrefetchSize(prefetchSize);
-	                destinationInfo.setDispatchAsync(dispatchAsync);
-	                remoteBroker.oneway(destinationInfo);
+                	advisoryTopic += ","+AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
                 }
-                
+                demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
+                demandConsumerInfo.setPrefetchSize(prefetchSize);
+                remoteBroker.oneway(demandConsumerInfo);                
                 startedLatch.countDown();
                 
                 if (!disposed){

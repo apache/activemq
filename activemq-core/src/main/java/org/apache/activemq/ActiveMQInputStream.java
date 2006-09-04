@@ -143,6 +143,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         try {
             md = unconsumedMessages.dequeue(-1);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
         }
 

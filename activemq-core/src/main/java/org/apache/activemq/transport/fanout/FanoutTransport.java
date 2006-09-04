@@ -142,6 +142,7 @@ public class FanoutTransport implements CompositeTransport {
                 }
             }
             catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 transportListener.onException(new InterruptedIOException());
             }
         }        
@@ -394,6 +395,7 @@ public class FanoutTransport implements CompositeTransport {
             }
         } catch (InterruptedException e) {
             // Some one may be trying to stop our thread.
+            Thread.currentThread().interrupt();
             throw new InterruptedIOException();
         }
     }
