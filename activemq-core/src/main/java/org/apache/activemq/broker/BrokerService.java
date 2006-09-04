@@ -109,6 +109,7 @@ public class BrokerService implements Service, Serializable {
     private ManagementContext managementContext;
     private ObjectName brokerObjectName;
     private TaskRunnerFactory taskRunnerFactory;
+    private TaskRunnerFactory persistenceTaskRunnerFactory;
     private UsageManager memoryManager;
     private PersistenceAdapter persistenceAdapter;
     private PersistenceAdapterFactory persistenceFactory;
@@ -139,6 +140,8 @@ public class BrokerService implements Service, Serializable {
     private DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
     private Store tempDataStore;
+    private int persistenceThreadPriority = Thread.MAX_PRIORITY;
+   
 
     /**
      * Adds a new transport connector for the given bind address
@@ -617,6 +620,19 @@ public class BrokerService implements Service, Serializable {
     public void setTaskRunnerFactory(TaskRunnerFactory taskRunnerFactory) {
         this.taskRunnerFactory = taskRunnerFactory;
     }
+    
+    
+    public TaskRunnerFactory getPersistenceTaskRunnerFactory(){
+        if (taskRunnerFactory == null) {
+            persistenceTaskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", persistenceThreadPriority, true, 1000);
+        }
+        return persistenceTaskRunnerFactory;
+    }
+
+   
+    public void setPersistenceTaskRunnerFactory(TaskRunnerFactory persistenceTaskRunnerFactory){
+        this.persistenceTaskRunnerFactory=persistenceTaskRunnerFactory;
+    }
 
     public boolean isUseJmx() {
         return useJmx;
@@ -947,6 +963,14 @@ public class BrokerService implements Service, Serializable {
     public void setTempDataStore(Store tempDataStore){
         this.tempDataStore=tempDataStore;
     }   
+    
+    public int getPersistenceThreadPriority(){
+        return persistenceThreadPriority;
+    }
+
+    public void setPersistenceThreadPriority(int persistenceThreadPriority){
+        this.persistenceThreadPriority=persistenceThreadPriority;
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -1223,7 +1247,7 @@ public class BrokerService implements Service, Serializable {
     protected DefaultPersistenceAdapterFactory createPersistenceFactory() {
         DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
         factory.setDataDirectoryFile(getDataDirectory());
-        factory.setTaskRunnerFactory(getTaskRunnerFactory());
+        factory.setTaskRunnerFactory(getPersistenceTaskRunnerFactory());
         return factory;
     }
 
@@ -1427,6 +1451,11 @@ public class BrokerService implements Service, Serializable {
             masterConnector = (MasterConnector) service;
         }
     }
+
+   
+    
+
+    
 
     
 }
