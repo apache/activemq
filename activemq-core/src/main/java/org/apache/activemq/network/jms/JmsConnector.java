@@ -63,30 +63,33 @@ public abstract class JmsConnector implements Service {
     protected String localPassword;
     private String name;
 
-    protected LRUCache replyToBridges = new LRUCache() {
-        /**
-         * 
-         */
-        private static final long serialVersionUID = -7446792754185879286L;
+    protected LRUCache replyToBridges = createLRUCache(); 
+    	
+    static private LRUCache createLRUCache() { 
+    	return new LRUCache() {
+	        private static final long serialVersionUID = -7446792754185879286L;
+	
+	        protected boolean removeEldestEntry(Map.Entry enty) {
+	            if (size() > maxCacheSize) {
+	                Iterator iter = entrySet().iterator();
+	                Map.Entry lru = (Map.Entry) iter.next();
+	                remove(lru.getKey());
+	                DestinationBridge bridge = (DestinationBridge) lru.getValue();
+	                try {
+	                    bridge.stop();
+	                    log.info("Expired bridge: " + bridge);
+	                }
+	                catch (Exception e) {
+	                    log.warn("stopping expired bridge" + bridge + " caused an exception", e);
+	                }
+	            }
+	            return false;
+	        }
+	    };
+    }
 
-        protected boolean removeEldestEntry(Map.Entry enty) {
-            if (size() > maxCacheSize) {
-                Iterator iter = entrySet().iterator();
-                Map.Entry lru = (Map.Entry) iter.next();
-                remove(lru.getKey());
-                DestinationBridge bridge = (DestinationBridge) lru.getValue();
-                try {
-                    bridge.stop();
-                    log.info("Expired bridge: " + bridge);
-                }
-                catch (Exception e) {
-                    log.warn("stopping expired bridge" + bridge + " caused an exception", e);
-                }
-            }
-            return false;
-        }
-    };
-
+    /**
+     */
     public boolean init() {
         boolean result = initialized.compareAndSet(false, true);
         if (result) {

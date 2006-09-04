@@ -188,6 +188,8 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
 
     /**
      * @param maxDataFileLength the maxDataFileLength to set
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setMaxDataFileLength(long maxDataFileLength){
         this.maxDataFileLength=maxDataFileLength;

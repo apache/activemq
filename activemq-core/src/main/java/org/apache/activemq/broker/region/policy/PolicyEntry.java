@@ -172,6 +172,10 @@ public class PolicyEntry extends DestinationMapEntry {
         return memoryLimit;
     }
 
+    /**
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
     public void setMemoryLimit(long memoryLimit) {
         this.memoryLimit = memoryLimit;
     }
