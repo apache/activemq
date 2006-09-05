@@ -20,10 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
 import org.apache.activemq.kaha.StoreFactory;
+import org.apache.activemq.kaha.impl.KahaStore;
+import org.apache.activemq.kaha.impl.container.ContainerId;
+import org.apache.activemq.kaha.impl.container.ListContainerImpl;
+import org.apache.activemq.kaha.impl.data.DataManager;
+import org.apache.activemq.kaha.impl.index.IndexItem;
+import org.apache.activemq.kaha.impl.index.IndexManager;
 /**
  * Junit tests for CachedListContainerImpl
  * 
- * @version $Revision$
+ * @version $Revision: 439552 $
  */
 public class CachedListContainerImplTest extends TestCase{
     protected String name;

@@ -26,6 +26,16 @@ import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.kaha.impl.container.BaseContainerImpl;
+import org.apache.activemq.kaha.impl.container.ContainerId;
+import org.apache.activemq.kaha.impl.container.ListContainerImpl;
+import org.apache.activemq.kaha.impl.container.MapContainerImpl;
+import org.apache.activemq.kaha.impl.data.DataItem;
+import org.apache.activemq.kaha.impl.data.DataManager;
+import org.apache.activemq.kaha.impl.data.RedoListener;
+import org.apache.activemq.kaha.impl.index.IndexItem;
+import org.apache.activemq.kaha.impl.index.IndexManager;
+import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +51,7 @@ public class KahaStore implements Store{
     private File directory;
 
     protected IndexRootContainer mapsContainer;
-    protected IndexRootContainer listsContainer;
+    public IndexRootContainer listsContainer;
     private Map lists=new ConcurrentHashMap();
     private Map maps=new ConcurrentHashMap();
     
@@ -244,7 +254,7 @@ public class KahaStore implements Store{
         }
     }
 
-    protected synchronized void initialize() throws IOException{
+    public synchronized void initialize() throws IOException{
     	if( closed )
     		throw new IOException("Store has been closed.");
         if(!initialized){
@@ -276,7 +286,7 @@ public class KahaStore implements Store{
         }
     }
     
-    protected DataManager getDataManager(String name) throws IOException {
+    public DataManager getDataManager(String name) throws IOException {
         DataManager dm = (DataManager) dataManagers.get(name);
         if (dm == null){
             dm = new DataManager(directory,name);
@@ -287,7 +297,7 @@ public class KahaStore implements Store{
         return dm;
     }
     
-    protected IndexManager getIndexManager(DataManager dm, String name) throws IOException {
+    public IndexManager getIndexManager(DataManager dm, String name) throws IOException {
         IndexManager im = (IndexManager) indexManagers.get(name);
         if( im == null ) {
             im = new IndexManager(directory,name,mode, logIndexChanges?dm:null);
