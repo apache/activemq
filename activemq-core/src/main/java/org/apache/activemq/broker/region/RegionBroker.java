@@ -17,8 +17,15 @@
  */
 package org.apache.activemq.broker.region;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jms.InvalidClientIDException;
+import javax.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
@@ -51,15 +58,9 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 
-import javax.jms.InvalidClientIDException;
-import javax.jms.JMSException;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -91,6 +92,7 @@ public class RegionBroker implements Broker {
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
     protected DestinationFactory destinationFactory;
+    protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
         
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
         this.brokerService = brokerService;
@@ -575,6 +577,10 @@ public class RegionBroker implements Broker {
         this.adminConnectionContext = adminConnectionContext;
     }
     
+	public Map getConnectionStates() {
+		return connectionStates;
+	}
+
     public Store getTempDataStore() {
         return brokerService.getTempDataStore();
     }

@@ -18,6 +18,7 @@
 package org.apache.activemq.broker;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ConnectionId;
@@ -52,6 +53,7 @@ public class ConnectionContext {
     private Object longTermStoreContext;
     private boolean producerFlowControl=true;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
+    private AtomicInteger referenceCounter = new AtomicInteger();
     
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     
@@ -230,5 +232,13 @@ public class ConnectionContext {
         }
         return true;
     }
+
+	public int incrementReference() {
+		return referenceCounter.incrementAndGet();
+	}
+	
+	public int decrementReference() {
+		return referenceCounter.decrementAndGet();
+	}
 
 }
