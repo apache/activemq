@@ -567,7 +567,7 @@ final public class OpenWireFormat implements WireFormat {
 		if( preferedWireFormatInfo==null )
 			throw new IllegalStateException("Wireformat cannot not be renegociated.");
 		
-		this.setVersion(Math.max(preferedWireFormatInfo.getVersion(), info.getVersion()) );
+		this.setVersion(Math.min(preferedWireFormatInfo.getVersion(), info.getVersion()) );
 		this.stackTraceEnabled = info.isStackTraceEnabled() && preferedWireFormatInfo.isStackTraceEnabled();
 		this.tcpNoDelayEnabled = info.isTcpNoDelayEnabled() && preferedWireFormatInfo.isTcpNoDelayEnabled();
 		this.cacheEnabled = info.isCacheEnabled() && preferedWireFormatInfo.isCacheEnabled();
