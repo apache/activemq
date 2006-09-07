@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project-modules id="moduleCoreId">
-<wb-module deploy-name="ActiveMQRAR">
-<wb-resource deploy-path="/" source-path="/connectorModule"/>
-<wb-resource deploy-path="/" source-path="/.apt_src"/>
-<property name="java-output-path" value="/build/classes/"/>
-</wb-module>
-</project-modules>
