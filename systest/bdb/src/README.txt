@@ -1,1 +1,0 @@
-This module runs the system tests for Berkeley DB

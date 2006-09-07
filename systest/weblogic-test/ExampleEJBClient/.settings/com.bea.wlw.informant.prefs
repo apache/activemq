@@ -1,5 +1,0 @@
-#Tue May 02 14:45:54 EDT 2006
-eclipse.preferences.version=1
-informants/com.bea.wlw.controls.ui.ControlExtension=com.bea.wlw.controls.core.informants.ControlExtensionInformant,
-informants/com.bea.wlw.controls.ui.ControlImplementation=com.bea.wlw.controls.core.informants.ControlImplementationInformant,
-informants/com.bea.wlw.controls.ui.ControlInterface=com.bea.wlw.controls.core.informants.ControlInterfaceInformant,
