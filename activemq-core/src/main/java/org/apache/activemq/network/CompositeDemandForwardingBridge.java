@@ -44,6 +44,7 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
     public CompositeDemandForwardingBridge(Transport localBroker, Transport remoteBroker) {
         super(localBroker, remoteBroker);
         remoteBrokerName = remoteBroker.toString();
+    	remoteBrokerNameKnownLatch.countDown();
     }
 
     protected void serviceRemoteBrokerInfo(Command command) throws IOException {
