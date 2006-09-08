@@ -59,32 +59,78 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         Message answer = consumer.receive(5000);
         assertNotNull("Should have received a message!", answer);
         // check if method will return at all and will return a null
-        answer = consumer.receive(1000);
+        answer = consumer.receive(1);
         assertNull("Should have not received a message!", answer);
         answer = consumer.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
 
     public void testIdleConsumer() throws Exception {
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        doTestIdleConsumer(false);
+    }
+    
+    public void testIdleConsumerTranscated() throws Exception {
+        doTestIdleConsumer(true);
+    }
+    
+    private void doTestIdleConsumer(boolean transacted) throws Exception {
+        Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
 
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Msg1"));
         producer.send(session.createTextMessage("Msg2"));
-
+        if(transacted) {
+            session.commit();            
+        }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
         //noinspection UNUSED_SYMBOL
         MessageConsumer idleConsumer = session.createConsumer(queue);
         TextMessage answer = (TextMessage) consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
+        if(transacted) {
+            session.commit();            
+        }
         // this call would return null if prefetchSize > 0
         answer = (TextMessage) consumer.receive(5000);
-        assertEquals("Should have not received a message!", answer.getText(), "Msg2");
+        assertEquals("Should have received a message!", answer.getText(), "Msg2");
+        if(transacted) {
+            session.commit();            
+        }
         answer = (TextMessage) consumer.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
 
+    public void testRecvRecvCommit() throws Exception {
+        doTestRecvRecvCommit(false);
+    }
+    
+    public void testRecvRecvCommitTranscated() throws Exception {
+        doTestRecvRecvCommit(true);
+    }
+    
+    private void doTestRecvRecvCommit(boolean transacted) throws Exception {
+        Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
+
+        MessageProducer producer = session.createProducer(queue);
+        producer.send(session.createTextMessage("Msg1"));
+        producer.send(session.createTextMessage("Msg2"));
+        if(transacted) {
+            session.commit();            
+        }
+        // now lets receive it
+        MessageConsumer consumer = session.createConsumer(queue);
+        TextMessage answer = (TextMessage) consumer.receiveNoWait();
+        assertEquals("Should have received a message!", answer.getText(), "Msg1");
+        answer = (TextMessage) consumer.receiveNoWait();
+        assertEquals("Should have received a message!", answer.getText(), "Msg2");
+        if(transacted) {
+            session.commit();            
+        }
+        answer = (TextMessage) consumer.receiveNoWait();
+        assertNull("Should have not received a message!", answer);
+    }
+    
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:61616";
         super.setUp();

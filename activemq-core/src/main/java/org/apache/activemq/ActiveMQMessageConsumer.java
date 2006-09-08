@@ -618,7 +618,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *
      */
     protected void sendPullCommand(long timeout) throws JMSException {
-        if (info.getPrefetchSize() == 0) {
+        if (info.getPrefetchSize() == 0 && unconsumedMessages.isEmpty()) {
             MessagePull messagePull = new MessagePull();
             messagePull.configure(info);
             messagePull.setTimeout(timeout);            
