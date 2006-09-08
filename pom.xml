@@ -123,7 +123,6 @@
     </distributionManagement>
 
     <modules>
-        <module>activecluster</module>
         <module>activemq-jaas</module>
         <module>activemq-core</module>
         <module>activemq-console</module>
@@ -135,12 +134,6 @@
         <module>activemq-optional</module>
         <module>activemq-openwire-generator</module>
         <module>assembly</module>
-        <module>activeio</module>
-	<!-- uncomment if you want to include tooling build -->
-	<!-- module>tooling</module -->
-        
-	<!--module>activemq-systest</module -->
-        <!-- module>activecluster</module -->
     </modules>
 
     <scm>
