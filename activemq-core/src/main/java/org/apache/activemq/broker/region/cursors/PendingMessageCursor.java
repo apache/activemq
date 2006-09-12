@@ -13,6 +13,9 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import org.apache.activemq.Service;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 
 /**
@@ -20,7 +23,24 @@ import org.apache.activemq.broker.region.MessageReference;
  * 
  * @version $Revision$
  */
-public interface PendingMessageCursor{
+public interface PendingMessageCursor extends Service{
+    
+    
+    /**
+     * Add a destination
+     * @param context
+     * @param destination
+     * @throws Exception
+     */
+    public void add(ConnectionContext context, Destination destination) throws Exception;
+
+    /**
+     * remove a destination
+     * @param context
+     * @param destination
+     * @throws Exception
+     */
+    public void remove(ConnectionContext context, Destination destination) throws Exception;
     /**
      * @return true if there are no pending messages
      */
@@ -70,4 +90,12 @@ public interface PendingMessageCursor{
      * 
      */
     public void clear();
+    
+    /**
+     * Informs the Broker if the subscription needs to intervention to recover it's state
+     * e.g. DurableTopicSubscriber may do
+     * @see org.apache.activemq.region.cursors.PendingMessageCursor
+     * @return true if recovery required
+     */
+    public boolean isRecoveryRequired();
 }

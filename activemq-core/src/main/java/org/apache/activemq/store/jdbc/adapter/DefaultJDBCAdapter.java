@@ -408,6 +408,58 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
         
     }
+    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, int maxReturned,JDBCMessageRecoveryListener listener) throws Exception {
+//      dumpTables(c, destination.getQualifiedName(),clientId,subscriptionName);
+
+      PreparedStatement s = null;
+      ResultSet rs = null;
+      try {
+
+          s = c.getConnection().prepareStatement(statements.getFindDurableSubMessagesStatement());
+          s.setString(1, destination.getQualifiedName());
+          s.setString(2, clientId);
+          s.setString(3, subscriptionName);
+          s.setLong(4,seq);
+          s.setInt(5,maxReturned);
+          rs = s.executeQuery();
+
+          if( statements.isUseExternalMessageReferences() ) {
+              while (rs.next()) {
+                  listener.recoverMessageReference(rs.getString(2));
+              }
+          } else {
+              while (rs.next()) {
+                  listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2));
+              }
+          }
+
+      }
+      finally {
+          close(rs);
+          close(s);
+          listener.finished();
+      }
+      
+  }
+    
+    public int doGetDurableSubscriberMessageCount(TransactionContext c,ActiveMQDestination destination,String clientId,
+                    String subscriptionName) throws SQLException, IOException{
+        PreparedStatement s=null;
+        ResultSet rs=null;
+        int result = 0;
+        try{
+            s=c.getConnection().prepareStatement(statements.getDurableSubscriberMessageCountStatement());
+            s.setString(1,destination.getQualifiedName());
+            s.setString(2,clientId);
+            s.setString(3,subscriptionName);
+            rs=s.executeQuery();
+            result =  rs.getInt(1);
+        }finally{
+            close(rs);
+            close(s);
+        }
+        return result;
+    }
 
     /**
      * @see org.apache.activemq.store.jdbc.JDBCAdapter#doSetSubscriberEntry(java.sql.Connection, java.lang.Object, org.apache.activemq.service.SubscriptionInfo)
@@ -607,6 +659,29 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     public void setStatements(Statements statements) {
         this.statements = statements;
+    }
+
+    public byte[] doGetNextDurableSubscriberMessageStatement(TransactionContext c,ActiveMQDestination destination,String clientId,String subscriberName) throws SQLException,IOException{
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+
+            s = c.getConnection().prepareStatement(statements.getNextDurableSubscriberMessageStatement());
+            s.setString(1, destination.getQualifiedName());
+            s.setString(2, clientId);
+            s.setString(3, subscriberName);
+            rs = s.executeQuery();
+
+            if (!rs.next()) {
+                return null;
+            }
+            return getBinaryData(rs, 1);
+
+        }
+        finally {
+            close(rs);
+            close(s);
+        }
     }
 
     /*

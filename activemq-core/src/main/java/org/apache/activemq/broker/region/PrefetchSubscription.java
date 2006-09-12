@@ -188,7 +188,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         if(context.isInTransaction()) {
                             // extend prefetch window only if not a pulling consumer
                             if (getPrefetchSize() != 0) {
-                                prefetchExtension=Math.max(prefetchExtension,index+1);
+                            prefetchExtension=Math.max(prefetchExtension,index+1);
                             }
                         }
                         else {
@@ -316,6 +316,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         return enqueueCounter;
     }
     
+    public boolean isRecoveryRequired(){
+        return pending.isRecoveryRequired();
+    }
+    
     /**
      * optimize message consumer prefetch if the consumer supports it
      *
@@ -336,7 +340,16 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         */
     }
     
-    
+    public void add(ConnectionContext context, Destination destination) throws Exception {
+        super.add(context,destination);
+        pending.add(context,destination);
+    }
+
+    public void remove(ConnectionContext context, Destination destination) throws Exception {
+        super.remove(context,destination);
+        pending.remove(context,destination);
+       
+    }
 
 
     protected void dispatchMatched() throws IOException{

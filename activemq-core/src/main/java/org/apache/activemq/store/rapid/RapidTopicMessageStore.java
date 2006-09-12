@@ -94,6 +94,42 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         }
         
     }
+    
+    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,
+                    MessageRecoveryListener listener) throws Exception{
+        String key=getSubscriptionKey(clientId,subscriptionName);
+        ListContainer list=(ListContainer) subscriberAcks.get(key);
+        if(list!=null){
+            boolean startFound=false;
+            int count = 0;
+            for(Iterator i=list.iterator();i.hasNext() && count < maxReturned;){
+                Object msg=messageContainer.get(i.next());
+                if(msg!=null){
+                    if(msg.getClass()==String.class){
+                        String ref=msg.toString();
+                        if (startFound || lastMessageId == null){
+                            listener.recoverMessageReference(ref);
+                            count++;
+                        }
+                        else if(startFound||ref.equals(lastMessageId.toString())){
+                            startFound=true;
+                        }
+                    }else{
+                        Message message=(Message) msg;
+                        if(startFound||message.getMessageId().equals(lastMessageId)){
+                            startFound=true;
+                        }else{
+                            listener.recoverMessage(message);
+                            count++;
+                        }
+                    }
+                }
+                listener.finished();
+            }
+        }else{
+            listener.finished();
+        }
+    }
 
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         return (SubscriptionInfo) subscriberContainer.get(getSubscriptionKey(clientId,subscriptionName));
@@ -290,6 +326,20 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         Marshaller marshaller=new StringMarshaller();
         container.setMarshaller(marshaller);
         subscriberAcks.put(key,container);
+    }
+    
+    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
+        String key=getSubscriptionKey(clientId,subscriptionName);
+        ListContainer list=(ListContainer) subscriberAcks.get(key);
+        Iterator iter = list.iterator();
+        return (Message) (iter.hasNext() ? iter.next() : null);
+        
+    }
+    
+    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+        String key=getSubscriptionKey(clientId,subscriberName);
+        ListContainer list=(ListContainer) subscriberAcks.get(key);
+        return list.size();
     }
 
 }

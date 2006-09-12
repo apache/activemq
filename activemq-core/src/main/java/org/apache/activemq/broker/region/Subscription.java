@@ -190,5 +190,13 @@ public interface Subscription {
      * @return the prefetch size that is configured for the subscription
      */
     int getPrefetchSize();
+    
+    /**
+     * Informs the Broker if the subscription needs to intervention to recover it's state
+     * e.g. DurableTopicSubscriber may do
+     * @see org.apache.activemq.region.cursors.PendingMessageCursor
+     * @return true if recovery required
+     */
+    public boolean isRecoveryRequired();
 
 }

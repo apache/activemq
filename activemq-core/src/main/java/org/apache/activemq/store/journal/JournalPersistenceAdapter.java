@@ -604,11 +604,14 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
-        if (newPercentUsage > 80 && oldPercentUsage < newPercentUsage) {
-            checkpoint(false, true);
+        newPercentUsage = ((newPercentUsage)/10)*10;
+        oldPercentUsage = ((oldPercentUsage)/10)*10;
+        if (newPercentUsage >= 70 && oldPercentUsage < newPercentUsage) {
+            boolean sync = newPercentUsage >= 90;
+            checkpoint(sync, true);
         }
     }
-
+    
     public JournalTransactionStore getTransactionStore() {
         return transactionStore;
     }

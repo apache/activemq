@@ -24,6 +24,7 @@ import java.util.Set;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -216,6 +217,9 @@ public class TopicRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         if (info.isDurable()) {
+            if (AdvisorySupport.isAdvisoryTopic(info.getDestination())){
+                throw new JMSException("Cannot create a durable subscription for an advisory Topic");
+            }
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if (sub == null) {

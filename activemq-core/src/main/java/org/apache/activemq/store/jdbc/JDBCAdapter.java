@@ -53,6 +53,9 @@ public interface JDBCAdapter {
 
     public abstract void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, JDBCMessageRecoveryListener listener) throws Exception;
+    
+    public abstract void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId,
+                    String subscriptionName, long seq,int maxReturned,JDBCMessageRecoveryListener listener) throws Exception;
 
     public abstract void doSetSubscriberEntry(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, String selector, boolean retroactive) throws SQLException, IOException;
@@ -79,5 +82,8 @@ public interface JDBCAdapter {
 
     public abstract SubscriptionInfo[] doGetAllSubscriptions(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
 
+    public byte[] doGetNextDurableSubscriberMessageStatement(TransactionContext c, ActiveMQDestination destination,String clientId,String subscriberName) throws SQLException, IOException;
+    
+    public int doGetDurableSubscriberMessageCount(TransactionContext c,ActiveMQDestination destination,String clientId,String subscriptionName) throws SQLException, IOException;
 
 }
