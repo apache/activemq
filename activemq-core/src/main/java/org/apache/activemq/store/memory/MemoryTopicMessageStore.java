@@ -111,6 +111,40 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
             listener.finished();
         }
     }
+    
+    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,MessageRecoveryListener listener) throws Exception{
+        MessageId lastAck=(MessageId) ackDatabase.get(new SubscriptionKey(clientId,subscriptionName));
+        boolean startFound=false;
+        // the message table is a synchronizedMap - so just have to synchronize here
+        synchronized(messageTable){
+            int count = 0;
+            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext() && count < maxReturned;){
+                Map.Entry entry=(Entry) iter.next();
+               
+                    Object msg=entry.getValue();
+                    if(msg.getClass()==String.class){
+                        String ref=msg.toString();
+                        if(startFound||ref.equals(lastMessageId.toString())){
+                            startFound=true;
+                        }else if (startFound){
+                            listener.recoverMessageReference(ref);
+                            count++;
+                        }
+                    }else{
+                        Message message=(Message) msg;
+                        if(startFound||message.getMessageId().equals(lastMessageId)){
+                            startFound=true;
+                        }else if (startFound){
+                            listener.recoverMessage(message);
+                            count++;
+                        }
+                    }
+                
+            }
+            listener.finished();
+        }
+        
+    }
 
     public void delete() {
         super.delete();
@@ -122,4 +156,34 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return (SubscriptionInfo[]) subscriberDatabase.values().toArray(new SubscriptionInfo[subscriberDatabase.size()]);
     }
+    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
+        MessageId lastAck=(MessageId) ackDatabase.get(new SubscriptionKey(clientId,subscriptionName));
+        // the message table is a synchronizedMap - so just have to synchronize here
+        synchronized(messageTable){
+            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
+                Map.Entry entry=(Entry) iter.next();
+                if(entry.getKey().equals(lastAck)){
+                    return (Message) entry.getValue();
+                }
+            }
+        }
+        return null;
+    }
+    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+        int result = 0;
+        MessageId lastAck=(MessageId) ackDatabase.get(new SubscriptionKey(clientId,subscriberName));
+        // the message table is a synchronizedMap - so just have to synchronize here
+        synchronized(messageTable){
+            result = messageTable.size();
+            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
+                Map.Entry entry=(Entry) iter.next();
+                if(entry.getKey().equals(lastAck)){
+                    break;
+                }
+                result--;
+            }
+        }
+        return result;
+    }
+    
 }

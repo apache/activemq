@@ -180,31 +180,30 @@ public class Topic implements Destination {
     
             final MessageEvaluationContext msgContext = new MessageEvaluationContext();
             msgContext.setDestination(destination);
-            store.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
-                public void recoverMessage(Message message) throws Exception {
-                    message.setRegionDestination(Topic.this);
-                    try {
-                        msgContext.setMessageReference(message);
-                        if (subscription.matches(message, msgContext)) {
-                            subscription.add(message);
+            if(subscription.isRecoveryRequired()){
+                store.recoverSubscription(clientId,subscriptionName,new MessageRecoveryListener(){
+                    public void recoverMessage(Message message) throws Exception{
+                        message.setRegionDestination(Topic.this);
+                        try{
+                            msgContext.setMessageReference(message);
+                            if(subscription.matches(message,msgContext)){
+                                subscription.add(message);
+                            }
+                        }catch(InterruptedException e){
+                            Thread.currentThread().interrupt();
+                        }catch(IOException e){
+                            // TODO: Need to handle this better.
+                            e.printStackTrace();
                         }
                     }
-                    catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+
+                    public void recoverMessageReference(String messageReference) throws Exception{
+                        throw new RuntimeException("Should not be called.");
                     }
-                    catch (IOException e) {
-                        // TODO: Need to handle this better.
-                        e.printStackTrace();
-                    }
-                }
-    
-                public void recoverMessageReference(String messageReference) throws Exception {
-                    throw new RuntimeException("Should not be called.");
-                }
-                
-                public void finished(){
-                }
-            });
+
+                    public void finished(){}
+                });
+            }
             
             if( true && subscription.getConsumerInfo().isRetroactive() ) {
                 // If nothing was in the persistent store, then try to use the recovery policy.

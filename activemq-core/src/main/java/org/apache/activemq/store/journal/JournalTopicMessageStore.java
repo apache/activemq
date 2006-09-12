@@ -57,6 +57,12 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         this.peristenceAdapter.checkpoint(true, true);
         longTermStore.recoverSubscription(clientId, subscriptionName, listener);
     }
+    
+    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,MessageRecoveryListener listener) throws Exception{
+        this.peristenceAdapter.checkpoint(true, true);
+        longTermStore.recoverNextMessages(clientId, subscriptionName, lastMessageId,maxReturned,listener);
+        
+    }
 
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         return longTermStore.lookupSubscription(clientId, subscriptionName);
@@ -183,5 +189,17 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return longTermStore.getAllSubscriptions();
     }
+
+    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
+        this.peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getNextMessageToDeliver(clientId,subscriptionName);
+    }
+
+    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+        this.peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getMessageCount(clientId,subscriberName);
+    }
+
+    
 
 }

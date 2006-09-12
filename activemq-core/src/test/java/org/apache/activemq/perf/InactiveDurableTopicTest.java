@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 /**
  * @version $Revision$
@@ -52,7 +53,14 @@ public class InactiveDurableTopicTest extends TestCase{
         super.setUp();
         broker=new BrokerService();
         
-        broker.setPersistenceAdapter(new KahaPersistenceAdapter(new File ("TEST_STUFD")));
+        //broker.setPersistenceAdapter(new KahaPersistenceAdapter(new File ("TEST_STUFD")));
+        /*
+        DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
+        factory.setDataDirectoryFile(broker.getDataDirectory());
+        factory.setTaskRunnerFactory(broker.getTaskRunnerFactory());
+        factory.setUseJournal(false);
+        broker.setPersistenceFactory(factory);
+        */
         broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
         broker.start();
         connectionFactory=new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);

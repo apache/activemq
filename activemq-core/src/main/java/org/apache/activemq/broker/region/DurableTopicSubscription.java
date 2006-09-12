@@ -24,6 +24,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -40,7 +41,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     private boolean active=false;
     
     public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive) throws InvalidSelectorException {
-        //super(broker,context, info, new FilePendingMessageCursor(context.getClientId() + info.getConsumerId().toString(),broker.getTempDataStore()));
+        //super(broker,context, info, new StoreDurableSubscriberCursor(context.getClientId(),info.getSubcriptionName()));
+       // super(broker,context, info, new FilePendingMessageCursor(context.getClientId() + info.getConsumerId().toString(),broker.getTempDataStore()));
         super(broker,context,info);
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
@@ -78,12 +80,14 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                     topic.activate(context, this);
                 }
             }
+            pending.start();
             dispatchMatched();
         }
     }
 
     synchronized public void deactivate(boolean keepDurableSubsActive) throws Exception {        
         active=false;
+        pending.stop();
         if( !keepDurableSubsActive ) {
             for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
                 Topic topic = (Topic) iter.next();

@@ -82,6 +82,14 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         delegate.recoverSubscription(clientId, subscriptionName, listener);
     }
     
+    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,MessageRecoveryListener listener) throws Exception{
+        delegate.recoverNextMessages(clientId, subscriptionName, lastMessageId,maxReturned,listener);
+    }
+    
+    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
+        return delegate.getNextMessageToDeliver(clientId,subscriptionName);
+    }
+    
     public ActiveMQDestination getDestination() {
         return delegate.getDestination();
     }
@@ -100,4 +108,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public void setUsageManager(UsageManager usageManager) {
         delegate.setUsageManager(usageManager);
     }
+
+    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+        return delegate.getMessageCount(clientId,subscriberName);
+    }    
 }

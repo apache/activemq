@@ -53,6 +53,7 @@ public class Statements {
     private String updateLastAckOfDurableSubStatement;
     private String deleteSubscriptionStatement;
     private String findAllDurableSubMessagesStatement;
+    private String findDurableSubMessagesStatement;
     private String findAllDestinationsStatement;
     private String removeAllMessagesStatement;
     private String removeAllSubscriptionsStatement;
@@ -61,6 +62,8 @@ public class Statements {
     private String[] dropSchemaStatements;
     private String lockCreateStatement;
     private String lockUpdateStatement;
+    private String nextDurableSubscriberMessageStatement;
+    private String durableSubscriberMessageCountStatement;
     private boolean useLockCreateWhereClause;
 
     public String[] getCreateSchemaStatements() {
@@ -203,6 +206,47 @@ public class Statements {
                     + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" + " ORDER BY M.ID";
         }
         return findAllDurableSubMessagesStatement;
+    }
+    
+    public String getFindDurableSubMessagesStatement(){
+        if(findDurableSubMessagesStatement==null){
+            findDurableSubMessagesStatement="SELECT M.ID, M.MSG FROM "+getFullMessageTableName()+" M, "
+                            +getFullAckTableName()+" D "+" WHERE ? >= ( select count(*) from "
+                            +getFullMessageTableName()+" M, where D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                            +" AND M.CONTAINER=D.CONTAINER AND M.ID > ?"+" ORDER BY M.ID)";
+        }
+        return findDurableSubMessagesStatement;
+    }
+    
+    public String findAllDurableSubMessagesStatement() {
+        if (findAllDurableSubMessagesStatement == null) {
+            findAllDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
+                    + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                    + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" + " ORDER BY M.ID";
+        }
+        return findAllDurableSubMessagesStatement;
+    }
+    
+    public String getNextDurableSubscriberMessageStatement(){
+        if (nextDurableSubscriberMessageStatement == null){
+            nextDurableSubscriberMessageStatement = "SELECT M.ID, M.MSG FROM "+getFullMessageTableName()+" M, "
+            +getFullAckTableName()+" D "+" WHERE 1 >= ( select count(*) from "
+            +getFullMessageTableName()+" M, where D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+            +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"+" ORDER BY M.ID)"; 
+        }
+        return nextDurableSubscriberMessageStatement;
+    }
+    
+    /**
+     * @return the durableSubscriberMessageCountStatement
+     */
+    public String getDurableSubscriberMessageCountStatement(){
+        if (durableSubscriberMessageCountStatement==null){
+            durableSubscriberMessageCountStatement = "select count(*) from "
+            +getFullMessageTableName()+" M, where D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+            +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID";
+        }
+        return durableSubscriberMessageCountStatement;
     }
 
     public String getFindAllDestinationsStatement() {
@@ -498,5 +542,27 @@ public class Statements {
 
     public void setLockUpdateStatement(String lockUpdateStatement) {
         this.lockUpdateStatement = lockUpdateStatement;
+    }
+
+    /**
+     * @param findDurableSubMessagesStatement the findDurableSubMessagesStatement to set
+     */
+    public void setFindDurableSubMessagesStatement(String findDurableSubMessagesStatement){
+        this.findDurableSubMessagesStatement=findDurableSubMessagesStatement;
+    }
+
+    /**
+     * @param nextDurableSubscriberMessageStatement the nextDurableSubscriberMessageStatement to set
+     */
+    public void setNextDurableSubscriberMessageStatement(String nextDurableSubscriberMessageStatement){
+        this.nextDurableSubscriberMessageStatement=nextDurableSubscriberMessageStatement;
+    }
+
+
+    /**
+     * @param durableSubscriberMessageCountStatement the durableSubscriberMessageCountStatement to set
+     */
+    public void setDurableSubscriberMessageCountStatement(String durableSubscriberMessageCountStatement){
+        this.durableSubscriberMessageCountStatement=durableSubscriberMessageCountStatement;
     }
 }

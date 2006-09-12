@@ -20,7 +20,7 @@ import org.apache.activemq.broker.region.MessageReference;
  * 
  * @version $Revision$
  */
-public class VMPendingMessageCursor implements PendingMessageCursor{
+public class VMPendingMessageCursor extends AbstractPendingMessageCursor{
     private LinkedList list = new LinkedList();
     private Iterator iter = null;
     /**

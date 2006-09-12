@@ -71,6 +71,25 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
         });
 
     }
+    
+    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId, int maxReturned,final MessageRecoveryListener listener) throws Exception{
+        this.peristenceAdapter.checkpoint(true, true);
+        longTermStore.recoverNextMessages(clientId, subscriptionName, lastMessageId,maxReturned,new MessageRecoveryListener() {
+            public void recoverMessage(Message message) throws Exception {
+                throw new IOException("Should not get called.");
+            }
+            public void recoverMessageReference(String messageReference) throws Exception {
+                RecordLocation loc = toRecordLocation(messageReference);
+                Message message = (Message) peristenceAdapter.readCommand(loc);
+                listener.recoverMessage(message);
+            }
+            
+            public void finished(){
+                listener.finished();
+            }
+        });
+        
+    }
 
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         return longTermStore.lookupSubscription(clientId, subscriptionName);
@@ -197,5 +216,17 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return longTermStore.getAllSubscriptions();
     }
+    
+    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
+        this.peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getNextMessageToDeliver(clientId,subscriptionName);
+    }
+    
+    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+        this.peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getMessageCount(clientId,subscriberName);
+    }
+
+   
 
 }
