@@ -96,6 +96,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     private WireFormatInfo wireFormatInfo;    
     protected boolean disposed=false;
+    protected IOException transportException;
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
         private final ConnectionContext context;
@@ -176,6 +177,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     public void serviceTransportException(IOException e) {
         if( !disposed ) {
+            transportException = e;	
             if( transportLog.isDebugEnabled() )
                 transportLog.debug("Transport failed: "+e,e);
             ServiceSupport.dispose(this);
