@@ -74,9 +74,6 @@ public class SessionState {
     public Collection getProducerStates() {
         return producers.values();
     }
-	public ProducerState getProducerState(ProducerId producerId) {
-		return (ProducerState) producers.get(producerId);
-	}
     
     public Collection getConsumerStates() {
         return consumers.values();
