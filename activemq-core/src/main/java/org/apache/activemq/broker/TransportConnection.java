@@ -22,13 +22,11 @@ import java.io.IOException;
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -85,7 +83,12 @@ public class TransportConnection extends AbstractConnection {
             if (masterBroker != null){
                 masterBroker.stop();
             }
-            transport.oneway(new ShutdownInfo());
+            
+            // If the transport has not failed yet,
+            // notify the peer that we are doing a normal shutdown.
+            if( transportException == null ) {
+            	transport.oneway(new ShutdownInfo());
+            }
         } catch (Exception ignore) {
             //ignore.printStackTrace();
         }
