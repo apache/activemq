@@ -62,6 +62,7 @@ import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConsumerState;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.state.SessionState;
+import org.apache.activemq.state.TransactionState;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -308,7 +309,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( cs!=null ) {
            context = cs.getContext();
         }
-        broker.beginTransaction(context, info.getTransactionId());
+        
+        // Avoid replaying dup commands
+        if( cs.getTransactionState(info.getTransactionId())==null ) {
+        	cs.addTransactionState(info.getTransactionId());
+            broker.beginTransaction(context, info.getTransactionId());
+        }
         return null;
     }
     
@@ -325,9 +331,22 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( cs!=null ) {
            context = cs.getContext();
         }
-        int result = broker.prepareTransaction(context, info.getTransactionId());
-        IntegerResponse response = new IntegerResponse(result);
-        return response;
+        
+        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
+        if( transactionState == null )
+            throw new IllegalStateException("Cannot prepare a transaction that had not been started: "+info.getTransactionId());
+
+        // Avoid dups.
+        if( !transactionState.isPrepared() ) {
+            transactionState.setPrepared(true);
+            int result = broker.prepareTransaction(context, info.getTransactionId());
+            transactionState.setPreparedResult(result);
+            IntegerResponse response = new IntegerResponse(result);
+            return response;
+        } else {
+            IntegerResponse response = new IntegerResponse(transactionState.getPreparedResult());
+            return response;
+        }
     }
 
     public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
@@ -336,8 +355,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( cs!=null ) {
            context = cs.getContext();
         }
+        
+        cs.removeTransactionState(info.getTransactionId());
         broker.commitTransaction(context, info.getTransactionId(), true);
+
         return null;
+        
     }
 
     public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
@@ -346,7 +369,9 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( cs!=null ) {
            context = cs.getContext();
         }
-        broker.commitTransaction(context, info.getTransactionId(), false);
+        
+        cs.removeTransactionState(info.getTransactionId());
+    	broker.commitTransaction(context, info.getTransactionId(), false);
         return null;
     }
 
@@ -356,7 +381,9 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( cs!=null ) {
            context = cs.getContext();
         }
-        broker.rollbackTransaction(context, info.getTransactionId());
+        
+        cs.removeTransactionState(info.getTransactionId());
+    	broker.rollbackTransaction(context, info.getTransactionId());
         return null;
     }
     
@@ -382,10 +409,32 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
 
     public Response processMessage(Message messageSend) throws Exception {
+    	
         ProducerId producerId = messageSend.getProducerId();
         ConnectionState state = lookupConnectionState(producerId);
         ConnectionContext context = state.getContext();
-        broker.send(context, messageSend);
+        
+        // If the message originates from this client connection, 
+        // then, finde the associated producer state so we can do some dup detection.
+        ProducerState producerState=null;        
+        if( messageSend.getMessageId().getProducerId().equals( messageSend.getProducerId() ) ) {
+	        SessionState ss = state.getSessionState(producerId.getParentId());
+	        if( ss == null )
+	            throw new IllegalStateException("Cannot send from a session that had not been registered: "+producerId.getParentId());
+	        producerState = ss.getProducerState(producerId); 
+        }
+        
+        if( producerState == null ) {
+            broker.send(context, messageSend);
+        } else {
+	        // Avoid Dups.
+	        long seq = messageSend.getMessageId().getProducerSequenceId();
+	        if( seq > producerState.getLastSequenceId() ) {
+	        	producerState.setLastSequenceId(seq);
+	            broker.send(context, messageSend);
+	        }
+        }
+        
         return null;
     }
 

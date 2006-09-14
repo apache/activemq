@@ -21,7 +21,8 @@ package org.apache.activemq.state;
 import org.apache.activemq.command.ProducerInfo;
 
 public class ProducerState {        
-    final ProducerInfo info;  
+    final ProducerInfo info;
+	private long lastSequenceId=-1;  
     
     public ProducerState(ProducerInfo info) {
         this.info = info;
@@ -31,5 +32,11 @@ public class ProducerState {
     }
     public ProducerInfo getInfo() {
         return info;
-    }        
+    }
+	public void setLastSequenceId(long lastSequenceId) {
+		this.lastSequenceId = lastSequenceId;		
+	}
+	public long getLastSequenceId() {
+		return lastSequenceId;
+	}        
 }

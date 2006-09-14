@@ -28,6 +28,7 @@ import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
+import org.apache.activemq.state.Tracked;
 import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
@@ -89,7 +90,10 @@ public class FailoverTransport implements CompositeTransport {
 	                return;
 	            }
 	            if (command.isResponse()) {
-	                requestMap.remove(new Integer(((Response) command).getCorrelationId()));
+                    Object object = requestMap.remove(new Integer(((Response) command).getCorrelationId()));
+                    if( object!=null && object.getClass() == Tracked.class ) {
+                	   ((Tracked)object).onResponses();
+                    }
 	            }
 	            if (!initialized){
 	                if (command.isBrokerInfo()){
@@ -136,6 +140,8 @@ public class FailoverTransport implements CompositeTransport {
     
     public FailoverTransport() throws InterruptedIOException {
 
+    	stateTracker.setTrackTransactions(true);
+    	
         // Setup a task that is used to reconnect the a connection async.
         reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
 
@@ -372,7 +378,10 @@ public class FailoverTransport implements CompositeTransport {
                         // the state tracker,
                         // then hold it in the requestMap so that we can replay
                         // it later.
-                        if (!stateTracker.track(command) && command.isResponseRequired()) {
+                        Tracked tracked = stateTracker.track(command);
+                        if( tracked!=null && tracked.isWaitingForResponse() ) {
+                            requestMap.put(new Integer(command.getCommandId()), tracked);
+                        } else if ( tracked==null && command.isResponseRequired()) {
                             requestMap.put(new Integer(command.getCommandId()), command);
                         }
                                                 
@@ -380,13 +389,20 @@ public class FailoverTransport implements CompositeTransport {
                         try {
                             connectedTransport.oneway(command);
                         } catch (IOException e) {
-                            // If there is an IOException in the send, remove the command from the requestMap
-                            if (!stateTracker.track(command) && command.isResponseRequired()) {
-                                requestMap.remove(new Integer(command.getCommandId()), command);
-                            }
-                            
-                            // Rethrow the exception so it will handled by the outer catch
-                            throw e;
+                        	
+                        	// If the command was not tracked.. we will retry in this method
+                        	if( tracked==null ) {
+                        		
+                        		// since we will retry in this method.. take it out of the request
+                        		// map so that it is not sent 2 times on recovery
+                            	if( command.isResponseRequired() ) {
+                            		requestMap.remove(new Integer(command.getCommandId()));
+                            	}
+                            	
+                                // Rethrow the exception so it will handled by the outer catch
+                                throw e;
+                        	}
+                        	
                         }
                         
                         return;
