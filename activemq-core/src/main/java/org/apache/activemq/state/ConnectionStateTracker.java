@@ -55,41 +55,21 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
  */
 public class ConnectionStateTracker implements CommandVisitor {
 
-	private final static Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
+    private final static Response TRACKED_RESPONSE_MARKER = new Response();
     
-	private boolean trackTransactions = false;
+    boolean trackTransactions = false;
+    boolean trackMessages = false;
+    boolean trackAcks = false;
     
     private boolean restoreSessions=true;
-    private boolean restoreConsumers=true;
+    boolean restoreConsumers=true;
     private boolean restoreProducers=true;
-    private boolean restoreTransaction=true;
     
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
-        
-    private class RemoveTransactionAction implements Runnable {
-		private final TransactionInfo info;
-		public RemoveTransactionAction(TransactionInfo info) {
-			this.info = info;
-		}
-		public void run() {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
-	        if( cs != null ) {
-	        	cs.removeTransactionState(info.getTransactionId());
-	        }
-		}
-    }
-
-    /**
-     * 
-     * 
-     * @param command
-     * @return null if the command is not state tracked.
-     * @throws IOException
-     */
-    public Tracked track(Command command) throws IOException {
+    
+    public boolean track(Command command) throws IOException {
         try {
-        	return (Tracked) command.visit(this);
+            return command.visit(this)!=null;
         } catch (IOException e) {
             throw e;
         } catch (Throwable e) {
@@ -106,21 +86,8 @@ public class ConnectionStateTracker implements CommandVisitor {
             
             if( restoreSessions )
                 restoreSessions(transport, connectionState);
-            
-            if( restoreTransaction )
-            	restoreTransactions(transport, connectionState);
         }
     }
-
-    private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
-    	for (Iterator iter = connectionState.getTransactionStates().iterator(); iter.hasNext();) {
-			TransactionState transactionState = (TransactionState) iter.next();
-			for (Iterator iterator = transactionState.getCommands().iterator(); iterator.hasNext();) {
-				Command command = (Command) iterator.next();
-	            transport.oneway(command);
-			}
-		}
-	}
 
     /**
      * @param transport
@@ -260,103 +227,26 @@ public class ConnectionStateTracker implements CommandVisitor {
         return null;
     }
     public Response processMessage(Message send) throws Exception {
-    	if( trackTransactions && send.getTransactionId() != null ) {
-            ConnectionId connectionId = send.getProducerId().getParentId().getParentId();
-            ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-            TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
-            transactionState.addCommand(send);    		
-            return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
-    }    
+        return null;
+    }
     public Response processMessageAck(MessageAck ack) throws Exception {
-    	if( trackTransactions && ack.getTransactionId() != null ) {
-            ConnectionId connectionId = ack.getConsumerId().getParentId().getParentId();
-            ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-            TransactionState transactionState = cs.getTransactionState(ack.getTransactionId());
-            transactionState.addCommand(ack);    		
-            return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
+        return null;
     }
-    
     public Response processBeginTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        cs.addTransactionState(info.getTransactionId());
-	        return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
-    }    
+        return null;
+    }
     public Response processPrepareTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        transactionState.addCommand(info);
-	        return TRACKED_RESPONSE_MARKER;
-    	} 
-    	return null;
+        return null;
     }
-    
     public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        if( transactionState !=null ) {
-		        transactionState.addCommand(info);
-		        return new Tracked(new RemoveTransactionAction(info));
-	        }
-    	}
-    	return null;
-    }        
+        return null;
+    }
     public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        if( transactionState !=null ) {
-		        transactionState.addCommand(info);
-		        return new Tracked(new RemoveTransactionAction(info));
-	        }
-    	}
-    	return null;
+        return null;
     }
-    
     public Response processRollbackTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        if( transactionState !=null ) {
-		        transactionState.addCommand(info);
-		        return new Tracked(new RemoveTransactionAction(info));
-	        }
-    	}
-    	return null;
-    }
-    
-    public Response processEndTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        transactionState.addCommand(info);
-	        return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
-    }
-    
-    public Response processRecoverTransactions(TransactionInfo info) {
         return null;
     }
-    public Response processForgetTransaction(TransactionInfo info) throws Exception {
-        return null;
-    }
-
-    
     public Response processWireFormat(WireFormatInfo info) throws Exception {
         return null;
     }
@@ -367,6 +257,18 @@ public class ConnectionStateTracker implements CommandVisitor {
         return null;
     }
     public Response processBrokerInfo(BrokerInfo info) throws Exception {
+        return null;
+    }
+
+    public Response processRecoverTransactions(TransactionInfo info) {
+        return null;
+    }
+
+    public Response processForgetTransaction(TransactionInfo info) throws Exception {
+        return null;
+    }
+
+    public Response processEndTransaction(TransactionInfo info) throws Exception {
         return null;
     }
 
@@ -405,20 +307,5 @@ public class ConnectionStateTracker implements CommandVisitor {
     public void setRestoreSessions(boolean restoreSessions) {
         this.restoreSessions = restoreSessions;
     }
-
-	public boolean isTrackTransactions() {
-		return trackTransactions;
-	}
-
-	public void setTrackTransactions(boolean trackTransactions) {
-		this.trackTransactions = trackTransactions;
-	}
-
-	public boolean isRestoreTransaction() {
-		return restoreTransaction;
-	}
-
-	public void setRestoreTransaction(boolean restoreTransaction) {
-		this.restoreTransaction = restoreTransaction;
-	}
+        
 }

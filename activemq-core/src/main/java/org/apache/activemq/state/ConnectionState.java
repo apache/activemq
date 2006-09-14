@@ -30,7 +30,6 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.TransactionId;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
@@ -38,7 +37,6 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 public class ConnectionState {
     
     final ConnectionInfo info;
-    private final ConcurrentHashMap transactions = new ConcurrentHashMap();
     private final ConcurrentHashMap sessions = new ConcurrentHashMap();
     private final List tempDestinations = Collections.synchronizedList(new ArrayList());
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -65,20 +63,6 @@ public class ConnectionState {
                 iter.remove();
             }
         }
-    }
-	
-    public void addTransactionState(TransactionId id) {
-    	checkShutdown();
-    	transactions.put(id, new TransactionState(id));
-    }        
-    public TransactionState getTransactionState(TransactionId id) {
-        return (TransactionState)transactions.get(id);
-    }
-    public Collection getTransactionStates() {
-        return transactions.values();
-    }
-    public TransactionState removeTransactionState(TransactionId id) {
-        return (TransactionState) transactions.remove(id);
     }
 
     public void addSession(SessionInfo info) {
