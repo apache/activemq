@@ -296,11 +296,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         initializeStreams();
 	}
 
-    protected void doStop(ServiceStopper stopper) throws Exception {    	
-        closeStreams();
+    protected void doStop(ServiceStopper stopper) throws Exception {   
+    	// Closing the streams flush the sockets before closing.. if the socket
+    	// is hung.. then this hangs the close.
+        // closeStreams();
         if (socket != null) {
             socket.close();
-        }
+        }    	
     }
 
     protected void initializeStreams() throws IOException {
