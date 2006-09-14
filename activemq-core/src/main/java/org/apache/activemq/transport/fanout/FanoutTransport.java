@@ -340,7 +340,7 @@ public class FanoutTransport implements CompositeTransport {
                 // then hold it in the requestMap so that we can replay
                 // it later.
                 boolean fanout = isFanoutCommand(command);
-                if (!stateTracker.track(command) && command.isResponseRequired() ) {
+                if (stateTracker.track(command)==null && command.isResponseRequired() ) {
                     int size = fanout ? minAckCount : 1;
                     requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
                 }
