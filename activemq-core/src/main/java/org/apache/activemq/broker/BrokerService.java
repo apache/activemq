@@ -186,6 +186,23 @@ public class BrokerService implements Service, Serializable {
         return connector;
     }
 
+
+    /**
+     * Stops and removes a transport connector from the broker.
+     * 
+     * @param connector
+     * @return true if the connector has been previously added to the broker
+     * @throws Exception
+     */
+    public boolean removeConnector(TransportConnector connector) throws Exception {        
+        boolean rc = transportConnectors.remove(connector);
+        if( rc ) {
+           unregisterConnectorMBean(connector);
+        }
+        return rc;
+        
+    }
+
     /**
      * Adds a new network connector using the given discovery address
      *
@@ -1015,19 +1032,51 @@ public class BrokerService implements Service, Serializable {
         }
     }
 
-    protected void registerConnectorMBean(TransportConnector connector, ObjectName objectName) throws IOException, URISyntaxException {
+    protected TransportConnector registerConnectorMBean(TransportConnector connector) throws IOException  {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         if (mbeanServer != null) {
-            ConnectorViewMBean view = new ConnectorView(connector);
+
             try {
+                ObjectName objectName = createConnectorObjectName(connector);
+                connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), objectName);
+                ConnectorViewMBean view = new ConnectorView(connector);            
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
+                return connector;
             }
             catch (Throwable e) {
-                throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+                throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
             }
         }
+        return connector;
     }
+    
+    protected void unregisterConnectorMBean(TransportConnector connector) throws IOException {
+        if (isUseJmx()) {
+	        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+	        if (mbeanServer != null) {
+	            try {
+	                ObjectName objectName = createConnectorObjectName(connector);
+	
+	                if( registeredMBeanNames.remove(objectName) ) {
+	                       mbeanServer.unregisterMBean(objectName);
+	                }
+	            }
+	            catch (Throwable e) {
+	                throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
+	            }
+	        }
+        }
+    }
+
+	private ObjectName createConnectorObjectName(TransportConnector connector) throws MalformedObjectNameException {
+		return new ObjectName(
+		        managementContext.getJmxDomainName()+":"+
+		        "BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
+		        "Type=Connector,"+
+		        "ConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
+		        );
+	}    
 
     protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
@@ -1039,7 +1088,7 @@ public class BrokerService implements Service, Serializable {
                 registeredMBeanNames.add(objectName);
             }
             catch (Throwable e) {
-                throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
+                throw IOExceptionSupport.create("Network Connector could not be registered in JMX: " + e.getMessage(), e);
             }
         }
     }
@@ -1056,13 +1105,12 @@ public class BrokerService implements Service, Serializable {
             if (mbeanServer != null) {
                 try {
                     ObjectName objectName = createNetworkConnectorObjectName(connector);
-                    if (registeredMBeanNames.contains(objectName)) {
-                        registeredMBeanNames.remove(objectName);
+                    if (registeredMBeanNames.remove(objectName)) {
                         mbeanServer.unregisterMBean(objectName);
                     }
                 }
                 catch (Exception e) {
-                    log.error("Failed to unregister MBean: " + e, e);
+                    log.error("Network Connector could not be unregistered from JMX: " + e, e);
                 }
             }
         }
@@ -1425,16 +1473,7 @@ public class BrokerService implements Service, Serializable {
         }
         
         if (isUseJmx()) {
-            
-            ObjectName objectName = new ObjectName(
-                    managementContext.getJmxDomainName()+":"+
-                    "BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-                    "Type=Connector,"+
-                    "ConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
-                    );
-            
-            connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), objectName);
-            registerConnectorMBean(connector, objectName);
+            connector = registerConnectorMBean(connector);
         }        
         connector.start();
     }
