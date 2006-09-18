@@ -211,6 +211,25 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected ActiveMQConnection createActiveMQConnection() throws JMSException {
         return createActiveMQConnection(userName, password);
     }
+    
+    /**
+     * Creates a Transport based on this object's connection settings.
+     * 
+     * Separated from createActiveMQConnection to allow for subclasses to
+     *      override.
+     * 
+     * @return The newly created Transport.
+     * @throws JMSException If unable to create trasnport.
+     * 
+     * @author sepandm@gmail.com
+     */
+    protected Transport createTransport() throws JMSException {
+        try {
+            return TransportFactory.connect(brokerURL,DEFAULT_CONNECTION_EXECUTOR);
+        } catch (Exception e) {
+            throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);
+        }
+    }
 
     /**
      * @return Returns the Connection.
@@ -221,7 +240,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         }
         Transport transport;
         try {
-            transport = TransportFactory.connect(brokerURL,DEFAULT_CONNECTION_EXECUTOR);
+            transport = createTransport();
             ActiveMQConnection connection = createActiveMQConnection(transport, factoryStats);
 
             connection.setUserName(userName);

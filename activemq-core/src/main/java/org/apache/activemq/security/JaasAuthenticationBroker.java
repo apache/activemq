@@ -28,6 +28,8 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
 
+import org.apache.activemq.jaas.JassCredentialCallback;
+
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 
