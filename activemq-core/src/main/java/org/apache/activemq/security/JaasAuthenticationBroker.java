@@ -28,7 +28,7 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
 
-import org.apache.activemq.jaas.JassCredentialCallback;
+import org.apache.activemq.jaas.JassCredentialCallbackHandler;
 
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
@@ -72,7 +72,7 @@ public class JaasAuthenticationBroker extends BrokerFilter {
             try {
                 // Do the login.
                 try {
-                    JassCredentialCallback callback = new JassCredentialCallback(info.getUserName(), info.getPassword());
+                    JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(info.getUserName(), info.getPassword());
                     LoginContext lc = new LoginContext(jassConfiguration, callback);
                     lc.login();
                     Subject subject = lc.getSubject();
