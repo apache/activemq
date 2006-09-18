@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.security;
+package org.apache.activemq.jaas;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -28,12 +28,12 @@ import java.io.IOException;
 /**
  * A JASS username password CallbackHandler.
  */
-public class JassCredentialCallback implements CallbackHandler {
+public class JassCredentialCallbackHandler implements CallbackHandler {
 
     private final String username;
     private final String password;
 
-    public JassCredentialCallback(String username, String password) {
+    public JassCredentialCallbackHandler(String username, String password) {
         this.username = username;
         this.password = password;
     }
