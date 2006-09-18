@@ -30,9 +30,8 @@ import java.net.URL;
  * @version $Revision$
  */
 public class JaasAuthenticationPlugin implements BrokerPlugin {
-
-    private String configuration = "activemq-domain";
-    private boolean discoverLoginConfig = true;
+    protected String configuration = "activemq-domain";
+    protected boolean discoverLoginConfig = true;
 
     public Broker installPlugin(Broker broker) {
         initialiseJaas();

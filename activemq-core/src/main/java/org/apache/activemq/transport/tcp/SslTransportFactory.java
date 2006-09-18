@@ -16,27 +16,181 @@
  */
 package org.apache.activemq.transport.tcp;
 
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.InactivityMonitor;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportLogger;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.WireFormatNegotiator;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 /**
- * An implementation of the TCP Transport using SSL
+ * An implementation of the TcpTransportFactory using SSL.
  * 
+ * The major contribution from this class is that it is aware of SslTransportServer and SslTransport classes.
+ * All Transports and TransportServers created from this factory will have their needClientAuth option set to false.
+ * 
+ * @author sepandm@gmail.com (Sepand)
  * @version $Revision: $
  */
 public class SslTransportFactory extends TcpTransportFactory {
-
+    // The context used to creat ssl sockets.
+    private SSLContext sslContext = null;
+    
+    // The log this uses.,
+    private static final Log log = LogFactory.getLog(SslTransportFactory.class);
+    
+    /**
+     * Constructor. Nothing special.
+     *
+     */
     public SslTransportFactory() {
     }
+    
+    /**
+     * Overriding to use SslTransportServer and allow for proper reflection.
+     */
+    public TransportServer doBind(String brokerId, final URI location) throws IOException {
+        try {
+            Map options = new HashMap(URISupport.parseParamters(location));
 
-    protected ServerSocketFactory createServerSocketFactory() {
-        return SSLServerSocketFactory.getDefault();
-    }
-
-    protected SocketFactory createSocketFactory() {
-        return SSLSocketFactory.getDefault();
+            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
+            SslTransportServer server =
+                new SslTransportServer(this, location, (SSLServerSocketFactory)serverSocketFactory);  
+            server.setWireFormatFactory(createWireFormatFactory(options));
+            IntrospectionSupport.setProperties(server, options);
+            Map transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            server.setTransportOption(transportOptions);
+            server.bind();
+            
+            return server;
+        }
+        catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
     
+    /**
+     * Overriding to allow for proper configuration through reflection.
+     */
+    public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+        
+        SslTransport sslTransport = (SslTransport) transport.narrow(SslTransport.class);
+        IntrospectionSupport.setProperties(sslTransport, options);
+        
+        Map socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
+        
+        sslTransport.setSocketOptions(socketOptions);
+
+        if (sslTransport.isTrace()) {
+            transport = new TransportLogger(transport);
+        }
+
+        transport = new InactivityMonitor(transport);
+
+        // Only need the WireFormatNegotiator if using openwire
+        if (format instanceof OpenWireFormat) {
+            transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, sslTransport.getMinmumWireFormatVersion());
+        }
+        
+        return transport;
+    }
+    
+    /**
+     * Overriding to use SslTransports.
+     */
+    protected Transport createTransport(URI location,WireFormat wf) throws UnknownHostException,IOException{
+        URI localLocation = null;
+        String path = location.getPath();
+        // see if the path is a local URI location
+        if (path != null && path.length() > 0) {
+            int localPortIndex = path.indexOf(':');
+            try {
+                Integer.parseInt(path.substring((localPortIndex + 1), path.length()));
+                String localString = location.getScheme() + ":/" + path;
+                localLocation = new URI(localString);
+            }
+            catch (Exception e) {
+                log.warn("path isn't a valid local location for SslTransport to use", e);
+            }
+        }
+        SocketFactory socketFactory = createSocketFactory();
+        return new SslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation, false);
+    }
+    
+    /**
+     * Sets the key and trust managers used in constructed socket factories.
+     * 
+     * Passes given arguments to SSLContext.init(...).
+     * 
+     * @param km The sources of authentication keys or null.
+     * @param tm The sources of peer authentication trust decisions or null.
+     * @param random The source of randomness for this generator or null.
+     */
+    public void setKeyAndTrustManagers(KeyManager[] km, TrustManager[] tm, SecureRandom random) throws KeyManagementException {
+        // Killing old context and making a new one just to be safe.
+        try {
+            sslContext = SSLContext.getInstance("TLS");
+        } catch (NoSuchAlgorithmException e) {
+            // This should not happen unless this class is improperly modified.
+            throw new RuntimeException("Unknown SSL algorithm encountered.", e);
+        }
+        sslContext.init(km, tm, random);
+    }
+    
+    /**
+     * Creates a new SSL ServerSocketFactory.
+     * 
+     * The given factory will use user-provided key and trust managers (if the user provided them).
+     * 
+     * @return Newly created (Ssl)ServerSocketFactory.
+     */
+    protected ServerSocketFactory createServerSocketFactory() {
+        if (sslContext == null) {
+            return SSLServerSocketFactory.getDefault();
+        }
+        else
+            return sslContext.getServerSocketFactory();
+    }
+
+    /**
+     * Creates a new SSL SocketFactory.
+     * 
+     * The given factory will use user-provided key and trust managers (if the user provided them).
+     * 
+     * @return Newly created (Ssl)SocketFactory.
+     */
+    protected SocketFactory createSocketFactory() {
+        if ( sslContext == null ) {
+            return SSLSocketFactory.getDefault();
+        }
+        else
+            return sslContext.getSocketFactory();
+    }
+    
+
 }
