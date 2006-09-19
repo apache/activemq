@@ -43,7 +43,7 @@ if [ -z "$ACTIVEMQ_HOME" ] ; then
 fi
 
 if [ -z "$BROKER_URL" ] ; then
-   BROKER_URL=vm://localhost
+   BROKER_URL='vm://(broker://()/localhost?useJmx=false)/localhost'
 fi
 
 java ${JAVA_OPTIONS} -cp ${ACTIVEMQ_HOME}/apache-activemq-4.1-incubator-SNAPSHOT.jar:${PERFHARNESS_HOME}/perfharness.jar JMSPerfHarness -pc JNDI -ii org.apache.activemq.jndi.ActiveMQInitialContextFactory -iu $BROKER_URL -cf ConnectionFactory -d dynamic$DESTINATION $@
