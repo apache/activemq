@@ -42,13 +42,14 @@
 
     <ciManagement>
         <system>continuum</system>
-        <url>http://ci.gbuild.org/continuum</url>
+        <url>http://goopen.org:8080/continuum</url>
         <notifiers>
             <notifier>
                 <configuration>
-                    <address>activemq-commits@geronimo.apache.org</address>
+                    <address>scm@lingo.codehaus.org</address>
                 </configuration>
             </notifier>
+            
             <notifier>
                   <type>irc</type>
                   <configuration>
@@ -58,8 +59,6 @@
                 </configuration>
             </notifier>               
         </notifiers>
-        
-        
     </ciManagement>
 
     <mailingLists>
@@ -132,6 +131,7 @@
         <module>activemq-web-demo</module>
         <module>activemq-web-console</module>
         <module>activemq-optional</module>
+        <module>activemq-tooling</module>
         <module>activemq-openwire-generator</module>
         <module>assembly</module>
     </modules>
