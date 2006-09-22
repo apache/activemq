@@ -42,7 +42,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     private static final long serialVersionUID = -5754338187296859149L;
 
     private static final Log log = LogFactory.getLog(ActiveMQConnectionFactory.class);
-    transient private ConnectionManager manager;
+    private ConnectionManager manager;
     transient private ActiveMQManagedConnectionFactory factory;
     private Reference reference;
     private final ActiveMQConnectionRequestInfo info;
