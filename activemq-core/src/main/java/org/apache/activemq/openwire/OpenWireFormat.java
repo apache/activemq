@@ -565,7 +565,7 @@ final public class OpenWireFormat implements WireFormat {
 		if( preferedWireFormatInfo==null )
 			throw new IllegalStateException("Wireformat cannot not be renegotiated.");
 		
-		this.setVersion(Math.min(preferedWireFormatInfo.getVersion(), info.getVersion()) );
+		this.setVersion(min(preferedWireFormatInfo.getVersion(), info.getVersion()) );
 		this.stackTraceEnabled = info.isStackTraceEnabled() && preferedWireFormatInfo.isStackTraceEnabled();
 		this.tcpNoDelayEnabled = info.isTcpNoDelayEnabled() && preferedWireFormatInfo.isTcpNoDelayEnabled();
 		this.cacheEnabled = info.isCacheEnabled() && preferedWireFormatInfo.isCacheEnabled();
@@ -573,4 +573,11 @@ final public class OpenWireFormat implements WireFormat {
 		this.sizePrefixDisabled = info.isSizePrefixDisabled() && preferedWireFormatInfo.isSizePrefixDisabled();
 		
 	}
+
+    protected int min(int version1, int version2) {
+        if (version1 < version2 && version1 > 0 || version2 <= 0) {
+            return version1;
+        }
+        return version2;
+    }
 }

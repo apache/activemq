@@ -18,11 +18,12 @@ package org.apache.activemq.transport.tcp;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
 
 /**
- * 
  * @version $Revision$
  */
 public class TransportUriTest extends EmbeddedBrokerTestSupport {
@@ -38,6 +39,36 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         connection.start();
     }
 
+    public void testBadVersionNumberDoesNotWork() throws Exception {
+        String uri = bindAddress + postfix + "&minmumWireFormatVersion=65535";
+        System.out.println("Connecting via: " + uri);
+
+        try {
+            connection = new ActiveMQConnectionFactory(uri).createConnection();
+            connection.start();
+            fail("Should have thrown an exception!");
+        }
+        catch (Exception e) {
+            System.out.println("Caught expected exception: " + e);
+        }
+    }
+
+
+    public void testBadPropertyNameFails() throws Exception {
+        String uri = bindAddress + postfix + "&cheese=abc";
+        System.out.println("Connecting via: " + uri);
+
+        try {
+            connection = new ActiveMQConnectionFactory(uri).createConnection();
+            connection.start();
+            fail("Should have thrown an exception!");
+        }
+        catch (Exception e) {
+            System.out.println("Caught expected exception: " + e);
+        }
+    }
+
+
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:6161";
         super.setUp();
@@ -45,9 +76,21 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
     protected void tearDown() throws Exception {
         if (connection != null) {
-            connection.close();
+            try {
+                connection.close();
+            }
+            catch (JMSException e) {
+                e.printStackTrace();
+            }
         }
         super.tearDown();
     }
 
+    protected BrokerService createBroker() throws Exception {
+        BrokerService answer = new BrokerService();
+        answer.setUseJmx(false);
+        answer.setPersistent(isPersistent());
+        answer.addConnector(bindAddress);
+        return answer;
+    }
 }
