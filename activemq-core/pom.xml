@@ -296,10 +296,6 @@
             <!--  see  http://issues.apache.org/activemq/browse/AMQ-826 -->
             <!--  have not yet figured out the way to configure ApacheDS via Spring  -->
             <exclude>**/LDAPAuthorizationMapTest.*</exclude>
-
-            <!-- TODO fix ASAP -->
-            <exclude>**/SslTransportFactoryTest.*</exclude>
-
           </excludes>
         </configuration>
       </plugin>
