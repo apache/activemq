@@ -33,8 +33,6 @@
     <module>maven-activemq-memtest-plugin</module>
     <module>maven-activemq-perf-plugin</module>
     <module>maven-activemq-plugin</module>
-    <module>maven-bundle-plugin</module>
-    <module>maven-gram-plugin</module>
   </modules> 
 
 </project>
