@@ -22,7 +22,9 @@ import java.io.InterruptedIOException;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,6 +33,9 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 
+/**
+ * Negotiates the wire format with a new connection
+ */
 public class WireFormatNegotiator extends TransportFilter {
 
     private static final Log log = LogFactory.getLog(WireFormatNegotiator.class);
@@ -47,11 +52,13 @@ public class WireFormatNegotiator extends TransportFilter {
      * Negotiator
      * 
      * @param next
-     * @param preferedFormat
      */
     public WireFormatNegotiator(Transport next, OpenWireFormat wireFormat, int minimumVersion) {
         super(next);
         this.wireFormat = wireFormat;
+        if (minimumVersion <= 0) {
+            minimumVersion = 1;
+        }
         this.minimumVersion = minimumVersion;
     }
 
@@ -117,6 +124,8 @@ public class WireFormatNegotiator extends TransportFilter {
                 onException(e);
             } catch (InterruptedException e) {
                 onException((IOException) new InterruptedIOException().initCause(e));
+            } catch (Exception e) {
+                onException(IOExceptionSupport.create(e));
 			}
             readyCountDownLatch.countDown();
             onWireFormatNegotiated(info);
@@ -127,7 +136,15 @@ public class WireFormatNegotiator extends TransportFilter {
 
     public void onException(IOException error) {
         readyCountDownLatch.countDown();
-    	super.onException(error);
+        /*
+        try {
+            super.oneway(new ExceptionResponse(error));
+        }
+        catch (IOException e) {
+            // ignore as we are already throwing an exception
+        }
+        */
+        super.onException(error);
     }
     
     public String toString() {
