@@ -254,6 +254,9 @@
             <!-- this one is a little flaky and can fail on some platforms randomly -->
             <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
             <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
+
+            <!-- This test depends on SSH being installed on the machine for it to pass -->
+            <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
