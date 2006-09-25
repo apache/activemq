@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<h1>Send a JMS Message</h1>
+<h2>Send a JMS Message</h2>
 
 <form action="sendMessage.action" method="post">
 

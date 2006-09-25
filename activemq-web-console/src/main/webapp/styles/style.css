@@ -1,0 +1,253 @@
+/* CSS Document
+   Template Title: Inspirationally Blue
+   Author: J David Macor
+   URL: http://www.jdavidmacor.com */
+
+/* Main Body */
+body { 
+	margin-top:0;
+	padding:0;
+	font-family:Verdana, Arial, sans-serif;
+	font-size:12px;
+	text-align:center;
+	color:#000;
+	background-color:#efefef;
+	}
+
+#container {
+	width:740px;
+	background:url(../images/container_bg.gif) repeat-y #fff;
+	margin:0 auto;
+	padding-left:10px;
+	padding-right:10px;
+	}
+	
+a {
+	color:#2873C3;
+	text-decoration:none;
+	}
+
+a:visited {
+	color:#2873C3;
+	text-decoration:none;
+	}
+
+a:hover {
+	text-decoration:underline;
+	}
+	
+/* Header */
+#header {
+	width:720px;
+	padding:30px 10px 10px 10px;
+	text-align:left;
+	height:70px;
+	}
+	
+.sitetitle_left {
+	color:#000;
+	font-family:Georgia, "Times New Roman", Times, serif;
+	font-size:40px;
+	margin:0;
+	}
+	
+.sitetitle_right {
+	color:#2873C3;
+	font-family:Georgia, "Times New Roman", Times, serif;
+	font-size:40px;
+	margin:0;
+	}
+	
+/* Menu */
+#chromemenu{
+	background:#2873C3;
+	font-weight: bold;
+	}
+
+#chromemenu:after{
+	content: "."; 
+	display: block; 
+	height: 0; 
+	clear: both; 
+	visibility: hidden;
+	}
+
+#chromemenu ul{
+	border: 0px solid #BBB;
+	width: 100%;
+	background: url(../images/menuoff.gif) center center repeat-x;
+	padding: 5px 0;
+	margin: 0;
+	text-align: right;
+	}
+
+#chromemenu ul li{
+	display: inline;
+	}
+
+#chromemenu ul li a{
+	color: #fff;
+	padding: 5px;
+	margin: 0;
+	text-decoration: none;
+	border-right: 0px solid #DADADA;
+	}
+
+#chromemenu ul li a:hover{
+	background: url(../images/menuon.gif) center center repeat-x;
+	}
+
+/* Content */
+#content {
+	width:720px;
+	margin-top:20px;
+	text-align:left;
+	padding-top: 0px;
+	padding-right: 10px;
+	padding-bottom: 20px;
+	padding-left: 10px;
+	}
+	
+#left {
+	width:710px;
+	padding-right:10px;
+	}
+	
+#left h1 {
+	margin:0;
+	font-weight:normal;
+	color:#DFEFFF;
+	font-size:3.2em;
+	}
+
+#left h2 {
+	margin:0;
+/*	display:inline;
+	position:relative; */
+	top:-1.3em;
+	left:1.5em;
+	font-size:2.5em;
+	font-weight:normal;
+	color:#2873C3;
+	}
+	
+#left h3 {
+	font-family:"Times New Roman", Times, serif;
+	font-size:2em;
+	font-weight:normal;
+	margin:0px 0px 10px 0px;
+	border-bottom:1px solid #efefef;
+	padding:1px 0;
+	color:#444;
+	}
+
+#left p {
+	line-height:2em;
+	margin-bottom:30px;
+	}
+
+	
+/* Sidebar */
+#right {
+	float:right;
+	width:210px;
+	}
+	
+#right h1 {
+	margin:0;
+	font-weight:normal;
+	color:#DFEFFF;
+	font-size:2.5em;
+	margin-bottom:0px;
+	margin-top:10px;
+	}
+
+#right h2 {
+	margin:0;
+	display:inline;
+	position:relative;
+	top:-1.3em;
+	left:1.5em;
+	font-size:1.8em;
+	font-weight:normal;
+	color:#2873C3;
+	margin-bottom:0px;
+	margin-top:10px;
+	}
+	
+p.news {
+	padding:10px;
+	background:#DFEFFF;
+	margin:0px 0px 15px 0px;
+	color:#2873C3;
+	border-bottom:2px solid #1D5F9F;
+	border-top:2px solid #1D5F9F;
+	font-size:9px;
+	}
+
+p.news a {
+	color:#14426F;
+	text-decoration:none;
+	}
+	
+p.news a:visited {
+	color:#14426F;
+	text-decoration:none;
+	}
+
+p.news a:hover {
+	text-decoration:underline;
+	}
+	
+a.more {
+	display:block;
+	text-align:right;
+	color:#14426F;
+	text-decoration:none;
+	margin:10px 0 0 0 ;
+	}
+a.more:hover {
+	text-decoration:underline;
+	}
+	
+p.form {
+	padding:2px;
+	text-align:center;
+	}
+	
+.formbutton{
+	cursor:pointer;
+	border:outset 1px #ccc;
+	background:#999;
+	color:#666;
+	font-weight:bold;
+	padding: 1px 2px;
+	background:url(../images/formbg.gif) repeat-x left top;
+	}
+	
+/* Footer */
+#footer {
+	width:690px;
+	height:40px;
+	clear:both;
+	margin:0 auto;
+	padding:35px;
+	background:url(../images/footer_bg.jpg) no-repeat;
+	background-color:#ccc;
+	color:#666666;
+	font-size:9px;
+	}
+	
+#footer a {
+	color:#2873C3;
+	text-decoration:none;
+	}
+	
+#footer a:visited {
+	color:#2873C3;
+	text-decoration:none;
+	}
+
+#footer a:hover {
+	text-decoration:underline;
+	}
