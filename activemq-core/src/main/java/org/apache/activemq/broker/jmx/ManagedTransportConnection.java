@@ -58,7 +58,11 @@ public class ManagedTransportConnection extends TransportConnection {
         setConnectionId(connectionId);
     }
 
-    public void stop() throws Exception {
+    public synchronized void stop() throws Exception {
+        if (isStarting()) {
+            setPendingStop(true);
+            return;
+        }
         unregisterMBean();
         super.stop();
     }
