@@ -107,10 +107,10 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 					</tr>
 				</thead>
 				<tbody>
-                   <form:forEachMapEntry items="${requestContext.messageQuery.propertiesMap}" var="row">
+                   <form:forEachMapEntry items="${requestContext.messageQuery.propertiesMap}" var="prop">
 						<tr>
-							<td class="label">${row.key}</td>
-							<td>${row.value}</td>
+							<td class="label">${prop.key}</td>
+							<td>${prop.value}</td>
 						</tr>
 						<tr>
 					</form:forEachMapEntry>
