@@ -46,7 +46,7 @@ final public class OpenWireFormat implements WireFormat {
     private static final int MARSHAL_CACHE_PREFERED_SIZE = MARSHAL_CACHE_SIZE-100;
     
     private DataStreamMarshaller dataMarshallers[];
-    private int version;
+    private int version = 2;
     private boolean stackTraceEnabled=false;
     private boolean tcpNoDelayEnabled=false;
     private boolean cacheEnabled=false;

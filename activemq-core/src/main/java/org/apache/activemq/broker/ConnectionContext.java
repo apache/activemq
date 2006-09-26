@@ -72,6 +72,11 @@ public class ConnectionContext {
 
     public void setSecurityContext(SecurityContext subject) {
         this.securityContext = subject;
+        if (subject != null) {
+            setUserName(subject.getUserName());
+        } else {
+            setUserName(null);
+        }
     }
 
     /**
@@ -202,7 +207,7 @@ public class ConnectionContext {
         return userName;
     }
 
-    public void setUserName(String userName) {
+    protected void setUserName(String userName) {
         this.userName = userName;
     }
 

@@ -17,8 +17,11 @@
  */
 package org.apache.activemq.security;
 
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.JmsTestSupport;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
@@ -36,6 +39,15 @@ import javax.jms.TextMessage;
 public class SecurityTestSupport extends JmsTestSupport {
 
     public ActiveMQDestination destination;
+
+    /**
+     * Overrides to set the JMSXUserID flag to true.
+     */
+    protected BrokerService createBroker() throws Exception {
+        BrokerService broker = super.createBroker();
+        broker.setPopulateJMSXUserID(true);
+        return broker;
+    }
 
     public void testUserReceiveFails() throws JMSException {
         doReceive(true);
@@ -74,7 +86,9 @@ public class SecurityTestSupport extends JmsTestSupport {
     }
 
     public void testUserReceiveSucceeds() throws JMSException {
-        doReceive(false);
+        Message m = doReceive(false);
+        assertEquals("system", ((ActiveMQMessage)m).getUserID());
+        assertEquals("system", m.getStringProperty("JMSXUserID"));
     }
 
     public void testGuestReceiveSucceeds() throws JMSException {
@@ -86,7 +100,9 @@ public class SecurityTestSupport extends JmsTestSupport {
     }
 
     public void testUserSendSucceeds() throws JMSException {
-        doSend(false);
+        Message m = doSend(false);
+        assertEquals("user", ((ActiveMQMessage)m).getUserID());
+        assertEquals("user", m.getStringProperty("JMSXUserID"));
     }
 
     public void testUserSendFails() throws JMSException {
@@ -104,7 +120,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     /**
      * @throws JMSException
      */
-    public void doSend(boolean fail) throws JMSException {
+    public Message doSend(boolean fail) throws JMSException {
 
         Connection adminConnection = factory.createConnection("system", "manager");
         connections.add(adminConnection);
@@ -134,13 +150,13 @@ public class SecurityTestSupport extends JmsTestSupport {
             assertEquals("0", ((TextMessage) m).getText());
             assertNull(consumer.receiveNoWait());
         }
-
+        return m;
     }
 
     /**
      * @throws JMSException
      */
-    public void doReceive(boolean fail) throws JMSException {
+    public Message doReceive(boolean fail) throws JMSException {
 
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -152,7 +168,7 @@ public class SecurityTestSupport extends JmsTestSupport {
         }
         catch (JMSException e) {
             if (fail && e.getCause() instanceof SecurityException)
-                return;
+                return null;
             throw e;
         }
 
@@ -165,9 +181,13 @@ public class SecurityTestSupport extends JmsTestSupport {
         assertNotNull(m);
         assertEquals("0", ((TextMessage) m).getText());
         assertNull(consumer.receiveNoWait());
+        return m;
 
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestUserReceiveFails() {
         addCombinationValues("userName", new Object[] { "user" });
         addCombinationValues("password", new Object[] { "password" });
@@ -175,23 +195,35 @@ public class SecurityTestSupport extends JmsTestSupport {
                 new ActiveMQTopic("GUEST.BAR"), });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestInvalidAuthentication() {
         addCombinationValues("userName", new Object[] { "user" });
         addCombinationValues("password", new Object[] { "password" });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestUserReceiveSucceeds() {
         addCombinationValues("userName", new Object[] { "user" });
         addCombinationValues("password", new Object[] { "password" });
         addCombinationValues("destination", new Object[] { new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO"), });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestGuestReceiveSucceeds() {
         addCombinationValues("userName", new Object[] { "guest" });
         addCombinationValues("password", new Object[] { "password" });
         addCombinationValues("destination", new Object[] { new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"), });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestGuestReceiveFails() {
         addCombinationValues("userName", new Object[] { "guest" });
         addCombinationValues("password", new Object[] { "password" });
@@ -199,6 +231,9 @@ public class SecurityTestSupport extends JmsTestSupport {
                 new ActiveMQTopic("USERS.FOO"), });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestUserSendSucceeds() {
         addCombinationValues("userName", new Object[] { "user" });
         addCombinationValues("password", new Object[] { "password" });
@@ -206,12 +241,18 @@ public class SecurityTestSupport extends JmsTestSupport {
                 new ActiveMQTopic("GUEST.BAR"), });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestUserSendFails() {
         addCombinationValues("userName", new Object[] { "user" });
         addCombinationValues("password", new Object[] { "password" });
         addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestGuestSendFails() {
         addCombinationValues("userName", new Object[] { "guest" });
         addCombinationValues("password", new Object[] { "password" });
@@ -219,6 +260,9 @@ public class SecurityTestSupport extends JmsTestSupport {
                 new ActiveMQTopic("USERS.FOO"), });
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombosForTestGuestSendSucceeds() {
         addCombinationValues("userName", new Object[] { "guest" });
         addCombinationValues("password", new Object[] { "password" });
