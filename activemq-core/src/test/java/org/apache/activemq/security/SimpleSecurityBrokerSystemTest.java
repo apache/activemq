@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.security;
 
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
@@ -124,13 +125,16 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         }
     }
 
+    /**
+     * @see {@link CombinationTestSupport}
+     */
     public void initCombos() {
         addCombinationValues("authorizationPlugin", new Object[] { new AuthorizationPlugin(createAuthorizationMap()), });
         addCombinationValues("authenticationPlugin", new Object[] { new SimpleAuthenticationFactory(), new JaasAuthenticationPlugin(), });
     }
 
     protected BrokerService createBroker() throws Exception {
-        BrokerService broker = new BrokerService();
+        BrokerService broker = super.createBroker();
         broker.setPlugins(new BrokerPlugin[] { authorizationPlugin, authenticationPlugin });
         broker.setPersistent(false);
         return broker;
