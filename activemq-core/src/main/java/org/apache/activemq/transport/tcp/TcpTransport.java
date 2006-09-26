@@ -1,10 +1,11 @@
 /**
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -27,6 +28,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.SocketFactory;
@@ -49,27 +51,25 @@ import org.apache.commons.logging.LogFactory;
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Log log = LogFactory.getLog(TcpTransport.class);
 
-    private int connectionTimeout = 30000;
-    private int soTimeout = 0;
-    private int socketBufferSize = 128 * 1024;
-    private Socket socket;
-    private DataOutputStream dataOut;
-    private DataInputStream dataIn;
-    private WireFormat wireFormat;
-    private boolean trace;
-    private boolean useLocalHost = true;
-    private int minmumWireFormatVersion;
-    private InetSocketAddress remoteAddress;
-	private InetSocketAddress localAddress;
+    protected final URI remoteLocation;
+    protected final URI localLocation;
+    protected final WireFormat wireFormat;
+
+    protected int connectionTimeout = 30000;
+    protected int soTimeout = 0;
+    protected int socketBufferSize = 128 * 1024;
+    protected Socket socket;
+    protected DataOutputStream dataOut;
+    protected DataInputStream dataIn;
+    protected boolean trace;
+    protected boolean useLocalHost = true;
+    protected int minmumWireFormatVersion;
+    protected SocketFactory socketFactory;
+
+    private Map socketOptions;    
+    private Boolean keepAlive;
+    private Boolean tcpNoDelay;
     
-    /**
-     * Construct basic helpers
-     * 
-     * @param wireFormat
-     */
-    protected TcpTransport(WireFormat wireFormat) {
-        this.wireFormat = wireFormat;
-    }
 
     /**
      * Connect to a remote Node - e.g. a Broker
@@ -83,8 +83,16 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws UnknownHostException
      */
     public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
-        this(wireFormat);
-        this.socket = createSocket(socketFactory, remoteLocation, localLocation);
+        this.wireFormat = wireFormat;
+	this.socketFactory = socketFactory;
+	try {
+		this.socket = socketFactory.createSocket();
+	} catch (SocketException e) {
+		this.socket = null;
+	}
+	this.remoteLocation = remoteLocation;
+	this.localLocation = localLocation;
+        setDaemon(false);
     }
 
     /**
@@ -95,8 +103,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws IOException
      */
     public TcpTransport(WireFormat wireFormat, Socket socket) throws IOException {
-        this(wireFormat);
+        this.wireFormat = wireFormat;
         this.socket = socket;
+	this.remoteLocation = null;
+	this.localLocation = null;        
         setDaemon(true);
     }
 
@@ -208,31 +218,32 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
     
 
+    public Boolean getKeepAlive() {
+        return keepAlive;
+    }
+
+    /**
+     * Enable/disable TCP KEEP_ALIVE mode
+     */
+    public void setKeepAlive(Boolean keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
+    public Boolean getTcpNoDelay() {
+        return tcpNoDelay;
+    }
+
+    /**
+     * Enable/disable the TCP_NODELAY option on the socket
+     */
+    public void setTcpNoDelay(Boolean tcpNoDelay) {
+        this.tcpNoDelay = tcpNoDelay;
+    }
+
+
     // Implementation methods
     // -------------------------------------------------------------------------
 
-    /**
-     * Factory method to create a new socket
-     * 
-     * @param remoteLocation
-     * @param localLocation ignored if null
-     * @return
-     * @throws IOException
-     * @throws IOException
-     * @throws UnknownHostException
-     */
-    protected Socket createSocket(SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws IOException, UnknownHostException {
-    	
-        String host = resolveHostName(remoteLocation.getHost());
-        remoteAddress = new InetSocketAddress(host, remoteLocation.getPort());
-        
-        if( localLocation!=null ) {
-        	localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
-        }
-        
-        Socket sock = socketFactory.createSocket();        
-        return sock;
-    }
 
     protected String resolveHostName(String host) throws UnknownHostException {
         String localName = InetAddress.getLocalHost().getHostName();
@@ -251,6 +262,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws SocketException
      */
     protected void initialiseSocket(Socket sock) throws SocketException {
+    	if( socketOptions != null ) {
+    		IntrospectionSupport.setProperties(socket, socketOptions);
+    	}
+    	    	
         try {
             sock.setReceiveBufferSize(socketBufferSize);
             sock.setSendBufferSize(socketBufferSize);
@@ -260,27 +275,71 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             log.debug("Cannot set socket buffer size. Reason: " + se, se);
         }
         sock.setSoTimeout(soTimeout);
+
+        if (keepAlive != null) {
+            sock.setKeepAlive(keepAlive.booleanValue());
+        }
+        if (tcpNoDelay != null) {
+            sock.setTcpNoDelay(tcpNoDelay.booleanValue());
+        }        
     }
 
     protected void doStart() throws Exception {
-        initialiseSocket(socket);
-        if( localAddress!=null ) {
-        	socket.bind(localAddress);
-        }
-        if (remoteAddress != null) {
-            if (connectionTimeout >= 0) {
-                socket.connect(remoteAddress, connectionTimeout);
-            }
-            else {
-                socket.connect(remoteAddress);
-            }
-        }
-        initializeStreams();
+        connect();
         super.doStart();
     }
 
+     protected void connect() throws SocketException, IOException {
+		
+	if( socket == null && socketFactory == null ) {
+		throw new IllegalStateException("Cannot connect if the socket or socketFactory have not been set");
+	}
+		
+	InetSocketAddress localAddress=null;
+	InetSocketAddress remoteAddress=null;
+		
+        if( localLocation!=null ) {
+           localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
+        }  
+                      
+	if( remoteLocation!=null ) {
+		String host = resolveHostName(remoteLocation.getHost());
+	        remoteAddress = new InetSocketAddress(host, remoteLocation.getPort());
+	}
+	
+   	if( socket!=null ) {
+    		
+    		if( localAddress!=null )
+    			socket.bind(localAddress);
+    		
+    		// If it's a server accepted socket.. we don't need to connect it 
+    		// to a remote address.
+    		if ( remoteAddress!=null ) {
+	            if (connectionTimeout >= 0) {
+	                socket.connect(remoteAddress, connectionTimeout);
+	            } else {
+	                socket.connect(remoteAddress);
+	            }
+    		}
+            
+    	} else {
+    		// For SSL sockets.. you can't create an unconnected socket :(
+    		// This means the timout option are not supported either.
+    		if( localAddress!=null ) {
+            	socket = socketFactory.createSocket(remoteAddress.getAddress(), remoteAddress.getPort(), localAddress.getAddress(), localAddress.getPort());
+    		} else {
+            	socket = socketFactory.createSocket(remoteAddress.getAddress(), remoteAddress.getPort());
+    		}
+    	}
+		
+	initialiseSocket(socket);        
+        initializeStreams();
+	}
+
     protected void doStop(ServiceStopper stopper) throws Exception {
-        closeStreams();
+    	// Closing the streams flush the sockets before closing.. if the socket
+    	// is hung.. then this hangs the close.
+        // closeStreams();
         if (socket != null) {
             socket.close();
         }
@@ -303,6 +362,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     public void setSocketOptions(Map socketOptions) {
-        IntrospectionSupport.setProperties(socket, socketOptions);
+    	this.socketOptions = new HashMap(socketOptions);
+    }
+
+    public String getRemoteAddress() {
+	if(socket != null){
+		return "" + socket.getRemoteSocketAddress();
+	}
+	return null;
     }
 }

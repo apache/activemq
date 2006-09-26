@@ -1,10 +1,11 @@
 /**
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -99,6 +100,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected final ConcurrentHashMap subscriptionMapByRemoteId = new ConcurrentHashMap();
     protected final BrokerId localBrokerPath[] = new BrokerId[] { null };
     protected CountDownLatch startedLatch = new CountDownLatch(2);
+    protected CountDownLatch remoteBrokerNameKnownLatch = new CountDownLatch(1);
     protected boolean decreaseNetworkConsumerPriority;
     protected int networkTTL = 1;
     protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
@@ -211,6 +213,9 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected void startLocalBridge() throws Exception {
         if(localBridgeStarted.compareAndSet(false,true)){
             synchronized( this ) {
+            	
+        		remoteBrokerNameKnownLatch.await();
+
 	            localConnectionInfo=new ConnectionInfo();
 	            localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
 	            localClientId="NC_"+remoteBrokerName+"_inbound"+name;

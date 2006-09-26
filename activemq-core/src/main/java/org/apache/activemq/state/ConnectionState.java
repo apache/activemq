@@ -1,10 +1,11 @@
 /**
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -29,6 +30,7 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.TransactionId;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
@@ -36,6 +38,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 public class ConnectionState {
     
     final ConnectionInfo info;
+    private final ConcurrentHashMap transactions = new ConcurrentHashMap();
     private final ConcurrentHashMap sessions = new ConcurrentHashMap();
     private final List tempDestinations = Collections.synchronizedList(new ArrayList());
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -62,6 +65,20 @@ public class ConnectionState {
                 iter.remove();
             }
         }
+    }
+	
+    public void addTransactionState(TransactionId id) {
+    	checkShutdown();
+    	transactions.put(id, new TransactionState(id));
+    }        
+    public TransactionState getTransactionState(TransactionId id) {
+        return (TransactionState)transactions.get(id);
+    }
+    public Collection getTransactionStates() {
+        return transactions.values();
+    }
+    public TransactionState removeTransactionState(TransactionId id) {
+        return (TransactionState) transactions.remove(id);
     }
 
     public void addSession(SessionInfo info) {

@@ -1,24 +1,21 @@
 @echo off
 
-REM   ActiveMQ shell script
+REM ------------------------------------------------------------------------
+REM Licensed to the Apache Software Foundation (ASF) under one or more
+REM contributor license agreements.  See the NOTICE file distributed with
+REM this work for additional information regarding copyright ownership.
+REM The ASF licenses this file to You under the Apache License, Version 2.0
+REM (the "License"); you may not use this file except in compliance with
+REM the License.  You may obtain a copy of the License at
 REM
-REM   $Id: activemq.bat,v 1.1.1.1 2005/03/11 21:14:04 jstrachan Exp $
+REM http://www.apache.org/licenses/LICENSE-2.0
 REM
-REM   This script is heavily based on the Ant script
-REM
-REM   Copyright 2005-2006 The Apache Software Foundation
-REM
-REM   Licensed under the Apache License, Version 2.0 (the "License");
-REM   you may not use this file except in compliance with the License.
-REM   You may obtain a copy of the License at
-REM
-REM   http://www.apache.org/licenses/LICENSE-2.0
-REM
-REM   Unless required by applicable law or agreed to in writing, software
-REM   distributed under the License is distributed on an "AS IS" BASIS,
-REM   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-REM   See the License for the specific language governing permissions and
-REM   limitations under the License.
+REM Unless required by applicable law or agreed to in writing, software
+REM distributed under the License is distributed on an "AS IS" BASIS,
+REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+REM See the License for the specific language governing permissions and
+REM limitations under the License.
+REM ------------------------------------------------------------------------
 
 if exist "%HOME%\activemqrc_pre.bat" call "%HOME%\activemqrc_pre.bat"
 
@@ -90,7 +87,7 @@ echo.
 
 if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Dderby.system.home="..\data" -Dderby.storage.fileSyncTransactionLog=true -Dcom.sun.management.jmxremote
 
-set SUNJMX=
+if "%SUNJMX%" == "" set SUNJMX=-Dcom.sun.management.jmxremote
 REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
 
 REM Uncomment to enable YourKit profiling
@@ -102,7 +99,7 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 set LOCALCLASSPATH=%ACTIVEMQ_HOME%\conf;%LOCALCLASSPATH%
 
 set ACTIVEMQ_TASK="start"
-"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Dactivemq.home="%ACTIVEMQ_HOME%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
+"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -classpath %ACTIVEMQ_CLASSPATH% -Dactivemq.home="%ACTIVEMQ_HOME%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
 
 goto end
 

@@ -1,10 +1,11 @@
 /**
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -141,6 +142,7 @@ public class FanoutTransport implements CompositeTransport {
                 }
             }
             catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 transportListener.onException(new InterruptedIOException());
             }
         }        
@@ -338,7 +340,7 @@ public class FanoutTransport implements CompositeTransport {
                 // then hold it in the requestMap so that we can replay
                 // it later.
                 boolean fanout = isFanoutCommand(command);
-                if (!stateTracker.track(command) && command.isResponseRequired() ) {
+                if (stateTracker.track(command)==null && command.isResponseRequired() ) {
                     int size = fanout ? minAckCount : 1;
                     requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
                 }
@@ -393,6 +395,7 @@ public class FanoutTransport implements CompositeTransport {
             }
         } catch (InterruptedException e) {
             // Some one may be trying to stop our thread.
+            Thread.currentThread().interrupt();
             throw new InterruptedIOException();
         }
     }

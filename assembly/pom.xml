@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    Copyright 2005-2006 The Apache Software Foundation
-   
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
    
     http://www.apache.org/licenses/LICENSE-2.0
    
@@ -216,9 +217,32 @@
     
   </dependencies>
 
-  <build>
-    
+  <build>    
     <plugins>
+	  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution>
+            <id>run-jar</id>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                <jar destfile="target/run.jar" basedir="target/classes">
+		          <include name="org/apache/activemq/console/Main*.class"/>
+		          <manifest>
+		            <attribute name="Main-Class" value="org.apache.activemq.console.Main"/>
+		          </manifest>
+                </jar>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -256,27 +280,8 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.1</version>
         <executions>
-          <execution>
-            <id>run</id>
-            <phase>package</phase>
-            <goals>
-              <goal>assembly</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                 <descriptor>src/main/descriptors/run-jar.xml</descriptor>
-              </descriptors>
-              <finalName>run</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <archive>
-                <manifest>
-                  <mainClass>org.apache.activemq.console.Main</mainClass>
-                </manifest>
-              </archive>
-            </configuration>
-          </execution>
           <execution>
             <id>bin</id>
             <phase>package</phase>

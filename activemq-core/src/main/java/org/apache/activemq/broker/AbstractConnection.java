@@ -1,10 +1,11 @@
 /**
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -22,9 +23,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectionStatistics;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -58,6 +61,7 @@ import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConsumerState;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.state.SessionState;
+import org.apache.activemq.state.TransactionState;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -87,10 +91,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     private boolean inServiceException=false;
     private boolean manageable;
 
-    protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
+    protected final ConcurrentHashMap localConnectionStates = new ConcurrentHashMap();
+	protected final Map brokerConnectionStates;
     
     private WireFormatInfo wireFormatInfo;    
     protected boolean disposed=false;
+    protected IOException transportException;
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
         private final ConnectionContext context;
@@ -116,6 +122,10 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         this.connector = connector;
         this.broker = broker;
+        
+        RegionBroker rb = (RegionBroker) broker.getAdaptor(RegionBroker.class);
+        brokerConnectionStates = rb.getConnectionStates();
+        
         if (connector != null) {
             this.statistics.setParent(connector.getStatistics());
         }
@@ -152,7 +162,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         // Remove all logical connection associated with this connection
         // from the broker.
         if(!broker.isStopped()){
-            ArrayList l=new ArrayList(connectionStates.keySet());
+            ArrayList l=new ArrayList(localConnectionStates.keySet());
             for(Iterator iter=l.iterator();iter.hasNext();){
                 ConnectionId connectionId=(ConnectionId) iter.next();
                 try{
@@ -167,6 +177,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     public void serviceTransportException(IOException e) {
         if( !disposed ) {
+            transportException = e; 	
             if( transportLog.isDebugEnabled() )
                 transportLog.debug("Transport failed: "+e,e);
             ServiceSupport.dispose(this);
@@ -244,25 +255,25 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     protected ConnectionState lookupConnectionState(ConsumerId id) {
-        ConnectionState cs = (ConnectionState) connectionStates.get(id.getParentId().getParentId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(id.getParentId().getParentId());
         if( cs== null )
             throw new IllegalStateException("Cannot lookup a consumer from a connection that had not been registered: "+id.getParentId().getParentId());
         return cs;
     }
     protected ConnectionState lookupConnectionState(ProducerId id) {
-        ConnectionState cs = (ConnectionState) connectionStates.get(id.getParentId().getParentId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(id.getParentId().getParentId());
         if( cs== null )
             throw new IllegalStateException("Cannot lookup a producer from a connection that had not been registered: "+id.getParentId().getParentId());        
         return cs;
     }
     protected ConnectionState lookupConnectionState(SessionId id) {
-        ConnectionState cs = (ConnectionState) connectionStates.get(id.getParentId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(id.getParentId());
         if( cs== null )
             throw new IllegalStateException("Cannot lookup a session from a connection that had not been registered: "+id.getParentId());        
         return cs;
     }
     protected ConnectionState lookupConnectionState(ConnectionId connectionId) {
-        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(connectionId);
         if( cs== null )
             throw new IllegalStateException("Cannot lookup a connection that had not been registered: "+connectionId);
         return cs;
@@ -292,12 +303,17 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
     public Response processBeginTransaction(TransactionInfo info) throws Exception {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
            context = cs.getContext();
         }
-        broker.beginTransaction(context, info.getTransactionId());
+        
+        // Avoid replaying dup commands
+        if( cs.getTransactionState(info.getTransactionId())==null ) {
+        	cs.addTransactionState(info.getTransactionId());
+            broker.beginTransaction(context, info.getTransactionId());
+        }
         return null;
     }
     
@@ -309,48 +325,69 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processPrepareTransaction(TransactionInfo info) throws Exception {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
            context = cs.getContext();
         }
-        int result = broker.prepareTransaction(context, info.getTransactionId());
-        IntegerResponse response = new IntegerResponse(result);
-        return response;
+        
+        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
+        if( transactionState == null )
+            throw new IllegalStateException("Cannot prepare a transaction that had not been started: "+info.getTransactionId());
+
+        // Avoid dups.
+        if( !transactionState.isPrepared() ) {
+            transactionState.setPrepared(true);
+            int result = broker.prepareTransaction(context, info.getTransactionId());
+            transactionState.setPreparedResult(result);
+            IntegerResponse response = new IntegerResponse(result);
+            return response;
+        } else {
+            IntegerResponse response = new IntegerResponse(transactionState.getPreparedResult());
+            return response;
+        }
     }
 
     public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
            context = cs.getContext();
         }
+        
+        cs.removeTransactionState(info.getTransactionId());
         broker.commitTransaction(context, info.getTransactionId(), true);
+
         return null;
+        
     }
 
     public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
            context = cs.getContext();
         }
-        broker.commitTransaction(context, info.getTransactionId(), false);
+        
+        cs.removeTransactionState(info.getTransactionId());
+    	broker.commitTransaction(context, info.getTransactionId(), false);
         return null;
     }
 
     public Response processRollbackTransaction(TransactionInfo info) throws Exception {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
            context = cs.getContext();
         }
-        broker.rollbackTransaction(context, info.getTransactionId());
+        
+        cs.removeTransactionState(info.getTransactionId());
+    	broker.rollbackTransaction(context, info.getTransactionId());
         return null;
     }
     
     public Response processForgetTransaction(TransactionInfo info) throws Exception {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
            context = cs.getContext();
@@ -360,7 +397,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processRecoverTransactions(TransactionInfo info) throws Exception {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
+        ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
            context = cs.getContext();
@@ -371,10 +408,32 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
 
     public Response processMessage(Message messageSend) throws Exception {
+    	
         ProducerId producerId = messageSend.getProducerId();
         ConnectionState state = lookupConnectionState(producerId);
         ConnectionContext context = state.getContext();
-        broker.send(context, messageSend);
+        
+        // If the message originates from this client connection, 
+        // then, finde the associated producer state so we can do some dup detection.
+        ProducerState producerState=null;        
+        if( messageSend.getMessageId().getProducerId().equals( messageSend.getProducerId() ) ) {
+	        SessionState ss = state.getSessionState(producerId.getParentId());
+	        if( ss == null )
+	            throw new IllegalStateException("Cannot send from a session that had not been registered: "+producerId.getParentId());
+	        producerState = ss.getProducerState(producerId); 
+        }
+        
+        if( producerState == null ) {
+            broker.send(context, messageSend);
+        } else {
+	        // Avoid Dups.
+	        long seq = messageSend.getMessageId().getProducerSequenceId();
+	        if( seq > producerState.getLastSequenceId() ) {
+	        	producerState.setLastSequenceId(seq);
+	            broker.send(context, messageSend);
+	        }
+        }
+        
         return null;
     }
 
@@ -389,6 +448,13 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
     public Response processBrokerInfo(BrokerInfo info) {
+    	
+    	// We only expect to get one broker info command per connection
+    	if( this.brokerInfo!=null ) {
+    		log.warn("Unexpected extra broker info command received: "+info);
+    	}
+    	
+        this.brokerInfo = info;
         broker.addBroker(this, info);
         return null;
     }
@@ -420,12 +486,16 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         SessionState ss = cs.getSessionState(sessionId);
         if( ss == null )
             throw new IllegalStateException("Cannot add a producer to a session that had not been registered: "+sessionId);
-        broker.addProducer(cs.getContext(), info);
-        try {
-            ss.addProducer(info);
-		} catch (IllegalStateException e) {
-			broker.removeProducer(cs.getContext(), info);
-		}
+
+        // Avoid replaying dup commands
+        if( !ss.getProducerIds().contains(info.getProducerId()) ) {
+	        broker.addProducer(cs.getContext(), info);
+	        try {
+	            ss.addProducer(info);
+			} catch (IllegalStateException e) {
+				broker.removeProducer(cs.getContext(), info);
+			}
+        }
         return null;
     }
     
@@ -454,12 +524,15 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         if( ss == null )
             throw new IllegalStateException("Cannot add a consumer to a session that had not been registered: "+sessionId);
 
-        broker.addConsumer(cs.getContext(), info);
-        try {
-			ss.addConsumer(info);
-		} catch (IllegalStateException e) {
-			broker.removeConsumer(cs.getContext(), info);
-		}
+        // Avoid replaying dup commands
+        if( !ss.getConsumerIds().contains(info.getConsumerId()) ) {
+	        broker.addConsumer(cs.getContext(), info);
+	        try {
+				ss.addConsumer(info);
+			} catch (IllegalStateException e) {
+				broker.removeConsumer(cs.getContext(), info);
+			}
+        }
         
         return null;
     }
@@ -483,14 +556,17 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     
     public Response processAddSession(SessionInfo info) throws Exception {
         ConnectionId connectionId = info.getSessionId().getParentId();
-        
         ConnectionState cs = lookupConnectionState(connectionId);
-    	broker.addSession(cs.getContext(), info);
-        try {
-            cs.addSession(info);
-		} catch (IllegalStateException e) {
-			broker.removeSession(cs.getContext(), info);
-		}
+        
+        // Avoid replaying dup commands
+        if( !cs.getSessionIds().contains(info.getSessionId()) ) {
+	    	broker.addSession(cs.getContext(), info);
+	        try {
+	            cs.addSession(info);
+			} catch (IllegalStateException e) {
+				broker.removeSession(cs.getContext(), info);
+			}
+        }
         return null;
     }
     
@@ -532,28 +608,40 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processAddConnection(ConnectionInfo info) throws Exception {
-        // Setup the context.
-        String clientId = info.getClientId();
-        ConnectionContext context = new ConnectionContext();
-        context.setConnection(this);
-        context.setBroker(broker);
-        context.setConnector(connector);
-        context.setTransactions(new ConcurrentHashMap());
-        context.setClientId(clientId);
-        context.setUserName(info.getUserName());
-        context.setConnectionId(info.getConnectionId());
-        context.setWireFormatInfo(wireFormatInfo);
-        this.manageable = info.isManageable();
-        connectionStates.put(info.getConnectionId(), new ConnectionState(info, context));
-       
-        
-        broker.addConnection(context, info);
-        if (info.isManageable() && broker.isFaultTolerantConfiguration()){
-            //send ConnectionCommand
-            ConnectionControl command = new ConnectionControl();
-            command.setFaultTolerant(broker.isFaultTolerantConfiguration());
-            dispatchAsync(command);
-        }
+    	
+    	ConnectionState state = (ConnectionState) brokerConnectionStates.get(info.getConnectionId());
+    	if( state == null ) {
+    		
+	        // Setup the context.
+	        String clientId = info.getClientId();
+	        ConnectionContext context = new ConnectionContext();
+	        context.setConnection(this);
+	        context.setBroker(broker);
+	        context.setConnector(connector);
+	        context.setTransactions(new ConcurrentHashMap());
+	        context.setClientId(clientId);
+	        context.setUserName(info.getUserName());
+	        context.setConnectionId(info.getConnectionId());
+	        context.setWireFormatInfo(wireFormatInfo);
+    		context.incrementReference();
+	        this.manageable = info.isManageable();
+	        
+	        state = new ConnectionState(info, context);
+	        brokerConnectionStates.put(info.getConnectionId(), state);
+	        localConnectionStates.put(info.getConnectionId(), state);	        
+	        
+	        broker.addConnection(context, info);
+	        if (info.isManageable() && broker.isFaultTolerantConfiguration()){
+	            //send ConnectionCommand
+	            ConnectionControl command = new ConnectionControl();
+	            command.setFaultTolerant(broker.isFaultTolerantConfiguration());
+	            dispatchAsync(command);
+	        }
+    	} else {
+    		// We are a concurrent connection... it must be client reconnect.
+    		localConnectionStates.put(info.getConnectionId(), state);
+    		state.getContext().incrementReference();
+    	}
         return null;
     }
     
@@ -591,8 +679,14 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         }catch(Throwable e){
             serviceLog.warn("Failed to remove connection " +  cs.getInfo(),e);
         }
-        connectionStates.remove(id);
-        
+        ConnectionState state = (ConnectionState) localConnectionStates.remove(id);
+        if( state != null ) {
+        	// If we are the last reference, we should remove the state
+        	// from the broker.
+        	if( state.getContext().decrementReference() == 0 ){ 
+        		brokerConnectionStates.remove(id);
+        	}
+        }
         return null;
     }
 

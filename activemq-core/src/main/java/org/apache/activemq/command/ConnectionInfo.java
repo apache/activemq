@@ -1,10 +1,11 @@
 /**
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -35,6 +36,7 @@ public class ConnectionInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean brokerMasterConnector;
     protected boolean manageable;
+    protected transient Object transportContext; 
     
     public ConnectionInfo() {        
     }    
@@ -141,5 +143,27 @@ public class ConnectionInfo extends BaseCommand {
     public void setManageable(boolean manageable){
         this.manageable=manageable;
     }
+    
+    /**
+	 * Transports may wish to associate additional data with the connection.  For
+	 * example, an SSL transport may use this field to attach the client certificates
+	 * used when the conection was established.
+     * 
+     * @return the transport context.
+     */
+	public Object getTransportContext() {
+		return transportContext;
+	}
+	
+	/**
+	 * Transports may wish to associate additional data with the connection.  For
+	 * example, an SSL transport may use this field to attach the client certificates
+	 * used when the conection was established.
+	 *  
+	 * @param transportContext value used to set the transport context
+	 */
+	public void setTransportContext(Object transportContext) {
+		this.transportContext = transportContext;
+	}
 
 }
