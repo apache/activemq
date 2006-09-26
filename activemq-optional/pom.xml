@@ -104,8 +104,39 @@
       <artifactId>junit</artifactId>
       <scope>compile</scope>
     </dependency>
+
+    <dependency>
+      <groupId>xmlbeans</groupId>
+      <artifactId>xbean</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>xmlbeans</groupId>
+      <artifactId>xmlpublic</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>xmlbeans</groupId>
+      <artifactId>xbean_xpath</artifactId>
+      <optional>true</optional>
+    </dependency>    
+    
+    <dependency>
+      <groupId>xalan</groupId>
+      <artifactId>xalan</artifactId>
+      <optional>true</optional>
+    </dependency>     
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax-api</artifactId>
+      <optional>true</optional>
+    </dependency>    
     
   </dependencies>
+  
+
+
 
 
   <build>
