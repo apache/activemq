@@ -79,13 +79,16 @@ class TopicBridge extends DestinationBridge{
     
     
     
-    protected MessageProducer createProducer() throws JMSException{
+    protected synchronized MessageProducer createProducer() throws JMSException{
         producerSession=producerConnection.createTopicSession(false,Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createPublisher(null);
         return producer;
     }
     
-    protected void sendMessage(Message message) throws JMSException{
+    protected synchronized void sendMessage(Message message) throws JMSException{
+        if (producer == null) {
+            createProducer();
+        }
         producer.publish(producerTopic,message);
     }
 

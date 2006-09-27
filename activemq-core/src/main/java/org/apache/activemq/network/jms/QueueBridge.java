@@ -71,7 +71,7 @@ class QueueBridge extends DestinationBridge{
         return consumer;
     }
     
-    protected MessageProducer createProducer() throws JMSException{
+    protected synchronized MessageProducer createProducer() throws JMSException{
         producerSession=producerConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createSender(null);
         return producer;
@@ -80,7 +80,10 @@ class QueueBridge extends DestinationBridge{
         
         
     
-    protected void sendMessage(Message message) throws JMSException{
+    protected synchronized void sendMessage(Message message) throws JMSException{
+        if (producer == null) {
+            createProducer();
+        }
         producer.send(producerQueue,message);
     }
 
