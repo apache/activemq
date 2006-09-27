@@ -292,10 +292,11 @@
         <artifactId>maven-antrun-plugin</artifactId>
         <configuration>
           <tasks>
-            <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGenerator"/>
+            <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask"/>
             <generate version="2" basedir="${basedir}"/>
           </tasks>
         </configuration>
+        <dependencies>
           <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-openwire-generator</artifactId>
