@@ -42,15 +42,15 @@ public class MessageAckTest extends BaseCommandTestSupport {
     public static MessageAckTest SINGLETON = new MessageAckTest();
 
     public Object createObject() throws Exception {
-    		MessageAck info = new MessageAck();
-    		populateObject(info);
-    		return info;
+        MessageAck info = new MessageAck();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		MessageAck info = (MessageAck) object;
+        super.populateObject(object);
+        MessageAck info = (MessageAck) object;
+
         info.setDestination(createActiveMQDestination("Destination:1"));
         info.setTransactionId(createTransactionId("TransactionId:2"));
         info.setConsumerId(createConsumerId("ConsumerId:3"));
@@ -58,6 +58,5 @@ public class MessageAckTest extends BaseCommandTestSupport {
         info.setFirstMessageId(createMessageId("FirstMessageId:4"));
         info.setLastMessageId(createMessageId("LastMessageId:5"));
         info.setMessageCount(1);
-
-            }
-        }
+    }
+}

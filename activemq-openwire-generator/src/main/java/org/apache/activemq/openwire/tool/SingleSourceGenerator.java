@@ -22,6 +22,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -35,9 +36,9 @@ import org.codehaus.jam.JamClassIterator;
  * 
  * @version $Revision: 386442 $
  */
-public abstract class OpenWireClassesScript extends OpenWireScript {
+public abstract class SingleSourceGenerator extends OpenWireGenerator {
+	
     protected Set manuallyMaintainedClasses = new HashSet();
-    protected File destDir;
     protected File destFile;
 
     protected JClass jclass;
@@ -45,31 +46,77 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
     protected String simpleName;
     protected String className;
     protected String baseClass;
-    protected StringBuffer buffer;
+	protected List sortedClasses;
 
-    public OpenWireClassesScript() {
+    public SingleSourceGenerator() {
         initialiseManuallyMaintainedClasses();
     }
 
     public Object run() {
-        if (destDir == null) {
-            throw new IllegalArgumentException("No destDir defined!");
-        }
-        System.out.println(getClass().getName() + " generating files in: " + destDir);
-        destDir.mkdirs();
-        buffer = new StringBuffer();
+    	
+        if (destFile == null) {
+            throw new IllegalArgumentException("No destFile defined!");
+        }        
+        destFile.getParentFile().mkdirs();
 
-        JamClassIterator iter = getClasses();
-        while (iter.hasNext()) {
-            jclass = iter.nextClass();
-            if (isValidClass(jclass)) {
-                processClass(jclass);
+        PrintWriter out = null;
+        try {
+        	out =  new PrintWriter(new FileWriter(destFile));
+        	
+        	ArrayList classes = new ArrayList();        	
+   	     	JamClassIterator iter = getClasses();
+            while (iter.hasNext()) {
+				jclass = iter.nextClass();				
+                if (isValidClass(jclass)) {
+                	classes.add(jclass);
+                }
+            }
+   	        sortedClasses = sort(classes);
+   	        
+        	generateSetup(out);
+   	        for (Iterator iterator = sortedClasses.iterator(); iterator.hasNext();) {
+				jclass = (JClass) iterator.next();				
+                simpleName = jclass.getSimpleName();
+                superclass = jclass.getSuperclass();
+                className = getClassName(jclass);
+                baseClass = getBaseClassName(jclass);
+
+                System.out.println(getClass().getName() + " processing class: " + simpleName);
+                generateFile(out);
+            }        
+            generateTearDown(out);
+        	
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (out != null) {
+                out.close();
             }
         }
+        
+        // Use the FixCRLF Ant Task to make sure the file has consistent newlines
+        // so that SVN does not complain on checkin.
+        Project project = new Project();
+        project.init();
+        FixCRLF fixCRLF = new FixCRLF();
+        fixCRLF.setProject(project);
+        fixCRLF.setSrcdir(destFile.getParentFile());
+        fixCRLF.setIncludes(destFile.getName());
+        fixCRLF.execute();
         return null;
     }
+    
+    protected List sort(List classes) {
+		return classes;
+	}
 
-    /**
+	protected void generateTearDown(PrintWriter out) {
+	}
+
+    protected void generateSetup(PrintWriter out) {
+	}
+
+	/**
      * Returns all the valid properties available on the current class
      */
     public List getProperties() {
@@ -85,50 +132,15 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
     }
 
     protected boolean isValidClass(JClass jclass) {
-        if (jclass.getAnnotation("openwire:marshaller") == null) {
+        if (jclass==null || jclass.getAnnotation("openwire:marshaller") == null) {
             return false;
         }
-        return !manuallyMaintainedClasses.contains(jclass.getSimpleName());
+        return true;
+        //return !manuallyMaintainedClasses.contains(jclass.getSimpleName());
     }
 
-    protected void processClass(JClass jclass) {
-        simpleName = jclass.getSimpleName();
-        superclass = jclass.getSuperclass();
 
-        System.out.println(getClass().getName() + " processing class: " + simpleName);
-
-        className = getClassName(jclass);
-
-        destFile = new File(destDir, className + filePostFix);
-
-        baseClass = getBaseClassName(jclass);
-
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(new FileWriter(destFile));
-            generateFile(out);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            if (out != null) {
-                out.close();
-            }
-        }
-        
-        // Use the FixCRLF Ant Task to make sure the file has consistent newlines
-        // so that SVN does not complain on checkin.
-        Project project = new Project();
-        project.init();
-        FixCRLF fixCRLF = new FixCRLF();
-        fixCRLF.setProject(project);
-        fixCRLF.setSrcdir(destFile.getParentFile());
-        fixCRLF.setIncludes(destFile.getName());
-        fixCRLF.execute();
-    }
-
-    protected abstract void generateFile(PrintWriter out);
+    protected abstract void generateFile(PrintWriter out) throws Exception;
 
     protected String getBaseClassName(JClass jclass) {
         String answer = "BaseDataStructure";
@@ -181,14 +193,6 @@ public abstract class OpenWireClassesScript extends OpenWireScript {
 
 	public void setClassName(String className) {
 		this.className = className;
-	}
-
-	public File getDestDir() {
-		return destDir;
-	}
-
-	public void setDestDir(File destDir) {
-		this.destDir = destDir;
 	}
 
 	public File getDestFile() {

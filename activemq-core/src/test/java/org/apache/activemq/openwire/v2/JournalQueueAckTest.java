@@ -42,17 +42,16 @@ public class JournalQueueAckTest extends DataFileGeneratorTestSupport {
     public static JournalQueueAckTest SINGLETON = new JournalQueueAckTest();
 
     public Object createObject() throws Exception {
-    		JournalQueueAck info = new JournalQueueAck();
-    		populateObject(info);
-    		return info;
+        JournalQueueAck info = new JournalQueueAck();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		JournalQueueAck info = (JournalQueueAck) object;
+        super.populateObject(object);
+        JournalQueueAck info = (JournalQueueAck) object;
+
         info.setDestination(createActiveMQDestination("Destination:1"));
         info.setMessageAck(createMessageAck("MessageAck:2"));
-
-            }
-        }
+    }
+}

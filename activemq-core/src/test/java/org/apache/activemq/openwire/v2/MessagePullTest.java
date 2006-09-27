@@ -42,18 +42,17 @@ public class MessagePullTest extends BaseCommandTestSupport {
     public static MessagePullTest SINGLETON = new MessagePullTest();
 
     public Object createObject() throws Exception {
-    		MessagePull info = new MessagePull();
-    		populateObject(info);
-    		return info;
+        MessagePull info = new MessagePull();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		MessagePull info = (MessagePull) object;
+        super.populateObject(object);
+        MessagePull info = (MessagePull) object;
+
         info.setConsumerId(createConsumerId("ConsumerId:1"));
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setTimeout(1);
-
-            }
-        }
+    }
+}

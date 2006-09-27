@@ -42,18 +42,17 @@ public class MessageIdTest extends DataFileGeneratorTestSupport {
     public static MessageIdTest SINGLETON = new MessageIdTest();
 
     public Object createObject() throws Exception {
-    		MessageId info = new MessageId();
-    		populateObject(info);
-    		return info;
+        MessageId info = new MessageId();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		MessageId info = (MessageId) object;
+        super.populateObject(object);
+        MessageId info = (MessageId) object;
+
         info.setProducerId(createProducerId("ProducerId:1"));
         info.setProducerSequenceId(1);
         info.setBrokerSequenceId(2);
-
-            }
-        }
+    }
+}

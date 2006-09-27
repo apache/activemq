@@ -42,17 +42,16 @@ public class NetworkBridgeFilterTest extends DataFileGeneratorTestSupport {
     public static NetworkBridgeFilterTest SINGLETON = new NetworkBridgeFilterTest();
 
     public Object createObject() throws Exception {
-    		NetworkBridgeFilter info = new NetworkBridgeFilter();
-    		populateObject(info);
-    		return info;
+        NetworkBridgeFilter info = new NetworkBridgeFilter();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		NetworkBridgeFilter info = (NetworkBridgeFilter) object;
+        super.populateObject(object);
+        NetworkBridgeFilter info = (NetworkBridgeFilter) object;
+
         info.setNetworkTTL(1);
         info.setNetworkBrokerId(createBrokerId("NetworkBrokerId:1"));
-
-            }
-        }
+    }
+}

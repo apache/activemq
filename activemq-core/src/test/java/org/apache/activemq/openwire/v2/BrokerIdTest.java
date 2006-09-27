@@ -42,16 +42,15 @@ public class BrokerIdTest extends DataFileGeneratorTestSupport {
     public static BrokerIdTest SINGLETON = new BrokerIdTest();
 
     public Object createObject() throws Exception {
-    		BrokerId info = new BrokerId();
-    		populateObject(info);
-    		return info;
+        BrokerId info = new BrokerId();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		BrokerId info = (BrokerId) object;
-        info.setValue("Value:1");
+        super.populateObject(object);
+        BrokerId info = (BrokerId) object;
 
-            }
-        }
+        info.setValue("Value:1");
+    }
+}

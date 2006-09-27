@@ -42,16 +42,15 @@ public class IntegerResponseTest extends ResponseTest {
     public static IntegerResponseTest SINGLETON = new IntegerResponseTest();
 
     public Object createObject() throws Exception {
-    		IntegerResponse info = new IntegerResponse();
-    		populateObject(info);
-    		return info;
+        IntegerResponse info = new IntegerResponse();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		IntegerResponse info = (IntegerResponse) object;
-        info.setResult(1);
+        super.populateObject(object);
+        IntegerResponse info = (IntegerResponse) object;
 
-            }
-        }
+        info.setResult(1);
+    }
+}

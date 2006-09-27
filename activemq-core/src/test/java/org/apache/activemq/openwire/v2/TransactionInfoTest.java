@@ -42,18 +42,17 @@ public class TransactionInfoTest extends BaseCommandTestSupport {
     public static TransactionInfoTest SINGLETON = new TransactionInfoTest();
 
     public Object createObject() throws Exception {
-    		TransactionInfo info = new TransactionInfo();
-    		populateObject(info);
-    		return info;
+        TransactionInfo info = new TransactionInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		TransactionInfo info = (TransactionInfo) object;
+        super.populateObject(object);
+        TransactionInfo info = (TransactionInfo) object;
+
         info.setConnectionId(createConnectionId("ConnectionId:1"));
         info.setTransactionId(createTransactionId("TransactionId:2"));
         info.setType((byte) 1);
-
-            }
-        }
+    }
+}

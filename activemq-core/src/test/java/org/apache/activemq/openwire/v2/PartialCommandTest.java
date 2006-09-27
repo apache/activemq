@@ -42,17 +42,16 @@ public class PartialCommandTest extends DataFileGeneratorTestSupport {
     public static PartialCommandTest SINGLETON = new PartialCommandTest();
 
     public Object createObject() throws Exception {
-    		PartialCommand info = new PartialCommand();
-    		populateObject(info);
-    		return info;
+        PartialCommand info = new PartialCommand();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		PartialCommand info = (PartialCommand) object;
+        super.populateObject(object);
+        PartialCommand info = (PartialCommand) object;
+
         info.setCommandId(1);
         info.setData("Data:1".getBytes());
-
-            }
-        }
+    }
+}

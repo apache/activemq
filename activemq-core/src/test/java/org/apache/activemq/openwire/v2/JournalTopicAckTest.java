@@ -42,21 +42,20 @@ public class JournalTopicAckTest extends DataFileGeneratorTestSupport {
     public static JournalTopicAckTest SINGLETON = new JournalTopicAckTest();
 
     public Object createObject() throws Exception {
-    		JournalTopicAck info = new JournalTopicAck();
-    		populateObject(info);
-    		return info;
+        JournalTopicAck info = new JournalTopicAck();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		JournalTopicAck info = (JournalTopicAck) object;
+        super.populateObject(object);
+        JournalTopicAck info = (JournalTopicAck) object;
+
         info.setDestination(createActiveMQDestination("Destination:1"));
         info.setMessageId(createMessageId("MessageId:2"));
         info.setMessageSequenceId(1);
         info.setSubscritionName("SubscritionName:3");
         info.setClientId("ClientId:4");
         info.setTransactionId(createTransactionId("TransactionId:5"));
-
-            }
-        }
+    }
+}

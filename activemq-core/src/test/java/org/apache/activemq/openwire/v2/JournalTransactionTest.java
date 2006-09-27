@@ -42,18 +42,17 @@ public class JournalTransactionTest extends DataFileGeneratorTestSupport {
     public static JournalTransactionTest SINGLETON = new JournalTransactionTest();
 
     public Object createObject() throws Exception {
-    		JournalTransaction info = new JournalTransaction();
-    		populateObject(info);
-    		return info;
+        JournalTransaction info = new JournalTransaction();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		JournalTransaction info = (JournalTransaction) object;
+        super.populateObject(object);
+        JournalTransaction info = (JournalTransaction) object;
+
         info.setTransactionId(createTransactionId("TransactionId:1"));
         info.setType((byte) 1);
         info.setWasPrepared(true);
-
-            }
-        }
+    }
+}

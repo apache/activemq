@@ -42,16 +42,15 @@ public class ControlCommandTest extends BaseCommandTestSupport {
     public static ControlCommandTest SINGLETON = new ControlCommandTest();
 
     public Object createObject() throws Exception {
-    		ControlCommand info = new ControlCommand();
-    		populateObject(info);
-    		return info;
+        ControlCommand info = new ControlCommand();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ControlCommand info = (ControlCommand) object;
-        info.setCommand("Command:1");
+        super.populateObject(object);
+        ControlCommand info = (ControlCommand) object;
 
-            }
-        }
+        info.setCommand("Command:1");
+    }
+}

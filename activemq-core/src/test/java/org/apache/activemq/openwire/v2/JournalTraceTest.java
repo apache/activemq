@@ -42,16 +42,15 @@ public class JournalTraceTest extends DataFileGeneratorTestSupport {
     public static JournalTraceTest SINGLETON = new JournalTraceTest();
 
     public Object createObject() throws Exception {
-    		JournalTrace info = new JournalTrace();
-    		populateObject(info);
-    		return info;
+        JournalTrace info = new JournalTrace();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		JournalTrace info = (JournalTrace) object;
-        info.setMessage("Message:1");
+        super.populateObject(object);
+        JournalTrace info = (JournalTrace) object;
 
-            }
-        }
+        info.setMessage("Message:1");
+    }
+}

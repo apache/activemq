@@ -42,17 +42,16 @@ public class ReplayCommandTest extends BaseCommandTestSupport {
     public static ReplayCommandTest SINGLETON = new ReplayCommandTest();
 
     public Object createObject() throws Exception {
-    		ReplayCommand info = new ReplayCommand();
-    		populateObject(info);
-    		return info;
+        ReplayCommand info = new ReplayCommand();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ReplayCommand info = (ReplayCommand) object;
+        super.populateObject(object);
+        ReplayCommand info = (ReplayCommand) object;
+
         info.setFirstNakNumber(1);
         info.setLastNakNumber(2);
-
-            }
-        }
+    }
+}

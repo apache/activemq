@@ -42,15 +42,14 @@ public class LastPartialCommandTest extends PartialCommandTest {
     public static LastPartialCommandTest SINGLETON = new LastPartialCommandTest();
 
     public Object createObject() throws Exception {
-    		LastPartialCommand info = new LastPartialCommand();
-    		populateObject(info);
-    		return info;
+        LastPartialCommand info = new LastPartialCommand();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		LastPartialCommand info = (LastPartialCommand) object;
+        super.populateObject(object);
+        LastPartialCommand info = (LastPartialCommand) object;
 
-            }
-        }
+    }
+}

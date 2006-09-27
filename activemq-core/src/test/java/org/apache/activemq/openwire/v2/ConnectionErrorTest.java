@@ -42,17 +42,16 @@ public class ConnectionErrorTest extends BaseCommandTestSupport {
     public static ConnectionErrorTest SINGLETON = new ConnectionErrorTest();
 
     public Object createObject() throws Exception {
-    		ConnectionError info = new ConnectionError();
-    		populateObject(info);
-    		return info;
+        ConnectionError info = new ConnectionError();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ConnectionError info = (ConnectionError) object;
+        super.populateObject(object);
+        ConnectionError info = (ConnectionError) object;
+
         info.setException(createThrowable("Exception:1"));
         info.setConnectionId(createConnectionId("ConnectionId:2"));
-
-            }
-        }
+    }
+}

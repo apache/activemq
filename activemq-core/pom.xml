@@ -287,7 +287,25 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <configuration>
+          <tasks>
+            <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGenerator"/>
+            <generate version="2" basedir="${basedir}"/>
+          </tasks>
+        </configuration>
+          <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-openwire-generator</artifactId>
+            <version>${pom.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
       <!-- Use Gram to Gernerate the OpenWire Marshallers -->
+      <!--
       <plugin>
         <groupId>org.apache.activemq</groupId>
         <artifactId>maven-gram-plugin</artifactId>
@@ -310,6 +328,7 @@
           </dependency>
         </dependencies>
       </plugin>
+      -->
 
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

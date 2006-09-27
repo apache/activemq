@@ -42,17 +42,16 @@ public class DiscoveryEventTest extends DataFileGeneratorTestSupport {
     public static DiscoveryEventTest SINGLETON = new DiscoveryEventTest();
 
     public Object createObject() throws Exception {
-    		DiscoveryEvent info = new DiscoveryEvent();
-    		populateObject(info);
-    		return info;
+        DiscoveryEvent info = new DiscoveryEvent();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		DiscoveryEvent info = (DiscoveryEvent) object;
+        super.populateObject(object);
+        DiscoveryEvent info = (DiscoveryEvent) object;
+
         info.setServiceName("ServiceName:1");
         info.setBrokerName("BrokerName:2");
-
-            }
-        }
+    }
+}
