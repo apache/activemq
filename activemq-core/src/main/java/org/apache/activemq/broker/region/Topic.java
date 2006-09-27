@@ -93,11 +93,10 @@ public class Topic implements Destination {
     public void addSubscription(ConnectionContext context, final Subscription sub) throws Exception {
         
         sub.add(context, this);
+        destinationStatistics.getConsumers().increment();
 
         if ( !sub.getConsumerInfo().isDurable() ) {
-            
-            destinationStatistics.getConsumers().increment();
-            
+
             // Do a retroactive recovery if needed.
             if (sub.getConsumerInfo().isRetroactive()) {
                 
@@ -139,8 +138,10 @@ public class Topic implements Destination {
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
         if (store != null) {
             store.deleteSubscription(key.clientId, key.subscriptionName);
-            durableSubcribers.remove(key);
-            destinationStatistics.getConsumers().decrement();
+            Object removed = durableSubcribers.remove(key);
+            if(removed != null) {
+                destinationStatistics.getConsumers().decrement();
+            }
         }
     }
     

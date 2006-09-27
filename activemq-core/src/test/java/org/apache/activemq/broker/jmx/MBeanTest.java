@@ -19,6 +19,7 @@ package org.apache.activemq.broker.jmx;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Topic;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -73,6 +74,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // messages on a queue
         assertQueueBrowseWorks();
         assertCreateAndDestroyDurableSubscriptions();
+        assertConsumerCounts();
     }
     
     public void testMoveMessagesBySelector() throws Exception {
@@ -203,6 +205,57 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // now lets try destroy it
         broker.destroyDurableSubscriber(clientID, "subscriber1");
         assertEquals("Durable subscriber count", 1, broker.getDurableTopicSubscribers().length);
+    }
+
+    protected void assertConsumerCounts() throws Exception {
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        BrokerViewMBean broker = (BrokerViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        //create 2 topics
+        broker.addTopic(getDestinationString() + "1");
+        broker.addTopic(getDestinationString() + "2");
+
+        ObjectName topicObjName1 = assertRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination="+getDestinationString() + "1");
+        ObjectName topicObjName2 = assertRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination="+getDestinationString() + "2");
+        TopicViewMBean topic1 = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName1, TopicViewMBean.class, true);
+        TopicViewMBean topic2 = (TopicViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName2, TopicViewMBean.class, true);
+
+        assertEquals("topic1 Durable subscriber count", 0, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 0, topic2.getConsumerCount());
+
+        String topicName = getDestinationString();
+        String selector = null;
+
+        //create 1 subscriber for each topic
+        broker.createDurableSubscriber(clientID, "topic1.subscriber1", topicName + "1", selector);
+        broker.createDurableSubscriber(clientID, "topic2.subscriber1", topicName + "2", selector);
+
+        assertEquals("topic1 Durable subscriber count", 1, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 1, topic2.getConsumerCount());
+
+        //create 1 more subscriber for topic1
+        broker.createDurableSubscriber(clientID, "topic1.subscriber2", topicName + "1", selector);
+
+        assertEquals("topic1 Durable subscriber count", 2, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 1, topic2.getConsumerCount());
+
+        //destroy topic1 subscriber
+        broker.destroyDurableSubscriber(clientID, "topic1.subscriber1");
+
+        assertEquals("topic1 Durable subscriber count", 1, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 1, topic2.getConsumerCount());
+
+        // destroy topic2 subscriber
+        broker.destroyDurableSubscriber(clientID, "topic2.subscriber1");
+
+        assertEquals("topic1 Durable subscriber count", 1, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 0, topic2.getConsumerCount());
+
+        //destroy remaining topic1 subscriber
+        broker.destroyDurableSubscriber(clientID, "topic1.subscriber2");
+
+        assertEquals("topic1 Durable subscriber count", 0, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 0, topic2.getConsumerCount());
     }
 
     protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {
