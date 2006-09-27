@@ -42,18 +42,17 @@ public class RemoveSubscriptionInfoTest extends BaseCommandTestSupport {
     public static RemoveSubscriptionInfoTest SINGLETON = new RemoveSubscriptionInfoTest();
 
     public Object createObject() throws Exception {
-    		RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
-    		populateObject(info);
-    		return info;
+        RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) object;
+        super.populateObject(object);
+        RemoveSubscriptionInfo info = (RemoveSubscriptionInfo) object;
+
         info.setConnectionId(createConnectionId("ConnectionId:1"));
         info.setSubcriptionName("SubcriptionName:2");
         info.setClientId("ClientId:3");
-
-            }
-        }
+    }
+}

@@ -42,19 +42,18 @@ public class SubscriptionInfoTest extends DataFileGeneratorTestSupport {
     public static SubscriptionInfoTest SINGLETON = new SubscriptionInfoTest();
 
     public Object createObject() throws Exception {
-    		SubscriptionInfo info = new SubscriptionInfo();
-    		populateObject(info);
-    		return info;
+        SubscriptionInfo info = new SubscriptionInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		SubscriptionInfo info = (SubscriptionInfo) object;
+        super.populateObject(object);
+        SubscriptionInfo info = (SubscriptionInfo) object;
+
         info.setClientId("ClientId:1");
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setSelector("Selector:3");
         info.setSubcriptionName("SubcriptionName:4");
-
-            }
-        }
+    }
+}

@@ -42,16 +42,15 @@ public class ResponseTest extends BaseCommandTestSupport {
     public static ResponseTest SINGLETON = new ResponseTest();
 
     public Object createObject() throws Exception {
-    		Response info = new Response();
-    		populateObject(info);
-    		return info;
+        Response info = new Response();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		Response info = (Response) object;
-        info.setCorrelationId(1);
+        super.populateObject(object);
+        Response info = (Response) object;
 
-            }
-        }
+        info.setCorrelationId(1);
+    }
+}

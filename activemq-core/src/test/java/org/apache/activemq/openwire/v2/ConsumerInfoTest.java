@@ -42,15 +42,15 @@ public class ConsumerInfoTest extends BaseCommandTestSupport {
     public static ConsumerInfoTest SINGLETON = new ConsumerInfoTest();
 
     public Object createObject() throws Exception {
-    		ConsumerInfo info = new ConsumerInfo();
-    		populateObject(info);
-    		return info;
+        ConsumerInfo info = new ConsumerInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ConsumerInfo info = (ConsumerInfo) object;
+        super.populateObject(object);
+        ConsumerInfo info = (ConsumerInfo) object;
+
         info.setConsumerId(createConsumerId("ConsumerId:1"));
         info.setBrowser(true);
         info.setDestination(createActiveMQDestination("Destination:2"));
@@ -63,18 +63,16 @@ public class ConsumerInfoTest extends BaseCommandTestSupport {
         info.setExclusive(false);
         info.setRetroactive(true);
         info.setPriority((byte) 1);
-        
-    		    {
-	            BrokerId value[] = new BrokerId[2];
-	            for( int i=0; i < 2; i++ ) {
-	                value[i] = createBrokerId("BrokerPath:5");
-	            }
-	            info.setBrokerPath(value);
+        {
+            BrokerId value[] = new BrokerId[2];
+            for( int i=0; i < 2; i++ ) {
+                value[i] = createBrokerId("BrokerPath:5");
             }
+            info.setBrokerPath(value);
+        }
         info.setAdditionalPredicate(createBooleanExpression("AdditionalPredicate:6"));
         info.setNetworkSubscription(false);
         info.setOptimizedAcknowledge(true);
         info.setNoRangeAcks(false);
-
-            }
-        }
+    }
+}

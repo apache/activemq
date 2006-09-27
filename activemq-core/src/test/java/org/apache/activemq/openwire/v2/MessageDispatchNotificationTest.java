@@ -42,19 +42,18 @@ public class MessageDispatchNotificationTest extends BaseCommandTestSupport {
     public static MessageDispatchNotificationTest SINGLETON = new MessageDispatchNotificationTest();
 
     public Object createObject() throws Exception {
-    		MessageDispatchNotification info = new MessageDispatchNotification();
-    		populateObject(info);
-    		return info;
+        MessageDispatchNotification info = new MessageDispatchNotification();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		MessageDispatchNotification info = (MessageDispatchNotification) object;
+        super.populateObject(object);
+        MessageDispatchNotification info = (MessageDispatchNotification) object;
+
         info.setConsumerId(createConsumerId("ConsumerId:1"));
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setDeliverySequenceId(1);
         info.setMessageId(createMessageId("MessageId:3"));
-
-            }
-        }
+    }
+}

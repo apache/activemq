@@ -42,17 +42,16 @@ public class SessionIdTest extends DataFileGeneratorTestSupport {
     public static SessionIdTest SINGLETON = new SessionIdTest();
 
     public Object createObject() throws Exception {
-    		SessionId info = new SessionId();
-    		populateObject(info);
-    		return info;
+        SessionId info = new SessionId();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		SessionId info = (SessionId) object;
+        super.populateObject(object);
+        SessionId info = (SessionId) object;
+
         info.setConnectionId("ConnectionId:1");
         info.setValue(1);
-
-            }
-        }
+    }
+}

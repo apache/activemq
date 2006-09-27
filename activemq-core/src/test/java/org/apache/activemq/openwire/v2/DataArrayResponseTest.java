@@ -42,23 +42,21 @@ public class DataArrayResponseTest extends ResponseTest {
     public static DataArrayResponseTest SINGLETON = new DataArrayResponseTest();
 
     public Object createObject() throws Exception {
-    		DataArrayResponse info = new DataArrayResponse();
-    		populateObject(info);
-    		return info;
+        DataArrayResponse info = new DataArrayResponse();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		DataArrayResponse info = (DataArrayResponse) object;
-        
-    		    {
-	            DataStructure value[] = new DataStructure[2];
-	            for( int i=0; i < 2; i++ ) {
-	                value[i] = createDataStructure("Data:1");
-	            }
-	            info.setData(value);
-            }
+        super.populateObject(object);
+        DataArrayResponse info = (DataArrayResponse) object;
 
+        {
+            DataStructure value[] = new DataStructure[2];
+            for( int i=0; i < 2; i++ ) {
+                value[i] = createDataStructure("Data:1");
             }
+            info.setData(value);
         }
+    }
+}

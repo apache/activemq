@@ -42,18 +42,17 @@ public class ProducerIdTest extends DataFileGeneratorTestSupport {
     public static ProducerIdTest SINGLETON = new ProducerIdTest();
 
     public Object createObject() throws Exception {
-    		ProducerId info = new ProducerId();
-    		populateObject(info);
-    		return info;
+        ProducerId info = new ProducerId();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ProducerId info = (ProducerId) object;
+        super.populateObject(object);
+        ProducerId info = (ProducerId) object;
+
         info.setConnectionId("ConnectionId:1");
         info.setValue(1);
         info.setSessionId(2);
-
-            }
-        }
+    }
+}

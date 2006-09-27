@@ -42,16 +42,15 @@ public class RemoveInfoTest extends BaseCommandTestSupport {
     public static RemoveInfoTest SINGLETON = new RemoveInfoTest();
 
     public Object createObject() throws Exception {
-    		RemoveInfo info = new RemoveInfo();
-    		populateObject(info);
-    		return info;
+        RemoveInfo info = new RemoveInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		RemoveInfo info = (RemoveInfo) object;
-        info.setObjectId(createDataStructure("ObjectId:1"));
+        super.populateObject(object);
+        RemoveInfo info = (RemoveInfo) object;
 
-            }
-        }
+        info.setObjectId(createDataStructure("ObjectId:1"));
+    }
+}

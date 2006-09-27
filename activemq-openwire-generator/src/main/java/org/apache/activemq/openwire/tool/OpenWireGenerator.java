@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.openwire.tool;
 
-import org.codehaus.gram.GramSupport;
+import org.codehaus.jam.JAnnotation;
 import org.codehaus.jam.JAnnotationValue;
 import org.codehaus.jam.JClass;
 import org.codehaus.jam.JField;
@@ -29,12 +29,14 @@ import org.codehaus.jam.JamService;
 /**
  * @version $Revision$
  */
-public abstract class OpenWireScript extends GramSupport {
+public abstract class OpenWireGenerator {
 
-    private String openwireVersion;
+    protected int openwireVersion;
     protected String filePostFix = ".java";
+    protected JamService jam;
+    
 
-    public boolean isValidProperty(JProperty it) {
+	public boolean isValidProperty(JProperty it) {
         JMethod getter = it.getGetter();
         return getter != null && it.getSetter() != null && getter.isStatic() == false && getter.getAnnotation("openwire:property") != null;
     }
@@ -74,8 +76,7 @@ public abstract class OpenWireScript extends GramSupport {
                 }
             }
             return false;
-        }
-        else {
+        } else {
             String simpleName = j.getSimpleName();
             return simpleName.equals("ActiveMQMessage") || simpleName.equals("WireFormatInfo");
         }
@@ -88,21 +89,18 @@ public abstract class OpenWireScript extends GramSupport {
     }
 
     public JamService getJam() {
-        return (JamService) getBinding().getVariable("jam");
+        return jam;
     }
 
     public JamClassIterator getClasses() {
         return getJam().getClasses();
     }
 
-    public String getOpenwireVersion() {
-        if (openwireVersion == null) {
-            openwireVersion = (String) getProperty("version");
-        }
+    public int getOpenwireVersion() {
         return openwireVersion;
     }
 
-    public void setOpenwireVersion(String openwireVersion) {
+    public void setOpenwireVersion(int openwireVersion) {
         this.openwireVersion = openwireVersion;
     }
 
@@ -128,7 +126,43 @@ public abstract class OpenWireScript extends GramSupport {
         }
     }
 
-    public String getOpenWireOpCode(JClass aClass) {
-        return annotationValue(aClass, "openwire:marshaller", "code", "0");
+    public String getOpenWireOpCode(JClass element) {
+    	if (element != null) {
+			JAnnotation annotation = element.getAnnotation("openwire:marshaller");
+			return stringValue(annotation, "code", "0");
+		}
+		return "0";
     }
+    
+    protected String stringValue(JAnnotation annotation, String name) {
+		return stringValue(annotation, name, null);
+	}
+	
+	protected String stringValue(JAnnotation annotation, String name, String defaultValue) {
+        if (annotation != null) {
+            JAnnotationValue value = annotation.getValue(name);
+            if (value != null) {
+                return value.asString();
+            }
+        }
+        return defaultValue;
+	}
+
+	public void setJam(JamService jam) {
+		this.jam = jam;
+	}
+	
+	public String decapitalize(String text) {
+		if (text == null) {
+			return null;
+		}
+		return text.substring(0, 1).toLowerCase() + text.substring(1);
+	}
+
+	public String capitalize(String text) {
+		if (text == null) {
+			return null;
+		}
+		return text.substring(0, 1).toUpperCase() + text.substring(1);
+	}
 }

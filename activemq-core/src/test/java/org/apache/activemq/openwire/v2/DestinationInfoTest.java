@@ -42,27 +42,25 @@ public class DestinationInfoTest extends BaseCommandTestSupport {
     public static DestinationInfoTest SINGLETON = new DestinationInfoTest();
 
     public Object createObject() throws Exception {
-    		DestinationInfo info = new DestinationInfo();
-    		populateObject(info);
-    		return info;
+        DestinationInfo info = new DestinationInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		DestinationInfo info = (DestinationInfo) object;
+        super.populateObject(object);
+        DestinationInfo info = (DestinationInfo) object;
+
         info.setConnectionId(createConnectionId("ConnectionId:1"));
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setOperationType((byte) 1);
         info.setTimeout(1);
-        
-    		    {
-	            BrokerId value[] = new BrokerId[2];
-	            for( int i=0; i < 2; i++ ) {
-	                value[i] = createBrokerId("BrokerPath:3");
-	            }
-	            info.setBrokerPath(value);
+        {
+            BrokerId value[] = new BrokerId[2];
+            for( int i=0; i < 2; i++ ) {
+                value[i] = createBrokerId("BrokerPath:3");
             }
-
-            }
+            info.setBrokerPath(value);
         }
+    }
+}

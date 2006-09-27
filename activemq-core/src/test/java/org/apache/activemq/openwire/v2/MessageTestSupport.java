@@ -38,10 +38,11 @@ import org.apache.activemq.command.*;
  */
 public abstract class MessageTestSupport extends BaseCommandTestSupport {
 
-    
+
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		Message info = (Message) object;
+        super.populateObject(object);
+        Message info = (Message) object;
+
         info.setProducerId(createProducerId("ProducerId:1"));
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setTransactionId(createTransactionId("TransactionId:3"));
@@ -57,33 +58,27 @@ public abstract class MessageTestSupport extends BaseCommandTestSupport {
         info.setReplyTo(createActiveMQDestination("ReplyTo:9"));
         info.setTimestamp(2);
         info.setType("Type:10");
-        
-    		{
-        		byte data[] = "Content:11".getBytes();
-        		info.setContent(new org.apache.activemq.util.ByteSequence(data,0,data.length));
-    		}
-    		
-        
-    		{
-        		byte data[] = "MarshalledProperties:12".getBytes();
-        		info.setMarshalledProperties(new org.apache.activemq.util.ByteSequence(data,0,data.length));
-    		}
-    		
+        {
+            byte data[] = "Content:11".getBytes();
+            info.setContent(new org.apache.activemq.util.ByteSequence(data,0,data.length));
+}
+        {
+            byte data[] = "MarshalledProperties:12".getBytes();
+            info.setMarshalledProperties(new org.apache.activemq.util.ByteSequence(data,0,data.length));
+}
         info.setDataStructure(createDataStructure("DataStructure:13"));
         info.setTargetConsumerId(createConsumerId("TargetConsumerId:14"));
         info.setCompressed(false);
         info.setRedeliveryCounter(2);
-        
-    		    {
-	            BrokerId value[] = new BrokerId[2];
-	            for( int i=0; i < 2; i++ ) {
-	                value[i] = createBrokerId("BrokerPath:15");
-	            }
-	            info.setBrokerPath(value);
+        {
+            BrokerId value[] = new BrokerId[2];
+            for( int i=0; i < 2; i++ ) {
+                value[i] = createBrokerId("BrokerPath:15");
             }
+            info.setBrokerPath(value);
+        }
         info.setArrival(3);
         info.setUserID("UserID:16");
         info.setRecievedByDFBridge(true);
-
-            }
-        }
+    }
+}

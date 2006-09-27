@@ -42,16 +42,15 @@ public class SessionInfoTest extends BaseCommandTestSupport {
     public static SessionInfoTest SINGLETON = new SessionInfoTest();
 
     public Object createObject() throws Exception {
-    		SessionInfo info = new SessionInfo();
-    		populateObject(info);
-    		return info;
+        SessionInfo info = new SessionInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		SessionInfo info = (SessionInfo) object;
-        info.setSessionId(createSessionId("SessionId:1"));
+        super.populateObject(object);
+        SessionInfo info = (SessionInfo) object;
 
-            }
-        }
+        info.setSessionId(createSessionId("SessionId:1"));
+    }
+}

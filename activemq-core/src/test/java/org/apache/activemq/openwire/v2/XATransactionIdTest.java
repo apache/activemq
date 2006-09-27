@@ -42,18 +42,17 @@ public class XATransactionIdTest extends TransactionIdTestSupport {
     public static XATransactionIdTest SINGLETON = new XATransactionIdTest();
 
     public Object createObject() throws Exception {
-    		XATransactionId info = new XATransactionId();
-    		populateObject(info);
-    		return info;
+        XATransactionId info = new XATransactionId();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		XATransactionId info = (XATransactionId) object;
+        super.populateObject(object);
+        XATransactionId info = (XATransactionId) object;
+
         info.setFormatId(1);
         info.setGlobalTransactionId("GlobalTransactionId:1".getBytes());
         info.setBranchQualifier("BranchQualifier:2".getBytes());
-
-            }
-        }
+    }
+}

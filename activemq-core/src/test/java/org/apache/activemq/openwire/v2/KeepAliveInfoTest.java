@@ -42,15 +42,14 @@ public class KeepAliveInfoTest extends BaseCommandTestSupport {
     public static KeepAliveInfoTest SINGLETON = new KeepAliveInfoTest();
 
     public Object createObject() throws Exception {
-    		KeepAliveInfo info = new KeepAliveInfo();
-    		populateObject(info);
-    		return info;
+        KeepAliveInfo info = new KeepAliveInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		KeepAliveInfo info = (KeepAliveInfo) object;
+        super.populateObject(object);
+        KeepAliveInfo info = (KeepAliveInfo) object;
 
-            }
-        }
+    }
+}

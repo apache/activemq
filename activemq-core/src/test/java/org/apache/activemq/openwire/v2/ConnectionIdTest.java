@@ -42,16 +42,15 @@ public class ConnectionIdTest extends DataFileGeneratorTestSupport {
     public static ConnectionIdTest SINGLETON = new ConnectionIdTest();
 
     public Object createObject() throws Exception {
-    		ConnectionId info = new ConnectionId();
-    		populateObject(info);
-    		return info;
+        ConnectionId info = new ConnectionId();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ConnectionId info = (ConnectionId) object;
-        info.setValue("Value:1");
+        super.populateObject(object);
+        ConnectionId info = (ConnectionId) object;
 
-            }
-        }
+        info.setValue("Value:1");
+    }
+}

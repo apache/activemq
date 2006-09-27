@@ -42,25 +42,23 @@ public class ProducerInfoTest extends BaseCommandTestSupport {
     public static ProducerInfoTest SINGLETON = new ProducerInfoTest();
 
     public Object createObject() throws Exception {
-    		ProducerInfo info = new ProducerInfo();
-    		populateObject(info);
-    		return info;
+        ProducerInfo info = new ProducerInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ProducerInfo info = (ProducerInfo) object;
+        super.populateObject(object);
+        ProducerInfo info = (ProducerInfo) object;
+
         info.setProducerId(createProducerId("ProducerId:1"));
         info.setDestination(createActiveMQDestination("Destination:2"));
-        
-    		    {
-	            BrokerId value[] = new BrokerId[2];
-	            for( int i=0; i < 2; i++ ) {
-	                value[i] = createBrokerId("BrokerPath:3");
-	            }
-	            info.setBrokerPath(value);
+        {
+            BrokerId value[] = new BrokerId[2];
+            for( int i=0; i < 2; i++ ) {
+                value[i] = createBrokerId("BrokerPath:3");
             }
-
-            }
+            info.setBrokerPath(value);
         }
+    }
+}

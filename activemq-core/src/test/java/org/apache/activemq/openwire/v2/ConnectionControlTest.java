@@ -42,20 +42,19 @@ public class ConnectionControlTest extends BaseCommandTestSupport {
     public static ConnectionControlTest SINGLETON = new ConnectionControlTest();
 
     public Object createObject() throws Exception {
-    		ConnectionControl info = new ConnectionControl();
-    		populateObject(info);
-    		return info;
+        ConnectionControl info = new ConnectionControl();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ConnectionControl info = (ConnectionControl) object;
+        super.populateObject(object);
+        ConnectionControl info = (ConnectionControl) object;
+
         info.setClose(true);
         info.setExit(false);
         info.setFaultTolerant(true);
         info.setResume(false);
         info.setSuspend(true);
-
-            }
-        }
+    }
+}

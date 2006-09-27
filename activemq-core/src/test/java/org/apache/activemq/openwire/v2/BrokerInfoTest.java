@@ -42,29 +42,27 @@ public class BrokerInfoTest extends BaseCommandTestSupport {
     public static BrokerInfoTest SINGLETON = new BrokerInfoTest();
 
     public Object createObject() throws Exception {
-    		BrokerInfo info = new BrokerInfo();
-    		populateObject(info);
-    		return info;
+        BrokerInfo info = new BrokerInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		BrokerInfo info = (BrokerInfo) object;
+        super.populateObject(object);
+        BrokerInfo info = (BrokerInfo) object;
+
         info.setBrokerId(createBrokerId("BrokerId:1"));
         info.setBrokerURL("BrokerURL:2");
-        
-    		    {
-	            BrokerInfo value[] = new BrokerInfo[0];
-	            for( int i=0; i < 0; i++ ) {
-	                value[i] = createBrokerInfo("PeerBrokerInfos:3");
-	            }
-	            info.setPeerBrokerInfos(value);
+        {
+            BrokerInfo value[] = new BrokerInfo[0];
+            for( int i=0; i < 0; i++ ) {
+                value[i] = createBrokerInfo("PeerBrokerInfos:3");
             }
+            info.setPeerBrokerInfos(value);
+        }
         info.setBrokerName("BrokerName:4");
         info.setSlaveBroker(true);
         info.setMasterBroker(false);
         info.setFaultTolerantConfiguration(true);
-
-            }
-        }
+    }
+}

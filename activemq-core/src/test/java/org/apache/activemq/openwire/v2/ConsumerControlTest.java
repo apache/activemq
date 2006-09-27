@@ -42,18 +42,17 @@ public class ConsumerControlTest extends BaseCommandTestSupport {
     public static ConsumerControlTest SINGLETON = new ConsumerControlTest();
 
     public Object createObject() throws Exception {
-    		ConsumerControl info = new ConsumerControl();
-    		populateObject(info);
-    		return info;
+        ConsumerControl info = new ConsumerControl();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ConsumerControl info = (ConsumerControl) object;
+        super.populateObject(object);
+        ConsumerControl info = (ConsumerControl) object;
+
         info.setClose(true);
         info.setConsumerId(createConsumerId("ConsumerId:1"));
         info.setPrefetch(1);
-
-            }
-        }
+    }
+}

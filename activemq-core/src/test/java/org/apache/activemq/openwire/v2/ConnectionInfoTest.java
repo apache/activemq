@@ -42,29 +42,27 @@ public class ConnectionInfoTest extends BaseCommandTestSupport {
     public static ConnectionInfoTest SINGLETON = new ConnectionInfoTest();
 
     public Object createObject() throws Exception {
-    		ConnectionInfo info = new ConnectionInfo();
-    		populateObject(info);
-    		return info;
+        ConnectionInfo info = new ConnectionInfo();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ConnectionInfo info = (ConnectionInfo) object;
+        super.populateObject(object);
+        ConnectionInfo info = (ConnectionInfo) object;
+
         info.setConnectionId(createConnectionId("ConnectionId:1"));
         info.setClientId("ClientId:2");
         info.setPassword("Password:3");
         info.setUserName("UserName:4");
-        
-    		    {
-	            BrokerId value[] = new BrokerId[2];
-	            for( int i=0; i < 2; i++ ) {
-	                value[i] = createBrokerId("BrokerPath:5");
-	            }
-	            info.setBrokerPath(value);
+        {
+            BrokerId value[] = new BrokerId[2];
+            for( int i=0; i < 2; i++ ) {
+                value[i] = createBrokerId("BrokerPath:5");
             }
+            info.setBrokerPath(value);
+        }
         info.setBrokerMasterConnector(true);
         info.setManageable(false);
-
-            }
-        }
+    }
+}

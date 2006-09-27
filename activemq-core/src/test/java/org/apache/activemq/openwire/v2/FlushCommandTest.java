@@ -42,15 +42,14 @@ public class FlushCommandTest extends BaseCommandTestSupport {
     public static FlushCommandTest SINGLETON = new FlushCommandTest();
 
     public Object createObject() throws Exception {
-    		FlushCommand info = new FlushCommand();
-    		populateObject(info);
-    		return info;
+        FlushCommand info = new FlushCommand();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		FlushCommand info = (FlushCommand) object;
+        super.populateObject(object);
+        FlushCommand info = (FlushCommand) object;
 
-            }
-        }
+    }
+}

@@ -42,16 +42,15 @@ public class DataResponseTest extends ResponseTest {
     public static DataResponseTest SINGLETON = new DataResponseTest();
 
     public Object createObject() throws Exception {
-    		DataResponse info = new DataResponse();
-    		populateObject(info);
-    		return info;
+        DataResponse info = new DataResponse();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		DataResponse info = (DataResponse) object;
-        info.setData(createDataStructure("Data:1"));
+        super.populateObject(object);
+        DataResponse info = (DataResponse) object;
 
-            }
-        }
+        info.setData(createDataStructure("Data:1"));
+    }
+}
