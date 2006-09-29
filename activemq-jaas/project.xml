@@ -102,13 +102,6 @@
         </dependency>
 
         <dependency>
-            <groupId>jdbm</groupId>
-            <artifactId>jdbm</artifactId>
-            <version>${jdbm_version}</version>
-            <url>http://jdbm.sourceforge.net</url>
-        </dependency>
-
-        <dependency>
             <groupId>regexp</groupId>
             <artifactId>regexp</artifactId>
             <version>${regexp_version}</version>

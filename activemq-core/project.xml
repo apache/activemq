@@ -306,13 +306,7 @@
             <version>${commons_collections_version}</version>
         </dependency>
 
-        <!-- JAAS Login Modules -->
-        <dependency>
-            <groupId>${pom.groupId}</groupId>
-            <artifactId>activemq-jaas</artifactId>
-            <version>${pom.currentVersion}</version>
-        </dependency>
-                
+
     </dependencies>
 
     <build>
