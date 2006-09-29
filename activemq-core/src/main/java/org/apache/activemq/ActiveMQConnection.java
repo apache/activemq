@@ -165,9 +165,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * Construct an <code>ActiveMQConnection</code>
      * @param transport 
      * @param factoryStats
-     * @param userName
-     * @param password
-     * @throws Exception 
+     * @throws Exception
      */
     protected ActiveMQConnection(final Transport transport, IdGenerator clientIdGenerator, JMSStatsImpl factoryStats)
             throws Exception {
