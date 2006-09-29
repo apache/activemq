@@ -535,32 +535,36 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     synchronized public void dispose() throws JMSException {
         if (!closed) {
 
-            executor.stop();
-            
-            for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
-                consumer.dispose();
-            }
-            consumers.clear();
-
-            for (Iterator iter = producers.iterator(); iter.hasNext();) {
-                ActiveMQMessageProducer producer = (ActiveMQMessageProducer) iter.next();
-                producer.dispose();
-            }
-            producers.clear();
-            
             try {
-                if (getTransactionContext().isInLocalTransaction()) {
-                    rollback();
+                executor.stop();
+
+                for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+                    ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
+                    consumer.dispose();
                 }
-            } catch (JMSException e) {
+                consumers.clear();
+
+                for (Iterator iter = producers.iterator(); iter.hasNext();) {
+                    ActiveMQMessageProducer producer = (ActiveMQMessageProducer) iter.next();
+                    producer.dispose();
+                }
+                producers.clear();
+
+                try {
+                    if (getTransactionContext().isInLocalTransaction()) {
+                        rollback();
+                    }
+                }
+                catch (JMSException e) {
+                }
+
+
             }
-            
-            
-            connection.removeSession(this);
-            this.transactionContext=null;
-            closed = true;
-            
+            finally {
+                connection.removeSession(this);
+                this.transactionContext = null;
+                closed = true;
+            }
         }
     }
 
