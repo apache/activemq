@@ -1368,9 +1368,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * <P>
      * Messages that have been received but not acknowledged may be redelivered.
      * 
-     * @param caller -
-     *            the message calling acknowledge on the session
-     * 
      * @throws JMSException
      *             if the JMS provider fails to acknowledge the messages due to
      *             some internal error.
@@ -1388,8 +1385,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
    
     /**
      * Add a message consumer.
-     * @param id 
-     * 
+     *
      * @param consumer -
      *            message consumer.
      * @throws JMSException
@@ -1492,8 +1488,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *            message priority.
      * @param timeToLive -
      *            message expiration.
-     * @param reuseMessageId -
-     *            true if the message id will be reused.
      * @throws JMSException
      */
     protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode,
