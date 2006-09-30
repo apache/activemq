@@ -12,7 +12,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
-public class JmsSendReceiveWithMessageExpiration extends TestSupport {
+public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
 	
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
            .getLog(JmsQueueSendReceiveWithMessageExpiration.class);
