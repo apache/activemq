@@ -15,7 +15,7 @@ import javax.jms.Topic;
 public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
 	
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-           .getLog(JmsQueueSendReceiveWithMessageExpiration.class);
+           .getLog(JmsSendReceiveWithMessageExpirationTest.class);
 	
 	protected int messageCount = 100;
     protected String[] data;
