@@ -185,6 +185,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
      */
     public void printException(Exception e) {
         out.println("ERROR: " + e);
+        e.printStackTrace(out);
     }
 
     /**

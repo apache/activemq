@@ -67,7 +67,7 @@ public class StartCommand extends AbstractCommand {
             // Prevent the main thread from exiting unless it is terminated elsewhere
             waitForShutdown();
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute start task. Reason: " + e));
+            GlobalWriter.printException(new RuntimeException("Failed to execute start task. Reason: " + e, e));
             throw new Exception(e);
         }
     }
