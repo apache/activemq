@@ -22,11 +22,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -1200,6 +1196,8 @@ public class BrokerService implements Service, Serializable {
                 mbeanServer.registerMBean(adminView, objectName);
                 registeredMBeanNames.add(objectName);
             }
+            //register all destination in persistence store including inactive destinations as mbeans 
+            this.startDestinationsInPersistenceStore(broker);
         }
         
 
@@ -1492,8 +1490,29 @@ public class BrokerService implements Service, Serializable {
     }
 
    
-    
+    /**
+     * Starts all destiantions in persistence store. This includes all inactive destinations
+     */
+    protected void startDestinationsInPersistenceStore(Broker broker) throws Exception {
+        Set destinations = destinationFactory.getDestinations();
+        if (destinations != null) {
+            Iterator iter = destinations.iterator();
 
+            ConnectionContext adminConnectionContext = broker.getAdminConnectionContext();
+            if (adminConnectionContext == null) {
+                ConnectionContext context = new ConnectionContext();
+                context.setBroker(broker);
+                adminConnectionContext = context;
+                broker.setAdminConnectionContext(adminConnectionContext);
+            }
+
+
+            while (iter.hasNext()) {
+                ActiveMQDestination destination = (ActiveMQDestination) iter.next();
+                broker.addDestination(adminConnectionContext, destination);
+            }
+        }
+    }
     
 
     
