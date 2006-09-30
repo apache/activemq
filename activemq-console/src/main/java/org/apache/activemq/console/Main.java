@@ -201,22 +201,25 @@ public class Main {
 
             if(activeMQHome==null){
                 // guess from the location of the jar
-                URL url = Main.class.getClassLoader().getResource("org/apache/activemq/broker/Main.class");
+                URL url = Main.class.getClassLoader().getResource("org/apache/activemq/console/Main.class");
                 if (url != null) {
                     try {
                         JarURLConnection jarConnection = (JarURLConnection) url.openConnection();
                         url = jarConnection.getJarFileURL();
                         URI baseURI = new URI(url.toString()).resolve("..");
                         activeMQHome = new File(baseURI).getCanonicalFile();
+                        System.setProperty("activemq.home",activeMQHome.getAbsolutePath());
                     } catch (Exception ignored) {
                     }
                 }
             }
 
             if(activeMQHome==null){
-                activeMQHome = new File(".");
+                activeMQHome = new File("../.");
+                System.setProperty("activemq.home",activeMQHome.getAbsolutePath());
             }
         }
+        
         return activeMQHome;
     }
 }
