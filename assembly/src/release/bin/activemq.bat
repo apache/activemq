@@ -68,7 +68,6 @@ goto end
 
 :checkJava
 set _JAVACMD=%JAVACMD%
-set LOCALCLASSPATH=%CLASSPATH%
 
 set JAVA_EXT_DIRS=%JAVA_HOME%\lib\ext;%ACTIVEMQ_HOME%;%ACTIVEMQ_HOME%\lib;%ACTIVEMQ_HOME%\lib\optional
 
@@ -96,16 +95,13 @@ REM SET ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
 REM Uncomment to enable remote debugging
 REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
 
-set LOCALCLASSPATH=%ACTIVEMQ_HOME%\conf;%LOCALCLASSPATH%
-
 set ACTIVEMQ_TASK="start"
-"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -classpath %ACTIVEMQ_CLASSPATH% -Dactivemq.home="%ACTIVEMQ_HOME%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
+"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -classpath "%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
 
 goto end
 
 
 :end
-set LOCALCLASSPATH=
 set _JAVACMD=
 set ACTIVEMQ_CMD_LINE_ARGS=
 
