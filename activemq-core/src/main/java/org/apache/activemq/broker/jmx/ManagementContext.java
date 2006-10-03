@@ -296,7 +296,8 @@ public class ManagementContext implements Service{
             if (result == null && createMBeanServer) {
                 result = createMBeanServer();
             }
-            else {
+
+            if (result != null && createConnector) {
                 createConnector(result);
             }
         }
