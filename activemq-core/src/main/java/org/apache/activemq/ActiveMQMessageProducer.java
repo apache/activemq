@@ -458,6 +458,9 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
         } else {
             throw new UnsupportedOperationException("This producer can only send messages to: " + this.info.getDestination().getPhysicalName());
         }
+        if (dest == null) {
+            throw new JMSException("No destination specified");
+        }
         
         this.session.send(this, dest, message, deliveryMode, priority, timeToLive);
         stats.onMessage();            
