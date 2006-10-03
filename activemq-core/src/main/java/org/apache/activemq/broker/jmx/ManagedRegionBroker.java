@@ -168,33 +168,42 @@ public class ManagedRegionBroker extends RegionBroker {
         }
     }
 
-    public ObjectName registerSubscription(ConnectionContext context,Subscription sub){
-        Hashtable map=brokerObjectName.getKeyPropertyList();
-        String name="";
-        SubscriptionKey key=new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
-        if(sub.getConsumerInfo().isDurable()){
-            name=key.toString();
-        }else{
-            name=sub.getConsumerInfo().getConsumerId().toString();
+    public ObjectName registerSubscription(ConnectionContext context, Subscription sub) {
+        Hashtable map = brokerObjectName.getKeyPropertyList();
+        String persistentMode = "";
+        String destinationType = "";
+        String destinationName = "";
+        String clientID = "";
+        SubscriptionKey key = new SubscriptionKey(context.getClientId(), sub.getConsumerInfo().getSubcriptionName());
+        if (sub.getConsumerInfo().isDurable()) {
+            persistentMode = "Durable";
+
+        } else {
+            persistentMode = "Non-Durable";
         }
-        try{
-            ObjectName objectName=new ObjectName(brokerObjectName.getDomain()+":"+"BrokerName="+map.get("BrokerName")
-                            +","+"Type=Subscription,"+"active=true,"+"name="+JMXSupport.encodeObjectNamePart(name)+"");
+
+        destinationType = sub.getConsumerInfo().getDestination().getDestinationTypeAsString();
+        destinationName = sub.getConsumerInfo().getDestination().getPhysicalName();
+        clientID = context.getClientId();
+
+        try {
+            ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName")
+                    + "," + "Type=Subscription, persistentMode=" + persistentMode + ", destinationType=" + destinationType + " ,destinationName=" + JMXSupport.encodeObjectNamePart(destinationName) + " ,clientID=" + JMXSupport.encodeObjectNamePart(clientID) + "");
             SubscriptionView view;
-            if(sub.getConsumerInfo().isDurable()){
-                view=new DurableSubscriptionView(this,context.getClientId(),sub);
-            }else{
-                if(sub instanceof TopicSubscription){
-                    view=new TopicSubscriptionView(context.getClientId(),(TopicSubscription) sub);
-                }else{
-                    view=new SubscriptionView(context.getClientId(),sub);
+            if (sub.getConsumerInfo().isDurable()) {
+                view = new DurableSubscriptionView(this, context.getClientId(), sub);
+            } else {
+                if (sub instanceof TopicSubscription) {
+                    view = new TopicSubscriptionView(context.getClientId(), (TopicSubscription) sub);
+                } else {
+                    view = new SubscriptionView(context.getClientId(), sub);
                 }
             }
-            registerSubscription(objectName,sub.getConsumerInfo(),key,view);
-            subscriptionMap.put(sub,objectName);
+            registerSubscription(objectName, sub.getConsumerInfo(), key, view);
+            subscriptionMap.put(sub, objectName);
             return objectName;
-        }catch(Exception e){
-            log.error("Failed to register subscription "+sub,e);
+        } catch (Exception e) {
+            log.error("Failed to register subscription " + sub, e);
             return null;
         }
     }
