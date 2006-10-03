@@ -94,6 +94,8 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                 DataOutputStream dataOut = new DataOutputStream(os);
                 ObjectOutputStream objOut = new ObjectOutputStream(dataOut);
                 objOut.writeObject(object);
+                objOut.flush();
+                objOut.reset();
                 objOut.close();
                 setContent(bytesOut.toByteSequence());
             } catch (IOException ioe) {

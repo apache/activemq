@@ -50,8 +50,8 @@ public class ObjectMarshaller implements Marshaller{
         
         ObjectOutputStream objectOut=new ObjectOutputStream((OutputStream) dataOut);
         objectOut.writeObject(object);
-        objectOut.reset();
         objectOut.flush();
+        objectOut.reset();
     }
 
     /**
