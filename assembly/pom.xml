@@ -274,7 +274,7 @@
       <plugin>
         <groupId>org.apache.activemq</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>${pom.version}</version>
+        <version>4.1-incubator</version>
         <executions>
           <execution>
             <phase>compile</phase>

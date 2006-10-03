@@ -310,7 +310,7 @@
       <plugin>
         <groupId>org.apache.activemq</groupId>
         <artifactId>maven-gram-plugin</artifactId>
-        <version>${pom.version}</version>
+        <version>4.1-incubator</version>
         <configuration>
           <scripts>
             :GenerateJavaMarshalling.groovy: GenerateJavaTests.groovy: GenerateCSharpMarshalling.groovy:
