@@ -145,17 +145,7 @@ public class MarshallingSupport {
             out.writeInt(((byte[])value).length);
             out.write(((byte[])value));
         } else if( value.getClass() == String.class ) {
-            String s = (String)value;
-            
-            // If it's too big, out.writeUTF may not able able to write it out.
-            if( s.length() < Short.MAX_VALUE/4 ) {
-                out.writeByte(STRING_TYPE);
-                out.writeUTF((String)value);
-            } else {
-                out.writeByte(BIG_STRING_TYPE);
-                writeUTF8(out, s);
-            }
-            
+            marshalString(out, (String)value);
         } else if( value instanceof Map) {
             out.writeByte(MAP_TYPE);
             marshalPrimitiveMap((Map) value, out);
@@ -214,6 +204,18 @@ public class MarshallingSupport {
         }
         return value;
     }
+
+    public static void marshalString(DataOutputStream out, String s) throws IOException {
+        // If it's too big, out.writeUTF may not able able to write it out.
+        if( s.length() < Short.MAX_VALUE/4 ) {
+            out.writeByte(STRING_TYPE);
+            out.writeUTF(s);
+        } else {
+            out.writeByte(BIG_STRING_TYPE);
+            writeUTF8(out, s);
+        }
+    }
+
 
     static public void writeUTF8(DataOutput dataOut, String text) throws IOException {
         if (text != null) {
