@@ -115,35 +115,25 @@ public class MarshallingSupport {
 
     static public void marshalPrimitive(DataOutputStream out, Object value) throws IOException {
         if( value == null ) {
-            out.writeByte(NULL);
+            marshalNull(out);
         } else if( value.getClass() == Boolean.class ) {
-            out.writeByte(BOOLEAN_TYPE);
-            out.writeBoolean(((Boolean)value).booleanValue());
+            marshalBoolean(out, ((Boolean)value).booleanValue());
         } else if( value.getClass() == Byte.class ) {
-            out.writeByte(BYTE_TYPE);
-            out.writeByte(((Byte)value).byteValue());
+            marshalByte(out, ((Byte)value).byteValue());
         } else if( value.getClass() == Character.class ) {
-            out.writeByte(CHAR_TYPE);
-            out.writeChar(((Character)value).charValue());
+            marshalChar(out, ((Character)value).charValue());
         } else if( value.getClass() == Short.class ) {
-            out.writeByte(SHORT_TYPE);
-            out.writeShort(((Short)value).shortValue());
+            marshalShort(out, ((Short)value).shortValue());
         } else if( value.getClass() == Integer.class ) {
-            out.writeByte(INTEGER_TYPE);
-            out.writeInt(((Integer)value).intValue());
+            marshalInt(out, ((Integer)value).intValue());
         } else if( value.getClass() == Long.class ) {
-            out.writeByte(LONG_TYPE);
-            out.writeLong(((Long)value).longValue());
+            marshalLong(out, ((Long)value).longValue());
         } else if( value.getClass() == Float.class ) {
-            out.writeByte(FLOAT_TYPE);
-            out.writeFloat(((Float)value).floatValue());
+            marshalFloat(out, ((Float)value).floatValue());
         } else if( value.getClass() == Double.class ) {
-            out.writeByte(DOUBLE_TYPE);
-            out.writeDouble(((Double)value).doubleValue());
+            marshalDouble(out, ((Double)value).doubleValue());
         } else if( value.getClass() == byte[].class ) {
-            out.writeByte(BYTE_ARRAY_TYPE);
-            out.writeInt(((byte[])value).length);
-            out.write(((byte[])value));
+            marshalByteArray(out, ((byte[])value));
         } else if( value.getClass() == String.class ) {
             marshalString(out, (String)value);
         } else if( value instanceof Map) {
@@ -205,6 +195,61 @@ public class MarshallingSupport {
         return value;
     }
 
+    public static void marshalNull(DataOutputStream out) throws IOException {
+        out.writeByte(NULL);
+    }
+
+    public static void marshalBoolean(DataOutputStream out, boolean value) throws IOException {
+        out.writeByte(BOOLEAN_TYPE);
+        out.writeBoolean(value);
+    }
+
+    public static void marshalByte(DataOutputStream out, byte value) throws IOException {
+        out.writeByte(BYTE_TYPE);
+        out.writeByte(value);
+    }
+
+    public static void marshalChar(DataOutputStream out, char value) throws IOException {
+        out.writeByte(CHAR_TYPE);
+        out.writeChar(value);
+    }
+
+    public static void marshalShort(DataOutputStream out, short value) throws IOException {
+        out.writeByte(SHORT_TYPE);
+        out.writeShort(value);
+    }
+
+    public static void marshalInt(DataOutputStream out, int value) throws IOException {
+        out.writeByte(INTEGER_TYPE);
+        out.writeInt(value);
+    }
+
+    public static void marshalLong(DataOutputStream out, long value) throws IOException {
+        out.writeByte(LONG_TYPE);
+        out.writeLong(value);
+    }
+
+    public static void marshalFloat(DataOutputStream out, float value) throws IOException {
+        out.writeByte(FLOAT_TYPE);
+        out.writeFloat(value);
+    }
+
+    public static void marshalDouble(DataOutputStream out, double value) throws IOException {
+        out.writeByte(DOUBLE_TYPE);
+        out.writeDouble(value);
+    }
+
+    public static void marshalByteArray(DataOutputStream out, byte[] value) throws IOException {
+        marshalByteArray(out, value, 0, value.length);
+    }
+
+    public static void marshalByteArray(DataOutputStream out, byte[] value, int offset, int length) throws IOException {
+        out.writeByte(BYTE_ARRAY_TYPE);
+        out.writeInt(length);
+        out.write(value, offset, length);
+    }
+
+
     public static void marshalString(DataOutputStream out, String s) throws IOException {
         // If it's too big, out.writeUTF may not able able to write it out.
         if( s.length() < Short.MAX_VALUE/4 ) {
@@ -215,7 +260,6 @@ public class MarshallingSupport {
             writeUTF8(out, s);
         }
     }
-
 
     static public void writeUTF8(DataOutput dataOut, String text) throws IOException {
         if (text != null) {
