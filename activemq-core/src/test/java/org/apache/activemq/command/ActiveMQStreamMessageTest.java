@@ -601,6 +601,26 @@ public class ActiveMQStreamMessageTest extends TestCase {
         }
     }
 
+    public void testReadBigString() {
+        ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
+        try {
+            // Test with a 1Meg String
+            StringBuffer bigSB = new StringBuffer(1024*1024);
+            for( int i=0; i < 1024*1024; i++ ) {
+                bigSB.append((char)'a'+i%26);
+            }
+            String bigString = bigSB.toString();
+
+            msg.writeString(bigString);
+            msg.reset();
+            assertEquals(bigString, msg.readString());
+            
+        } catch (JMSException jmsEx) {
+            jmsEx.printStackTrace();
+            assertTrue(false);
+        }
+    }
+
     public void testReadBytes() {
         ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
         try {
