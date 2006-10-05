@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
@@ -41,6 +42,7 @@ public final class DataManager{
     
     private static final Log log=LogFactory.getLog(DataManager.class);
     public static long MAX_FILE_LENGTH=1024*1024*32;
+    private static final String NAME_PREFIX="data-";
     private final File dir;
     private final String name;
     private StoreDataReader reader;
@@ -62,7 +64,7 @@ public final class DataManager{
         this.reader=new StoreDataReader(this);
         this.writer=new StoreDataWriter(this);
         
-        dataFilePrefix = "data-"+name+"-";
+        dataFilePrefix = NAME_PREFIX+name+"-";
         // build up list of current dataFiles
         File[] files=dir.listFiles(new FilenameFilter(){
             public boolean accept(File dir,String n){
@@ -109,25 +111,30 @@ public final class DataManager{
         return currentWriteFile;
     }
 
-    RandomAccessFile getDataFile(DataItem item) throws IOException{
+    RandomAccessFile getDataFile(StoreLocation item) throws IOException{
         Integer key=new Integer(item.getFile());
         DataFile dataFile=(DataFile) fileMap.get(key);
         if(dataFile!=null){
             return dataFile.getRandomAccessFile();
         }
-        throw new IOException("Could not locate data file "+name+item.getFile());
+        log.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
+        throw new IOException("Could not locate data file "+NAME_PREFIX+name+"-"+item.getFile());
     }
     
-    public synchronized Object readItem(Marshaller marshaller, DataItem item) throws IOException{
+    public synchronized Object readItem(Marshaller marshaller, StoreLocation item) throws IOException{
         return reader.readItem(marshaller,item);
     }
 
-    public synchronized DataItem storeDataItem(Marshaller marshaller, Object payload) throws IOException{
+    public synchronized StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException{
         return writer.storeItem(marshaller,payload, DATA_ITEM_TYPE);
     }
     
-    public synchronized DataItem storeRedoItem(Object payload) throws IOException{
+    public synchronized StoreLocation storeRedoItem(Object payload) throws IOException{
         return writer.storeItem(redoMarshaller, payload, REDO_ITEM_TYPE);
+    }
+    
+    public synchronized void updateItem(StoreLocation location,Marshaller marshaller, Object payload) throws IOException {
+        writer.updateItem(location,marshaller,payload,DATA_ITEM_TYPE);
     }
 
     public synchronized void recoverRedoItems(RedoListener listener) throws IOException{
@@ -188,6 +195,7 @@ public final class DataManager{
         }
     }
 
+        
     public synchronized boolean delete() throws IOException{
         boolean result=true;
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
@@ -197,6 +205,7 @@ public final class DataManager{
         fileMap.clear();
         return result;
     }
+    
 
     public synchronized void addInterestInFile(int file) throws IOException{
         if(file>=0){
@@ -275,5 +284,9 @@ public final class DataManager{
      */
     public void setMaxFileLength(long maxFileLength){
         this.maxFileLength=maxFileLength;
+    }
+    
+    public String toString(){
+        return "DataManager:("+NAME_PREFIX+name+")";
     }
 }

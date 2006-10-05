@@ -1,36 +1,42 @@
 /**
- *
+ * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
+
 package org.apache.activemq.kaha.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
+import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.container.BaseContainerImpl;
 import org.apache.activemq.kaha.impl.container.ContainerId;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
 import org.apache.activemq.kaha.impl.container.MapContainerImpl;
-import org.apache.activemq.kaha.impl.data.DataItem;
 import org.apache.activemq.kaha.impl.data.DataManager;
 import org.apache.activemq.kaha.impl.data.RedoListener;
 import org.apache.activemq.kaha.impl.index.IndexItem;
@@ -39,35 +45,39 @@ import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+
 /**
- * Optimized Store writer
+ * Store Implementation
  * 
  * @version $Revision: 1.1.1.1 $
  */
 public class KahaStore implements Store{
-    
-    private static final String DEFAULT_CONTAINER_NAME = "kaha";
+
+    private static final String LOCK_FILE_NAME="store.lock";
+    private static final String DEFAULT_CONTAINER_NAME="kaha";
+    private final static String PROPERTY_PREFIX="org.apache.activemq.kaha.Store";
+    private final static boolean brokenFileLock="true".equals(System.getProperty(PROPERTY_PREFIX+".broken","false"));
+    private final static boolean disableLocking="true".equals(System.getProperty(PROPERTY_PREFIX+"DisableLocking",
+            "false"));
+    private static Set lockSet;
     private static final Log log=LogFactory.getLog(KahaStore.class);
     private File directory;
-
-    protected IndexRootContainer mapsContainer;
-    public IndexRootContainer listsContainer;
+    private IndexRootContainer mapsContainer;
+    private IndexRootContainer listsContainer;
     private Map lists=new ConcurrentHashMap();
     private Map maps=new ConcurrentHashMap();
-    
-    private Map dataManagers = new ConcurrentHashMap();
-    private Map indexManagers = new ConcurrentHashMap();
-    protected IndexManager rootIndexManager; //contains all the root indexes
-    
+    private Map dataManagers=new ConcurrentHashMap();
+    private Map indexManagers=new ConcurrentHashMap();
+    private IndexManager rootIndexManager; // contains all the root indexes
     private boolean closed=false;
-    private String name;
     private String mode;
     private boolean initialized;
     private boolean logIndexChanges=false;
-    private long maxDataFileLength = DataManager.MAX_FILE_LENGTH;
+    private long maxDataFileLength=DataManager.MAX_FILE_LENGTH;
+    private FileLock lock;
+    private String indexType=IndexTypes.DISK_INDEX;
 
     public KahaStore(String name,String mode) throws IOException{
-        this.name=name;
         this.mode=mode;
         directory=new File(name);
         directory.mkdirs();
@@ -77,33 +87,29 @@ public class KahaStore implements Store{
         if(!closed){
             closed=true;
             if(initialized){
-                
-                for (Iterator iter = indexManagers.values().iterator(); iter.hasNext();) {
-                    IndexManager im = (IndexManager) iter.next();
+                unlock();
+                for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
+                    IndexManager im=(IndexManager)iter.next();
                     im.close();
                     iter.remove();
                 }
-
-                for (Iterator iter = dataManagers.values().iterator(); iter.hasNext();) {
-                    DataManager dm = (DataManager) iter.next();
+                for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
+                    DataManager dm=(DataManager)iter.next();
                     dm.close();
                     iter.remove();
                 }
-                
             }
         }
     }
 
     public synchronized void force() throws IOException{
         if(initialized){
-
-            for (Iterator iter = indexManagers.values().iterator(); iter.hasNext();) {
-                IndexManager im = (IndexManager) iter.next();
+            for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
+                IndexManager im=(IndexManager)iter.next();
                 im.force();
             }
-
-            for (Iterator iter = dataManagers.values().iterator(); iter.hasNext();) {
-                DataManager dm = (DataManager) iter.next();
+            for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
+                DataManager dm=(DataManager)iter.next();
                 dm.force();
             }
         }
@@ -112,34 +118,30 @@ public class KahaStore implements Store{
     public synchronized void clear() throws IOException{
         initialize();
         for(Iterator i=maps.values().iterator();i.hasNext();){
-            BaseContainerImpl container=(BaseContainerImpl) i.next();
+            BaseContainerImpl container=(BaseContainerImpl)i.next();
             container.clear();
         }
         for(Iterator i=lists.values().iterator();i.hasNext();){
-            BaseContainerImpl container=(BaseContainerImpl) i.next();
+            BaseContainerImpl container=(BaseContainerImpl)i.next();
             container.clear();
         }
-        lists.clear();
-        maps.clear();
     }
 
     public synchronized boolean delete() throws IOException{
         boolean result=true;
-        if (initialized){
+        if(initialized){
             clear();
-            
             for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
-                IndexManager im=(IndexManager) iter.next();
+                IndexManager im=(IndexManager)iter.next();
                 result&=im.delete();
                 iter.remove();
             }
             for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
-                DataManager dm=(DataManager) iter.next();
+                DataManager dm=(DataManager)iter.next();
                 result&=dm.delete();
                 iter.remove();
             }
         }
-       
         if(directory!=null&&directory.isDirectory()){
             File[] files=directory.listFiles();
             if(files!=null){
@@ -150,179 +152,200 @@ public class KahaStore implements Store{
                     }
                 }
             }
+            log.info("Kaha Store deleted data directory "+directory);
         }
         initialized=false;
         return result;
     }
 
     public boolean doesMapContainerExist(Object id) throws IOException{
+        return doesMapContainerExist(id,DEFAULT_CONTAINER_NAME);
+    }
+
+    public boolean doesMapContainerExist(Object id,String containerName) throws IOException{
         initialize();
-        return maps.containsKey(id);
+        ContainerId containerId=new ContainerId();
+        containerId.setKey(id);
+        containerId.setDataContainerName(containerName);
+        return maps.containsKey(containerId)||mapsContainer.doesRootExist(containerId);
     }
 
     public MapContainer getMapContainer(Object id) throws IOException{
-        return getMapContainer(id, DEFAULT_CONTAINER_NAME);
+        return getMapContainer(id,DEFAULT_CONTAINER_NAME);
     }
-    
-    public synchronized MapContainer getMapContainer(Object id, String dataContainerName) throws IOException{
-        initialize();
-       
-        MapContainerImpl result=(MapContainerImpl) maps.get(id);
-        if(result==null){
-            
-            DataManager dm = getDataManager(dataContainerName);
-            IndexManager im = getIndexManager(dm, dataContainerName);
-            
-            ContainerId containerId = new ContainerId();
-            containerId.setKey(id);
-            containerId.setDataContainerName(dataContainerName);
 
-            IndexItem root=mapsContainer.getRoot(containerId);
-            if( root == null ) {
-                root=mapsContainer.addRoot(containerId);
+    public MapContainer getMapContainer(Object id,String containerName) throws IOException{
+        return getMapContainer(id,containerName,indexType);
+    }
+
+    public synchronized MapContainer getMapContainer(Object id,String containerName,String indexType)
+            throws IOException{
+        initialize();
+        ContainerId containerId=new ContainerId();
+        containerId.setKey(id);
+        containerId.setDataContainerName(containerName);
+        MapContainerImpl result=(MapContainerImpl)maps.get(containerId);
+        if(result==null){
+            DataManager dm=getDataManager(containerName);
+            IndexManager im=getIndexManager(dm,containerName);
+            IndexItem root=mapsContainer.getRoot(im,containerId);
+            if(root==null){
+                root=mapsContainer.addRoot(im,containerId);
             }
-            result=new MapContainerImpl(containerId,root,rootIndexManager,im,dm);
-            result.expressDataInterest();
-            maps.put(containerId.getKey(),result);
-            
+            result=new MapContainerImpl(containerId,root,im,dm,indexType);
+            maps.put(containerId,result);
         }
         return result;
     }
 
     public void deleteMapContainer(Object id) throws IOException{
+        deleteMapContainer(id,DEFAULT_CONTAINER_NAME);
+    }
+
+    public void deleteMapContainer(Object id,String containerName) throws IOException{
         initialize();
-        MapContainerImpl container=(MapContainerImpl) maps.remove(id);
+        ContainerId containerId=new ContainerId();
+        containerId.setKey(id);
+        containerId.setDataContainerName(containerName);
+        MapContainerImpl container=(MapContainerImpl)maps.remove(containerId);
         if(container!=null){
             container.clear();
-            mapsContainer.removeRoot(container.getContainerId());
+            mapsContainer.removeRoot(container.getIndexManager(),containerId);
         }
     }
 
     public Set getMapContainerIds() throws IOException{
         initialize();
-        return maps.keySet();
+        Set set = new HashSet();
+        for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {
+            ContainerId id = (ContainerId)i.next();
+            set.add(id.getKey());
+        }
+        return set;
     }
 
     public boolean doesListContainerExist(Object id) throws IOException{
+        return doesListContainerExist(id,DEFAULT_CONTAINER_NAME);
+    }
+
+    public boolean doesListContainerExist(Object id,String containerName) throws IOException{
         initialize();
-        return lists.containsKey(id);
+        ContainerId containerId=new ContainerId();
+        containerId.setKey(id);
+        containerId.setDataContainerName(containerName);
+        return lists.containsKey(containerId)||listsContainer.doesRootExist(containerId);
     }
 
     public ListContainer getListContainer(Object id) throws IOException{
         return getListContainer(id,DEFAULT_CONTAINER_NAME);
     }
-    
-    public synchronized ListContainer getListContainer(Object id, String containerName) throws IOException{
+
+    public ListContainer getListContainer(Object id,String containerName) throws IOException{
+        return getListContainer(id,containerName,indexType);
+    }
+
+    public synchronized ListContainer getListContainer(Object id,String containerName,String indexType)
+            throws IOException{
         initialize();
-       
-        ListContainerImpl result=(ListContainerImpl) lists.get(id);
+        ContainerId containerId=new ContainerId();
+        containerId.setKey(id);
+        containerId.setDataContainerName(containerName);
+        ListContainerImpl result=(ListContainerImpl)lists.get(containerId);
         if(result==null){
-            DataManager dm = getDataManager(containerName);
-            IndexManager im = getIndexManager(dm, containerName);
-            ContainerId containerId = new ContainerId();
-            containerId.setKey(id);
-            containerId.setDataContainerName(containerName);
-            IndexItem root=listsContainer.getRoot(containerId);
-            if( root == null ) {
-                root=listsContainer.addRoot(containerId);
+            DataManager dm=getDataManager(containerName);
+            IndexManager im=getIndexManager(dm,containerName);
+            
+            IndexItem root=listsContainer.getRoot(im,containerId);
+            if(root==null){
+                root=listsContainer.addRoot(im,containerId);
             }
-            result=new ListContainerImpl(containerId,root,rootIndexManager,im,dm);
-            result.expressDataInterest();
-            lists.put(containerId.getKey(),result);
+            result=new ListContainerImpl(containerId,root,im,dm,indexType);
+            lists.put(containerId,result);
         }
         return result;
     }
-    
-    
+
     public void deleteListContainer(Object id) throws IOException{
+        deleteListContainer(id,DEFAULT_CONTAINER_NAME);
+    }
+
+    public void deleteListContainer(Object id,String containerName) throws IOException{
         initialize();
-        ListContainerImpl container=(ListContainerImpl) lists.remove(id);
+        ContainerId containerId=new ContainerId();
+        containerId.setKey(id);
+        containerId.setDataContainerName(containerName);
+        ListContainerImpl container=(ListContainerImpl)lists.remove(containerId);
         if(container!=null){
+            listsContainer.removeRoot(container.getIndexManager(),containerId);
             container.clear();
-            listsContainer.removeRoot(container.getContainerId());
         }
     }
 
     public Set getListContainerIds() throws IOException{
         initialize();
-        return lists.keySet();
-    }
-
-    protected void checkClosed(){
-        if(closed){
-            throw new RuntimeStoreException("The store is closed");
+        Set set = new HashSet();
+        for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
+            ContainerId id = (ContainerId)i.next();
+            set.add(id.getKey());
         }
+        return set;
     }
 
-    public synchronized void initialize() throws IOException{
-    	if( closed )
-    		throw new IOException("Store has been closed.");
-        if(!initialized){
-            initialized=true;
-            
-            log.info("Kaha Store using data directory " + directory);
-            DataManager defaultDM = getDataManager(DEFAULT_CONTAINER_NAME);
-            rootIndexManager = getIndexManager(defaultDM, DEFAULT_CONTAINER_NAME);
-            
-            IndexItem mapRoot=new IndexItem();
-            IndexItem listRoot=new IndexItem();
-            if(rootIndexManager.isEmpty()){
-                mapRoot.setOffset(0);
-                rootIndexManager.updateIndex(mapRoot);
-                listRoot.setOffset(IndexItem.INDEX_SIZE);
-                rootIndexManager.updateIndex(listRoot);
-                rootIndexManager.setLength(IndexItem.INDEX_SIZE*2);
-            }else{
-                mapRoot=rootIndexManager.getIndex(0);
-                listRoot=rootIndexManager.getIndex(IndexItem.INDEX_SIZE);
-            }
-            mapsContainer=new IndexRootContainer(mapRoot,rootIndexManager,defaultDM);
-            listsContainer=new IndexRootContainer(listRoot,rootIndexManager,defaultDM);
-
-            for (Iterator i = dataManagers.values().iterator(); i.hasNext();){
-                DataManager dm = (DataManager) i.next();
-                dm.consolidateDataFiles();
-            }
-        }
-    }
     
-    public DataManager getDataManager(String name) throws IOException {
-        DataManager dm = (DataManager) dataManagers.get(name);
-        if (dm == null){
-            dm = new DataManager(directory,name);
+    
+    /**
+     * @return the listsContainer
+     */
+    public IndexRootContainer getListsContainer(){
+        return this.listsContainer;
+    }
+
+    
+    /**
+     * @return the mapsContainer
+     */
+    public IndexRootContainer getMapsContainer(){
+        return this.mapsContainer;
+    }
+
+    public DataManager getDataManager(String name) throws IOException{
+        DataManager dm=(DataManager)dataManagers.get(name);
+        if(dm==null){
+            dm=new DataManager(directory,name);
             dm.setMaxFileLength(maxDataFileLength);
             recover(dm);
             dataManagers.put(name,dm);
         }
         return dm;
     }
-    
-    public IndexManager getIndexManager(DataManager dm, String name) throws IOException {
-        IndexManager im = (IndexManager) indexManagers.get(name);
-        if( im == null ) {
-            im = new IndexManager(directory,name,mode, logIndexChanges?dm:null);
+
+    public IndexManager getIndexManager(DataManager dm,String name) throws IOException{
+        IndexManager im=(IndexManager)indexManagers.get(name);
+        if(im==null){
+            im=new IndexManager(directory,name,mode,logIndexChanges?dm:null);
             indexManagers.put(name,im);
         }
         return im;
     }
 
-    private void recover(final DataManager dm) throws IOException {
-        dm.recoverRedoItems( new RedoListener() {
-            public void onRedoItem(DataItem item, Object o) throws Exception {
-                RedoStoreIndexItem redo = (RedoStoreIndexItem) o;
-                //IndexManager im = getIndexManager(dm, redo.getIndexName());
-                IndexManager im = getIndexManager(dm, dm.getName());
+    private void recover(final DataManager dm) throws IOException{
+        dm.recoverRedoItems(new RedoListener(){
+
+            public void onRedoItem(StoreLocation item,Object o) throws Exception{
+                RedoStoreIndexItem redo=(RedoStoreIndexItem)o;
+                // IndexManager im = getIndexManager(dm, redo.getIndexName());
+                IndexManager im=getIndexManager(dm,dm.getName());
                 im.redo(redo);
             }
         });
     }
 
-    public boolean isLogIndexChanges() {
+    public boolean isLogIndexChanges(){
         return logIndexChanges;
     }
 
-    public void setLogIndexChanges(boolean logIndexChanges) {
-        this.logIndexChanges = logIndexChanges;
+    public void setLogIndexChanges(boolean logIndexChanges){
+        this.logIndexChanges=logIndexChanges;
     }
 
     /**
@@ -333,10 +356,123 @@ public class KahaStore implements Store{
     }
 
     /**
-     * @param maxDataFileLength the maxDataFileLength to set
+     * @param maxDataFileLength
+     *            the maxDataFileLength to set
      */
     public void setMaxDataFileLength(long maxDataFileLength){
         this.maxDataFileLength=maxDataFileLength;
     }
 
+    /**
+     * @see org.apache.activemq.kaha.IndexTypes
+     * @return the default index type
+     */
+    public String getIndexType(){
+        return indexType;
+    }
+
+    /**
+     * Set the default index type
+     * 
+     * @param type
+     * @see org.apache.activemq.kaha.IndexTypes
+     */
+    public void setIndexType(String type){
+        if(type==null||(!type.equals(IndexTypes.DISK_INDEX)&&!type.equals(IndexTypes.IN_MEMORY_INDEX))){
+            throw new RuntimeException("Unknown IndexType: "+type);
+        }
+        this.indexType=indexType;
+    }
+    
+    public synchronized void initialize() throws IOException{
+        if(closed)
+            throw new IOException("Store has been closed.");
+        if(!initialized){
+            initialized=true;
+            log.info("Kaha Store using data directory "+directory);
+            DataManager defaultDM=getDataManager(DEFAULT_CONTAINER_NAME);
+            rootIndexManager=getIndexManager(defaultDM,DEFAULT_CONTAINER_NAME);
+            IndexItem mapRoot=new IndexItem();
+            IndexItem listRoot=new IndexItem();
+            if(rootIndexManager.isEmpty()){
+                mapRoot.setOffset(0);
+                rootIndexManager.storeIndex(mapRoot);
+                listRoot.setOffset(IndexItem.INDEX_SIZE);
+                rootIndexManager.storeIndex(listRoot);
+                rootIndexManager.setLength(IndexItem.INDEX_SIZE*2);
+            }else{
+                mapRoot=rootIndexManager.getIndex(0);
+                listRoot=rootIndexManager.getIndex(IndexItem.INDEX_SIZE);
+            }
+            lock();
+            mapsContainer=new IndexRootContainer(mapRoot,rootIndexManager,defaultDM);
+            listsContainer=new IndexRootContainer(listRoot,rootIndexManager,defaultDM);
+            for(Iterator i=dataManagers.values().iterator();i.hasNext();){
+                DataManager dm=(DataManager)i.next();
+                dm.consolidateDataFiles();
+            }
+        }
+    }
+
+    private synchronized void lock() throws IOException{
+        if(!disableLocking&&directory!=null&&lock==null){
+            Set set=getVmLockSet();
+            synchronized(set){
+                if(lock==null){
+                    if(!set.add(directory.getCanonicalPath())){
+                        throw new StoreLockedExcpetion("Kaha Store "+directory.getName()
+                                +" is already opened by this application.");
+                    }
+                    if(!brokenFileLock){
+                        lock=rootIndexManager.getLock();
+                        if(lock==null){
+                            set.remove(directory.getCanonicalPath());
+                            throw new StoreLockedExcpetion("Kaha Store "+directory.getName()
+                                    +"  is already opened by another application");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void unlock() throws IOException{
+        if(!disableLocking&&directory!=null){
+            Set set=getVmLockSet();
+            synchronized(set){
+                if(lock!=null){
+                    set.remove(directory.getCanonicalPath());
+                    if(lock.isValid()){
+                        lock.release();
+                    }
+                    lock=null;
+                }
+            }
+        }
+    }
+    
+    private void checkClosed(){
+        if(closed){
+            throw new RuntimeStoreException("The store is closed");
+        }
+    }
+
+    
+
+    static private Set getVmLockSet(){
+        if(lockSet==null){
+            Properties properties=System.getProperties();
+            synchronized(properties){
+                lockSet=(Set)properties.get("org.apache.activemq.kaha.impl.KahaStore");
+                if(lockSet==null){
+                    lockSet=new HashSet();
+                }
+                properties.put(PROPERTY_PREFIX,lockSet);
+            }
+        }
+        return lockSet;
+    }
+
+    
+   
 }

@@ -20,6 +20,7 @@ package org.apache.activemq.kaha.impl.data;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.kaha.StoreLocation;
 /**
  * Optimized Store reader
  * 
@@ -58,7 +59,7 @@ final class StoreDataReader{
         return rc;
     }
     
-    protected Object readItem(Marshaller marshaller,DataItem item) throws IOException{
+    protected Object readItem(Marshaller marshaller,StoreLocation item) throws IOException{
         RandomAccessFile file=dataManager.getDataFile(item);
         
         // TODO: we could reuse the buffer in dataIn if it's big enough to avoid

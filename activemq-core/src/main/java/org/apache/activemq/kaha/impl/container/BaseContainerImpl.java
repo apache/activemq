@@ -1,85 +1,94 @@
 /**
- *
+ * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
+
 package org.apache.activemq.kaha.impl.container;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
+import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.RuntimeStoreException;
+import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.data.DataManager;
 import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.index.DiskIndexLinkedList;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 import org.apache.activemq.kaha.impl.index.IndexManager;
+import org.apache.activemq.kaha.impl.index.VMIndexLinkedList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 /**
  * Implementation of a ListContainer
  * 
  * @version $Revision: 1.2 $
  */
 public abstract class BaseContainerImpl{
+
     private static final Log log=LogFactory.getLog(BaseContainerImpl.class);
     protected IndexItem root;
     protected IndexLinkedList indexList;
-    protected IndexManager rootIndexManager; // IndexManager that contains the root
     protected IndexManager indexManager;
     protected DataManager dataManager;
     protected ContainerId containerId;
     protected boolean loaded=false;
     protected boolean closed=false;
-    protected boolean initialized = false;
-    protected final Object mutex=new Object();
+    protected boolean initialized=false;
+    private String indexType;
 
-    protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager rootIndexManager,IndexManager indexManager,DataManager dataManager){
+    protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,
+            DataManager dataManager,String indexType){
         this.containerId=id;
         this.root=root;
-        this.rootIndexManager = rootIndexManager;
         this.indexManager=indexManager;
         this.dataManager=dataManager;
-        
+        this.indexType = indexType;
+        if (indexType == null || (!indexType.equals(IndexTypes.DISK_INDEX) && !indexType.equals(IndexTypes.IN_MEMORY_INDEX))) {
+            throw new RuntimeException("Unknown IndexType: " + indexType);
+        }
     }
 
     public ContainerId getContainerId(){
         return containerId;
     }
-    
-    public void init(){
-        if (!initialized){
-            synchronized(mutex){
-                if (!initialized){
-                    initialized= true;
-                    if (this.indexList == null){
+
+    public synchronized void init(){
+        if(!initialized){
+            if(!initialized){
+                initialized=true;
+                if(this.indexList==null){
+                    if(indexType.equals(IndexTypes.DISK_INDEX)){
                         this.indexList=new DiskIndexLinkedList(indexManager,root);
+                    }else{
+                        this.indexList=new VMIndexLinkedList(root);
                     }
                 }
             }
         }
     }
+
     
-    public void clear(){
-        if (indexList != null){
+    public synchronized void clear(){
+        if(indexList!=null){
             indexList.clear();
-        }
+        }       
     }
-    
     /**
      * @return the indexList
      */
@@ -100,16 +109,15 @@ public abstract class BaseContainerImpl{
 
     public abstract int size();
 
-
-    protected abstract Object getValue(IndexItem currentItem);
+    protected abstract Object getValue(StoreEntry currentItem);
 
     protected abstract void remove(IndexItem currentItem);
 
-    protected final IndexLinkedList getInternalList(){
+    protected synchronized final IndexLinkedList getInternalList(){
         return indexList;
     }
 
-    public final void close(){
+    public synchronized final void close(){
         unload();
         closed=true;
     }
@@ -119,7 +127,7 @@ public abstract class BaseContainerImpl{
      * 
      * @see org.apache.activemq.kaha.ListContainer#isLoaded()
      */
-    public final boolean isLoaded(){
+    public synchronized final boolean isLoaded(){
         checkClosed();
         return loaded;
     }
@@ -133,8 +141,17 @@ public abstract class BaseContainerImpl{
         checkClosed();
         return containerId.getKey();
     }
+    
+    public DataManager getDataManager(){
+        return dataManager;
+    }
 
-    public final void expressDataInterest() throws IOException{
+    
+    public IndexManager getIndexManager(){
+        return indexManager;
+    }
+
+    public synchronized final void expressDataInterest() throws IOException{
         long nextItem=root.getNextItem();
         while(nextItem!=Item.POSITION_NOT_SET){
             IndexItem item=indexManager.getIndex(nextItem);
@@ -147,32 +164,29 @@ public abstract class BaseContainerImpl{
 
     protected final void doClear(){
         checkClosed();
-        synchronized(mutex){
-            loaded=true;
-            synchronized(mutex){
-                List indexList=new ArrayList();
-                try{
-                    long nextItem=root.getNextItem();
-                    while(nextItem!=Item.POSITION_NOT_SET){
-                        IndexItem item=new IndexItem();
-                        item.setOffset(nextItem);
-                        indexList.add(item);
-                        nextItem=item.getNextItem();
-                    }
-                    root.setNextItem(Item.POSITION_NOT_SET);
-                    updateIndex(root);
-                    for(int i=0;i<indexList.size();i++){
-                        IndexItem item=(IndexItem) indexList.get(i);
-                        dataManager.removeInterestInFile(item.getKeyFile());
-                        dataManager.removeInterestInFile(item.getValueFile());
-                        indexManager.freeIndex(item);
-                    }
-                    indexList.clear();
-                }catch(IOException e){
-                    log.error("Failed to clear Container "+getId(),e);
-                    throw new RuntimeStoreException(e);
-                }
+        loaded=true;
+        List indexList=new ArrayList();
+        try{
+            init();
+            long nextItem=root.getNextItem();
+            while(nextItem!=Item.POSITION_NOT_SET){
+                IndexItem item=new IndexItem();
+                item.setOffset(nextItem);
+                indexList.add(item);
+                nextItem=item.getNextItem();
             }
+            root.setNextItem(Item.POSITION_NOT_SET);
+            storeIndex(root);
+            for(int i=0;i<indexList.size();i++){
+                IndexItem item=(IndexItem)indexList.get(i);
+                dataManager.removeInterestInFile(item.getKeyFile());
+                dataManager.removeInterestInFile(item.getValueFile());
+                indexManager.freeIndex(item);
+            }
+            indexList.clear();
+        }catch(IOException e){
+            log.error("Failed to clear Container "+getId(),e);
+            throw new RuntimeStoreException(e);
         }
     }
 
@@ -185,11 +199,11 @@ public abstract class BaseContainerImpl{
             if(next!=null){
                 prev.setNextItem(next.getOffset());
                 next.setPreviousItem(prev.getOffset());
-                updateIndex(next);
+                updateIndexes(next);
             }else{
                 prev.setNextItem(Item.POSITION_NOT_SET);
             }
-            updateIndex(prev);
+            updateIndexes(prev);
             indexManager.freeIndex(key);
         }catch(IOException e){
             log.error("Failed to delete "+key,e);
@@ -202,18 +216,20 @@ public abstract class BaseContainerImpl{
             throw new RuntimeStoreException("The store is closed");
         }
     }
-    
-    protected void updateIndex(IndexItem item) throws IOException{
-        IndexManager im = isRoot(item) ? rootIndexManager : indexManager;
-        im.updateIndex(item);
-            
+
+    protected void storeIndex(IndexItem item) throws IOException{
+        indexManager.storeIndex(item);
     }
     
-    protected final boolean isRoot(IndexItem item){
-       // return item != null && root != null && (root == item || root.getOffset() == item.getOffset());
-        return item != null && root != null && root == item;
+    protected void updateIndexes(IndexItem item) throws IOException{
+        indexManager.updateIndexes(item);
     }
 
-   
+    protected final boolean isRoot(StoreEntry item){
+        return item!=null&&root!=null&&(root==item||root.getOffset()==item.getOffset());
+        // return item != null && indexRoot != null && indexRoot == item;
+    }
+
     
+   
 }

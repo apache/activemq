@@ -414,13 +414,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
       PreparedStatement s = null;
       ResultSet rs = null;
       try {
-
+          System.err.println("VANILLA STATEMENT = " + statements.getFindDurableSubMessagesStatement());
           s = c.getConnection().prepareStatement(statements.getFindDurableSubMessagesStatement());
           s.setString(1, destination.getQualifiedName());
           s.setString(2, clientId);
           s.setString(3, subscriptionName);
           s.setLong(4,seq);
           s.setInt(5,maxReturned);
+          System.err.println("STATEMENT = " + s);
           rs = s.executeQuery();
 
           if( statements.isUseExternalMessageReferences() ) {

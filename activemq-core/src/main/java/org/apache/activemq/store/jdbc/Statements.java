@@ -211,9 +211,9 @@ public class Statements {
     public String getFindDurableSubMessagesStatement(){
         if(findDurableSubMessagesStatement==null){
             findDurableSubMessagesStatement="SELECT M.ID, M.MSG FROM "+getFullMessageTableName()+" M, "
-                            +getFullAckTableName()+" D "+" WHERE ? >= ( select count(*) from "
-                            +getFullMessageTableName()+" M, where D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                            +" AND M.CONTAINER=D.CONTAINER AND M.ID > ?"+" ORDER BY M.ID)";
+                            +getFullAckTableName()+" D "+" WHERE ?>= ( SELECT COUNT(*) FROM "
+                            +getFullMessageTableName()+" M, " +  getFullAckTableName() + " D WHERE (D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                            +" AND M.CONTAINER=D.CONTAINER AND M.ID > ?)"+" ORDER BY M.ID)";
         }
         return findDurableSubMessagesStatement;
     }
@@ -230,9 +230,9 @@ public class Statements {
     public String getNextDurableSubscriberMessageStatement(){
         if (nextDurableSubscriberMessageStatement == null){
             nextDurableSubscriberMessageStatement = "SELECT M.ID, M.MSG FROM "+getFullMessageTableName()+" M, "
-            +getFullAckTableName()+" D "+" WHERE 1 >= ( select count(*) from "
-            +getFullMessageTableName()+" M, where D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-            +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"+" ORDER BY M.ID)"; 
+            +getFullAckTableName()+" D "+" WHERE 1 >= ( SELECT COUNT(*) FROM "
+            +getFullMessageTableName()+" M, WHERE (D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+            +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"+") ORDER BY M.ID)"; 
         }
         return nextDurableSubscriberMessageStatement;
     }
@@ -242,7 +242,7 @@ public class Statements {
      */
     public String getDurableSubscriberMessageCountStatement(){
         if (durableSubscriberMessageCountStatement==null){
-            durableSubscriberMessageCountStatement = "select count(*) from "
+            durableSubscriberMessageCountStatement = "SELECT COUNT(*) FROM "
             +getFullMessageTableName()+" M, where D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
             +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID";
         }

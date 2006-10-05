@@ -19,8 +19,10 @@ package org.apache.activemq.kaha.impl.data;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.kaha.StoreLocation;
 /**
  * Optimized Store writer
  * 
@@ -50,7 +52,7 @@ final class StoreDataWriter{
      * @throws IOException
      * @throws FileNotFoundException
      */
-    DataItem storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
+    StoreLocation storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
         
         // Write the packet our internal buffer.
         buffer.reset();
@@ -74,5 +76,20 @@ final class StoreDataWriter{
         
         dataManager.addInterestInFile(dataFile);
         return item;
+    }
+    
+    void updateItem(StoreLocation location,Marshaller marshaller, Object payload, byte type) throws IOException {
+        //Write the packet our internal buffer.
+        buffer.reset();
+        buffer.position(DataManager.ITEM_HEAD_SIZE);
+        marshaller.writePayload(payload,buffer);
+        int size=buffer.size();
+        int payloadSize=size-DataManager.ITEM_HEAD_SIZE;
+        buffer.reset();
+        buffer.writeByte(type);
+        buffer.writeInt(payloadSize);
+        RandomAccessFile  dataFile = dataManager.getDataFile(location);
+        dataFile.seek(location.getOffset());
+        dataFile.write(buffer.getData(),0,size);
     }
 }

@@ -17,9 +17,11 @@
  */
 package org.apache.activemq.kaha.impl.data;
 
+import org.apache.activemq.kaha.StoreLocation;
+
 
 public interface RedoListener {
 
-    void onRedoItem(DataItem item, Object object) throws Exception;
+    void onRedoItem(StoreLocation item, Object object) throws Exception;
 
 }

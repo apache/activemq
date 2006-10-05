@@ -17,12 +17,14 @@
  */
 package org.apache.activemq.kaha.impl.index;
 
+import org.apache.activemq.kaha.StoreEntry;
+
 /**
  * A linked list used by IndexItems
  * 
  * @version $Revision: 1.2 $
  */
-final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
+public final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
     private transient IndexItem root;
     private transient int size=0;
 
@@ -30,7 +32,7 @@ final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
     /**
      * Constructs an empty list.
      */
-    VMIndexLinkedList(IndexItem header){
+    public VMIndexLinkedList(IndexItem header){
         this.root = header;
         this.root.next=root.prev=root;
     }
@@ -62,11 +64,11 @@ final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
     /* (non-Javadoc)
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#removeFirst()
      */
-    public IndexItem removeFirst(){
+    public StoreEntry removeFirst(){
         if(size==0){
             return null;
         }
-        IndexItem result=root.next;
+        StoreEntry result=root.next;
         remove(root.next);
         return result;
     }
@@ -77,7 +79,7 @@ final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
     public Object removeLast(){
         if(size==0)
             return null;
-        IndexItem result=root.prev;
+        StoreEntry result=root.prev;
         remove(root.prev);
         return result;
     }
@@ -171,7 +173,7 @@ final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
     /* (non-Javadoc)
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#indexOf(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public int indexOf(IndexItem o){
+    public int indexOf(StoreEntry o){
         int index=0;
         for(IndexItem e=root.next;e!=root;e=e.next){
             if(o==e){
@@ -228,7 +230,15 @@ final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
         return clone;
     }
 
-    public IndexItem getEntry(IndexItem current){
+    public StoreEntry getEntry(StoreEntry current){
+        return current;
+    }
+    
+    /**
+     * Update the indexes of a StoreEntry
+     * @param current
+     */
+    public StoreEntry refreshEntry(StoreEntry current){
         return current;
     }
 }

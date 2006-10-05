@@ -22,6 +22,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
@@ -200,7 +201,7 @@ public class VMIndexLinkedListTest extends TestCase{
             list.add(i,(IndexItem) testData.get(i));
         }
         for (int i =0; i < testData.size(); i++){
-            assertTrue(list.indexOf((IndexItem) testData.get(i))==i);
+            assertTrue(list.indexOf((StoreEntry) testData.get(i))==i);
         }
     }
 

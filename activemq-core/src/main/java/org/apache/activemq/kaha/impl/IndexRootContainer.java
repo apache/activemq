@@ -24,7 +24,9 @@ import java.util.Set;
 
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.Store;
-import org.apache.activemq.kaha.impl.data.DataItem;
+import org.apache.activemq.kaha.StoreEntry;
+import org.apache.activemq.kaha.StoreLocation;
+import org.apache.activemq.kaha.impl.container.ContainerId;
 import org.apache.activemq.kaha.impl.data.DataManager;
 import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.index.IndexItem;
@@ -56,8 +58,8 @@ class IndexRootContainer {
         this.dataManager=dfm;
         long nextItem=root.getNextItem();
         while(nextItem!=Item.POSITION_NOT_SET){
-            IndexItem item=indexManager.getIndex(nextItem);
-            DataItem data=item.getKeyDataItem();
+            StoreEntry item=indexManager.getIndex(nextItem);
+            StoreLocation data=item.getKeyDataItem();
             Object key=dataManager.readItem(rootMarshaller,data);
             map.put(key,item);
             list.add(item);
@@ -72,58 +74,66 @@ class IndexRootContainer {
     
     
     
-    IndexItem addRoot(Object key) throws IOException{
+    IndexItem addRoot(IndexManager containerIndexManager,ContainerId key) throws IOException{
         if (map.containsKey(key)){
-            removeRoot(key);
+            removeRoot(containerIndexManager,key);
         }
         
-        DataItem data = dataManager.storeDataItem(rootMarshaller, key);
-        IndexItem index = indexManager.createNewIndex();
-        index.setKeyData(data);
+        StoreLocation data = dataManager.storeDataItem(rootMarshaller, key);
         IndexItem newRoot = indexManager.createNewIndex();
-        indexManager.updateIndex(newRoot);
-        index.setValueOffset(newRoot.getOffset());
+        newRoot.setKeyData(data);
+        IndexItem containerRoot = containerIndexManager.createNewIndex();
+        containerIndexManager.storeIndex(containerRoot);
+        newRoot.setValueOffset(containerRoot.getOffset());
        
         IndexItem last=list.isEmpty()?null:(IndexItem) list.getLast();
         last=last==null?root:last;
         long prev=last.getOffset();
-        index.setPreviousItem(prev);
-        indexManager.updateIndex(index);
-        last.setNextItem(index.getOffset());
-        indexManager.updateIndex(last);
-        map.put(key, index);
-        list.add(index);
-        return newRoot;
+        newRoot.setPreviousItem(prev);
+        indexManager.storeIndex(newRoot);
+        last.setNextItem(newRoot.getOffset());
+        indexManager.storeIndex(last);
+        map.put(key, newRoot);
+        list.add(newRoot);
+        return containerRoot;
     }
     
-    void removeRoot(Object key) throws IOException{
-        IndexItem item = (IndexItem) map.remove(key);
-        if (item != null){
-            dataManager.removeInterestInFile(item.getKeyFile());
-            IndexItem rootIndex = indexManager.getIndex(item.getValueOffset());
-            indexManager.freeIndex(rootIndex);
-            int index=list.indexOf(item);
-            IndexItem prev=index>0?(IndexItem) list.get(index-1):root;
+    void removeRoot(IndexManager containerIndexManager,ContainerId key) throws IOException{
+        StoreEntry oldRoot=(StoreEntry)map.remove(key);
+        if(oldRoot!=null){
+            dataManager.removeInterestInFile(oldRoot.getKeyFile());
+            // get the container root
+            IndexItem containerRoot=containerIndexManager.getIndex(oldRoot.getValueOffset());
+            if(containerRoot!=null){
+                containerIndexManager.freeIndex(containerRoot);
+            }
+            int index=list.indexOf(oldRoot);
+            IndexItem prev=index>0?(IndexItem)list.get(index-1):root;
             prev=prev==null?root:prev;
-            IndexItem next=index<(list.size()-1)?(IndexItem) list.get(index+1):null;
+            IndexItem next=index<(list.size()-1)?(IndexItem)list.get(index+1):null;
             if(next!=null){
                 prev.setNextItem(next.getOffset());
                 next.setPreviousItem(prev.getOffset());
-                indexManager.updateIndex(next);
+                indexManager.updateIndexes(next);
             }else{
                 prev.setNextItem(Item.POSITION_NOT_SET);
             }
-            indexManager.updateIndex(prev);
-            list.remove(item);
+            indexManager.updateIndexes(prev);
+            list.remove(oldRoot);
+            indexManager.freeIndex((IndexItem)oldRoot);
         }
     }
     
-    IndexItem getRoot(Object key) throws IOException{
-        IndexItem index =  (IndexItem) map.get(key);
+    IndexItem getRoot(IndexManager containerIndexManager,ContainerId key) throws IOException{
+        StoreEntry index =  (StoreEntry) map.get(key);
         if (index != null){
-            return indexManager.getIndex(index.getValueOffset());
+            return containerIndexManager.getIndex(index.getValueOffset());
         }
         return null;
+    }
+    
+    boolean doesRootExist(Object key){
+        return map.containsKey(key);
     }
 
     

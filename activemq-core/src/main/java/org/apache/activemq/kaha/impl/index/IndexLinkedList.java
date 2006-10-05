@@ -17,6 +17,13 @@
  */
 package org.apache.activemq.kaha.impl.index;
 
+import org.apache.activemq.kaha.StoreEntry;
+
+/**
+* Inteface to LinkedList of Indexes
+* 
+* @version $Revision$
+*/
 public interface IndexLinkedList{
     
     /**
@@ -43,7 +50,7 @@ public interface IndexLinkedList{
      * 
      * @return the first element from this list.
      */
-    public IndexItem removeFirst();
+    public StoreEntry removeFirst();
 
     /**
      * Removes and returns the last element from this list.
@@ -54,16 +61,14 @@ public interface IndexLinkedList{
 
     /**
      * Inserts the given element at the beginning of this list.
-     * 
-     * @param o the element to be inserted at the beginning of this list.
+     * @param item 
      */
     public void addFirst(IndexItem item);
 
     /**
      * Appends the given element to the end of this list. (Identical in function to the <tt>add</tt> method; included
      * only for consistency.)
-     * 
-     * @param o the element to be inserted at the end of this list.
+     * @param item 
      */
     public void addLast(IndexItem item);
 
@@ -83,8 +88,8 @@ public interface IndexLinkedList{
 
     /**
      * Appends the specified element to the end of this list.
+     * @param item 
      * 
-     * @param o element to be appended to this list.
      * @return <tt>true</tt> (as per the general contract of <tt>Collection.add</tt>).
      */
     public boolean add(IndexItem item);
@@ -137,7 +142,7 @@ public interface IndexLinkedList{
      * @return the index in this list of the first occurrence of the specified element, or -1 if the list does not
      *         contain this element.
      */
-    public int indexOf(IndexItem o);
+    public int indexOf(StoreEntry o);
 
     /**
      * Retrieve the next entry after this entry
@@ -164,8 +169,15 @@ public interface IndexLinkedList{
     
     /**
      * Ensure we have the up to date entry
-     * @param current
+     * @param entry 
      * @return the entry
      */
-    public  IndexItem getEntry(IndexItem current);
+    public  StoreEntry getEntry(StoreEntry entry);
+    
+    /**
+     * Update the indexes of a StoreEntry
+     * @param current
+     * @return update StoreEntry
+     */
+    public StoreEntry refreshEntry(StoreEntry current);
 }
