@@ -56,6 +56,7 @@ public class VMTransportFactory extends TransportFactory{
         URI brokerURI;
         String host;
         Map options;
+        boolean create=true;
         CompositeData data=URISupport.parseComposite(location);
         if(data.getComponents().length==1&&"broker".equals(data.getComponents()[0].getScheme())){
             brokerURI=data.getComponents()[0];
@@ -79,6 +80,9 @@ public class VMTransportFactory extends TransportFactory{
                     Map brokerOptions=IntrospectionSupport.extractProperties(options,"broker.");
                     brokerURI=new URI("broker://()/"+host+"?"+URISupport.createQueryString(brokerOptions));
                 }
+                if( "false".equals(options.get("create")) ) {
+                	create=false;
+                }
             }catch(URISyntaxException e1){
                 throw IOExceptionSupport.create(e1);
             }
@@ -97,6 +101,9 @@ public class VMTransportFactory extends TransportFactory{
             synchronized( BrokerRegistry.getInstance().getRegistryMutext() ) {
                 broker=BrokerRegistry.getInstance().lookup(host);
                 if(broker==null){
+                	if( !create ) {
+                		throw new IOException("Broker named '"+host+"' does not exist.");
+                	}
                     try{
                         if(brokerFactoryHandler!=null){
                             broker=brokerFactoryHandler.createBroker(brokerURI);

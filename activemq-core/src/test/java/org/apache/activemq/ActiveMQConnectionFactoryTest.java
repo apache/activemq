@@ -97,7 +97,16 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     public void testCreateTcpConnectionUsingKnownPort() throws Exception {
         assertCreateConnection("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
     }
-    
+
+    public void testConnectionFailsToConnectToVMBrokerThatIsNotRunning() throws Exception {    	
+		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+    	try {
+    		factory.createConnection();
+			fail("Expected connection failure.");
+		} catch (JMSException e) {
+		}
+    }
+
     protected void assertCreateConnection(String uri) throws Exception {
         // Start up a broker with a tcp connector.
         BrokerService broker = new BrokerService();
