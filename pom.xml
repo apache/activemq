@@ -154,77 +154,83 @@
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-core</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-core</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
         <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-jaas</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-web</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-web-demo</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-gbean-management</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activecluster</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-console</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-optional</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-ra</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-rar</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
         <type>rar</type>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-web</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>org.apache.activemq</artifactId>
-        <version>${pom.version}</version>
+        <version>${activemq-version}</version>
       </dependency>
 
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activeio-core</artifactId>
         <version>3.0-SNAPSHOT</version>
+      </dependency>
+
+	  <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-openwire-generator</artifactId>
+        <version>${activemq-version}</version>
       </dependency>
 
       <!-- =============================== -->
@@ -909,6 +915,7 @@
   </reporting>
 
   <properties>
+    <activemq-version>4.1-incubator-SNAPSHOT</activemq-version>
     <activecluster-version>1.1-SNAPSHOT</activecluster-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
