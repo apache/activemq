@@ -63,7 +63,7 @@ abstract public class ActiveMQTempDestination extends ActiveMQDestination {
         if( !isComposite() ) {
             // Parse off the sequenceId off the end.
             int p = this.physicalName.lastIndexOf(":");
-            sequenceId = Integer.parseInt(this.physicalName.substring(p+1));
+            sequenceId = Integer.parseInt(this.physicalName.substring(p+1).trim());
             // The rest should be the connection id.
             connectionId = this.physicalName.substring(0,p);
         }
