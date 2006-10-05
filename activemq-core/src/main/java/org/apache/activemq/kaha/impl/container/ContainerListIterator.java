@@ -19,6 +19,7 @@ package org.apache.activemq.kaha.impl.container;
 
 import java.util.ListIterator;
 
+import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
@@ -61,7 +62,7 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
     public int nextIndex(){
         int result = -1;
         if (nextItem != null){
-            IndexItem next = list.getNextEntry(nextItem);
+            StoreEntry next = list.getNextEntry(nextItem);
             if (next != null){
                 result = container.getInternalList().indexOf(next);
             }
@@ -79,7 +80,7 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
     public int previousIndex(){
         int result = -1;
         if (nextItem != null){
-            IndexItem prev = list.getPrevEntry(nextItem);
+            StoreEntry prev = list.getPrevEntry(nextItem);
             if (prev != null){
                 result = container.getInternalList().indexOf(prev);
             }

@@ -19,7 +19,7 @@ package org.apache.activemq.kaha.impl.container;
 
 import java.util.ListIterator;
 
-import org.apache.activemq.kaha.impl.index.IndexItem;
+import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
 /** 
@@ -31,7 +31,7 @@ public class CachedContainerListIterator implements ListIterator{
     protected IndexLinkedList list;
     protected int pos = 0;
     protected int nextPos =0;
-    protected IndexItem currentItem;
+    protected StoreEntry currentItem;
 
     protected CachedContainerListIterator(ListContainerImpl container,int start){
         this.container=container;

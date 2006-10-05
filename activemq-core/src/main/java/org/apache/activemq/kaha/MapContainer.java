@@ -142,4 +142,32 @@ public interface MapContainer  extends   Map{
      * empty the container
      */
     public void clear();
+    
+    /**
+     * Add an entry to the Store Map
+     * @param key
+     * @param Value
+     * @return the StoreEntry associated with the entry
+     */
+    public StoreEntry place(Object key, Object Value);
+    
+    /**
+     * Remove an Entry from ther Map
+     * @param entry
+     */
+    public void remove(StoreEntry entry);
+    
+    /**
+     * Get the Key object from it's location
+     * @param keyLocation
+     * @return
+     */
+    public Object getKey(StoreEntry keyLocation);
+    
+    /**
+     * Get the value from it's location
+     * @param Valuelocation
+     * @return
+     */
+    public Object getValue(StoreEntry Valuelocation);
 }

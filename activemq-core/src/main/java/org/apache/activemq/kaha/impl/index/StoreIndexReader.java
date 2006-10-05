@@ -50,4 +50,13 @@ class StoreIndexReader{
         result.read(dataIn);
         return result;
     }
+    
+    void updateIndexes(IndexItem indexItem) throws IOException{
+        if (indexItem != null){
+            file.seek(indexItem.getOffset());
+            file.readFully(buffer,0,IndexItem.INDEXES_ONLY_SIZE);
+            dataIn.restart(buffer);
+            indexItem.readIndexes(dataIn);
+        }
+    }
 }

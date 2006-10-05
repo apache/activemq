@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
+import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.StoreFactory;
 import org.apache.activemq.kaha.impl.KahaStore;
 import org.apache.activemq.kaha.impl.container.ContainerId;
@@ -131,8 +132,8 @@ public class CachedListContainerImplTest extends TestCase{
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
         containerId.setDataContainerName(containerName);
-        IndexItem root=store.listsContainer.addRoot(containerId);
-        ListContainerImpl result=new ListContainerImpl(containerId,root,store.rootIndexManager,im,dm);
+        IndexItem root=store.getListsContainer().addRoot(im,containerId);
+        ListContainerImpl result=new ListContainerImpl(containerId,root,im,dm,IndexTypes.DISK_INDEX);
         result.expressDataInterest();
         result.setMaximumCacheSize(MAX_CACHE_SIZE);
         return result;

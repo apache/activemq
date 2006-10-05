@@ -61,6 +61,18 @@ class StoreIndexWriter{
         file.seek(indexItem.getOffset());
         file.write(dataOut.getData(),0,IndexItem.INDEX_SIZE);
     }
+    
+    void updateIndexes(IndexItem indexItem) throws IOException{
+        if( redoLog!=null ) {
+            RedoStoreIndexItem redo = new RedoStoreIndexItem(name, indexItem.getOffset(), indexItem);
+            redoLog.storeRedoItem(redo);
+        }
+        
+        dataOut.reset();
+        indexItem.updateIndexes(dataOut);
+        file.seek(indexItem.getOffset());
+        file.write(dataOut.getData(),0,IndexItem.INDEXES_ONLY_SIZE);
+    }
 
     public void redoStoreItem(RedoStoreIndexItem redo) throws IOException {
         dataOut.reset();

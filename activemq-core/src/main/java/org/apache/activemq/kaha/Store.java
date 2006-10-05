@@ -26,10 +26,19 @@ import java.util.Set;
  */
 public interface Store{
     
+    /**
+     * Byte Marshaller
+     */
     public final static Marshaller BytesMarshaller = new BytesMarshaller();
     
+    /**
+     * Object Marshaller
+     */
     public final static Marshaller ObjectMarshaller = new ObjectMarshaller();
     
+    /**
+     * String Marshaller
+     */
     public final static Marshaller StringMarshaller = new StringMarshaller();
     /**
      * close the store
@@ -61,13 +70,23 @@ public interface Store{
     public boolean delete() throws IOException;
 
     /**
-     * Checks if a MapContainer exists
+     * Checks if a MapContainer exists in the default container
      * 
      * @param id
      * @return new MapContainer
      * @throws IOException
      */
     public boolean doesMapContainerExist(Object id) throws IOException;
+    
+    /**
+     * Checks if a MapContainer exists in the named container
+     * 
+     * @param id
+     * @param containerName 
+     * @return new MapContainer
+     * @throws IOException
+     */
+    public boolean doesMapContainerExist(Object id,String containerName) throws IOException;
 
     /**
      * Get a MapContainer with the given id - the MapContainer is created if needed
@@ -87,14 +106,34 @@ public interface Store{
      * @throws IOException
      */
     public MapContainer getMapContainer(Object id,String containerName) throws IOException;
+    
+    /**
+     * Get a MapContainer with the given id - the MapContainer is created if needed
+     * 
+     * @param id
+     * @param containerName
+     * @param indexType 
+     * @return container for the associated id or null if it doesn't exist
+     * @throws IOException
+     */
+    public MapContainer getMapContainer(Object id,String containerName,String indexType) throws IOException;
 
     /**
-     * delete a container
+     * delete a container from the default container
      * 
      * @param id
      * @throws IOException
      */
     public void deleteMapContainer(Object id) throws IOException;
+    
+    /**
+     * delete a MapContainer from the name container
+     * 
+     * @param id
+     * @param containerName 
+     * @throws IOException
+     */
+    public void deleteMapContainer(Object id,String containerName) throws IOException;
 
     /**
      * Get a Set of call MapContainer Ids
@@ -105,13 +144,23 @@ public interface Store{
     public Set getMapContainerIds() throws IOException;
 
     /**
-     * Checks if a ListContainer exists
+     * Checks if a ListContainer exists in the default container
      * 
      * @param id
      * @return new MapContainer
      * @throws IOException
      */
     public boolean doesListContainerExist(Object id) throws IOException;
+    
+    /**
+     * Checks if a ListContainer exists in the named container
+     * 
+     * @param id
+     * @param containerName 
+     * @return new MapContainer
+     * @throws IOException
+     */
+    public boolean doesListContainerExist(Object id,String containerName) throws IOException;
 
     /**
      * Get a ListContainer with the given id and creates it if it doesn't exist
@@ -131,14 +180,35 @@ public interface Store{
      * @throws IOException
      */
     public ListContainer getListContainer(Object id,String containerName) throws IOException;
+    
+    /**
+     * Get a ListContainer with the given id and creates it if it doesn't exist
+     * 
+     * @param id
+     * @param containerName
+     * @param indexType 
+     * @return container for the associated id or null if it doesn't exist
+     * @throws IOException
+     */
+    public ListContainer getListContainer(Object id,String containerName,String indexType) throws IOException;
 
     /**
-     * delete a ListContainer
+     * delete a ListContainer from the default container
      * 
      * @param id
      * @throws IOException
      */
     public void deleteListContainer(Object id) throws IOException;
+    
+    /**
+     * delete a ListContainer from the named container
+     * 
+     * @param id
+     * @param containerName 
+     * @throws IOException
+     */
+    public void deleteListContainer(Object id,String containerName) throws IOException;
+
 
     /**
      * Get a Set of call ListContainer Ids
@@ -157,4 +227,17 @@ public interface Store{
      * @param maxDataFileLength the maxDataFileLength to set
      */
     public void setMaxDataFileLength(long maxDataFileLength);
+    
+    /**
+     * @see org.apache.activemq.kaha.IndexTypes
+     * @return the default index type
+     */
+    public String getIndexType();
+    
+    /**
+     * Set the default index type
+     * @param type
+     * @see org.apache.activemq.kaha.IndexTypes
+     */
+    public void setIndexType(String type);
 }

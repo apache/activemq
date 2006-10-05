@@ -21,15 +21,19 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.StringMarshaller;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
@@ -37,15 +41,18 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 /**
  * @version $Revision: 1.5 $
  */
-public class KahaTopicMessageStore extends KahaMessageStore implements TopicMessageStore{
-    private Map ackContainer;
+public class KahaTopicMessageStore  implements TopicMessageStore{
+    private ActiveMQDestination destination;
+    private ListContainer ackContainer;
+    private ListContainer messageContainer;
     private Map subscriberContainer;
     private Store store;
     private Map subscriberAcks=new ConcurrentHashMap();
 
-    public KahaTopicMessageStore(Store store,MapContainer messageContainer,MapContainer ackContainer,
+    public KahaTopicMessageStore(Store store,ListContainer messageContainer,ListContainer ackContainer,
                     MapContainer subsContainer,ActiveMQDestination destination) throws IOException{
-        super(messageContainer,destination);
+        this.messageContainer = messageContainer;
+        this.destination = destination;
         this.store=store;
         this.ackContainer=ackContainer;
         subscriberContainer=subsContainer;
@@ -59,32 +66,35 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
         int subscriberCount=subscriberAcks.size();
         if(subscriberCount>0){
-            String id=message.getMessageId().toString();
-            ackContainer.put(id,new AtomicInteger(subscriberCount));
+            StoreEntry entry = messageContainer.placeLast(message);
+            TopicSubAck tsa = new TopicSubAck();
+            tsa.setCount(subscriberCount);
+            tsa.setStoreEntry(entry);
+            StoreEntry ackEntry = ackContainer.placeLast(tsa);
             for(Iterator i=subscriberAcks.keySet().iterator();i.hasNext();){
                 Object key=i.next();
                 ListContainer container=store.getListContainer(key,"durable-subs");
-                container.add(id);
+                container.add(ackEntry);
             }
-            super.addMessage(context,message);
+            
         }
     }
 
     public synchronized void acknowledge(ConnectionContext context,String clientId,String subscriptionName,
-                    MessageId messageId) throws IOException{
+            MessageId messageId) throws IOException{
         String subcriberId=getSubscriptionKey(clientId,subscriptionName);
-        String id=messageId.toString();
-        ListContainer container=(ListContainer) subscriberAcks.get(subcriberId);
+        ListContainer container=(ListContainer)subscriberAcks.get(subcriberId);
         if(container!=null){
-            //container.remove(id);
-            container.removeFirst();
-            AtomicInteger count=(AtomicInteger) ackContainer.remove(id);
-            if(count!=null){
-                if(count.decrementAndGet()>0){
-                    ackContainer.put(id,count);
-                }else{
-                    // no more references to message messageContainer so remove it
-                    super.removeMessage(messageId);
+            StoreEntry ackEntry=(StoreEntry)container.removeFirst();
+            if(ackEntry!=null){
+                TopicSubAck tsa=(TopicSubAck)ackContainer.get(ackEntry);
+                if(tsa!=null){
+                    if(tsa.decrementCount()<=0){
+                        ackContainer.remove(ackEntry);
+                        messageContainer.remove(tsa.getStoreEntry());
+                    }else {
+                       ackContainer.update(ackEntry,tsa);
+                    }
                 }
             }
         }
@@ -115,14 +125,16 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         subscriberContainer.remove(key);
         ListContainer list=(ListContainer) subscriberAcks.get(key);
         for(Iterator i=list.iterator();i.hasNext();){
-            String id=i.next().toString();
-            AtomicInteger count=(AtomicInteger) ackContainer.remove(id);
-            if(count!=null){
-                if(count.decrementAndGet()>0){
-                    ackContainer.put(id,count);
-                }else{
-                    // no more references to message messageContainer so remove it
-                    messageContainer.remove(id);
+            StoreEntry ackEntry=(StoreEntry)i.next();
+            if(ackEntry!=null){
+                TopicSubAck tsa=(TopicSubAck)ackContainer.get(ackEntry);
+                if(tsa!=null){
+                    if(tsa.decrementCount()<=0){
+                        ackContainer.remove(ackEntry);
+                        messageContainer.remove(tsa.getStoreEntry());
+                    }else {
+                       ackContainer.update(ackEntry,tsa);
+                    }
                 }
             }
         }
@@ -134,7 +146,8 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         ListContainer list=(ListContainer) subscriberAcks.get(key);
         if(list!=null){
             for(Iterator i=list.iterator();i.hasNext();){
-                Object msg=messageContainer.get(i.next());
+                TopicSubAck tsa = (TopicSubAck)i.next();
+                Object msg=messageContainer.get(tsa.getStoreEntry());
                 if(msg!=null){
                     if(msg.getClass()==String.class){
                         listener.recoverMessageReference((String) msg);
@@ -157,7 +170,8 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
             boolean startFound=false;
             int count = 0;
             for(Iterator i=list.iterator();i.hasNext() && count < maxReturned;){
-                Object msg=messageContainer.get(i.next());
+                TopicSubAck tsa = (TopicSubAck)i.next();
+                Object msg=messageContainer.get(tsa.getStoreEntry());
                 if(msg!=null){
                     if(msg.getClass()==String.class){
                         String ref=msg.toString();
@@ -186,7 +200,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     }
 
     public void delete(){
-        super.delete();
+        messageContainer.clear();
         ackContainer.clear();
         subscriberContainer.clear();
     }
@@ -204,7 +218,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
 
     protected void addSubscriberAckContainer(Object key) throws IOException{
         ListContainer container=store.getListContainer(key,"topic-subs");
-        Marshaller marshaller=new StringMarshaller();
+        Marshaller marshaller=new StoreEntryMarshaller();
         container.setMarshaller(marshaller);
         subscriberAcks.put(key,container);
     }
@@ -213,14 +227,135 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         String key=getSubscriptionKey(clientId,subscriptionName);
         ListContainer list=(ListContainer) subscriberAcks.get(key);
         Iterator iter = list.iterator();
-        return (Message) (iter.hasNext() ? iter.next() : null);
-        
+        TopicSubAck tsa = (TopicSubAck)list.get(0);
+        Message msg=(Message)messageContainer.get(tsa.getStoreEntry());
+        return msg;
     }
 
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         String key=getSubscriptionKey(clientId,subscriberName);
         ListContainer list=(ListContainer) subscriberAcks.get(key);
         return list.size();
+    }
+
+    /**
+     * @param context
+     * @param messageId
+     * @param expirationTime
+     * @param messageRef
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#addMessageReference(org.apache.activemq.broker.ConnectionContext, org.apache.activemq.command.MessageId, long, java.lang.String)
+     */
+    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef) throws IOException{
+        messageContainer.add(messageRef);
+        
+    }
+
+    /**
+     * @return the destination
+     * @see org.apache.activemq.store.MessageStore#getDestination()
+     */
+    public ActiveMQDestination getDestination(){
+       return destination;
+    }
+
+    /**
+     * @param identity
+     * @return the Message
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#getMessage(org.apache.activemq.command.MessageId)
+     */
+    public Message getMessage(MessageId identity) throws IOException{
+        Message result = null;
+        for (Iterator i = messageContainer.iterator(); i.hasNext();){
+            Message msg = (Message)i.next();
+            if (msg.getMessageId().equals(identity)) {
+                result = msg;
+                break;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param identity
+     * @return String
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#getMessageReference(org.apache.activemq.command.MessageId)
+     */
+    public String getMessageReference(MessageId identity) throws IOException{
+        return null;
+    }
+
+    /**
+     * @throws Exception
+     * @see org.apache.activemq.store.MessageStore#recover(org.apache.activemq.store.MessageRecoveryListener)
+     */
+    public void recover(MessageRecoveryListener listener) throws Exception{
+        for(Iterator iter=messageContainer.iterator();iter.hasNext();){
+            Object msg=iter.next();
+            if(msg.getClass()==String.class){
+                listener.recoverMessageReference((String) msg);
+            }else{
+                listener.recoverMessage((Message) msg);
+            }
+        }
+        listener.finished();
+        
+    }
+
+    /**
+     * @param context
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#removeAllMessages(org.apache.activemq.broker.ConnectionContext)
+     */
+    public void removeAllMessages(ConnectionContext context) throws IOException{
+        messageContainer.clear();
+        
+    }
+
+    /**
+     * @param context
+     * @param ack
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#removeMessage(org.apache.activemq.broker.ConnectionContext, org.apache.activemq.command.MessageAck)
+     */
+    public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
+        for (Iterator i = messageContainer.iterator(); i.hasNext();){
+            Message msg = (Message)i.next();
+            if (msg.getMessageId().equals(ack.getLastMessageId())) {
+               i.remove();
+                break;
+            }
+        }
+        
+    }
+
+    /**
+     * @param usageManager
+     * @see org.apache.activemq.store.MessageStore#setUsageManager(org.apache.activemq.memory.UsageManager)
+     */
+    public void setUsageManager(UsageManager usageManager){
+        // TODO Auto-generated method stub
+        
+    }
+
+    /**
+     * @throws Exception
+     * @see org.apache.activemq.Service#start()
+     */
+    public void start() throws Exception{
+        // TODO Auto-generated method stub
+        
+    }
+
+    /**
+     * @throws Exception
+     * @see org.apache.activemq.Service#stop()
+     */
+    public void stop() throws Exception{
+        // TODO Auto-generated method stub
+        
     }
 
     

@@ -18,10 +18,14 @@
 package org.apache.activemq.kaha.impl.index;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
 import java.util.LinkedList;
 
+
+import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.data.DataManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,29 +38,22 @@ public final class IndexManager{
     private static final Log log=LogFactory.getLog(IndexManager.class);
     private static final String NAME_PREFIX="index-";
     private final String name;
+    private File directory;
     private File file;
     private RandomAccessFile indexFile;
     private StoreIndexReader reader;
     private StoreIndexWriter writer;
     private LinkedList freeList=new LinkedList();
+    private DataManager redoLog;
+    private String mode;
     private long length=0;
 
     public IndexManager(File directory,String name,String mode,DataManager redoLog) throws IOException{
+        this.directory = directory;
         this.name=name;
-        file=new File(directory,NAME_PREFIX+name);
-        indexFile=new RandomAccessFile(file,mode);
-        reader=new StoreIndexReader(indexFile);
-        writer=new StoreIndexWriter(indexFile,name,redoLog);
-        long offset=0;
-        while((offset+IndexItem.INDEX_SIZE)<=indexFile.length()){
-            IndexItem index=reader.readItem(offset);
-            if(!index.isActive()){
-                index.reset();
-                freeList.add(index);
-            }
-            offset+=IndexItem.INDEX_SIZE;
-        }
-        length=offset;
+        this.mode = mode;
+        this.redoLog = redoLog;
+        initialize();
     }
 
     public synchronized boolean isEmpty(){
@@ -66,19 +63,28 @@ public final class IndexManager{
     public synchronized IndexItem getIndex(long offset) throws IOException{
         return reader.readItem(offset);
     }
+    
+    public synchronized IndexItem refreshIndex(IndexItem item) throws IOException{
+        reader.updateIndexes(item);
+        return item;
+    }
 
     public synchronized void freeIndex(IndexItem item) throws IOException{
-        item.reset();
+        //item.reset();
         item.setActive(false);
-        writer.storeItem(item);
+        writer.updateIndexes(item);
         freeList.add(item);
     }
 
-    public synchronized void updateIndex(IndexItem index) throws IOException{
+    public synchronized void storeIndex(IndexItem index) throws IOException{
         writer.storeItem(index);
     }
+    
+    public synchronized void updateIndexes(IndexItem index) throws IOException{
+        writer.updateIndexes(index);
+    }
 
-    public void redo(final RedoStoreIndexItem redo) throws IOException{
+    public synchronized void redo(final RedoStoreIndexItem redo) throws IOException{
         writer.redoStoreItem(redo);
     }
 
@@ -106,6 +112,7 @@ public final class IndexManager{
         }
     }
 
+        
     public synchronized boolean delete() throws IOException{
         freeList.clear();
         if(indexFile!=null){
@@ -115,7 +122,7 @@ public final class IndexManager{
         return file.delete();
     }
 
-    private IndexItem getNextFreeIndex(){
+    private synchronized IndexItem getNextFreeIndex(){
         IndexItem result=null;
         if(!freeList.isEmpty()){
             result=(IndexItem) freeList.removeLast();
@@ -128,12 +135,33 @@ public final class IndexManager{
         return length;
     }
 
-    public void setLength(long value){
+    public synchronized void setLength(long value){
         this.length=value;
+    }
+    
+    public synchronized FileLock getLock() throws IOException {
+        return indexFile.getChannel().tryLock();
     }
 
     
     public String toString(){
         return "IndexManager:("+NAME_PREFIX+name+")";
+    }
+    
+    protected void initialize() throws IOException {
+        file=new File(directory,NAME_PREFIX+name);
+        indexFile=new RandomAccessFile(file,mode);
+        reader=new StoreIndexReader(indexFile);
+        writer=new StoreIndexWriter(indexFile,name,redoLog);
+        long offset=0;
+        while((offset+IndexItem.INDEX_SIZE)<=indexFile.length()){
+            IndexItem index=reader.readItem(offset);
+            if(!index.isActive()){
+                index.reset();
+                freeList.add(index);
+            }
+            offset+=IndexItem.INDEX_SIZE;
+        }
+        length=offset;
     }
 }

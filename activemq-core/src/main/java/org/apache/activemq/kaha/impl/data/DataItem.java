@@ -17,13 +17,15 @@
  */
 package org.apache.activemq.kaha.impl.data;
 
+import org.apache.activemq.kaha.StoreLocation;
+
 
 /**
  * A a wrapper for a data in the store
  * 
  * @version $Revision: 1.2 $
  */
-public final class DataItem implements Item{
+public final class DataItem implements Item, StoreLocation{
     
     private int file=(int) POSITION_NOT_SET;
     private long offset=POSITION_NOT_SET;
@@ -42,7 +44,8 @@ public final class DataItem implements Item{
     }
 
     /**
-     * @return Returns the size.
+     * @return
+     * @see org.apache.activemq.kaha.StoreLocation#getSize()
      */
     public int getSize(){
         return size;
@@ -56,7 +59,8 @@ public final class DataItem implements Item{
     }
 
     /**
-     * @return Returns the offset.
+     * @return
+     * @see org.apache.activemq.kaha.StoreLocation#getOffset()
      */
     public long getOffset(){
         return offset;
@@ -70,7 +74,8 @@ public final class DataItem implements Item{
     }
 
     /**
-     * @return Returns the file.
+     * @return
+     * @see org.apache.activemq.kaha.StoreLocation#getFile()
      */
     public int getFile(){
         return file;

@@ -18,6 +18,7 @@
 package org.apache.activemq.kaha.impl.index;
 
 import java.io.IOException;
+import org.apache.activemq.kaha.StoreEntry;
 /**
  * A linked list used by IndexItems
  * 
@@ -72,7 +73,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @return the first element from this list.
      */
-    public IndexItem removeFirst(){
+    public StoreEntry removeFirst(){
         if(size==0){
             return null;
         }
@@ -89,7 +90,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
     public Object removeLast(){
         if(size==0)
             return null;
-        IndexItem result=last;
+        StoreEntry result=last;
         remove(last);
         return result;
     }
@@ -142,7 +143,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * @return <tt>true</tt> (as per the general contract of <tt>Collection.add</tt>).
      */
     public boolean add(IndexItem item){
-        size++;
+        addLast(item);
         return true;
     }
 
@@ -224,7 +225,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * @return the index in this list of the first occurrence of the specified element, or -1 if the list does not
      *         contain this element.
      */
-    public int indexOf(IndexItem o){
+    public int indexOf(StoreEntry o){
         int index=0;
         if(size>0){
             for(IndexItem e=getNextEntry(root);e!=null;e=getNextEntry(e)){
@@ -271,19 +272,19 @@ public class DiskIndexLinkedList implements IndexLinkedList{
             try{
                 result=indexManager.getIndex(current.getPreviousItem());
             }catch(IOException e){
-                throw new RuntimeException("Failed to index",e);
+                throw new RuntimeException("Failed to  get current index for "+current,e);
             }
         }
-        //essential root get's updated consistently
-        if(result != null &&root!=null && root.equals(result)){
-           return root;
+        // essential root get's updated consistently
+        if(result!=null&&root!=null&&root.equals(result)){
+            return root;
         }
         return result;
     }
     
-   public  IndexItem getEntry(IndexItem current){
-        IndexItem result=null;
-        if(current!=null&&current.getOffset()>=0){
+   public  StoreEntry getEntry(StoreEntry current){
+        StoreEntry result=null;
+        if(current != null && current.getOffset() >= 0){
             try{
                 result=indexManager.getIndex(current.getOffset());
             }catch(IOException e){
@@ -296,6 +297,26 @@ public class DiskIndexLinkedList implements IndexLinkedList{
         }
         return result;
     }
+   
+   /**
+    * Update the indexes of a StoreEntry
+    * @param current
+    */
+   public StoreEntry refreshEntry(StoreEntry current){
+       StoreEntry result=null;
+       if(current != null && current.getOffset() >= 0){
+           try{
+               result=indexManager.refreshIndex((IndexItem)current);
+           }catch(IOException e){
+               throw new RuntimeException("Failed to index",e);
+           }
+       }
+       //essential root get's updated consistently
+       if(result != null &&root!=null && root.equals(result)){
+          return root;
+       }
+       return result;
+   }
 
     public void remove(IndexItem e){
         if(e==root||e.equals(root))

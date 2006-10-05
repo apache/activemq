@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.kaha;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 /**
@@ -115,5 +116,41 @@ public interface ListContainer extends List{
      * clear any cached values
      */
     public void clearCache();
+    
+    /**
+     * add an Object to the list but get a StoreEntry of its position
+     * @param object
+     * @return the entry in the Store
+     */
+    public StoreEntry placeLast(Object object);
+    
+    /**
+     * insert an Object in first position int the list but get a StoreEntry of its position
+     * @param object
+     * @return the location in the Store
+     */
+    public StoreEntry placeFirst(Object object);
+    
+    /**
+     * Advanced feature = must ensure the object written doesn't overwrite other objects in the container
+     * @param entry 
+     * @param object 
+     */
+    public void update(StoreEntry entry, Object object);
+    
+    /**
+     * Retrieve an Object from the Store by its location
+     * @param entry
+     * @return the Object at that entry
+     */
+    public Object get(StoreEntry entry);
+    
+    /**
+     * remove the Object at the StoreEntry
+     * @param entry
+     * @return true if successful
+     */
+    public boolean remove(StoreEntry entry);
+    
     
 }

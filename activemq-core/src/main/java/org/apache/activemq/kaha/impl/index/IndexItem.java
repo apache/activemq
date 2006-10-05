@@ -21,6 +21,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.activemq.kaha.StoreEntry;
+import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.data.DataItem;
 import org.apache.activemq.kaha.impl.data.Item;
 /**
@@ -28,9 +30,10 @@ import org.apache.activemq.kaha.impl.data.Item;
  * 
  * @version $Revision: 1.2 $
  */
- public class IndexItem implements Item{
+ public class IndexItem implements Item, StoreEntry{
     
     public static final int INDEX_SIZE=51;
+    public static final int INDEXES_ONLY_SIZE=19;
     //used by linked list
     IndexItem next;
     IndexItem prev;
@@ -66,7 +69,11 @@ import org.apache.activemq.kaha.impl.data.Item;
         active=true;
     }
 
-    public DataItem getKeyDataItem(){
+    /**
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getKeyDataItem()
+     */
+    public StoreLocation getKeyDataItem(){
         DataItem result=new DataItem();
         result.setOffset(keyOffset);
         result.setFile(keyFile);
@@ -74,7 +81,11 @@ import org.apache.activemq.kaha.impl.data.Item;
         return result;
     }
 
-    public DataItem getValueDataItem(){
+    /**
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getValueDataItem()
+     */
+    public StoreLocation getValueDataItem(){
         DataItem result=new DataItem();
         result.setOffset(valueOffset);
         result.setFile(valueFile);
@@ -82,13 +93,13 @@ import org.apache.activemq.kaha.impl.data.Item;
         return result;
     }
 
-    public void setValueData(DataItem item){
+    public void setValueData(StoreLocation item){
         valueOffset=item.getOffset();
         valueFile=item.getFile();
         valueSize=item.getSize();
     }
 
-    public void setKeyData(DataItem item){
+    public void setKeyData(StoreLocation item){
         keyOffset=item.getOffset();
         keyFile=item.getFile();
         keySize=item.getSize();
@@ -98,7 +109,7 @@ import org.apache.activemq.kaha.impl.data.Item;
      * @param dataOut
      * @throws IOException
      */
-    void write(DataOutput dataOut) throws IOException{
+    public void write(DataOutput dataOut) throws IOException{
         dataOut.writeShort(MAGIC);
         dataOut.writeBoolean(active);
         dataOut.writeLong(previousItem);
@@ -110,12 +121,19 @@ import org.apache.activemq.kaha.impl.data.Item;
         dataOut.writeLong(valueOffset);
         dataOut.writeInt(valueSize);
     }
+    
+    void updateIndexes(DataOutput dataOut) throws IOException{
+        dataOut.writeShort(MAGIC);
+        dataOut.writeBoolean(active);
+        dataOut.writeLong(previousItem);
+        dataOut.writeLong(nextItem);
+    }
 
     /**
      * @param dataIn
      * @throws IOException
      */
-    void read(DataInput dataIn) throws IOException{
+    public void read(DataInput dataIn) throws IOException{
         if(dataIn.readShort()!=MAGIC){
             throw new BadMagicException();
         }
@@ -128,6 +146,15 @@ import org.apache.activemq.kaha.impl.data.Item;
         valueFile=dataIn.readInt();
         valueOffset=dataIn.readLong();
         valueSize=dataIn.readInt();
+    }
+    
+    void readIndexes(DataInput dataIn) throws IOException{
+        if(dataIn.readShort()!=MAGIC){
+            throw new BadMagicException();
+        }
+        active=dataIn.readBoolean();
+        previousItem=dataIn.readLong();
+        nextItem=dataIn.readLong();
     }
 
     /**
@@ -152,7 +179,8 @@ import org.apache.activemq.kaha.impl.data.Item;
     }
 
     /**
-     * @return next item
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getNextItem()
      */
     public long getNextItem(){
         return nextItem;
@@ -173,7 +201,8 @@ import org.apache.activemq.kaha.impl.data.Item;
     }
 
     /**
-     * @return Returns the keyFile.
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getKeyFile()
      */
     public int getKeyFile(){
         return keyFile;
@@ -187,7 +216,8 @@ import org.apache.activemq.kaha.impl.data.Item;
     }
 
     /**
-     * @return Returns the valueFile.
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getValueFile()
      */
     public int getValueFile(){
         return valueFile;
@@ -201,7 +231,8 @@ import org.apache.activemq.kaha.impl.data.Item;
     }
 
     /**
-     * @return Returns the valueOffset.
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getValueOffset()
      */
     public long getValueOffset(){
         return valueOffset;
@@ -229,7 +260,8 @@ import org.apache.activemq.kaha.impl.data.Item;
     }
 
     /**
-     * @return Returns the offset.
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getOffset()
      */
     public long getOffset(){
         return offset;
@@ -242,6 +274,10 @@ import org.apache.activemq.kaha.impl.data.Item;
         this.offset=offset;
     }
 
+    /**
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getKeySize()
+     */
     public int getKeySize() {
         return keySize;
     }
@@ -250,6 +286,10 @@ import org.apache.activemq.kaha.impl.data.Item;
         this.keySize = keySize;
     }
 
+    /**
+     * @return
+     * @see org.apache.activemq.kaha.StoreEntry#getValueSize()
+     */
     public int getValueSize() {
         return valueSize;
     }
