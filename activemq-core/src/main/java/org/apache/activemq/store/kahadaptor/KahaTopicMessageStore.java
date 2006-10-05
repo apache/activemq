@@ -146,8 +146,8 @@ public class KahaTopicMessageStore  implements TopicMessageStore{
         ListContainer list=(ListContainer) subscriberAcks.get(key);
         if(list!=null){
             for(Iterator i=list.iterator();i.hasNext();){
-                TopicSubAck tsa = (TopicSubAck)i.next();
-                Object msg=messageContainer.get(tsa.getStoreEntry());
+                StoreEntry entry = (StoreEntry)i.next();
+                Object msg=messageContainer.get(entry);
                 if(msg!=null){
                     if(msg.getClass()==String.class){
                         listener.recoverMessageReference((String) msg);
@@ -170,8 +170,8 @@ public class KahaTopicMessageStore  implements TopicMessageStore{
             boolean startFound=false;
             int count = 0;
             for(Iterator i=list.iterator();i.hasNext() && count < maxReturned;){
-                TopicSubAck tsa = (TopicSubAck)i.next();
-                Object msg=messageContainer.get(tsa.getStoreEntry());
+                StoreEntry entry = (StoreEntry)i.next();
+                Object msg=messageContainer.get(entry);
                 if(msg!=null){
                     if(msg.getClass()==String.class){
                         String ref=msg.toString();
@@ -226,9 +226,8 @@ public class KahaTopicMessageStore  implements TopicMessageStore{
     public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
         String key=getSubscriptionKey(clientId,subscriptionName);
         ListContainer list=(ListContainer) subscriberAcks.get(key);
-        Iterator iter = list.iterator();
-        TopicSubAck tsa = (TopicSubAck)list.get(0);
-        Message msg=(Message)messageContainer.get(tsa.getStoreEntry());
+        StoreEntry entry = (StoreEntry)list.get(0);
+        Message msg=(Message)messageContainer.get(entry);
         return msg;
     }
 
