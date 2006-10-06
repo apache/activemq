@@ -581,12 +581,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         ConnectionState cs = lookupConnectionState(connectionId);
         SessionState session = cs.getSessionState(id);
-        
-        // Don't let new consumers or producers get added while we are closing this down.
-        session.shutdown();
-        
+
         if( session == null )
             throw new IllegalStateException("Cannot remove session that had not been registered: "+id);
+
+        // Don't let new consumers or producers get added while we are closing this down.
+        session.shutdown();
         
         // Cascade the connection stop to the consumers and producers.
         for (Iterator iter = session.getConsumerIds().iterator(); iter.hasNext();) {
