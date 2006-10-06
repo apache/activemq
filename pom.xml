@@ -831,7 +831,7 @@
             </goals>
             <configuration>
               <remoteRepositoryId>apache.m1.releases</remoteRepositoryId>
-              <remoteRepositoryUrl>scpexe://minotaur.apache.org/www/people.apache.org/repository</remoteRepositoryUrl>
+              <remoteRepositoryUrl>${m1-dist-repo-url}</remoteRepositoryUrl>
             </configuration>
           </execution>
         </executions>
@@ -959,6 +959,7 @@
     <xstream-version>1.1.2</xstream-version>
     <xbean-version>2.6</xbean-version>
     <dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m2-incubating-repository</dist-repo-url>
+    <m1-dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m1-snapshot-repository</m1-dist-repo-url>
     <site-repo-url>scpexe://people.apache.org/www/incubator.apache.org/activemq/maven/</site-repo-url>
   </properties>
 </project>
