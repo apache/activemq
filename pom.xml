@@ -228,7 +228,7 @@
       </dependency>
 
 	  <dependency>
-        <groupId>org.apache.activemq</groupId>
+        <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-openwire-generator</artifactId>
         <version>${activemq-version}</version>
       </dependency>
