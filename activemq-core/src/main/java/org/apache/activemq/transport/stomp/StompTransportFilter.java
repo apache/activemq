@@ -30,22 +30,25 @@ import org.apache.activemq.util.IOExceptionSupport;
  * The StompTransportFilter normally sits on top of a TcpTransport
  * that has been configured with the StompWireFormat and is used to
  * convert STOMP commands to ActiveMQ commands.
- * 
- * All of the coversion work is done by delegating to the ProtocolConverter. 
- *  
- * @author <a href="http://hiramchirino.com">chirino</a> 
+ *
+ * All of the coversion work is done by delegating to the ProtocolConverter.
+ *
+ * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompTransportFilter extends TransportFilter {
 
-    ProtocolConverter protocolConverter = new ProtocolConverter();
-    
+    private final ProtocolConverter protocolConverter;
+
     private final Object sendToActiveMQMutex = new Object();
     private final Object sendToStompMutex = new Object();
-    
-	public StompTransportFilter(Transport next) {
+
+    private final FrameTranslator frameTranslator;
+
+    public StompTransportFilter(Transport next, FrameTranslator translator) {
 		super(next);
-		protocolConverter.setTransportFilter(this);
-	}
+        this.frameTranslator = translator;
+        this.protocolConverter = new ProtocolConverter(this, translator);
+    }
 
 	public void oneway(Command command) throws IOException {
         try {
@@ -54,7 +57,7 @@ public class StompTransportFilter extends TransportFilter {
 			throw IOExceptionSupport.create(e);
 		}
 	}
-	
+
 	public void onCommand(Command command) {
         try {
         	protocolConverter.onStompCommad((StompFrame) command);
@@ -64,17 +67,21 @@ public class StompTransportFilter extends TransportFilter {
 			onException(IOExceptionSupport.create(e));
 		}
 	}
-	
+
 	public void sendToActiveMQ(Command command) {
 		synchronized(sendToActiveMQMutex) {
 			transportListener.onCommand(command);
 		}
 	}
-	
+
 	public void sendToStomp(StompFrame command) throws IOException {
 		synchronized(sendToStompMutex) {
 			next.oneway(command);
 		}
 	}
 
+    public FrameTranslator getFrameTranslator()
+    {
+        return frameTranslator;
+    }
 }
