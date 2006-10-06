@@ -40,7 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
+ *
  * @version $Revision$
  */
 public class StompSubscriptionRemoveTest extends TestCase {
@@ -49,10 +49,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
     private Socket stompSocket;
     private ByteArrayOutputStream inputBuffer;
 
-    /**
-     * @param args
-     * @throws Exception
-     */
+    
     public void testRemoveSubscriber() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
@@ -115,7 +112,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
             ++messagesCount;
             ++count;
         }
-        
+
         sendFrame("DISCONNECT\n\n");
         Thread.sleep(1000);
         stompSocket.close();
@@ -127,7 +124,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         sendFrame(connect_frame);
 
         f = receiveFrame(5000);
-        
+
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n";
         sendFrame(frame);
         try {
@@ -147,7 +144,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
                         }
                     }
                 }
-                                
+
                 line = input.readLine();
                 if (line == null) {
                     throw new IOException("connection was closed");
@@ -166,11 +163,11 @@ public class StompSubscriptionRemoveTest extends TestCase {
         catch (IOException ex) {
             ex.printStackTrace();
         }
-                
+
         sendFrame("DISCONNECT\n\n");
         stompSocket.close();
         broker.stop();
-        
+
         log.info("Total messages received: " + messagesCount);
         assertTrue("Messages received after connection loss: " + messagesCount, messagesCount >= 2000);
 

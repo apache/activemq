@@ -57,28 +57,35 @@ import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 
- * @author <a href="http://hiramchirino.com">chirino</a> 
+ *
+ * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class ProtocolConverter {
-	
+
     private static final IdGenerator connectionIdGenerator = new IdGenerator();
     private final ConnectionId connectionId = new ConnectionId(connectionIdGenerator.generateId());
     private final SessionId sessionId = new SessionId(connectionId, -1);
     private final ProducerId producerId = new ProducerId(sessionId, 1);
-    
+
     private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator transactionIdGenerator = new LongSequenceGenerator();
-	
+
     private final ConcurrentHashMap resposeHandlers = new ConcurrentHashMap();
     private final ConcurrentHashMap subscriptionsByConsumerId = new ConcurrentHashMap();
     private final Map transactions = new ConcurrentHashMap();
-	private StompTransportFilter transportFilter;
-	
+	private final StompTransportFilter transportFilter;
+
 	private final Object commnadIdMutex = new Object();
 	private int lastCommandId;
     private final AtomicBoolean connected = new AtomicBoolean(false);
+    private final FrameTranslator frameTranslator;
+
+    public ProtocolConverter(StompTransportFilter stompTransportFilter, FrameTranslator translator)
+    {
+        this.transportFilter = stompTransportFilter;
+        this.frameTranslator = translator;
+    }
 
     protected int generateCommandId() {
     	synchronized(commnadIdMutex){
@@ -102,7 +109,7 @@ public class ProtocolConverter {
 	    }
     	return null;
     }
-    
+
 	protected void sendToActiveMQ(Command command, ResponseHandler handler) {
 		command.setCommandId(generateCommandId());
 		if(handler!=null) {
@@ -122,11 +129,11 @@ public class ProtocolConverter {
      */
 	public void onStompCommad( StompFrame command ) throws IOException, JMSException {
 		try {
-			
+
 			if( command.getClass() == StompFrameError.class ) {
 				throw ((StompFrameError)command).getException();
 			}
-			
+
 			String action = command.getAction();
 	        if (action.startsWith(Stomp.Commands.SEND))
 	            onStompSend(command);
@@ -148,9 +155,9 @@ public class ProtocolConverter {
 	            onStompDisconnect(command);
 	        else
 	        	throw new ProtocolException("Unknown STOMP action: "+action);
-	        
+
         } catch (ProtocolException e) {
-        	
+
         	// Let the stomp client know about any protocol errors.
         	ByteArrayOutputStream baos = new ByteArrayOutputStream();
         	PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos,"UTF-8"));
@@ -159,20 +166,20 @@ public class ProtocolConverter {
 
         	HashMap headers = new HashMap();
         	headers.put(Stomp.Headers.Error.MESSAGE, e.getMessage());
-        	
+
             final String receiptId = (String) command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
-            if( receiptId != null ) {            	
+            if( receiptId != null ) {
             	headers.put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
             }
-        	
+
         	StompFrame errorMessage = new StompFrame(Stomp.Responses.ERROR,headers,baos.toByteArray());
 			sendToStomp(errorMessage);
-			
+
 			if( e.isFatal() )
 				getTransportFilter().onException(e);
         }
 	}
-	
+
 	protected void onStompSend(StompFrame command) throws IOException, JMSException {
 		checkConnected();
 
@@ -192,12 +199,12 @@ public class ProtocolConverter {
                 throw new ProtocolException("Invalid transaction id: "+stompTx);
             message.setTransactionId(activemqTx);
         }
-		
+
         message.onSend();
 		sendToActiveMQ(message, createResponseHandler(command));
-		
+
 	}
-	
+
 
     protected void onStompAck(StompFrame command) throws ProtocolException {
 		checkConnected();
@@ -205,7 +212,7 @@ public class ProtocolConverter {
     	// TODO: acking with just a message id is very bogus
     	// since the same message id could have been sent to 2 different subscriptions
     	// on the same stomp connection. For example, when 2 subs are created on the same topic.
-    	
+
     	Map headers = command.getHeaders();
         String messageId = (String) headers.get(Stomp.Headers.Ack.MESSAGE_ID);
         if (messageId == null)
@@ -230,98 +237,94 @@ public class ProtocolConverter {
 		        break;
 			}
 		}
-        
+
         if( !acked )
         	throw new ProtocolException("Unexpected ACK received for message-id [" + messageId + "]");
 
 	}
-    
+
 
 	protected void onStompBegin(StompFrame command) throws ProtocolException {
 		checkConnected();
 
 		Map headers = command.getHeaders();
-		
+
         String stompTx = (String)headers.get(Stomp.Headers.TRANSACTION);
-        
+
         if (!headers.containsKey(Stomp.Headers.TRANSACTION)) {
             throw new ProtocolException("Must specify the transaction you are beginning");
         }
-        
+
         if( transactions.get(stompTx)!=null  ) {
             throw new ProtocolException("The transaction was allready started: "+stompTx);
         }
-        
+
         LocalTransactionId activemqTx = new LocalTransactionId(connectionId, transactionIdGenerator.getNextSequenceId());
         transactions.put(stompTx, activemqTx);
-        
+
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.BEGIN);
-        
+
 		sendToActiveMQ(tx, createResponseHandler(command));
-		
+
 	}
-	
+
 	protected void onStompCommit(StompFrame command) throws ProtocolException {
 		checkConnected();
 
 		Map headers = command.getHeaders();
-		
+
         String stompTx = (String) headers.get(Stomp.Headers.TRANSACTION);
         if (stompTx==null) {
             throw new ProtocolException("Must specify the transaction you are committing");
         }
-        
-        TransactionId activemqTx=null;
-        if (stompTx!=null) {
-        	activemqTx = (TransactionId) transactions.remove(stompTx);
-            if (activemqTx == null)
-                throw new ProtocolException("Invalid transaction id: "+stompTx);
+
+        TransactionId activemqTx = (TransactionId) transactions.remove(stompTx);
+        if (activemqTx == null) {
+            throw new ProtocolException("Invalid transaction id: "+stompTx);
         }
 
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.COMMIT_ONE_PHASE);
-		
+
 		sendToActiveMQ(tx, createResponseHandler(command));
 	}
 
 	protected void onStompAbort(StompFrame command) throws ProtocolException {
 		checkConnected();
     	Map headers = command.getHeaders();
-		
+
         String stompTx = (String) headers.get(Stomp.Headers.TRANSACTION);
         if (stompTx==null) {
             throw new ProtocolException("Must specify the transaction you are committing");
         }
-        
-        TransactionId activemqTx=null;
-        if (stompTx!=null) {
-        	activemqTx = (TransactionId) transactions.remove(stompTx);
-            if (activemqTx == null)
-                throw new ProtocolException("Invalid transaction id: "+stompTx);
+
+        TransactionId activemqTx = (TransactionId) transactions.remove(stompTx);
+        if (activemqTx == null) {
+            throw new ProtocolException("Invalid transaction id: "+stompTx);
         }
 
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.ROLLBACK);
-		
+
 		sendToActiveMQ(tx, createResponseHandler(command));
-		
+
 	}
 
 	protected void onStompSubscribe(StompFrame command) throws ProtocolException {
 		checkConnected();
     	Map headers = command.getHeaders();
-        
+
         String subscriptionId = (String)headers.get(Stomp.Headers.Subscribe.ID);
         String destination = (String)headers.get(Stomp.Headers.Subscribe.DESTINATION);
-        
-        ActiveMQDestination actual_dest = convertDestination(destination);
+
+        ActiveMQDestination actual_dest = frameTranslator.convertDestination(destination);
         ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
         consumerInfo.setPrefetchSize(1000);
@@ -329,14 +332,14 @@ public class ProtocolConverter {
 
         String selector = (String) headers.remove(Stomp.Headers.Subscribe.SELECTOR);
         consumerInfo.setSelector(selector);
-        
+
         IntrospectionSupport.setProperties(consumerInfo, headers, "activemq.");
-        
-        consumerInfo.setDestination(convertDestination(destination));
-                
+
+        consumerInfo.setDestination(frameTranslator.convertDestination(destination));
+
         StompSubscription stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo);
         stompSubscription.setDestination(actual_dest);
-        
+
         String ackMode = (String)headers.get(Stomp.Headers.Subscribe.ACK_MODE);
         if (Stomp.Headers.Subscribe.AckModeValues.CLIENT.equals(ackMode)) {
             stompSubscription.setAckMode(StompSubscription.CLIENT_ACK);
@@ -346,7 +349,7 @@ public class ProtocolConverter {
 
         subscriptionsByConsumerId.put(id, stompSubscription);
 		sendToActiveMQ(consumerInfo, createResponseHandler(command));
-		
+
 	}
 
 	protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {
@@ -355,11 +358,11 @@ public class ProtocolConverter {
 
         ActiveMQDestination destination=null;
         Object o = headers.get(Stomp.Headers.Unsubscribe.DESTINATION);
-        if( o!=null ) 
-        	destination =convertDestination((String) o);
-        
+        if( o!=null )
+        	destination = frameTranslator.convertDestination((String) o);
+
         String subscriptionId = (String)headers.get(Stomp.Headers.Unsubscribe.ID);
-        
+
         if (subscriptionId==null && destination==null) {
             throw new ProtocolException("Must specify the subscriptionId or the destination you are unsubscribing from");
         }
@@ -369,7 +372,7 @@ public class ProtocolConverter {
         //
         for (Iterator iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
 			StompSubscription sub = (StompSubscription) iter.next();
-			if ( 
+			if (
 				(subscriptionId!=null && subscriptionId.equals(sub.getSubscriptionId()) ) ||
 				(destination!=null && destination.equals(sub.getDestination()) )
 			) {
@@ -377,7 +380,7 @@ public class ProtocolConverter {
 				return;
 			}
 		}
-        
+
         throw new ProtocolException("No subscription matched.");
 	}
 
@@ -388,56 +391,56 @@ public class ProtocolConverter {
 		}
 
     	final Map headers = command.getHeaders();
-        
+
         // allow anyone to login for now
         String login = (String)headers.get(Stomp.Headers.Connect.LOGIN);
         String passcode = (String)headers.get(Stomp.Headers.Connect.PASSCODE);
         String clientId = (String)headers.get(Stomp.Headers.Connect.CLIENT_ID);
-        
+
         final ConnectionInfo connectionInfo = new ConnectionInfo();
-        
+
         IntrospectionSupport.setProperties(connectionInfo, headers, "activemq.");
-        
+
         connectionInfo.setConnectionId(connectionId);
         if( clientId!=null )
             connectionInfo.setClientId(clientId);
         else
             connectionInfo.setClientId(""+connectionInfo.getConnectionId().toString());
-        
+
         connectionInfo.setResponseRequired(true);
         connectionInfo.setUserName(login);
         connectionInfo.setPassword(passcode);
 
 		sendToActiveMQ(connectionInfo, new ResponseHandler(){
 			public void onResponse(ProtocolConverter converter, Response response) throws IOException {
-					            
+
 	            final SessionInfo sessionInfo = new SessionInfo(sessionId);
 	            sendToActiveMQ(sessionInfo,null);
-	            
-	            
+
+
 	            final ProducerInfo producerInfo = new ProducerInfo(producerId);
 	            sendToActiveMQ(producerInfo,new ResponseHandler(){
 					public void onResponse(ProtocolConverter converter, Response response) throws IOException {
-						
+
 						connected.set(true);
 	                    HashMap responseHeaders = new HashMap();
-	                    
+
 	                    responseHeaders.put(Stomp.Headers.Connected.SESSION, connectionInfo.getClientId());
 	                    String requestId = (String) headers.get(Stomp.Headers.Connect.REQUEST_ID);
 	                    if( requestId !=null ){
 		                    responseHeaders.put(Stomp.Headers.Connected.RESPONSE_ID, requestId);
 	            		}
-	                    
+
 	                    StompFrame sc = new StompFrame();
 	                    sc.setAction(Stomp.Responses.CONNECTED);
 	                    sc.setHeaders(responseHeaders);
 	                    sendToStomp(sc);
 					}
 				});
-	            
+
 			}
 		});
-		
+
 	}
 
 	protected void onStompDisconnect(StompFrame command) throws ProtocolException {
@@ -454,182 +457,42 @@ public class ProtocolConverter {
 	}
 
 	/**
-     * Convert a ActiveMQ command
+     * Dispatch a ActiveMQ command
      * @param command
-     * @throws IOException 
+     * @throws IOException
      */
 	public void onActiveMQCommad( Command command ) throws IOException, JMSException {
-		
+
     	if ( command.isResponse() ) {
-		    
+
 			Response response = (Response) command;
 		    ResponseHandler rh = (ResponseHandler) resposeHandlers.remove(new Integer(response.getCorrelationId()));
 		    if( rh !=null ) {
 		    	rh.onResponse(this, response);
 		    }
-		    
+
 		} else if( command.isMessageDispatch() ) {
-			
+
 		    MessageDispatch md = (MessageDispatch)command;
 		    StompSubscription sub = (StompSubscription) subscriptionsByConsumerId.get(md.getConsumerId());
-		    if (sub != null)
+		    if (sub != null) {
 		        sub.onMessageDispatch(md);
-		    
-		}
-		
+            }
+        }
 	}
 
-	public  ActiveMQMessage convertMessage(StompFrame command) throws IOException, JMSException {
-		Map headers = command.getHeaders();
-        
-        // now the body
-        ActiveMQMessage msg;
-        if (headers.containsKey(Stomp.Headers.CONTENT_LENGTH)) {
-            headers.remove(Stomp.Headers.CONTENT_LENGTH);
-            ActiveMQBytesMessage bm = new ActiveMQBytesMessage();
-            bm.writeBytes(command.getContent());
-            msg = bm;
-        } else {
-            ActiveMQTextMessage text = new ActiveMQTextMessage();
-            try {
-				text.setText(new String(command.getContent(), "UTF-8"));
-			} catch (Throwable e) {
-				throw new ProtocolException("Text could not bet set: "+e, false, e);
-			}
-            msg = text;
-        }
+    public  ActiveMQMessage convertMessage(StompFrame command) throws IOException, JMSException {
 
-        String destination = (String) headers.remove(Stomp.Headers.Send.DESTINATION);
-        msg.setDestination(convertDestination(destination));
+        ActiveMQMessage msg = frameTranslator.convertFrame(command);
 
-        // the standard JMS headers
-        msg.setJMSCorrelationID((String) headers.remove(Stomp.Headers.Send.CORRELATION_ID));
-
-        Object o = headers.remove(Stomp.Headers.Send.EXPIRATION_TIME);
-        if (o != null) {
-            msg.setJMSExpiration(Long.parseLong((String) o));
-        }
-        
-        o = headers.remove(Stomp.Headers.Send.PRIORITY);
-        if (o != null) {
-            msg.setJMSPriority(Integer.parseInt((String)o));
-        }
-        
-        o = headers.remove(Stomp.Headers.Send.TYPE);
-        if (o != null) {
-            msg.setJMSType((String) o);
-        }
-        
-        o = headers.remove(Stomp.Headers.Send.REPLY_TO);
-        if( o!=null ) {
-        	msg.setJMSReplyTo(convertDestination((String)o));
-        }
-
-        o = headers.remove(Stomp.Headers.Send.PERSISTENT);
-        if (o != null) {
-            msg.setPersistent("true".equals(o));
-        }
-        
-        // now the general headers
-        msg.setProperties(headers);
-        
-        return msg;        
-	}
-	
-	public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
-
-		StompFrame command = new StompFrame();
-		command.setAction(Stomp.Responses.MESSAGE);
-		
-		HashMap headers = new HashMap();
-		command.setHeaders(headers);
-		
-        headers.put(Stomp.Headers.Message.DESTINATION, convertDestination(message.getDestination()));
-        headers.put(Stomp.Headers.Message.MESSAGE_ID, message.getJMSMessageID());
-        if (message.getJMSCorrelationID() != null) {
-            headers.put(Stomp.Headers.Message.CORRELATION_ID, message.getJMSCorrelationID());
-        }
-        headers.put(Stomp.Headers.Message.EXPIRATION_TIME, ""+message.getJMSExpiration());
-        if (message.getJMSRedelivered()) {
-            headers.put(Stomp.Headers.Message.REDELIVERED, "true");
-        }
-        headers.put(Stomp.Headers.Message.PRORITY, ""+message.getJMSPriority());
-        if (message.getJMSReplyTo() != null) {
-            headers.put(Stomp.Headers.Message.REPLY_TO, convertDestination(message.getJMSReplyTo()));
-        }
-        headers.put(Stomp.Headers.Message.TIMESTAMP, ""+message.getJMSTimestamp());
-        if (message.getJMSType() != null) {
-            headers.put(Stomp.Headers.Message.TYPE, message.getJMSType());
-        }
-
-        // now lets add all the message headers
-        Map properties = message.getProperties();
-        if (properties != null) {
-            headers.putAll(properties);
-        }
-        
-        if( message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE ) {
-        	
-            ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
-            command.setContent(msg.getText().getBytes("UTF-8"));
-            
-        } else if( message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE ) {
-            
-        	ActiveMQBytesMessage msg = (ActiveMQBytesMessage)message.copy();
-            byte[] data = new byte[(int)msg.getBodyLength()]; 
-            msg.readBytes(data);
-
-            headers.put(Stomp.Headers.CONTENT_LENGTH, ""+data.length);
-            command.setContent(data);
-            
-        }
-
-        return command;		
-	}
-	
-    protected ActiveMQDestination convertDestination(String name) throws ProtocolException {
-        if (name == null) {
-            return null;
-        }
-        else if (name.startsWith("/queue/")) {
-            String q_name = name.substring("/queue/".length(), name.length());
-            return ActiveMQDestination.createDestination(q_name, ActiveMQDestination.QUEUE_TYPE);
-        }
-        else if (name.startsWith("/topic/")) {
-            String t_name = name.substring("/topic/".length(), name.length());
-            return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TOPIC_TYPE);
-        }
-        else {
-            throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations " + "must begine with /queue/ or /topic/");
-        }
-
+        return msg;
     }
 
-    protected String convertDestination(Destination d) {
-        if (d == null) {
-            return null;
-        }
-        ActiveMQDestination amq_d = (ActiveMQDestination) d;
-        String p_name = amq_d.getPhysicalName();
-
-        StringBuffer buffer = new StringBuffer();
-        if (amq_d.isQueue()) {
-            buffer.append("/queue/");
-        }
-        if (amq_d.isTopic()) {
-            buffer.append("/topic/");
-        }
-        buffer.append(p_name);
-
-        return buffer.toString();
+	public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
+		return frameTranslator.convertMessage(message);
     }
 
 	public StompTransportFilter getTransportFilter() {
 		return transportFilter;
 	}
-
-	public void setTransportFilter(StompTransportFilter transportFilter) {
-		this.transportFilter = transportFilter;
-	}
-	
 }

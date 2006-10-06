@@ -25,7 +25,7 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> transport factory
- * 
+ *
  * @version $Revision: 1.1.1.1 $
  */
 public class StompTransportFactory extends TcpTransportFactory {
@@ -33,9 +33,9 @@ public class StompTransportFactory extends TcpTransportFactory {
     protected String getDefaultWireFormatType() {
         return "stomp";
     }
-    
+
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-    	transport = new StompTransportFilter(transport);
+    	transport = new StompTransportFilter(transport, new LegacyFrameTranslator());
     	return super.compositeConfigure(transport, format, options);
     }
 }
