@@ -19,18 +19,14 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker useJmx="false"  xmlns="http://activemq.org/config/1.0">
-  
-    <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="foo"/>
-    </persistenceAdapter>
+  <broker useJmx="false"  xmlns="http://activemq.org/config/1.0" persistent="false">
   
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:0" discoveryUri="rendezvous://default"/>
+      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default"/>
     </transportConnectors>
     
     <networkConnectors>
-      <networkConnector uri="rendezvous://default"/>
+      <networkConnector uri="multicast://default"/>
     </networkConnectors>
     
   </broker>
