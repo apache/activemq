@@ -156,14 +156,34 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return (SubscriptionInfo[]) subscriberDatabase.values().toArray(new SubscriptionInfo[subscriberDatabase.size()]);
     }
-    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
-        MessageId lastAck=(MessageId) ackDatabase.get(new SubscriptionKey(clientId,subscriptionName));
+    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws IOException{
         // the message table is a synchronizedMap - so just have to synchronize here
+        boolean matchFound = false;
         synchronized(messageTable){
             for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
                 Map.Entry entry=(Entry) iter.next();
-                if(entry.getKey().equals(lastAck)){
-                    return (Message) entry.getValue();
+                if(!matchFound && entry.getKey().equals(id)){
+                    matchFound = true;
+                }else if (matchFound) {
+                    Message msg =  (Message) entry.getValue();
+                    return msg.getMessageId();
+                }
+            }
+        }
+        return null;
+    }
+    
+    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws IOException{
+        // the message table is a synchronizedMap - so just have to synchronize here
+        Message last= null;
+        synchronized(messageTable){
+            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
+                Map.Entry entry=(Entry) iter.next();
+                
+                if(entry.getKey().equals(id)){
+                    return last != null ? last.getMessageId() : null;
+                }else {
+                    last = (Message)entry.getValue();
                 }
             }
         }
@@ -184,6 +204,9 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
             }
         }
         return result;
+    }
+    
+    public void resetBatching(String clientId,String subscriptionName,MessageId id) {
     }
     
 }

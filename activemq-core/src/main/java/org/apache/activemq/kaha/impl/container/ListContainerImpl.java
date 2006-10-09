@@ -1,19 +1,15 @@
 /**
  * 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
+ * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
+ * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
  * 
  * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 
 package org.apache.activemq.kaha.impl.container;
@@ -52,8 +48,8 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     protected int maximumCacheSize=100;
     protected IndexItem lastCached;
 
-    public ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,String indexType)
-            throws IOException{
+    public ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,
+            String indexType) throws IOException{
         super(id,root,indexManager,dataManager,indexType);
     }
 
@@ -462,15 +458,15 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         indexList.add(index,item);
         itemAdded(item,index,element);
     }
-    
-    protected StoreEntry internalAddLast(Object o) {
+
+    protected StoreEntry internalAddLast(Object o){
         load();
         IndexItem item=writeLast(o);
         indexList.addLast(item);
         itemAdded(item,indexList.size()-1,o);
         return item;
     }
-    
+
     protected StoreEntry internalAddFirst(Object o){
         load();
         IndexItem item=writeFirst(o);
@@ -486,8 +482,6 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         itemAdded(item,index,element);
         return item;
     }
-    
-    
 
     protected StoreEntry internalGet(int index){
         load();
@@ -623,27 +617,29 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         }
         return result;
     }
-    
+
     /**
      * add an Object to the list but get a StoreEntry of its position
+     * 
      * @param object
      * @return the entry in the Store
      */
-    public synchronized StoreEntry placeLast(Object object) {
-        StoreEntry item = internalAddLast(object);
+    public synchronized StoreEntry placeLast(Object object){
+        StoreEntry item=internalAddLast(object);
         return item;
     }
-    
+
     /**
      * insert an Object in first position int the list but get a StoreEntry of its position
+     * 
      * @param object
      * @return the location in the Store
      */
-    public synchronized StoreEntry placeFirst(Object object) {
-        StoreEntry item = internalAddFirst(object);
+    public synchronized StoreEntry placeFirst(Object object){
+        StoreEntry item=internalAddFirst(object);
         return item;
     }
-    
+
     /**
      * @param entry
      * @param object
@@ -651,41 +647,90 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public void update(StoreEntry entry,Object object){
         try{
-            dataManager.updateItem(entry.getValueDataItem(),marshaller, object);
+            dataManager.updateItem(entry.getValueDataItem(),marshaller,object);
         }catch(IOException e){
             throw new RuntimeException(e);
         }
-        
+    }
+
+    /**
+     * Retrieve an Object from the Store by its location
+     * 
+     * @param entry
+     * @return the Object at that entry
+     */
+    public synchronized Object get(StoreEntry entry){
+        load();
+        return getValue(entry);
+    }
+
+    /**
+     * remove the Object at the StoreEntry
+     * 
+     * @param entry
+     * @return true if successful
+     */
+    public synchronized boolean remove(StoreEntry entry){
+        IndexItem item=(IndexItem)entry;
+        load();
+        boolean result=false;
+        if(item!=null){
+            clearCache();
+            remove(item);
+            result = true;
+        }
+        return result;
+    }
+
+    /**
+     * Get the StoreEntry for the first item of the list
+     * 
+     * @return the first StoreEntry or null if the list is empty
+     */
+    public synchronized StoreEntry getFirst(){
+        return indexList.getFirst();
+    }
+
+    /**
+     * Get yjr StoreEntry for the last item of the list
+     * 
+     * @return the last StoreEntry or null if the list is empty
+     */
+    public synchronized StoreEntry getLast(){
+        return indexList.getLast();
+    }
+
+    /**
+     * Get the next StoreEntry from the list
+     * 
+     * @param entry
+     * @return the next StoreEntry or null
+     */
+    public synchronized StoreEntry getNext(StoreEntry entry){
+        IndexItem item=(IndexItem)entry;
+        return indexList.getNextEntry(item);
+    }
+
+    /**
+     * Get the previous StoreEntry from the list
+     * 
+     * @param entry
+     * @return the previous store entry or null
+     */
+    public synchronized StoreEntry getPrevious(StoreEntry entry){
+        IndexItem item=(IndexItem)entry;
+        return indexList.getPrevEntry(item);
     }
     
     /**
-    * Retrieve an Object from the Store by its location
-    * @param entry
-    * @return the Object at that entry
-    */
-   public synchronized Object get(StoreEntry entry) {
-       load();
-       return getValue(entry);
-   }
-   
-   /**
-    * remove the Object at the StoreEntry
-    * @param entry
-    * @return true if successful
-    */
-   public synchronized boolean remove(StoreEntry entry) {
-       IndexItem item = (IndexItem)entry;
-       load();
-       boolean result = false;
-       if(item!=null){
-           clearCache();
-           IndexItem prev=indexList.getPrevEntry(item);
-           prev=prev!=null?prev:root;
-           IndexItem next=indexList.getNextEntry(item);
-           delete(item,prev,next);
-       }
-       return result;
-   }
+     * It's possible that a StoreEntry could be come stale
+     * this will return an upto date entry for the StoreEntry position
+     * @param entry old entry
+     * @return a refreshed StoreEntry
+     */
+    public synchronized StoreEntry refresh(StoreEntry entry) {
+        return indexList.getEntry(entry);
+    }
 
     protected IndexItem writeLast(Object value){
         IndexItem index=null;
@@ -782,7 +827,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         if(item!=null){
             try{
                 // ensure it's up to date
-                //item=indexList.getEntry(item);
+                // item=indexList.getEntry(item);
                 StoreLocation data=item.getValueDataItem();
                 result=dataManager.readItem(marshaller,data);
             }catch(IOException e){
@@ -903,8 +948,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     }
 
     /**
-     * @param cacheList
-     *            the cacheList to set
+     * @param cacheList the cacheList to set
      */
     public synchronized void setCacheList(LinkedList cacheList){
         this.cacheList=cacheList;
@@ -918,8 +962,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     }
 
     /**
-     * @param lastCached
-     *            the lastCached to set
+     * @param lastCached the lastCached to set
      */
     public synchronized void setLastCached(IndexItem lastCached){
         this.lastCached=lastCached;
@@ -933,8 +976,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     }
 
     /**
-     * @param maximumCacheSize
-     *            the maximumCacheSize to set
+     * @param maximumCacheSize the maximumCacheSize to set
      */
     public synchronized void setMaximumCacheSize(int maximumCacheSize){
         this.maximumCacheSize=maximumCacheSize;
@@ -948,12 +990,9 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     }
 
     /**
-     * @param offset
-     *            the offset to set
+     * @param offset the offset to set
      */
     public synchronized void setOffset(int offset){
         this.offset=offset;
     }
-
-   
 }

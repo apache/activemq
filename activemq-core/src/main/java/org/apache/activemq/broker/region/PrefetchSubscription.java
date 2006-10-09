@@ -124,7 +124,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         
     synchronized public void add(MessageReference node) throws Exception{
         enqueueCounter++;
-        if(!isFull()){
+        //if(!isFull()){
+        if(!isFull() && pending.isEmpty() && canDispatch(node)){
             dispatch(node);
         }else{
             optimizePrefetch();
@@ -196,8 +197,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         }
                         dispatchMatched();
                         return;
-                    }else{
-                        // System.out.println("no match: "+ack.getLastMessageId()+","+messageId);
                     }
                 }
             }
@@ -435,8 +434,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     /**
      * @param node
      * @param message
-     *            TODO
-     * @return
+     * @return MessageDispatch
      */
     protected MessageDispatch createMessageDispatch(MessageReference node,Message message){
         if( node == QueueMessageReference.NULL_MESSAGE ) {
