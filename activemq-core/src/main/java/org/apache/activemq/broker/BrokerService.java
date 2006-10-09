@@ -454,7 +454,9 @@ public class BrokerService implements Service, Serializable {
         if (broker != null) {
             stopper.stop(broker);
         }
-        tempDataStore.close();
+        if(tempDataStore!=null){
+            tempDataStore.close();
+        }
 
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
