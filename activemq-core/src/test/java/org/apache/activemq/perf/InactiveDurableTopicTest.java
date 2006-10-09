@@ -34,6 +34,7 @@ import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
  * @version $Revision$
  */
 public class InactiveDurableTopicTest extends TestCase{
+    private static final int MESSAGE_COUNT = 100000;
     private static final String DEFAULT_PASSWORD="";
     private static final String USERNAME="testuser";
     private static final String CLIENTID="mytestclient";
@@ -53,7 +54,7 @@ public class InactiveDurableTopicTest extends TestCase{
         super.setUp();
         broker=new BrokerService();
         
-        //broker.setPersistenceAdapter(new KahaPersistenceAdapter(new File ("TEST_STUFD")));
+        broker.setPersistenceAdapter(new KahaPersistenceAdapter(new File ("TEST_STUFD")));
         /*
         DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
         factory.setDataDirectoryFile(broker.getDataDirectory());
@@ -84,6 +85,7 @@ public class InactiveDurableTopicTest extends TestCase{
             connection=connectionFactory.createConnection(USERNAME,DEFAULT_PASSWORD);
             assertNotNull(connection);
             connection.setClientID(CLIENTID);
+            connection.start();
             session=connection.createSession(false,javax.jms.Session.CLIENT_ACKNOWLEDGE);
             assertNotNull(session);
             topic=session.createTopic(TOPIC_NAME);
@@ -119,18 +121,51 @@ public class InactiveDurableTopicTest extends TestCase{
             assertNotNull(msg);
             msg.setString("key1","value1");
             int loop;
-            for(loop=0;loop<100000;loop++){
+            for(loop=0;loop<MESSAGE_COUNT;loop++){
                 msg.setInt("key2",loop);
                 publisher.send(msg,deliveryMode,deliveryPriority,Message.DEFAULT_TIME_TO_LIVE);
                 if (loop%500==0){
                     System.out.println("Sent " + loop + " messages");
                 }
             }
-            this.assertEquals(loop,100000);
+            this.assertEquals(loop,MESSAGE_COUNT);
             publisher.close();
             session.close();
             connection.stop();
             connection.stop();
+        }catch(JMSException ex){
+            try{
+                connection.close();
+            }catch(Exception ignore){}
+            throw new AssertionFailedError("Create Subscription caught: "+ex);
+        }
+    }
+    public void test3CreateSubscription() throws Exception{
+        try{
+            /*
+             * Step 1 - Establish a connection with a client id and create a durable subscription
+             */
+            connection=connectionFactory.createConnection(USERNAME,DEFAULT_PASSWORD);
+            assertNotNull(connection);
+            connection.setClientID(CLIENTID);
+            connection.start();
+            session=connection.createSession(false,javax.jms.Session.AUTO_ACKNOWLEDGE);
+            assertNotNull(session);
+            topic=session.createTopic(TOPIC_NAME);
+            assertNotNull(topic);
+            subscriber=session.createDurableSubscriber(topic,SUBID,"",false);
+            assertNotNull(subscriber);
+            int loop;
+            for(loop=0;loop<MESSAGE_COUNT;loop++){
+                Message msg = subscriber.receive();
+                if (loop%500==0){
+                    System.out.println("Received " + loop + " messages");
+                }
+            }
+            this.assertEquals(loop,MESSAGE_COUNT);
+            subscriber.close();
+            session.close();
+            connection.close();
         }catch(JMSException ex){
             try{
                 connection.close();
