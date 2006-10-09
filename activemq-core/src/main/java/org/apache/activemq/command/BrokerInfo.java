@@ -33,6 +33,8 @@ public class BrokerInfo extends BaseCommand{
     boolean slaveBroker;
     boolean masterBroker;
     boolean faultTolerantConfiguration;
+    boolean networkConnection;
+    boolean duplexConnection;
     BrokerInfo peerBrokerInfos[];
     String brokerName;
 
@@ -132,5 +134,39 @@ public class BrokerInfo extends BaseCommand{
      */
     public void setFaultTolerantConfiguration(boolean faultTolerantConfiguration){
         this.faultTolerantConfiguration=faultTolerantConfiguration;
+    }
+
+    
+    /**
+     * @openwire:property version=2
+     * @return the duplexConnection
+     */
+    public boolean isDuplexConnection(){
+        return this.duplexConnection;
+    }
+
+    
+    /**
+     * @param duplexConnection the duplexConnection to set
+     */
+    public void setDuplexConnection(boolean duplexConnection){
+        this.duplexConnection=duplexConnection;
+    }
+
+    
+    /**
+     * @openwire:property version=2
+     * @return the networkConnection
+     */
+    public boolean isNetworkConnection(){
+        return this.networkConnection;
+    }
+
+    
+    /**
+     * @param networkConnection the networkConnection to set
+     */
+    public void setNetworkConnection(boolean networkConnection){
+        this.networkConnection=networkConnection;
     }
 }

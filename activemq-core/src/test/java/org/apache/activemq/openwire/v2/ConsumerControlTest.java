@@ -54,5 +54,8 @@ public class ConsumerControlTest extends BaseCommandTestSupport {
         info.setClose(true);
         info.setConsumerId(createConsumerId("ConsumerId:1"));
         info.setPrefetch(1);
+        info.setFlush(false);
+        info.setStart(true);
+        info.setStop(false);
     }
 }

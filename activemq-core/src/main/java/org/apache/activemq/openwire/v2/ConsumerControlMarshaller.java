@@ -69,6 +69,9 @@ public class ConsumerControlMarshaller extends BaseCommandMarshaller {
         info.setClose(bs.readBoolean());
         info.setConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setPrefetch(dataIn.readInt());
+        info.setFlush(bs.readBoolean());
+        info.setStart(bs.readBoolean());
+        info.setStop(bs.readBoolean());
 
     }
 
@@ -83,6 +86,9 @@ public class ConsumerControlMarshaller extends BaseCommandMarshaller {
         int rc = super.tightMarshal1(wireFormat, o, bs);
         bs.writeBoolean(info.isClose());
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
+        bs.writeBoolean(info.isFlush());
+        bs.writeBoolean(info.isStart());
+        bs.writeBoolean(info.isStop());
 
         return rc + 4;
     }
@@ -101,6 +107,9 @@ public class ConsumerControlMarshaller extends BaseCommandMarshaller {
         bs.readBoolean();
         tightMarshalNestedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
         dataOut.writeInt(info.getPrefetch());
+        bs.readBoolean();
+        bs.readBoolean();
+        bs.readBoolean();
 
     }
 
@@ -118,6 +127,9 @@ public class ConsumerControlMarshaller extends BaseCommandMarshaller {
         info.setClose(dataIn.readBoolean());
         info.setConsumerId((org.apache.activemq.command.ConsumerId) looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setPrefetch(dataIn.readInt());
+        info.setFlush(dataIn.readBoolean());
+        info.setStart(dataIn.readBoolean());
+        info.setStop(dataIn.readBoolean());
 
     }
 
@@ -133,6 +145,9 @@ public class ConsumerControlMarshaller extends BaseCommandMarshaller {
         dataOut.writeBoolean(info.isClose());
         looseMarshalNestedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
         dataOut.writeInt(info.getPrefetch());
+        dataOut.writeBoolean(info.isFlush());
+        dataOut.writeBoolean(info.isStart());
+        dataOut.writeBoolean(info.isStop());
 
     }
 }
