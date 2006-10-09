@@ -134,23 +134,26 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     }
 
     public synchronized void addMessageLast(MessageReference node) throws Exception{
-        if(started){
-            if(node!=null){
-                Message msg=node.getMessage();
+        if(node!=null){
+            Message msg=node.getMessage();
+            if(started){
+                pendingCount++;
                 if(!msg.isPersistent()){
                     nonPersistent.addMessageLast(node);
-                }else{
-                    Destination dest=msg.getRegionDestination();
-                    TopicStorePrefetch tsp=(TopicStorePrefetch)topics.get(dest);
-                    if(tsp!=null){
-                        tsp.addMessageLast(node);
+                }
+            }
+            if(msg.isPersistent()){
+                Destination dest=msg.getRegionDestination();
+                TopicStorePrefetch tsp=(TopicStorePrefetch)topics.get(dest);
+                if(tsp!=null){
+                    tsp.addMessageLast(node);
+                    if(started){
                         // if the store has been empty - then this message is next to dispatch
                         if((pendingCount-nonPersistent.size())<=0){
                             tsp.nextToDispatch(node.getMessageId());
                         }
                     }
                 }
-                pendingCount++;
             }
         }
     }

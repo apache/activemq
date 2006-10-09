@@ -84,6 +84,12 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
             throw new RuntimeException(e);
         }
     }
+    
+    public synchronized void addMessageLast(MessageReference node) throws Exception{
+        if(node!=null){
+            node.decrementReferenceCount();
+        }
+    }
 
     public synchronized boolean hasNext(){
         if(isEmpty()){
@@ -112,6 +118,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
 
     public void recoverMessage(Message message) throws Exception{
         message.setRegionDestination(regionDestination);
+        message.incrementReferenceCount();
         batchList.addLast(message);
     }
 
