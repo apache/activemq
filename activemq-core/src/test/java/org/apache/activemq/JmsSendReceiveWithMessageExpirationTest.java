@@ -70,7 +70,7 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
     }
     
     /**
-     * Sends and consumes the messages to a queue destination.
+     * Test consuming an expired queue.
      *
      * @throws Exception
      */
@@ -98,7 +98,9 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
             producer.send(producerDestination, message);
         }
         
-        Thread.sleep(timeToLive + 1000);
+        // sleeps a second longer than the expiration time.
+		// Basically waits till queue expires.
+		Thread.sleep(timeToLive + 1000);
         
         // message should have expired.
         assertNull(consumer.receive(1000));
@@ -133,12 +135,12 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
             producer.send(producerDestination, message);
         }
         
-        // message should have expired.
+        // should receive a queue since there is no expiration.
         assertNotNull(consumer.receive(1000));
     }
     
     /**
-     * Sends and consumes the messages to a topic destination.
+     * Test consuming an expired topic.
      *
      * @throws Exception
      */
@@ -166,7 +168,9 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
             producer.send(producerDestination, message);
         }
         
-        Thread.sleep(timeToLive + 1000);
+        // sleeps a second longer than the expiration time.
+		// Basically waits till topic expires.
+		Thread.sleep(timeToLive + 1000);
         
         // message should have expired.
         assertNull(consumer.receive(1000));
@@ -201,7 +205,7 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
             producer.send(producerDestination, message);
         }
         
-        // message should have expired.
+        // should receive a topic since there is no expiration.
         assertNotNull(consumer.receive(1000));
     }
     
@@ -224,11 +228,9 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
     }
     
     protected void tearDown() throws Exception {
-        log.info("Dumping stats...");
-    
+        log.info("Dumping stats...");    
         log.info("Closing down connection");
 
-        /** TODO we should be able to shut down properly */
         session.close();
         connection.close();
     }
