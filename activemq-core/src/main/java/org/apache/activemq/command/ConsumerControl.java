@@ -32,6 +32,9 @@ public class ConsumerControl extends BaseCommand {
 
     protected ConsumerId consumerId;
     protected boolean close;
+    protected boolean stop;
+    protected boolean start;
+    protected boolean flush;
     protected int prefetch;
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -112,5 +115,80 @@ public class ConsumerControl extends BaseCommand {
      */
     public void setPrefetch(int prefetch){
         this.prefetch=prefetch;
+    }
+
+
+
+
+
+    
+    /**
+     * @openwire:property version=2
+     * @return the flush
+     */
+    public boolean isFlush(){
+        return this.flush;
+    }
+
+
+
+
+
+    
+    /**
+     * @param flush the flush to set
+     */
+    public void setFlush(boolean flush){
+        this.flush=flush;
+    }
+
+
+
+
+
+    
+    /**
+     *  @openwire:property version=2
+     * @return the start
+     */
+    public boolean isStart(){
+        return this.start;
+    }
+
+
+
+
+
+    
+    /**
+     * @param start the start to set
+     */
+    public void setStart(boolean start){
+        this.start=start;
+    }
+
+
+
+
+
+    
+    /**
+     *  @openwire:property version=2
+     * @return the stop
+     */
+    public boolean isStop(){
+        return this.stop;
+    }
+
+
+
+
+
+    
+    /**
+     * @param stop the stop to set
+     */
+    public void setStop(boolean stop){
+        this.stop=stop;
     }
 }

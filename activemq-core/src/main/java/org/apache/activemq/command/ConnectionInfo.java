@@ -36,6 +36,7 @@ public class ConnectionInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean brokerMasterConnector;
     protected boolean manageable;
+    protected boolean clientMaster;
     protected transient Object transportContext; 
     
     public ConnectionInfo() {        
@@ -165,5 +166,20 @@ public class ConnectionInfo extends BaseCommand {
 	public void setTransportContext(Object transportContext) {
 		this.transportContext = transportContext;
 	}
+    
+    /**
+     * @openwire:property version=2
+     * @return the clientMaster
+     */
+    public boolean isClientMaster(){
+        return this.clientMaster;
+    }
+    
+    /**
+     * @param clientMaster the clientMaster to set
+     */
+    public void setClientMaster(boolean clientMaster){
+        this.clientMaster=clientMaster;
+    }
 
 }
