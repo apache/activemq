@@ -28,26 +28,42 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
  * Marshall a TopicSubAck
  * @version $Revision: 1.10 $
  */
-public class TopicSubAckMarshaller implements Marshaller{
+public class ConsumerMessageRefMarshaller implements Marshaller{
    
 
+    /**
+     * @param object
+     * @param dataOut
+     * @throws IOException
+     * @see org.apache.activemq.kaha.Marshaller#writePayload(java.lang.Object, java.io.DataOutput)
+     */
     public void writePayload(Object object,DataOutput dataOut) throws IOException{
-       TopicSubAck tsa = (TopicSubAck) object;
-       dataOut.writeInt(tsa.getCount());
-       IndexItem item = (IndexItem)tsa.getMessageEntry();
+       ConsumerMessageRef ref = (ConsumerMessageRef) object;
+       IndexItem item = (IndexItem)ref.getMessageEntry();
+       dataOut.writeLong(item.getOffset());
+       item.write(dataOut);
+       item = (IndexItem)ref.getAckEntry();
        dataOut.writeLong(item.getOffset());
        item.write(dataOut);
        
     }
 
+    /**
+     * @param dataIn
+     * @return payload
+     * @throws IOException
+     * @see org.apache.activemq.kaha.Marshaller#readPayload(java.io.DataInput)
+     */
     public Object readPayload(DataInput dataIn) throws IOException{
-        TopicSubAck tsa = new TopicSubAck();
-        int count = dataIn.readInt();
-        tsa.setCount(count);
+        ConsumerMessageRef ref = new ConsumerMessageRef();
         IndexItem item = new IndexItem();
         item.setOffset(dataIn.readLong());
         item.read(dataIn);
-        tsa.setMessageEntry(item);
-        return tsa;
+        ref.setMessageEntry(item);
+        item = new IndexItem();
+        item.setOffset(dataIn.readLong());
+        item.read(dataIn);
+        ref.setAckEntry(item);
+        return ref;
     }
 }

@@ -217,14 +217,24 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
         return longTermStore.getAllSubscriptions();
     }
     
-    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
+    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
         this.peristenceAdapter.checkpoint(true, true);
-        return longTermStore.getNextMessageToDeliver(clientId,subscriptionName);
+        return longTermStore.getNextMessageIdToDeliver(clientId,subscriptionName,id);
     }
+    
+    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
+        this.peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getPreviousMessageIdToDeliver(clientId,subscriptionName,id);
+    }
+
     
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         this.peristenceAdapter.checkpoint(true, true);
         return longTermStore.getMessageCount(clientId,subscriberName);
+    }
+    
+    public void resetBatching(String clientId,String subscriptionName,MessageId nextId) {
+        longTermStore.resetBatching(clientId,subscriptionName,nextId);
     }
 
    

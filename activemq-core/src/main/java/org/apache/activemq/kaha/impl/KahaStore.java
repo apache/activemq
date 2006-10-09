@@ -381,7 +381,7 @@ public class KahaStore implements Store{
         if(type==null||(!type.equals(IndexTypes.DISK_INDEX)&&!type.equals(IndexTypes.IN_MEMORY_INDEX))){
             throw new RuntimeException("Unknown IndexType: "+type);
         }
-        this.indexType=indexType;
+        this.indexType=type;
     }
     
     public synchronized void initialize() throws IOException{

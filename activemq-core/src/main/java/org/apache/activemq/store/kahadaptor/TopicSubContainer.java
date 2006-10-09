@@ -14,61 +14,52 @@
 
 package org.apache.activemq.store.kahadaptor;
 
+import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.StoreEntry;
 
 /**
- * Holds information for location of message
+ * Holds information for the subscriber
  * 
  * @version $Revision: 1.10 $
  */
-public class TopicSubAck{
+ class TopicSubContainer{
 
-    private int count =0;
-    private StoreEntry messageEntry;
-
-    /**
-     * @return the count
-     */
-    public int getCount(){
-        return this.count;
+    private ListContainer listContainer;
+    private StoreEntry batchEntry;
+    
+    TopicSubContainer(ListContainer container){
+        this.listContainer = container;
     }
-
     /**
-     * @param count the count to set
+     * @return the batchEntry
      */
-    public void setCount(int count){
-        this.count=count;
+     StoreEntry getBatchEntry(){
+        return this.batchEntry;
     }
     
     /**
-     * @return the value of the count after it's decremented
+     * @param batchEntry the batchEntry to set
      */
-    public int decrementCount() {
-        return --count;
+     void setBatchEntry(StoreEntry batchEntry){
+        this.batchEntry=batchEntry;
     }
     
     /**
-     * @return the value of the count after it's incremented
+     * @return the listContainer
      */
-    public int incrementCount() {
-        return ++count;
+     ListContainer getListContainer(){
+        return this.listContainer;
     }
-
     
     /**
-     * @return the messageEntry
+     * @param listContainer the listContainer to set
      */
-    public StoreEntry getMessageEntry(){
-        return this.messageEntry;
+     void setListContainer(ListContainer container){
+        this.listContainer=container;
     }
-
     
-    /**
-     * @param messageEntry the messageEntry to set
-     */
-    public void setMessageEntry(StoreEntry storeEntry){
-        this.messageEntry=storeEntry;
+     void reset() {
+        batchEntry = null;
     }
-
    
 }

@@ -13,6 +13,8 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import java.io.IOException;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
@@ -55,14 +57,17 @@ public interface PendingMessageCursor extends Service{
     /**
      * add message to await dispatch
      * @param node
+     * @throws IOException 
+     * @throws Exception 
      */
-    public void addMessageLast(MessageReference node);
+    public void addMessageLast(MessageReference node) throws  Exception;
     
     /**
      * add message to await dispatch
      * @param node
+     * @throws Exception 
      */
-    public void addMessageFirst(MessageReference node);
+    public void addMessageFirst(MessageReference node) throws Exception;
 
     /**
      * @return true if there pending messages to dispatch
@@ -94,8 +99,18 @@ public interface PendingMessageCursor extends Service{
     /**
      * Informs the Broker if the subscription needs to intervention to recover it's state
      * e.g. DurableTopicSubscriber may do
-     * @see org.apache.activemq.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
     public boolean isRecoveryRequired();
+    
+    /**
+     * @return the maximum batch size
+     */
+    public int getMaxBatchSize();
+
+    /**
+     * Set the max batch size
+     * @param maxBatchSize
+     */
+    public void setMaxBatchSize(int maxBatchSize);
 }

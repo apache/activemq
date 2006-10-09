@@ -64,6 +64,8 @@ public class Statements {
     private String lockUpdateStatement;
     private String nextDurableSubscriberMessageStatement;
     private String durableSubscriberMessageCountStatement;
+    private String nextDurableSubscriberMessageIdStatement;
+    private String prevDurableSubscriberMessageIdStatement;
     private boolean useLockCreateWhereClause;
 
     public String[] getCreateSchemaStatements() {
@@ -210,10 +212,9 @@ public class Statements {
     
     public String getFindDurableSubMessagesStatement(){
         if(findDurableSubMessagesStatement==null){
-            findDurableSubMessagesStatement="SELECT M.ID, M.MSG FROM "+getFullMessageTableName()+" M, "
-                            +getFullAckTableName()+" D "+" WHERE ?>= ( SELECT COUNT(*) FROM "
-                            +getFullMessageTableName()+" M, " +  getFullAckTableName() + " D WHERE (D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                            +" AND M.CONTAINER=D.CONTAINER AND M.ID > ?)"+" ORDER BY M.ID)";
+            findDurableSubMessagesStatement="SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
+            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+            + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?" + " ORDER BY M.ID";
         }
         return findDurableSubMessagesStatement;
     }
@@ -229,10 +230,9 @@ public class Statements {
     
     public String getNextDurableSubscriberMessageStatement(){
         if (nextDurableSubscriberMessageStatement == null){
-            nextDurableSubscriberMessageStatement = "SELECT M.ID, M.MSG FROM "+getFullMessageTableName()+" M, "
-            +getFullAckTableName()+" D "+" WHERE 1 >= ( SELECT COUNT(*) FROM "
-            +getFullMessageTableName()+" M, WHERE (D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-            +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"+") ORDER BY M.ID)"; 
+            nextDurableSubscriberMessageStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
+            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+            + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?" + " ORDER BY M.ID ";
         }
         return nextDurableSubscriberMessageStatement;
     }
@@ -240,14 +240,55 @@ public class Statements {
     /**
      * @return the durableSubscriberMessageCountStatement
      */
+    
+    
     public String getDurableSubscriberMessageCountStatement(){
         if (durableSubscriberMessageCountStatement==null){
-            durableSubscriberMessageCountStatement = "SELECT COUNT(*) FROM "
-            +getFullMessageTableName()+" M, where D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-            +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID";
+            durableSubscriberMessageCountStatement =  "SELECT COUNT(*) FROM " + getFullMessageTableName() + " M, "
+            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+            + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID";
         }
         return durableSubscriberMessageCountStatement;
     }
+    
+    /**
+     * @return the nextDurableSubscriberMessageIdStatement
+     */
+    public String getNextDurableSubscriberMessageIdStatement(){
+        if (nextDurableSubscriberMessageIdStatement==null) {
+            nextDurableSubscriberMessageIdStatement =
+                "SELECT M.ID FROM " + getFullMessageTableName() + " M, "
+                 + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?" + " ORDER BY M.ID ";
+        }
+        return nextDurableSubscriberMessageIdStatement;
+    }
+    
+    /**
+     * @return the prevDurableSubscriberMessageIdStatement
+     */
+   /*
+    public String getPrevDurableSubscriberMessageIdStatement(){
+        if(prevDurableSubscriberMessageIdStatement==null) {
+            prevDurableSubscriberMessageIdStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
+            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+            + " AND M.CONTAINER=D.CONTAINER AND M.ID < ?" + " ORDER BY M.ID ";
+        }
+        return prevDurableSubscriberMessageIdStatement;
+    }
+    */
+   
+   
+    public String getPrevDurableSubscriberMessageIdStatement(){
+        if(prevDurableSubscriberMessageIdStatement==null) {
+            prevDurableSubscriberMessageIdStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M "
+            + " WHERE M.CONTAINER=? "
+            + "  AND M.ID <?" + "  ORDER BY M.ID DESC ";
+        }
+        return prevDurableSubscriberMessageIdStatement;
+    }
+    
+
 
     public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
@@ -564,5 +605,26 @@ public class Statements {
      */
     public void setDurableSubscriberMessageCountStatement(String durableSubscriberMessageCountStatement){
         this.durableSubscriberMessageCountStatement=durableSubscriberMessageCountStatement;
+    }
+
+    
+    
+
+    
+    /**
+     * @param nextDurableSubscriberMessageIdStatement the nextDurableSubscriberMessageIdStatement to set
+     */
+    public void setNextDurableSubscriberMessageIdStatement(String nextDurableSubscriberMessageIdStatement){
+        this.nextDurableSubscriberMessageIdStatement=nextDurableSubscriberMessageIdStatement;
+    }
+
+    
+   
+    
+    /**
+     * @param prevDurableSubscriberMessageIdStatement the prevDurableSubscriberMessageIdStatement to set
+     */
+    public void setPrevDurableSubscriberMessageIdStatement(String prevDurableSubscriberMessageIdStatement){
+        this.prevDurableSubscriberMessageIdStatement=prevDurableSubscriberMessageIdStatement;
     }
 }

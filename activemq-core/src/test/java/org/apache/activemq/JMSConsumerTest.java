@@ -507,7 +507,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         session.commit();
 
         // Only pick up the first message.
-        Message message1 = message1 = consumer.receive(1000);
+        Message message1 = consumer.receive(1000);
         assertNotNull(message1);        
         
         // Don't acknowledge yet.  This should keep our prefetch full.        

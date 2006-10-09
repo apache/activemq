@@ -21,39 +21,24 @@ import org.apache.activemq.kaha.StoreEntry;
  * 
  * @version $Revision: 1.10 $
  */
-public class TopicSubAck{
+public class ConsumerMessageRef{
 
-    private int count =0;
     private StoreEntry messageEntry;
-
+    private StoreEntry ackEntry;
+    
     /**
-     * @return the count
+     * @return the ackEntry
      */
-    public int getCount(){
-        return this.count;
-    }
-
-    /**
-     * @param count the count to set
-     */
-    public void setCount(int count){
-        this.count=count;
+    public StoreEntry getAckEntry(){
+        return this.ackEntry;
     }
     
     /**
-     * @return the value of the count after it's decremented
+     * @param ackEntry the ackEntry to set
      */
-    public int decrementCount() {
-        return --count;
+    public void setAckEntry(StoreEntry ackEntry){
+        this.ackEntry=ackEntry;
     }
-    
-    /**
-     * @return the value of the count after it's incremented
-     */
-    public int incrementCount() {
-        return ++count;
-    }
-
     
     /**
      * @return the messageEntry
@@ -61,14 +46,13 @@ public class TopicSubAck{
     public StoreEntry getMessageEntry(){
         return this.messageEntry;
     }
-
     
     /**
      * @param messageEntry the messageEntry to set
      */
-    public void setMessageEntry(StoreEntry storeEntry){
-        this.messageEntry=storeEntry;
+    public void setMessageEntry(StoreEntry messageEntry){
+        this.messageEntry=messageEntry;
     }
 
-   
+       
 }

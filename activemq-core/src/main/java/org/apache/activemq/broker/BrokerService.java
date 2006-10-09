@@ -454,6 +454,7 @@ public class BrokerService implements Service, Serializable {
         if (broker != null) {
             stopper.stop(broker);
         }
+        tempDataStore.close();
 
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
@@ -957,7 +958,7 @@ public class BrokerService implements Service, Serializable {
     /**
      * @return the tempDataStore
      */
-    public Store getTempDataStore() {
+    public synchronized Store getTempDataStore() {
         if (tempDataStore == null){
             String name = getTmpDataDirectory().getPath();
             try {

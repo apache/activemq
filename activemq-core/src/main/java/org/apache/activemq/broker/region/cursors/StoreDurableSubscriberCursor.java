@@ -11,6 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
@@ -22,24 +23,28 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.kaha.Store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * perist pending messages pending message (messages awaiting disptach to a consumer) cursor
  * 
  * @version $Revision$
  */
 public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
+
     static private final Log log=LogFactory.getLog(StoreDurableSubscriberCursor.class);
     private int pendingCount=0;
     private String clientId;
     private String subscriberName;
-    private int maxBatchSize=10;
-    private LinkedList batchList=new LinkedList();
     private Map topics=new HashMap();
     private LinkedList storePrefetches=new LinkedList();
-    private AtomicBoolean started=new AtomicBoolean();
+    private boolean started;
+    private PendingMessageCursor nonPersistent;
+    private PendingMessageCursor currentCursor;
 
     /**
      * @param topic
@@ -47,24 +52,26 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
      * @param subscriberName
      * @throws IOException
      */
-    public StoreDurableSubscriberCursor(String clientId,String subscriberName){
+    public StoreDurableSubscriberCursor(String clientId,String subscriberName,Store store,int maxBatchSize){
         this.clientId=clientId;
         this.subscriberName=subscriberName;
+        this.nonPersistent=new FilePendingMessageCursor(clientId+subscriberName,store);
+        storePrefetches.add(nonPersistent);
     }
 
     public synchronized void start() throws Exception{
-        started.set(true);
+        started=true;
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
-            TopicStorePrefetch tsp=(TopicStorePrefetch) i.next();
+            PendingMessageCursor tsp=(PendingMessageCursor)i.next();
             tsp.start();
             pendingCount+=tsp.size();
         }
     }
 
     public synchronized void stop() throws Exception{
-        started.set(false);
+        started=false;
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
-            TopicStorePrefetch tsp=(TopicStorePrefetch) i.next();
+            PendingMessageCursor tsp=(PendingMessageCursor)i.next();
             tsp.stop();
         }
         pendingCount=0;
@@ -78,10 +85,11 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
      * @throws Exception
      */
     public synchronized void add(ConnectionContext context,Destination destination) throws Exception{
-        TopicStorePrefetch tsp=new TopicStorePrefetch((Topic) destination,batchList,clientId,subscriberName);
+        TopicStorePrefetch tsp=new TopicStorePrefetch((Topic)destination,clientId,subscriberName);
+        tsp.setMaxBatchSize(getMaxBatchSize());
         topics.put(destination,tsp);
         storePrefetches.add(tsp);
-        if(started.get()){
+        if(started){
             tsp.start();
             pendingCount+=tsp.size();
         }
@@ -95,7 +103,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
      * @throws Exception
      */
     public synchronized void remove(ConnectionContext context,Destination destination) throws Exception{
-        TopicStorePrefetch tsp=(TopicStorePrefetch) topics.remove(destination);
+        Object tsp=topics.remove(destination);
         if(tsp!=null){
             storePrefetches.remove(tsp);
         }
@@ -119,12 +127,32 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         return false;
     }
 
-    public synchronized void addMessageFirst(MessageReference node){
-        pendingCount++;
+    public synchronized void addMessageFirst(MessageReference node) throws IOException{
+        if(started){
+            throw new RuntimeException("This shouldn't be called!");
+        }
     }
 
-    public synchronized void addMessageLast(MessageReference node){
-        pendingCount++;
+    public synchronized void addMessageLast(MessageReference node) throws Exception{
+        if(started){
+            if(node!=null){
+                Message msg=node.getMessage();
+                if(!msg.isPersistent()){
+                    nonPersistent.addMessageLast(node);
+                }else{
+                    Destination dest=msg.getRegionDestination();
+                    TopicStorePrefetch tsp=(TopicStorePrefetch)topics.get(dest);
+                    if(tsp!=null){
+                        tsp.addMessageLast(node);
+                        // if the store has been empty - then this message is next to dispatch
+                        if((pendingCount-nonPersistent.size())<=0){
+                            tsp.nextToDispatch(node.getMessageId());
+                        }
+                    }
+                }
+                pendingCount++;
+            }
+        }
     }
 
     public void clear(){
@@ -132,49 +160,56 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     }
 
     public synchronized boolean hasNext(){
-        return !isEmpty();
-    }
-
-    public synchronized MessageReference next(){
-        MessageReference result=null;
-        if(!isEmpty()){
-            if(batchList.isEmpty()){
-                try{
-                    fillBatch();
-                }catch(Exception e){
-                    log.error("Couldn't fill batch from store ",e);
-                    throw new RuntimeException(e);
-                }
+        boolean result=pendingCount>0;
+        if(result){
+            try{
+                currentCursor=getNextCursor();
+            }catch(Exception e){
+                log.error("Failed to get current cursor ",e);
+                throw new RuntimeException(e);
             }
-            if(!batchList.isEmpty()){
-                result=(MessageReference) batchList.removeFirst();
-            }
+            result=currentCursor!=null?currentCursor.hasNext():false;
         }
         return result;
     }
 
+    public synchronized MessageReference next(){
+        return currentCursor!=null?currentCursor.next():null;
+    }
+
     public synchronized void remove(){
+        if(currentCursor!=null){
+            currentCursor.remove();
+        }
         pendingCount--;
     }
 
-    public void reset(){
-        batchList.clear();
+    public synchronized void reset(){
+        for(Iterator i=storePrefetches.iterator();i.hasNext();){
+            AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
+            tsp.reset();
+        }
     }
 
     public int size(){
         return pendingCount;
     }
 
-    private synchronized void fillBatch() throws Exception{
-        for(Iterator i=storePrefetches.iterator();i.hasNext();){
-            TopicStorePrefetch tsp=(TopicStorePrefetch) i.next();
-            tsp.fillBatch();
-            if(batchList.size()>=maxBatchSize){
-                break;
+    protected synchronized PendingMessageCursor getNextCursor() throws Exception{
+        if(currentCursor==null||currentCursor.isEmpty()){
+            currentCursor=null;
+            for(Iterator i=storePrefetches.iterator();i.hasNext();){
+                AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
+                tsp.setMaxBatchSize(getMaxBatchSize());
+                if(tsp.hasNext()){
+                    currentCursor=tsp;
+                    break;
+                }
             }
+            // round-robin
+            Object obj=storePrefetches.removeFirst();
+            storePrefetches.addLast(obj);
         }
-        // round-robin
-        Object obj=storePrefetches.removeFirst();
-        storePrefetches.addLast(obj);
+        return currentCursor;
     }
 }

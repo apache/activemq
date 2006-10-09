@@ -86,8 +86,16 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         delegate.recoverNextMessages(clientId, subscriptionName, lastMessageId,maxReturned,listener);
     }
     
-    public Message getNextMessageToDeliver(String clientId,String subscriptionName) throws IOException{
-        return delegate.getNextMessageToDeliver(clientId,subscriptionName);
+    public void resetBatching(String clientId,String subscriptionName,MessageId id) {
+        delegate.resetBatching(clientId,subscriptionName,id);
+    }
+    
+    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
+        return delegate.getNextMessageIdToDeliver(clientId,subscriptionName,id);
+    }
+    
+    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
+        return delegate.getPreviousMessageIdToDeliver(clientId,subscriptionName,id);
     }
     
     public ActiveMQDestination getDestination() {
