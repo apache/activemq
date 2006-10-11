@@ -161,7 +161,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
 
     public void deleteAllMessages() throws IOException{
         if(theStore!=null){
-            theStore.clear();
+            theStore.delete();
         }
     }
 
