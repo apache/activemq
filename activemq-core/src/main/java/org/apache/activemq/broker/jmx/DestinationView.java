@@ -212,7 +212,6 @@ public class DestinationView implements DestinationViewMBean {
                         rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
                     }
                 }
-                rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
             } catch(Throwable e) {
                 log.warn("exception browsing destination",e);
             }
