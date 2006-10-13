@@ -20,6 +20,7 @@ package org.apache.activemq.broker.region.policy;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
@@ -46,6 +47,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private MessageEvictionStrategy messageEvictionStrategy;
     private long memoryLimit;
     private MessageGroupMapFactory messageGroupMapFactory;
+    private PendingQueueMessageStoragePolicy pendingQueueMessageStoragePolicy;
     
     public void configure(Queue queue) {
         if (dispatchPolicy != null) {
@@ -57,6 +59,10 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setMessageGroupMapFactory(getMessageGroupMapFactory());
         if( memoryLimit>0 ) {
             queue.getUsageManager().setLimit(memoryLimit);
+        }
+        if (pendingQueueMessageStoragePolicy != null) {
+            PendingMessageCursor messages = pendingQueueMessageStoragePolicy.getQueuePendingMessageCursor();
+            queue.setMessages(messages);
         }
     }
 
@@ -74,6 +80,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if( memoryLimit>0 ) {
             topic.getUsageManager().setLimit(memoryLimit);
         }
+        
     }
 
     public void configure(TopicSubscription subscription) {
@@ -193,6 +200,22 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setMessageGroupMapFactory(MessageGroupMapFactory messageGroupMapFactory) {
         this.messageGroupMapFactory = messageGroupMapFactory;
+    }
+
+    
+    /**
+     * @return the pendingQueueMessageStoragePolicy
+     */
+    public PendingQueueMessageStoragePolicy getPendingQueueMessageStoragePolicy(){
+        return this.pendingQueueMessageStoragePolicy;
+    }
+
+    
+    /**
+     * @param pendingQueueMessageStoragePolicy the pendingQueueMessageStoragePolicy to set
+     */
+    public void setPendingQueueMessageStoragePolicy(PendingQueueMessageStoragePolicy pendingQueueMessageStoragePolicy){
+        this.pendingQueueMessageStoragePolicy=pendingQueueMessageStoragePolicy;
     }
 
     

@@ -24,7 +24,7 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.kahadaptor.CommandMarshaller;
 /**
  * perist pending messages pending message (messages awaiting disptach to a consumer) cursor
- * 
+ *
  * @version $Revision$
  */
 public class FilePendingMessageCursor extends AbstractPendingMessageCursor{

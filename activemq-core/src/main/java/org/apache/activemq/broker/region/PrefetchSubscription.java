@@ -124,8 +124,8 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         
     synchronized public void add(MessageReference node) throws Exception{
         enqueueCounter++;
-        //if(!isFull()){
-        if(!isFull() && pending.isEmpty() && canDispatch(node)){
+      
+        if(!isFull() && pending.isEmpty() ){
             dispatch(node);
         }else{
             optimizePrefetch();
@@ -376,7 +376,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         if(canDispatch(node)&&!isSlaveBroker()){
         	
             MessageDispatch md=createMessageDispatch(node,message);
-
             // NULL messages don't count... they don't get Acked.
             if( node != QueueMessageReference.NULL_MESSAGE ) {
             dispatchCounter++;

@@ -20,6 +20,7 @@ package org.apache.activemq.broker;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -218,6 +219,13 @@ public class StubBroker implements Broker {
     }
 
     public void stop() throws Exception {
+    }
+    
+    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
+        return null;
+    }
+  
+    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
     }
 
 	public Store getTempDataStore() {

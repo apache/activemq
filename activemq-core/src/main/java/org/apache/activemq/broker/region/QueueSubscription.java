@@ -79,7 +79,6 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
         if( groupId!=null ) {
-            
             MessageGroupMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();            
             
             // If we can own the first, then no-one else should own the rest.
