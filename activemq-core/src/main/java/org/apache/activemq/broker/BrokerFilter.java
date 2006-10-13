@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -232,6 +233,15 @@ public class BrokerFilter implements Broker {
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
         next.setAdminConnectionContext(adminConnectionContext);
     }
+    
+    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
+        return next.getPendingDurableSubscriberPolicy();
+    }
+  
+    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
+        next.setPendingDurableSubscriberPolicy(pendingDurableSubscriberPolicy);
+    }
+   
 
     public Store getTempDataStore() {
         return next.getTempDataStore();

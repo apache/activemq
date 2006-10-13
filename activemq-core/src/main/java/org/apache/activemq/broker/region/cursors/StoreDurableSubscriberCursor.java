@@ -127,12 +127,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         return false;
     }
 
-    public synchronized void addMessageFirst(MessageReference node) throws IOException{
-        if(started){
-            throw new RuntimeException("This shouldn't be called!");
-        }
-    }
-
+    
     public synchronized void addMessageLast(MessageReference node) throws Exception{
         if(node!=null){
             Message msg=node.getMessage();

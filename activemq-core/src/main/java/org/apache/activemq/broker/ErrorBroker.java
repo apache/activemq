@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -228,6 +229,14 @@ public class ErrorBroker implements Broker {
     }
 
     public Response messagePull(ConnectionContext context, MessagePull pull) {
+        throw new BrokerStoppedException(this.message);
+    }
+    
+    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
+        throw new BrokerStoppedException(this.message);
+    }
+  
+    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
         throw new BrokerStoppedException(this.message);
     }
     

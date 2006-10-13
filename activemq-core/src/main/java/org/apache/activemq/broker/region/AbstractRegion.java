@@ -177,7 +177,6 @@ abstract public class AbstractRegion implements Region {
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         log.debug("Adding consumer: "+info.getConsumerId());
-
         ActiveMQDestination destination = info.getDestination();
         if (destination != null && ! destination.isPattern() && ! destination.isComposite()) {
             // lets auto-create the destination
@@ -260,7 +259,6 @@ abstract public class AbstractRegion implements Region {
     }
 
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-
         log.debug("Removing consumer: "+info.getConsumerId());
 
         Subscription sub = (Subscription) subscriptions.remove(info.getConsumerId());

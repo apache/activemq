@@ -35,6 +35,6 @@ public class KahaCursorDurableTest extends CursorDurableTest{
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("activemq-data/durableTest"));
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
-        answer.setDeleteAllMessagesOnStartup(true);
+        //answer.setDeleteAllMessagesOnStartup(true);
     }
 }

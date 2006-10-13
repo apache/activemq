@@ -26,6 +26,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionId;
@@ -61,60 +62,52 @@ public class TopicRegion extends AbstractRegion {
         
     }
 
-    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        if (info.isDurable()) {
-
-            ActiveMQDestination destination = info.getDestination();
-            if( !destination.isPattern() ) {
+    public Subscription addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
+        if(info.isDurable()){
+            ActiveMQDestination destination=info.getDestination();
+            if(!destination.isPattern()){
                 // Make sure the destination is created.
-                lookup(context, destination);
+                lookup(context,destination);
             }
-
-            String clientId = context.getClientId();
-            String subcriptionName = info.getSubcriptionName();
-            SubscriptionKey key = new SubscriptionKey(clientId, subcriptionName);
-            DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
-            if (sub != null) {
-
-                if (sub.isActive()) {
-                    throw new JMSException("Durable consumer is in use for client: " + clientId + " and subscriptionName: " + subcriptionName);
+            String clientId=context.getClientId();
+            String subcriptionName=info.getSubcriptionName();
+            SubscriptionKey key=new SubscriptionKey(clientId,subcriptionName);
+            DurableTopicSubscription sub=(DurableTopicSubscription)durableSubscriptions.get(key);
+            if(sub!=null){
+                if(sub.isActive()){
+                    throw new JMSException("Durable consumer is in use for client: "+clientId+" and subscriptionName: "
+                            +subcriptionName);
                 }
-
                 // Has the selector changed??
-                if (hasDurableSubChanged(info, sub.getConsumerInfo())) {
-
+                if(hasDurableSubChanged(info,sub.getConsumerInfo())){
                     // Remove the consumer first then add it.
                     durableSubscriptions.remove(key);
-                    for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
-                        Topic topic = (Topic) iter.next();
-                        topic.deleteSubscription(context, key);
+                    for(Iterator iter=destinations.values().iterator();iter.hasNext();){
+                        Topic topic=(Topic)iter.next();
+                        topic.deleteSubscription(context,key);
                     }
-                    super.removeConsumer(context, sub.getConsumerInfo());
-
-                    super.addConsumer(context, info);
-                    sub = (DurableTopicSubscription) durableSubscriptions.get(key);
-                }
-                else {
+                    super.removeConsumer(context,sub.getConsumerInfo());
+                    super.addConsumer(context,info);
+                    sub=(DurableTopicSubscription)durableSubscriptions.get(key);
+                }else{
                     // Change the consumer id key of the durable sub.
-                    if( sub.getConsumerInfo().getConsumerId()!=null )
+                    if(sub.getConsumerInfo().getConsumerId()!=null)
                         subscriptions.remove(sub.getConsumerInfo().getConsumerId());
-                    subscriptions.put(info.getConsumerId(), sub);
+                    subscriptions.put(info.getConsumerId(),sub);
+                }
+            }else{
+                super.addConsumer(context,info);
+                sub=(DurableTopicSubscription)durableSubscriptions.get(key);
+                if(sub==null){
+                    throw new JMSException("Cannot use the same consumerId: "+info.getConsumerId()
+                            +" for two different durable subscriptions clientID: "+key.getClientId()
+                            +" subscriberName: "+key.getSubscriptionName());
                 }
             }
-            else {
-                super.addConsumer(context, info);
-                sub = (DurableTopicSubscription) durableSubscriptions.get(key);
-                if (sub == null) {
-                    throw new JMSException("Cannot use the same consumerId: " + info.getConsumerId() + " for two different durable subscriptions clientID: "
-                            + key.getClientId() + " subscriberName: " + key.getSubscriptionName());
-                }
-            }
-            
-            sub.activate(context, info);
+            sub.activate(context,info);
             return sub;
-        }
-        else {
-            return super.addConsumer(context, info);
+        }else{
+            return super.addConsumer(context,info);
         }
     }
 
@@ -222,9 +215,12 @@ public class TopicRegion extends AbstractRegion {
             }
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
-            if (sub == null) {
-                sub = new DurableTopicSubscription(broker,context, info, keepDurableSubsActive);
-                durableSubscriptions.put(key, sub);
+            if(sub==null){
+                PendingMessageCursor cursor=broker.getPendingDurableSubscriberPolicy().getSubscriberPendingMessageCursor(
+                        context.getClientId(),info.getSubcriptionName(),broker.getTempDataStore(),
+                        info.getPrefetchSize());
+                sub=new DurableTopicSubscription(broker,context,info,keepDurableSubsActive,cursor);
+                durableSubscriptions.put(key,sub);
             }
             else {
                 throw new JMSException("That durable subscription is already active.");

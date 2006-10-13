@@ -113,4 +113,10 @@ public interface PendingMessageCursor extends Service{
      * @param maxBatchSize
      */
     public void setMaxBatchSize(int maxBatchSize);
+
+    /**
+     * Give the cursor a hint that we are about to remove
+     * messages from memory only
+     */
+    public void resetForGC();
 }

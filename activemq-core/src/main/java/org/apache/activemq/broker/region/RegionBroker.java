@@ -31,7 +31,9 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -93,6 +95,7 @@ public class RegionBroker implements Broker {
     private ConnectionContext adminConnectionContext;
     protected DestinationFactory destinationFactory;
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
+    private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy = new VMPendingDurableSubscriberMessageStoragePolicy();
         
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
         this.brokerService = brokerService;
@@ -583,5 +586,19 @@ public class RegionBroker implements Broker {
 
     public Store getTempDataStore() {
         return brokerService.getTempDataStore();
+    }
+    
+    /**
+     * @return the pendingDurableSubscriberPolicy
+     */
+    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy(){
+        return this.pendingDurableSubscriberPolicy;
+    }
+  
+    /**
+     * @param pendingDurableSubscriberPolicy the pendingDurableSubscriberPolicy to set
+     */
+    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy durableSubscriberCursor){
+        this.pendingDurableSubscriberPolicy=durableSubscriberCursor;
     }
 }

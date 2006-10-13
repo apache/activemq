@@ -45,7 +45,9 @@ import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationFactoryImpl;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
@@ -137,6 +139,7 @@ public class BrokerService implements Service, Serializable {
     private ActiveMQDestination[] destinations;
     private Store tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
+    private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy = new VMPendingDurableSubscriberMessageStoragePolicy();
    
 
     /**
@@ -388,7 +391,13 @@ public class BrokerService implements Service, Serializable {
             }
 
             getBroker().start();
-            
+            /*
+            if(isUseJmx()){
+                // yes - this is orer dependent!
+                // register all destination in persistence store including inactive destinations as mbeans
+                this.startDestinationsInPersistenceStore(broker);
+            }
+            */
             startAllConnectors();
             
             if (isUseJmx() && masterConnector != null) {
@@ -987,6 +996,23 @@ public class BrokerService implements Service, Serializable {
     public void setPersistenceThreadPriority(int persistenceThreadPriority){
         this.persistenceThreadPriority=persistenceThreadPriority;
     }
+    
+    /**
+     * @return the pendingDurableSubscriberPolicy
+     */
+    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy(){
+        return this.pendingDurableSubscriberPolicy;
+    }
+  
+    /**
+     * @param pendingDurableSubscriberPolicy the pendingDurableSubscriberPolicy to set
+     */
+    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy){
+        this.pendingDurableSubscriberPolicy=pendingDurableSubscriberPolicy;
+        if (broker != null) {
+            broker.setPendingDurableSubscriberPolicy(pendingDurableSubscriberPolicy);
+        }
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -1199,8 +1225,6 @@ public class BrokerService implements Service, Serializable {
                 mbeanServer.registerMBean(adminView, objectName);
                 registeredMBeanNames.add(objectName);
             }
-            //register all destination in persistence store including inactive destinations as mbeans 
-            this.startDestinationsInPersistenceStore(broker);
         }
         
 
@@ -1243,6 +1267,7 @@ public class BrokerService implements Service, Serializable {
         
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
 		regionBroker.setBrokerName(getBrokerName());
+        regionBroker.setPendingDurableSubscriberPolicy(getPendingDurableSubscriberPolicy());
 		return regionBroker;
 	}
 
@@ -1515,8 +1540,5 @@ public class BrokerService implements Service, Serializable {
                 broker.addDestination(adminConnectionContext, destination);
             }
         }
-    }
-    
-
-    
+    }    
 }

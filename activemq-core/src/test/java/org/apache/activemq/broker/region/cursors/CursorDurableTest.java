@@ -39,6 +39,7 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +52,7 @@ public class CursorDurableTest extends TestCase{
     
     protected static final Log log = LogFactory.getLog(CursorDurableTest.class);
 
-    protected static final int MESSAGE_COUNT=50;
+    protected static final int MESSAGE_COUNT=100;
     protected static final int PREFETCH_SIZE = 5;
     protected BrokerService broker;
     protected String bindAddress="tcp://localhost:60706";
@@ -138,7 +139,10 @@ public class CursorDurableTest extends TestCase{
         for (int i =MESSAGE_COUNT/10; i < MESSAGE_COUNT; i++) {
             TextMessage msg=session.createTextMessage("test"+i);
             senderList.add(msg);
+           
             producer.send(msg);
+            
+           
         }   
         
         
@@ -204,11 +208,13 @@ public class CursorDurableTest extends TestCase{
         BrokerService answer=new BrokerService();
         configureBroker(answer);
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.setPendingDurableSubscriberPolicy(new StorePendingDurableSubscriberMessageStoragePolicy());
         answer.start();
         return answer;
     }
 
     protected void configureBroker(BrokerService answer) throws Exception{
+        
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
     }

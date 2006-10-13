@@ -21,6 +21,7 @@ import java.util.Set;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Region;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -250,10 +251,19 @@ public interface Broker extends Region, Service {
 
     /**
      * Sets the default administration connection context used when configuring the broker on startup or via JMX
+     * @param adminConnectionContext 
      */
     public abstract void setAdminConnectionContext(ConnectionContext adminConnectionContext);
     
-    
+    /**
+     * @return the pendingDurableSubscriberPolicy
+     */
+    public abstract PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy();
+  
+    /**
+     * @param pendingDurableSubscriberPolicy the pendingDurableSubscriberPolicy to set
+     */
+    public abstract void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy);
     /**
      * @return the broker's temp data store
      * @throws Exception

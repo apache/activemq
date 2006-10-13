@@ -20,12 +20,15 @@ package org.apache.activemq.broker.region;
 import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.broker.region.group.MessageGroupSet;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
+import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -67,10 +70,10 @@ public class Queue implements Destination {
 
     protected final ActiveMQDestination destination;
     protected final List consumers = new CopyOnWriteArrayList();
-    private final LinkedList messages = new LinkedList();
     protected final Valve dispatchValve = new Valve(true);
     protected final UsageManager usageManager;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
+    protected  PendingMessageCursor messages = new VMPendingMessageCursor();
 
     private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
@@ -100,6 +103,10 @@ public class Queue implements Destination {
         destinationStatistics.setParent(parentStats);
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
 
+        
+    }
+    
+    public void initialize() throws Exception {
         if (store != null) {
             // Restore the persistent messages.
             store.recover(new MessageRecoveryListener() {
@@ -107,7 +114,11 @@ public class Queue implements Destination {
                     message.setRegionDestination(Queue.this);
                     MessageReference reference = createMessageReference(message);
                     synchronized (messages) {
-                        messages.add(reference);
+                        try{
+                            messages.addMessageLast(reference);
+                        }catch(Exception e){
+                           log.fatal("Failed to add message to cursor",e);
+                        }
                     }
                     reference.decrementReferenceCount();
                     destinationStatistics.getMessages().increment();
@@ -158,9 +169,10 @@ public class Queue implements Destination {
             synchronized (messages) {
                 // Add all the matching messages in the queue to the
                 // subscription.
-                for (Iterator iter = messages.iterator(); iter.hasNext();) {
+                messages.reset();
+                while(messages.hasNext()) {
 
-                    QueueMessageReference node = (QueueMessageReference) iter.next();
+                    QueueMessageReference node = (QueueMessageReference) messages.next();
                     if (node.isDropped()) {
                         continue;
                     }
@@ -219,8 +231,9 @@ public class Queue implements Destination {
                     // lets copy the messages to dispatch to avoid deadlock
                     List messagesToDispatch = new ArrayList();
                     synchronized (messages) {
-                        for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                            QueueMessageReference node = (QueueMessageReference) iter.next();
+                        messages.reset();
+                        while(messages.hasNext()) {
+                            QueueMessageReference node = (QueueMessageReference) messages.next();
                             if (node.isDropped()) {
                                 continue;
                             }
@@ -314,12 +327,13 @@ public class Queue implements Destination {
 
     public void gc() {
         synchronized (messages) {
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+            messages.resetForGC();
+            while(messages.hasNext()) {
                 // Remove dropped messages from the queue.
-                QueueMessageReference node = (QueueMessageReference) iter.next();
+                QueueMessageReference node = (QueueMessageReference) messages.next();
                 if (node.isDropped()) {
                     garbageSize--;
-                    iter.remove();
+                    messages.remove();
                     continue;
                 }
             }
@@ -456,6 +470,12 @@ public class Queue implements Destination {
     public void setMemoryLimit(long limit) {
         getUsageManager().setLimit(limit);
     }
+    public PendingMessageCursor getMessages(){
+        return this.messages;
+    }
+    public void setMessages(PendingMessageCursor messages){
+        this.messages=messages;
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -470,7 +490,7 @@ public class Queue implements Destination {
         try {
             destinationStatistics.onMessageEnqueue(message);
             synchronized (messages) {
-                messages.add(node);
+                messages.addMessageLast(node);
             }
 
             synchronized (consumers) {
@@ -509,12 +529,12 @@ public class Queue implements Destination {
     }
 
     public Message[] browse() {
-
         ArrayList l = new ArrayList();
         synchronized (messages) {
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+            messages.reset();
+            while(messages.hasNext()) {
                 try {
-                    MessageReference r = (MessageReference) iter.next();
+                    MessageReference r = (MessageReference) messages.next();
                     r.incrementReferenceCount();
                     try {
                         Message m = r.getMessage();
@@ -536,9 +556,10 @@ public class Queue implements Destination {
 
     public Message getMessage(String messageId) {
         synchronized (messages) {
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+            messages.reset();
+            while(messages.hasNext()) {
                 try {
-                    MessageReference r = (MessageReference) iter.next();
+                    MessageReference r = (MessageReference) messages.next();
                     if (messageId.equals(r.getMessageId().toString())) {
                         r.incrementReferenceCount();
                         try {
@@ -563,9 +584,10 @@ public class Queue implements Destination {
     public void purge() {
         synchronized (messages) {
             ConnectionContext c = createConnectionContext();
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
+            messages.reset();
+            while(messages.hasNext()) {
                 try {
-                    QueueMessageReference r = (QueueMessageReference) iter.next();
+                    QueueMessageReference r = (QueueMessageReference) messages.next();
 
                     // We should only delete messages that can be locked.
                     if (r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER)) {
@@ -623,8 +645,9 @@ public class Queue implements Destination {
         int counter = 0;
         synchronized (messages) {
             ConnectionContext c = createConnectionContext();
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                IndirectMessageReference r = (IndirectMessageReference) iter.next();
+            messages.reset();
+            while(messages.hasNext()) {
+                IndirectMessageReference r = (IndirectMessageReference) messages.next();
                 if (filter.evaluate(c, r)) {
                     // We should only delete messages that can be locked.
                     if (lockMessage(r)) {
@@ -672,8 +695,9 @@ public class Queue implements Destination {
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
         int counter = 0;
         synchronized (messages) {
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                MessageReference r = (MessageReference) iter.next();
+            messages.reset();
+            while(messages.hasNext()) {
+                MessageReference r = (MessageReference) messages.next();
                 if (filter.evaluate(context, r)) {
                     r.incrementReferenceCount();
                     try {
@@ -721,8 +745,9 @@ public class Queue implements Destination {
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
         int counter = 0;
         synchronized (messages) {
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                IndirectMessageReference r = (IndirectMessageReference) iter.next();
+            messages.reset();
+            while(messages.hasNext()) {
+                IndirectMessageReference r = (IndirectMessageReference) messages.next();
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
                     if (lockMessage(r)) {
@@ -789,5 +814,4 @@ public class Queue implements Destination {
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
         return answer;
     }
-
 }

@@ -24,6 +24,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -40,10 +41,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     private final boolean keepDurableSubsActive;
     private boolean active=false;
     
-    public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive) throws InvalidSelectorException {
-       //super(broker,context, info, new StoreDurableSubscriberCursor(context.getClientId(),info.getSubcriptionName(),broker.getTempDataStore(),info.getPrefetchSize()));
-       //super(broker,context, info, new FilePendingMessageCursor(context.getClientId() + info.getConsumerId().toString(),broker.getTempDataStore()));
-       super(broker,context,info);
+    public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive,PendingMessageCursor cursor) throws InvalidSelectorException {
+        super(broker,context,info,cursor);
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
     }
@@ -192,7 +191,6 @@ public class DurableTopicSubscription extends PrefetchSubscription {
      * Release any references that we are holding.
      */
     synchronized public void destroy() {
-    	
     	synchronized(pending) {
             pending.reset();
 	        while(pending.hasNext()) {

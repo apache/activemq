@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -243,6 +244,14 @@ public class MutableBrokerFilter implements Broker {
 
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         return getNext().messagePull(context, pull);
+    }
+    
+    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
+        return getNext().getPendingDurableSubscriberPolicy();
+    }
+  
+    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
+        getNext().setPendingDurableSubscriberPolicy(pendingDurableSubscriberPolicy);
     }
     
     public Store getTempDataStore() {
