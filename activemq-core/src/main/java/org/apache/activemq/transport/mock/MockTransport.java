@@ -19,8 +19,6 @@ package org.apache.activemq.transport.mock;
 
 import java.io.IOException;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
@@ -71,7 +69,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         next.stop();
     }    
 
-    synchronized public void onCommand(Command command) {
+    synchronized public void onCommand(Object command) {
         transportListener.onCommand(command);
     }
 
@@ -93,19 +91,19 @@ public class MockTransport extends DefaultTransportListener implements Transport
         return next.toString();
     }
 
-    synchronized public void oneway(Command command) throws IOException {
+    synchronized public void oneway(Object command) throws IOException {
         next.oneway(command);
     }
 
-    synchronized public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+    synchronized public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
         return next.asyncRequest(command, null);
     }
 
-    synchronized public Response request(Command command) throws IOException {
+    synchronized public Object request(Object command) throws IOException {
         return next.request(command);
     }
     
-    public Response request(Command command,int timeout) throws IOException {
+    public Object request(Object command,int timeout) throws IOException {
         return next.request(command, timeout);
     }
 

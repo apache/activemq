@@ -28,7 +28,6 @@ import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ProducerInfo;
@@ -159,7 +158,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
         // Slip in a new transport filter after the MockTransport
         MockTransport mt = (MockTransport) connection3.getTransport().narrow(MockTransport.class);
         mt.install(new TransportFilter(mt.getNext()) {
-            public void oneway(Command command) throws IOException {
+            public void oneway(Object command) throws IOException {
                 log.info("Dropping: "+command);
                 // just eat it! to simulate a recent failure.
             }

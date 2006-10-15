@@ -34,7 +34,6 @@ import java.util.Map;
 import javax.net.SocketFactory;
 
 import org.apache.activemq.Service;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -113,8 +112,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     /**
      * A one way asynchronous send
      */
-    public void oneway(Command command) throws IOException {
-        checkStarted(command);
+    public void oneway(Object command) throws IOException {
+        checkStarted();
         wireFormat.marshal(command, dataOut);
         dataOut.flush();
     }
@@ -133,7 +132,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         log.trace("TCP consumer thread starting");
         while (!isStopped()) {
             try {
-                Command command = (Command) wireFormat.unmarshal(dataIn);
+                Object command = wireFormat.unmarshal(dataIn);
                 doConsume(command);
             }
             catch (SocketTimeoutException e) {

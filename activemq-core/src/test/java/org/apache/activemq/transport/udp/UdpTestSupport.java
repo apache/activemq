@@ -169,7 +169,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
         producer = createProducer();
         producer.setTransportListener(new TransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
                 log.info("Producer received: " + command);
             }
 
@@ -200,7 +200,8 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         }
     }
 
-    public void onCommand(Command command) {
+    public void onCommand(Object o) {
+    	final Command command = (Command) o;
         if (command instanceof WireFormatInfo) {
             log.info("Got WireFormatInfo: " + command);
         }

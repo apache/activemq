@@ -17,6 +17,13 @@
  */
 package org.apache.activemq.transport.udp;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -32,13 +39,6 @@ import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A UDP based implementation of {@link TransportServer}
@@ -81,7 +81,8 @@ public class UdpTransportServer extends TransportServerSupport {
         log.info("Starting " + this);
 
         configuredTransport.setTransportListener(new TransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object o) {
+            	final Command command = (Command) o;
                 processInboundConnection(command);
             }
 

@@ -46,7 +46,8 @@ public class CommandJoiner extends TransportFilter {
         this.wireFormat = wireFormat;
     }
 
-    public void onCommand(Command command) {
+    public void onCommand(Object o) {
+    	Command command = (Command) o;
         byte type = command.getDataStructureType();
         if (type == PartialCommand.DATA_STRUCTURE_TYPE || type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
             PartialCommand header = (PartialCommand) command;

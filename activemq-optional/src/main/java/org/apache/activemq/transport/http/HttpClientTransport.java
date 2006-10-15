@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URI;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -62,11 +60,11 @@ public class HttpClientTransport extends HttpTransportSupport {
         super(wireFormat, remoteUrl);
     }
 
-    public FutureResponse asyncRequest(Command command) throws IOException {
+    public FutureResponse asyncRequest(Object command) throws IOException {
         return null;
     }
 
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object command) throws IOException {
     	
     	if( isStopped() ) {
     		throw new IOException("stopped.");
@@ -96,7 +94,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         }
     }
 
-    public Response request(Command command) throws IOException {
+    public Object request(Object command) throws IOException {
         return null;
     }
 
@@ -131,7 +129,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                 else {
 //                    checkSession(httpMethod);
                 	DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());                    
-                	Command command = (Command) getTextWireFormat().unmarshal(stream);                    
+                	Object command = (Object) getTextWireFormat().unmarshal(stream);                    
                     if (command == null) {
                         log.warn("Received null command from url: " + remoteUrl);
                     } else {

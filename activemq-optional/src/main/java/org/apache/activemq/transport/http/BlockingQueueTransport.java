@@ -21,7 +21,6 @@ import edu.emory.mathcs.backport.java.util.Queue;
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.util.ServiceStopper;
 
@@ -47,7 +46,7 @@ public class BlockingQueueTransport extends TransportSupport {
         return queue;
     }
 
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object command) throws IOException {
         try {
             boolean success = queue.offer(command, MAX_TIMEOUT, TimeUnit.MILLISECONDS);
             if (!success)

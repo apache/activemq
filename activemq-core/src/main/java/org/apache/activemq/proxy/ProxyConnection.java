@@ -19,7 +19,6 @@ package org.apache.activemq.proxy;
 
 import java.io.IOException;
 import org.apache.activemq.Service;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
@@ -60,7 +59,7 @@ class ProxyConnection implements Service {
         }
             
         this.localTransport.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
                 boolean shutdown=false;
                 if( command.getClass() == ShutdownInfo.class ) {
                     shuttingDown.set(true);
@@ -82,7 +81,7 @@ class ProxyConnection implements Service {
         });
         
         this.remoteTransport.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
                 try {
                     localTransport.oneway(command);
                 } catch (IOException error) {

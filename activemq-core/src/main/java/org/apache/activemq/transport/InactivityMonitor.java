@@ -19,7 +19,6 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.Scheduler;
@@ -107,10 +106,10 @@ public class InactivityMonitor extends TransportFilter {
         commandReceived.set(false);
     }
 
-    public void onCommand(Command command) {
+    public void onCommand(Object command) {
         inReceive.set(true);
         try {
-            if( command.isWireFormatInfo() ) {
+            if( command.getClass() == WireFormatInfo.class ) {
                 synchronized( this ) {
                     remoteWireFormatInfo = (WireFormatInfo) command;
                     try {
@@ -120,7 +119,7 @@ public class InactivityMonitor extends TransportFilter {
                     }
                 }
             }
-            getTransportListener().onCommand(command);
+            transportListener.onCommand(command);
         } finally {
             inReceive.set(false);
             commandReceived.set(true);
@@ -128,18 +127,18 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object o) throws IOException {
         // Disable inactivity monitoring while processing a command.
         inSend.set(true);
         commandSent.set(true);
         try {
-            if( command.isWireFormatInfo() ) {
+            if( o.getClass() == WireFormatInfo.class ) {
                 synchronized( this ) {
-                    localWireFormatInfo = (WireFormatInfo) command;
+                    localWireFormatInfo = (WireFormatInfo) o;
                     startMonitorThreads();
                 }
             }
-            next.oneway(command);
+            next.oneway(o);
         } finally {
             inSend.set(false);
         }
@@ -147,7 +146,7 @@ public class InactivityMonitor extends TransportFilter {
     
     public void onException(IOException error) {
         stopMonitorThreads();
-        getTransportListener().onException(error);
+        transportListener.onException(error);
     }
     
     

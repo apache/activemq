@@ -17,15 +17,11 @@
  */
 package org.apache.activemq.transport;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.RemoveInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.ShutdownInfo;
+import java.io.IOException;
+
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
 
 /**
  * A useful base class for transport implementations.
@@ -67,22 +63,22 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
         return null;
     }
 
-    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+    public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
-    public Response request(Command command) throws IOException {
+    public Object request(Object command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
     
-    public Response request(Command command,int timeout) throws IOException {
+    public Object request(Object command,int timeout) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
     /**
      * Process the inbound command
      */
-    public void doConsume(Command command) {
+    public void doConsume(Object command) {
         if (command != null) {
             if (transportListener != null) {
                 transportListener.onCommand(command);
@@ -102,7 +98,7 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
         }
     }
 
-    protected void checkStarted(Command command) throws IOException {
+    protected void checkStarted() throws IOException {
         if (!isStarted()) {
 			throw new IOException("The transport is not running.");
         }

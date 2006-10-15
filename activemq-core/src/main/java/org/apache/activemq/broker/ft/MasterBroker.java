@@ -360,7 +360,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
     protected void sendSyncToSlave(Command command){
         try{
 
-            Response response=slave.request(command);
+            Response response=(Response) slave.request(command);
             if (response.isException()){
                 ExceptionResponse er=(ExceptionResponse)response;
                 log.error("Slave Failed",er.getException());

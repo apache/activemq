@@ -107,7 +107,8 @@ public class FanoutTransport implements CompositeTransport {
             this.uri=uri;
         }
 
-        public void onCommand(Command command) {
+        public void onCommand(Object o) {
+        	Command command = (Command) o;
             if (command.isResponse()) {
                 Integer id = new Integer(((Response) command).getCorrelationId());
                 RequestCounter rc = (RequestCounter) requestMap.get(id);
@@ -331,7 +332,8 @@ public class FanoutTransport implements CompositeTransport {
         this.maxReconnectAttempts = maxReconnectAttempts;
     }
 
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object o) throws IOException {
+    	final Command command = (Command) o;
         try {
             synchronized (reconnectMutex) {
                 
@@ -414,15 +416,15 @@ public class FanoutTransport implements CompositeTransport {
         return true;
     }
 
-    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+    public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
-    public Response request(Command command) throws IOException {
+    public Object request(Object command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
     
-    public Response request(Command command,int timeout) throws IOException {
+    public Object request(Object command,int timeout) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
