@@ -105,6 +105,7 @@ public class TransportConnector implements Connector {
         rc.setDiscoveryUri(discoveryUri);
         rc.setName(name);
         rc.setDisableAsyncDispatch(disableAsyncDispatch);
+        rc.setBrokerInfo(brokerInfo);
         return rc;
     }
     
@@ -212,6 +213,7 @@ public class TransportConnector implements Connector {
         getServer().start();
         DiscoveryAgent da = getDiscoveryAgent();
         if( da!=null ) {
+        	da.setBrokerName(getBrokerInfo().getBrokerName());
             da.registerService(getConnectUri().toString());
             da.start();
         }
