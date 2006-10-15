@@ -23,7 +23,6 @@ import java.net.URI;
 import junit.framework.TestCase;
 
 import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
@@ -58,7 +57,7 @@ public class BadConnectionTest extends TestCase {
         transport = createTransport();
         transport.setTransportListener(new TransportListener() {
 
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
             }
 
             public void onException(IOException error) {

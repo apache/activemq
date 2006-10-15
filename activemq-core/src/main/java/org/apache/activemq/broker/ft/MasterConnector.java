@@ -109,7 +109,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
         log.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
 
         localBroker.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
             }
 
             public void onException(IOException error) {
@@ -120,7 +120,8 @@ public class MasterConnector implements Service, BrokerServiceAware {
         });
 
         remoteBroker.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object o) {
+            	Command command = (Command) o;
                 if (started.get()) {
                     serviceRemoteCommand(command);
                 }

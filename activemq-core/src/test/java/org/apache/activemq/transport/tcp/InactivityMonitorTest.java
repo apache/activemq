@@ -21,7 +21,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
@@ -65,7 +64,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     private void startClient() throws Exception, URISyntaxException {
         clientTransport = TransportFactory.connect(new URI("tcp://localhost:61616?trace=true&wireFormat.maxInactivityDuration=1000"));
         clientTransport.setTransportListener(new TransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
                 clientReceiveCount.incrementAndGet();
                 if( clientRunOnCommand !=null ) {
                     clientRunOnCommand.run();
@@ -117,7 +116,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
             log.info("["+getName()+"] Server Accepted a Connection");
             serverTransport = transport;
             serverTransport.setTransportListener(new TransportListener() {
-                public void onCommand(Command command) {
+                public void onCommand(Object command) {
                     serverReceiveCount.incrementAndGet();
                     if( serverRunOnCommand !=null ) {
                         serverRunOnCommand.run();
@@ -151,7 +150,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         // this should simulate a client hang.
         clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:61616"), null);
         clientTransport.setTransportListener(new TransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
                 clientReceiveCount.incrementAndGet();
                 if( clientRunOnCommand !=null ) {
                     clientRunOnCommand.run();

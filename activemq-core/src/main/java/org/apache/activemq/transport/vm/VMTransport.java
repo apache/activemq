@@ -20,7 +20,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -70,7 +69,7 @@ public class VMTransport implements Transport,Task{
         this.peer=peer;
     }
 
-    public void oneway(Command command) throws IOException{
+    public void oneway(Object command) throws IOException{
         if(disposed){
             throw new TransportDisposedIOException("Transport disposed.");
         }
@@ -88,7 +87,7 @@ public class VMTransport implements Transport,Task{
         }
     }
     
-    protected void syncOneWay(Command command){
+    protected void syncOneWay(Object command){
         final TransportListener tl=peer.transportListener;
         prePeerSetQueue=peer.prePeerSetQueue;
         if(tl==null){
@@ -98,7 +97,7 @@ public class VMTransport implements Transport,Task{
         }
     }
     
-    protected void asyncOneWay(Command command) throws IOException{
+    protected void asyncOneWay(Object command) throws IOException{
         messageQueue=getMessageQueue();
         try{
             messageQueue.put(command);
@@ -109,15 +108,15 @@ public class VMTransport implements Transport,Task{
         }
     }
 
-    public FutureResponse asyncRequest(Command command,ResponseCallback responseCallback) throws IOException{
+    public FutureResponse asyncRequest(Object command,ResponseCallback responseCallback) throws IOException{
         throw new AssertionError("Unsupported Method");
     }
 
-    public Response request(Command command) throws IOException{
+    public Object request(Object command) throws IOException{
         throw new AssertionError("Unsupported Method");
     }
 
-    public Response request(Command command,int timeout) throws IOException{
+    public Object request(Object command,int timeout) throws IOException{
         throw new AssertionError("Unsupported Method");
     }
 

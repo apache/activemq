@@ -18,8 +18,6 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Response;
 /**
  * @version $Revision: 1.5 $
  */
@@ -63,7 +61,7 @@ public class TransportFilter implements TransportListener,Transport{
         next.stop();
     }
 
-    public void onCommand(Command command){
+    public void onCommand(Object command){
         transportListener.onCommand(command);
     }
 
@@ -78,19 +76,19 @@ public class TransportFilter implements TransportListener,Transport{
         return next.toString();
     }
 
-    public void oneway(Command command) throws IOException{
+    public void oneway(Object command) throws IOException{
         next.oneway(command);
     }
 
-    public FutureResponse asyncRequest(Command command,ResponseCallback responseCallback) throws IOException{
+    public FutureResponse asyncRequest(Object command,ResponseCallback responseCallback) throws IOException{
         return next.asyncRequest(command,null);
     }
 
-    public Response request(Command command) throws IOException{
+    public Object request(Object command) throws IOException{
         return next.request(command);
     }
 
-    public Response request(Command command,int timeout) throws IOException{
+    public Object request(Object command,int timeout) throws IOException{
         return next.request(command,timeout);
     }
 

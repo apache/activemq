@@ -58,7 +58,8 @@ public class TransportConnection extends AbstractConnection {
         connector.setBrokerName(broker.getBrokerName());
         this.transport = transport;
         this.transport.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object o) {
+            	Command command = (Command) o;
                 Response response = service(command);
                 if (response != null) {
                     dispatch(response);

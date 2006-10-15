@@ -34,7 +34,8 @@ public class ResponseRedirectInterceptor extends TransportFilter {
         this.transport = transport;
     }
 
-    public void onCommand(Command command) {
+    public void onCommand(Object o) {
+    	final Command command = (Command) o;
         // redirect to the endpoint that the last response came from
         Endpoint from = command.getFrom();
         transport.setTargetEndpoint(from);

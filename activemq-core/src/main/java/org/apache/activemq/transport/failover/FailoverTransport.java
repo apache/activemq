@@ -85,7 +85,8 @@ public class FailoverTransport implements CompositeTransport {
     
     TransportListener createTransportListener() {
     	return new TransportListener() {
-	        public void onCommand(Command command) {
+	        public void onCommand(Object o) {
+            	Command command = (Command) o;
 	            if (command == null) {
 	                return;
 	            }
@@ -340,7 +341,8 @@ public class FailoverTransport implements CompositeTransport {
         this.randomize=randomize;
     }
 
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object o) throws IOException {
+    	Command command = (Command) o;
         Exception error = null;
         try {
 
@@ -429,15 +431,15 @@ public class FailoverTransport implements CompositeTransport {
         }
     }
 
-    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+    public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
-    public Response request(Command command) throws IOException {
+    public Object request(Object command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
     
-    public Response request(Command command,int timeout) throws IOException {
+    public Object request(Object command,int timeout) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 

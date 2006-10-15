@@ -50,15 +50,16 @@ public class StompTransportFilter extends TransportFilter {
         this.protocolConverter = new ProtocolConverter(this, translator);
     }
 
-	public void oneway(Command command) throws IOException {
+	public void oneway(Object o) throws IOException {
         try {
+        	final Command command = (Command) o;
         	protocolConverter.onActiveMQCommad(command);
 		} catch (JMSException e) {
 			throw IOExceptionSupport.create(e);
 		}
 	}
 
-	public void onCommand(Command command) {
+	public void onCommand(Object command) {
         try {
         	protocolConverter.onStompCommad((StompFrame) command);
 		} catch (IOException e) {

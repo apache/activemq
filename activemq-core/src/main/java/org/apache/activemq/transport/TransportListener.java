@@ -19,7 +19,6 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
-import org.apache.activemq.command.Command;
 
 /**
  * An asynchronous listener of commands
@@ -32,7 +31,7 @@ public interface TransportListener {
      * called to process a command
      * @param command
      */
-    public void onCommand(Command command);
+    public void onCommand(Object command);
     /**
      * An unrecoverable exception has occured on the transport
      * @param error

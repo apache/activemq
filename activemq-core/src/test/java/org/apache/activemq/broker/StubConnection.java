@@ -18,6 +18,7 @@
 package org.apache.activemq.broker;
 
 import java.io.IOException;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ExceptionResponse;
@@ -30,6 +31,7 @@ import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
+
 import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 
@@ -66,7 +68,7 @@ public class StubConnection implements Service {
         };
     }
 
-    protected void dispatch(Command command) throws InterruptedException, IOException {
+    protected void dispatch(Object command) throws InterruptedException, IOException {
         dispatchQueue.put(command);
     }
 
@@ -77,7 +79,7 @@ public class StubConnection implements Service {
     public StubConnection(Transport transport) throws Exception {
         this.transport = transport;
         transport.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Command command) {
+            public void onCommand(Object command) {
                 try {
                     if (command.getClass() == ShutdownInfo.class) {
                         shuttingDown = true;
@@ -135,7 +137,7 @@ public class StubConnection implements Service {
             return response;
         }
         else if (transport != null) {
-            Response response = transport.request(command);
+            Response response = (Response) transport.request(command);
             if (response != null && response.isException()) {
                 ExceptionResponse er = (ExceptionResponse) response;
                 throw JMSExceptionSupport.create(er.getException());

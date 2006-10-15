@@ -53,7 +53,8 @@ public class HttpTransport extends HttpTransportSupport {
         url = new URL(remoteUrl.toString());
     }
 
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object o) throws IOException {
+    	final Command command = (Command) o;
         try {
             if (command.getDataStructureType()==ConnectionInfo.DATA_STRUCTURE_TYPE) {
                 boolean startGetThread = clientID==null;

@@ -20,7 +20,6 @@ package org.apache.activemq.transport;
 import edu.emory.mathcs.backport.java.util.Queue;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.activemq.command.Command;
 
 import java.io.IOException;
 
@@ -41,7 +40,7 @@ public class StubTransportListener implements TransportListener {
         return exceptions;
     }
 
-    public void onCommand(Command command) {
+    public void onCommand(Object command) {
         commands.add(command);
     }
 

@@ -22,7 +22,6 @@ import java.io.InterruptedIOException;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
@@ -83,7 +82,7 @@ public class WireFormatNegotiator extends TransportFilter {
         readyCountDownLatch.countDown();
     }
     
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object command) throws IOException {
         try {
             if( !readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS) ) 
             	throw new IOException("Wire format negociation timeout: peer did not send his wire format.");
@@ -95,7 +94,8 @@ public class WireFormatNegotiator extends TransportFilter {
     }
 
  
-    public void onCommand(Command command) {
+    public void onCommand(Object o) {
+    	Command command = (Command) o;
         if( command.isWireFormatInfo() ) {
             WireFormatInfo info = (WireFormatInfo) command;
             if (log.isDebugEnabled()) {

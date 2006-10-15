@@ -1143,7 +1143,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         } else {
 
             try {
-                Response response = this.transport.request(command);
+                Response response = (Response) this.transport.request(command);
                 if (response.isException()) {
                     ExceptionResponse er = (ExceptionResponse) response;
                     if (er.getException() instanceof JMSException)
@@ -1171,7 +1171,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         } else {
 
             try {
-                Response response = this.transport.request(command,timeout);
+                Response response = (Response) this.transport.request(command,timeout);
                 if (response!=null && response.isException()) {
                     ExceptionResponse er = (ExceptionResponse) response;
                     if (er.getException() instanceof JMSException)
@@ -1427,7 +1427,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     /**
      * @param command - the command to consume
      */
-    public void onCommand(final Command command) {
+    public void onCommand(final Object o) {
+    	final Command command = (Command) o;
         if (!closed.get() && command != null) {
             if (command.isMessageDispatch()) {
                 MessageDispatch md = (MessageDispatch) command;

@@ -17,6 +17,8 @@
  */
 package org.apache.activemq.network;
 
+import java.io.IOException;
+
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.BrokerId;
@@ -42,8 +44,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
 
 /**
  * Forwards all messages from the local broker to the remote broker.
@@ -86,7 +86,8 @@ public class ForwardingBridge implements Bridge {
         log.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
 
         localBroker.setTransportListener(new DefaultTransportListener(){
-            public void onCommand(Command command) {
+            public void onCommand(Object o) {
+            	Command command = (Command) o;
                 serviceLocalCommand(command);
             }
             public void onException(IOException error) {
@@ -95,7 +96,8 @@ public class ForwardingBridge implements Bridge {
         });
         
         remoteBroker.setTransportListener(new DefaultTransportListener(){
-            public void onCommand(Command command) {
+            public void onCommand(Object o) {
+            	Command command = (Command) o;
                 serviceRemoteCommand(command);
             }
             public void onException(IOException error) {

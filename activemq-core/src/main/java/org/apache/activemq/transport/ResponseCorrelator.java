@@ -53,13 +53,15 @@ public class ResponseCorrelator extends TransportFilter {
         this.sequenceGenerator = sequenceGenerator;
     }
 
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object o) throws IOException {
+    	Command command = (Command) o;
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(false);
         next.oneway(command);
     }
 
-    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException {
+    public FutureResponse asyncRequest(Object o, ResponseCallback responseCallback) throws IOException {
+    	Command command = (Command) o;
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(true);
         FutureResponse future = new FutureResponse(responseCallback);
@@ -68,17 +70,18 @@ public class ResponseCorrelator extends TransportFilter {
         return future;
     }
     
-    public Response request(Command command) throws IOException { 
+    public Object request(Object command) throws IOException { 
         FutureResponse response = asyncRequest(command, null);
         return response.getResult();
     }
     
-    public Response request(Command command,int timeout) throws IOException {
+    public Object request(Object command,int timeout) throws IOException {
         FutureResponse response = asyncRequest(command, null);
         return response.getResult(timeout);
     }
     
-    public void onCommand(Command command) {
+    public void onCommand(Object o) {
+    	Command command = (Command) o;
         boolean debug = log.isDebugEnabled();
         if( command.isResponse() ) {
             Response response = (Response) command;

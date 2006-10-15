@@ -113,19 +113,19 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     /**
      * A one way asynchronous send
      */
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object command) throws IOException {
         oneway(command, targetAddress);
     }
 
     /**
      * A one way asynchronous send to a given address
      */
-    public void oneway(Command command, SocketAddress address) throws IOException {
+    public void oneway(Object command, SocketAddress address) throws IOException {
         if (log.isDebugEnabled()) {
             log.debug("Sending oneway from: " + this + " to target: " + targetAddress + " command: " + command);
         }
-        checkStarted(command);
-        commandChannel.write(command, address);
+        checkStarted();
+        commandChannel.write((Command) command, address);
     }
 
     /**

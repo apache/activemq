@@ -116,7 +116,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 
     public void start() throws Exception {
         localBroker.setTransportListener(new DefaultTransportListener(){
-            public void onCommand(Command command){
+            public void onCommand(Object o){
+            	Command command = (Command) o;
                 serviceLocalCommand(command);
             }
     
@@ -125,7 +126,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             }
         });
         remoteBroker.setTransportListener(new TransportListener(){
-            public void onCommand(Command command){
+            public void onCommand(Object o){
+            	Command command = (Command) o;
                 serviceRemoteCommand(command);
             }
     

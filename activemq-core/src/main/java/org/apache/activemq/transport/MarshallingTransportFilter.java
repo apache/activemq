@@ -33,11 +33,11 @@ public class MarshallingTransportFilter extends TransportFilter {
         this.remoteWireFormat = remoteWireFormat;
     }
     
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object command) throws IOException {
         next.oneway((Command) remoteWireFormat.unmarshal(localWireFormat.marshal(command)));
     }
     
-    public void onCommand(Command command) {
+    public void onCommand(Object command) {
         try {
             getTransportListener().onCommand((Command)localWireFormat.unmarshal(remoteWireFormat.marshal(command)));
         } catch (IOException e) {

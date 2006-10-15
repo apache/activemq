@@ -40,7 +40,7 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
         expected.setSelector("Edam");
         expected.setResponseRequired(true);
         log.info("About to send: " + expected);
-        Response response = producer.request(expected, 2000);
+        Response response = (Response) producer.request(expected, 2000);
 
         log.info("Received: " + response);
         assertNotNull("Received a response", response);

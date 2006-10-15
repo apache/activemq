@@ -20,7 +20,6 @@ package org.apache.activemq.transport;
 import edu.emory.mathcs.backport.java.util.Queue;
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.util.ServiceStopper;
 
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class StubTransport extends TransportSupport {
     protected void doStart() throws Exception {
     }
 
-    public void oneway(Command command) throws IOException {
+    public void oneway(Object command) throws IOException {
         queue.add(command);
     }
 

@@ -18,8 +18,6 @@
 package org.apache.activemq.transport;
 
 import org.apache.activemq.Service;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Response;
 
 import java.io.IOException;
 
@@ -36,7 +34,7 @@ public interface Transport extends Service {
      * @param command 
      * @throws IOException 
      */
-    public void oneway(Command command) throws IOException;
+    public void oneway(Object command) throws IOException;
 
     /**
      * An asynchronous request response where the Receipt will be returned
@@ -48,7 +46,7 @@ public interface Transport extends Service {
      * @return the FutureResponse
      * @throws IOException 
      */
-    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException;
+    public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException;
     
     /**
      * A synchronous request response
@@ -56,7 +54,7 @@ public interface Transport extends Service {
      * @return the response
      * @throws IOException 
      */
-    public Response request(Command command) throws IOException;
+    public Object request(Object command) throws IOException;
 
     /**
      * A synchronous request response
@@ -65,8 +63,45 @@ public interface Transport extends Service {
      * @return the repsonse or null if timeout
      * @throws IOException 
      */
-    public Response request(Command command, int timeout) throws IOException;
+    public Object request(Object command, int timeout) throws IOException;
 
+    
+//    /**
+//     * A one way asynchronous send
+//     * @param command 
+//     * @throws IOException 
+//     */
+//    public void oneway(Command command) throws IOException;
+//
+//    /**
+//     * An asynchronous request response where the Receipt will be returned
+//     * in the future.  If responseCallback is not null, then it will be called
+//     * when the response has been completed.
+//     * 
+//     * @param command 
+//     * @param responseCallback TODO
+//     * @return the FutureResponse
+//     * @throws IOException 
+//     */
+//    public FutureResponse asyncRequest(Command command, ResponseCallback responseCallback) throws IOException;
+//    
+//    /**
+//     * A synchronous request response
+//     * @param command 
+//     * @return the response
+//     * @throws IOException 
+//     */
+//    public Response request(Command command) throws IOException;
+//
+//    /**
+//     * A synchronous request response
+//     * @param command 
+//     * @param timeout 
+//     * @return the repsonse or null if timeout
+//     * @throws IOException 
+//     */
+//    public Response request(Command command, int timeout) throws IOException;
+    
     /**
      * Returns the current transport listener
      * @return 

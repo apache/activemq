@@ -17,6 +17,10 @@
  */
 package org.apache.activemq.transport.reliable;
 
+import java.io.IOException;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ReplayCommand;
 import org.apache.activemq.command.Response;
@@ -25,13 +29,8 @@ import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.UdpTransport;
-import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * This interceptor deals with out of order commands together with being able to
@@ -78,7 +77,8 @@ public class ReliableTransport extends ResponseCorrelator {
         }
     }
 
-    public Response request(Command command) throws IOException {
+    public Object request(Object o) throws IOException {
+    	final Command command = (Command) o;
         FutureResponse response = asyncRequest(command, null);
         while (true) {
             Response result = response.getResult(requestTimeout);
@@ -89,7 +89,8 @@ public class ReliableTransport extends ResponseCorrelator {
         }
     }
 
-    public Response request(Command command, int timeout) throws IOException {
+    public Object request(Object o, int timeout) throws IOException {
+    	final Command command = (Command) o;
         FutureResponse response = asyncRequest(command, null);
         while (timeout > 0) {
             int time = timeout;
@@ -106,7 +107,8 @@ public class ReliableTransport extends ResponseCorrelator {
         return response.getResult(0);
     }
 
-    public void onCommand(Command command) {
+    public void onCommand(Object o) {
+    	Command command = (Command) o;
         // lets pass wireformat through
         if (command.isWireFormatInfo()) {
             super.onCommand(command);
