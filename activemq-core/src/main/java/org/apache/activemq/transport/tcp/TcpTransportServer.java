@@ -163,7 +163,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                         options.putAll(transportOptions);
                         WireFormat format = wireFormatFactory.createWireFormat();
                         Transport transport = createTransport(socket, format);
-                        Transport configuredTransport = transportFactory.configure(transport, format, options);
+                        Transport configuredTransport = transportFactory.serverConfigure(transport, format, options);
                         getAcceptListener().onAccept(configuredTransport);
                     }
                 }
