@@ -421,7 +421,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         checkClosed();
         checkMessageListener();
         
-        sendPullCommand(-1);
+        sendPullCommand(0);
         MessageDispatch md = dequeue(-1);
         if (md == null)
             return null;
