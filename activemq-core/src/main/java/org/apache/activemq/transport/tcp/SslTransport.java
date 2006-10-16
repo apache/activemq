@@ -18,21 +18,19 @@
 
 package org.apache.activemq.transport.tcp;
 
-import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
-import java.util.Map;
 
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * A Transport class that uses SSL and client-side certificate authentication.
@@ -44,7 +42,7 @@ import javax.net.ssl.SSLPeerUnverifiedException;
  *      set before the socket is connected. Otherwise, unexpected situations may occur.
  * 
  */
-class SslTransport extends TcpTransport {
+public class SslTransport extends TcpTransport {
     /**
      * Connect to a remote node such as a Broker.
      * 
@@ -60,7 +58,9 @@ class SslTransport extends TcpTransport {
      */
     public SslTransport(WireFormat wireFormat, SSLSocketFactory socketFactory, URI remoteLocation, URI localLocation, boolean needClientAuth) throws IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
-        ((SSLSocket)this.socket).setNeedClientAuth(needClientAuth);
+        if (this.socket != null) {
+            ((SSLSocket)this.socket).setNeedClientAuth(needClientAuth);
+        }
     }
     
     /**
@@ -106,5 +106,13 @@ class SslTransport extends TcpTransport {
 
         super.doConsume(command);
     }
+
+    /**
+     * @return pretty print of 'this'
+     */
+    public String toString() {
+        return "ssl://"+socket.getInetAddress()+":"+socket.getPort();
+    }
+
 }
 

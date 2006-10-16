@@ -48,12 +48,12 @@ public class SslTransportServer extends TcpTransportServer {
     
     
     /**
-     * Constructor.
+     * Creates a ssl transport server for the specified url using the provided
+     * serverSocketFactory
      * 
      * @param transportFactory The factory used to create transports when connections arrive.
      * @param location The location of the broker to bind to.
      * @param serverSocketFactory The factory used to create this server.
-     * @param needClientAuth States if this server should needClientAuth.
      * @throws IOException passed up from TcpTransportFactory.
      * @throws URISyntaxException passed up from TcpTransportFactory.
      */
@@ -65,34 +65,34 @@ public class SslTransportServer extends TcpTransportServer {
     }
     
     /**
-     * Setter for needClientAuth.
-     * 
-     * When set to true, needClientAuth will set SSLSockets' needClientAuth to true forcing clients to provide
-     *      client certificates.
+     * Sets whether client authentication should be required
+     * Must be called before {@link #bind()}
+     * Note: Calling this method clears the wantClientAuth flag
+     * in the underlying implementation.
      */
     public void setNeedClientAuth(boolean needAuth) {
         this.needClientAuth = needAuth;
     }
     
     /**
-     * Getter for needClientAuth.
+     * Returns whether client authentication should be required.
      */
     public boolean getNeedClientAuth() {
         return this.needClientAuth;
     }
     
     /**
-     * Getter for wantClientAuth.
+     * Returns whether client authentication should be requested.
      */
     public boolean getWantClientAuth() {
         return this.wantClientAuth;
     }
     
     /**
-     * Setter for wantClientAuth.
-     * 
-     * When set to true, wantClientAuth will set SSLSockets' wantClientAuth to true forcing clients to provide
-     *      client certificates.
+     * Sets whether client authentication should be requested.
+     * Must be called before {@link #bind()}
+     * Note: Calling this method clears the needClientAuth flag
+     * in the underlying implementation.
      */
     public void setWantClientAuth(boolean wantAuth) {
         this.wantClientAuth = wantAuth;

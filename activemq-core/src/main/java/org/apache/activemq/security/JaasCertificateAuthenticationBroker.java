@@ -96,11 +96,11 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter {
                             break;
                         }
                     }
-                    
-                    SecurityContext s = new JaasSecurityContext(dnName, subject);
+                    SecurityContext s = new JaasCertificateSecurityContext(
+                        dnName, subject, (X509Certificate[])info.getTransportContext());
                     context.setSecurityContext(s);
                 } catch (Exception e) {
-                    throw new SecurityException("User name or password is invalid.", e);
+                    throw new SecurityException("User name or password is invalid: " + e.getMessage(), e);
                 }
             } finally {
                 Thread.currentThread().setContextClassLoader(original);

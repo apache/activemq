@@ -148,13 +148,20 @@ public class TransportConnector implements Connector {
                     connection.start();
                 }
                 catch (Exception e) {
+                    String remoteHost = transport.getRemoteAddress();
                 	ServiceSupport.dispose(transport);
-                    onAcceptError(e);
+                    onAcceptError(e, remoteHost);
                 }
             }
 
             public void onAcceptError(Exception error) {
-                log.error("Could not accept connection: " + error, error);
+                onAcceptError(error,null);
+            }
+
+            private void onAcceptError(Exception error, String remoteHost) {
+                log.error("Could not accept connection "  +
+                    (remoteHost == null ? "" : "from " + remoteHost)
+                    + ": " + error, error);
             }
         });
         this.server.setBrokerInfo(brokerInfo);
