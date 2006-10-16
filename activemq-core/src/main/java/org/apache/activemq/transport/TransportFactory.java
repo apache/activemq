@@ -219,6 +219,24 @@ public abstract class TransportFactory {
     }
 
     /**
+     * Fully configures and adds all need transport filters so that the transport
+     * can be used by the ActiveMQ message broker.  The main difference between this and the 
+     * configure() method is that the broker does not issue requests to the client so the
+     * ResponseCorrelator is not needed.
+     * 
+     * @param transport
+     * @param wf
+     * @param options
+     * @return
+     * @throws Exception
+     */
+	public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+    	transport = compositeConfigure(transport, format, options);    	
+        transport = new MutexTransport(transport);
+        return transport;
+	}
+    
+    /**
      * Similar to configure(...) but this avoid adding in the MutexTransport and ResponseCorrelator transport layers
      * so that the resulting transport can more efficiently be used as part of a composite transport.
      * 
