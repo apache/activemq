@@ -720,7 +720,7 @@ public class BrokerService implements Service, Serializable {
     }
 
     /**
-     * @param jmsBridgeConnectors The jmsBridgeConnectors to set.
+     * @param jmsConnectors The jmsBridgeConnectors to set.
      */
     public void setJmsBridgeConnectors(JmsConnector[] jmsConnectors){
         this.jmsBridgeConnectors=jmsConnectors;

@@ -132,7 +132,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @param noLocal
      * @param browser
      * @param dispatchAsync
-     * @param value
      * @throws JMSException
      */
     public ActiveMQMessageConsumer(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination dest,
@@ -737,7 +736,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * Acknowledge all the messages that have been delivered to the client upto
      * this point.
      * 
-     * @param deliverySequenceId
      * @throws JMSException
      */
     public void acknowledge() throws JMSException {
