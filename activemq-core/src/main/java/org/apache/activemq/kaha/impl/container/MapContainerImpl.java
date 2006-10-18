@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.RuntimeStoreException;
@@ -47,13 +48,24 @@ import org.apache.commons.logging.LogFactory;
 public final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
 
     private static final Log log=LogFactory.getLog(MapContainerImpl.class);
-    protected Map map=new HashMap();
-    protected Map valueToKeyMap=new HashMap();
+    protected Map indexMap;
     protected Marshaller keyMarshaller=Store.ObjectMarshaller;
     protected Marshaller valueMarshaller=Store.ObjectMarshaller;
 
     public MapContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,String indexType){
         super(id,root,indexManager,dataManager,indexType);
+    }
+    
+    public synchronized void init(){
+        super.init();
+        if(indexMap == null){
+            if(indexType.equals(IndexTypes.DISK_INDEX)){
+                this.indexMap = new HashMap();
+            }else{
+                this.indexMap = new HashMap();
+            }
+        }
+            
     }
 
     /*
@@ -73,8 +85,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                         IndexItem item=indexManager.getIndex(nextItem);
                         StoreLocation data=item.getKeyDataItem();
                         Object key=dataManager.readItem(keyMarshaller,data);
-                        map.put(key,item);
-                        valueToKeyMap.put(item,key);
+                        indexMap.put(key,item);
                         indexList.add(item);
                         nextItem=item.getNextItem();
                     }
@@ -95,8 +106,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         checkClosed();
         if(loaded){
             loaded=false;
-            map.clear();
-            valueToKeyMap.clear();
+            indexMap.clear();
             indexList.clear();
         }
     }
@@ -118,7 +128,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      */
     public synchronized int size(){
         load();
-        return map.size();
+        return indexMap.size();
     }
 
     /*
@@ -128,7 +138,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      */
     public synchronized boolean isEmpty(){
         load();
-        return map.isEmpty();
+        return indexMap.isEmpty();
     }
 
     /*
@@ -138,7 +148,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      */
     public synchronized boolean containsKey(Object key){
         load();
-        return map.containsKey(key);
+        return indexMap.containsKey(key);
     }
 
     /*
@@ -150,7 +160,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         load();
         Object result=null;
         StoreEntry item=null;
-        item=(StoreEntry)map.get(key);
+        item=(StoreEntry)indexMap.get(key);
         if(item!=null){
             result=getValue(item);
         }
@@ -232,13 +242,9 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      */
     public synchronized Object put(Object key,Object value){
         load();
-        Object result=null;
-        if(map.containsKey(key)){
-            result=remove(key);
-        }
+        Object result=remove(key);;
         IndexItem item=write(key,value);
-        map.put(key,item);
-        valueToKeyMap.put(item,key);
+        indexMap.put(key,item);
         indexList.add(item);
         return result;
     }
@@ -251,12 +257,11 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     public synchronized Object remove(Object key){
         load();
         Object result=null;
-        IndexItem item=(IndexItem)map.get(key);
+        IndexItem item=(IndexItem)indexMap.get(key);
         if(item!=null){
             //refresh the index
             item = (IndexItem)indexList.refreshEntry(item);
-            map.remove(key);
-            valueToKeyMap.remove(item);
+            indexMap.remove(key);
             result=getValue(item);
             IndexItem prev=indexList.getPrevEntry(item);
             IndexItem next=indexList.getNextEntry(item);
@@ -276,7 +281,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                 if(value!=null&&value.equals(o)){
                     result=true;
                     // find the key
-                    Object key=valueToKeyMap.get(item);
+                    Object key=getKey(item);
                     if(key!=null){
                         remove(key);
                     }
@@ -289,7 +294,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     }
 
     protected void remove(IndexItem item){
-        Object key=valueToKeyMap.get(item);
+        Object key=getKey(item);
         if(key!=null){
             remove(key);
         }
@@ -303,8 +308,9 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     public synchronized void clear(){
         checkClosed();
         loaded=true;
-        map.clear();
-        valueToKeyMap.clear();
+        if(indexMap!=null){
+            indexMap.clear();
+        }
         super.clear();
         doClear();
     }
@@ -317,12 +323,11 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      */
     public StoreEntry place(Object key, Object value) {
         load();
-        if(map.containsKey(key)){
+        if(indexMap.containsKey(key)){
             remove(key);
         }
         IndexItem item=write(key,value);
-        map.put(key,item);
-        valueToKeyMap.put(item,key);
+        indexMap.put(key,item);
         indexList.add(item);
         return item;
     }
@@ -336,8 +341,8 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         IndexItem item=(IndexItem)entry;
         if(item!=null){
             
-            Object key = valueToKeyMap.remove(item);
-            map.remove(key);
+            Object key = getKey(item);
+            indexMap.remove(key);
             IndexItem prev=indexList.getPrevEntry(item);
             IndexItem next=indexList.getNextEntry(item);
             indexList.remove(item);
@@ -347,8 +352,8 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     
     /**
      * Get the value from it's location
-     * @param Valuelocation
-     * @return
+     * @param item 
+     * @return the value associated with the store entry
      */
     public synchronized Object getValue(StoreEntry item){
         load();
@@ -369,8 +374,8 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
 
     /**
      * Get the Key object from it's location
-     * @param keyLocation
-     * @return
+     * @param item 
+     * @return the Key Object associated with the StoreEntry
      */
     public synchronized Object getKey(StoreEntry item){
         load();
@@ -389,7 +394,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     
 
     protected Set getInternalKeySet(){
-        return new HashSet(map.keySet());
+        return new HashSet(indexMap.keySet());
     }
 
     protected IndexLinkedList getItemList(){
@@ -425,5 +430,22 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             throw new RuntimeStoreException(e);
         }
         return index;
+    }
+
+    /**
+     * @return
+     * @see org.apache.activemq.kaha.MapContainer#getIndexMap()
+     */
+    public Map getIndexMap(){
+        return indexMap;
+    }
+
+    /**
+     * @param map
+     * @see org.apache.activemq.kaha.MapContainer#setIndexMap(java.util.Map)
+     */
+    public void setIndexMap(Map map){
+        indexMap = map;
+        
     }
 }

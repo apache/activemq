@@ -38,6 +38,7 @@ import org.apache.activemq.kaha.impl.container.ContainerId;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
 import org.apache.activemq.kaha.impl.container.MapContainerImpl;
 import org.apache.activemq.kaha.impl.data.DataManager;
+import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.data.RedoListener;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
@@ -407,6 +408,11 @@ public class KahaStore implements Store{
             lock();
             mapsContainer=new IndexRootContainer(mapRoot,rootIndexManager,defaultDM);
             listsContainer=new IndexRootContainer(listRoot,rootIndexManager,defaultDM);
+            /**
+             * Add interest in data files - then consolidate them
+             */
+            generateInterestInMapDataFiles();
+            generateInterestInListDataFiles();
             for(Iterator i=dataManagers.values().iterator();i.hasNext();){
                 DataManager dm=(DataManager)i.next();
                 dm.consolidateDataFiles();
@@ -471,6 +477,50 @@ public class KahaStore implements Store{
             }
         }
         return lockSet;
+    }
+    
+    /**
+     * scans the directory and builds up the IndexManager and DataManager
+     * @throws IOException 
+     */
+    private void generateInterestInListDataFiles() throws IOException {
+        for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
+            ContainerId id = (ContainerId)i.next();
+            DataManager dm = getDataManager(id.getDataContainerName());
+            IndexManager im = getIndexManager(dm,id.getDataContainerName());
+            IndexItem theRoot=listsContainer.getRoot(im,id);
+            long nextItem=theRoot.getNextItem();
+            while(nextItem!=Item.POSITION_NOT_SET){
+                IndexItem item=im.getIndex(nextItem);
+                item.setOffset(nextItem);
+                dm.addInterestInFile(item.getKeyFile());
+                dm.addInterestInFile(item.getValueFile());
+                nextItem=item.getNextItem();
+            }
+            
+        }
+    }
+    
+    /**
+     * scans the directory and builds up the IndexManager and DataManager
+     * @throws IOException 
+     */
+    private void generateInterestInMapDataFiles() throws IOException {
+        for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {
+            ContainerId id = (ContainerId)i.next();
+            DataManager dm = getDataManager(id.getDataContainerName());
+            IndexManager im = getIndexManager(dm,id.getDataContainerName());
+            IndexItem theRoot=mapsContainer.getRoot(im,id);
+            long nextItem=theRoot.getNextItem();
+            while(nextItem!=Item.POSITION_NOT_SET){
+                IndexItem item=im.getIndex(nextItem);
+                item.setOffset(nextItem);
+                dm.addInterestInFile(item.getKeyFile());
+                dm.addInterestInFile(item.getValueFile());
+                nextItem=item.getNextItem();
+            }
+            
+        }
     }
 
     

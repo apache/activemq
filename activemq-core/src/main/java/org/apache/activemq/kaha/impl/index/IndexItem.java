@@ -311,8 +311,8 @@ import org.apache.activemq.kaha.impl.data.Item;
     }
     
     public boolean equals(Object obj){
-        boolean result = false;
-        if (obj != null && obj instanceof IndexItem){
+        boolean result = obj == this;
+        if (!result && obj != null && obj instanceof IndexItem){
             IndexItem other = (IndexItem)obj;
             result = other.offset == this.offset;
         }

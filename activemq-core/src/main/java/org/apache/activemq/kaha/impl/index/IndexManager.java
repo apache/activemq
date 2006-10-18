@@ -35,8 +35,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public final class IndexManager{
+    public static final String NAME_PREFIX="index-";
     private static final Log log=LogFactory.getLog(IndexManager.class);
-    private static final String NAME_PREFIX="index-";
     private final String name;
     private File directory;
     private File file;
