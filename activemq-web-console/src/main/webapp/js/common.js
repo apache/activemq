@@ -1,4 +1,7 @@
 /**
+ * This software is licensed under the Creative Commons Licence 2.5
+ * http://creativecommons.org/licenses/by/2.5/
+ *
  * addEvent written by Dean Edwards, 2005
  * with input from Tino Zijdel
  *
