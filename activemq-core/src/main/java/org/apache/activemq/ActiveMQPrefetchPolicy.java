@@ -116,7 +116,7 @@ public class ActiveMQPrefetchPolicy implements Serializable {
     }
 
     /**
-     * @param optimizeDurableTopicPrefetch The optimizeDurableTopicPrefetch to set.
+     * @param optimizeAcknowledgePrefetch The optimizeDurableTopicPrefetch to set.
      */
     public void setOptimizeDurableTopicPrefetch(int optimizeAcknowledgePrefetch){
         this.optimizeDurableTopicPrefetch=optimizeAcknowledgePrefetch;
