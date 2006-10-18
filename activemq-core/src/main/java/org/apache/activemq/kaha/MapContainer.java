@@ -160,14 +160,25 @@ public interface MapContainer  extends   Map{
     /**
      * Get the Key object from it's location
      * @param keyLocation
-     * @return
+     * @return the key for the entry
      */
     public Object getKey(StoreEntry keyLocation);
     
     /**
      * Get the value from it's location
      * @param Valuelocation
-     * @return
+     * @return the Object
      */
     public Object getValue(StoreEntry Valuelocation);
+    
+    /**
+     * Set the internal index map
+     * @param map
+     */
+    public void setIndexMap(Map map);
+    
+    /**
+     * @return the index map
+     */
+    public Map getIndexMap();
 }

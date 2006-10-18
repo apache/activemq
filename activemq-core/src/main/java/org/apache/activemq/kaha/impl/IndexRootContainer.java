@@ -60,7 +60,7 @@ class IndexRootContainer {
         while(nextItem!=Item.POSITION_NOT_SET){
             StoreEntry item=indexManager.getIndex(nextItem);
             StoreLocation data=item.getKeyDataItem();
-            Object key=dataManager.readItem(rootMarshaller,data);
+            Object key = dataManager.readItem(rootMarshaller,data);
             map.put(key,item);
             list.add(item);
             nextItem=item.getNextItem();

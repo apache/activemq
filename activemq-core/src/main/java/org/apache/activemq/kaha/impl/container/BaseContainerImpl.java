@@ -50,7 +50,7 @@ public abstract class BaseContainerImpl{
     protected boolean loaded=false;
     protected boolean closed=false;
     protected boolean initialized=false;
-    private String indexType;
+    protected String indexType;
 
     protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,
             DataManager dataManager,String indexType){

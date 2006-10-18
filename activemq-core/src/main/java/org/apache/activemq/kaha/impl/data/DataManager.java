@@ -252,9 +252,7 @@ public final class DataManager{
         }
         for(int i=0;i<purgeList.size();i++){
             DataFile dataFile=(DataFile) purgeList.get(i);
-            fileMap.remove(dataFile.getNumber());
-            boolean result=dataFile.delete();
-            log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
+            removeDataFile(dataFile);
         }
     }
 
