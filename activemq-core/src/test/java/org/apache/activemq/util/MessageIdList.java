@@ -104,8 +104,8 @@ public class MessageIdList extends Assert implements MessageListener {
                 messageIds.add(id);
                 semaphore.notifyAll();
             }
-            if (verbose) {
-                log.info("Received message: " + message);
+            if (log.isDebugEnabled()) {
+                log.debug("Received message: " + message);
             }
         } catch (JMSException e) {
             e.printStackTrace();

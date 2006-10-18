@@ -26,6 +26,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
@@ -47,10 +48,10 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         // lets some messages
         connection = createConnection();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(destination);
+        MessageProducer producer = createProducer();
         for (int i = 0; i < messageCount; i++) {
             TextMessage message = session.createTextMessage("Message: " + i + " sent at: " + new Date());
-            producer.send(message);
+            sendMessage(producer, message);
         }
         producer.close();
         session.close();
@@ -60,7 +61,7 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         connection.start();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        MessageConsumer consumer = session.createConsumer(destination);
+        MessageConsumer consumer = createConsumer();
         MessageIdList listener = new MessageIdList();
         consumer.setMessageListener(listener);
         listener.waitForMessagesToArrive(messageCount);
@@ -105,4 +106,16 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         return "org/apache/activemq/test/retroactive/activemq-fixed-buffer.xml";
     }
 
+
+    protected MessageProducer createProducer() throws JMSException {
+        return session.createProducer(destination);
+    }
+
+    protected void sendMessage(MessageProducer producer, TextMessage message) throws JMSException {
+        producer.send(message);
+    }
+
+    protected MessageConsumer createConsumer() throws JMSException {
+        return session.createConsumer(destination);
+    }
 }
