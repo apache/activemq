@@ -75,6 +75,9 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         return journalLogFiles;
     }
 
+    /**
+     * Sets the number of journal log files to use
+     */
     public void setJournalLogFiles(int journalLogFiles) {
         this.journalLogFiles = journalLogFiles;
     }
@@ -84,6 +87,8 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
     }
 
     /**
+     * Sets the size of the journal log files
+     *
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setJournalLogFileSize(int journalLogFileSize) {
@@ -102,6 +107,11 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         return useJournal;
     }
 
+    /**
+     * Enables or disables the use of the journal. The default is to use the journal
+     *
+     * @param useJournal
+     */
     public void setUseJournal(boolean useJournal) {
         this.useJournal = useJournal;
     }
@@ -144,6 +154,11 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         return useQuickJournal;
     }
 
+    /**
+     * Enables or disables the use of quick journal, which keeps messages in the journal and just
+     * stores a reference to the messages in JDBC. Defaults to false so that messages actually reside
+     * long term in the JDBC database.
+     */
     public void setUseQuickJournal(boolean useQuickJournal) {
         this.useQuickJournal = useQuickJournal;
     }
@@ -167,6 +182,9 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         return jdbcPersistenceAdapter.isUseDatabaseLock();
     }
 
+    /**
+     * Sets whether or not an exclusive database lock should be used to enable JDBC Master/Slave. Enabled by default.
+     */
     public void setUseDatabaseLock(boolean useDatabaseLock) {
         jdbcPersistenceAdapter.setUseDatabaseLock(useDatabaseLock);
     }
@@ -175,6 +193,9 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         return jdbcPersistenceAdapter.isCreateTablesOnStartup();
     }
 
+    /**
+     * Sets whether or not tables are created on startup
+     */
     public void setCreateTablesOnStartup(boolean createTablesOnStartup) {
         jdbcPersistenceAdapter.setCreateTablesOnStartup(createTablesOnStartup);
     }
@@ -183,6 +204,9 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         return journalThreadPriority;
     }
 
+    /**
+     * Sets the thread priority of the journal thread
+     */
     public void setJournalThreadPriority(int journalThreadPriority){
         this.journalThreadPriority=journalThreadPriority;
     }
