@@ -23,54 +23,79 @@
         @import url(<c:url value="/styles/style.css"/>);
         @import url(<c:url value="/styles/sorttable.css"/>);
     </style>
-	    <c:if test="${!disableJavaScript}">
+    <c:if test="${!disableJavaScript}">
 	    <script type='text/javascript' src='<c:url value="/js/common.js"/>'/>
 	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'/>
 	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'/>
     </c:if>
-        
+
 	<decorator:head />
 </head>
 
-<body id="page-home">
+<body>
 
-
-
-<div id="container">
-
-	<div id="header">
-
-		<span class="sitetitle_left">ActiveMQ</span> <span class="sitetitle_right">Console</span>
-
-	</div>
-
-	<div id="chromemenu">
-		<ul>
+<div id="wrapper-menu-top">
+    <div id="menu-top">
+        <ul>
             <li><a href="<c:url value='/index.jsp'/>" title="Home<"><span>Home</span></a></li>
             <li><a href="<c:url value='/queues.jsp'/>" title="Queues"><span>Queues</span></a></li>
             <li><a href="<c:url value='/topics.jsp'/>" title="Topics"><span>Topics</span></a></li>
             <li><a href="<c:url value='/subscribers.jsp'/>" title="Subscribers"><span>Subscribers</span></a></li>
             <li><a href="<c:url value='/send.jsp'/>" title="Send"><span>Send</span></a></li>
-		</ul>
-	</div>
+        </ul>
+    </div>
+    <!--menu-top-->
+</div>
+<!--wrapper-menu-top-->
 
-	<div id="content">
-
-        <div id="left">
-
-<decorator:body />
-
+<div id="wrapper-header">
+    <div id="header">
+        <div id="wrapper-header2">
+            <div id="wrapper-header3">
+                <h1>ActiveMQ Console</h1>
+            </div>
         </div>
     </div>
 </div>
 
+<div id="wrapper-content">
+    <!--
+    <div id="wrapper-menu-page">
+        <div id="menu-page">
+            <h3>Page navigation</h3>
+            <ul>
+                <li><a href="#">Example Link 1</a></li>
+            </ul>
 
+            <h3>sub page menu</h3>
+            <ul>
+                <li><a href="#">Example Link 1</a></li>
 
-<div id="footer">
-<p>
-Copyright 2005-2006 The Apache Software Foundation
-</p>
-<p><small>(<a href="?printable=true">printable version</a>)</small></p>
+                <li><a href="#">Example Link 2</a></li>
+                <li><a href="#">Example Link 3</a></li>
+                <li><a href="#">Example Link 4</a></li>
+            </ul>
+        </div>
+    </div>
+    -->
+
+    <div id="content">
+        <decorator:body/>
+
+    </div>
+</div>
+
+<div id="wrapper-footer">
+    <div id="footer">
+        <p>
+            Copyright 2005-2006 The Apache Software Foundation
+        </p>
+
+        <p>
+            <small>(<a href="?printable=true">printable version</a>)</small>
+        </p>
+    </div>
+
 </div>
 
 </body>
