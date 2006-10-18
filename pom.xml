@@ -109,17 +109,17 @@
     <repository>
       <id>apache-repo</id>
       <name>Apache CVS Repository</name>
-      <url>scpexe://minotaur.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
+      <url>${dist-repo-url}</url>
     </repository>
     <snapshotRepository>
       <id>apache-snapshots</id>
       <name>Apache CVS Development Repository</name>
-      <url>scpexe://minotaur.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
+      <url>scp://people.apache.org/www/people.apache.org/repo/m2-snapshot-repository</url>
     </snapshotRepository>
 <!--
     <site>
       <id>geronimo-website</id>
-      <url>scpexe://minotaur.apache.org/www/geronimo.apache.org/maven/</url>
+      <url>${site-repo-url}</url>
     </site>
 -->
   </distributionManagement>
@@ -779,7 +779,7 @@
         <executions> 
           <execution>
             <configuration>
-              <remoteRepositoryUrl>scpexe://minotaur.apache.org/www/cvs.apache.org/repository</remoteRepositoryUrl>
+              <remoteRepositoryUrl>${m1-dist-repo-url}</remoteRepositoryUrl>
             </configuration>
             <goals>
               <goal>install-maven-one-repository</goal>
@@ -814,5 +814,11 @@
       </plugin>
     </plugins>
   </reporting>
+
+  <properties>
+    <dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m2-incubating-repository</dist-repo-url>
+    <m1-dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m1-snapshot-repository</m1-dist-repo-url>
+    <site-repo-url>scpexe://people.apache.org/www/incubator.apache.org/activemq/maven/</site-repo-url>
+  </properties>
 
 </project>
