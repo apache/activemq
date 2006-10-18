@@ -372,6 +372,9 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return cleanupPeriod;
     }
 
+    /**
+     * Sets the number of milliseconds until the database is attempted to be cleaned up for durable topics
+     */
     public void setCleanupPeriod(int cleanupPeriod) {
         this.cleanupPeriod = cleanupPeriod;
     }
@@ -402,6 +405,9 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return createTablesOnStartup;
     }
 
+    /**
+     * Sets whether or not tables are created on startup
+     */
     public void setCreateTablesOnStartup(boolean createTablesOnStartup) {
         this.createTablesOnStartup = createTablesOnStartup;
     }
@@ -410,6 +416,9 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return useDatabaseLock;
     }
 
+    /**
+     * Sets whether or not an exclusive database lock should be used to enable JDBC Master/Slave. Enabled by default.
+     */
     public void setUseDatabaseLock(boolean useDatabaseLock) {
         this.useDatabaseLock = useDatabaseLock;
     }
