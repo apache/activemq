@@ -614,10 +614,11 @@ out.println("{");
 out.println("	/// <summary>");
 out.println("	/// Used to create marshallers for a specific version of the wire protocol");
 out.println("	/// </summary>");
-out.println("    public class MarshallerFactory");
+out.println("    public class MarshallerFactory : IMarshallerFactory");
 out.println("    {");
 out.println("        public void configure(OpenWireFormat format) ");
 out.println("        {");
+out.println("            format.clearMarshallers();");
 
 		List list = new ArrayList(getConcreteClasses());
 		Collections.sort(list, new Comparator(){
