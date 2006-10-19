@@ -52,7 +52,7 @@
   
   
     <persistenceAdapter>
-        <journaledJDBC journalLogFiles="5" dataDirectory="${activemq.home}/activemq-data"/>
+        <journaledJDBC journalLogFiles="5" dataDirectory="${activemq.base}/activemq-data"/>
       <!-- To use a different datasource, use the following syntax : -->
       <!-- 
       <journaledJDBC journalLogFiles="5" dataDirectory="../activemq-data" dataSource="#postgres-ds"/>
