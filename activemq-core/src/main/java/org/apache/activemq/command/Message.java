@@ -83,6 +83,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     private transient ByteSequence cachedWireFormatData;
 
     private BrokerId [] brokerPath;
+    protected boolean droppable = false;
 
     abstract public Message copy();
     
@@ -632,4 +633,14 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     public void onMessageRolledBack() {
         incrementRedeliveryCounter();
     }
+
+    /**
+     * @openwire:property version=2 cache=true
+     */
+	public boolean isDroppable() {
+		return droppable;
+	}
+	public void setDroppable(boolean droppable) {
+		this.droppable = droppable;
+	}
 }

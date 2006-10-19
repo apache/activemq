@@ -80,5 +80,6 @@ public abstract class MessageTestSupport extends BaseCommandTestSupport {
         info.setArrival(3);
         info.setUserID("UserID:16");
         info.setRecievedByDFBridge(true);
+        info.setDroppable(false);
     }
 }
