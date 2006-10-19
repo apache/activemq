@@ -381,7 +381,8 @@ public class TransactionContext implements XAResource {
     }
 
     public void rollback(Xid xid) throws XAException {
-        if( log.isDebugEnabled() )
+    	
+		if( log.isDebugEnabled() )
             log.debug("Rollback: "+xid);
 
         // We allow interleaving multiple transactions, so
@@ -399,6 +400,9 @@ public class TransactionContext implements XAResource {
         }
 
         try {
+			this.connection.checkClosedOrFailed();
+			this.connection.ensureConnectionInfoSent();
+
             // Let the server know that the tx is rollback.
             TransactionInfo info = new TransactionInfo(getConnectionId(), x, TransactionInfo.ROLLBACK);
             this.connection.syncSendPacket(info);
@@ -435,6 +439,8 @@ public class TransactionContext implements XAResource {
 
 
         try {
+			this.connection.checkClosedOrFailed();
+			this.connection.ensureConnectionInfoSent();
             
             // Notify the server that the tx was committed back
             TransactionInfo info = new TransactionInfo(getConnectionId(), x, 
@@ -504,7 +510,10 @@ public class TransactionContext implements XAResource {
         
         TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
         try {
-            DataArrayResponse receipt = (DataArrayResponse) this.connection.syncSendPacket(info);
+			this.connection.checkClosedOrFailed();
+			this.connection.ensureConnectionInfoSent();
+
+			DataArrayResponse receipt = (DataArrayResponse) this.connection.syncSendPacket(info);
             return (XATransactionId[]) receipt.getData();
         } catch (JMSException e) {
             throw toXAException(e);
@@ -529,7 +538,15 @@ public class TransactionContext implements XAResource {
     }
 
     private void setXid(Xid xid) throws XAException {
-        if (xid != null) {
+    	
+    	try {
+			this.connection.checkClosedOrFailed();
+			this.connection.ensureConnectionInfoSent();
+		} catch (JMSException e) {
+            throw toXAException(e);
+		}
+
+    	if (xid != null) {
             // associate
             associatedXid = xid;
             transactionId = new XATransactionId(xid);
