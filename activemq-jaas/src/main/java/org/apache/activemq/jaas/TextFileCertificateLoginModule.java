@@ -93,7 +93,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
             throw new LoginException("Unable to load user properties file " + usersFile);
         }
         
-        String dn = certs[0].getSubjectDN().getName();
+        String dn = getDistinguishedName(certs);
         
         for(Enumeration vals = users.elements(), keys = users.keys(); vals.hasMoreElements(); ) {
             if ( ((String)vals.nextElement()).equals(dn) ) {
