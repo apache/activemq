@@ -90,6 +90,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setArrival(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setUserID(tightUnmarshalString(dataIn, bs));
         info.setRecievedByDFBridge(bs.readBoolean());
+        info.setDroppable(bs.readBoolean());
 
         info.afterUnmarshall(wireFormat);
 
@@ -128,6 +129,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc+=tightMarshalLong1(wireFormat, info.getArrival(), bs);
         rc += tightMarshalString1(info.getUserID(), bs);
         bs.writeBoolean(info.isRecievedByDFBridge());
+        bs.writeBoolean(info.isDroppable());
 
         return rc + 9;
     }
@@ -167,6 +169,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
         tightMarshalLong2(wireFormat, info.getArrival(), dataOut, bs);
         tightMarshalString2(info.getUserID(), dataOut, bs);
+        bs.readBoolean();
         bs.readBoolean();
 
         info.afterMarshall(wireFormat);
@@ -223,6 +226,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setArrival(looseUnmarshalLong(wireFormat, dataIn));
         info.setUserID(looseUnmarshalString(dataIn));
         info.setRecievedByDFBridge(dataIn.readBoolean());
+        info.setDroppable(dataIn.readBoolean());
 
         info.afterUnmarshall(wireFormat);
 
@@ -264,6 +268,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         looseMarshalLong(wireFormat, info.getArrival(), dataOut);
         looseMarshalString(info.getUserID(), dataOut);
         dataOut.writeBoolean(info.isRecievedByDFBridge());
+        dataOut.writeBoolean(info.isDroppable());
 
     }
 }
