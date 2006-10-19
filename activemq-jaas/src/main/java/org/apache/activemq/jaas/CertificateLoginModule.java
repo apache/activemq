@@ -18,27 +18,23 @@
 
 package org.apache.activemq.jaas;
 
-import java.io.File;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
-import java.util.Enumeration;
+import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.security.cert.X509Certificate;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A LoginModule that allows for authentication based on SSL certificates.
@@ -99,7 +95,8 @@ public abstract class CertificateLoginModule implements LoginModule {
         
         username = getUserNameForCertificates(certificates);
         if ( username == null )
-            throw new FailedLoginException("Unable to verify client certificates.");
+            throw new FailedLoginException("No user for client certificate: "
+                + getDistinguishedName(certificates));
 
         groups = getUserGroups(username);
         
@@ -187,5 +184,13 @@ public abstract class CertificateLoginModule implements LoginModule {
      * @return A Set of the names of the groups this user belongs to.
      */
     protected abstract Set getUserGroups(final String username) throws LoginException;
+
+    protected String getDistinguishedName(final X509Certificate[] certs) {
+        if (certs != null && certs.length > 0 && certs[0] != null) {
+            return certs[0].getSubjectDN().getName();
+        } else {
+            return null;
+        }
+    }
 
 }
