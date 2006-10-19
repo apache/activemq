@@ -22,33 +22,72 @@
     <format>tar.bz2</format>
   </formats>
   <fileSets>
-    <!-- I don't think the STATUS file is required.
-    <fileSet>
-      <directory>..</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>STATUS*</include>
-      </includes>
-      <lineEnding>unix</lineEnding>
-    </fileSet>
-    -->
+
+    <!-- Copy over everything that needs to get unix line endings -->
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
       <excludes>
-        <exclude>bin/*</exclude>
+        <exclude>bin/**</exclude>
+        <exclude>conf/*.ts</exclude>
+        <exclude>conf/*.ks</exclude>
+        <exclude>conf/*.cert</exclude>
       </excludes>
       <lineEnding>unix</lineEnding>
     </fileSet>
     <fileSet>
-      <directory>src/release/bin</directory>
-      <outputDirectory>/bin</outputDirectory>
-      <excludes>
-        <exclude>*.bat</exclude>
-      </excludes>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>bin/macosx/wrapper.conf</include>
+        <include>bin/linux/wrapper.conf</include>
+      </includes>
+      <lineEnding>unix</lineEnding>
+    </fileSet>
+
+    <!-- Copy over files that should not get the line endings converted -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>conf/*.ts</include>
+        <include>conf/*.ks</include>
+        <include>conf/*.cert</include>
+      </includes>
+    </fileSet>
+
+    <!-- Copy over the files that should not get the line endings converted but need to be chmod to 755 -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>bin/linux/wrapper</include>
+        <include>bin/linux/libwrapper.so</include>
+        <include>bin/macosx/wrapper</include>
+        <include>bin/macosx/libwrapper.jnilib</include>
+      </includes>
+      <fileMode>0755</fileMode>
+    </fileSet>
+
+    <!-- Copy over the files that need unix line endings and also chmod to 755 -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>bin/activemq</include>
+        <include>bin/browse</include>
+        <include>bin/bstat</include>
+        <include>bin/list</include>
+        <include>bin/query</include>
+        <include>bin/shutdown</include>
+        <include>bin/macosx/activemq</include>
+        <include>bin/linux/activemq</include>
+      </includes>
       <fileMode>0755</fileMode>
       <lineEnding>unix</lineEnding>
     </fileSet>
+
+    <!-- Copy over jar files -->
     <fileSet>
       <directory>target</directory>
       <outputDirectory>/</outputDirectory>

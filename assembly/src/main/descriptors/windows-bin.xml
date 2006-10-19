@@ -21,21 +21,44 @@
     <format>zip</format>
   </formats>
   <fileSets>
-    <!-- I don't think the STATUS file is required.
-    <fileSet>
-      <directory>..</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>STATUS*</include>
-      </includes>
-      <lineEnding>dos</lineEnding>
-    </fileSet>
-    -->
+
+    <!-- Copy over everything that needs to get dos line endings -->
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
+      <excludes>
+        <exclude>bin/**</exclude>
+        <exclude>conf/*.ts</exclude>
+        <exclude>conf/*.ks</exclude>
+        <exclude>conf/*.cert</exclude>
+      </excludes>
       <lineEnding>dos</lineEnding>
     </fileSet>
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>bin/*.bat</include>
+        <include>bin/win32/*.bat</include>
+        <include>bin/win32/*.conf</include>
+      </includes>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+
+    <!-- Copy over files that should not get the line endings converted -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>conf/*.ts</include>
+        <include>conf/*.ks</include>
+        <include>conf/*.cert</include>
+        <include>bin/win32/*.exe</include>
+        <include>bin/win32/*.dll</include>
+      </includes>
+    </fileSet>
+
+    <!-- Copy over jar files -->
     <fileSet>
       <directory>target</directory>
       <outputDirectory>/</outputDirectory>
