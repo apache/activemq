@@ -20,7 +20,7 @@
   <!-- Allows us to use system properties as variables in this configuration file -->
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
   
-  <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
+  <broker brokerName="localhost" useJmx="true" xmlns="http://activemq.org/config/1.0">
   
     <!--  Use the following to set the broker memory limit 
     <memoryManager>  
