@@ -35,6 +35,8 @@ import javax.security.auth.Subject;
  * @version $Revisio n$
  * 
  * TODO: Must override equals and hashCode (JCA spec 16.4)
+ * 
+ * @org.apache.xbean.XBean element="managedConnectionFactory"  
  */
 public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation {
 
