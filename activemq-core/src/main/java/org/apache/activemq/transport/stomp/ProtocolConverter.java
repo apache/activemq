@@ -570,6 +570,7 @@ public class ProtocolConverter {
         } else if( message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE ) {
             
         	ActiveMQBytesMessage msg = (ActiveMQBytesMessage)message.copy();
+            msg.setReadOnlyBody(true);
             byte[] data = new byte[(int)msg.getBodyLength()]; 
             msg.readBytes(data);
 
