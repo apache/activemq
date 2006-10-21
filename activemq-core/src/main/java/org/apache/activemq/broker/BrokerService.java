@@ -432,26 +432,7 @@ public class BrokerService implements Service, Serializable {
             }
         }
         
-        for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = (NetworkConnector) iter.next();
-            unregisterNetworkConnectorMBean(connector);
-            stopper.stop(connector);
-        }
-
-        for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = (ProxyConnector) iter.next();
-            stopper.stop(connector);
-        }
-        
-        for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = (JmsConnector) iter.next();
-            stopper.stop(connector);
-        }
-        
-        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = (TransportConnector) iter.next();
-            stopper.stop(connector);
-        }
+        stopAllConnectors(stopper);
 
         
         //remove any VMTransports connected
@@ -487,6 +468,30 @@ public class BrokerService implements Service, Serializable {
 
         stopper.throwFirstException();
     }
+
+	protected void stopAllConnectors(ServiceStopper stopper) {
+		
+		for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+            NetworkConnector connector = (NetworkConnector) iter.next();
+            unregisterNetworkConnectorMBean(connector);
+            stopper.stop(connector);
+        }
+
+        for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
+            ProxyConnector connector = (ProxyConnector) iter.next();
+            stopper.stop(connector);
+        }
+        
+        for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
+            JmsConnector connector = (JmsConnector) iter.next();
+            stopper.stop(connector);
+        }
+        
+        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
+            TransportConnector connector = (TransportConnector) iter.next();
+            stopper.stop(connector);
+        }
+	}
 
     // Properties
     // -------------------------------------------------------------------------
