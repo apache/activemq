@@ -225,7 +225,7 @@ public abstract class TransportFactory {
      * ResponseCorrelator is not needed.
      * 
      * @param transport
-     * @param wf
+     * @param format
      * @param options
      * @return
      * @throws Exception
