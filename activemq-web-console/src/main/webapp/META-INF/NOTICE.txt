@@ -52,51 +52,9 @@ prior written permission. For written permission, please contact
 rod.johnson@interface21.com or juergen.hoeller@interface21.com.
 
 
-
 =========================================================================
 ==  MX4J Notice                                                        ==
 =========================================================================
 
 This product includes software developed by the MX4J project
 (http://sourceforge.net/projects/mx4j).
-
-
-
-=========================================================================
-==  MochiKit Notice                                                    ==
-=========================================================================
-
-This product includes JavaScript code developed by Bob Ippolito
-http://www.mochikit.com/
-
-
-=========================================================================
-==  PlotKit Notice                                                     ==
-=========================================================================
-
-This product includes JavaScript code developed by Alastair Tse
-http://www.liquidx.net/plotkit/
-
-
-=========================================================================
-==  common.js Notice                                                   ==
-=========================================================================
-
-This project includes JavaScript code developed by Dean Edwards
-with input from Tino Zijdel
-
-
-=========================================================================
-==  css.js and standardista-table-sorting.js Notice                    ==
-=========================================================================
-
-This project includes JavaScript code developed by Neil Crosby.
-http://www.workingwith.me.uk/
-
-
-=========================================================================
-==  CSS Notice                                                         ==
-=========================================================================
-
-This project includes the Inspirationally Blue CSS design by J David Macor
-http://www.jdavidmacor.com 
