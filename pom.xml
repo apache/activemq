@@ -126,7 +126,6 @@
 
   <modules>
 
-    <module>activecluster</module>
     <module>activemq-jaas</module>
     <module>activemq-core</module>
     <module>activemq-console</module>
@@ -140,8 +139,6 @@
     <module>assembly</module>
     -->
     <module>activeio</module>
-    <!-- module>activecluster</module -->
-
   </modules> 
 
   <licenses>
@@ -198,11 +195,6 @@
       <dependency>
         <groupId>${pom.groupId}</groupId>
         <artifactId>activemq-gbean-management</artifactId>
-        <version>${pom.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${pom.groupId}</groupId>
-        <artifactId>activecluster</artifactId>
         <version>${pom.version}</version>
       </dependency>
       <dependency>

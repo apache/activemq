@@ -70,7 +70,7 @@
       <type>war</type>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>activecluster</groupId>
       <artifactId>activecluster</artifactId>
       <optional>true</optional>
     </dependency>
