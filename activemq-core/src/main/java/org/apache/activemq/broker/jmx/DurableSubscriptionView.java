@@ -39,7 +39,7 @@ public class DurableSubscriptionView extends SubscriptionView implements  Durabl
     public DurableSubscriptionView(ManagedRegionBroker broker,String clientId,Subscription sub){
         super(clientId,sub);
         this.broker = broker;
-        this.subscriptionName = sub.getConsumerInfo().getSubcriptionName();
+        this.subscriptionName = sub.getConsumerInfo().getSubscriptionName();
     }
     
     /**

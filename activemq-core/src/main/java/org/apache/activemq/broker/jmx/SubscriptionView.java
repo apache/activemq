@@ -221,7 +221,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      */
     public String getSubcriptionName() {
         ConsumerInfo info = getConsumerInfo();
-        return info != null ? info.getSubcriptionName() : null;
+        return info != null ? info.getSubscriptionName() : null;
     }
     
     /**

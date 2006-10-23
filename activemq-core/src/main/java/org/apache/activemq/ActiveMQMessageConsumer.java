@@ -164,7 +164,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.redeliveryPolicy = session.connection.getRedeliveryPolicy();
 
         this.info = new ConsumerInfo(consumerId);
-        this.info.setSubcriptionName(name);
+        this.info.setSubscriptionName(name);
         this.info.setPrefetchSize(prefetch);
         this.info.setCurrentPrefetchSize(prefetch);
         this.info.setMaximumPendingMessageLimit(maximumPendingMessageCount);
@@ -234,7 +234,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @return the consumer name - used for durable consumers
      */
     protected String getConsumerName() {
-        return this.info.getSubcriptionName();
+        return this.info.getSubscriptionName();
     }
 
     /**
@@ -271,7 +271,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @return true if this is a durable topic subscriber
      */
     public boolean isDurableSubscriber() {
-        return info.getSubcriptionName()!=null && info.getDestination().isTopic();
+        return info.getSubscriptionName()!=null && info.getDestination().isTopic();
     }
 
     /**

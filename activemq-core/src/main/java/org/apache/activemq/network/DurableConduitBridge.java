@@ -58,7 +58,7 @@ public class DurableConduitBridge extends ConduitBridge{
                 if(isPermissableDestination(dest) && !doesConsumerExist(dest)){
                     DemandSubscription sub=createDemandSubscription(dest);
                     if(dest.isTopic()){
-                        sub.getLocalInfo().setSubcriptionName(getSubscriberName(dest));
+                        sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
                     }
                     try{
                         addSubscription(sub);
@@ -86,7 +86,7 @@ public class DurableConduitBridge extends ConduitBridge{
         if(info.isDurable()){
             // set the subscriber name to something reproducible
            
-            info.setSubcriptionName(getSubscriberName(info.getDestination()));
+            info.setSubscriptionName(getSubscriberName(info.getDestination()));
         }
         return doCreateDemandSubscription(info);
     }

@@ -163,7 +163,7 @@ public class BrokerView implements BrokerViewMBean {
         consumerId.setValue(0);
         info.setConsumerId(consumerId);
         info.setDestination(new ActiveMQTopic(topicName));
-        info.setSubcriptionName(subscriberName);
+        info.setSubscriptionName(subscriberName);
         info.setSelector(selector);
         Subscription subscription = broker.addConsumer(context, info);
         broker.removeConsumer(context, info);
