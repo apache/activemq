@@ -11,13 +11,6 @@ This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
 
 =========================================================================
-==  Scriptaculous Notice                                               ==
-=========================================================================
-
-This product includes software developed by Thomas Fuchs
-(http://script.aculo.us, http://mir.aculo.us)
-
-=========================================================================
 ==  Derby Notice                                                       ==
 =========================================================================
 
