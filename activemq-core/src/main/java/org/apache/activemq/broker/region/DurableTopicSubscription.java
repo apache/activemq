@@ -44,7 +44,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive,PendingMessageCursor cursor) throws InvalidSelectorException {
         super(broker,context,info,cursor);
         this.keepDurableSubsActive = keepDurableSubsActive;
-        subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
+        subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
     
     synchronized public boolean isActive() {

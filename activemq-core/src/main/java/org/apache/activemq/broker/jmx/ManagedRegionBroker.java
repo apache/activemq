@@ -180,10 +180,10 @@ public class ManagedRegionBroker extends RegionBroker {
         String clientId="clientId="+JMXSupport.encodeObjectNamePart(context.getClientId());
         String persistentMode="persistentMode=";
         String consumerId="";
-        SubscriptionKey key=new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubcriptionName());
+        SubscriptionKey key=new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubscriptionName());
         if(sub.getConsumerInfo().isDurable()){
             persistentMode+="Durable, subscriptionID="
-                    +JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubcriptionName());
+                    +JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
         }else{
             persistentMode+="Non-Durable";
             if(sub.getConsumerInfo()!=null&&sub.getConsumerInfo().getConsumerId()!=null){

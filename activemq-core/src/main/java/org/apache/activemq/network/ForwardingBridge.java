@@ -151,7 +151,7 @@ public class ForwardingBridge implements Bridge {
         if( connectionInfo.getClientId()!=null ) {
             topicConsumerInfo = new ConsumerInfo(sessionInfo, 2);
             topicConsumerInfo.setDispatchAsync(dispatchAsync);
-            topicConsumerInfo.setSubcriptionName("topic-bridge");
+            topicConsumerInfo.setSubscriptionName("topic-bridge");
             topicConsumerInfo.setRetroactive(true);
             topicConsumerInfo.setDestination(new ActiveMQTopic(destinationFilter));
             topicConsumerInfo.setPrefetchSize(prefetchSize);

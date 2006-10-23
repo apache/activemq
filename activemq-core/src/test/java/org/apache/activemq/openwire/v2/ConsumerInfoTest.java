@@ -58,7 +58,7 @@ public class ConsumerInfoTest extends BaseCommandTestSupport {
         info.setMaximumPendingMessageLimit(2);
         info.setDispatchAsync(false);
         info.setSelector("Selector:3");
-        info.setSubcriptionName("SubcriptionName:4");
+        info.setSubscriptionName("SubcriptionName:4");
         info.setNoLocal(true);
         info.setExclusive(false);
         info.setRetroactive(true);

@@ -73,7 +73,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(bs.readBoolean());
         info.setSelector(tightUnmarshalString(dataIn, bs));
-        info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
+        info.setSubscriptionName(tightUnmarshalString(dataIn, bs));
         info.setNoLocal(bs.readBoolean());
         info.setExclusive(bs.readBoolean());
         info.setRetroactive(bs.readBoolean());
@@ -111,7 +111,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
         bs.writeBoolean(info.isDispatchAsync());
         rc += tightMarshalString1(info.getSelector(), bs);
-        rc += tightMarshalString1(info.getSubcriptionName(), bs);
+        rc += tightMarshalString1(info.getSubscriptionName(), bs);
         bs.writeBoolean(info.isNoLocal());
         bs.writeBoolean(info.isExclusive());
         bs.writeBoolean(info.isRetroactive());
@@ -142,7 +142,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         dataOut.writeInt(info.getMaximumPendingMessageLimit());
         bs.readBoolean();
         tightMarshalString2(info.getSelector(), dataOut, bs);
-        tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
+        tightMarshalString2(info.getSubscriptionName(), dataOut, bs);
         bs.readBoolean();
         bs.readBoolean();
         bs.readBoolean();
@@ -173,7 +173,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         info.setMaximumPendingMessageLimit(dataIn.readInt());
         info.setDispatchAsync(dataIn.readBoolean());
         info.setSelector(looseUnmarshalString(dataIn));
-        info.setSubcriptionName(looseUnmarshalString(dataIn));
+        info.setSubscriptionName(looseUnmarshalString(dataIn));
         info.setNoLocal(dataIn.readBoolean());
         info.setExclusive(dataIn.readBoolean());
         info.setRetroactive(dataIn.readBoolean());
@@ -213,7 +213,7 @@ public class ConsumerInfoMarshaller extends BaseCommandMarshaller {
         dataOut.writeInt(info.getMaximumPendingMessageLimit());
         dataOut.writeBoolean(info.isDispatchAsync());
         looseMarshalString(info.getSelector(), dataOut);
-        looseMarshalString(info.getSubcriptionName(), dataOut);
+        looseMarshalString(info.getSubscriptionName(), dataOut);
         dataOut.writeBoolean(info.isNoLocal());
         dataOut.writeBoolean(info.isExclusive());
         dataOut.writeBoolean(info.isRetroactive());

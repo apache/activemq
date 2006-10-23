@@ -329,7 +329,7 @@ public class BrokerTest extends BrokerTestSupport {
         
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
         consumerInfo1.setPrefetchSize(100);
-        consumerInfo1.setSubcriptionName("test");
+        consumerInfo1.setSubscriptionName("test");
         connection1.send(consumerInfo1);
 
         // Send the messages
@@ -357,7 +357,7 @@ public class BrokerTest extends BrokerTestSupport {
         SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);        
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
         consumerInfo2.setPrefetchSize(100);
-        consumerInfo2.setSubcriptionName("test");
+        consumerInfo2.setSubscriptionName("test");
         
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
@@ -462,7 +462,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Create the durable subscription.
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
         if( durableConsumer ) {
-            consumerInfo1.setSubcriptionName("test");
+            consumerInfo1.setSubscriptionName("test");
         }
         consumerInfo1.setPrefetchSize(100);
         connection1.send(consumerInfo1);
@@ -511,7 +511,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Create the durable subscription.
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
         if( durableConsumer ) {
-            consumerInfo1.setSubcriptionName("test");
+            consumerInfo1.setSubscriptionName("test");
         }
         consumerInfo1.setPrefetchSize(100);
         consumerInfo1.setRetroactive(true);

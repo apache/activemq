@@ -678,7 +678,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         ConsumerInfo info = new ConsumerInfo(new ConsumerId(sessionId, consumerIdGenerator
                 .getNextSequenceId()));
         info.setDestination(ActiveMQMessageTransformation.transformDestination(topic));
-        info.setSubcriptionName(subscriptionName);
+        info.setSubscriptionName(subscriptionName);
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
         info.setDispatchAsync(dispatchAsync);

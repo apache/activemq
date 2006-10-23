@@ -70,7 +70,7 @@ public class TopicRegion extends AbstractRegion {
                 lookup(context,destination);
             }
             String clientId=context.getClientId();
-            String subcriptionName=info.getSubcriptionName();
+            String subcriptionName=info.getSubscriptionName();
             SubscriptionKey key=new SubscriptionKey(clientId,subcriptionName);
             DurableTopicSubscription sub=(DurableTopicSubscription)durableSubscriptions.get(key);
             if(sub!=null){
@@ -114,7 +114,7 @@ public class TopicRegion extends AbstractRegion {
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
 
-            SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
+            SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if (sub != null) {
                 sub.deactivate(keepDurableSubsActive);
@@ -189,7 +189,7 @@ public class TopicRegion extends AbstractRegion {
     private ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
         ConsumerInfo rc = new ConsumerInfo();
         rc.setSelector(info.getSelector());
-        rc.setSubcriptionName(info.getSubcriptionName());
+        rc.setSubscriptionName(info.getSubcriptionName());
         rc.setDestination(info.getDestination());
         rc.setConsumerId(createConsumerId());
         return rc;
@@ -213,11 +213,11 @@ public class TopicRegion extends AbstractRegion {
             if (AdvisorySupport.isAdvisoryTopic(info.getDestination())){
                 throw new JMSException("Cannot create a durable subscription for an advisory Topic");
             }
-            SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubcriptionName());
+            SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
             DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
             if(sub==null){
                 PendingMessageCursor cursor=broker.getPendingDurableSubscriberPolicy().getSubscriberPendingMessageCursor(
-                        context.getClientId(),info.getSubcriptionName(),broker.getTempDataStore(),
+                        context.getClientId(),info.getSubscriptionName(),broker.getTempDataStore(),
                         info.getPrefetchSize());
                 sub=new DurableTopicSubscription(broker,context,info,keepDurableSubsActive,cursor);
                 durableSubscriptions.put(key,sub);

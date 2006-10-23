@@ -84,7 +84,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         }
 
         this.info = new ConsumerInfo(consumerId);
-        this.info.setSubcriptionName(name);
+        this.info.setSubscriptionName(name);
 
         if (selector != null && selector.trim().length() != 0) {
             selector = "JMSType='org.apache.activemq.Stream' AND ( "+selector+" ) ";

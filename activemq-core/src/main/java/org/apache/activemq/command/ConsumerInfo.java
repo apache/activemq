@@ -43,7 +43,7 @@ public class ConsumerInfo extends BaseCommand {
     protected boolean browser;
     protected boolean dispatchAsync;
     protected String selector;
-    protected String subcriptionName;
+    protected String subscriptionName;
     protected boolean noLocal;
     protected boolean exclusive;
     protected boolean retroactive;
@@ -82,7 +82,7 @@ public class ConsumerInfo extends BaseCommand {
         info.browser = browser;
         info.dispatchAsync = dispatchAsync;
         info.selector = selector;
-        info.subcriptionName=subcriptionName;
+        info.subscriptionName=subscriptionName;
         info.noLocal = noLocal;
         info.exclusive = exclusive;
         info.retroactive = retroactive;
@@ -91,7 +91,7 @@ public class ConsumerInfo extends BaseCommand {
     }
     
     public boolean isDurable() {
-        return subcriptionName!=null;
+        return subscriptionName!=null;
     }
  
     public byte getDataStructureType() {
@@ -197,13 +197,30 @@ public class ConsumerInfo extends BaseCommand {
      * 
      * @openwire:property version=1
      */
+    public String getSubscriptionName() {
+        return subscriptionName;
+    }
+    public void setSubscriptionName(String durableSubscriptionId) {
+        this.subscriptionName = durableSubscriptionId;
+    }
+    
+    /**
+     * @deprecated
+     * @return @see getSubscriptionName
+     */
     public String getSubcriptionName() {
-        return subcriptionName;
+        return subscriptionName;
     }
+    
+    /**
+     * @deprecated
+     * @see setSubscriptionName
+     * @param durableSubscriptionId 
+     */
     public void setSubcriptionName(String durableSubscriptionId) {
-        this.subcriptionName = durableSubscriptionId;
-    }
-
+        this.subscriptionName = durableSubscriptionId;
+    }    
+    
     /**
      * Set noLocal to true to avoid receiving messages that were published locally on the same connection.
      * 

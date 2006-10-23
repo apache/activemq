@@ -140,7 +140,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Create the durable subscription.
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
-        consumerInfo1.setSubcriptionName("test");
+        consumerInfo1.setSubscriptionName("test");
         consumerInfo1.setPrefetchSize(100);
         connection1.send(consumerInfo1);
         
@@ -166,7 +166,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Re-open the subscription.
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
-        consumerInfo2.setSubcriptionName("test");
+        consumerInfo2.setSubscriptionName("test");
         consumerInfo2.setPrefetchSize(100);
         connection2.send(consumerInfo2);
         
