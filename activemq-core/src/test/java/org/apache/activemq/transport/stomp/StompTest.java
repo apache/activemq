@@ -46,16 +46,17 @@ public class StompTest extends CombinationTestSupport {
     private Connection connection;
     private Session session;
     private ActiveMQQueue queue;
+    protected String bindAddress = "stomp://localhost:0";
 
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setPersistent(false);
 
-        connector = broker.addConnector("stomp://localhost:0");
+        connector = broker.addConnector(bindAddress);
         broker.start();
 
         URI connectUri = connector.getConnectUri();
-        stompSocket = new Socket("127.0.0.1", connectUri.getPort());
+        stompSocket = createSocket(connectUri);
         inputBuffer = new ByteArrayOutputStream();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
@@ -65,6 +66,10 @@ public class StompTest extends CombinationTestSupport {
         connection.start();
 
 
+    }
+
+    protected Socket createSocket(URI connectUri) throws IOException {
+        return new Socket("127.0.0.1", connectUri.getPort());
     }
 
     protected String getQueueName() {
