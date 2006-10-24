@@ -70,11 +70,6 @@
       <type>war</type>
     </dependency>
     <dependency>
-      <groupId>activecluster</groupId>
-      <artifactId>activecluster</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-rar</artifactId>
       <type>rar</type>
