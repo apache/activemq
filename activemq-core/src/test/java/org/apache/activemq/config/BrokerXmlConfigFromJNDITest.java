@@ -34,7 +34,7 @@ public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConne
         // START SNIPPET: example
 
         
-        System.err.print(System.getProperties());
+//        System.err.print(System.getProperties());
         
         // we could put these properties into a jndi.properties
         // on the classpath instead
