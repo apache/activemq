@@ -50,7 +50,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
  */
 public class MulticastDiscoveryAgent implements DiscoveryAgent,Runnable{
     private static final Log log=LogFactory.getLog(MulticastDiscoveryAgent.class);
-    public static final String DEFAULT_DISCOVERY_URI_STRING="multicast://224.1.2.3:6155";
+    public static final String DEFAULT_DISCOVERY_URI_STRING="multicast://239.255.2.3:6155";
     private static final String TYPE_SUFFIX="ActiveMQ-4.";
     private static final String ALIVE="alive.";
     private static final String DEAD="dead.";
