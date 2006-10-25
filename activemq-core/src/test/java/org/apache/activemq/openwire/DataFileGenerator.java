@@ -54,7 +54,7 @@ abstract public class DataFileGenerator extends Assert {
      * @throws IllegalAccessException
      */
     public static ArrayList getAllDataFileGenerators() throws Exception{
-        System.out.println("Looking for generators in : "+classFileDir);
+//        System.out.println("Looking for generators in : "+classFileDir);
         ArrayList l = new ArrayList();
         File[] files = classFileDir.listFiles();
         for (int i = 0; files!=null && i < files.length; i++) {
@@ -74,10 +74,10 @@ abstract public class DataFileGenerator extends Assert {
         for (Iterator iter = generators.iterator(); iter.hasNext();) {
             DataFileGenerator object = (DataFileGenerator) iter.next();
             try {
-                System.out.println("Processing: "+object.getClass());
+//                System.out.println("Processing: "+object.getClass());
                 object.generateControlFile();
             } catch (Exception e) {
-                System.err.println("Error while processing: "+object.getClass() + ". Reason: " + e);
+//                System.err.println("Error while processing: "+object.getClass() + ". Reason: " + e);
             }
         }
     }
@@ -115,7 +115,7 @@ abstract public class DataFileGenerator extends Assert {
         ArrayList generators = getAllDataFileGenerators();
         for (Iterator iter = generators.iterator(); iter.hasNext();) {
             DataFileGenerator object = (DataFileGenerator) iter.next();
-            System.out.println("Processing: "+object.getClass());
+//            System.out.println("Processing: "+object.getClass());
             object.assertControlFileIsEqual();
         }
     }
