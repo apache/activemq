@@ -43,8 +43,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
 /**
- * A {@link DiscoveryAgent} using <a href="http://www.zeroconf.org/">Zeroconf</a> via the <a
- * href="http://jmdns.sf.net/">jmDNS</a> library
+ * A {@link DiscoveryAgent} using a multicast address and heartbeat packets encoded using any 
+ * wireformat, but openwire by default.
  * 
  * @version $Revision$
  */
