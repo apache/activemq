@@ -253,6 +253,18 @@ public class WireFormatInfo implements Command, MarshallAware {
         setProperty("MaxInactivityDuration", new Long(maxInactivityDuration));
     }
 
+    /**
+     * @throws IOException 
+     */
+    public int getCacheSize() throws IOException {
+        Integer i = (Integer) getProperty("CacheSize");
+        return i == null ? 0 : i.intValue();
+    }
+    public void setCacheSize(int cacheSize) throws IOException {
+        setProperty("CacheSize", new Integer(cacheSize));
+    }
+    
+    
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);
     }
