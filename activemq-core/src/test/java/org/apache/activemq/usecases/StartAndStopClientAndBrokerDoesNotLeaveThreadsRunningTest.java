@@ -79,14 +79,14 @@ public class StartAndStopClientAndBrokerDoesNotLeaveThreadsRunningTest extends T
 
     public void runTest(Task task) throws Exception {
         int numThreads = Thread.currentThread().getThreadGroup().activeCount();
-        Thread.currentThread().getThreadGroup().list();
+//        Thread.currentThread().getThreadGroup().list();
 
         task.execute();
 
         Thread.yield();
         Thread.sleep(2000); // Wait for the threads to exit on their own
 
-        Thread.currentThread().getThreadGroup().list();
+//        Thread.currentThread().getThreadGroup().list();
         int activeCount = Thread.currentThread().getThreadGroup().activeCount();
         assertTrue("Should be at most one more thread but was: " + activeCount, numThreads + 1 <= activeCount);
     }
