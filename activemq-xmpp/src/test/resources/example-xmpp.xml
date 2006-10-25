@@ -1,0 +1,12 @@
+<?xml version='1.0'?>
+<stream:stream
+        to='example.com'
+        xmlns='jabber:client'
+        xmlns:stream='http://etherx.jabber.org/streams'
+        version='1.0'>
+
+  <message xml:lang='en'>
+    <body>Hello world!</body>
+  </message>
+
+</stream:stream>
