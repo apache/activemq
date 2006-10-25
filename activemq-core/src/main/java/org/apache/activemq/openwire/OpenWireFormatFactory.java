@@ -37,6 +37,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     private boolean tightEncodingEnabled=true;
     private boolean sizePrefixDisabled=false;
     private long maxInactivityDuration=30*1000;
+    private int cacheSize=1024;
     
     public WireFormat createWireFormat() {
 		WireFormatInfo info = new WireFormatInfo();
@@ -49,6 +50,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
 			info.setTightEncodingEnabled(tightEncodingEnabled);
 			info.setSizePrefixDisabled(sizePrefixDisabled);
             info.seMaxInactivityDuration(maxInactivityDuration);
+            info.setCacheSize(cacheSize);
 		} catch (Exception e) {
 			IllegalStateException ise = new IllegalStateException("Could not configure WireFormatInfo");
             ise.initCause(e);
@@ -115,4 +117,12 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     public void setMaxInactivityDuration(long maxInactivityDuration) {
         this.maxInactivityDuration = maxInactivityDuration;
     }
+
+	public int getCacheSize() {
+		return cacheSize;
+	}
+
+	public void setCacheSize(int cacheSize) {
+		this.cacheSize = cacheSize;
+	}
 }
