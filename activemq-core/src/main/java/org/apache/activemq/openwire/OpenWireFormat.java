@@ -57,8 +57,8 @@ final public class OpenWireFormat implements WireFormat {
     private short nextMarshallCacheIndex=0;    
     private short nextMarshallCacheEvictionIndex=0;    
     private HashMap marshallCacheMap = new HashMap();
-    private DataStructure marshallCache[];
-    private DataStructure unmarshallCache[];
+    private DataStructure marshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
+    private DataStructure unmarshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
     
 	private WireFormatInfo preferedWireFormatInfo;
             
