@@ -33,7 +33,7 @@ public class RetroactiveConsumerTestWithLastImagePolicyWithWildcardTest extends 
     
     protected void sendMessage(MessageProducer producer, TextMessage message) throws JMSException {
         ActiveMQTopic topic = new ActiveMQTopic(destination.toString() + "." + (counter++));
-        System.out.println("Sending to destination: " + topic);
+//        System.out.println("Sending to destination: " + topic);
         producer.send(topic, message);
     }
 
