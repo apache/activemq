@@ -17,7 +17,9 @@
 -->
 
 <!-- START SNIPPET: spring -->
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:amq="http://activemq.org/config/1.0"
+<beans 
+  xmlns="http://www.springframework.org/schema/beans" 
+  xmlns:amq="http://activemq.org/config/1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
   http://activemq.org/config/1.0 http://people.apache.org/repository/org.apache.activemq/xsds/activemq-core-4.1-incubator-SNAPSHOT.xsd">
@@ -48,6 +50,10 @@
     </property>
   </bean>
 
+  <bean id="consumerJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    <property name="connectionFactory" ref="jmsFactory"/>
+  </bean>
+
   <!-- a sample POJO which uses a Spring JmsTemplate -->
   <bean id="producer" class="org.apache.activemq.spring.SpringProducer">
     <property name="template">
@@ -65,7 +71,7 @@
 
   <!-- a sample POJO consumer -->
   <bean id="consumer" class="org.apache.activemq.spring.SpringConsumer">
-    <property name="template" ref="myJmsTemplate"/>
+    <property name="template" ref="consumerJmsTemplate"/>
     <property name="destination" ref="destination"/>
   </bean>
 
