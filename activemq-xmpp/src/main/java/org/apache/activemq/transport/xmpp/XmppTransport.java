@@ -101,16 +101,17 @@ public class XmppTransport extends TcpTransport {
 
                     // now lets write the features
                     Features features = new Features();
+
+                    // TODO support TLS
                     //features.getAny().add(new Starttls());
+
                     Mechanisms mechanisms = new Mechanisms();
+
+                    // TODO support SASL
                     //mechanisms.getMechanism().add("DIGEST-MD5");
                     //mechanisms.getMechanism().add("PLAIN");
                     features.getAny().add(mechanisms);
                     marshall(features);
-                    /*
-                    xmlWriter.flush();
-                    outputStream.flush();
-                    */
                 }
                 catch (XMLStreamException e) {
                     throw IOExceptionSupport.create(e);

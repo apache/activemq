@@ -28,8 +28,30 @@ import org.jivesoftware.smack.XMPPConnection;
 public class XmppTest extends TestCase {
 
     private XmppBroker broker = new XmppBroker();
-    private boolean block = true;
+    private boolean block = false;
 
+    public static void main(String[] args) {
+        XmppTest test = new XmppTest();
+        test.block = true;
+        try {
+            test.setUp();
+            test.testConnect();
+        }
+        catch (Exception e) {
+            System.out.println("Caught: " + e);
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                test.tearDown();
+            }
+            catch (Exception e) {
+                System.out.println("Caught: " + e);
+                e.printStackTrace();
+            }
+        }
+
+    }
     public void testConnect() throws Exception {
         //ConnectionConfiguration config = new ConnectionConfiguration("localhost", 61222);
         //config.setDebuggerEnabled(true);
