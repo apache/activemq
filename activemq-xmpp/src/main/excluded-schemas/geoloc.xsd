@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<xs:schema 
+    xmlns:xs='http://www.w3.org/2001/XMLSchema'
+    targetNamespace='http://jabber.org/protocol/geoloc' 
+    xmlns='http://jabber.org/protocol/geoloc'
+    elementFormDefault='qualified'>
+
+  <xs:annotation>
+    <xs:documentation>
+      The protocol documented by this schema is defined in
+      JEP-0080: http://www.jabber.org/jeps/jep-0080.html
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:element name='geoloc'>
+    <xs:complexType>
+      <xs:sequence minOccur='0'>
+        <xs:element name='alt' minOccurs='0' type='xs:decimal'/>
+        <xs:element name='bearing' minOccurs='0' type='xs:decimal'/>
+        <xs:element name='datum' minOccurs='0' type='xs:string'/>
+        <xs:element name='description' minOccurs='0' type='xs:string'/>
+        <xs:element name='error' minOccurs='0' type='xs:decimal'/>
+        <xs:element name='lat' minOccurs='1' type='xs:decimal'/>
+        <xs:element name='lon' minOccurs='1' type='xs:decimal'/>
+        <xs:element name='timestamp' minOccurs='0' type='xs:datetime'/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
