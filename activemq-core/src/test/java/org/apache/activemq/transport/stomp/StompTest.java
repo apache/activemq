@@ -382,7 +382,7 @@ public class StompTest extends CombinationTestSupport {
         frame = receiveFrame(10000);
         assertTrue(frame.startsWith("MESSAGE"));
 
-        System.out.println("out: "+frame);
+//        System.out.println("out: "+frame);
 
         frame =
             "DISCONNECT\n" +
