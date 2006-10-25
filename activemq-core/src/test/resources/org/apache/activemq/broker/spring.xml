@@ -52,6 +52,11 @@
       </bean>
     </property>
   </bean>
+  
+  <!-- Spring JMS Template -->
+  <bean id="consumerJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    <property name="connectionFactory" ref="jmsFactory"/>
+  </bean>
 
   <!-- a sample POJO which uses a Spring JmsTemplate -->
   <bean id="producer" class="org.apache.activemq.spring.SpringProducer">
@@ -72,7 +77,7 @@
   <!-- a sample POJO consumer -->
   <bean id="consumer" class="org.apache.activemq.spring.SpringConsumer">
     <property name="template">
-      <ref bean="myJmsTemplate"></ref>
+      <ref bean="consumerJmsTemplate"></ref>
     </property>
 
     <property name="destination">
