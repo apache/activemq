@@ -165,10 +165,10 @@ public class ReliableReconnectTest extends TestSupport {
                 closeBroker.wait();
             }
         }
-        System.err.println("Stopping broker");
+//        System.err.println("Stopping broker");
         broker.stop();
         startBroker();
-        System.err.println("Started Broker again");
+//        System.err.println("Started Broker again");
         synchronized (messagesReceived) {
             if (messagesReceived.get() < MESSAGE_COUNT) {
                 messagesReceived.wait(60000);
