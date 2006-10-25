@@ -33,7 +33,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
     public void testUriOptionsWork() throws Exception {
         String uri = bindAddress + postfix;
-        System.out.println("Connecting via: " + uri);
+//        System.out.println("Connecting via: " + uri);
 
         connection = new ActiveMQConnectionFactory(uri).createConnection();
         connection.start();
@@ -41,30 +41,28 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
     public void testBadVersionNumberDoesNotWork() throws Exception {
         String uri = bindAddress + postfix + "&minmumWireFormatVersion=65535";
-        System.out.println("Connecting via: " + uri);
+//        System.out.println("Connecting via: " + uri);
 
         try {
             connection = new ActiveMQConnectionFactory(uri).createConnection();
             connection.start();
             fail("Should have thrown an exception!");
         }
-        catch (Exception e) {
-            System.out.println("Caught expected exception: " + e);
+        catch (Exception expected) {
         }
     }
 
 
     public void testBadPropertyNameFails() throws Exception {
         String uri = bindAddress + postfix + "&cheese=abc";
-        System.out.println("Connecting via: " + uri);
+//        System.out.println("Connecting via: " + uri);
 
         try {
             connection = new ActiveMQConnectionFactory(uri).createConnection();
             connection.start();
             fail("Should have thrown an exception!");
         }
-        catch (Exception e) {
-            System.out.println("Caught expected exception: " + e);
+        catch (Exception expected) {
         }
     }
 
