@@ -78,7 +78,7 @@ public class ConfigTest extends TestCase {
      * This tests creating a journal persistence adapter using the persistence adapter factory bean
      */
     public void testJournaledJDBCConfig() throws Exception {
-        System.out.print("Checking journaled JDBC persistence adapter configuration... ");
+//        System.out.print("Checking journaled JDBC persistence adapter configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testJournaledJDBCConfig/journal");
         recursiveDelete(journalFile);
@@ -99,7 +99,7 @@ public class ConfigTest extends TestCase {
 
             
             // Check persistence factory configurations
-            System.out.print("Checking persistence adapter factory settings... ");
+//            System.out.print("Checking persistence adapter factory settings... ");
             JournalPersistenceAdapter pa = (JournalPersistenceAdapter) broker.getPersistenceAdapter();
             
             log.info("Success");
@@ -114,7 +114,7 @@ public class ConfigTest extends TestCase {
      * This tests creating a jdbc persistence adapter using xbeans-spring
      */
     public void testJdbcConfig() throws Exception {
-        System.out.print("Checking jdbc persistence adapter configuration... ");
+//        System.out.print("Checking jdbc persistence adapter configuration... ");
 
         BrokerService broker;
         broker = createBroker(new FileSystemResource(CONF_ROOT + "jdbc-example.xml"));
@@ -150,13 +150,13 @@ public class ConfigTest extends TestCase {
         recursiveDelete(journalFile);
 
         // Create broker from resource
-        System.out.print("Creating broker... ");
+//        System.out.print("Creating broker... ");
         broker = createBroker("org/apache/activemq/config/example.xml");
         log.info("Success");
 
         try {
             // Check broker configuration
-            System.out.print("Checking broker configurations... ");
+//            System.out.print("Checking broker configurations... ");
             assertEquals("Broker Config Error (brokerName)", "brokerConfigTest", broker.getBrokerName());
             assertEquals("Broker Config Error (populateJMSXUserID)", false, broker.isPopulateJMSXUserID());
             assertEquals("Broker Config Error (useLoggingForShutdownErrors)", true, broker.isUseLoggingForShutdownErrors());
@@ -167,12 +167,12 @@ public class ConfigTest extends TestCase {
             log.info("Success");
 
             // Check specific vm transport
-            System.out.print("Checking vm connector... ");
+//            System.out.print("Checking vm connector... ");
             assertEquals("Should have a specific VM Connector", "vm://javacoola", broker.getVmConnectorURI().toString());
             log.info("Success");
 
             // Check transport connectors list
-            System.out.print("Checking transport connectors... ");
+//            System.out.print("Checking transport connectors... ");
             List connectors = broker.getTransportConnectors();
             assertTrue("Should have created at least 3 connectors", (connectors.size() >= 3));
             assertTrue ("1st connector should be TcpTransportServer", ((TransportConnector)connectors.get(0)).getServer() instanceof TcpTransportServer);
@@ -180,13 +180,13 @@ public class ConfigTest extends TestCase {
             assertTrue ("3rd connector should be TcpTransportServer", ((TransportConnector)connectors.get(2)).getServer() instanceof TcpTransportServer);
 
             // Check network connectors
-            System.out.print("Checking network connectors... ");
+//            System.out.print("Checking network connectors... ");
             List networkConnectors = broker.getNetworkConnectors();
             assertEquals("Should have a single network connector", 1, networkConnectors.size());
             log.info("Success");
 
             // Check dispatch policy configuration
-            System.out.print("Checking dispatch policies... ");
+//            System.out.print("Checking dispatch policies... ");
 
             dest = new ActiveMQTopic("Topic.SimpleDispatch");
             assertTrue("Should have a simple dispatch policy for " + dest.getTopicName(),
@@ -202,7 +202,7 @@ public class ConfigTest extends TestCase {
             log.info("Success");
 
             // Check subscription policy configuration
-            System.out.print("Checking subscription recovery policies... ");
+//            System.out.print("Checking subscription recovery policies... ");
             SubscriptionRecoveryPolicy subsPolicy;
 
             dest = new ActiveMQTopic("Topic.FixedSizedSubs");
@@ -233,7 +233,7 @@ public class ConfigTest extends TestCase {
             log.info("Success");
 
             // Check usage manager
-            System.out.print("Checking memory manager configurations... ");
+//            System.out.print("Checking memory manager configurations... ");
             UsageManager memMgr = broker.getMemoryManager();
             assertTrue("Should have a memory manager", memMgr != null);
             assertEquals("UsageManager Config Error (limit)", 200000, memMgr.getLimit());
@@ -252,7 +252,7 @@ public class ConfigTest extends TestCase {
      * This tests creating a journal persistence adapter using xbeans-spring
      */
     public void testJournalConfig() throws Exception {
-        System.out.print("Checking journal persistence adapter configuration... ");
+//        System.out.print("Checking journal persistence adapter configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testJournalConfig/journal");
         recursiveDelete(journalFile);
@@ -279,7 +279,7 @@ public class ConfigTest extends TestCase {
      * This tests creating a memory persistence adapter using xbeans-spring
      */
     public void testMemoryConfig() throws Exception {
-        System.out.print("Checking memory persistence adapter configuration... ");
+//        System.out.print("Checking memory persistence adapter configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testMemoryConfig");
         recursiveDelete(journalFile);
