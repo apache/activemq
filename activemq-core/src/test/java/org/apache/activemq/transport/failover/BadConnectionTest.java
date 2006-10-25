@@ -45,8 +45,7 @@ public class BadConnectionTest extends TestCase {
             fail("This should never succeed");
         }
         catch (IOException e) {
-            log.info("Caught expected exception: " + e);
-            e.printStackTrace();
+            log.info("Caught expected exception: " + e, e);
         }
     }
     protected Transport createTransport() throws Exception {
