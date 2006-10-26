@@ -595,9 +595,6 @@ public class RegionBroker implements Broker {
         return this.pendingDurableSubscriberPolicy;
     }
   
-    /**
-     * @param pendingDurableSubscriberPolicy the pendingDurableSubscriberPolicy to set
-     */
     public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy durableSubscriberCursor){
         this.pendingDurableSubscriberPolicy=durableSubscriberCursor;
     }
