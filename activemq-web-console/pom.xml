@@ -98,6 +98,13 @@
       <artifactId>activemq-web</artifactId>
     </dependency>
 
+    <!-- XMPP support -->
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-xmpp</artifactId>
+      <version>${pom.version}</version>
+    </dependency>
+
     <!-- TODO this should not be needed, but transitive dependencies are not working -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
