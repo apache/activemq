@@ -201,3 +201,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
+=========================================================================
+== For the Jabber Software Foundation XSDs                             ==
+=========================================================================
+
+  Copyright (c) 1999-2006 The Jabber Software Foundation
+  http://www.xmpp.org/about/copyright.shtml
+
+  These XSD files arelicensed under the Creative Commons License 2.5
+  http://creativecommons.org/licenses/by/2.5/
+  
