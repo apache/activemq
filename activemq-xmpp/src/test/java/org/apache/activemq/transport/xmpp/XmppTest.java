@@ -18,40 +18,25 @@
 package org.apache.activemq.transport.xmpp;
 
 import junit.framework.TestCase;
+import junit.textui.TestRunner;
 import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 
 /**
  * @version $Revision$
  */
 public class XmppTest extends TestCase {
 
+    protected static boolean block = false;
+
     private XmppBroker broker = new XmppBroker();
-    private boolean block = false;
 
     public static void main(String[] args) {
-        XmppTest test = new XmppTest();
-        test.block = true;
-        try {
-            test.setUp();
-            test.testConnect();
-        }
-        catch (Exception e) {
-            System.out.println("Caught: " + e);
-            e.printStackTrace();
-        }
-        finally {
-            try {
-                test.tearDown();
-            }
-            catch (Exception e) {
-                System.out.println("Caught: " + e);
-                e.printStackTrace();
-            }
-        }
-
+        block = true;
+        TestRunner.run(XmppTest.class);
     }
+
     public void testConnect() throws Exception {
         //ConnectionConfiguration config = new ConnectionConfiguration("localhost", 61222);
         //config.setDebuggerEnabled(true);
@@ -69,8 +54,13 @@ public class XmppTest extends TestCase {
             System.out.println("Sent all messages!");
         }
         catch (XMPPException e) {
-            System.out.println("Caught: " + e);
-            e.printStackTrace();
+            if (block) {
+                System.out.println("Caught: " + e);
+                e.printStackTrace();
+            }
+            else {
+                throw e;
+            }
         }
         if (block) {
             Thread.sleep(20000);

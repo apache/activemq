@@ -353,14 +353,21 @@ public class ProtocolConverter {
         item.setNick("broker");
         sendPresence(presence, item);
 
+        /*
         item = new org.jabber.protocol.muc_user.Item();
         item.setAffiliation("admin");
         item.setRole("moderator");
         sendPresence(presence, item);
+        */
 
         // lets create a subscription
         final String to = presence.getTo();
 
+        ActiveMQDestination destination = createActiveMQDestination(to);
+        if (destination == null) {
+            log.debug("No 'to' attribute specified for presence so not creating a JMS subscription");
+            return;
+        }
 
         boolean createConsumer = false;
         ConsumerInfo consumerInfo = null;
@@ -373,6 +380,7 @@ public class ProtocolConverter {
                 ConsumerId consumerId = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
                 consumerInfo.setConsumerId(consumerId);
                 consumerInfo.setPrefetchSize(10);
+                consumerInfo.setNoLocal(true);
                 createConsumer = true;
             }
         }
@@ -380,7 +388,6 @@ public class ProtocolConverter {
             return;
         }
 
-        ActiveMQDestination destination = createActiveMQDestination(to);
         consumerInfo.setDestination(destination);
 
         subscriptionsByConsumerId.put(consumerInfo.getConsumerId(), new Handler<MessageDispatch>() {
@@ -508,14 +515,16 @@ public class ProtocolConverter {
         activeMQMessage.setTimestamp(System.currentTimeMillis());
         addActiveMQMessageHeaders(activeMQMessage, message);
 
+        /*
         MessageDispatch dispatch = new MessageDispatch();
         dispatch.setDestination(destination);
         dispatch.setMessage(activeMQMessage);
+        */
 
         if (log.isDebugEnabled()) {
             log.debug("Sending ActiveMQ message: " + activeMQMessage);
         }
-        sendToActiveMQ(dispatch, createErrorHandler("send message"));
+        sendToActiveMQ(activeMQMessage, createErrorHandler("send message"));
     }
 
     protected Handler<Response> createErrorHandler(final String text) {
