@@ -137,6 +137,7 @@
     <module>activemq-optional</module>
     <module>activemq-tooling</module>
     <module>activemq-openwire-generator</module>
+    <module>activemq-xmpp</module>
     <module>assembly</module>
   </modules>
 
