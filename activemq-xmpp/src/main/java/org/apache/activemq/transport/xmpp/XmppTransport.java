@@ -69,7 +69,8 @@ public class XmppTransport extends TcpTransport {
     protected OutputStream outputStream;
     protected InputStream inputStream;
     private ProtocolConverter converter;
-    private String from;
+    private String from = "localhost";
+    private String brokerId = "broker-id-1";
 
     public XmppTransport(WireFormat wireFormat, Socket socket) throws IOException {
         super(wireFormat, socket);
@@ -94,24 +95,10 @@ public class XmppTransport extends TcpTransport {
             if (command instanceof BrokerInfo) {
                 BrokerInfo brokerInfo = (BrokerInfo) command;
 
-                String id = brokerInfo.getBrokerId().toString();
+                brokerId = brokerInfo.getBrokerId().toString();
                 from = brokerInfo.getBrokerName();
                 try {
-                    writeOpenStream(id, from);
-
-                    // now lets write the features
-                    Features features = new Features();
-
-                    // TODO support TLS
-                    //features.getAny().add(new Starttls());
-
-                    Mechanisms mechanisms = new Mechanisms();
-
-                    // TODO support SASL
-                    //mechanisms.getMechanism().add("DIGEST-MD5");
-                    //mechanisms.getMechanism().add("PLAIN");
-                    features.getAny().add(mechanisms);
-                    marshall(features);
+                    writeOpenStream(brokerId, from);
                 }
                 catch (XMLStreamException e) {
                     throw IOExceptionSupport.create(e);
@@ -139,9 +126,14 @@ public class XmppTransport extends TcpTransport {
      * Marshalls the given POJO to the client
      */
     public void marshall(Object command) throws IOException {
+        if (isStopped() || isStopping()) {
+            log.warn("Not marshalling command as shutting down: " + command);
+            return;
+        }
         try {
             marshaller.marshal(command, xmlWriter);
             xmlWriter.flush();
+            outputStream.flush();
         }
         catch (JAXBException e) {
             throw IOExceptionSupport.create(e);
@@ -193,7 +185,8 @@ public class XmppTransport extends TcpTransport {
                     if (event.getEventType() == XMLEvent.END_ELEMENT) {
                         break;
                     }
-                    else if (event.getEventType() == XMLEvent.END_ELEMENT || event.getEventType() == XMLEvent.END_DOCUMENT) {
+                    else
+                    if (event.getEventType() == XMLEvent.END_ELEMENT || event.getEventType() == XMLEvent.END_DOCUMENT) {
                         break;
                     }
                     else {
@@ -250,16 +243,30 @@ public class XmppTransport extends TcpTransport {
     @Override
     protected void initializeStreams() throws Exception {
         // TODO it would be preferable to use class discovery here!
-        context = JAXBContext.newInstance("jabber.client" + ":jabber.server"
-                + ":jabber.iq._private" + ":jabber.iq.auth" + ":jabber.iq.gateway" + ":jabber.iq.last" + ":jabber.iq.oob"
-                + ":jabber.iq.pass" + ":jabber.iq.roster" + ":jabber.iq.time" + ":jabber.iq.version"
-                + ":org.jabber.etherx.streams" + ":org.jabber.protocol.activity" + ":org.jabber.protocol.address"
+        context = JAXBContext.newInstance("jabber.client"
+                /*
+                + ":jabber.server"
+                + ":jabber.iq.gateway"
+                + ":jabber.iq.last"
+                + ":jabber.iq.oob"
+                + ":jabber.iq.pass"
+                + ":jabber.iq.time"
+                + ":jabber.iq.version"
+                + ":org.jabber.protocol.activity" + ":org.jabber.protocol.address"
                 + ":org.jabber.protocol.amp" + ":org.jabber.protocol.amp_errors"
+                + ":org.jabber.protocol.muc_admin"
+                + ":org.jabber.protocol.muc_unique"
+                */
+                + ":jabber.iq._private"
+                + ":jabber.iq.auth"
+                + ":jabber.iq.roster"
+                + ":org.jabber.etherx.streams"
                 + ":org.jabber.protocol.disco_info" + ":org.jabber.protocol.disco_items"
-                + ":org.jabber.protocol.muc" + ":org.jabber.protocol.muc_admin"
-                + ":org.jabber.protocol.muc_unique" + ":org.jabber.protocol.muc_user"
+                + ":org.jabber.protocol.muc"
+                + ":org.jabber.protocol.muc_user"
                 + ":ietf.params.xml.ns.xmpp_sasl" + ":ietf.params.xml.ns.xmpp_stanzas"
-                + ":ietf.params.xml.ns.xmpp_streams" + ":ietf.params.xml.ns.xmpp_tls");
+                + ":ietf.params.xml.ns.xmpp_streams" + ":ietf.params.xml.ns.xmpp_tls"
+        );
 
         inputStream = new TcpBufferedInputStream(socket.getInputStream(), 8 * 1024);
         outputStream = new TcpBufferedOutputStream(socket.getOutputStream(), 16 * 1024);
@@ -270,6 +277,7 @@ public class XmppTransport extends TcpTransport {
     }
 
     protected void writeOpenStream(String id, String from) throws IOException, XMLStreamException {
+        log.debug("Sending initial stream element");
         XMLOutputFactory factory = XMLOutputFactory.newInstance();
         //factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
         xmlWriter = factory.createXMLStreamWriter(outputStream);
@@ -286,7 +294,23 @@ public class XmppTransport extends TcpTransport {
         }
         xmlWriter.writeAttribute("to", to);
         xmlWriter.writeAttribute("from", from);
-        xmlWriter.writeCharacters("\n");
+
+
+        // now lets write the features
+        Features features = new Features();
+
+        // TODO support TLS
+        //features.getAny().add(new Starttls());
+
+        Mechanisms mechanisms = new Mechanisms();
+
+        // TODO support SASL
+        //mechanisms.getMechanism().add("DIGEST-MD5");
+        //mechanisms.getMechanism().add("PLAIN");
+        features.getAny().add(mechanisms);
+        marshall(features);
+
+        log.debug("Initial stream element sent!");
     }
 
 }

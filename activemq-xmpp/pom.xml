@@ -177,16 +177,11 @@
         </configuration>
       </plugin>
 
-      <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <!--
-          <includes>
-            <include>**/*Test.*</include>
-          </includes>
-          -->
           <excludes>
+            <!--<exclude>**/XmppTest.*</exclude>-->
           </excludes>
         </configuration>
       </plugin>
