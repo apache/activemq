@@ -15,169 +15,228 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.util.Arrays;
+import java.util.Date;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.Date;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.IndentPrinter;
 
 /**
  * A simple tool for publishing messages
- *
+ * 
  * @version $Revision: 1.2 $
  */
-public class RequesterTool extends ToolSupport {
+public class RequesterTool {
 
-    protected int messageCount = 10;
-    protected long sleepTime = 0L;
-    protected boolean verbose = true;
-    protected int messageSize = 255;
-    private long timeToLive;
+	private int messageCount = 10;
+	private long sleepTime = 0L;
+	private boolean verbose = true;
+	private int messageSize = 255;
+	private long timeToLive;
+	private String subject = "TOOL.DEFAULT";
+	private String replySubject;
+	private boolean topic = false;
+	private String user = ActiveMQConnection.DEFAULT_USER;
+	private String password = ActiveMQConnection.DEFAULT_PASSWORD;
+	private String url = ActiveMQConnection.DEFAULT_BROKER_URL;
+	private boolean transacted = false;
+	private boolean persistent = false;
+	private String clientId;
 
-    public static void main(String[] args) {
-        runTool(args, new RequesterTool());
-    }
+	private Destination destination;
+	private Destination replyDest;
+	private MessageProducer producer;
+	private MessageConsumer consumer;
+	private Session session;
 
-    protected static void runTool(String[] args, RequesterTool tool) {
-        tool.clientID = null;
-        if (args.length > 0) {
-            tool.url = args[0];
-        }
-        if (args.length > 1) {
-            tool.topic = args[1].equalsIgnoreCase("true");
-        }
-        if (args.length > 2) {
-            tool.subject = args[2];
-        }
-        if (args.length > 3) {
-            tool.durable = args[3].equalsIgnoreCase("true");
-        }
-        if (args.length > 4) {
-            tool.messageCount = Integer.parseInt(args[4]);
-        }
-        if (args.length > 5) {
-            tool.messageSize = Integer.parseInt(args[5]);
-        }
-        if (args.length > 6) {
-            if( ! "null".equals(args[6]) ) { 
-                tool.clientID = args[6];
-            }
-        }
-        if (args.length > 7) {
-            tool.timeToLive = Long.parseLong(args[7]);
-        }
-        if (args.length > 8) {
-            tool.sleepTime = Long.parseLong(args[8]);
-        }
-        if (args.length > 9) {
-            tool.transacted = "true".equals(args[9]);
-        }
-        tool.run();
-    }
+	public static void main(String[] args) {
+		RequesterTool requesterTool = new RequesterTool();
+		String[] unknonwn = CommnadLineSupport.setOptions(requesterTool, args);
+		if (unknonwn.length > 0) {
+			System.out.println("Unknown options: " + Arrays.toString(unknonwn));
+			System.exit(-1);
+		}
+		requesterTool.run();
+	}
 
-    public void run() {
-        try {
-            System.out.println("Connecting to URL: " + url);
-            System.out.println("Publishing a Message with size " + messageSize + " to " + (topic ? "topic" : "queue") + ": " + subject);
-            System.out.println("Using " + (durable ? "durable" : "non-durable") + " publishing");
-            System.out.println("Sleeping between publish "+sleepTime+" ms");                
-            if( timeToLive!=0 ) {
-                System.out.println("Messages time to live "+timeToLive+" ms");                
-            }
-            Connection connection = createConnection();
-            Session session = createSession(connection);
-            MessageProducer producer = createProducer(session);
-            
-            Destination replyDest = null;
-            if( this.topic ) {
-            	replyDest = session.createTemporaryTopic();
-            } else {
-            	replyDest = session.createTemporaryQueue();
-            }
-            
-            System.out.println("Reply Destination: "+replyDest);                
-            MessageConsumer consumer = session.createConsumer(replyDest);
-            
-            requestLoop(session, producer, consumer, replyDest);
+	public void run() {
+		
+		Connection connection=null;
+		try {
+			
+			System.out.println("Connecting to URL: " + url);
+			System.out.println("Publishing a Message with size " + messageSize + " to " + (topic ? "topic" : "queue") + ": " + subject);
+			System.out.println("Using " + (persistent ? "persistent" : "non-persistent") + " messages");
+			System.out.println("Sleeping between publish " + sleepTime + " ms");
+			
+			// Create the connection
+			ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(user, password, url);
+			connection = connectionFactory.createConnection();
+			if (persistent && clientId != null && clientId.length() > 0 && !"null".equals(clientId)) {
+				connection.setClientID(clientId);
+			}
+			connection.start();
 
-            System.out.println("Done.");
-            close(connection, session);
-        }
-        catch (Exception e) {
-            System.out.println("Caught: " + e);
-            e.printStackTrace();
-        }
-    }
+			// Create the Session
+			session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
+			
+			// And the Destinations..
+			if (topic) {
+				destination = session.createTopic(subject);
+				if( replySubject==null )
+					replyDest = session.createTemporaryTopic();
+				else
+					replyDest = session.createTopic(replySubject);
+			} else {
+				destination = session.createQueue(subject);
+				if( replySubject==null )
+					replyDest = session.createTemporaryQueue();
+				else
+					replyDest = session.createQueue(replySubject);
+			}
+			System.out.println("Reply Destination: " + replyDest);
 
-    protected MessageProducer createProducer(Session session) throws JMSException {
-        MessageProducer producer = session.createProducer(destination);
-        if (durable) {
-            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        }
-        else {
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        }
-        if( timeToLive!=0 )
-            producer.setTimeToLive(timeToLive);
-        return producer;
-    }
+			// Create the producer
+			producer = session.createProducer(destination);
+			if (persistent) {
+				producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+			} else {
+				producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			}
+			if (timeToLive != 0) {
+				System.out.println("Messages time to live " + timeToLive + " ms");
+				producer.setTimeToLive(timeToLive);
+			}
 
-    protected void requestLoop(Session session, MessageProducer producer, MessageConsumer consumer, Destination replyDest) throws Exception {
+			// Create the reply consumer
+			consumer = session.createConsumer(replyDest);
+			
+			// Start sending reqests.
+			requestLoop();
+			
+			System.out.println("Done.");
+			
+			// Use the ActiveMQConnection interface to dump the connection stats.
+			ActiveMQConnection c = (ActiveMQConnection) connection;
+			c.getConnectionStats().dump(new IndentPrinter());
+						
+		} catch (Exception e) {
+			System.out.println("Caught: " + e);
+			e.printStackTrace();
+		} finally {
+			try { 
+				connection.close();
+			} catch (Throwable ignore) {
+			}
+		}
+	}
 
-        for (int i = 0; i < messageCount || messageCount==0 ; i++) {
+	protected void requestLoop() throws Exception {
+
+		for (int i = 0; i < messageCount || messageCount == 0; i++) {
+
+			TextMessage message = session.createTextMessage(createMessageText(i));
+			message.setJMSReplyTo(replyDest);
+
+			if (verbose) {
+				String msg = message.getText();
+				if (msg.length() > 50) {
+					msg = msg.substring(0, 50) + "...";
+				}
+				System.out.println("Sending message: " + msg);
+			}
+
+			producer.send(message);
+			if (transacted) {
+				session.commit();
+			}
+
+			System.out.println("Waiting for reponse message...");
+			Message message2 = consumer.receive();
+			if (message2 instanceof TextMessage) {
+				System.out.println("Reponse message: " + ((TextMessage) message2).getText());
+			} else {
+				System.out.println("Reponse message: " + message2);
+			}
+			if (transacted) {
+				session.commit();
+			}
+
+			Thread.sleep(sleepTime);
+
+		}
+	}
+
+	/**
+	 * @param i
+	 * @return
+	 */
+	private String createMessageText(int index) {
+		StringBuffer buffer = new StringBuffer(messageSize);
+		buffer.append("Message: " + index + " sent at: " + new Date());
+		if (buffer.length() > messageSize) {
+			return buffer.substring(0, messageSize);
+		}
+		for (int i = buffer.length(); i < messageSize; i++) {
+			buffer.append(' ');
+		}
+		return buffer.toString();
+	}
 
 
-            TextMessage message = session.createTextMessage(createMessageText(i));
-            message.setJMSReplyTo(replyDest);
-            
-            if (verbose) {
-                String msg = message.getText();
-                if (msg.length() > 50) {
-                    msg = msg.substring(0, 50) + "...";
-                }
-                System.out.println("Sending message: " + msg);
-            }
-            
-            producer.send(message);
-            if(transacted) {
-                session.commit();
-            }
-            
-            System.out.println("Waiting for reponse message...");
-            Message message2 = consumer.receive();
-            if( message2 instanceof TextMessage ) {
-            	System.out.println("Reponse message: "+((TextMessage)message2).getText());
-            } else {
-            	System.out.println("Reponse message: "+message2);
-            }
-            if(transacted) {
-                session.commit();
-            }
-            
-            Thread.sleep(sleepTime);
-            
-        }
-        
-    }
-
-    /**
-     * @param i
-     * @return
-     */
-    private String createMessageText(int index) {
-        StringBuffer buffer = new StringBuffer(messageSize);
-        buffer.append("Message: " + index + " sent at: " + new Date());
-        if (buffer.length() > messageSize) {
-            return buffer.substring(0, messageSize);
-        }
-        for (int i = buffer.length(); i < messageSize; i++) {
-            buffer.append(' ');
-        }
-        return buffer.toString();
-    }
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
+	}
+	public void setPersistent(boolean durable) {
+		this.persistent = durable;
+	}
+	public void setMessageCount(int messageCount) {
+		this.messageCount = messageCount;
+	}
+	public void setMessageSize(int messageSize) {
+		this.messageSize = messageSize;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public void setSleepTime(long sleepTime) {
+		this.sleepTime = sleepTime;
+	}
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+	public void setTimeToLive(long timeToLive) {
+		this.timeToLive = timeToLive;
+	}
+	public void setTopic(boolean topic) {
+		this.topic = topic;
+	}
+	public void setQueue(boolean queue) {
+		this.topic = !queue;
+	}	
+	public void setTransacted(boolean transacted) {
+		this.transacted = transacted;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	public void setUser(String user) {
+		this.user = user;
+	}
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+	public void setReplySubject(String replySubject) {
+		this.replySubject = replySubject;
+	}
 }

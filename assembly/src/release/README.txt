@@ -1,5 +1,5 @@
 Welcome to Apache ActiveMQ 
-=================== 
+========================== 
 Apache ActiveMQ is a high performance Apache 2.0 licenced Message Broker and JMS 1.1 implementation.
 
 

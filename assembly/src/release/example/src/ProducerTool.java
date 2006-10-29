@@ -15,143 +15,182 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.util.Arrays;
+import java.util.Date;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
+import javax.jms.Destination;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.Date;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.IndentPrinter;
 
 /**
  * A simple tool for publishing messages
- *
+ * 
  * @version $Revision: 1.2 $
  */
-public class ProducerTool extends ToolSupport {
+public class ProducerTool {
 
-    protected int messageCount = 10;
-    protected long sleepTime = 0L;
-    protected boolean verbose = true;
-    protected int messageSize = 255;
-    private long timeToLive;
+	private Destination destination;
+	private int messageCount = 10;
+	private long sleepTime = 0L;
+	private boolean verbose = true;
+	private int messageSize = 255;
+	private long timeToLive;
+	private String user = ActiveMQConnection.DEFAULT_USER;
+	private String password = ActiveMQConnection.DEFAULT_PASSWORD;
+	private String url = ActiveMQConnection.DEFAULT_BROKER_URL;
+	private String subject = "TOOL.DEFAULT";
+	private boolean topic = false;
+	private boolean transacted = false;
+	private boolean persistent = false;
 
-    public static void main(String[] args) {
-        runTool(args, new ProducerTool());
-    }
+	public static void main(String[] args) {
+		ProducerTool producerTool = new ProducerTool();
+    	String[] unknonwn = CommnadLineSupport.setOptions(producerTool, args);
+    	if( unknonwn.length > 0 ) {
+    		System.out.println("Unknown options: "+Arrays.toString(unknonwn));
+			System.exit(-1);
+    	}    		
+    	producerTool.run();
+	}
 
-    protected static void runTool(String[] args, ProducerTool tool) {
-        tool.clientID = null;
-        if (args.length > 0) {
-            tool.url = args[0];
-        }
-        if (args.length > 1) {
-            tool.topic = args[1].equalsIgnoreCase("true");
-        }
-        if (args.length > 2) {
-            tool.subject = args[2];
-        }
-        if (args.length > 3) {
-            tool.durable = args[3].equalsIgnoreCase("true");
-        }
-        if (args.length > 4) {
-            tool.messageCount = Integer.parseInt(args[4]);
-        }
-        if (args.length > 5) {
-            tool.messageSize = Integer.parseInt(args[5]);
-        }
-        if (args.length > 6) {
-            if( ! "null".equals(args[6]) ) { 
-                tool.clientID = args[6];
-            }
-        }
-        if (args.length > 7) {
-            tool.timeToLive = Long.parseLong(args[7]);
-        }
-        if (args.length > 8) {
-            tool.sleepTime = Long.parseLong(args[8]);
-        }
-        if (args.length > 9) {
-            tool.transacted = "true".equals(args[9]);
-        }
-        tool.run();
-    }
+	public void run() {
+		Connection connection=null;
+		try {
+			System.out.println("Connecting to URL: " + url);
+			System.out.println("Publishing a Message with size " + messageSize+ " to " + (topic ? "topic" : "queue") + ": " + subject);
+			System.out.println("Using " + (persistent ? "persistent" : "non-persistent") + " messages");
+			System.out.println("Sleeping between publish " + sleepTime + " ms");
+			if (timeToLive != 0) {
+				System.out.println("Messages time to live " + timeToLive + " ms");
+			}
+			
+			// Create the connection.
+			ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(user, password, url);			
+			connection = connectionFactory.createConnection();
+			connection.start();
+			
+			// Create the session
+			Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
+			if (topic) {
+				destination = session.createTopic(subject);
+			} else {
+				destination = session.createQueue(subject);
+			}
+			
+			// Create the producer.
+			MessageProducer producer = session.createProducer(destination);
+			if (persistent) {
+				producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+			} else {
+				producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			}			
+			if (timeToLive != 0)
+				producer.setTimeToLive(timeToLive);
+						
+			// Start sending messages
+			sendLoop(session, producer);
 
-    public void run() {
-        try {
-            System.out.println("Connecting to URL: " + url);
-            System.out.println("Publishing a Message with size " + messageSize + " to " + (topic ? "topic" : "queue") + ": " + subject);
-            System.out.println("Using " + (durable ? "durable" : "non-durable") + " publishing");
-            System.out.println("Sleeping between publish "+sleepTime+" ms");                
-            if( timeToLive!=0 ) {
-                System.out.println("Messages time to live "+timeToLive+" ms");                
-            }
-            Connection connection = createConnection();
-            Session session = createSession(connection);
-            MessageProducer producer = createProducer(session);
-            sendLoop(session, producer);
+			System.out.println("Done.");
+			
+			// Use the ActiveMQConnection interface to dump the connection stats.
+			ActiveMQConnection c = (ActiveMQConnection) connection;
+			c.getConnectionStats().dump(new IndentPrinter());
+						
+		} catch (Exception e) {
+			System.out.println("Caught: " + e);
+			e.printStackTrace();
+		} finally {
+			try { 
+				connection.close();
+			} catch (Throwable ignore) {
+			}
+		}
+	}
 
-            System.out.println("Done.");
-            close(connection, session);
-        }
-        catch (Exception e) {
-            System.out.println("Caught: " + e);
-            e.printStackTrace();
-        }
-    }
+	protected void sendLoop(Session session, MessageProducer producer)
+			throws Exception {
 
-    protected MessageProducer createProducer(Session session) throws JMSException {
-        MessageProducer producer = session.createProducer(destination);
-        if (durable) {
-            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        }
-        else {
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        }
-        if( timeToLive!=0 )
-            producer.setTimeToLive(timeToLive);
-        return producer;
-    }
+		for (int i = 0; i < messageCount || messageCount == 0; i++) {
 
-    protected void sendLoop(Session session, MessageProducer producer) throws Exception {
+			TextMessage message = session
+					.createTextMessage(createMessageText(i));
 
-        for (int i = 0; i < messageCount || messageCount==0 ; i++) {
+			if (verbose) {
+				String msg = message.getText();
+				if (msg.length() > 50) {
+					msg = msg.substring(0, 50) + "...";
+				}
+				System.out.println("Sending message: " + msg);
+			}
+
+			producer.send(message);
+			if (transacted) {
+				session.commit();
+			}
+
+			Thread.sleep(sleepTime);
+
+		}
+
+	}
+
+	private String createMessageText(int index) {
+		StringBuffer buffer = new StringBuffer(messageSize);
+		buffer.append("Message: " + index + " sent at: " + new Date());
+		if (buffer.length() > messageSize) {
+			return buffer.substring(0, messageSize);
+		}
+		for (int i = buffer.length(); i < messageSize; i++) {
+			buffer.append(' ');
+		}
+		return buffer.toString();
+	}
 
 
-            TextMessage message = session.createTextMessage(createMessageText(i));
-
-            if (verbose) {
-                String msg = message.getText();
-                if (msg.length() > 50) {
-                    msg = msg.substring(0, 50) + "...";
-                }
-                System.out.println("Sending message: " + msg);
-            }
-            
-            producer.send(message);
-            if(transacted) {
-                session.commit();
-            }
-            
-            Thread.sleep(sleepTime);
-            
-        }
-        
-    }
-
-    /**
-     * @param i
-     * @return
-     */
-    private String createMessageText(int index) {
-        StringBuffer buffer = new StringBuffer(messageSize);
-        buffer.append("Message: " + index + " sent at: " + new Date());
-        if (buffer.length() > messageSize) {
-            return buffer.substring(0, messageSize);
-        }
-        for (int i = buffer.length(); i < messageSize; i++) {
-            buffer.append(' ');
-        }
-        return buffer.toString();
-    }
+	public void setPersistent(boolean durable) {
+		this.persistent = durable;
+	}
+	public void setMessageCount(int messageCount) {
+		this.messageCount = messageCount;
+	}
+	public void setMessageSize(int messageSize) {
+		this.messageSize = messageSize;
+	}
+	public void setPassword(String pwd) {
+		this.password = pwd;
+	}
+	public void setSleepTime(long sleepTime) {
+		this.sleepTime = sleepTime;
+	}
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+	public void setTimeToLive(long timeToLive) {
+		this.timeToLive = timeToLive;
+	}
+	public void setTopic(boolean topic) {
+		this.topic = topic;
+	}
+	public void setQueue(boolean queue) {
+		this.topic = !queue;
+	}	
+	public void setTransacted(boolean transacted) {
+		this.transacted = transacted;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	public void setUser(String user) {
+		this.user = user;
+	}
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
 }
