@@ -16,15 +16,10 @@
  * limitations under the License.
  */
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
+import java.util.Arrays;
+import java.util.HashSet;
+
 import javax.jms.MessageListener;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-import java.io.IOException;
 
 /**
  * A simple tool for producing and consuming messages
@@ -34,44 +29,24 @@ import java.io.IOException;
 public class ProducerAndConsumerTool extends ConsumerTool implements MessageListener {
 
     public static void main(String[] args) {
-        ProducerAndConsumerTool tool = new ProducerAndConsumerTool();
-        if (args.length > 0) {
-            tool.url = args[0];
-        }
-        else {
-            tool.url = "vm://localhost";
-        }
-        if (args.length > 1) {
-            tool.topic = args[1].equalsIgnoreCase("true");
-        }
-        if (args.length > 2) {
-            tool.subject = args[2];
-        }
-        if (args.length > 3) {
-            tool.durable = args[3].equalsIgnoreCase("true");
-        }
-        if (args.length > 4) {
-            tool.maxiumMessages = Integer.parseInt(args[4]);
-        }
-        if (args.length > 5) {
-            tool.clientID = args[5];
-        }
-        tool.run();
+    	
+		ConsumerTool consumerTool = new ConsumerTool();
+		String[] unknonwn = CommnadLineSupport.setOptions(consumerTool, args);
+		HashSet set1 = new HashSet(Arrays.asList(unknonwn));
+    	
+		ProducerTool producerTool = new ProducerTool();
+    	unknonwn = CommnadLineSupport.setOptions(producerTool, args);
+		HashSet set2 = new HashSet(Arrays.asList(unknonwn));
+
+		set1.retainAll(set2);
+		if( set1.size() > 0 ) {
+    		System.out.println("Unknown options: "+set1);
+			System.exit(-1);
+    	}
+    	
+		consumerTool.run();
+    	producerTool.run();
+		
     }
-
-    public void run() {
-        super.run();
-
-        // now lets publish some messages
-        ProducerTool tool = new ProducerTool();
-        tool.url = this.url;
-        tool.topic = this.topic;
-        tool.subject = this.subject;
-        tool.durable = this.durable;
-        tool.clientID = this.clientID;
-
-        tool.run();
-    }
-
 
 }

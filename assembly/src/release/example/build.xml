@@ -32,7 +32,13 @@
 	<property name="timeToLive" value="0" />
 	<property name="sleepTime" value="0" />
 	<property name="transacted" value="false" />
-
+	<property name="reply-subject" value="" />
+	<property name="verbose" value="true"/>
+	<property name="ack-mode" value="AUTO_ACKNOWLEDGE"/>
+	<property name="receive-time-out" value="0"/>
+	<property name="subscribers" value="1"/>
+	<property name="batch" value="10"/>
+	
 	<!-- for WAR -->
 	<property name="app.name" value="activemq-web" />
 	<property name="app.base.dir" location="target/${app.name}" />
@@ -72,7 +78,7 @@
 
 		<path id="javac.classpath">
 			<pathelement path="${class.dir}" />
-			<pathelement path="../conf" />
+			<pathelement path="conf" />
 			<fileset dir="../lib">
 				<include name="**/*.jar" />
 			</fileset>
@@ -141,14 +147,17 @@
 			<classpath refid="javac.classpath" />
 			<jvmarg value="-server" />
 		    <sysproperty key="activemq.home" value="${activemq.home}"/>
-			<arg value="${url}" />
-			<arg value="${topic}" />
-			<arg value="${subject}" />
-			<arg value="${durable}" />
-			<arg value="${max}" />
-			<arg value="${clientId}" />
-			<arg value="${transacted}" />
-			<arg value="${sleepTime}" />
+			<arg value="--url=${url}" />
+			<arg value="--topic=${topic}" />
+			<arg value="--subject=${subject}" />
+			<arg value="--durable=${durable}" />
+			<arg value="--maxium-messages=${max}" />
+			<arg value="--client-id=${clientId}" />
+			<arg value="--transacted=${transacted}" />
+			<arg value="--sleep-time=${sleepTime}" />
+			<arg value="--verbose=${verbose}"/>
+			<arg value="--ack-mode=${ack-mode}"/>		
+			<arg value="--receive-time-out=${receive-time-out}"/>					
 		</java>
 	</target>
 
@@ -159,16 +168,16 @@
 			<classpath refid="javac.classpath" />
 			<jvmarg value="-server" />
 		    <sysproperty key="activemq.home" value="${activemq.home}"/>
-			<arg value="${url}" />
-			<arg value="${topic}" />
-			<arg value="${subject}" />
-			<arg value="${durable}" />
-			<arg value="${max}" />
-			<arg value="${messageSize}" />
-			<arg value="${producerClientId}" />
-			<arg value="${timeToLive}" />
-			<arg value="${sleepTime}" />
-			<arg value="${transacted}" />
+			<arg value="--url=${url}" />
+			<arg value="--topic=${topic}" />
+			<arg value="--subject=${subject}" />
+			<arg value="--persistent=${durable}" />
+			<arg value="--message-count=${max}" />
+			<arg value="--message-size=${messageSize}" />
+			<arg value="--time-to-live=${timeToLive}" />
+			<arg value="--sleep-time=${sleepTime}" />
+			<arg value="--transacted=${transacted}" />
+			<arg value="--verbose=${verbose}"/>			
 		</java>
 	</target>
 
@@ -179,16 +188,18 @@
 			<classpath refid="javac.classpath" />
 			<jvmarg value="-server" />
 		    <sysproperty key="activemq.home" value="${activemq.home}"/>
-			<arg value="${url}" />
-			<arg value="${topic}" />
-			<arg value="${subject}" />
-			<arg value="${durable}" />
-			<arg value="${max}" />
-			<arg value="${messageSize}" />
-			<arg value="${producerClientId}" />
-			<arg value="${timeToLive}" />
-			<arg value="${sleepTime}" />
-			<arg value="${transacted}" />
+			<arg value="--url=${url}" />
+			<arg value="--topic=${topic}" />
+			<arg value="--subject=${subject}" />
+			<arg value="--persistent=${durable}" />
+			<arg value="--message-count=${max}" />
+			<arg value="--message-size=${messageSize}" />
+			<arg value="--client-id=${producerClientId}" />
+			<arg value="--time-to-live=${timeToLive}" />
+			<arg value="--sleep-time=${sleepTime}" />
+			<arg value="--transacted=${transacted}" />
+			<arg value="--reply-subject=${reply-subject}" />
+			<arg value="--verbose=${verbose}"/>			
 		</java>
 	</target>
 
@@ -201,5 +212,26 @@
 		    <sysproperty key="activemq.home" value="${activemq.home}"/>
 		</java>
 	</target>
-
+	
+	<target name="topic-publisher" depends="compile" description="Runs a publisher">
+		<java classname="TopicPublisher" fork="yes" maxmemory="100M">
+			<classpath refid="javac.classpath" />
+			<jvmarg value="-server" />
+			<arg value="--url=${url}" />
+			<arg value="--size=${messageSize}" />
+			<arg value="--subscribers=${subscribers}" />
+			<arg value="--messages=${max}" />
+			<arg value="--delay=${sleepTime}" />
+			<arg value="--batch=${batch}" />			
+		</java>
+	</target>	
+	
+	<target name="topic-listener" depends="compile" description="Runs a listener">
+		<java classname="TopicListener" fork="yes" maxmemory="100M">
+			<classpath refid="javac.classpath" />
+			<jvmarg value="-server" />
+			<arg value="--url=${url}" />
+		</java>
+	</target>	
+	
 </project>
