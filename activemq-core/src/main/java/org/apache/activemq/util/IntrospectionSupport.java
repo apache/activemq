@@ -142,7 +142,7 @@ public class IntrospectionSupport {
         return rc;
     }
 
-    private static boolean setProperty(Object target, String name, Object value) {
+    public static boolean setProperty(Object target, String name, Object value) {
         try {
             Class clazz = target.getClass();
             Method setter = findSetterMethod(clazz, name);
