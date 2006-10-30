@@ -20,6 +20,8 @@ package org.apache.activemq.advisory;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 
+import javax.jms.Destination;
+
 public class AdvisorySupport {
     
     public static final String ADVISORY_TOPIC_PREFIX = "ActiveMQ.Advisory.";
@@ -38,6 +40,8 @@ public class AdvisorySupport {
     public static final String EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Expired.Queue.";
     public static final String NO_TOPIC_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"NoConsumer.Topic.";
     public static final String NO_QUEUE_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"NoConsumer.Queue.";
+    public static final String AGENT_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Agent.";
+
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(TEMP_QUEUE_ADVISORY_TOPIC+","+TEMP_TOPIC_ADVISORY_TOPIC);
 
@@ -167,4 +171,7 @@ public class AdvisorySupport {
         }
     }
 
+    public static Destination getAgentDestination(String brokerName) {
+        return new ActiveMQTopic(AGENT_TOPIC_PREFIX + brokerName);
+    }
 }
