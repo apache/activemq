@@ -51,6 +51,7 @@ import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessag
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
+import org.apache.activemq.broker.util.CommandAgent;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.kaha.Store;
@@ -118,7 +119,7 @@ public class BrokerService implements Service, Serializable {
     private List proxyConnectors = new CopyOnWriteArrayList();
     private List registeredMBeanNames = new CopyOnWriteArrayList();
     private List jmsConnectors = new CopyOnWriteArrayList();
-    private Service[] services;
+    private Service[] services = new Service[] { new CommandAgent() };
     private MasterConnector masterConnector;
     private String masterConnectorURI;
     private transient Thread shutdownHook;
