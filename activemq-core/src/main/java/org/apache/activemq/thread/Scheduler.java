@@ -51,7 +51,7 @@ public class Scheduler {
     synchronized static public void cancel(Runnable task) {
         ScheduledFuture ticket = (ScheduledFuture) clockTickets.remove(task);
         if( ticket!=null ) {
-            ticket.cancel(true);
+            ticket.cancel(false);
         	clockDaemon.remove(task);
         }
     }

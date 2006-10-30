@@ -194,15 +194,6 @@
     </dependency>
 
     <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>activecluster</artifactId>
-      <version>${pom.currentVersion}</version>
-      <properties>
-        <optional>true</optional>
-      </properties>
-    </dependency>
-
-    <dependency>
        <groupId>org.apache.xbean</groupId>
        <artifactId>xbean-spring</artifactId>
        <version>${xbean_spring_version}</version>

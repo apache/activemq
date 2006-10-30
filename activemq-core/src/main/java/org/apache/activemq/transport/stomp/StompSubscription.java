@@ -20,6 +20,8 @@ package org.apache.activemq.transport.stomp;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 
@@ -91,18 +93,23 @@ public class StompSubscription {
         ack.setConsumerId(consumerInfo.getConsumerId());
         
         int count=0;
-        for (Iterator iter = dispatchedMessage.keySet().iterator(); iter.hasNext();) {
+        for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
             
-            String id = (String) iter.next();
+        	Map.Entry entry = (Entry) iter.next();
+            String id = (String) entry.getKey();
+            MessageId msgid = (MessageId) entry.getValue();
+            
             if( ack.getFirstMessageId()==null )
-                ack.setFirstMessageId((MessageId) dispatchedMessage.get(id));
+                ack.setFirstMessageId(msgid);
 
             iter.remove();
             count++;
+
             if( id.equals(messageId)  ) {
-                ack.setLastMessageId((MessageId) dispatchedMessage.get(id));
+                ack.setLastMessageId(msgid);
                 break;
             }
+            
         }
         
         ack.setMessageCount(count);

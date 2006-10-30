@@ -71,11 +71,6 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activecluster</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-rar</artifactId>
       <type>rar</type>
       <optional>true</optional>
