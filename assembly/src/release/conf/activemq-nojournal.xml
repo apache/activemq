@@ -59,7 +59,7 @@
     <networkConnectors>
       <!-- auto discover the other brokers 
       
-      <networkConnector name="default" uri="multicast://default"/>
+      <networkConnector name="default-nc" uri="multicast://default"/>
       
       or use static hosts
       
