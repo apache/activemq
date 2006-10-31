@@ -133,6 +133,7 @@
     <module>activemq-rar</module>
     <module>activemq-web</module>
     <module>activemq-web-demo</module>
+    <module>activemq-web-console</module>
     <module>activemq-optional</module>
     <module>maven-bundle-plugin</module>
     <!--
@@ -763,6 +764,11 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.1.3</version>
         </plugin>
+        <plugin>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>maven-jetty-plugin</artifactId>
+          <version>${jetty-version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -808,6 +814,7 @@
   </reporting>
 
   <properties>
+    <jetty-version>6.0.1</jetty-version>
     <dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m2-incubating-repository</dist-repo-url>
     <m1-dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m1-snapshot-repository</m1-dist-repo-url>
     <site-repo-url>scpexe://people.apache.org/www/incubator.apache.org/activemq/maven/</site-repo-url>
