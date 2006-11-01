@@ -21,6 +21,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UTFDataFormatException;
+import org.apache.activemq.util.ByteSequence;
 /**
  * Optimized ByteArrayInputStream that can be used more than once
  * 
@@ -29,15 +30,27 @@ import java.io.UTFDataFormatException;
 public final class StoreByteArrayInputStream extends InputStream implements DataInput{
     private byte[] buf;
     private int pos;
+    private int offset;
 
     /**
-     * Creates a <code>WireByteArrayInputStream</code>.
+     * Creates a <code>StoreByteArrayInputStream</code>.
      * 
      * @param buf the input buffer.
      */
     public StoreByteArrayInputStream(byte buf[]){
         this.buf=buf;
         this.pos=0;
+        this.offset = 0;
+    }
+    
+    /**
+     * Creates a <code>StoreByteArrayInputStream</code>.
+     * 
+     * @param sequence the input buffer.
+     */
+    public StoreByteArrayInputStream(ByteSequence sequence){
+        this.buf=sequence.getData();
+        this.offset=this.pos=sequence.getOffset();
     }
 
     /**
@@ -47,8 +60,12 @@ public final class StoreByteArrayInputStream extends InputStream implements Data
         this(new byte[0]);
     }
 
+    /**
+     * 
+     * @return the size
+     */
     public int size(){
-        return pos;
+        return pos-offset;
     }
 
     /**
@@ -59,13 +76,23 @@ public final class StoreByteArrayInputStream extends InputStream implements Data
     }
 
     /**
-     * reset the <code>WireByteArrayInputStream</code> to use an new byte array
+     * reset the <code>StoreByteArrayInputStream</code> to use an new byte array
      * 
      * @param newBuff
      */
     public void restart(byte[] newBuff){
         buf=newBuff;
         pos=0;
+    }
+    
+    /**
+     * reset the <code>StoreByteArrayInputStream</code> to use an new ByteSequence
+     * @param sequence 
+     *  
+     */
+    public void restart(ByteSequence sequence){
+        this.buf=sequence.getData();
+        this.pos=sequence.getOffset();
     }
 
     /**
