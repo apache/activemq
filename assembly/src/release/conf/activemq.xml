@@ -60,7 +60,7 @@
     </persistenceAdapter>
   
     <transportConnectors>
-       <transportConnector name="default" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+       <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
        <transportConnector name="ssl"     uri="ssl://localhost:61617"/>
        <transportConnector name="stomp"   uri="stomp://localhost:61613"/>
     </transportConnectors>
