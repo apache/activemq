@@ -136,7 +136,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
                 consumer.close();
             }
             catch (JMSException e) {
-                e.printStackTrace();
+                log.debug("caught exception closing consumer",e);
             }
         }
     }
@@ -148,7 +148,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
                 connection.close();
         }
         catch (JMSException e) {
-            throw new RuntimeException(e);
+            log.debug("caught exception closing consumer",e);
         }
         finally {
             producer = null;
@@ -189,7 +189,11 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
                     consumers.put(destination, getConsumer(destination, true));
                 }
                 catch (JMSException e) {
-                    e.printStackTrace(); // TODO better handling?
+                    log.debug("Caought Exception ",e);
+                    IOException ex = new IOException(e.getMessage());
+                    ex.initCause(e.getCause() != null ? e.getCause() : e);
+                    throw ex;
+                    
                 }
             }
         }
