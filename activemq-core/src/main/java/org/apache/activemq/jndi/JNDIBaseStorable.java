@@ -19,13 +19,18 @@ package org.apache.activemq.jndi;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Properties;
 
 /**
  * Faciliates objects to be stored in JNDI as properties
  */
 
-public abstract class JNDIBaseStorable implements JNDIStorableInterface {
+public abstract class JNDIBaseStorable implements JNDIStorableInterface, Externalizable{
+    
     private Properties properties = null;
 
 
@@ -78,6 +83,30 @@ public abstract class JNDIBaseStorable implements JNDIStorableInterface {
      */
     public Reference getReference() throws NamingException {
         return JNDIReferenceFactory.createReference(this.getClass().getName(), this);
+    }
+
+    /**
+     * @param in
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+     */
+    public void readExternal(ObjectInput in) throws IOException,ClassNotFoundException{
+        Properties props = (Properties)in.readObject();
+        if (props != null) {
+            setProperties(props);
+        }
+        
+    }
+
+    /**
+     * @param out
+     * @throws IOException
+     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+     */
+    public void writeExternal(ObjectOutput out) throws IOException{
+        out.writeObject(getProperties());
+        
     }
 
 }
