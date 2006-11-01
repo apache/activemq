@@ -119,7 +119,7 @@ public class BrokerService implements Service, Serializable {
     private List proxyConnectors = new CopyOnWriteArrayList();
     private List registeredMBeanNames = new CopyOnWriteArrayList();
     private List jmsConnectors = new CopyOnWriteArrayList();
-    private Service[] services = new Service[] { new CommandAgent() };
+    private Service[] services;
     private MasterConnector masterConnector;
     private String masterConnectorURI;
     private transient Thread shutdownHook;
