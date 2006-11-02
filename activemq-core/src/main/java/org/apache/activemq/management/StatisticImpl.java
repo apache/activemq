@@ -29,6 +29,7 @@ public class StatisticImpl implements Statistic, Resettable {
     private String description;
     private long startTime;
     private long lastSampleTime;
+    protected boolean enabled= true;
 
     public StatisticImpl(String name, String unit, String description) {
         this.name = name;
@@ -75,6 +76,20 @@ public class StatisticImpl implements Statistic, Resettable {
     public synchronized long getLastSampleTime() {
         return lastSampleTime;
     }
+    
+    /**
+     * @return the enabled
+     */
+    public boolean isEnabled(){
+        return this.enabled;
+    }
+
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled(boolean enabled){
+        this.enabled=enabled;
+    }
 
     protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" unit: ");
@@ -88,4 +103,7 @@ public class StatisticImpl implements Statistic, Resettable {
         buffer.append(" description: ");
         buffer.append(description);
     }
+
+    
+   
 }

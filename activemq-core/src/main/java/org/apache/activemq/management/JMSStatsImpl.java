@@ -68,4 +68,16 @@ public class JMSStatsImpl extends StatsImpl {
         out.println("}");
         out.flush();
     }
+    
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled(boolean enabled){
+        super.setEnabled(enabled);
+        JMSConnectionStatsImpl[] stats = getConnections();
+        for (int i = 0, size = stats.length; i < size; i++) {
+            stats[i].setEnabled(enabled);
+        }
+        
+    }
 }
