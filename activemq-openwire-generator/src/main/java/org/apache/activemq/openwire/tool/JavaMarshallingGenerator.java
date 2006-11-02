@@ -59,8 +59,8 @@ public class JavaMarshallingGenerator extends MultiSourceGenerator {
 out.println("");
 out.println("package org.apache.activemq.openwire.v" + getOpenwireVersion() + ";");
 out.println("");
-out.println("import java.io.DataInputStream;");
-out.println("import java.io.DataOutputStream;");
+out.println("import java.io.DataInput;");
+out.println("import java.io.DataOutput;");
 out.println("import java.io.IOException;");
 out.println("");
 out.println("import org.apache.activemq.openwire.*;");
@@ -116,7 +116,7 @@ out.println("     * @param o the object to un-marshal");
 out.println("     * @param dataIn the data input stream to build the object from");
 out.println("     * @throws IOException");
 out.println("     */");
-out.println("    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {");
+out.println("    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs) throws IOException {");
 out.println("        super.tightUnmarshal(wireFormat, o, dataIn, bs);");
 
 		if (!getProperties().isEmpty()) {
@@ -171,7 +171,7 @@ out.println("     * @param o the instance to be marshaled");
 out.println("     * @param dataOut the output stream");
 out.println("     * @throws IOException thrown if an error occurs");
 out.println("     */");
-out.println("    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {");
+out.println("    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs) throws IOException {");
 out.println("        super.tightMarshal2(wireFormat, o, dataOut, bs);");
 		if (!getProperties().isEmpty()) {
 out.println("");
@@ -195,7 +195,7 @@ out.println("     * @param o the object to un-marshal");
 out.println("     * @param dataIn the data input stream to build the object from");
 out.println("     * @throws IOException");
 out.println("     */");
-out.println("    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {");
+out.println("    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn) throws IOException {");
 out.println("        super.looseUnmarshal(wireFormat, o, dataIn);");
 
 		if (!getProperties().isEmpty()) {
@@ -223,7 +223,7 @@ out.println("");
 out.println("    /**");
 out.println("     * Write the booleans that this object uses to a BooleanStream");
 out.println("     */");
-out.println("    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {");
+out.println("    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutput dataOut) throws IOException {");
 
 		if (!getProperties().isEmpty()) {
 out.println("");
