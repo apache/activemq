@@ -55,7 +55,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     protected int connectionTimeout = 30000;
     protected int soTimeout = 0;
-    protected int socketBufferSize = 128 * 1024;
+    protected int socketBufferSize = 64 * 1024;
+    protected int ioBufferSize = 8 * 1024;
     protected Socket socket;
     protected DataOutputStream dataOut;
     protected DataInputStream dataIn;
@@ -241,6 +242,20 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void setTcpNoDelay(Boolean tcpNoDelay) {
         this.tcpNoDelay = tcpNoDelay;
     }
+    
+    /**
+     * @return the ioBufferSize
+     */
+    public int getIoBufferSize(){
+        return this.ioBufferSize;
+    }
+
+    /**
+     * @param ioBufferSize the ioBufferSize to set
+     */
+    public void setIoBufferSize(int ioBufferSize){
+        this.ioBufferSize=ioBufferSize;
+    }
 
 
     // Implementation methods
@@ -350,9 +365,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void initializeStreams() throws Exception {
-        TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), 8 * 1024);
+        TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), ioBufferSize);
         this.dataIn = new DataInputStream(buffIn);
-        TcpBufferedOutputStream buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), 16 * 1024);
+        TcpBufferedOutputStream buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
         this.dataOut = new DataOutputStream(buffOut);
     }
 
@@ -375,4 +390,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
         return null;
     }
+
+
+    
+  
 }
