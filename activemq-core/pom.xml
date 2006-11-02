@@ -160,7 +160,7 @@
       <groupId>org.slf4j</groupId>
       <artifactId>nlog4j</artifactId>
       <version>1.2.24</version>
-      <scope>est</scope>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
