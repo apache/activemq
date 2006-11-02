@@ -863,6 +863,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setSessionTaskRunner(TaskRunnerFactory sessionTaskRunner) {
         this.sessionTaskRunner = sessionTaskRunner;
     }
+    
+    /**
+     * @return the statsEnabled
+     */
+    public boolean isStatsEnabled(){
+        return this.stats.isEnabled();
+    }
+
+    
+    /**
+     * @param statsEnabled the statsEnabled to set
+     */
+    public void setStatsEnabled(boolean statsEnabled){
+        this.stats.setEnabled(statsEnabled);
+    }
 
     
     // Implementation methods

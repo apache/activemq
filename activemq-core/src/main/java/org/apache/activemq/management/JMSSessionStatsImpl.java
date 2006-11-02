@@ -95,6 +95,22 @@ public class JMSSessionStatsImpl extends StatsImpl {
             pstats[i].reset();
         }
     }
+    
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled(boolean enabled){
+        super.setEnabled(enabled);
+        JMSConsumerStatsImpl[] cstats = getConsumers();
+        for (int i = 0, size = cstats.length; i < size; i++) {
+            cstats[i].setEnabled(enabled);
+        }
+        JMSProducerStatsImpl[] pstats = getProducers();
+        for (int i = 0, size = pstats.length; i < size; i++) {
+            pstats[i].setEnabled(enabled);
+        }
+        
+    }
 
     public CountStatisticImpl getMessageCount() {
         return messageCount;

@@ -85,7 +85,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
     private boolean nestedMapAndListEnabled = true;
-
     JMSStatsImpl factoryStats = new JMSStatsImpl();
 
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
@@ -519,6 +518,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("closeTimeout", Integer.toString(getCloseTimeout()));
         props.setProperty("alwaysSessionAsync", Boolean.toString(isAlwaysSessionAsync()));
         props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
+        props.setProperty("statsEnabled",Boolean.toString(isStatsEnabled()));
 
     }
 
@@ -661,5 +661,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     protected void setClientIdGenerator(IdGenerator clientIdGenerator) {
         this.clientIdGenerator = clientIdGenerator;
+    }
+
+    
+    /**
+     * @return the statsEnabled
+     */
+    public boolean isStatsEnabled(){
+        return this.factoryStats.isEnabled();
+    }
+
+    
+    /**
+     * @param statsEnabled the statsEnabled to set
+     */
+    public void setStatsEnabled(boolean statsEnabled){
+        this.factoryStats.setEnabled(statsEnabled);
     }
 }

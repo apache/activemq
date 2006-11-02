@@ -54,6 +54,18 @@ public class JMSConnectionStatsImpl extends StatsImpl {
             stats[i].reset();
         }
     }
+    
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled(boolean enabled){
+        super.setEnabled(enabled);
+        JMSSessionStatsImpl[] stats = getSessions();
+        for (int i = 0, size = stats.length; i < size; i++) {
+            stats[i].setEnabled(enabled);
+        }
+        
+    }
 
 
     public boolean isTransactional() {

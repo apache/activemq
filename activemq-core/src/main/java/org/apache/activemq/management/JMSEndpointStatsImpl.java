@@ -128,10 +128,12 @@ public class JMSEndpointStatsImpl extends StatsImpl {
     }
 
     public void onMessage() {
-        long start = messageCount.getLastSampleTime();
-        messageCount.increment();
-        long end = messageCount.getLastSampleTime();
-        messageRateTime.addTime(end - start);
+        if (enabled) {
+            long start = messageCount.getLastSampleTime();
+            messageCount.increment();
+            long end = messageCount.getLastSampleTime();
+            messageRateTime.addTime(end - start);
+        }
     }
 
     public void dump(IndentPrinter out) {
