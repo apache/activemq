@@ -17,6 +17,10 @@
  */
 package org.apache.activemq;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -105,6 +109,21 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 			fail("Expected connection failure.");
 		} catch (JMSException e) {
 		}
+    }
+    
+    public void testFactorySerializable() throws Exception{
+        String clientID="TestClientID";
+        ActiveMQConnectionFactory cf=new ActiveMQConnectionFactory();
+        cf.setClientID(clientID);
+        ByteArrayOutputStream bytesOut=new ByteArrayOutputStream();
+        ObjectOutputStream objectsOut=new ObjectOutputStream(bytesOut);
+        objectsOut.writeObject(cf);
+        objectsOut.flush();
+        byte[] data=bytesOut.toByteArray();
+        ByteArrayInputStream bytesIn=new ByteArrayInputStream(data);
+        ObjectInputStream objectsIn=new ObjectInputStream(bytesIn);
+        cf=(ActiveMQConnectionFactory)objectsIn.readObject();
+        assertEquals(cf.getClientID(),clientID);
     }
 
     protected void assertCreateConnection(String uri) throws Exception {
