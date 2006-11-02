@@ -32,6 +32,7 @@ import java.io.OutputStream;
 public class TcpBufferedOutputStream extends FilterOutputStream {
     private final static int BUFFER_SIZE = 8192;
     private byte[] buffer;
+    private int bufferlen;
     private int count;
     private boolean closed;
 
@@ -58,6 +59,7 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
             throw new IllegalArgumentException("Buffer size <= 0");
         }
         buffer = new byte[size];
+        bufferlen=size;
     }
 
     /**
@@ -67,8 +69,7 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      * @throws IOException
      */
     public void write(int b) throws IOException {
-        checkClosed();
-        if (availableBufferToWrite() < 1) {
+        if ((bufferlen-count) < 1) {
             flush();
         }
         buffer[count++] = (byte) b;
@@ -84,8 +85,7 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      * @throws IOException
      */
     public void write(byte b[], int off, int len) throws IOException {
-        checkClosed();
-        if (availableBufferToWrite() < len) {
+        if ((bufferlen-count) < len) {
             flush();
         }
         if (buffer.length >= len) {
@@ -127,16 +127,10 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      *
      * @throws IOException
      */
-    protected void checkClosed() throws IOException {
+    private final void checkClosed() throws IOException {
         if (closed) {
             throw new EOFException("Cannot write to the stream any more it has already been closed");
         }
     }
 
-    /**
-     * @return the amount free space in the buffer
-     */
-    private int availableBufferToWrite() {
-        return buffer.length - count;
-    }
 }
