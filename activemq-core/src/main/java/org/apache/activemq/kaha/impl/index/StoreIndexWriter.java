@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import org.apache.activemq.kaha.impl.data.DataManager;
-import org.apache.activemq.kaha.impl.data.StoreByteArrayOutputStream;
+import org.apache.activemq.util.DataByteArrayOutputStream;
 /**
  * Optimized Store writer
  * 
@@ -29,7 +29,7 @@ import org.apache.activemq.kaha.impl.data.StoreByteArrayOutputStream;
  */
 class StoreIndexWriter{
     
-    protected final StoreByteArrayOutputStream dataOut = new StoreByteArrayOutputStream();
+    protected final DataByteArrayOutputStream dataOut = new DataByteArrayOutputStream();
     protected final RandomAccessFile file;
     protected final String name;
     protected final DataManager redoLog;

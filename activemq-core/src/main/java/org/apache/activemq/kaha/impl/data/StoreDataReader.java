@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreLocation;
+import org.apache.activemq.util.DataByteArrayInputStream;
 /**
  * Optimized Store reader
  * 
@@ -29,7 +30,7 @@ import org.apache.activemq.kaha.StoreLocation;
 final class StoreDataReader{
     
     private DataManager dataManager;
-    private StoreByteArrayInputStream dataIn;
+    private DataByteArrayInputStream dataIn;
 
     /**
      * Construct a Store reader
@@ -38,7 +39,7 @@ final class StoreDataReader{
      */
     StoreDataReader(DataManager fileManager){
         this.dataManager=fileManager;
-        this.dataIn=new StoreByteArrayInputStream();
+        this.dataIn=new DataByteArrayInputStream();
     }
 
     /**
