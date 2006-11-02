@@ -17,7 +17,9 @@
  */
 package org.apache.activemq.openwire;
 
+import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -29,10 +31,10 @@ public interface DataStreamMarshaller {
     DataStructure createObject();
 
     int tightMarshal1(OpenWireFormat format, Object c, BooleanStream bs) throws IOException;
-    void tightMarshal2(OpenWireFormat format, Object c, DataOutputStream ds, BooleanStream bs) throws IOException;
-    void tightUnmarshal(OpenWireFormat format, Object data, DataInputStream dis, BooleanStream bs) throws IOException;
+    void tightMarshal2(OpenWireFormat format, Object c, DataOutput ds, BooleanStream bs) throws IOException;
+    void tightUnmarshal(OpenWireFormat format, Object data, DataInput dis, BooleanStream bs) throws IOException;
 
-    void looseMarshal(OpenWireFormat format, Object c, DataOutputStream ds) throws IOException;
-    void looseUnmarshal(OpenWireFormat format, Object data, DataInputStream dis) throws IOException;
+    void looseMarshal(OpenWireFormat format, Object c, DataOutput ds) throws IOException;
+    void looseUnmarshal(OpenWireFormat format, Object data, DataInput dis) throws IOException;
     
 }

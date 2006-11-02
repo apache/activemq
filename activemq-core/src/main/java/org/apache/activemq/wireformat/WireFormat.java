@@ -17,8 +17,8 @@
  */
 package org.apache.activemq.wireformat;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.activemq.util.ByteSequence;
@@ -45,12 +45,12 @@ public interface WireFormat {
     /**
      * Stream based marshaling 
      */
-    void marshal(Object command, DataOutputStream out) throws IOException;
+    void marshal(Object command, DataOutput out) throws IOException;
     
     /**
      * Packet based un-marshaling 
      */
-    Object unmarshal(DataInputStream in) throws IOException;
+    Object unmarshal(DataInput in) throws IOException;
     
     /**
      * @param the version of the wire format

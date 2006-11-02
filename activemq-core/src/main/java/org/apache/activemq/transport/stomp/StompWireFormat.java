@@ -17,7 +17,9 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -58,7 +60,7 @@ public class StompWireFormat implements WireFormat {
         return unmarshal(dis);
     }
 
-    public void marshal(Object command, DataOutputStream os) throws IOException {
+    public void marshal(Object command, DataOutput os) throws IOException {
 		StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame) command;
 
 		StringBuffer buffer = new StringBuffer();
@@ -83,7 +85,7 @@ public class StompWireFormat implements WireFormat {
 	}
     
 
-    public Object unmarshal(DataInputStream in) throws IOException {
+    public Object unmarshal(DataInput in) throws IOException {
         	
         try {
 			String action = null;
@@ -179,7 +181,7 @@ public class StompWireFormat implements WireFormat {
 
     }
 
-    private String readLine(DataInputStream in, int maxLength, String errorMessage) throws IOException {
+    private String readLine(DataInput in, int maxLength, String errorMessage) throws IOException {
         byte b;
         ByteArrayOutputStream baos=new ByteArrayOutputStream(maxLength);
         while ((b = in.readByte()) != '\n') {

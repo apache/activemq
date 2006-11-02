@@ -17,8 +17,8 @@
  */
 package org.apache.activemq.openwire;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -27,11 +27,11 @@ import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.MarshallAware;
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.util.ByteArrayInputStream;
-import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.ClassLoading;
+import org.apache.activemq.util.DataByteArrayInputStream;
+import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -59,11 +59,12 @@ final public class OpenWireFormat implements WireFormat {
     private HashMap marshallCacheMap = new HashMap();
     private DataStructure marshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
     private DataStructure unmarshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
-    
+    private DataByteArrayOutputStream bytesOut = new DataByteArrayOutputStream();
+    private DataByteArrayInputStream bytesIn = new DataByteArrayInputStream();
 	private WireFormatInfo preferedWireFormatInfo;
             
 	public OpenWireFormat() {
-		this(1);
+		this(2);
 	}
 	
     public OpenWireFormat(int i) {
@@ -148,28 +149,23 @@ final public class OpenWireFormat implements WireFormat {
                     size += dsm.tightMarshal1(this, c, bs);
                     size += bs.marshalledSize();
     
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
-                    DataOutputStream ds = new DataOutputStream(baos);
+                    bytesOut.restart(size);
                     if( !sizePrefixDisabled ) {
-                        ds.writeInt(size);
+                        bytesOut.writeInt(size);
                     }
-                    ds.writeByte(type);
-                    bs.marshal(ds);
-                    dsm.tightMarshal2(this, c, ds, bs);                
-                    ds.close();
-                    sequence = baos.toByteSequence();
+                    bytesOut.writeByte(type);
+                    bs.marshal(bytesOut);
+                    dsm.tightMarshal2(this, c, bytesOut, bs);                
+                    sequence = bytesOut.toByteSequence();
                     
                 } else {
-                    
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    DataOutputStream ds = new DataOutputStream(baos);
+                    bytesOut.restart();
                     if( !sizePrefixDisabled ) {
-                        ds.writeInt(0); // we don't know the final size yet but write this here for now.
+                        bytesOut.writeInt(0); // we don't know the final size yet but write this here for now.
                     }
-                    ds.writeByte(type);
-                    dsm.looseMarshal(this, c, ds);                
-                    ds.close();
-                    sequence = baos.toByteSequence();
+                    bytesOut.writeByte(type);
+                    dsm.looseMarshal(this, c, bytesOut);                
+                    sequence = bytesOut.toByteSequence();
                     
                     if( !sizePrefixDisabled ) {
                         size = sequence.getLength()-4;
@@ -181,13 +177,10 @@ final public class OpenWireFormat implements WireFormat {
                 
                 
             } else {
-                
-                ByteArrayOutputStream baos = new ByteArrayOutputStream(5);
-                DataOutputStream daos = new DataOutputStream(baos);
-                daos.writeInt(size);
-                daos.writeByte(NULL_TYPE);
-                daos.close();
-                sequence = baos.toByteSequence();
+                bytesOut.restart(5);
+                bytesOut.writeInt(size);
+                bytesOut.writeByte(NULL_TYPE);
+                sequence = bytesOut.toByteSequence();
             }
             
             if( ma!=null ) {
@@ -198,23 +191,24 @@ final public class OpenWireFormat implements WireFormat {
     }
     
     public Object unmarshal(ByteSequence sequence) throws IOException {
-        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(sequence));
+        bytesIn.restart(sequence);
+        //DataInputStream dis = new DataInputStream(new ByteArrayInputStream(sequence));
         
         if( !sizePrefixDisabled ) {
-            int size = dis.readInt();
+            int size = bytesIn.readInt();
             if( sequence.getLength()-4 != size ) {
     //            throw new IOException("Packet size does not match marshaled size");
             }
         }
         
-        Object command = doUnmarshal(dis);
+        Object command = doUnmarshal(bytesIn);
         if( !cacheEnabled && ((DataStructure)command).isMarshallAware() ) {
             ((MarshallAware) command).setCachedMarshalledForm(this, sequence);
         }
         return command;
     }
     
-    public void marshal(Object o, DataOutputStream dataOut) throws IOException {
+    public void marshal(Object o, DataOutput dataOut) throws IOException {
         
         if( cacheEnabled ) {
             runMarshallCacheEvictionSweep();
@@ -243,20 +237,18 @@ final public class OpenWireFormat implements WireFormat {
 	            dsm.tightMarshal2(this, c, dataOut, bs);
                 
             } else {            	
-            	DataOutputStream looseOut = dataOut;
-            	ByteArrayOutputStream baos=null;
-            	
+            	DataOutput looseOut = dataOut;
+            	            	
             	if( !sizePrefixDisabled ) {
-	                baos = new ByteArrayOutputStream();
-	                looseOut = new DataOutputStream(baos);
+	                bytesOut.restart();
+	                looseOut = bytesOut;
                 }
                 
                 looseOut.writeByte(type);
                 dsm.looseMarshal(this, c, looseOut);
                 
                 if( !sizePrefixDisabled ) {
-                    looseOut.close();
-                    ByteSequence sequence = baos.toByteSequence();
+                    ByteSequence sequence = bytesOut.toByteSequence();
                     dataOut.writeInt(sequence.getLength());
                     dataOut.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
                 }
@@ -269,11 +261,16 @@ final public class OpenWireFormat implements WireFormat {
         }
     }
 
-    public Object unmarshal(DataInputStream dis) throws IOException {
+    public Object unmarshal(DataInput dis) throws IOException {
+        DataInput dataIn = dis;
         if( !sizePrefixDisabled ) {
-        	dis.readInt();
+        	int size = dis.readInt();
+            //byte[] data = new byte[size];
+            //dis.readFully(data);
+            //bytesIn.restart(data);
+            //dataIn = bytesIn;
         }
-        return doUnmarshal(dis);
+        return doUnmarshal(dataIn);
     }
     
     /**
@@ -297,7 +294,7 @@ final public class OpenWireFormat implements WireFormat {
     /**
      * Used by NIO or AIO transports; note that the size is not written as part of this method.
      */
-    public void tightMarshal2(Object o, DataOutputStream ds, BooleanStream bs) throws IOException {
+    public void tightMarshal2(Object o, DataOutput ds, BooleanStream bs) throws IOException {
         if( cacheEnabled ) {
             runMarshallCacheEvictionSweep();
         }
@@ -337,7 +334,7 @@ final public class OpenWireFormat implements WireFormat {
         this.version = version;
     }
         
-    public Object doUnmarshal(DataInputStream dis) throws IOException {
+    public Object doUnmarshal(DataInput dis) throws IOException {
         byte dataType = dis.readByte();
         if( dataType!=NULL_TYPE ) {
             DataStreamMarshaller dsm = (DataStreamMarshaller) dataMarshallers[dataType & 0xFF];
@@ -382,7 +379,7 @@ final public class OpenWireFormat implements WireFormat {
         return 1 + dsm.tightMarshal1(this, o, bs);
     }
     
-    public void tightMarshalNestedObject2(DataStructure o, DataOutputStream ds, BooleanStream bs) throws IOException {
+    public void tightMarshalNestedObject2(DataStructure o, DataOutput ds, BooleanStream bs) throws IOException {
         if( !bs.readBoolean() ) 
             return;
             
@@ -405,7 +402,7 @@ final public class OpenWireFormat implements WireFormat {
         }
     }
     
-    public DataStructure tightUnmarshalNestedObject(DataInputStream dis, BooleanStream bs) throws IOException {
+    public DataStructure tightUnmarshalNestedObject(DataInput dis, BooleanStream bs) throws IOException {
         if( bs.readBoolean() ) {
             
             byte dataType = dis.readByte();
@@ -437,7 +434,7 @@ final public class OpenWireFormat implements WireFormat {
         }
     }
     
-    public DataStructure looseUnmarshalNestedObject(DataInputStream dis) throws IOException {
+    public DataStructure looseUnmarshalNestedObject(DataInput dis) throws IOException {
         if( dis.readBoolean() ) {
             
             byte dataType = dis.readByte();
@@ -453,7 +450,7 @@ final public class OpenWireFormat implements WireFormat {
         }
     }
 
-    public void looseMarshalNestedObject(DataStructure o, DataOutputStream dataOut) throws IOException {
+    public void looseMarshalNestedObject(DataStructure o, DataOutput dataOut) throws IOException {
         dataOut.writeBoolean(o!=null);
         if( o!=null ) {
             byte type = o.getDataStructureType();
