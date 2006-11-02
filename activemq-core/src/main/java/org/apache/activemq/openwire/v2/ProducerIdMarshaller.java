@@ -18,8 +18,8 @@
 
 package org.apache.activemq.openwire.v2;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.activemq.openwire.*;
@@ -62,7 +62,7 @@ public class ProducerIdMarshaller extends BaseDataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn, BooleanStream bs) throws IOException {
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs) throws IOException {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ProducerId info = (ProducerId)o;
@@ -95,7 +95,7 @@ public class ProducerIdMarshaller extends BaseDataStreamMarshaller {
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut, BooleanStream bs) throws IOException {
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs) throws IOException {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         ProducerId info = (ProducerId)o;
@@ -112,7 +112,7 @@ public class ProducerIdMarshaller extends BaseDataStreamMarshaller {
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInputStream dataIn) throws IOException {
+    public void looseUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn) throws IOException {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         ProducerId info = (ProducerId)o;
@@ -126,7 +126,7 @@ public class ProducerIdMarshaller extends BaseDataStreamMarshaller {
     /**
      * Write the booleans that this object uses to a BooleanStream
      */
-    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutputStream dataOut) throws IOException {
+    public void looseMarshal(OpenWireFormat wireFormat, Object o, DataOutput dataOut) throws IOException {
 
         ProducerId info = (ProducerId)o;
 
