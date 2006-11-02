@@ -23,6 +23,7 @@ import java.io.RandomAccessFile;
 
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreLocation;
+import org.apache.activemq.util.DataByteArrayOutputStream;
 /**
  * Optimized Store writer
  * 
@@ -30,7 +31,7 @@ import org.apache.activemq.kaha.StoreLocation;
  */
 final class StoreDataWriter{
     
-    private StoreByteArrayOutputStream buffer;
+    private DataByteArrayOutputStream buffer;
     private DataManager dataManager;
 
 
@@ -41,7 +42,7 @@ final class StoreDataWriter{
      */
     StoreDataWriter(DataManager fileManager){
         this.dataManager=fileManager;
-        this.buffer=new StoreByteArrayOutputStream();
+        this.buffer=new DataByteArrayOutputStream();
     }
 
     /**

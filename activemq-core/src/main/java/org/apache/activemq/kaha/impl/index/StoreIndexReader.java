@@ -20,7 +20,7 @@ package org.apache.activemq.kaha.impl.index;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.apache.activemq.kaha.impl.data.StoreByteArrayInputStream;
+import org.apache.activemq.util.DataByteArrayInputStream;
 /**
  * Optimized Store reader
  * 
@@ -28,7 +28,7 @@ import org.apache.activemq.kaha.impl.data.StoreByteArrayInputStream;
  */
 class StoreIndexReader{
     protected RandomAccessFile file;
-    protected StoreByteArrayInputStream dataIn;
+    protected DataByteArrayInputStream dataIn;
     protected byte[] buffer=new byte[IndexItem.INDEX_SIZE];
 
     /**
@@ -38,7 +38,7 @@ class StoreIndexReader{
      */
     StoreIndexReader(RandomAccessFile file){
         this.file=file;
-        this.dataIn=new StoreByteArrayInputStream();
+        this.dataIn=new DataByteArrayInputStream();
     }
 
     protected IndexItem readItem(long offset) throws IOException{
