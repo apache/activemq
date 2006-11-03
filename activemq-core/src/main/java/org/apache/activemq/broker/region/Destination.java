@@ -51,15 +51,5 @@ public interface Destination extends Service {
     DeadLetterStrategy getDeadLetterStrategy();
     
     public Message[] browse();
-    
-    public void resetStatistics();
     public String getName();
-    public long getEnqueueCount();
-    public long getDequeueCount();
-    public long getConsumerCount();
-    public long getQueueSize();
-    public long getMessagesCached();
-    public int getMemoryPercentageUsed();
-    public long getMemoryLimit();
-    public void setMemoryLimit(long limit);
 }

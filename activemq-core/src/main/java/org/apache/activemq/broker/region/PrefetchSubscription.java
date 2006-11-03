@@ -170,6 +170,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     // Don't remove the nodes until we are committed.
                     if(!context.isInTransaction()){
                     	dequeueCounter++;
+                    	node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                         iter.remove();
                     }else{
                         // setup a Synchronization to remove nodes from the dispatched list.
@@ -178,6 +179,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                                 synchronized(PrefetchSubscription.this){
                                 	dequeueCounter++;
                                     dispatched.remove(node);
+                                    node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                                     prefetchExtension--;
                                 }
                             }
@@ -230,6 +232,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 }
                 if(inAckRange){
                     sendToDLQ(context, node);
+                    node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                     iter.remove();
                     dequeueCounter++;
                     index++;
@@ -406,7 +409,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     synchronized protected void onDispatch(final MessageReference node,final Message message){
         if(node.getRegionDestination()!=null){
         	if( node != QueueMessageReference.NULL_MESSAGE ) {
-            node.getRegionDestination().getDestinationStatistics().onMessageDequeue(message);
+            node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
             context.getConnection().getStatistics().onMessageDequeue(message);
         	}
             try{
