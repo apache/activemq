@@ -24,7 +24,9 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -200,11 +202,11 @@ public class XmppWireFormat implements WireFormat {
         return unmarshal(dis);
     }
 
-    public void marshal(Object object, DataOutputStream dataOutputStream) throws IOException {
+    public void marshal(Object object, DataOutput dataOutput) throws IOException {
         /** TODO */
     }
 
-    public Object unmarshal(DataInputStream dataInputStream) throws IOException {
+    public Object unmarshal(DataInput dataInput) throws IOException {
         return null;  /** TODO */
     }
 
