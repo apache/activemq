@@ -42,9 +42,14 @@ public interface DestinationViewMBean {
      * @return The number of messages that have been sent to the destination.
      */
     public long getEnqueueCount();
-
+    
     /**
-     * @return The number of messages that have been received from the destination.
+     * @return The number of messages that have been delivered (potentially not acknowledged) to consumers.
+     */
+    public long getDispatchCount();
+    
+    /**
+     * @return The number of messages that have been acknowledged from the destination.
      */
     public long getDequeueCount();
 

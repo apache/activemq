@@ -69,39 +69,43 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     public void resetStatistics() {
-        destination.resetStatistics();
+        destination.getDestinationStatistics().reset();
     }
 
     public long getEnqueueCount() {
-        return destination.getEnqueueCount();
+        return destination.getDestinationStatistics().getEnqueues().getCount();
     }
 
     public long getDequeueCount() {
-        return destination.getDequeueCount();
+        return destination.getDestinationStatistics().getDequeues().getCount();
     }
+    
+    public long getDispatchCount() {
+        return destination.getDestinationStatistics().getDispatched().getCount();
+    }    
 
     public long getConsumerCount() {
-        return destination.getConsumerCount();
+        return destination.getDestinationStatistics().getConsumers().getCount();
     }
 
     public long getQueueSize() {
-        return destination.getQueueSize();
+        return destination.getDestinationStatistics().getMessages().getCount();
     }
 
     public long getMessagesCached() {
-        return destination.getMessagesCached();
+        return destination.getDestinationStatistics().getMessagesCached().getCount();
     }
 
     public int getMemoryPercentageUsed() {
-        return destination.getMemoryPercentageUsed();
+        return destination.getUsageManager().getPercentUsage();
     }
 
     public long getMemoryLimit() {
-        return destination.getMemoryLimit();
+        return destination.getUsageManager().getLimit();
     }
 
     public void setMemoryLimit(long limit) {
-        destination.setMemoryLimit(limit);
+       destination.getUsageManager().setLimit(limit);
     }
 
     public CompositeData[] browse() throws OpenDataException{

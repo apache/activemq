@@ -65,44 +65,16 @@ public class DestinationFilter implements Destination {
         return next.getActiveMQDestination();
     }
 
-    public long getConsumerCount() {
-        return next.getConsumerCount();
-    }
-
     public DeadLetterStrategy getDeadLetterStrategy() {
         return next.getDeadLetterStrategy();
-    }
-
-    public long getDequeueCount() {
-        return next.getDequeueCount();
     }
 
     public DestinationStatistics getDestinationStatistics() {
         return next.getDestinationStatistics();
     }
 
-    public long getEnqueueCount() {
-        return next.getEnqueueCount();
-    }
-
-    public long getMemoryLimit() {
-        return next.getMemoryLimit();
-    }
-
-    public int getMemoryPercentageUsed() {
-        return next.getMemoryPercentageUsed();
-    }
-
-    public long getMessagesCached() {
-        return next.getMessagesCached();
-    }
-
     public String getName() {
         return next.getName();
-    }
-
-    public long getQueueSize() {
-        return next.getQueueSize();
     }
 
     public UsageManager getUsageManager() {
@@ -117,16 +89,8 @@ public class DestinationFilter implements Destination {
         next.removeSubscription(context, sub);
     }
 
-    public void resetStatistics() {
-        next.resetStatistics();
-    }
-
     public void send(ConnectionContext context, Message messageSend) throws Exception {
         next.send(context, messageSend);
-    }
-
-    public void setMemoryLimit(long limit) {
-        next.setMemoryLimit(limit);
     }
 
     public void start() throws Exception {

@@ -62,6 +62,9 @@ public class TopicSubscription extends AbstractSubscription{
     private final AtomicLong enqueueCounter = new AtomicLong(0);
     private final AtomicLong dequeueCounter = new AtomicLong(0);
     
+    boolean singleDestination=true;
+    Destination destination;    
+    
     public TopicSubscription(Broker broker,ConnectionContext context,ConsumerInfo info,UsageManager usageManager)
                     throws InvalidSelectorException{
         super(broker,context,info);
@@ -158,12 +161,22 @@ public class TopicSubscription extends AbstractSubscription{
                 delivered.addAndGet(ack.getMessageCount());
                 context.getTransaction().addSynchronization(new Synchronization(){
                     public void afterCommit() throws Exception{
+                    	synchronized( TopicSubscription.this ) {
+	                    	if( singleDestination ) {
+	                    		destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
+	                    	}
+                    	}                    
                         dequeueCounter.addAndGet(ack.getMessageCount());
                         dispatched.addAndGet(-ack.getMessageCount());
                         delivered.set(Math.max(0,delivered.get()-ack.getMessageCount()));
                     }
                 });
             }else{
+            	
+            	if( singleDestination ) {
+            		destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
+            	}
+            	            
                 dequeueCounter.addAndGet(ack.getMessageCount());
                 dispatched.addAndGet(-ack.getMessageCount());
                 delivered.set(Math.max(0,delivered.get()-ack.getMessageCount()));
@@ -325,15 +338,29 @@ public class TopicSubscription extends AbstractSubscription{
         md.setConsumerId(info.getConsumerId());
         md.setDestination(node.getRegionDestination().getActiveMQDestination());
         dispatched.incrementAndGet();
+       
+        // Keep track if this subscription is receiving messages from a single destination.
+        if( singleDestination ) {
+        	if( destination == null ) {
+        		destination = node.getRegionDestination();
+        	} else {
+        		if( destination != node.getRegionDestination() ) {
+        			singleDestination = false;
+        		}
+        	}
+        }
+                
         if(info.isDispatchAsync()){
             md.setConsumer(new Runnable(){
                 public void run(){
+                    node.getRegionDestination().getDestinationStatistics().getDispatched().increment();	
                     node.decrementReferenceCount();
                 }
             });
             context.getConnection().dispatchAsync(md);
         }else{
             context.getConnection().dispatchSync(md);
+            node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
             node.decrementReferenceCount();
         }
     }
