@@ -17,11 +17,12 @@
  */
 package org.apache.activemq.transport.util;
 
+import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Reader;
-
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
@@ -38,11 +39,11 @@ public abstract class TextWireFormat implements WireFormat {
     public abstract Object unmarshalText(Reader reader);
     public abstract String marshalText(Object command);
 
-    public void marshal(Object command, DataOutputStream out) throws IOException {
+    public void marshal(Object command, DataOutput out) throws IOException {
         out.writeUTF(marshalText(command));
     }
 
-    public Object unmarshal(DataInputStream in) throws IOException {
+    public Object unmarshal(DataInput in) throws IOException {
         String text = in.readUTF();
         return unmarshalText(text);
 	}
