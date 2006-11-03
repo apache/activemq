@@ -35,16 +35,19 @@ public class DestinationStatistics extends StatsImpl {
     protected CountStatisticImpl consumers;
     protected CountStatisticImpl messages;
     protected PollCountStatisticImpl messagesCached;
+    protected CountStatisticImpl dispatched;
 
     public DestinationStatistics() {
 
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the destination");
-        dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been dispatched from the destination");
+        dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the destination");
+        dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
         messagesCached = new PollCountStatisticImpl("messagesCached", "The number of messages that are held in the destination's memory cache");
 
         addStatistic("enqueues", enqueues);
+        addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
         addStatistic("consumers", consumers);
         addStatistic("messages", messages);
@@ -75,11 +78,13 @@ public class DestinationStatistics extends StatsImpl {
         super.reset();
         enqueues.reset();
         dequeues.reset();
+        dispatched.reset();
     }
 
     public void setParent(DestinationStatistics parent) {
         if (parent != null) {
             enqueues.setParent(parent.enqueues);
+            dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
             consumers.setParent(parent.consumers);
             messagesCached.setParent(parent.messagesCached);
@@ -87,6 +92,7 @@ public class DestinationStatistics extends StatsImpl {
         }
         else {
             enqueues.setParent(null);
+            dispatched.setParent(null);
             dequeues.setParent(null);
             consumers.setParent(null);
             messagesCached.setParent(null);
@@ -98,15 +104,7 @@ public class DestinationStatistics extends StatsImpl {
         this.messagesCached = messagesCached;
     }
 
-    /**
-     * Called when a message is enqueued to update the statistics.
-     */
-    public void onMessageEnqueue(Message message) {
-        getEnqueues().increment();
-        getMessages().increment();
-    }
-
-    public void onMessageDequeue(Message message) {
-        getDequeues().increment();
+    public CountStatisticImpl getDispatched() {
+		return dispatched;
     }
 }
