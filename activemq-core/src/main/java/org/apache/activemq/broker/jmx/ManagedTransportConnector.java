@@ -53,8 +53,7 @@ public class ManagedTransportConnector extends TransportConnector {
     }
 
     protected Connection createConnection(Transport transport) throws IOException {
-        String connectionId = "" + getNextConnectionId();
-        return new ManagedTransportConnection(this, transport, getBroker(), isDisableAsyncDispatch() ? null : getTaskRunnerFactory(), mbeanServer, connectorName, connectionId);
+        return new ManagedTransportConnection(this, transport, getBroker(), isDisableAsyncDispatch() ? null : getTaskRunnerFactory(), mbeanServer, connectorName);
     }
 
     protected static synchronized long getNextConnectionId() {

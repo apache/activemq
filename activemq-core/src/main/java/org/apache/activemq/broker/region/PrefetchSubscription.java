@@ -20,12 +20,12 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
-import org.apache.activemq.ActiveMQConnectionFactory;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
@@ -250,7 +250,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         if( isSlaveBroker() ) {
         	throw new JMSException("Slave broker out of sync with master: Acknowledgment ("+ack+") was not in the dispatch list: "+dispatched);
         } else {
-        	throw new JMSException("Invalid acknowledgment: "+ack);
+        	log.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "+ack);
         }
     }
 
@@ -415,7 +415,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             try{
                 dispatchMatched();
             }catch(IOException e){
-                context.getConnection().serviceException(e);
+                context.getConnection().serviceExceptionAsync(e);
             }
         }
     }

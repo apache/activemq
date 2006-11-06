@@ -46,16 +46,18 @@ public class ManagedTransportConnection extends TransportConnection {
     private final MBeanServer server;
     private final ObjectName connectorName;
     private ConnectionViewMBean mbean;
-    private ObjectName name;
-    private String connectionId;
+
+    private ObjectName byClientIdName;
+	private ObjectName byAddressName;
 
     public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker, TaskRunnerFactory factory, MBeanServer server,
-            ObjectName connectorName, String connectionId) throws IOException {
+            ObjectName connectorName) throws IOException {
         super(connector, transport, broker, factory);
         this.server = server;
         this.connectorName = connectorName;
         this.mbean = new ConnectionView(this);
-        setConnectionId(connectionId);
+        byAddressName = createByAddressObjectName("address", transport.getRemoteAddress());
+        registerMBean(byAddressName);
     }
 
     public synchronized void stop() throws Exception {
@@ -63,12 +65,13 @@ public class ManagedTransportConnection extends TransportConnection {
             setPendingStop(true);
             return;
         }
-        unregisterMBean();
+    	synchronized(this) {
+	        unregisterMBean(byClientIdName);
+	        unregisterMBean(byAddressName);
+	        byClientIdName=null;
+	        byAddressName=null;
+    	}
         super.stop();
-    }
-
-    public String getConnectionId() {
-        return connectionId;
     }
 
     /**
@@ -77,46 +80,46 @@ public class ManagedTransportConnection extends TransportConnection {
      * the clientID of the JMS client.
      */
     public void setConnectionId(String connectionId) throws IOException {
-        this.connectionId = connectionId;
-        unregisterMBean();
-        name = createObjectName();
-        registerMBean();
     }
 
     public Response processAddConnection(ConnectionInfo info) throws Exception {
         Response answer = super.processAddConnection(info);
         String clientId = info.getClientId();
         if (clientId != null) {
-            // lets update the MBean name
-            setConnectionId(clientId);
+            if(byClientIdName==null) {
+    	        byClientIdName = createByClientIdObjectName(clientId);
+    	        registerMBean(byClientIdName);
+            }
         }
         return answer;
     }
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void registerMBean() throws IOException {
-        try {
-            server.registerMBean(mbean, name);
-        }
-        catch (Throwable e) {
-            throw IOExceptionSupport.create(e);
-        }
-
+    protected void registerMBean(ObjectName name) {
+    	if( name!=null ) {
+	        try {
+	            server.registerMBean(mbean, name);
+	        } catch (Throwable e) {
+	            log.warn("Failed to register MBean: "+name);
+	            log.debug("Failure reason: "+e,e);
+	        }
+    	}
     }
 
-    protected void unregisterMBean() {
+    protected void unregisterMBean(ObjectName name) {
         if (name != null) {
             try {
                 server.unregisterMBean(name);
             }
             catch (Throwable e) {
                 log.warn("Failed to unregister mbean: " + name);
+                log.debug("Failure reason: "+e,e);
             }
         }
     }
 
-    protected ObjectName createObjectName() throws IOException {
+    protected ObjectName createByAddressObjectName(String type, String value) throws IOException {
         // Build the object name for the destination
         Hashtable map = connectorName.getKeyPropertyList();
         try {
@@ -125,11 +128,31 @@ public class ManagedTransportConnection extends TransportConnection {
             		"BrokerName="+JMXSupport.encodeObjectNamePart((String) map.get("BrokerName"))+","+
             		"Type=Connection,"+
                     "ConnectorName="+JMXSupport.encodeObjectNamePart((String) map.get("ConnectorName"))+","+
-            		"Connection="+JMXSupport.encodeObjectNamePart(connectionId)
+            		"ViewType="+JMXSupport.encodeObjectNamePart(type)+","+
+            		"Name="+JMXSupport.encodeObjectNamePart(value)
             		);
         }
         catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
     }
+    
+    protected ObjectName createByClientIdObjectName(String value) throws IOException {
+        // Build the object name for the destination
+        Hashtable map = connectorName.getKeyPropertyList();
+        try {
+            return new ObjectName(
+            		connectorName.getDomain()+":"+
+            		"BrokerName="+JMXSupport.encodeObjectNamePart((String) map.get("BrokerName"))+","+
+            		"Type=Connection,"+
+                    "ConnectorName="+JMXSupport.encodeObjectNamePart((String) map.get("ConnectorName"))+","+
+                	"Connection="+JMXSupport.encodeObjectNamePart(value)
+            		);
+        }
+        catch (Throwable e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
+
+
 }

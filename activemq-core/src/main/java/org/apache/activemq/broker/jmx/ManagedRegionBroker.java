@@ -242,8 +242,13 @@ public class ManagedRegionBroker extends RegionBroker {
                 topics.put(key,view);
             }
         }
-        registeredMBeans.add(key);
-        mbeanServer.registerMBean(view,key);
+        try {
+            mbeanServer.registerMBean(view,key);
+            registeredMBeans.add(key);
+        } catch (Throwable e) {
+            log.warn("Failed to register MBean: "+key);
+            log.debug("Failure reason: "+e,e);
+        }            
     }
 
     protected void unregisterDestination(ObjectName key) throws Exception{
@@ -252,7 +257,12 @@ public class ManagedRegionBroker extends RegionBroker {
         temporaryQueues.remove(key);
         temporaryTopics.remove(key);
         if(registeredMBeans.remove(key)){
-            mbeanServer.unregisterMBean(key);
+            try {
+        		mbeanServer.unregisterMBean(key);
+            } catch (Throwable e) {
+                log.warn("Failed to unregister MBean: "+key);
+                log.debug("Failure reason: "+e,e);
+            }            
         }
     }
 
@@ -279,7 +289,7 @@ public class ManagedRegionBroker extends RegionBroker {
                             registeredMBeans.remove(inactiveName);
                             mbeanServer.unregisterMBean(inactiveName);
                         }
-                    }catch(Exception e){
+                    }catch(Throwable e){
                         log.error("Unable to unregister inactive durable subscriber: "+subscriptionKey,e);
                     }
                 }else{
@@ -287,8 +297,15 @@ public class ManagedRegionBroker extends RegionBroker {
                 }
             }
         }
-        registeredMBeans.add(key);
-        mbeanServer.registerMBean(view,key);
+        
+        try {
+            mbeanServer.registerMBean(view,key);
+            registeredMBeans.add(key);
+        } catch (Throwable e) {
+            log.warn("Failed to register MBean: "+key);
+            log.debug("Failure reason: "+e,e);
+        }
+        
     }
 
     protected void unregisterSubscription(ObjectName key) throws Exception{
@@ -298,7 +315,12 @@ public class ManagedRegionBroker extends RegionBroker {
         temporaryQueueSubscribers.remove(key);
         temporaryTopicSubscribers.remove(key);
         if(registeredMBeans.remove(key)){
-            mbeanServer.unregisterMBean(key);
+            try {
+                mbeanServer.unregisterMBean(key);
+            } catch (Throwable e) {
+                log.warn("Failed to unregister MBean: "+key);
+                log.debug("Failure reason: "+e,e);
+            }
         }
         DurableSubscriptionView view=(DurableSubscriptionView) durableTopicSubscribers.remove(key);
         if(view!=null){
@@ -346,8 +368,15 @@ public class ManagedRegionBroker extends RegionBroker {
                             +","+"Type=Subscription,"+"active=false,"+"name="
                             +JMXSupport.encodeObjectNamePart(key.toString())+"");
             SubscriptionView view=new InactiveDurableSubscriptionView(this,key.getClientId(),info);
-            registeredMBeans.add(objectName);
-            mbeanServer.registerMBean(view,objectName);
+            
+            try {
+                mbeanServer.registerMBean(view,objectName);
+                registeredMBeans.add(objectName);
+            } catch (Throwable e) {
+                log.warn("Failed to register MBean: "+key);
+                log.debug("Failure reason: "+e,e);
+            }            
+            
             inactiveDurableTopicSubscribers.put(objectName,view);
             subscriptionKeys.put(key,objectName);
         }catch(Exception e){

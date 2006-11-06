@@ -44,9 +44,9 @@ public class MockTransport extends DefaultTransportListener implements Transport
     synchronized public void setTransportListener(TransportListener channelListener) {
         this.transportListener = channelListener;
         if (channelListener == null)
-            next.setTransportListener(null);
+            getNext().setTransportListener(null);
         else
-            next.setTransportListener(this);
+            getNext().setTransportListener(this);
     }
 
 
@@ -55,26 +55,26 @@ public class MockTransport extends DefaultTransportListener implements Transport
      * @throws IOException if the next channel has not been set.
      */
     public void start() throws Exception {
-        if( next == null )
+        if( getNext() == null )
             throw new IOException("The next channel has not been set.");
         if( transportListener == null )
             throw new IOException("The command listener has not been set.");
-        next.start();
+        getNext().start();
     }
 
     /**
      * @see org.apache.activemq.Service#stop()
      */
     public void stop() throws Exception {
-        next.stop();
+        getNext().stop();
     }    
 
-    synchronized public void onCommand(Object command) {
-        transportListener.onCommand(command);
+    public void onCommand(Object command) {
+        getTransportListener().onCommand(command);
     }
 
     /**
-     * @return Returns the next.
+     * @return Returns the getNext().
      */
     synchronized public Transport getNext() {
         return next;
@@ -87,49 +87,49 @@ public class MockTransport extends DefaultTransportListener implements Transport
         return transportListener;
     }
     
-    synchronized public String toString() {
-        return next.toString();
+    public String toString() {
+        return getNext().toString();
     }
 
-    synchronized public void oneway(Object command) throws IOException {
-        next.oneway(command);
+    public void oneway(Object command) throws IOException {
+        getNext().oneway(command);
     }
 
-    synchronized public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
-        return next.asyncRequest(command, null);
+    public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
+        return getNext().asyncRequest(command, null);
     }
 
-    synchronized public Object request(Object command) throws IOException {
-        return next.request(command);
+    public Object request(Object command) throws IOException {
+        return getNext().request(command);
     }
     
     public Object request(Object command,int timeout) throws IOException {
-        return next.request(command, timeout);
+        return getNext().request(command, timeout);
     }
 
-    synchronized public void onException(IOException error) {
-        transportListener.onException(error);
+    public void onException(IOException error) {
+        getTransportListener().onException(error);
     }
 
-    synchronized public Object narrow(Class target) {
+    public Object narrow(Class target) {
         if( target.isAssignableFrom(getClass()) ) {
             return this;
         }
-        return next.narrow(target);
+        return getNext().narrow(target);
     }
 
     synchronized public void setNext(Transport next) {
         this.next = next;
     }
 
-    synchronized public void install(TransportFilter filter) {
+    public void install(TransportFilter filter) {
         filter.setTransportListener(this);
         getNext().setTransportListener(filter);
         setNext(filter);
     }
 
 	public String getRemoteAddress() {
-		return next.getRemoteAddress();
+		return getNext().getRemoteAddress();
 	}  
     
 }

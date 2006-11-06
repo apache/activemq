@@ -71,6 +71,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -93,23 +96,31 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     private boolean manageable;
 
     protected final ConcurrentHashMap localConnectionStates = new ConcurrentHashMap();
-	protected final Map brokerConnectionStates;
+    protected final Map brokerConnectionStates;
     
     private WireFormatInfo wireFormatInfo;    
-    protected boolean disposed=false;
+    protected final AtomicBoolean disposed=new AtomicBoolean(false);
     protected IOException transportException;
+    private CountDownLatch stopLatch = new CountDownLatch(1);
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
         private final ConnectionContext context;
+        AbstractConnection connection;
 
-        public ConnectionState(ConnectionInfo info, ConnectionContext context) {
+        public ConnectionState(ConnectionInfo info, ConnectionContext context, AbstractConnection connection) {
             super(info);
             this.context = context;
+            this.connection=connection;
         }
         
         public ConnectionContext getContext() {
             return context;
         }
+        
+        public AbstractConnection getConnection() {
+            return connection;
+        }
+        
     }
 
     
@@ -152,39 +163,68 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
     public void stop() throws Exception{
-        if(disposed)
-            return;
-        disposed=true;
-        
-        if( taskRunner!=null )
-            taskRunner.shutdown();
-        
-        //
-        // Remove all logical connection associated with this connection
-        // from the broker.
-        if(!broker.isStopped()){
-            ArrayList l=new ArrayList(localConnectionStates.keySet());
-            for(Iterator iter=l.iterator();iter.hasNext();){
-                ConnectionId connectionId=(ConnectionId) iter.next();
-                try{
-                    processRemoveConnection(connectionId);
-                }catch(Throwable ignore){}
-            }
-            if(brokerInfo!=null){
-                broker.removeBroker(this,brokerInfo);
-            }
+        if(disposed.compareAndSet(false, true)) {
+	        
+	        if( taskRunner!=null )
+	            taskRunner.shutdown();
+	        
+	        // Clear out the dispatch queue to release any memory that
+	        // is being held on to.
+	        dispatchQueue.clear();
+	        
+	        //
+	        // Remove all logical connection associated with this connection
+	        // from the broker.
+	        if(!broker.isStopped()){
+	            ArrayList l=new ArrayList(localConnectionStates.keySet());
+	            for(Iterator iter=l.iterator();iter.hasNext();){
+	                ConnectionId connectionId=(ConnectionId) iter.next();
+	                try{
+	                	log.debug("Cleaning up connection resources.");
+	                    processRemoveConnection(connectionId);
+	                }catch(Throwable ignore){
+	                	ignore.printStackTrace();
+	                }
+	            }
+	            if(brokerInfo!=null){
+	                broker.removeBroker(this,brokerInfo);
+	            }
+	        }
+			stopLatch.countDown();
         }
     }
     
     public void serviceTransportException(IOException e) {
-        if( !disposed ) {
-            transportException = e;	
+        if( !disposed.get() ) {
+            transportException = e; 
             if( transportLog.isDebugEnabled() )
                 transportLog.debug("Transport failed: "+e,e);
             ServiceSupport.dispose(this);
         }
     }
-        
+    
+    /**
+     * Calls the serviceException method in an async thread.  Since 
+     * handling a service exception closes a socket, we should not tie 
+     * up broker threads since client sockets may hang or cause deadlocks.
+     * 
+     * @param e
+     */
+	public void serviceExceptionAsync(final IOException e) {
+		new Thread("Async Exception Handler") {
+			public void run() {
+				serviceException(e);
+			}
+		}.start();
+	}
+
+	/**
+	 * Closes a clients connection due to a detected error.
+	 * 
+	 * Errors are ignored if: the client is closing or broker is closing.
+	 * Otherwise, the connection error transmitted to the client before stopping it's
+	 * transport.
+	 */
     public void serviceException(Throwable e) {
         // are we a transport exception such as not being able to dispatch
         // synchronously to a transport
@@ -195,9 +235,9 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         // Handle the case where the broker is stopped 
         // But the client is still connected.
         else if (e.getClass() == BrokerStoppedException.class ) {
-            if( !disposed ) {
+            if( !disposed.get() ) {
                 if( serviceLog.isDebugEnabled() )
-                	serviceLog.debug("Broker has been stopped.  Notifying client and closing his connection.");
+                    serviceLog.debug("Broker has been stopped.  Notifying client and closing his connection.");
                 
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
@@ -205,21 +245,21 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
                 
                 // Wait a little bit to try to get the output buffer to flush the exption notification to the client.
                 try {
-					Thread.sleep(500);
-				} catch (InterruptedException ie) {
-					Thread.currentThread().interrupt();
-				}
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
                 
-				// Worst case is we just kill the connection before the notification gets to him.
+                // Worst case is we just kill the connection before the notification gets to him.
                 ServiceSupport.dispose(this);
             }
         }
         
-        else if( !disposed && !inServiceException ) {
+        else if( !disposed.get() && !inServiceException ) {
             inServiceException = true;
                 try {
                 if( serviceLog.isDebugEnabled() )
-                	serviceLog.debug("Async error occurred: "+e,e);
+                    serviceLog.debug("Async error occurred: "+e,e);
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
                 dispatchAsync(ce);
@@ -238,8 +278,8 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
             response = command.visit(this);
         } catch ( Throwable e ) {
             if( responseRequired ) {
-            	if( serviceLog.isDebugEnabled() && e.getClass()!=BrokerStoppedException.class )
-            		serviceLog.debug("Error occured while processing sync command: "+e,e);
+                if( serviceLog.isDebugEnabled() && e.getClass()!=BrokerStoppedException.class )
+                    serviceLog.debug("Error occured while processing sync command: "+e,e);
                 response = new ExceptionResponse(e);
             } else {
                 serviceException(e);
@@ -312,7 +352,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         // Avoid replaying dup commands
         if( cs.getTransactionState(info.getTransactionId())==null ) {
-        	cs.addTransactionState(info.getTransactionId());
+            cs.addTransactionState(info.getTransactionId());
             broker.beginTransaction(context, info.getTransactionId());
         }
         return null;
@@ -371,7 +411,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         }
         
         cs.removeTransactionState(info.getTransactionId());
-    	broker.commitTransaction(context, info.getTransactionId(), false);
+        broker.commitTransaction(context, info.getTransactionId(), false);
         return null;
     }
 
@@ -383,7 +423,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         }
         
         cs.removeTransactionState(info.getTransactionId());
-    	broker.rollbackTransaction(context, info.getTransactionId());
+        broker.rollbackTransaction(context, info.getTransactionId());
         return null;
     }
     
@@ -409,7 +449,7 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
 
     public Response processMessage(Message messageSend) throws Exception {
-    	
+        
         ProducerId producerId = messageSend.getProducerId();
         ConnectionState state = lookupConnectionState(producerId);
         ConnectionContext context = state.getContext();
@@ -418,21 +458,21 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         // then, finde the associated producer state so we can do some dup detection.
         ProducerState producerState=null;        
         if( messageSend.getMessageId().getProducerId().equals( messageSend.getProducerId() ) ) {
-	        SessionState ss = state.getSessionState(producerId.getParentId());
-	        if( ss == null )
-	            throw new IllegalStateException("Cannot send from a session that had not been registered: "+producerId.getParentId());
-	        producerState = ss.getProducerState(producerId); 
+            SessionState ss = state.getSessionState(producerId.getParentId());
+            if( ss == null )
+                throw new IllegalStateException("Cannot send from a session that had not been registered: "+producerId.getParentId());
+            producerState = ss.getProducerState(producerId); 
         }
         
         if( producerState == null ) {
             broker.send(context, messageSend);
         } else {
-	        // Avoid Dups.
-	        long seq = messageSend.getMessageId().getProducerSequenceId();
-	        if( seq > producerState.getLastSequenceId() ) {
-	        	producerState.setLastSequenceId(seq);
-	            broker.send(context, messageSend);
-	        }
+            // Avoid Dups.
+            long seq = messageSend.getMessageId().getProducerSequenceId();
+            if( seq > producerState.getLastSequenceId() ) {
+                producerState.setLastSequenceId(seq);
+                broker.send(context, messageSend);
+            }
         }
         
         return null;
@@ -453,12 +493,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
 
     public Response processBrokerInfo(BrokerInfo info) {
-    	
-    	// We only expect to get one broker info command per connection
-    	if( this.brokerInfo!=null ) {
-    		log.warn("Unexpected extra broker info command received: "+info);
-    	}
-    	
+        
+        // We only expect to get one broker info command per connection
+        if( this.brokerInfo!=null ) {
+            log.warn("Unexpected extra broker info command received: "+info);
+        }
+        
         this.brokerInfo = info;
         broker.addBroker(this, info);
         return null;
@@ -494,12 +534,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
         // Avoid replaying dup commands
         if( !ss.getProducerIds().contains(info.getProducerId()) ) {
-	        broker.addProducer(cs.getContext(), info);
-	        try {
-	            ss.addProducer(info);
-			} catch (IllegalStateException e) {
-				broker.removeProducer(cs.getContext(), info);
-			}
+            broker.addProducer(cs.getContext(), info);
+            try {
+                ss.addProducer(info);
+            } catch (IllegalStateException e) {
+                broker.removeProducer(cs.getContext(), info);
+            }
         }
         return null;
     }
@@ -531,12 +571,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
 
         // Avoid replaying dup commands
         if( !ss.getConsumerIds().contains(info.getConsumerId()) ) {
-	        broker.addConsumer(cs.getContext(), info);
-	        try {
-				ss.addConsumer(info);
-			} catch (IllegalStateException e) {
-				broker.removeConsumer(cs.getContext(), info);
-			}
+            broker.addConsumer(cs.getContext(), info);
+            try {
+                ss.addConsumer(info);
+            } catch (IllegalStateException e) {
+                broker.removeConsumer(cs.getContext(), info);
+            }
         }
         
         return null;
@@ -565,12 +605,12 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         
         // Avoid replaying dup commands
         if( !cs.getSessionIds().contains(info.getSessionId()) ) {
-	    	broker.addSession(cs.getContext(), info);
-	        try {
-	            cs.addSession(info);
-			} catch (IllegalStateException e) {
-				broker.removeSession(cs.getContext(), info);
-			}
+            broker.addSession(cs.getContext(), info);
+            try {
+                cs.addSession(info);
+            } catch (IllegalStateException e) {
+                broker.removeSession(cs.getContext(), info);
+            }
         }
         return null;
     }
@@ -613,34 +653,51 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
     }
     
     public Response processAddConnection(ConnectionInfo info) throws Exception {
+
     	ConnectionState state = (ConnectionState) brokerConnectionStates.get(info.getConnectionId());
-    	if( state == null ) {
-            // Setup the context.
-            ConnectionContext context = new ConnectionContext(info);
-            context.setConnection(this);
-            context.setBroker(broker);
-            context.setConnector(connector);
-            context.setTransactions(new ConcurrentHashMap());
-            context.setWireFormatInfo(wireFormatInfo);
-            this.manageable = info.isManageable();
-            context.incrementReference();
-	        
-	        state = new ConnectionState(info, context);
-	        brokerConnectionStates.put(info.getConnectionId(), state);
-	        localConnectionStates.put(info.getConnectionId(), state);	        
-	        
-	        broker.addConnection(context, info);
-	        if (info.isManageable() && broker.isFaultTolerantConfiguration()){
-	            //send ConnectionCommand
-	            ConnectionControl command = new ConnectionControl();
-	            command.setFaultTolerant(broker.isFaultTolerantConfiguration());
-	            dispatchAsync(command);
-	        }
-    	} else {
-    		// We are a concurrent connection... it must be client reconnect.
-    		localConnectionStates.put(info.getConnectionId(), state);
-    		state.getContext().incrementReference();
+    	
+    	if( state !=null ) {
+    		// ConnectionInfo replay??  Chances are that it's a client reconnecting,
+    		// and we have not detected that that old connection died.. Kill the old connection
+    		// to make sure our state is in sync with the client.
+    		if( this != state.getConnection() ) {
+    			log.debug("Killing previous stale connection: "+state.getConnection());
+    			state.getConnection().stop();
+    			if( !state.getConnection().stopLatch.await(15, TimeUnit.SECONDS) ) {
+    				throw new Exception("Previous connection could not be clean up.");
+    			}
+    		}
     	}
+    	
+		log.debug("Setting up new connection: "+this);
+
+    	
+        // Setup the context.
+        String clientId = info.getClientId();
+        ConnectionContext context = new ConnectionContext();
+        context.setConnection(this);
+        context.setBroker(broker);
+        context.setConnector(connector);
+        context.setTransactions(new ConcurrentHashMap());
+        context.setClientId(clientId);
+        context.setUserName(info.getUserName());
+        context.setConnectionId(info.getConnectionId());
+        context.setWireFormatInfo(wireFormatInfo);
+        context.incrementReference();
+        this.manageable = info.isManageable();
+        
+        state = new ConnectionState(info, context, this);
+        brokerConnectionStates.put(info.getConnectionId(), state);
+        localConnectionStates.put(info.getConnectionId(), state);           
+        
+        broker.addConnection(context, info);
+        if (info.isManageable() && broker.isFaultTolerantConfiguration()){
+            //send ConnectionCommand
+            ConnectionControl command = new ConnectionControl();
+            command.setFaultTolerant(broker.isFaultTolerantConfiguration());
+            dispatchAsync(command);
+        }
+
         return null;
     }
     
@@ -680,11 +737,11 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
         }
         ConnectionState state = (ConnectionState) localConnectionStates.remove(id);
         if( state != null ) {
-        	// If we are the last reference, we should remove the state
-        	// from the broker.
-        	if( state.getContext().decrementReference() == 0 ){ 
-        		brokerConnectionStates.remove(id);
-        	}
+            // If we are the last reference, we should remove the state
+            // from the broker.
+            if( state.getContext().decrementReference() == 0 ){ 
+                brokerConnectionStates.remove(id);
+            }
         }
         return null;
     }
@@ -758,14 +815,14 @@ public abstract class AbstractConnection implements Service, Connection, Task, C
      * @return true if the Connection is connected
      */
     public boolean isConnected() {
-        return !disposed;
+        return !disposed.get();
     }
     
     /**
      * @return true if the Connection is active
      */
     public boolean isActive() {
-        return !disposed;
+        return !disposed.get();
     }
     
     
