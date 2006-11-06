@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @version $Revision: 1.8 $
@@ -46,7 +47,8 @@ public class TransportConnection extends AbstractConnection {
     private boolean pendingStop;
     private long timeStamp = 0;
     private MasterBroker masterBroker; //used if this connection is used by a Slave
-
+    private AtomicBoolean stopped = new AtomicBoolean(false);
+    
     /**
      * @param connector
      * @param transport
@@ -93,34 +95,41 @@ public class TransportConnection extends AbstractConnection {
         }
     }
 
-    public synchronized void stop() throws Exception {
+    public void stop() throws Exception {
         // If we're in the middle of starting
         // then go no further... for now.
-        pendingStop = true;
-        if (starting) {
-            log.debug("stop() called in the middle of start(). Delaying...");
-            return;
+        synchronized(this) { 
+	        pendingStop = true;
+	        if (starting) {
+	            log.debug("stop() called in the middle of start(). Delaying...");
+	            return;
+	        }
         }
 
-        connector.onStopped(this);
-        try {
-            if (masterBroker != null) {
-                masterBroker.stop();
-            }
+    	
+    	if( stopped.compareAndSet(false, true) ) {
 
-            // If the transport has not failed yet,
-            // notify the peer that we are doing a normal shutdown.
-            if (transportException == null) {
-                transport.oneway(new ShutdownInfo());
-            }
-        }
-        catch (Exception ignore) {
-            //ignore.printStackTrace();
-        }
-
-        transport.stop();
-        active = false;
-        super.stop();
+    		log.debug("Stopping connection: "+transport.getRemoteAddress());
+	        connector.onStopped(this);
+	        try {
+	            if (masterBroker != null){
+	                masterBroker.stop();
+	            }
+	            
+	            // If the transport has not failed yet,
+	            // notify the peer that we are doing a normal shutdown.
+	            if( transportException == null ) {
+	            	transport.oneway(new ShutdownInfo());
+	            }
+	        } catch (Exception ignore) {
+	            //ignore.printStackTrace();
+	        }
+	
+	        transport.stop();
+	        active = false;
+	        super.stop();
+    		log.debug("Stopped connection: "+transport.getRemoteAddress());
+    	}
     }
 
 
@@ -269,7 +278,7 @@ public class TransportConnection extends AbstractConnection {
             getStatistics().onCommand(command);
         }
         catch (IOException e) {
-            serviceException(e);
+            serviceExceptionAsync(e);
         }
         finally {
             setMarkedCandidate(false);

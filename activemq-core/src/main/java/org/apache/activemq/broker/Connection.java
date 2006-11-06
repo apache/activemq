@@ -17,6 +17,8 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.Command;
@@ -101,5 +103,7 @@ public interface Connection extends Service {
      * @return the source address for this connection
      */
 	public String getRemoteAddress();
+
+	public void serviceExceptionAsync(IOException e);
 
 }

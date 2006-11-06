@@ -38,7 +38,7 @@ public class InactivityMonitor extends TransportFilter {
     
     private WireFormatInfo localWireFormatInfo;
     private WireFormatInfo remoteWireFormatInfo;
-    private boolean monitorStarted=false;
+    private final AtomicBoolean monitorStarted= new AtomicBoolean(false);
 
     private final AtomicBoolean commandSent=new AtomicBoolean(false);
     private final AtomicBoolean inSend=new AtomicBoolean(false);
@@ -145,13 +145,15 @@ public class InactivityMonitor extends TransportFilter {
     }
     
     public void onException(IOException error) {
-        stopMonitorThreads();
-        transportListener.onException(error);
+    	if( monitorStarted.get() ) {
+	        stopMonitorThreads();
+	        getTransportListener().onException(error);
+    	}
     }
     
     
     synchronized private void startMonitorThreads() throws IOException {
-        if( monitorStarted ) 
+        if( monitorStarted.get() ) 
             return;
         if( localWireFormatInfo == null )
             return;
@@ -160,9 +162,9 @@ public class InactivityMonitor extends TransportFilter {
         
         long l = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
         if( l > 0 ) {
+            monitorStarted.set(true);        
             Scheduler.executePeriodically(writeChecker, l/2);
             Scheduler.executePeriodically(readChecker, l);
-            monitorStarted=true;        
         }
     }
     
@@ -170,10 +172,9 @@ public class InactivityMonitor extends TransportFilter {
      * 
      */
     synchronized private void stopMonitorThreads() {
-        if( monitorStarted ) {
+        if( monitorStarted.compareAndSet(true, false) ) {
             Scheduler.cancel(readChecker);
             Scheduler.cancel(writeChecker);
-            monitorStarted=false;
         }
     }
     
