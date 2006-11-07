@@ -80,6 +80,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         else {
             info.setBrokerPath(null);
         }
+        info.setDispatchAsync(bs.readBoolean());
 
     }
 
@@ -95,6 +96,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
         rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
+        bs.writeBoolean(info.isDispatchAsync());
 
         return rc + 0;
     }
@@ -113,6 +115,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getProducerId(), dataOut, bs);
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
         tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+        bs.readBoolean();
 
     }
 
@@ -141,6 +144,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         else {
             info.setBrokerPath(null);
         }
+        info.setDispatchAsync(dataIn.readBoolean());
 
     }
 
@@ -156,6 +160,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getProducerId(), dataOut);
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
         looseMarshalObjectArray(wireFormat, info.getBrokerPath(), dataOut);
+        dataOut.writeBoolean(info.isDispatchAsync());
 
     }
 }

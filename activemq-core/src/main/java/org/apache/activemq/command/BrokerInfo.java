@@ -37,6 +37,7 @@ public class BrokerInfo extends BaseCommand{
     boolean duplexConnection;
     BrokerInfo peerBrokerInfos[];
     String brokerName;
+    long connectionId;
 
     public boolean isBrokerInfo(){
         return true;
@@ -169,4 +170,19 @@ public class BrokerInfo extends BaseCommand{
     public void setNetworkConnection(boolean networkConnection){
         this.networkConnection=networkConnection;
     }
+
+    /**
+     * The broker assigns a each connection it accepts a connection id.
+     * 
+     * @openwire:property version=2
+     */
+	public long getConnectionId() {
+		return connectionId;
+	}
+
+	public void setConnectionId(long connectionId) {
+		this.connectionId = connectionId;
+	}
+
+  
 }

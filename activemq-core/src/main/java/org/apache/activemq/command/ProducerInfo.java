@@ -31,6 +31,7 @@ public class ProducerInfo extends BaseCommand {
     protected ProducerId producerId;
     protected ActiveMQDestination destination;
     protected BrokerId[] brokerPath;
+    protected boolean dispatchAsync;
     
     public ProducerInfo() {
     }
@@ -100,5 +101,20 @@ public class ProducerInfo extends BaseCommand {
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processAddProducer( this );
     }
+
+    /**
+     * If the broker should dispatch messages from this producer async.  Since sync
+     * dispatch could potentally block the producer thread, this could be an important
+     * setting for the producer.
+     * 
+     * @openwire:property version=2
+     */
+	public boolean isDispatchAsync() {
+		return dispatchAsync;
+	}
+
+	public void setDispatchAsync(boolean dispatchAsync) {
+		this.dispatchAsync = dispatchAsync;
+	}
 
 }

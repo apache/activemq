@@ -60,5 +60,6 @@ public class ProducerInfoTest extends BaseCommandTestSupport {
             }
             info.setBrokerPath(value);
         }
+        info.setDispatchAsync(true);
     }
 }
