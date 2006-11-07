@@ -66,5 +66,6 @@ public class BrokerInfoTest extends BaseCommandTestSupport {
         info.setFaultTolerantConfiguration(true);
         info.setDuplexConnection(false);
         info.setNetworkConnection(true);
+        info.setConnectionId(1);
     }
 }

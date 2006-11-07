@@ -86,6 +86,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         info.setFaultTolerantConfiguration(bs.readBoolean());
         info.setDuplexConnection(bs.readBoolean());
         info.setNetworkConnection(bs.readBoolean());
+        info.setConnectionId(tightUnmarshalLong(wireFormat, dataIn, bs));
 
     }
 
@@ -107,6 +108,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isFaultTolerantConfiguration());
         bs.writeBoolean(info.isDuplexConnection());
         bs.writeBoolean(info.isNetworkConnection());
+        rc+=tightMarshalLong1(wireFormat, info.getConnectionId(), bs);
 
         return rc + 0;
     }
@@ -131,6 +133,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         bs.readBoolean();
         bs.readBoolean();
         bs.readBoolean();
+        tightMarshalLong2(wireFormat, info.getConnectionId(), dataOut, bs);
 
     }
 
@@ -165,6 +168,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         info.setFaultTolerantConfiguration(dataIn.readBoolean());
         info.setDuplexConnection(dataIn.readBoolean());
         info.setNetworkConnection(dataIn.readBoolean());
+        info.setConnectionId(looseUnmarshalLong(wireFormat, dataIn));
 
     }
 
@@ -186,6 +190,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         dataOut.writeBoolean(info.isFaultTolerantConfiguration());
         dataOut.writeBoolean(info.isDuplexConnection());
         dataOut.writeBoolean(info.isNetworkConnection());
+        looseMarshalLong(wireFormat, info.getConnectionId(), dataOut);
 
     }
 }
