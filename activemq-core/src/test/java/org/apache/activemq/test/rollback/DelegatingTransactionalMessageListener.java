@@ -55,7 +55,7 @@ public class DelegatingTransactionalMessageListener implements MessageListener {
             underlyingListener.onMessage(message);
             session.commit();
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             rollback();
         }
     }
