@@ -138,29 +138,29 @@ public final class DataByteArrayOutputStream extends OutputStream implements Dat
     
 
     public void writeBoolean(boolean v){
-        ensureEnoughBuffer(1);
+        ensureEnoughBuffer(pos + 1);
         buf[pos++]=(byte) (v?1:0);
     }
 
     public void writeByte(int v){
-        ensureEnoughBuffer(1);
+        ensureEnoughBuffer(pos + 1);
         buf[pos++]=(byte) (v>>>0);
     }
 
     public void writeShort(int v){
-        ensureEnoughBuffer(2);
+        ensureEnoughBuffer(pos + 2);
         buf[pos++]=(byte) (v>>>8);
         buf[pos++]=(byte) (v>>>0);
     }
 
     public void writeChar(int v){
-        ensureEnoughBuffer(2);
+        ensureEnoughBuffer(pos + 2);
         buf[pos++]=(byte) (v>>>8);
         buf[pos++]=(byte) (v>>>0);
     }
 
     public void writeInt(int v){
-        ensureEnoughBuffer(4);
+        ensureEnoughBuffer(pos + 4);
         buf[pos++]=(byte) (v>>>24);
         buf[pos++]=(byte) (v>>>16);
         buf[pos++]=(byte) (v>>>8);
@@ -168,7 +168,7 @@ public final class DataByteArrayOutputStream extends OutputStream implements Dat
     }
 
     public void writeLong(long v){
-        ensureEnoughBuffer(8);
+        ensureEnoughBuffer(pos + 8);
         buf[pos++]=(byte) (v>>>56);
         buf[pos++]=(byte) (v>>>48);
         buf[pos++]=(byte) (v>>>40);
@@ -219,7 +219,7 @@ public final class DataByteArrayOutputStream extends OutputStream implements Dat
         }
         if(encodedsize>65535)
             throw new UTFDataFormatException("encoded string too long: "+encodedsize+" bytes");
-        ensureEnoughBuffer(encodedsize+2);
+        ensureEnoughBuffer(pos + encodedsize+2);
         writeShort(encodedsize);
         int i=0;
         for(i=0;i<strlen;i++){
