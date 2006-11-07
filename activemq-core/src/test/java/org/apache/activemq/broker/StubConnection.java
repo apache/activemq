@@ -25,10 +25,9 @@ import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 
@@ -41,36 +40,14 @@ public class StubConnection implements Service {
     private Connection connection;
     private Transport transport;
     boolean shuttingDown = false;
-    private OpenWireFormat wireFormat = new OpenWireFormat();
     
-    public StubConnection(BrokerService broker) throws Exception {
-        this(broker, null);
-    }
-
-    public StubConnection(BrokerService broker, TaskRunnerFactory taskRunnerFactory) throws Exception {
-        connection = new AbstractConnection(null, broker.getBroker(), null) {
-            protected void dispatch(Command command) {
-                try {
-                    StubConnection.this.dispatch(command);
-                }
-                catch (Exception e) {
-                    serviceException(e);
-                }
-            }
-
-            protected OpenWireFormat getWireFormat() {
-                return wireFormat;
-            }
-
-			public String getRemoteAddress() {
-				return null;
-			}
-        };
-    }
-
     protected void dispatch(Object command) throws InterruptedException, IOException {
         dispatchQueue.put(command);
     }
+
+    public StubConnection(BrokerService broker) throws Exception {
+		this(TransportFactory.connect(broker.getVmConnectorURI()));
+	}
 
     public StubConnection(Connection connection) {
         this.connection = connection;
@@ -100,7 +77,7 @@ public class StubConnection implements Service {
         transport.start();
     }
 
-    public BlockingQueue getDispatchQueue() {
+	public BlockingQueue getDispatchQueue() {
         return dispatchQueue;
     }
 
