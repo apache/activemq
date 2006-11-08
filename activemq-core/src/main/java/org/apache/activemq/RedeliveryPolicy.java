@@ -32,7 +32,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
 
     // +/-15% for a 30% spread -cgs
     protected double collisionAvoidanceFactor = 0.15d;
-    protected int maximumRedeliveries = 5;
+    protected int maximumRedeliveries = 6;
     protected long initialRedeliveryDelay = 1000L;
     protected static Random randomNumberGenerator;
     protected boolean useCollisionAvoidance = false;

@@ -57,7 +57,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
     protected RedeliveryPolicy getRedeliveryPolicy() {
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
         redeliveryPolicy.setInitialRedeliveryDelay(1000);
-        redeliveryPolicy.setMaximumRedeliveries(2);
+        redeliveryPolicy.setMaximumRedeliveries(3);
         redeliveryPolicy.setBackOffMultiplier((short) 2);
         redeliveryPolicy.setUseExponentialBackOff(true);
         return redeliveryPolicy;
@@ -82,7 +82,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
             try {
                 log.info("Message Received: " + message);
                 counter++;
-                if (counter <= 3) {
+                if (counter <= 4) {
                     log.info("Message Rollback.");
                     session.rollback();
                 } else {
@@ -119,24 +119,26 @@ public class MessageListenerRedeliveryTest extends TestCase {
         } catch (InterruptedException e) {
 
         }
-        // first try
-        assertEquals(1, listener.counter);
+        
+        // first try.. should get 2 since there is no delay on the 
+        // first redeliver..
+        assertEquals(2, listener.counter);
 
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
 
         }
-        // second try (redelivery after 1 sec)
-        assertEquals(2, listener.counter);
+        // 2nd redeliver (redelivery after 1 sec)
+        assertEquals(3, listener.counter);
 
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
 
         }
-        // third try (redelivery after 2 seconds) - it should give up after that
-        assertEquals(3, listener.counter);
+        // 3rd redeliver (redelivery after 2 seconds) - it should give up after that
+        assertEquals(4, listener.counter);
 
         // create new message
         producer.send(createTextMessage(session));
@@ -148,7 +150,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
             // ignore
         }
         // it should be committed, so no redelivery
-        assertEquals(4, listener.counter);
+        assertEquals(5, listener.counter);
 
         try {
             Thread.sleep(1500);
@@ -156,7 +158,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
             // ignore
         }
         // no redelivery, counter should still be 4
-        assertEquals(4, listener.counter);
+        assertEquals(5, listener.counter);
 
         session.close();
     }
@@ -184,8 +186,8 @@ public class MessageListenerRedeliveryTest extends TestCase {
         } catch (InterruptedException e) {
 
         }
-        // first try
-        assertEquals(1, listener.counter);
+        // first try 
+        assertEquals(2, listener.counter);
 
         try {
             Thread.sleep(1000);
@@ -193,7 +195,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
 
         }
         // second try (redelivery after 1 sec)
-        assertEquals(2, listener.counter);
+        assertEquals(3, listener.counter);
 
         try {
             Thread.sleep(2000);
@@ -201,7 +203,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
 
         }
         // third try (redelivery after 2 seconds) - it should give up after that
-        assertEquals(3, listener.counter);
+        assertEquals(4, listener.counter);
 
         // create new message
         producer.send(createTextMessage(session));
@@ -213,7 +215,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
             // ignore
         }
         // it should be committed, so no redelivery
-        assertEquals(4, listener.counter);
+        assertEquals(5, listener.counter);
 
         try {
             Thread.sleep(1500);
@@ -221,7 +223,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
             // ignore
         }
         // no redelivery, counter should still be 4
-        assertEquals(4, listener.counter);
+        assertEquals(5, listener.counter);
 
         session.close();
     }
