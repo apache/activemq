@@ -45,7 +45,7 @@ public class RollbacksWhileConsumingLargeQueueTest extends
 	private CountDownLatch latch;
 	private Throwable failure;
 
-	public void xtestWithReciever() throws Throwable {
+	public void testWithReciever() throws Throwable {
 		latch = new CountDownLatch(numberOfMessagesOnQueue);
 		Session session = connection.createSession(true, 0);
 		MessageConsumer consumer = session.createConsumer(destination);
@@ -148,11 +148,11 @@ public class RollbacksWhileConsumingLargeQueueTest extends
 
 		int value = deliveryCounter.incrementAndGet();
 		if (value % 2 == 0) {
-			log.info("Rolling Back message: " + value + " id: " + msgId + ", content: " + msgText);
+			log.info("Rolling Back message: " + ackCounter.get() + " id: " + msgId + ", content: " + msgText);
 			throw new RuntimeException("Dummy exception on message: " + value);
 		}
 
-		log.info("Received message: " + value + " id: " + msgId + ", content: " + msgText);
+		log.info("Received message: " + ackCounter.get() + " id: " + msgId + ", content: " + msgText);
 		ackCounter.incrementAndGet();
 		latch.countDown();
 	}

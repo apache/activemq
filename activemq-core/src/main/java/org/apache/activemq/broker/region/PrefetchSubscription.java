@@ -183,6 +183,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                                     prefetchExtension--;
                                 }
                             }
+
+                            public void afterRollback() throws Exception {
+                            	super.afterRollback();
+                            }
                         });
                     }
                     index++;

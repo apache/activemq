@@ -254,8 +254,6 @@
             <!-- TODO need to get the JUnit test configured to create SSL sockets nicely via system properties -->
             <exclude>**/StompSslTest.*</exclude>
 
-            <!-- TODO reproduces a bad ack bug -->
-            <exclude>**/RollbacksWhileConsumingLargeQueueTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>

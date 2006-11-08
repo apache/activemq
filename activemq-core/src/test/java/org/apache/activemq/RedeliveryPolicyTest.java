@@ -70,9 +70,15 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());        
         session.rollback();
 
-        // Show re-delivery delay is incrementing.
+        // No delay on first rollback..
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        session.rollback();
+        
+        // Show subsequent re-delivery delay is incrementing.
         m = (TextMessage)consumer.receive(100);
         assertNull(m);
+        
         m = (TextMessage)consumer.receive(500);
         assertNotNull(m);
         assertEquals("1st", m.getText());        
@@ -117,7 +123,12 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());        
         session.rollback();
 
-        // Show re-delivery delay is incrementing.
+        // No delay on first rollback..
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        session.rollback();
+        
+        // Show subsequent re-delivery delay is incrementing.
         m = (TextMessage)consumer.receive(100);
         assertNull(m);
         m = (TextMessage)consumer.receive(500);
