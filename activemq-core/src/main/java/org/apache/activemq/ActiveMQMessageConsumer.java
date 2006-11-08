@@ -131,7 +131,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @param noLocal
      * @param browser
      * @param dispatchAsync
-     * @param value
      * @throws JMSException
      */
     public ActiveMQMessageConsumer(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination dest,
@@ -699,7 +698,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * Acknowledge all the messages that have been delivered to the client upto
      * this point.
      * 
-     * @param deliverySequenceId
      * @throws JMSException
      */
     public void acknowledge() throws JMSException {
@@ -740,6 +738,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
             if(deliveredMessages.isEmpty())
                 return;
+
+            // Only increase the redlivery delay after the first redelivery..
+            if( rollbackCounter > 0 )
+            	redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
+
             rollbackCounter++;
             if(rollbackCounter>redeliveryPolicy.getMaximumRedeliveries()){
                 // We need to NACK the messages so that they get sent to the
@@ -755,28 +758,28 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }else{
                 // stop the delivery of messages.
                 unconsumedMessages.stop();
-                // Start up the delivery again a little later.
-                if(redeliveryDelay==0){
-                    redeliveryDelay=redeliveryPolicy.getInitialRedeliveryDelay();
-                }else{
-                    if(redeliveryPolicy.isUseExponentialBackOff())
-                        redeliveryDelay*=redeliveryPolicy.getBackOffMultiplier();
-                }
-                Scheduler.executeAfterDelay(new Runnable(){
-                    public void run(){
-                        try{
-                            if(started.get())
-                                start();
-                        }catch(JMSException e){
-                            session.connection.onAsyncException(e);
-                        }
-                    }
-                },redeliveryDelay);
                 for(Iterator iter=deliveredMessages.iterator();iter.hasNext();){
                     MessageDispatch md=(MessageDispatch) iter.next();
                     md.getMessage().onMessageRolledBack();
                     unconsumedMessages.enqueueFirst(md);
                 }
+                                
+                if( redeliveryDelay > 0 ) {
+                    // Start up the delivery again a little later.
+	                Scheduler.executeAfterDelay(new Runnable(){
+	                    public void run(){
+	                        try{
+	                            if(started.get())
+	                                start();
+	                        }catch(JMSException e){
+	                            session.connection.onAsyncException(e);
+	                        }
+	                    }
+	                },redeliveryDelay);
+                } else {
+                	start();
+                }
+
             }
             deliveredCounter-=deliveredMessages.size();
             deliveredMessages.clear();
@@ -789,30 +792,33 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void dispatch(MessageDispatch md) {
         MessageListener listener = this.messageListener;
         try {
-            if (!unconsumedMessages.isClosed()) {
-                if (listener != null && unconsumedMessages.isRunning() ) {
-                    ActiveMQMessage message = createActiveMQMessage(md);
-                    beforeMessageIsConsumed(md);
-                    try {
-                        listener.onMessage(message);
-                        afterMessageIsConsumed(md, false);
-                    } catch (RuntimeException e) {
-                        if ( session.isDupsOkAcknowledge() || session.isAutoAcknowledge() ) {
-                            // Redeliver the message
-                        } else {
-                            // Transacted or Client ack: Deliver the next message.
-                            afterMessageIsConsumed(md, false);
-                        }
-                    }
-                } else {
-                    unconsumedMessages.enqueue(md);
-                    if (availableListener != null) {
-                        availableListener.onMessageAvailable(this);
-                    }
-                }
+            synchronized(unconsumedMessages.getMutex()){
+	            if (!unconsumedMessages.isClosed()) {
+	                if (listener != null && unconsumedMessages.isRunning() ) {
+	                    ActiveMQMessage message = createActiveMQMessage(md);
+	                    beforeMessageIsConsumed(md);
+	                    try {
+	                        listener.onMessage(message);
+	                        afterMessageIsConsumed(md, false);
+	                    } catch (RuntimeException e) {
+	                        if ( session.isDupsOkAcknowledge() || session.isAutoAcknowledge() ) {
+	                            // Redeliver the message
+	                        } else {
+	                            // Transacted or Client ack: Deliver the next message.
+	                            afterMessageIsConsumed(md, false);
+	                        }
+	                        log.warn("Exception while processing message: " + e, e);
+	                    }
+	                } else {
+	                    unconsumedMessages.enqueue(md);
+	                    if (availableListener != null) {
+	                        availableListener.onMessageAvailable(this);
+	                    }
+	                }
+	            }
             }
         } catch (Exception e) {
-            log.warn("could not process message: " + md, e);
+        	session.connection.onAsyncException(e);
         }
     }
 
@@ -821,18 +827,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public void start() throws JMSException {
+    	if (unconsumedMessages.isClosed()) {
+    		return;
+    	}    	
         started.set(true);
         unconsumedMessages.start();
-        MessageListener listener = this.messageListener;
-        if( listener!=null ) {
-            MessageDispatch md;
-            while( (md = unconsumedMessages.dequeueNoWait())!=null ) {
-                ActiveMQMessage message = createActiveMQMessage(md);
-                beforeMessageIsConsumed(md);
-                listener.onMessage(message);
-                afterMessageIsConsumed(md, false);
-            }
-        }
+        session.executor.wakeup();
     }
 
     public void stop() {
@@ -843,5 +843,29 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public String toString() {
         return "ActiveMQMessageConsumer { value=" +info.getConsumerId()+", started=" +started.get()+" }";
     }
+
+    /**
+     * Delivers a message to the message listener.
+     * @return
+     * @throws JMSException 
+     */
+	public boolean iterate() {
+		MessageListener listener = this.messageListener;
+		if( listener!=null ) {
+		    MessageDispatch md = unconsumedMessages.dequeueNoWait();
+		    if( md!=null ) {
+		        try {
+			        ActiveMQMessage message = createActiveMQMessage(md);
+			        beforeMessageIsConsumed(md);
+			        listener.onMessage(message);
+			        afterMessageIsConsumed(md, false);
+				} catch (JMSException e) {
+		        	session.connection.onAsyncException(e);
+				}
+		        return true;
+		    }
+		}
+    	return false;
+	}
 
 }

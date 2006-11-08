@@ -61,12 +61,17 @@ public class ActiveMQSessionExecutor implements Task {
         }
     }
 
-    private void wakeup() {
-        if( taskRunner!=null && !dispatchedBySessionPool && hasUncomsumedMessages() ) {
-            try {
-                taskRunner.wakeup();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+    public void wakeup() {
+        if( !dispatchedBySessionPool ) {
+            if( taskRunner!=null ) {
+                try {
+                    taskRunner.wakeup();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                while( iterate() )
+                    ;
             }
         }
     }
@@ -144,6 +149,16 @@ public class ActiveMQSessionExecutor implements Task {
     }
 
     public boolean iterate() {
+
+    	// Deliver any messages queued on the consumer to their listeners.
+    	for (Iterator i = this.session.consumers.iterator(); i.hasNext();) {
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) i.next();
+        	if( consumer.iterate() ) {
+        		return true;
+        	}
+        }
+    	
+    	// No messages left queued on the listeners.. so now dispatch messages queued on the session
         MessageDispatch message = messageQueue.dequeueNoWait();
         if( message==null ) {
             return false;
