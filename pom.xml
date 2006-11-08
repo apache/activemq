@@ -24,7 +24,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>4.1-incubator-SNAPSHOT</version>
+  <version>4.2-incubator-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 

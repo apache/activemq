@@ -22,7 +22,7 @@
     <parent>
         <artifactId>activemq-parent</artifactId>
         <groupId>org.apache.activemq</groupId>
-        <version>4.1-incubator-SNAPSHOT</version>
+        <version>4.2-incubator-SNAPSHOT</version>
     </parent>
 
     <artifactId>activemq-perftest</artifactId>
