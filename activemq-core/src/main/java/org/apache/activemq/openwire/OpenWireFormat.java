@@ -115,7 +115,7 @@ final public class OpenWireFormat implements WireFormat {
         return version;
     }
     
-    public ByteSequence marshal(Object command) throws IOException {
+    public synchronized ByteSequence marshal(Object command) throws IOException {
         
         if( cacheEnabled ) {
             runMarshallCacheEvictionSweep();
@@ -190,7 +190,7 @@ final public class OpenWireFormat implements WireFormat {
         return sequence;
     }
     
-    public Object unmarshal(ByteSequence sequence) throws IOException {
+    public synchronized Object unmarshal(ByteSequence sequence) throws IOException {
         bytesIn.restart(sequence);
         //DataInputStream dis = new DataInputStream(new ByteArrayInputStream(sequence));
         
@@ -208,7 +208,7 @@ final public class OpenWireFormat implements WireFormat {
         return command;
     }
     
-    public void marshal(Object o, DataOutput dataOut) throws IOException {
+    public synchronized void marshal(Object o, DataOutput dataOut) throws IOException {
         
         if( cacheEnabled ) {
             runMarshallCacheEvictionSweep();
