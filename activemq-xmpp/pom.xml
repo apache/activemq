@@ -189,6 +189,8 @@
       <plugin>
         <groupId>org.jvnet.jaxb2.maven2</groupId>
         <artifactId>maven-jaxb2-plugin</artifactId>
+		<version>0.1</version>
+        <!--
         <dependencies>
           <dependency>
             <groupId>net.java.dev.jaxb2-commons</groupId>
@@ -202,6 +204,7 @@
             </exclusions>
           </dependency>
         </dependencies>
+		-->
         <executions>
           <execution>
             <goals>
