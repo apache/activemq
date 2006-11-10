@@ -44,8 +44,8 @@ public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConne
         // configure the embedded broker using an XML config file
         // which is either a URL or a resource on the classpath
         
-        File f = new File(System.getProperty("basedir", "."));
-        properties.put(Context.PROVIDER_URL, "vm://localhost?brokerConfig=xbean:file:"+f+"/src/test/resources/activemq.xml");
+        File f = new File(System.getProperty("basedir", "."), "/src/test/resources/activemq.xml");
+        properties.put(Context.PROVIDER_URL, "vm://localhost?brokerConfig=xbean:" + f.toURI());
 
         InitialContext context = new InitialContext(properties);
         ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory) context.lookup("ConnectionFactory");
