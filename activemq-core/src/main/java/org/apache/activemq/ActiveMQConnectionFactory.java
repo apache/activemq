@@ -260,7 +260,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             transport.start();
 
             if( clientID !=null )
-                connection.setClientID(clientID);
+                connection.setDefaultClientID(clientID);
 
             return connection;
         }
