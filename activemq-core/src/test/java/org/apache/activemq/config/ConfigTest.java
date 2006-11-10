@@ -115,6 +115,8 @@ public class ConfigTest extends TestCase {
      */
     public void testJdbcConfig() throws Exception {
 //        System.out.print("Checking jdbc persistence adapter configuration... ");
+        File derbyFile = new File(DERBY_ROOT + "testJDBCConfig/derbydb"); // Default derby name
+        recursiveDelete(derbyFile);
 
         BrokerService broker;
         broker = createBroker(new FileSystemResource(CONF_ROOT + "jdbc-example.xml"));
