@@ -82,7 +82,7 @@ public class Queue implements Destination {
     protected long garbageSizeBeforeCollection = 1000;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     protected final MessageStore store;
-    protected int highestSubscriptionPriority;
+    protected int highestSubscriptionPriority = Integer.MIN_VALUE;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
 
@@ -166,9 +166,14 @@ public class Queue implements Destination {
                     consumers.add(0, sub);
                 } else {
                     consumers.add(sub);
+                }
+
+                if (sub.getConsumerInfo().getPriority() > highestSubscriptionPriority) {
+                    highestSubscriptionPriority = sub.getConsumerInfo().getPriority();
+                }
             }
 
-            highestSubscriptionPriority = calcHighestSubscriptionPriority();
+            //highestSubscriptionPriority = calcHighestSubscriptionPriority();
             msgContext.setDestination(destination);
 
             synchronized (messages) {
