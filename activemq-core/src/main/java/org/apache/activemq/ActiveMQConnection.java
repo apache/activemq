@@ -358,6 +358,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.userSpecifiedClientID = true;
         ensureConnectionInfoSent();
     }
+    
+    /**
+     * Sets the default client id that the connection will use if explicitly not set with
+     * the setClientId() call.
+     */
+    public void setDefaultClientID(String clientID) throws JMSException {
+        this.info.setClientId(clientID);
+        this.userSpecifiedClientID = true;
+    }
+
 
     /**
      * Gets the metadata for this connection.
