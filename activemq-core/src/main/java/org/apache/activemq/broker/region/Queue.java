@@ -160,7 +160,12 @@ public class Queue implements Destination {
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
             synchronized (consumers) {
-                consumers.add(sub);
+                if (sub.getConsumerInfo().isExclusive()) {
+                    // Add to front of list to ensure that an exclusive consumer gets all messages
+                    // before non-exclusive consumers
+                    consumers.add(0, sub);
+                } else {
+                    consumers.add(sub);
             }
 
             highestSubscriptionPriority = calcHighestSubscriptionPriority();
