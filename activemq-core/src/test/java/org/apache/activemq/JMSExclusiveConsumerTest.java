@@ -128,4 +128,29 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
         assertNull(consumer1.receiveNoWait());
         assertNull(consumer2.receiveNoWait());
     }
+
+    public void testMixExclusiveWithNonExclusive() throws Exception {
+        ActiveMQQueue exclusiveQueue = new ActiveMQQueue("TEST.FOO?consumer.exclusive=true");
+        ActiveMQQueue nonExclusiveQueue = new ActiveMQQueue("TEST.FOO?consumer.exclusive=false");
+
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageConsumer nonExCon = session.createConsumer(nonExclusiveQueue);
+        MessageConsumer exCon = session.createConsumer(exclusiveQueue);
+
+
+        MessageProducer prod = session.createProducer(exclusiveQueue);
+        prod.send(session.createMessage());
+        prod.send(session.createMessage());
+        prod.send(session.createMessage());
+
+        Message m;
+        for (int i=0; i<3; i++) {
+            m = exCon.receive(1000);
+            assertNotNull(m);
+            m = nonExCon.receive(1000);
+            assertNull(m);
+        }
+    }
 }
