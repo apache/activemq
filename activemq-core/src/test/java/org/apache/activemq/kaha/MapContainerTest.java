@@ -177,8 +177,7 @@ public class MapContainerTest extends TestCase{
         super.setUp();
         name = System.getProperty("basedir", ".")+"/target/activemq-data/map-container.db";
         store = getStore();
-        store.deleteListContainer(name);
-        container = store.getMapContainer(name);
+        container = store.getMapContainer("test","test",IndexTypes.DISK_INDEX);
         container.load();
         testMap = new HashMap();
         for (int i =0; i < COUNT; i++){
