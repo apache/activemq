@@ -40,7 +40,7 @@ public class QueueView extends DestinationView implements QueueViewMBean{
         return OpenTypeSupport.convert(rc);
     }
 
-    public void purge(){
+    public void purge() throws Exception{
         ((Queue) destination).purge();
     }
 
