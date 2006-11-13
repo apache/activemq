@@ -410,7 +410,7 @@ public class Topic implements Destination {
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
 
-            if (!dispatchPolicy.dispatch(context, message, msgContext, consumers)) {
+            if (!dispatchPolicy.dispatch(message, msgContext, consumers)) {
                 onMessageWithNoConsumers(context, message);
             }
         }

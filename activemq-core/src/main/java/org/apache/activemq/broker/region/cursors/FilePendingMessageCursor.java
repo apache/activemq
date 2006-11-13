@@ -117,7 +117,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor{
     public void remove(){
         iter.remove();
     }
-
+    
+    public void remove(MessageReference node){
+        list.remove(node);
+    }
     /**
      * @return the number of pending messages
      */

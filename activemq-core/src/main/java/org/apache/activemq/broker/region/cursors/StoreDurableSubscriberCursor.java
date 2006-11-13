@@ -181,6 +181,13 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         }
         pendingCount--;
     }
+    
+    public void remove(MessageReference node){
+        if(currentCursor!=null){
+            currentCursor.remove(node);
+        }
+        pendingCount--;
+    }
 
     public synchronized void reset(){
         for(Iterator i=storePrefetches.iterator();i.hasNext();){

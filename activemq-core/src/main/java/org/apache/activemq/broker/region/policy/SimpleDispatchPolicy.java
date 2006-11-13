@@ -18,13 +18,11 @@
 package org.apache.activemq.broker.region.policy;
 
 
-import org.apache.activemq.broker.ConnectionContext;
+import java.util.Iterator;
+import java.util.List;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
-
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Simple dispatch policy that sends a message to every subscription that 
@@ -36,7 +34,7 @@ import java.util.List;
  */
 public class SimpleDispatchPolicy implements DispatchPolicy {
 
-    public boolean dispatch(ConnectionContext context, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
+    public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
         int count = 0;
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
             Subscription sub = (Subscription) iter.next();

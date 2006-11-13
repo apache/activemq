@@ -119,4 +119,10 @@ public interface PendingMessageCursor extends Service{
      * messages from memory only
      */
     public void resetForGC();
+    
+    /**
+     * remove a node
+     * @param node
+     */
+    public void remove(MessageReference node);
 }

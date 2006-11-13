@@ -58,7 +58,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     synchronized public void gc() {
     }
 
-    synchronized public void add(ConnectionContext context, Destination destination) throws Exception {
+    public void add(ConnectionContext context, Destination destination) throws Exception {
         super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
         if( active || keepDurableSubsActive ) {
@@ -68,7 +68,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         dispatchMatched();
     }
    
-    synchronized public void activate(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public void activate(ConnectionContext context, ConsumerInfo info) throws Exception {
         if( !active ) {
             this.active = true;
             this.context = context;
@@ -79,38 +79,43 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                     topic.activate(context, this);
                 }
             }
-            pending.start();
+            synchronized(pending) {
+                pending.start();
+            }
             dispatchMatched();
         }
     }
 
     synchronized public void deactivate(boolean keepDurableSubsActive) throws Exception {        
         active=false;
-        pending.stop();
+        synchronized(pending){
+            pending.stop();
+        }
         if( !keepDurableSubsActive ) {
             for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
                 Topic topic = (Topic) iter.next();
                 topic.deactivate(context, this);
             }
         }
-        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-
-            // Mark the dispatched messages as redelivered for next time.
-            MessageReference node = (MessageReference) iter.next();
-            Integer count = (Integer) redeliveredMessages.get(node.getMessageId());
-            if( count !=null ) {
-                redeliveredMessages.put(node.getMessageId(), new Integer(count.intValue()+1));
-            } else {
-                redeliveredMessages.put(node.getMessageId(), new Integer(1));
+        synchronized(dispatched){
+            for(Iterator iter=dispatched.iterator();iter.hasNext();){
+                // Mark the dispatched messages as redelivered for next time.
+                MessageReference node=(MessageReference)iter.next();
+                Integer count=(Integer)redeliveredMessages.get(node.getMessageId());
+                if(count!=null){
+                    redeliveredMessages.put(node.getMessageId(),new Integer(count.intValue()+1));
+                }else{
+                    redeliveredMessages.put(node.getMessageId(),new Integer(1));
+                }
+                if(keepDurableSubsActive){
+                    synchronized(pending){
+                        pending.addMessageFirst(node);
+                    }
+                }else{
+                    node.decrementReferenceCount();
+                }
+                iter.remove();
             }
-            if( keepDurableSubsActive ) {
-            	synchronized(pending) {
-            		pending.addMessageFirst(node);
-            	}
-            } else {
-                node.decrementReferenceCount();
-            }
-            iter.remove();
         }
         
         if( !keepDurableSubsActive ) {
@@ -135,7 +140,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         return md;
     }
 
-    synchronized public void add(MessageReference node) throws Exception {
+    public void add(MessageReference node) throws Exception {
         if( !active && !keepDurableSubsActive ) {
             return;
         }
@@ -190,7 +195,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     /**
      * Release any references that we are holding.
      */
-    synchronized public void destroy() {
+    public void destroy() {
     	synchronized(pending) {
             pending.reset();
 	        while(pending.hasNext()) {
