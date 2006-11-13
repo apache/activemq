@@ -92,4 +92,11 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     public void resetForGC(){
         reset();
     }
+
+    /**
+     * @param node
+     * @see org.apache.activemq.broker.region.cursors.PendingMessageCursor#remove(org.apache.activemq.broker.region.MessageReference)
+     */
+    public void remove(MessageReference node){
+    }
 }

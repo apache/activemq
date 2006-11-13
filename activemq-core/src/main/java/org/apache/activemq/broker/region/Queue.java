@@ -42,6 +42,8 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.thread.Task;
+import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
@@ -64,27 +66,32 @@ import java.util.List;
  * 
  * @version $Revision: 1.28 $
  */
-public class Queue implements Destination {
+public class Queue implements Destination, Task {
 
     private final Log log;
 
-    protected final ActiveMQDestination destination;
-    protected final List consumers = new CopyOnWriteArrayList();
-    protected final Valve dispatchValve = new Valve(true);
-    protected final UsageManager usageManager;
-    protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
-    protected  PendingMessageCursor messages = new VMPendingMessageCursor();
+    private final ActiveMQDestination destination;
+    private final List consumers = new CopyOnWriteArrayList();
+    private final Valve dispatchValve = new Valve(true);
+    private final UsageManager usageManager;
+    private final DestinationStatistics destinationStatistics = new DestinationStatistics();
+    private  PendingMessageCursor messages = new VMPendingMessageCursor();
+    private final LinkedList pagedInMessages = new LinkedList();
 
     private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
 
-    protected long garbageSize = 0;
-    protected long garbageSizeBeforeCollection = 1000;
+    private int garbageSize = 0;
+    private int garbageSizeBeforeCollection = 1000;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
-    protected final MessageStore store;
-    protected int highestSubscriptionPriority = Integer.MIN_VALUE;
+    private final MessageStore store;
+    private int highestSubscriptionPriority = Integer.MIN_VALUE;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
+    private int maximumPagedInMessages = garbageSizeBeforeCollection * 2;
+    private final MessageEvaluationContext queueMsgConext = new MessageEvaluationContext();
+    private final Object exclusiveLockMutex = new Object();
+    private TaskRunner taskRunner;
 
     public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory) throws Exception {
@@ -92,6 +99,7 @@ public class Queue implements Destination {
         this.usageManager = new UsageManager(memoryManager);
         this.usageManager.setLimit(Long.MAX_VALUE);
         this.store = store;
+        this.taskRunner = taskFactory.createTaskRunner(this, "Queue  "+destination.getPhysicalName());
 
         // Let the store know what usage manager we are using so that he can
         // flush messages to disk
@@ -106,43 +114,57 @@ public class Queue implements Destination {
         
     }
     
-    public void initialize() throws Exception {
-        if (store != null) {
+    public void initialize() throws Exception{
+        if(store!=null){
             // Restore the persistent messages.
-            store.recover(new MessageRecoveryListener() {
-                public void recoverMessage(Message message) {
-                    message.setRegionDestination(Queue.this);
-                    MessageReference reference = createMessageReference(message);
-                    synchronized (messages) {
-                        try{
-                            messages.addMessageLast(reference);
-                        }catch(Exception e){
-                           log.fatal("Failed to add message to cursor",e);
+            messages.start();
+            if(messages.isRecoveryRequired()){
+                store.recover(new MessageRecoveryListener(){
+
+                    public void recoverMessage(Message message){
+                        message.setRegionDestination(Queue.this);
+                        synchronized(messages){
+                            try{
+                                messages.addMessageLast(message);
+                            }catch(Exception e){
+                                log.fatal("Failed to add message to cursor",e);
+                            }
                         }
+                        destinationStatistics.getMessages().increment();
                     }
-                    reference.decrementReferenceCount();
-                    destinationStatistics.getMessages().increment();
-                }
 
-                public void recoverMessageReference(String messageReference) throws Exception {
-                    throw new RuntimeException("Should not be called.");
-                }
+                    public void recoverMessageReference(String messageReference) throws Exception{
+                        throw new RuntimeException("Should not be called.");
+                    }
 
-                public void finished() {
-                }
-            });
+                    public void finished(){
+                    }
+                });
+            }
         }
     }
 
-    public synchronized boolean lock(MessageReference node, LockOwner lockOwner) {
-        if (exclusiveOwner == lockOwner)
-            return true;
-        if (exclusiveOwner != null)
-            return false;
-        if (lockOwner.getLockPriority() < highestSubscriptionPriority)
-            return false;
-        if (lockOwner.isLockExclusive()) {
-            exclusiveOwner = lockOwner;
+    /**
+     * Lock a node
+     * @param node
+     * @param lockOwner
+     * @return true if can be locked
+     * @see org.apache.activemq.broker.region.Destination#lock(org.apache.activemq.broker.region.MessageReference, org.apache.activemq.broker.region.LockOwner)
+     */
+    public boolean lock(MessageReference node,LockOwner lockOwner){
+        synchronized(exclusiveLockMutex){
+            if(exclusiveOwner==lockOwner){
+                return true;
+            }
+            if(exclusiveOwner!=null){
+                return false;
+            }
+            if(lockOwner.getLockPriority()<highestSubscriptionPriority){
+                return false;
+            }
+            if(lockOwner.isLockExclusive()){
+                exclusiveOwner=lockOwner;
+            }
         }
         return true;
     }
@@ -150,16 +172,13 @@ public class Queue implements Destination {
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
         sub.add(context, this);
         destinationStatistics.getConsumers().increment();
+        maximumPagedInMessages += sub.getConsumerInfo().getPrefetchSize();
 
-        // synchronize with dispatch method so that no new messages are sent
-        // while
-        // setting up a subscription. avoid out of order messages, duplicates
-        // etc.
-        dispatchValve.turnOff();
-
-        MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-        try {
-            synchronized (consumers) {
+        
+        
+        MessageEvaluationContext msgContext=context.getMessageEvaluationContext();
+        try{
+            synchronized(consumers){
                 if (sub.getConsumerInfo().isExclusive()) {
                     // Add to front of list to ensure that an exclusive consumer gets all messages
                     // before non-exclusive consumers
@@ -167,40 +186,37 @@ public class Queue implements Destination {
                 } else {
                     consumers.add(sub);
                 }
-
-                if (sub.getConsumerInfo().getPriority() > highestSubscriptionPriority) {
-                    highestSubscriptionPriority = sub.getConsumerInfo().getPriority();
-                }
             }
-
-            //highestSubscriptionPriority = calcHighestSubscriptionPriority();
+            // page in messages
+            doPageIn();
+            // synchronize with dispatch method so that no new messages are sent
+            // while
+            // setting up a subscription. avoid out of order messages, duplicates
+            // etc.
+            dispatchValve.turnOff();
+            if (sub.getConsumerInfo().getPriority() > highestSubscriptionPriority) {
+                highestSubscriptionPriority = sub.getConsumerInfo().getPriority();
+            }
             msgContext.setDestination(destination);
-
-            synchronized (messages) {
+            synchronized(pagedInMessages){
                 // Add all the matching messages in the queue to the
                 // subscription.
-                messages.reset();
-                while(messages.hasNext()) {
-
-                    QueueMessageReference node = (QueueMessageReference) messages.next();
-                    if (node.isDropped()) {
+                for(Iterator i=pagedInMessages.iterator();i.hasNext();){
+                    QueueMessageReference node=(QueueMessageReference)i.next();
+                    if(node.isDropped()){
                         continue;
                     }
-
-                    try {
+                    try{
                         msgContext.setMessageReference(node);
-                        if (sub.matches(node, msgContext)) {
+                        if(sub.matches(node,msgContext)){
                             sub.add(node);
                         }
-                    }
-                    catch (IOException e) {
-                        log.warn("Could not load message: " + e, e);
+                    }catch(IOException e){
+                        log.warn("Could not load message: "+e,e);
                     }
                 }
             }
-
-        }
-        finally {
+        }finally{
             msgContext.clear();
             dispatchValve.turnOn();
         }
@@ -209,6 +225,7 @@ public class Queue implements Destination {
     public void removeSubscription(ConnectionContext context, Subscription sub) throws Exception {
 
         destinationStatistics.getConsumers().decrement();
+        maximumPagedInMessages -= sub.getConsumerInfo().getPrefetchSize();
 
         // synchronize with dispatch method so that no new messages are sent
         // while
@@ -240,10 +257,9 @@ public class Queue implements Destination {
 
                     // lets copy the messages to dispatch to avoid deadlock
                     List messagesToDispatch = new ArrayList();
-                    synchronized (messages) {
-                        messages.reset();
-                        while(messages.hasNext()) {
-                            QueueMessageReference node = (QueueMessageReference) messages.next();
+                    synchronized (pagedInMessages) {
+                        for(Iterator i =  pagedInMessages.iterator();i.hasNext();) {
+                            QueueMessageReference node = (QueueMessageReference) i.next();
                             if (node.isDropped()) {
                                 continue;
                             }
@@ -264,7 +280,7 @@ public class Queue implements Destination {
                         node.incrementRedeliveryCounter();
                         node.unlock();
                         msgContext.setMessageReference(node);
-                        dispatchPolicy.dispatch(context, node, msgContext, consumers);
+                        dispatchPolicy.dispatch(node, msgContext, consumers);
                     }
                 }
                 finally {
@@ -278,40 +294,31 @@ public class Queue implements Destination {
 
     }
 
-    public void send(final ConnectionContext context, final Message message) throws Exception {
-
-        if (context.isProducerFlowControl()) {
-            if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
+    public void send(final ConnectionContext context,final Message message) throws Exception{
+        if(context.isProducerFlowControl()){
+            if(usageManager.isSendFailIfNoSpace()&&usageManager.isFull()){
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-            }
-            else {
+            }else{
                 usageManager.waitForSpace();
             }
         }
-
         message.setRegionDestination(this);
-
-        if (store != null && message.isPersistent())
+        if (store != null && message.isPersistent()) {
             store.addMessage(context, message);
-
-        final MessageReference node = createMessageReference(message);
-        try {
-
-            if (context.isInTransaction()) {
-                context.getTransaction().addSynchronization(new Synchronization() {
-                    public void afterCommit() throws Exception {
-                        dispatch(context, node, message);
-                    }
-                });
-            }
-            else {
-                dispatch(context, node, message);
-            }
         }
-        finally {
-            node.decrementReferenceCount();
+        if(context.isInTransaction()){
+            context.getTransaction().addSynchronization(new Synchronization(){
+
+                public void afterCommit() throws Exception{
+                    sendMessage(context,message);
+                }
+            });
+        }else{
+            sendMessage(context,message);
         }
     }
+       
+    
 
     public void dispose(ConnectionContext context) throws IOException {
         if (store != null) {
@@ -324,29 +331,33 @@ public class Queue implements Destination {
         dropEvent(false);
     }
 
-    public void dropEvent(boolean skipGc) {
+    public void dropEvent(boolean skipGc){
         // TODO: need to also decrement when messages expire.
         destinationStatistics.getMessages().decrement();
-        synchronized (messages) {
+        synchronized(pagedInMessages){
             garbageSize++;
-            if (!skipGc && garbageSize > garbageSizeBeforeCollection) {
-                gc();
-            }
+        }
+        if(!skipGc&&garbageSize>garbageSizeBeforeCollection){
+            gc();
         }
     }
 
     public void gc() {
-        synchronized (messages) {
-            messages.resetForGC();
-            while(messages.hasNext()) {
+        synchronized (pagedInMessages) {
+            for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
                 // Remove dropped messages from the queue.
-                QueueMessageReference node = (QueueMessageReference) messages.next();
+                QueueMessageReference node = (QueueMessageReference) i.next();
                 if (node.isDropped()) {
                     garbageSize--;
-                    messages.remove();
+                    i.remove();
                     continue;
                 }
             }
+        }
+        try{
+            taskRunner.wakeup();
+        }catch(InterruptedException e){
+            log.warn("Task Runner failed to wakeup ",e);
         }
     }
 
@@ -390,6 +401,9 @@ public class Queue implements Destination {
     }
 
     public void stop() throws Exception {
+        if( taskRunner!=null ) {
+            taskRunner.shutdown();
+        }
     }
 
     // Properties
@@ -455,38 +469,12 @@ public class Queue implements Destination {
     // Implementation methods
     // -------------------------------------------------------------------------
     private MessageReference createMessageReference(Message message) {
-        return new IndirectMessageReference(this, store, message);
+        MessageReference result =  new IndirectMessageReference(this, store, message);
+        result.decrementReferenceCount();
+        return result;
     }
 
-    private void dispatch(ConnectionContext context, MessageReference node, Message message) throws Exception {
-
-        dispatchValve.increment();
-        MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-        try {
-            destinationStatistics.getEnqueues().increment();
-	    destinationStatistics.getMessages().increment();
-            synchronized (messages) {
-                messages.addMessageLast(node);
-            }
-
-            synchronized (consumers) {
-                if (consumers.isEmpty()) {
-                    log.debug("No subscriptions registered, will not dispatch message at this time.");
-                    return;
-                }
-            }
-
-            msgContext.setDestination(destination);
-            msgContext.setMessageReference(node);
-
-            dispatchPolicy.dispatch(context, node, msgContext, consumers);
-        }
-        finally {
-            msgContext.clear();
-            dispatchValve.decrement();
-        }
-    }
-
+    
     private int calcHighestSubscriptionPriority() {
         int rc = Integer.MIN_VALUE;
         synchronized (consumers) {
@@ -506,11 +494,28 @@ public class Queue implements Destination {
 
     public Message[] browse() {
         ArrayList l = new ArrayList();
+        synchronized(pagedInMessages) {
+            for (Iterator i = pagedInMessages.iterator();i.hasNext();) {
+                MessageReference r = (MessageReference)i.next();
+                r.incrementReferenceCount();
+                try {
+                    Message m = r.getMessage();
+                    if (m != null) {
+                        l.add(m);
+                    }
+                }catch(IOException e){
+                    log.error("caught an exception brwsing " + this,e);
+                }
+                finally {
+                    r.decrementReferenceCount();
+                }
+            }
+        }
         synchronized (messages) {
             messages.reset();
             while(messages.hasNext()) {
                 try {
-                    MessageReference r = (MessageReference) messages.next();
+                    MessageReference r = messages.next();
                     r.incrementReferenceCount();
                     try {
                         Message m = r.getMessage();
@@ -523,6 +528,7 @@ public class Queue implements Destination {
                     }
                 }
                 catch (IOException e) {
+                    log.error("caught an exception brwsing " + this,e);
                 }
             }
         }
@@ -535,7 +541,7 @@ public class Queue implements Destination {
             messages.reset();
             while(messages.hasNext()) {
                 try {
-                    MessageReference r = (MessageReference) messages.next();
+                    MessageReference r = messages.next();
                     if (messageId.equals(r.getMessageId().toString())) {
                         r.incrementReferenceCount();
                         try {
@@ -551,19 +557,22 @@ public class Queue implements Destination {
                     }
                 }
                 catch (IOException e) {
+                    log.error("got an exception retrieving message " + messageId);
                 }
             }
         }
         return null;
     }
 
-    public void purge() {
-        synchronized (messages) {
+    public void purge() throws Exception {
+        
+            doDispatch(doPageIn());
+        
+        synchronized (pagedInMessages) {
             ConnectionContext c = createConnectionContext();
-            messages.reset();
-            while(messages.hasNext()) {
+            for(Iterator i = pagedInMessages.iterator(); i.hasNext();){
                 try {
-                    QueueMessageReference r = (QueueMessageReference) messages.next();
+                    QueueMessageReference r = (QueueMessageReference) i.next();
 
                     // We should only delete messages that can be locked.
                     if (r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER)) {
@@ -618,20 +627,18 @@ public class Queue implements Destination {
      * @return the number of messages removed
      */
     public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
+        doDispatch(doPageIn());
         int counter = 0;
-        synchronized (messages) {
+        synchronized (pagedInMessages) {
             ConnectionContext c = createConnectionContext();
-            messages.reset();
-            while(messages.hasNext()) {
-                IndirectMessageReference r = (IndirectMessageReference) messages.next();
+           for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+               IndirectMessageReference r = (IndirectMessageReference) i.next();
                 if (filter.evaluate(c, r)) {
-                    // We should only delete messages that can be locked.
-                    if (lockMessage(r)) {
-                        removeMessage(c, r);
-                        if (++counter >= maximumMessages && maximumMessages > 0) {
-                            break;
-                        }
+                    removeMessage(c, r);
+                    if (++counter >= maximumMessages && maximumMessages > 0) {
+                        break;
                     }
+                    
                 }
             }
         }
@@ -669,11 +676,11 @@ public class Queue implements Destination {
      * @return the number of messages copied
      */
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
+        doDispatch(doPageIn());
         int counter = 0;
-        synchronized (messages) {
-            messages.reset();
-            while(messages.hasNext()) {
-                MessageReference r = (MessageReference) messages.next();
+        synchronized (pagedInMessages) {
+            for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                MessageReference r = (MessageReference) i.next();
                 if (filter.evaluate(context, r)) {
                     r.incrementReferenceCount();
                     try {
@@ -719,11 +726,11 @@ public class Queue implements Destination {
      * Moves the messages matching the given filter up to the maximum number of matched messages
      */
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
+        doDispatch(doPageIn());
         int counter = 0;
-        synchronized (messages) {
-            messages.reset();
-            while(messages.hasNext()) {
-                IndirectMessageReference r = (IndirectMessageReference) messages.next();
+        synchronized (pagedInMessages) {
+            for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                IndirectMessageReference r = (IndirectMessageReference) i.next();
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
                     if (lockMessage(r)) {
@@ -744,6 +751,19 @@ public class Queue implements Destination {
             }
         }
         return counter;
+    }
+    
+    /**
+     * @return
+     * @see org.apache.activemq.thread.Task#iterate()
+     */
+    public boolean iterate(){
+        try{
+            doDispatch(doPageIn(false));
+         }catch(Exception e){
+             log.error("Failed to page in more queue messages ",e);
+         }
+        return false;
     }
 
     protected MessageReferenceFilter createMessageIdFilter(final String messageId) {
@@ -771,6 +791,7 @@ public class Queue implements Destination {
         };
     }
 
+        
     protected void removeMessage(ConnectionContext c, IndirectMessageReference r) throws IOException {
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
@@ -790,4 +811,65 @@ public class Queue implements Destination {
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
         return answer;
     }
+    
+    private void sendMessage(final ConnectionContext context,Message msg) throws Exception{
+        
+        synchronized(messages){
+            messages.addMessageLast(msg);
+        }
+        destinationStatistics.getEnqueues().increment();
+        destinationStatistics.getMessages().increment();
+        doDispatch(doPageIn(false));
+    }
+    
+    private List doPageIn() throws Exception{
+        return doPageIn(true);
+    }
+    private List doPageIn(boolean force) throws Exception{
+        final int toPageIn=maximumPagedInMessages-pagedInMessages.size();
+        List result=null;
+        if((force || !consumers.isEmpty())&&toPageIn>0){
+            try{
+                dispatchValve.increment();
+                int count=0;
+                result=new ArrayList(toPageIn);
+                synchronized(messages){
+                    messages.reset();
+                    while(messages.hasNext()&&count<toPageIn){
+                        MessageReference node=messages.next();
+                        messages.remove();
+                        node=createMessageReference(node.getMessage());
+                        result.add(node);
+                        count++;
+                    }
+                }
+                synchronized(pagedInMessages){
+                    pagedInMessages.addAll(result);
+                }
+            }finally{
+                queueMsgConext.clear();
+                dispatchValve.decrement();
+            }
+        }
+        return result;
+    }
+
+    private void doDispatch(List list) throws Exception{
+        if(list!=null&&!list.isEmpty()){
+            try{
+                dispatchValve.increment();
+                for(int i=0;i<list.size();i++){
+                    MessageReference node=(MessageReference)list.get(i);
+                    queueMsgConext.setDestination(destination);
+                    queueMsgConext.setMessageReference(node);
+                    dispatchPolicy.dispatch(node,queueMsgConext,consumers);
+                }
+            }finally{
+                queueMsgConext.clear();
+                dispatchValve.decrement();
+            }
+        }
+    }
+
+    
 }

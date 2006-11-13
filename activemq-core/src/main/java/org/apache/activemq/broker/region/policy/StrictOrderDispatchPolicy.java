@@ -18,13 +18,11 @@
 package org.apache.activemq.broker.region.policy;
 
 
-import org.apache.activemq.broker.ConnectionContext;
+import java.util.Iterator;
+import java.util.List;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
-
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Dispatch policy that causes every subscription to see messages in the same order.
@@ -35,7 +33,15 @@ import java.util.List;
  */
 public class StrictOrderDispatchPolicy implements DispatchPolicy {
     
-    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
+    /**
+     * @param node
+     * @param msgContext
+     * @param consumers
+     * @return true if dispatched
+     * @throws Exception
+     * @see org.apache.activemq.broker.region.policy.DispatchPolicy#dispatch(org.apache.activemq.broker.region.MessageReference, org.apache.activemq.filter.MessageEvaluationContext, java.util.List)
+     */
+    public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
         // Big synch here so that only 1 message gets dispatched at a time.  Ensures 
         // Everyone sees the same order.
         synchronized(consumers) {

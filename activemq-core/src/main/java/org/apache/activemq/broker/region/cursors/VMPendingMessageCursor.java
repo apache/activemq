@@ -93,4 +93,19 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor{
     public void clear(){
         list.clear();
     }
+    
+    public void remove(MessageReference node) {
+        boolean matched = false;
+        int size = list.size();
+        for (Iterator i = list.iterator();i.hasNext();) {
+            MessageReference ref = (MessageReference)i.next();
+                System.err.println("MATCHIG " + node.getMessageId() + " AGAINST " + ref.getMessageId());
+                if(node.getMessageId().equals(ref.getMessageId())){
+                    i.remove();
+                    matched = true;
+                    break;
+                }
+        }
+        System.err.println("REMOVED " + node.getMessageId() + "  = " + matched + " presize = " + size + " size now = " + list.size());
+    }
 }

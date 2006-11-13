@@ -18,13 +18,13 @@
 package org.apache.activemq.broker.region.policy;
 
 
-import org.apache.activemq.broker.ConnectionContext;
+import java.util.Iterator;
+import java.util.List;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
-
-import java.util.Iterator;
-import java.util.List;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Simple dispatch policy that sends a message to every subscription that 
@@ -35,8 +35,17 @@ import java.util.List;
  * @version $Revision$
  */
 public class RoundRobinDispatchPolicy implements DispatchPolicy {
-
-    public boolean dispatch(ConnectionContext newParam, MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
+    static final Log log=LogFactory.getLog(RoundRobinDispatchPolicy.class);
+    
+    /**
+     * @param node
+     * @param msgContext
+     * @param consumers
+     * @return true if dispatched
+     * @throws Exception
+     * @see org.apache.activemq.broker.region.policy.DispatchPolicy#dispatch(org.apache.activemq.broker.region.MessageReference, org.apache.activemq.filter.MessageEvaluationContext, java.util.List)
+     */
+    public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
         
         // Big synch here so that only 1 message gets dispatched at a time.  Ensures 
         // Everyone sees the same order and that the consumer list is not used while
@@ -59,6 +68,7 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
             try {
                 consumers.add(consumers.remove(0));
             } catch (Throwable bestEffort) {
+                log.error("Caught error rotating consumers");
             }
             return count > 0;
         }        
