@@ -184,12 +184,6 @@
         <artifactId>activemq-gbean-management</artifactId>
         <version>${activemq-version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activecluster</artifactId>
-        <version>${activecluster-version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-console</artifactId>
         <version>${activemq-version}</version>
@@ -394,15 +388,6 @@
           </exclusion>
         </exclusions>
       </dependency>
-
-      <!-- an optional discovery agent -->
-      <!--dependency>
-        <groupId>activecluster</groupId>
-        <artifactId>activecluster</artifactId>
-        <version>${activecluster-version}</version>
-        <optional>true</optional>
-      </dependency-->
-
       <!-- Optional Derby support-->
       <dependency>
         <groupId>org.apache.derby</groupId>
@@ -933,7 +918,6 @@
 
   <properties>
     <activemq-version>4.2-incubator-SNAPSHOT</activemq-version>
-    <activecluster-version>4.x-SNAPSHOT</activecluster-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.6.2</ant-version>
