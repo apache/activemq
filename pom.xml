@@ -24,7 +24,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>4.1-incubator-SNAPSHOT</version>
+  <version>4.1.0-incubator</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 
@@ -214,7 +214,7 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activeio-core</artifactId>
-        <version>3.x-incubator-SNAPSHOT</version>
+        <version>3.0.0-incubator</version>
       </dependency>
 	  <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -919,7 +919,7 @@
   </reporting>
 
   <properties>
-    <activemq-version>4.1-incubator-SNAPSHOT</activemq-version>
+    <activemq-version>4.1.0-incubator</activemq-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.6.2</ant-version>
