@@ -264,8 +264,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         else if( !disposed.get() && !inServiceException ) {
             inServiceException = true;
                 try {
-                if( serviceLog.isDebugEnabled() )
-                    serviceLog.debug("Async error occurred: "+e,e);
+                
+                serviceLog.error("Async error occurred: "+e,e);
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
                 dispatchAsync(ce);
