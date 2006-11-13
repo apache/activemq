@@ -61,8 +61,9 @@ public interface QueueViewMBean extends DestinationViewMBean {
 
     /**
      * Removes all of the messages in the queue.
+     * @throws Exception 
      */
-    public void purge();
+    public void purge() throws Exception;
     
     /**
      * Copies a given message to another destination.
