@@ -35,6 +35,7 @@
         <include>**/*.so</include>
         <include>**/*.ks</include>
         <include>**/*.ts</include>
+        <include>**/*.keystore</include>
       </includes>
     </fileSet>
 
@@ -55,6 +56,7 @@
         <exclude>**/*.so</exclude>
         <exclude>**/*.ks</exclude>
         <exclude>**/*.ts</exclude>
+        <exclude>**/*.keystore</exclude>
         <exclude>**/svn-commit*</exclude>
         <exclude>**/target</exclude>
         <exclude>**/target/**</exclude>
