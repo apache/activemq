@@ -183,7 +183,8 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-gbean-management</artifactId>
         <version>${activemq-version}</version>
-      </dependency>
+	  </dependency>
+      <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-console</artifactId>
         <version>${activemq-version}</version>
