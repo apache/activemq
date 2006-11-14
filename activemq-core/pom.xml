@@ -341,7 +341,7 @@
           <execution>
             <configuration>
               <namespace>http://activemq.org/config/1.0</namespace>
-              <schema>target/activemq.xsd</schema>
+              <schema>target/xbean/activemq.xsd</schema>
             </configuration>
             <goals>
               <goal>mapping</goal>
@@ -364,11 +364,11 @@
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>${basedir}/target/activemq.xsd</file>
+                  <file>${basedir}/target/xbean/activemq.xsd</file>
                   <type>xsd</type>
                 </artifact>
                 <artifact>
-                  <file>${basedir}/target/activemq.xsd.html</file>
+                  <file>${basedir}/target/xbean/activemq.xsd.html</file>
                   <type>xsd.html</type>
                 </artifact>
               </artifacts>
