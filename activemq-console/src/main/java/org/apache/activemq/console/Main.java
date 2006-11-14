@@ -89,10 +89,51 @@ public class Main {
 
         try {
             app.runTaskClass(tokens);
+        } catch (ClassNotFoundException e) {
+            System.out.println("Could not load class: " + e.getMessage());
+            try {
+				ClassLoader cl = app.getClassLoader();
+				if( cl!=null ) {
+		            System.out.println("Class loader setup: ");
+					printClassLoaderTree(cl);
+				}
+			} catch (MalformedURLException e1) {
+			}
         } catch (Throwable e) {
             System.out.println("Failed to execute main task. Reason: " + e);
         }
     }
+
+    /**
+     * Print out what's in the classloader tree being used. 
+     * 
+     * @param cl
+     * @return
+     */
+	private static int printClassLoaderTree(ClassLoader cl) {
+		int depth = 0;
+		if( cl.getParent()!=null ) {
+			depth = printClassLoaderTree(cl.getParent())+1;
+		}
+		
+		StringBuffer indent = new StringBuffer();
+		for (int i = 0; i < depth; i++) {
+			indent.append("  ");
+		}
+		
+		if( cl instanceof URLClassLoader ) {
+			URLClassLoader ucl = (URLClassLoader) cl;
+			System.out.println(indent+cl.getClass().getName()+" {");
+			URL[] urls = ucl.getURLs();
+			for (int i = 0; i < urls.length; i++) {
+				System.out.println(indent+"  "+urls[i]);
+			}
+			System.out.println(indent+"}");
+		} else {
+			System.out.println(indent+cl.getClass().getName());
+		}
+		return depth;
+	}
 
 	public void parseExtensions(List tokens) {
         if (tokens.isEmpty()) {
@@ -147,7 +188,9 @@ public class Main {
     }
 
     public void runTaskClass(List tokens) throws Throwable {
+    	
         System.out.println("ACTIVEMQ_HOME: "+ getActiveMQHome());
+        System.out.println("ACTIVEMQ_BASE: "+ getActiveMQBase());
 
         ClassLoader cl = getClassLoader();
 

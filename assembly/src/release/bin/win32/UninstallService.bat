@@ -35,7 +35,7 @@ set _REALPATH=%~dp0
 set ACTIVEMQ_HOME=%~dp0\..\..
 
 :conf
-set _WRAPPER_CONF=wrapper.conf
+set _WRAPPER_CONF="%ACTIVEMQ_HOME%\bin\win32\wrapper.conf"
 
 
 rem
