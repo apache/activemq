@@ -19,7 +19,6 @@
   <id>unix-bin</id>
   <formats>
     <format>tar.gz</format>
-    <format>tar.bz2</format>
   </formats>
   <fileSets>
 

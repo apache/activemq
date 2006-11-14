@@ -19,9 +19,26 @@
   <id>src</id>
   <formats>
     <format>tar.gz</format>
-    <format>zip</format>
   </formats>
   <fileSets>
+    <!-- Binary Files -->
+    <fileSet>
+      <directory>..</directory>
+      <outputDirectory>src</outputDirectory>
+      <includes>
+        <include>**/*.jpeg</include>
+        <include>**/*.jpg</include>
+        <include>**/*.gif</include>
+        <include>**/*.exe</include>
+        <include>**/*.dll</include>
+        <include>**/*.jar</include>
+        <include>**/*.so</include>
+        <include>**/*.ks</include>
+        <include>**/*.ts</include>
+      </includes>
+    </fileSet>
+
+    <!-- Text Files -->
     <fileSet>
       <directory>..</directory>
       <outputDirectory>src</outputDirectory>
@@ -29,27 +46,38 @@
         <include>**/*</include>
       </includes>
       <excludes>
+        <exclude>**/*.jpeg</exclude>
+        <exclude>**/*.jpg</exclude>
+        <exclude>**/*.gif</exclude>
+        <exclude>**/*.exe</exclude>
+        <exclude>**/*.dll</exclude>
+        <exclude>**/*.jar</exclude>
+        <exclude>**/*.so</exclude>
+        <exclude>**/*.ks</exclude>
+        <exclude>**/*.ts</exclude>
+        <exclude>**/svn-commit*</exclude>
         <exclude>**/target</exclude>
         <exclude>**/target/**/*</exclude>
         <exclude>**/build</exclude>
         <exclude>**/build/**/*</exclude>
-	<exclude>**/data</exclude>
-	<exclude>**/data/**/*</exclude>
-	<exclude>**/activemq-data</exclude>
-	<exclude>**/activemq-data/**/*</exclude>
-	<exclude>**/.settings</exclude>
-        <exclude>**/.settings/**/*</exclude>
-	<exclude>**/eclipse-classes</exclude>
-	<exclude>**/eclipse-classes/**/*</exclude>
-	<exclude>**/.classpath</exclude>
+        <exclude>**/data</exclude>
+        <exclude>**/data/**/*</exclude>
+        <exclude>**/activemq-data</exclude>
+        <exclude>**/activemq-data/**</exclude>
+        <exclude>**/.settings</exclude>
+        <exclude>**/.settings/**</exclude>
+        <exclude>**/eclipse-classes</exclude>
+        <exclude>**/eclipse-classes/**</exclude>
+        <exclude>**/.classpath</exclude>
         <exclude>**/.project</exclude>
         <exclude>**/.wtpmodules</exclude>
         <exclude>**/surefire*</exclude>
         <exclude>**/cobertura.ser</exclude>
-	<exclude>**/*.iml</exclude>
-	<exclude>**/*.ipr</exclude>
-	<exclude>**/*.iws</exclude>
+        <exclude>**/*.iml</exclude>
+        <exclude>**/*.ipr</exclude>
+        <exclude>**/*.iws</exclude>
       </excludes>
+      <lineEnding>unix</lineEnding>
     </fileSet>
   </fileSets>
 </assembly>
