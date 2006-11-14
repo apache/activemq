@@ -56,6 +56,7 @@ public class PooledConnection implements TopicConnection, QueueConnection {
 
     public PooledConnection(ConnectionPool pool) {
         this.pool = pool;
+        this.pool.incrementReferenceCount();
     }
 
     /**
@@ -66,7 +67,10 @@ public class PooledConnection implements TopicConnection, QueueConnection {
     }
 
     public void close() throws JMSException {
-        pool = null;
+    	if( this.pool!=null ) {
+	        this.pool.decrementReferenceCount();
+	        this.pool = null;
+    	}
     }
 
     public void start() throws JMSException {
@@ -133,7 +137,7 @@ public class PooledConnection implements TopicConnection, QueueConnection {
     // Implementation methods
     // -------------------------------------------------------------------------
 
-    protected ActiveMQConnection getConnection() throws JMSException {
+    ActiveMQConnection getConnection() throws JMSException {
         assertNotClosed();
         return pool.getConnection();
     }
