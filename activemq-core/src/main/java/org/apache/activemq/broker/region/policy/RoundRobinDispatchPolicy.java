@@ -68,7 +68,7 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
             try {
                 consumers.add(consumers.remove(0));
             } catch (Throwable bestEffort) {
-                log.error("Caught error rotating consumers");
+                log.error("Caught error rotating consumers",bestEffort);
             }
             return count > 0;
         }        
