@@ -17,22 +17,20 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.Service;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.pool.ObjectPoolFactory;
-import org.apache.commons.pool.impl.GenericObjectPoolFactory;
-import org.apache.commons.pool.impl.GenericObjectPool.Config;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.Service;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.commons.pool.ObjectPoolFactory;
+import org.apache.commons.pool.impl.GenericObjectPoolFactory;
 
 /**
  * A JMS provider which pools Connection, Session and MessageProducer instances
@@ -79,6 +77,13 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     public synchronized Connection createConnection(String userName, String password) throws JMSException {
         ConnectionKey key = new ConnectionKey(userName, password);
         ConnectionPool connection = (ConnectionPool) cache.get(key);
+        
+        // Now.. we might get a connection, but it might be that we need to 
+        // dump it..
+        if( connection!=null && connection.expiredCheck() ) {
+        	connection=null;
+        }
+        
         if (connection == null) {
             ActiveMQConnection delegate = createConnection(key);
             connection = new ConnectionPool(delegate, getPoolFactory());
@@ -109,17 +114,10 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     }
 
     public void stop() throws Exception {
-        ServiceStopper stopper = new ServiceStopper();
         for (Iterator iter = cache.values().iterator(); iter.hasNext();) {
             ConnectionPool connection = (ConnectionPool) iter.next();
-            try {
-                connection.close();
-            }
-            catch (JMSException e) {
-                stopper.onException(this, e);
-            }
+            connection.close();
         }
-        stopper.throwFirstException();
     }
 
     public ObjectPoolFactory getPoolFactory() {
