@@ -50,6 +50,7 @@
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
+        <include>bin/*.jar</include>
         <include>conf/*.ts</include>
         <include>conf/*.ks</include>
         <include>conf/*.cert</include>

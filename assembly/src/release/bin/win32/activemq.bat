@@ -31,10 +31,6 @@ goto conf
 rem %~dp0 is name of current script under NT
 set _APP_HOME=%~dp0
 
-rem Set ActiveMQ Home
-set ACTIVEMQ_HOME=%~dp0..\..
-set ACTIVEMQ_BASE=%~dp0..\..
-
 rem
 rem Find the wrapper.conf
 rem
