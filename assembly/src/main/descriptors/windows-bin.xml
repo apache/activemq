@@ -41,6 +41,7 @@
         <include>bin/*.bat</include>
         <include>bin/win32/*.bat</include>
         <include>bin/win32/*.conf</include>
+        <include>bin/core/boot/*.jar</include>
       </includes>
       <lineEnding>dos</lineEnding>
     </fileSet>
@@ -53,6 +54,7 @@
         <include>conf/*.ts</include>
         <include>conf/*.ks</include>
         <include>conf/*.cert</include>
+        <include>bin/*.jar</include>
         <include>bin/win32/*.exe</include>
         <include>bin/win32/*.dll</include>
       </includes>

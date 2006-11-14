@@ -34,17 +34,19 @@ rem %~dp0 is location of current script under NT
 set _REALPATH=%~dp0
 
 set ACTIVEMQ_HOME=%~dp0..\..
+set ACTIVEMQ_BASE=%~dp0..\..
 
 :conf
-set _WRAPPER_CONF=wrapper.conf
+set _WRAPPER_CONF="%ACTIVEMQ_HOME%\bin\win32\wrapper.conf"
 
 set _ACTIVEMQ_HOME="set.ACTIVEMQ_HOME=%ACTIVEMQ_HOME%"
+set _ACTIVEMQ_BASE="set.ACTIVEMQ_BASE=%ACTIVEMQ_BASE%"
 
 rem
 rem Install the Wrapper as an NT service.
 rem
 :startup
-"wrapper.exe" -i %_WRAPPER_CONF% %_ACTIVEMQ_HOME%
+"wrapper.exe" -i %_WRAPPER_CONF% %_ACTIVEMQ_HOME% %_ACTIVEMQ_BASE%
 if not errorlevel 1 goto :eof
 pause
 
