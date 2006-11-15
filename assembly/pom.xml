@@ -325,11 +325,6 @@
               <descriptors>
                  <descriptor>src/main/descriptors/unix-src.xml</descriptor>  
               </descriptors>
-              <!--
-              <finalName>${pom.artifactId}-${pom.version}-src</finalName>
-              <outputDirectory>${pom.artifactId}-${pom.version}</outputDirectory>
-              <appendAssemblyId>false</appendAssemblyId>
-              -->
             </configuration>
           </execution>
           <execution>
@@ -342,10 +337,6 @@
               <descriptors>
                  <descriptor>src/main/descriptors/windows-src.xml</descriptor>  
               </descriptors>
-              <!--
-              <finalName>${pom.artifactId}-${pom.version}-src</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              -->
             </configuration>
           </execution>
         </executions>
