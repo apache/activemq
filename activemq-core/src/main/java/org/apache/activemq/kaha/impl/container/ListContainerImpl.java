@@ -47,6 +47,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     protected int offset=0;
     protected int maximumCacheSize=100;
     protected IndexItem lastCached;
+    protected boolean cacheEnabled = true;
 
     public ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,
             String indexType) throws IOException{
@@ -858,46 +859,51 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     }
 
     protected void itemAdded(IndexItem item,int pos,Object value){
-        int cachePosition=pos-offset;
-        // if pos is before the cache offset
-        // we need to clear the cache
-        if(pos<offset){
-            clearCache();
-        }
-        if(cacheList.isEmpty()){
-            offset=pos;
-            cacheList.add(value);
-            lastCached=item;
-        }else if(cachePosition==cacheList.size()&&cachePosition<maximumCacheSize){
-            cacheList.add(value);
-            lastCached=item;
-        }else if(cachePosition>=0&&cachePosition<=cacheList.size()){
-            cacheList.add(cachePosition,value);
-            if(cacheList.size()>maximumCacheSize){
-                itemRemoved(cacheList.size()-1);
+        if(cacheEnabled){
+            int cachePosition=pos-offset;
+            // if pos is before the cache offset
+            // we need to clear the cache
+            if(pos<offset){
+                clearCache();
+            }
+            if(cacheList.isEmpty()){
+                offset=pos;
+                cacheList.add(value);
+                lastCached=item;
+            }else if(cachePosition==cacheList.size()&&cachePosition<maximumCacheSize){
+                cacheList.add(value);
+                lastCached=item;
+            }else if(cachePosition>=0&&cachePosition<=cacheList.size()){
+                cacheList.add(cachePosition,value);
+                if(cacheList.size()>maximumCacheSize){
+                    itemRemoved(cacheList.size()-1);
+                }
             }
         }
     }
 
     protected void itemRemoved(int pos){
-        int lastPosition=offset+cacheList.size()-1;
-        int cachePosition=pos-offset;
-        if(cachePosition>=0&&cachePosition<cacheList.size()){
-            if(cachePosition==lastPosition){
-                if(lastCached!=null){
-                    lastCached=indexList.getPrevEntry(lastCached);
+        if(cacheEnabled){
+            int lastPosition=offset+cacheList.size()-1;
+            int cachePosition=pos-offset;
+            if(cachePosition>=0&&cachePosition<cacheList.size()){
+                if(cachePosition==lastPosition){
+                    if(lastCached!=null){
+                        lastCached=indexList.getPrevEntry(lastCached);
+                    }
                 }
-            }
-            cacheList.remove(pos);
-            if(cacheList.isEmpty()){
-                clearCache();
+                cacheList.remove(pos);
+                if(cacheList.isEmpty()){
+                    clearCache();
+                }
             }
         }
     }
 
     protected Object getCachedItem(int pos){
-        int cachePosition=pos-offset;
         Object result=null;
+        if(cacheEnabled) {
+        int cachePosition=pos-offset;
         if(cachePosition>=0&&cachePosition<cacheList.size()){
             result=cacheList.get(cachePosition);
         }
@@ -926,6 +932,12 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
                         lastCached=item;
                     }
                 }
+            }
+        }
+        }else {
+            IndexItem item=indexList.get(pos);
+            if(item!=null){
+                result=getValue(item);
             }
         }
         return result;
@@ -980,6 +992,10 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized void setMaximumCacheSize(int maximumCacheSize){
         this.maximumCacheSize=maximumCacheSize;
+        cacheEnabled = maximumCacheSize >= 0;
+        if (!cacheEnabled) {
+            clearCache();
+        }
     }
 
     /**

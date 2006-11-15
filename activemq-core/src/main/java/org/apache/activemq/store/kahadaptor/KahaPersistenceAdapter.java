@@ -1,19 +1,15 @@
 /**
  * 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
+ * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
+ * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
  * 
  * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 
 package org.apache.activemq.store.kahadaptor;
@@ -59,6 +55,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     private boolean useExternalMessageReferences;
     private OpenWireFormat wireFormat=new OpenWireFormat();
     private long maxDataFileLength=32*1024*1024;
+    private int maximumDestinationCacheSize=2000;
     private String indexType=IndexTypes.DISK_INDEX;
     private File dir;
     private Store theStore;
@@ -68,6 +65,8 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
             dir.mkdirs();
         }
         this.dir=dir;
+        wireFormat.setCacheEnabled(false);
+        wireFormat.setTightEncodingEnabled(true);
     }
 
     public Set getDestinations(){
@@ -89,7 +88,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException{
         MessageStore rc=(MessageStore)queues.get(destination);
         if(rc==null){
-            rc=new KahaMessageStore(getMapContainer(destination,"queue-data"),destination);
+            rc=new KahaMessageStore(getListContainer(destination,"queue-data"),destination,maximumDestinationCacheSize);
             messageStores.put(destination,rc);
             if(transactionStore!=null){
                 rc=transactionStore.proxy(rc);
@@ -185,10 +184,11 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         container.load();
         return container;
     }
-    
+
     protected ListContainer getListContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
         ListContainer container=store.getListContainer(id,containerName);
+        container.setMaximumCacheSize(0);
         if(useExternalMessageReferences){
             container.setMarshaller(new StringMarshaller());
         }else{
@@ -199,9 +199,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     /**
-     * @param usageManager
-     *            The UsageManager that is controlling the broker's memory
-     *            usage.
+     * @param usageManager The UsageManager that is controlling the broker's memory usage.
      */
     public void setUsageManager(UsageManager usageManager){
     }
@@ -214,8 +212,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     /**
-     * @param maxDataFileLength
-     *            the maxDataFileLength to set
+     * @param maxDataFileLength the maxDataFileLength to set
      * 
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
@@ -235,6 +232,20 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
      */
     public void setIndexType(String indexType){
         this.indexType=indexType;
+    }
+
+    /**
+     * @return the maximumDestinationCacheSize
+     */
+    public int getMaximumDestinationCacheSize(){
+        return this.maximumDestinationCacheSize;
+    }
+
+    /**
+     * @param maximumDestinationCacheSize the maximumDestinationCacheSize to set
+     */
+    public void setMaximumDestinationCacheSize(int maximumDestinationCacheSize){
+        this.maximumDestinationCacheSize=maximumDestinationCacheSize;
     }
 
     protected synchronized Store getStore() throws IOException{
