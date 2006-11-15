@@ -28,6 +28,17 @@ import java.io.PrintStream;
 
 public class ShellCommand extends AbstractCommand {
 
+    private boolean interactive;
+
+
+    public ShellCommand() {
+        this(false);
+    }
+
+    public ShellCommand(boolean interactive) {
+        this.interactive = interactive;
+    }
+
     /**
      * Main method to run a command shell client.
      * @param args - command line arguments
@@ -49,6 +60,15 @@ public class ShellCommand extends AbstractCommand {
             GlobalWriter.printException(e);
             return -1;
         }
+    }
+
+
+    public boolean isInteractive() {
+        return interactive;
+    }
+
+    public void setInteractive(boolean interactive) {
+        this.interactive = interactive;
     }
 
     /**
@@ -73,6 +93,8 @@ public class ShellCommand extends AbstractCommand {
                 new AmqBrowseCommand().execute(tokens);
             } else if (taskToken.equals("purge")) {
                 new PurgeCommand().execute(tokens);
+            } else if (taskToken.equals("help")) {
+                printHelp();
             } else {
                 // If not valid task, push back to list
                 tokens.add(0, taskToken);

@@ -39,9 +39,7 @@ public class GlobalWriter {
      * @param formatter - the output formatter to use
      */
     public static void instantiate(OutputFormatter formatter) {
-        if (GlobalWriter.formatter == null) {
             GlobalWriter.formatter = formatter;
-        }
     }
 
     /**
