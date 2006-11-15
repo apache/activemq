@@ -37,6 +37,24 @@ public class LRUCache extends LinkedHashMap{
     public LRUCache(){
         super(1000,0.75f,true);
     }
+    
+    /**
+     * Constructs an empty <tt>LRUCache</tt> instance with the
+     * specified initial capacity, maximumCacheSize,load factor and ordering mode.
+     *
+     * @param  initialCapacity the initial capacity.
+     * @param maximumCacheSize 
+     * @param  loadFactor      the load factor.
+     * @param  accessOrder     the ordering mode - <tt>true</tt> for
+     *         access-order, <tt>false</tt> for insertion-order.
+     * @throws IllegalArgumentException if the initial capacity is negative
+     *         or the load factor is nonpositive.
+     */
+    
+    public LRUCache(int initialCapacity,int maximumCacheSize,float loadFactor, boolean accessOrder) {
+        super(initialCapacity,loadFactor,accessOrder);
+        this.maxCacheSize = maximumCacheSize;
+    }
 
     
 
