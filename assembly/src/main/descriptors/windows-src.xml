@@ -40,7 +40,7 @@
         <include>**/*.bin</include>
         <include>**/*.jnilib</include>
         <include>**/*.cert</include>
-        <include>assembly/src/release/bin/macosx/wrapper</include>
+        <include>assembly/src/release/bin/*/wrapper</include>
       </includes>
       <excludes>
         <exclude>**/eclipse-classes/**</exclude>
@@ -70,12 +70,14 @@
         <exclude>**/*.bin</exclude>
         <exclude>**/*.jnilib</exclude>
         <exclude>**/*.cert</exclude>
-        <exclude>assembly/src/release/bin/macosx/wrapper</exclude>
+        <exclude>assembly/src/release/bin/*/wrapper</exclude>
 
         <exclude>**/target/**</exclude>
         <exclude>**/build/**</exclude>
+        <exclude>data/**</exclude>
         <exclude>*/data/**</exclude>
-        <exclude>**/activemq-data/**</exclude>
+        <exclude>activemq-data/**</exclude>
+        <exclude>*/activemq-data/**</exclude>
         <exclude>**/eclipse-classes/**</exclude>
         <exclude>**/.*</exclude>
         <exclude>**/.*/**</exclude>
