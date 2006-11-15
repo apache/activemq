@@ -236,10 +236,10 @@
             <configuration>
               <tasks>
                 <jar destfile="target/run.jar" basedir="target/classes">
-		              <include name="org/apache/activemq/console/Main*.class"/>
-		              <manifest>
-		                <attribute name="Main-Class" value="org.apache.activemq.console.Main"/>
-		              </manifest>
+                      <include name="org/apache/activemq/console/Main*.class"/>
+                      <manifest>
+                        <attribute name="Main-Class" value="org.apache.activemq.console.Main"/>
+                      </manifest>
                 </jar>
               </tasks>
             </configuration>
@@ -315,7 +315,31 @@
               <appendAssemblyId>false</appendAssemblyId>
             </configuration>
           </execution>
-	</executions>
+          <execution>
+            <id>unix-src</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                 <descriptor>src/main/descriptors/unix-src.xml</descriptor>  
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+            <id>windows-src</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                 <descriptor>src/main/descriptors/windows-src.xml</descriptor>  
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- plugin>
         <groupId>org.apache.activemq</groupId>
@@ -338,7 +362,7 @@
             <artifactId>maven-assembly-plugin</artifactId>
             <version>2.1</version>
             <executions>
-	      <execution>
+              <execution>
                 <id>src</id>
                 <phase>package</phase>
                 <goals>
@@ -352,7 +376,7 @@
               </execution>
             </executions>
           </plugin>
-	</plugins>
+        </plugins>
       </build>
     </profile>
   </profiles>
