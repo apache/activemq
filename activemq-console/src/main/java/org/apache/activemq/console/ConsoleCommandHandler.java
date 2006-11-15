@@ -34,7 +34,7 @@ import java.io.ByteArrayOutputStream;
  */
 public class ConsoleCommandHandler implements CommandHandler {
 
-    private ShellCommand command = new ShellCommand();
+    private ShellCommand command = new ShellCommand(true);
 
     public void processCommand(TextMessage request, TextMessage response) throws Exception {
 
@@ -42,14 +42,17 @@ public class ConsoleCommandHandler implements CommandHandler {
         GlobalWriter.instantiate(new CommandShellOutputFormatter(out));
 
         // lets turn the text into a list of arguments
-        List tokens = tokenize(request.getText());
+        String requestText = request.getText();
+
+        List tokens = tokenize(requestText);
         command.execute(tokens);
 
         out.flush();
         byte[] bytes = out.toByteArray();
 
-        String text = new String(bytes);
-        response.setText(text);
+        String answer = new String(bytes);
+
+        response.setText(answer);
     }
 
     protected List tokenize(String text) {

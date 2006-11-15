@@ -45,6 +45,8 @@ public class MBeansRegExQueryFilter extends RegExQueryFilter {
      * @throws Exception
      */
     protected boolean matches(Object data, Map regex) throws Exception {
+        // TODO why not just use instanceof?
+
         // Use reflection to determine where the object should go
         try {
             Method method = this.getClass().getDeclaredMethod("matches", new Class[] {data.getClass(), Map.class});
