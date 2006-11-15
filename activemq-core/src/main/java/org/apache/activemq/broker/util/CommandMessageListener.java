@@ -16,12 +16,21 @@
  */
 package org.apache.activemq.broker.util;
 
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.*;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 /**
  * @version $Revision: $
@@ -38,6 +47,9 @@ public class CommandMessageListener implements MessageListener {
     }
 
     public void onMessage(Message message) {
+        if (log.isDebugEnabled()) {
+            log.debug("Received command: " + message);
+        }
         if (message instanceof TextMessage) {
             TextMessage request = (TextMessage) message;
             try {
@@ -48,7 +60,7 @@ public class CommandMessageListener implements MessageListener {
                 }
                 Message response = processCommand(request);
                 addReplyHeaders(request, response);
-
+                getProducer().send(replyTo, response);
             }
             catch (Exception e) {
                 log.error("Failed to process message due to: " + e + ". Message: " + message, e);
@@ -66,10 +78,24 @@ public class CommandMessageListener implements MessageListener {
         }
     }
 
-    protected Message processCommand(TextMessage request) throws Exception {
+    /**
+     * Processes an incoming JMS message returning the response message
+     */
+    public Message processCommand(TextMessage request) throws Exception {
         TextMessage response = session.createTextMessage();
         getHandler().processCommand(request, response);
         return response;
+    }
+
+    /**
+     * Processes an incoming command from a console and returning the text to output
+     */
+    public String processCommandText(String line) throws Exception {
+        TextMessage request = new ActiveMQTextMessage();
+        request.setText(line);
+        TextMessage response = new ActiveMQTextMessage();
+        getHandler().processCommand(request, response);
+        return response.getText();
     }
 
     public Session getSession() {

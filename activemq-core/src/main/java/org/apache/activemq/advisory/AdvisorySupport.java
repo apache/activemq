@@ -40,10 +40,11 @@ public class AdvisorySupport {
     public static final String EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Expired.Queue.";
     public static final String NO_TOPIC_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"NoConsumer.Topic.";
     public static final String NO_QUEUE_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"NoConsumer.Queue.";
-    public static final String AGENT_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX+"Agent.";
+    public static final String AGENT_TOPIC = "ActiveMQ.Agent";
 
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(TEMP_QUEUE_ADVISORY_TOPIC+","+TEMP_TOPIC_ADVISORY_TOPIC);
+    private static final ActiveMQTopic AGENT_TOPIC_DESTINATION = new ActiveMQTopic(AGENT_TOPIC);
 
     public static ActiveMQTopic getConnectionAdvisoryTopic() {
         return CONNECTION_ADVISORY_TOPIC;
@@ -171,7 +172,10 @@ public class AdvisorySupport {
         }
     }
 
-    public static Destination getAgentDestination(String brokerName) {
-        return new ActiveMQTopic(AGENT_TOPIC_PREFIX + brokerName);
+    /**
+     * Returns the agent topic which is used to send commands to the broker
+     */
+    public static Destination getAgentDestination() {
+        return AGENT_TOPIC_DESTINATION;
     }
 }

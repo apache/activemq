@@ -16,24 +16,30 @@
  */
 package org.apache.activemq.broker.util;
 
-import org.apache.activemq.Service;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.FactoryBean;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 /**
  * An agent which listens to commands on a JMS destination
  *
+ * @version $Revision$
  * @org.apache.xbean.XBean
- *
- * @version $Revision: $
  */
-public class CommandAgent implements Service, BrokerServiceAware {
+public class CommandAgent implements Service, InitializingBean, DisposableBean, FactoryBean {
     private static final Log log = LogFactory.getLog(CommandAgent.class);
 
     private String brokerUrl = "vm://localhost";
@@ -43,7 +49,7 @@ public class CommandAgent implements Service, BrokerServiceAware {
     private CommandMessageListener listener;
     private Session session;
     private MessageConsumer consumer;
-    private String brokerName = "default";
+
 
     public void start() throws Exception {
         session = getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -57,21 +63,63 @@ public class CommandAgent implements Service, BrokerServiceAware {
     }
 
     public void stop() throws Exception {
-        consumer.close();
-        consumer = null;
-        session.close();
-        session = null;
-        connection.close();
-        connection = null;
-    }
-
-    public void setBrokerService(BrokerService brokerService) {
-        String name = brokerService.getBrokerName();
-        if (name != null) {
-            brokerName = name;
+        ServiceStopper stopper = new ServiceStopper();
+        if (consumer != null) {
+            try {
+                consumer.close();
+                consumer = null;
+            }
+            catch (JMSException e) {
+                stopper.onException(this, e);
+            }
         }
+        if (session != null) {
+            try {
+                session.close();
+                session = null;
+            }
+            catch (JMSException e) {
+                stopper.onException(this, e);
+            }
+        }
+        if (connection != null) {
+            try {
+                connection.close();
+                connection = null;
+            }
+            catch (JMSException e) {
+                stopper.onException(this, e);
+            }
+        }
+        stopper.throwFirstException();
     }
 
+    // the following methods ensure that we are created on startup and the lifecycles respected
+    // TODO there must be a simpler way?
+    public void afterPropertiesSet() throws Exception {
+        start();
+    }
+
+    public void destroy() throws Exception {
+        stop();
+    }
+
+    public Object getObject() throws Exception {
+        return this;
+    }
+
+    public Class getObjectType() {
+        return getClass();
+    }
+
+    public boolean isSingleton() {
+        return true;
+    }
+
+
+
+    // Properties
+    //-------------------------------------------------------------------------
     public String getBrokerUrl() {
         return brokerUrl;
     }
@@ -94,6 +142,7 @@ public class CommandAgent implements Service, BrokerServiceAware {
     public Connection getConnection() throws JMSException {
         if (connection == null) {
             connection = createConnection();
+            connection.start();
         }
         return connection;
     }
@@ -117,8 +166,7 @@ public class CommandAgent implements Service, BrokerServiceAware {
         return getConnectionFactory().createConnection();
     }
 
-
     protected Destination createCommandDestination() {
-        return AdvisorySupport.getAgentDestination(brokerName); 
+        return AdvisorySupport.getAgentDestination();
     }
 }
