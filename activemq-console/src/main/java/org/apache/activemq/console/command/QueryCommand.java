@@ -94,7 +94,10 @@ public class QueryCommand extends AbstractJmxCommand {
                 return;
             }
             String queryStr = JmxMBeansUtil.createQueryString(predefQuery, value);
-            queryAddObjects.add(queryStr);
+            StringTokenizer queryTokens = new StringTokenizer(queryStr, COMMAND_OPTION_DELIMETER);
+            while (queryTokens.hasMoreTokens()) {
+                queryAddObjects.add(queryTokens.nextToken());
+            }
         }
 
         // If token is a substractive predefined query define option
@@ -114,7 +117,10 @@ public class QueryCommand extends AbstractJmxCommand {
                 return;
             }
             String queryStr = JmxMBeansUtil.createQueryString(predefQuery, value);
-            querySubObjects.add(queryStr);
+            StringTokenizer queryTokens = new StringTokenizer(queryStr, COMMAND_OPTION_DELIMETER);
+            while (queryTokens.hasMoreTokens()) {
+                querySubObjects.add(queryTokens.nextToken());
+            }
         }
 
         // If token is an additive object name query option
