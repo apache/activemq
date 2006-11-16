@@ -72,6 +72,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     // optimization flags
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
     private RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+    private MessageTransformer transformer;
 
     private boolean disableTimeStampsByDefault = false;
     private boolean optimizedMessageDispatch = true;
@@ -256,6 +257,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
+            connection.setTransformer(getTransformer());
 
             transport.start();
 
@@ -444,6 +446,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
         this.redeliveryPolicy = redeliveryPolicy;
+    }
+
+    public MessageTransformer getTransformer() {
+        return transformer;
+    }
+
+    /**
+     * Sets the transformer used to transform messages before they are sent on to the JMS bus
+     * or when they are received from the bus but before they are delivered to the JMS client
+     */
+    public void setTransformer(MessageTransformer transformer) {
+        this.transformer = transformer;
     }
 
     public void buildFromProperties(Properties properties) {

@@ -82,6 +82,7 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
     private int defaultPriority;
     private long defaultTimeToLive;
     private long startTime;
+    private MessageTransformer transformer;
 
     protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination)
             throws JMSException {
@@ -98,6 +99,7 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
         this.stats = new JMSProducerStatsImpl(session.getSessionStats(), destination);
         this.session.addProducer(this);        
         this.session.asyncSendPacket(info);
+        setTransformer(session.getTransformer());
     }
 
     public StatsImpl getStats() {
@@ -461,9 +463,27 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
         if (dest == null) {
             throw new JMSException("No destination specified");
         }
-        
+
+        if (transformer != null) {
+            Message transformedMessage = transformer.producerTransform(session, this, message);
+            if (transformedMessage != null) {
+                message = transformedMessage;
+            }
+        }
         this.session.send(this, dest, message, deliveryMode, priority, timeToLive);
         stats.onMessage();            
+    }
+
+
+    public MessageTransformer getTransformer() {
+        return transformer;
+    }
+
+    /**
+     * Sets the transformer used to transform messages before they are sent on to the JMS bus
+     */
+    public void setTransformer(MessageTransformer transformer) {
+        this.transformer = transformer;
     }
 
     /**

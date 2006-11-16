@@ -168,26 +168,37 @@ public class ActiveMQMessageTransformation {
                 activeMessage.setConnection(connection);
             }
 
-            activeMessage.setJMSMessageID(message.getJMSMessageID());
-            activeMessage.setJMSCorrelationID(message.getJMSCorrelationID());
-            activeMessage.setJMSReplyTo(transformDestination(message.getJMSReplyTo()));
-            activeMessage.setJMSDestination(transformDestination(message.getJMSDestination()));
-            activeMessage.setJMSDeliveryMode(message.getJMSDeliveryMode());
-            activeMessage.setJMSRedelivered(message.getJMSRedelivered());
-            activeMessage.setJMSType(message.getJMSType());
-            activeMessage.setJMSExpiration(message.getJMSExpiration());
-            activeMessage.setJMSPriority(message.getJMSPriority());
-            activeMessage.setJMSTimestamp(message.getJMSTimestamp());
-
-            Enumeration propertyNames = message.getPropertyNames();
-
-            while (propertyNames.hasMoreElements()) {
-                String name = propertyNames.nextElement().toString();
-                Object obj = message.getObjectProperty(name);
-                activeMessage.setObjectProperty(name, obj);
-            }
+            copyProperties(message, activeMessage);
 
             return activeMessage;
+        }
+    }
+
+    /**
+     * Copies the standard JMS and user defined properties from the givem message to the specified message
+     *
+     * @param fromMessage the message to take the properties from
+     * @param toMesage the message to add the properties to
+     * @throws JMSException
+     */
+    public static void copyProperties(Message fromMessage, Message toMesage) throws JMSException {
+        toMesage.setJMSMessageID(fromMessage.getJMSMessageID());
+        toMesage.setJMSCorrelationID(fromMessage.getJMSCorrelationID());
+        toMesage.setJMSReplyTo(transformDestination(fromMessage.getJMSReplyTo()));
+        toMesage.setJMSDestination(transformDestination(fromMessage.getJMSDestination()));
+        toMesage.setJMSDeliveryMode(fromMessage.getJMSDeliveryMode());
+        toMesage.setJMSRedelivered(fromMessage.getJMSRedelivered());
+        toMesage.setJMSType(fromMessage.getJMSType());
+        toMesage.setJMSExpiration(fromMessage.getJMSExpiration());
+        toMesage.setJMSPriority(fromMessage.getJMSPriority());
+        toMesage.setJMSTimestamp(fromMessage.getJMSTimestamp());
+
+        Enumeration propertyNames = fromMessage.getPropertyNames();
+
+        while (propertyNames.hasMoreElements()) {
+            String name = propertyNames.nextElement().toString();
+            Object obj = fromMessage.getObjectProperty(name);
+            toMesage.setObjectProperty(name, obj);
         }
     }
 }

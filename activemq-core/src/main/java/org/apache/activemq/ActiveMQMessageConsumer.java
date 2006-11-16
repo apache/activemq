@@ -119,7 +119,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private boolean optimizeAcknowledge;
     private AtomicBoolean deliveryingAcknowledgements = new AtomicBoolean();
     private ExecutorService executorService = null;
-   
+    private MessageTransformer transformer;
+
     /**
      * Create a MessageConsumer
      * 
@@ -162,6 +163,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.session = session;
         this.selector = selector;
         this.redeliveryPolicy = session.connection.getRedeliveryPolicy();
+        setTransformer(session.getTransformer());
 
         this.info = new ConsumerInfo(consumerId);
         this.info.setSubscriptionName(name);
@@ -222,6 +224,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
         this.redeliveryPolicy = redeliveryPolicy;
     }
+
+    public MessageTransformer getTransformer() {
+        return transformer;
+    }
+
+    /**
+     * Sets the transformer used to transform messages before they are sent on to the JMS bus
+     */
+    public void setTransformer(MessageTransformer transformer) {
+        this.transformer = transformer;
+    }
+
 
     /**
      * @return Returns the value.
@@ -435,8 +449,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @param md
      * @return
      */
-    private ActiveMQMessage createActiveMQMessage(final MessageDispatch md) {
+    private ActiveMQMessage createActiveMQMessage(final MessageDispatch md) throws JMSException {
         ActiveMQMessage m = (ActiveMQMessage) md.getMessage().copy();
+        if (transformer != null) {
+            Message transformedMessage = transformer.consumerTransform(session, this, m);
+            if (transformedMessage != null) {
+                m = ActiveMQMessageTransformation.transformMessage(transformedMessage, session.connection);
+            }
+        }
         if (session.isClientAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
                 public void execute() throws Exception {
@@ -538,7 +558,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void close() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
             dispose();
-            this.session.syncSendPacket(info.createRemoveCommand());
+            this.session.asyncSendPacket(info.createRemoveCommand());
         }
     }
     
