@@ -69,7 +69,7 @@
 
   </broker>
 
-  <!-- lets create a command agent to respond to admin commands over JMS or XMPP -->
+  <!-- lets create a command agent to respond to admin commands over JMS or XMPP on the ActiveMQ.Agent topic -->
   <commandAgent xmlns="http://activemq.org/config/1.0"/>
 
  
