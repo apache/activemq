@@ -183,7 +183,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private JMSSessionStatsImpl stats;
     private TransactionContext transactionContext;
     private DeliveryListener deliveryListener;
-    
+    private MessageTransformer transformer;
+
     protected final ActiveMQConnection connection;
     protected final SessionInfo info;
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
@@ -224,6 +225,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         connection.addSession(this);
         stats = new JMSSessionStatsImpl(producers, consumers);
         this.connection.asyncSendPacket(info);
+        setTransformer(connection.getTransformer());
         
         if( connection.isStarted() )
             start();
@@ -1702,7 +1704,19 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.sessionAsyncDispatch=sessionAsyncDispatch;
     }
 
-	public List getUnconsumedMessages() {
+    public MessageTransformer getTransformer() {
+        return transformer;
+    }
+
+    /**
+     * Sets the transformer used to transform messages before they are sent on to the JMS bus
+     * or when they are received from the bus but before they are delivered to the JMS client
+     */
+    public void setTransformer(MessageTransformer transformer) {
+        this.transformer = transformer;
+    }
+
+    public List getUnconsumedMessages() {
 		return executor.getUnconsumedMessages();
 	}
     

@@ -117,6 +117,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     // Configuration options variables
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
     private RedeliveryPolicy redeliveryPolicy;
+    private MessageTransformer transformer;
+
     private boolean disableTimeStampsByDefault = false;
     private boolean optimizedMessageDispatch = true;
     private boolean copyMessageOnSend = true;
@@ -873,7 +875,19 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setSessionTaskRunner(TaskRunnerFactory sessionTaskRunner) {
         this.sessionTaskRunner = sessionTaskRunner;
     }
-    
+
+    public MessageTransformer getTransformer() {
+        return transformer;
+    }
+
+    /**
+     * Sets the transformer used to transform messages before they are sent on to the JMS bus
+     * or when they are received from the bus but before they are delivered to the JMS client
+     */
+    public void setTransformer(MessageTransformer transformer) {
+        this.transformer = transformer;
+    }
+
     /**
      * @return the statsEnabled
      */
@@ -1450,7 +1464,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
     
     /**
-     * @param command - the command to consume
+     * @param o - the command to consume
      */
     public void onCommand(final Object o) {
     	final Command command = (Command) o;
