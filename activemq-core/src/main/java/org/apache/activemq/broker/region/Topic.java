@@ -232,11 +232,23 @@ public class Topic implements Destination {
 
     public void send(final ConnectionContext context, final Message message) throws Exception {
 
+    	// There is delay between the client sending it and it arriving at the
+    	// destination.. it may have expired.
+    	if( message.isExpired() ) {
+    		return;
+    	}
+
         if (context.isProducerFlowControl()) {
             if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             } else {
                 usageManager.waitForSpace();
+                
+                // The usage manager could have delayed us by the time
+                // we unblock the message could have expired..
+            	if( message.isExpired() ) {
+            		return;
+            	}
             }    
         }
 
@@ -251,6 +263,12 @@ public class Topic implements Destination {
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     public void afterCommit() throws Exception {
+                    	// It could take while before we receive the commit
+                    	// operration.. by that time the message could have expired..
+                    	if( message.isExpired() ) {
+                    		// TODO: remove message from store.
+                    		return;
+                    	}
                         dispatch(context, message);
                     }
                 });
