@@ -74,6 +74,7 @@ public class KahaStore implements Store{
     private String mode;
     private boolean initialized;
     private boolean logIndexChanges=false;
+    private boolean useAsyncWriter=false;
     private long maxDataFileLength=DataManager.MAX_FILE_LENGTH;
     private FileLock lock;
     private String indexType=IndexTypes.DISK_INDEX;
@@ -314,6 +315,7 @@ public class KahaStore implements Store{
         if(dm==null){
             dm=new DataManager(directory,name);
             dm.setMaxFileLength(maxDataFileLength);
+            dm.setUseAsyncWriter(isUseAsyncWriter());
             recover(dm);
             dataManagers.put(name,dm);
         }
@@ -522,6 +524,14 @@ public class KahaStore implements Store{
             
         }
     }
+
+	public synchronized boolean isUseAsyncWriter() {
+		return useAsyncWriter;
+	}
+
+	public synchronized void setUseAsyncWriter(boolean useAsyncWriter) {
+		this.useAsyncWriter = useAsyncWriter;
+	}
 
     
    
