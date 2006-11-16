@@ -20,6 +20,7 @@ package org.apache.activemq.kaha.impl.data;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreLocation;
@@ -36,30 +37,60 @@ import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
  * @version $Revision: 1.1.1.1 $
  */
 final class AsyncDataFileWriter implements DataFileWriter {
+//    static final Log log = LogFactory.getLog(AsyncDataFileWriter.class);
     
-	private static final Object SHUTDOWN_COMMAND = new Object();
-	    
-    static class WriteCommand {
-		final RandomAccessFile dataFile;
-		final byte[] data;
-		final long offset;
-		final int size;
-	    final CountDownLatch latch;
+	private static final String SHUTDOWN_COMMAND = "SHUTDOWN";
+	
+	static public class WriteKey {
+	    private final int file;
+	    private final long offset;
+	    private final int hash;
 
-		public WriteCommand(RandomAccessFile dataFile, byte[] data, long offset, int size, CountDownLatch latch) {
+		public WriteKey(StoreLocation item){
+	    	file = item.getFile();
+	    	offset = item.getOffset();
+	    	// TODO: see if we can build a better hash  
+	    	hash = (int) (file  ^ offset);
+	    }
+	 
+	    public int hashCode() {
+	    	return hash;  
+	    }
+	    
+	    public boolean equals(Object obj) {
+	    	WriteKey di = (WriteKey)obj;
+	    	return di.file == file && di.offset == offset;
+	    }
+	}
+
+    public static class WriteCommand {
+    	
+		public final StoreLocation location;
+		public final RandomAccessFile dataFile;
+		public final byte[] data;
+		public final CountDownLatch latch;
+
+		public WriteCommand(StoreLocation location, RandomAccessFile dataFile, byte[] data, CountDownLatch latch) {
+			this.location = location;
 			this.dataFile = dataFile;
 			this.data = data;
-			this.offset = offset;
-			this.size = size;
 			this.latch = latch;
 		}
 
+		public String toString() {
+			return "write: "+location+", latch = "+System.identityHashCode(latch);
+		}
     }
     
     private DataManager dataManager;
     
     private final Object enqueueMutex = new Object();
     private final LinkedList queue = new LinkedList();
+    
+    // Maps WriteKey -> WriteCommand for all the writes that still have not landed on 
+    // disk.
+    private final ConcurrentHashMap inflightWrites = new ConcurrentHashMap();
+    
     private final UsageManager usage = new UsageManager();     
     private CountDownLatch latchAssignedToNewWrites = new CountDownLatch(1);
     
@@ -91,6 +122,7 @@ final class AsyncDataFileWriter implements DataFileWriter {
 				return;
 			}
 			latch.await();
+			
 		} catch (InterruptedException e) {
 			throw new InterruptedIOException();
 		}
@@ -103,7 +135,7 @@ final class AsyncDataFileWriter implements DataFileWriter {
      * @return
      * @throws IOException
      */
-    public StoreLocation storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
+    public DataItem storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
     	// We may need to slow down if we are pounding the async thread too 
     	// hard..
     	try {
@@ -121,30 +153,31 @@ final class AsyncDataFileWriter implements DataFileWriter {
         buffer.reset();
         buffer.writeByte(type);
         buffer.writeInt(payloadSize);
-
         final DataItem item=new DataItem();
-        item.setSize(payloadSize);
-        
+        item.setSize(payloadSize);        
         usage.increaseUsage(size);
 
         // Locate datafile and enqueue into the executor in sychronized block so that 
         // writes get equeued onto the executor in order that they were assigned by 
         // the data manager (which is basically just appending)
+    	WriteCommand write; 
         synchronized(enqueueMutex) {
             // Find the position where this item will land at.
 	        final DataFile dataFile=dataManager.findSpaceForData(item);
 	        dataManager.addInterestInFile(dataFile);
         	dataFile.setWriterData(latchAssignedToNewWrites);
-	        enqueue(new WriteCommand(dataFile.getRandomAccessFile(), buffer.getData(), item.getOffset(), size, latchAssignedToNewWrites));
+        	write = new WriteCommand(item, dataFile.getRandomAccessFile(), buffer.getData(), latchAssignedToNewWrites);
+	        enqueue(write);
         }
-                
+        
+    	inflightWrites.put(new WriteKey(item), write);
         return item;
     }
     
     /**
      * 
      */
-    public void updateItem(final StoreLocation location,Marshaller marshaller, Object payload, byte type) throws IOException {
+    public void updateItem(final DataItem item, Marshaller marshaller, Object payload, byte type) throws IOException {
     	// We may need to slow down if we are pounding the async thread too 
     	// hard..
     	try {
@@ -161,19 +194,24 @@ final class AsyncDataFileWriter implements DataFileWriter {
         int payloadSize=size-DataManager.ITEM_HEAD_SIZE;
         buffer.reset();
         buffer.writeByte(type);
-        buffer.writeInt(payloadSize);
-        final DataFile  dataFile = dataManager.getDataFile(location);
-                
+        buffer.writeInt(payloadSize);        
+        item.setSize(payloadSize);
+        final DataFile  dataFile = dataManager.getDataFile(item);                
+        
         usage.increaseUsage(size);
-
+        
+    	WriteCommand write = new WriteCommand(item, dataFile.getRandomAccessFile(), buffer.getData(), latchAssignedToNewWrites);
+    	
         // Equeue the write to an async thread.
         synchronized(enqueueMutex) {
         	dataFile.setWriterData(latchAssignedToNewWrites);
-        	enqueue(new WriteCommand(dataFile.getRandomAccessFile(), buffer.getData(), location.getOffset(), size, latchAssignedToNewWrites));
+        	enqueue(write);
         }
+    	inflightWrites.put(new WriteKey(item), write);
     }
 
     private void enqueue(Object command) throws IOException {
+    	
     	if( shutdown ) {
     		throw new IOException("Async Writter Thread Shutdown");
     	}
@@ -199,6 +237,7 @@ final class AsyncDataFileWriter implements DataFileWriter {
 	private Object dequeue() {
 		synchronized( enqueueMutex ) {
 			while( queue.isEmpty() ) {
+				inflightWrites.clear();
 				try {
 					enqueueMutex.wait();
 				} catch (InterruptedException e) {
@@ -247,14 +286,17 @@ final class AsyncDataFileWriter implements DataFileWriter {
      * 
      */
     private void processQueue() {
+//    	log.debug("Async thread startup");
     	try {
     		CountDownLatch currentBatchLatch=null;
     		RandomAccessFile currentBatchDataFile=null;
-	    	while( !isShutdown() ) {
+
+	    	while( true ) {
 	    		
 	    		// Block till we get a command.
 	    		Object o = dequeue();
-	    		
+//        		log.debug("Processing: "+o);
+	    			    		
 	        	if( o == SHUTDOWN_COMMAND ) {
 	        		if( currentBatchLatch!=null ) {
 	        			currentBatchDataFile.getFD().sync();
@@ -288,10 +330,14 @@ final class AsyncDataFileWriter implements DataFileWriter {
         			}
         			
         			// Write to the data..
-		        	write.dataFile.seek(write.offset);
-		        	write.dataFile.write(write.data,0,write.size);
-		        	usage.decreaseUsage(write.size);
-        			
+        			int size = write.location.getSize()+DataManager.ITEM_HEAD_SIZE;
+        			synchronized(write.dataFile) {
+			        	write.dataFile.seek(write.location.getOffset());
+			        	write.dataFile.write(write.data,0,size);
+        			}
+		        	inflightWrites.remove(new WriteKey(write.location));
+		        	usage.decreaseUsage(size);		        	
+		        	
 	        		// Start of a batch..
 	        		if( currentBatchLatch == null ) {
 	        			currentBatchLatch = write.latch;
@@ -301,14 +347,14 @@ final class AsyncDataFileWriter implements DataFileWriter {
         	        		// write commands allready in the queue should have the 
         	        		// same latch assigned.
         	        		latchAssignedToNewWrites = new CountDownLatch(1);
-        	        		// enqueue an end of batch indicator..
-        	        		queue.add(currentBatchLatch);
-        	          		enqueueMutex.notify();
+        	        		if( !shutdown ) {
+        	        			enqueue(currentBatchLatch);
+        	        		}
         	        	}
         	        	
 	        		} else if( currentBatchLatch!=write.latch ) { 
 	        			// the latch on subsequent writes should match.
-	        			new IOException("Got an out of sequence write.");
+	        			new IOException("Got an out of sequence write");
 	        		}
 	        	}
 	    	}
@@ -317,9 +363,15 @@ final class AsyncDataFileWriter implements DataFileWriter {
 	    	synchronized( enqueueMutex ) {
 	    		firstAsyncException = e;
 	    	}
+//			log.debug("Aync thread shutdown due to error: "+e,e);
 		} finally {
+//			log.debug("Aync thread shutdown");
     		shutdownDone.countDown();
     	}
     }
+
+	public synchronized ConcurrentHashMap getInflightWrites() {
+		return inflightWrites;
+	}
         
 }

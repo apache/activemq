@@ -44,7 +44,7 @@ public final class DataManager{
     private static final String NAME_PREFIX="data-";
     private final File dir;
     private final String name;
-    private SyncDataFileReader reader;
+    private DataFileReader reader;
     private DataFileWriter writer;
     private DataFile currentWriteFile;
     private long maxFileLength = MAX_FILE_LENGTH;
@@ -134,7 +134,7 @@ public final class DataManager{
     }
     
     public void updateItem(StoreLocation location,Marshaller marshaller, Object payload) throws IOException {
-        getWriter().updateItem(location,marshaller,payload,DATA_ITEM_TYPE);
+        getWriter().updateItem((DataItem)location,marshaller,payload,DATA_ITEM_TYPE);
     }
 
     public synchronized void recoverRedoItems(RedoListener listener) throws IOException{
@@ -289,16 +289,20 @@ public final class DataManager{
         return "DataManager:("+NAME_PREFIX+name+")";
     }
 
-	public synchronized SyncDataFileReader getReader() {
+	public synchronized DataFileReader getReader() {
 		if( reader == null ) {
 			reader = createReader();
 		}
 		return reader;
 	}
-	protected SyncDataFileReader createReader() {
-		return new SyncDataFileReader(this);
+	protected DataFileReader createReader() {
+		if( useAsyncWriter ) {
+			return new AsyncDataFileReader(this, (AsyncDataFileWriter) getWriter());
+		} else {
+			return new SyncDataFileReader(this);
+		}
 	}
-	public synchronized void setReader(SyncDataFileReader reader) {
+	public synchronized void setReader(DataFileReader reader) {
 		this.reader = reader;
 	}
 
