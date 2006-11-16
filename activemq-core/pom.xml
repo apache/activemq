@@ -279,7 +279,7 @@
         <configuration>
           <tasks>
             <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask"/>
-            <generate version="2" basedir="${basedir}"/>
+            <generate version="3" basedir="${basedir}"/>
           </tasks>
         </configuration>
         <dependencies>
