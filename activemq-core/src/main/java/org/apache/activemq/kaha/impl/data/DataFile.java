@@ -27,10 +27,12 @@ import java.io.RandomAccessFile;
  * @version $Revision: 1.1.1.1 $
  */
 class DataFile{
+	
     private File file;
     private Integer number;
     private int referenceCount;
     private RandomAccessFile randomAcessFile;
+    private Object writerData;
     long length=0;
 
     DataFile(File file,int number){
@@ -70,12 +72,6 @@ class DataFile{
         return file.delete();
     }
 
-    synchronized void force() throws IOException{
-        if(randomAcessFile!=null){
-            randomAcessFile.getFD().sync();
-        }
-    }
-
     synchronized void close() throws IOException{
         if(randomAcessFile!=null){
             randomAcessFile.close();
@@ -98,4 +94,19 @@ class DataFile{
         String result = file.getName() + " number = " + number + " , length = " + length + " refCount = " + referenceCount;
         return result;
     }
+
+    /**
+     * @return Opaque data that a DataFileWriter may want to associate with the DataFile.
+     */
+	public synchronized Object getWriterData() {
+		return writerData;
+	}
+
+	/**
+	 * @param writerData - Opaque data that a DataFileWriter may want to associate with the DataFile.
+	 */
+	public synchronized void setWriterData(Object writerData) {
+		this.writerData = writerData;
+	}
+
 }

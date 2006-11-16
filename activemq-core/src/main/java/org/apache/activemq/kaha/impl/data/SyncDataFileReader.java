@@ -27,7 +27,7 @@ import org.apache.activemq.util.DataByteArrayInputStream;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-final class StoreDataReader{
+final class SyncDataFileReader{
     
     private DataManager dataManager;
     private DataByteArrayInputStream dataIn;
@@ -37,7 +37,7 @@ final class StoreDataReader{
      * 
      * @param file
      */
-    StoreDataReader(DataManager fileManager){
+    SyncDataFileReader(DataManager fileManager){
         this.dataManager=fileManager;
         this.dataIn=new DataByteArrayInputStream();
     }
@@ -53,7 +53,7 @@ final class StoreDataReader{
      */
     protected byte readDataItemSize(DataItem item) throws IOException {
 
-        RandomAccessFile file = dataManager.getDataFile(item);
+        RandomAccessFile file = dataManager.getDataFile(item).getRandomAccessFile();
         file.seek(item.getOffset()); // jump to the size field
         byte rc = file.readByte();
         item.setSize(file.readInt());
@@ -61,7 +61,7 @@ final class StoreDataReader{
     }
     
     protected Object readItem(Marshaller marshaller,StoreLocation item) throws IOException{
-        RandomAccessFile file=dataManager.getDataFile(item);
+        RandomAccessFile file=dataManager.getDataFile(item).getRandomAccessFile();
         
         // TODO: we could reuse the buffer in dataIn if it's big enough to avoid
         // allocating byte[] arrays on every readItem.

@@ -20,7 +20,6 @@ package org.apache.activemq.kaha.impl.data;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,11 +44,13 @@ public final class DataManager{
     private static final String NAME_PREFIX="data-";
     private final File dir;
     private final String name;
-    private StoreDataReader reader;
-    private StoreDataWriter writer;
+    private SyncDataFileReader reader;
+    private DataFileWriter writer;
     private DataFile currentWriteFile;
     private long maxFileLength = MAX_FILE_LENGTH;
     Map fileMap=new HashMap();
+    
+    private boolean useAsyncWriter=false;
 
     public static final int ITEM_HEAD_SIZE=5; // type + length
     public static final byte DATA_ITEM_TYPE=1;
@@ -61,8 +62,6 @@ public final class DataManager{
     public DataManager(File dir, final String name){
         this.dir=dir;
         this.name=name;
-        this.reader=new StoreDataReader(this);
-        this.writer=new StoreDataWriter(this);
         
         dataFilePrefix = NAME_PREFIX+name+"-";
         // build up list of current dataFiles
@@ -107,34 +106,35 @@ public final class DataManager{
             currentWriteFile=createAndAddDataFile(nextNum);
         }
         item.setOffset(currentWriteFile.getLength());
-        item.setFile(currentWriteFile.getNumber().intValue());
+        item.setFile(currentWriteFile.getNumber().intValue());        
+        currentWriteFile.incrementLength(item.getSize()+ITEM_HEAD_SIZE);
         return currentWriteFile;
     }
 
-    RandomAccessFile getDataFile(StoreLocation item) throws IOException{
+    DataFile getDataFile(StoreLocation item) throws IOException{
         Integer key=new Integer(item.getFile());
         DataFile dataFile=(DataFile) fileMap.get(key);
-        if(dataFile!=null){
-            return dataFile.getRandomAccessFile();
+        if(dataFile==null){
+            log.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
+            throw new IOException("Could not locate data file "+NAME_PREFIX+name+"-"+item.getFile());
         }
-        log.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
-        throw new IOException("Could not locate data file "+NAME_PREFIX+name+"-"+item.getFile());
+        return dataFile;
     }
     
     public synchronized Object readItem(Marshaller marshaller, StoreLocation item) throws IOException{
-        return reader.readItem(marshaller,item);
+        return getReader().readItem(marshaller,item);
     }
 
-    public synchronized StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException{
-        return writer.storeItem(marshaller,payload, DATA_ITEM_TYPE);
+    public StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException{
+        return getWriter().storeItem(marshaller,payload, DATA_ITEM_TYPE);
     }
     
-    public synchronized StoreLocation storeRedoItem(Object payload) throws IOException{
-        return writer.storeItem(redoMarshaller, payload, REDO_ITEM_TYPE);
+    public StoreLocation storeRedoItem(Object payload) throws IOException{
+        return getWriter().storeItem(redoMarshaller, payload, REDO_ITEM_TYPE);
     }
     
-    public synchronized void updateItem(StoreLocation location,Marshaller marshaller, Object payload) throws IOException {
-        writer.updateItem(location,marshaller,payload,DATA_ITEM_TYPE);
+    public void updateItem(StoreLocation location,Marshaller marshaller, Object payload) throws IOException {
+        getWriter().updateItem(location,marshaller,payload,DATA_ITEM_TYPE);
     }
 
     public synchronized void recoverRedoItems(RedoListener listener) throws IOException{
@@ -149,7 +149,7 @@ public final class DataManager{
         while( true ) {
             byte type;
             try {
-                type = reader.readDataItemSize(item);
+                type = getReader().readDataItemSize(item);
             } catch (IOException ignore) {
                 log.trace("End of data file reached at (header was invalid): "+item);
                 return;
@@ -180,9 +180,10 @@ public final class DataManager{
     }
     
     public synchronized void close() throws IOException{
+    	getWriter().close();
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
             DataFile dataFile=(DataFile) i.next();
-            dataFile.force();
+            getWriter().force(dataFile);
             dataFile.close();
         }
         fileMap.clear();
@@ -191,7 +192,7 @@ public final class DataManager{
     public synchronized void force() throws IOException{
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
             DataFile dataFile=(DataFile) i.next();
-            dataFile.force();
+            getWriter().force(dataFile);
         }
     }
 
@@ -218,7 +219,7 @@ public final class DataManager{
         }
     }
 
-    void addInterestInFile(DataFile dataFile){
+    synchronized void addInterestInFile(DataFile dataFile){
         if(dataFile!=null){
             dataFile.increment();
         }
@@ -287,4 +288,42 @@ public final class DataManager{
     public String toString(){
         return "DataManager:("+NAME_PREFIX+name+")";
     }
+
+	public synchronized SyncDataFileReader getReader() {
+		if( reader == null ) {
+			reader = createReader();
+		}
+		return reader;
+	}
+	protected SyncDataFileReader createReader() {
+		return new SyncDataFileReader(this);
+	}
+	public synchronized void setReader(SyncDataFileReader reader) {
+		this.reader = reader;
+	}
+
+	public synchronized DataFileWriter getWriter() {
+		if( writer==null ) {
+			writer = createWriter();
+		}
+		return writer;
+	}
+	private DataFileWriter createWriter() {
+		if( useAsyncWriter ) {
+			return new AsyncDataFileWriter(this);
+		} else {
+			return new SyncDataFileWriter(this);
+		}
+	}
+	public synchronized void setWriter(DataFileWriter writer) {
+		this.writer = writer;
+	}
+
+	public synchronized boolean isUseAsyncWriter() {
+		return useAsyncWriter;
+	}
+
+	public synchronized void setUseAsyncWriter(boolean useAsyncWriter) {
+		this.useAsyncWriter = useAsyncWriter;
+	}
 }
