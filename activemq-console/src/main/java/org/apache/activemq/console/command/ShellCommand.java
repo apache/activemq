@@ -29,6 +29,7 @@ import java.io.PrintStream;
 public class ShellCommand extends AbstractCommand {
 
     private boolean interactive;
+    private String[] helpFile;
 
 
     public ShellCommand() {
@@ -37,6 +38,25 @@ public class ShellCommand extends AbstractCommand {
 
     public ShellCommand(boolean interactive) {
         this.interactive = interactive;
+        this.helpFile = new String[]{
+                (interactive ? "Usage: [task] [task-options] [task data]" : "Usage: Main [--extdir <dir>] [task] [task-options] [task data]"),
+                "",
+                "Tasks (default task is start):",
+                "    start           - Creates and starts a broker using a configuration file, or a broker URI.",
+                "    stop            - Stops a running broker specified by the broker name.",
+                "    list            - Lists all available brokers in the specified JMX context.",
+                "    query           - Display selected broker component's attributes and statistics.",
+                "    browse          - Display selected messages in a specified destination.",
+                "",
+                "Task Options (Options specific to each task):",
+                "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
+                "    --version       - Display the version information.",
+                "    -h,-?,--help    - Display this help information. To display task specific help, use " + (interactive ? "" : "Main ") + "[task] -h,-?,--help",
+                "",
+                "Task Data:",
+                "    - Information needed by each specific task.",
+                ""
+        };
     }
 
     /**
@@ -112,24 +132,4 @@ public class ShellCommand extends AbstractCommand {
     protected void printHelp() {
         GlobalWriter.printHelp(helpFile);
     }
-
-    protected String[] helpFile = new String[] {
-        "Usage: Main [--extdir <dir>] [task] [task-options] [task data]",
-        "",
-        "Tasks (default task is start):",
-        "    start           - Creates and starts a broker using a configuration file, or a broker URI.",
-        "    stop            - Stops a running broker specified by the broker name.",
-        "    list            - Lists all available brokers in the specified JMX context.",
-        "    query           - Display selected broker component's attributes and statistics.",
-        "    browse          - Display selected messages in a specified destination.",
-        "",
-        "Task Options (Options specific to each task):",
-        "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
-        "    --version       - Display the version information.",
-        "    -h,-?,--help    - Display this help information. To display task specific help, use Main [task] -h,-?,--help",
-        "",
-        "Task Data:",
-        "    - Information needed by each specific task.",
-        ""
-    };
 }
