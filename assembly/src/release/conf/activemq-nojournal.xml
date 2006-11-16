@@ -68,6 +68,9 @@
     </networkConnectors>
     
   </broker>
+
+  <!-- lets create a command agent to respond to message based admin commands on the ActiveMQ.Agent topic -->
+  <commandAgent xmlns="http://activemq.org/config/1.0"/>
   
   <!--  This xbean configuration file supports all the standard spring xml configuration options -->
   
