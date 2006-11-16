@@ -74,7 +74,7 @@ public class KahaStore implements Store{
     private String mode;
     private boolean initialized;
     private boolean logIndexChanges=false;
-    private boolean useAsyncWriter=false;
+    private boolean useAsyncWriter=true;
     private long maxDataFileLength=DataManager.MAX_FILE_LENGTH;
     private FileLock lock;
     private String indexType=IndexTypes.DISK_INDEX;

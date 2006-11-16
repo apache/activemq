@@ -48,7 +48,7 @@ final class SyncDataFileWriter implements DataFileWriter{
     /* (non-Javadoc)
 	 * @see org.apache.activemq.kaha.impl.data.DataFileWriter#storeItem(org.apache.activemq.kaha.Marshaller, java.lang.Object, byte)
 	 */
-    public synchronized StoreLocation storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
+    public synchronized DataItem storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
         
         // Write the packet our internal buffer.
         buffer.reset();
@@ -77,7 +77,7 @@ final class SyncDataFileWriter implements DataFileWriter{
     /* (non-Javadoc)
 	 * @see org.apache.activemq.kaha.impl.data.DataFileWriter#updateItem(org.apache.activemq.kaha.StoreLocation, org.apache.activemq.kaha.Marshaller, java.lang.Object, byte)
 	 */
-    public synchronized void updateItem(StoreLocation location,Marshaller marshaller, Object payload, byte type) throws IOException {
+    public synchronized void updateItem(DataItem item,Marshaller marshaller, Object payload, byte type) throws IOException {
         //Write the packet our internal buffer.
         buffer.reset();
         buffer.position(DataManager.ITEM_HEAD_SIZE);
@@ -87,9 +87,10 @@ final class SyncDataFileWriter implements DataFileWriter{
         buffer.reset();
         buffer.writeByte(type);
         buffer.writeInt(payloadSize);
-        DataFile  dataFile = dataManager.getDataFile(location);
+        item.setSize(payloadSize);
+        DataFile  dataFile = dataManager.getDataFile(item);
         RandomAccessFile file = dataFile.getRandomAccessFile();
-        file.seek(location.getOffset());
+        file.seek(item.getOffset());
         file.write(buffer.getData(),0,size);
         dataFile.setWriterData(Boolean.TRUE); // Use as dirty marker..
     }
