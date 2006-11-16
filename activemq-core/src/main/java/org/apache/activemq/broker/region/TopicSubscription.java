@@ -325,6 +325,14 @@ public class TopicSubscription extends AbstractSubscription{
             for(Iterator iter=matched.iterator();iter.hasNext()&&!isFull();){
                 MessageReference message=(MessageReference) iter.next();
                 iter.remove();
+                
+                // Message may have been sitting in the matched list a while
+                // waiting for the consumer to ak the message.
+        		if( message.isExpired() ) {
+        			message.decrementReferenceCount();
+        			continue; // just drop it.
+        		}
+
                 dispatch(message);
             }
         }

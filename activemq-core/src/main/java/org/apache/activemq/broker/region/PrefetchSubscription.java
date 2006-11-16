@@ -377,6 +377,13 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                     while(pending.hasNext()&&!isFull()){
                         MessageReference node=pending.next();
                         pending.remove();
+                        
+                        // Message may have been sitting in the pending list a while
+                        // waiting for the consumer to ak the message.
+                		if( node.isExpired() ) {
+                			continue; // just drop it.
+                		}
+
                         dispatch(node);
                     }
                 }finally{

@@ -17,7 +17,14 @@
  */
 package org.apache.activemq.broker.region;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -28,7 +35,6 @@ import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.broker.region.group.MessageGroupSet;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
-import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -51,14 +57,7 @@ import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -122,7 +121,13 @@ public class Queue implements Destination, Task {
                 store.recover(new MessageRecoveryListener(){
 
                     public void recoverMessage(Message message){
-                        message.setRegionDestination(Queue.this);
+                    	// Message could have expired while it was being loaded..
+                    	if( message.isExpired() ) {
+                    		// TODO: remove message from store.
+                    		return;
+                    	}
+
+                    	message.setRegionDestination(Queue.this);
                         synchronized(messages){
                             try{
                                 messages.addMessageLast(message);
@@ -295,11 +300,23 @@ public class Queue implements Destination, Task {
     }
 
     public void send(final ConnectionContext context,final Message message) throws Exception{
+    	// There is delay between the client sending it and it arriving at the
+    	// destination.. it may have expired.
+    	if( message.isExpired() ) {
+    		return;
+    	}
+    		
         if(context.isProducerFlowControl()){
             if(usageManager.isSendFailIfNoSpace()&&usageManager.isFull()){
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             }else{
                 usageManager.waitForSpace();
+                
+                // The usage manager could have delayed us by the time
+                // we unblock the message could have expired..
+            	if( message.isExpired() ) {
+            		return;
+            	}
             }
         }
         message.setRegionDestination(this);
@@ -310,6 +327,14 @@ public class Queue implements Destination, Task {
             context.getTransaction().addSynchronization(new Synchronization(){
 
                 public void afterCommit() throws Exception{
+                	
+                	// It could take while before we receive the commit
+                	// operration.. by that time the message could have expired..
+                	if( message.isExpired() ) {
+                		// TODO: remove message from store.
+                		return;
+                	}
+
                     sendMessage(context,message);
                 }
             });

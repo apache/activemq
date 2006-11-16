@@ -409,7 +409,10 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public boolean isExpired() {
-        // TODO: need to be implemented. 
+        long expireTime = getExpiration();
+        if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
+            return true;
+        }
         return false;
     }
     
