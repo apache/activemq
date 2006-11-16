@@ -19,7 +19,11 @@
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
 <queue name="${row.name}">
 
-  <stats size="${row.queueSize}" consumerCount="${row.consumerCount}" enqueueCount="${row.enqueueCount}" dequeueCount="${row.dequeueCount}"/>
+  <stats size="${row.destinationStatistics.messages.count}"
+         consumerCount="${row.destinationStatistics.consumers.count}"
+         enqueueCount="${row.destinationStatistics.enqueues.count}"
+         dequeueCount="${row.destinationStatistics.dequeues.count}"/>
+
 
   <feed>
     <atom><c:url value="queueBrowse/${row.name}?view=rss&amp;feedType=atom_1.0"/></atom>
