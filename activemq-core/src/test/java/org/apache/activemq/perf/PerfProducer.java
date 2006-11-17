@@ -17,44 +17,79 @@
  */
 package org.apache.activemq.perf;
 
+import java.util.concurrent.CountDownLatch;
+
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
-import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 /**
  * @version $Revision: 1.3 $
  */
-public class PerfProducer{
+public class PerfProducer implements Runnable {
     protected Connection connection;
     protected MessageProducer producer;
     protected PerfRate rate=new PerfRate();
-    public PerfProducer(ConnectionFactory fac,Destination dest) throws JMSException{
+	private byte[] payload;
+	private Session session;
+	private final CountDownLatch stopped = new CountDownLatch(1);
+	private boolean running;
+	
+    public PerfProducer(ConnectionFactory fac,Destination dest, byte[] palyload) throws JMSException{
         connection=fac.createConnection();
-        Session s=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        producer=s.createProducer(dest);
+        session=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
+        producer=session.createProducer(dest);
+        this.payload = palyload;
     }
+    
     public void setDeliveryMode(int mode) throws JMSException{
         producer.setDeliveryMode(mode);
     }
-    public void start() throws JMSException{
-        connection.start();
-        rate.getRate();
-    }
-    public void stop() throws JMSException{
-        connection.stop();
-    }
+    
     public void shutDown() throws JMSException{
         connection.close();
     }
-    public void sendMessage(Message msg) throws JMSException{
-        producer.send(msg);
-        rate.increment();
-    }
+
     public PerfRate getRate(){
         return rate;
     }
+    	
+	synchronized public void start() throws JMSException{
+		if( !running ) {
+			running = true;
+	        connection.start();
+	        new Thread(this).start(); 
+	        rate.reset();
+		}
+    }
+    public void stop() throws JMSException, InterruptedException{
+    	synchronized(this) {
+    		running=false;
+    	}
+    	stopped.await();
+        connection.stop();
+    }
+	synchronized public boolean isRunning() {
+		return running;
+	}
+	
+	public void run() {
+        try {
+			while(isRunning()){
+			    BytesMessage msg;
+			    msg=session.createBytesMessage();
+			    msg.writeBytes(payload);
+			    producer.send(msg);
+			    rate.increment();
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		} finally {
+			stopped.countDown();
+		}
+	}
+	
 }

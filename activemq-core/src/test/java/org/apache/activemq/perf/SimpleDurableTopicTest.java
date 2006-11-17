@@ -21,14 +21,12 @@ import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
 /**
  * @version $Revision: 1.3 $
  */
 public class SimpleDurableTopicTest extends SimpleTopicTest{
-    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        PerfProducer pp=new PerfProducer(fac,dest);
+    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number, byte payload[]) throws JMSException{
+        PerfProducer pp=new PerfProducer(fac,dest, payload);
         pp.setDeliveryMode(DeliveryMode.PERSISTENT);
         return pp;
     }

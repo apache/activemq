@@ -17,12 +17,12 @@
  */
 package org.apache.activemq.perf;
 
-import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Session;
+
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -42,11 +42,11 @@ public class SimpleTopicTest extends TestCase{
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String DESTINATION_NAME=getClass().toString();
+    protected int SAMPLE_COUNT = 10;
+    protected long SAMPLE_INTERVAL = 2000;
     protected int NUMBER_OF_CONSUMERS=1;
     protected int NUMBER_OF_PRODUCERS=1;
-    protected BytesMessage payload;
     protected int PAYLOAD_SIZE=1024;
-    protected int MESSAGE_COUNT=100000;
     protected byte[] array=null;
     protected ConnectionFactory factory;
     protected Destination destination;
@@ -60,26 +60,23 @@ public class SimpleTopicTest extends TestCase{
         if(broker==null){
             broker=createBroker();
         }
-        array=new byte[PAYLOAD_SIZE];
-        for(int i=0;i<array.length;i++){
-            array[i]=(byte) i;
-        }
         factory=createConnectionFactory();
         Connection con=factory.createConnection();
         Session session=con.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        payload=session.createBytesMessage();
-        payload.writeBytes(array);
+        
         destination=createDestination(session,DESTINATION_NAME);
         con.close();
         producers=new PerfProducer[NUMBER_OF_PRODUCERS];
         consumers=new PerfConsumer[NUMBER_OF_CONSUMERS];
         for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
             consumers[i]=createConsumer(factory,destination,i);
-            consumers[i].start();
         }
         for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
-            producers[i]=createProducer(factory,destination,i);
-            producers[i].start();
+            array=new byte[PAYLOAD_SIZE];
+            for(int j=i;j<array.length;j++){
+                array[j]=(byte) j;
+            }
+            producers[i]=createProducer(factory,destination,i,array);
         }
         super.setUp();
     }
@@ -114,8 +111,8 @@ public class SimpleTopicTest extends TestCase{
         return answer;
     }
 
-    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        return new PerfProducer(fac,dest);
+    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number, byte[] payload) throws JMSException{
+        return new PerfProducer(fac,dest,payload);
     }
 
     protected PerfConsumer createConsumer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
@@ -136,17 +133,27 @@ public class SimpleTopicTest extends TestCase{
         return cf;
     }
 
-    public void testPerformance() throws JMSException{
-        for(int i=0;i<MESSAGE_COUNT;i++){
-            if(i%10000==0){
-                dumpProducerRate();
-                dumpConsumerRate();
-            }
-            payload.clearBody();
-            payload.writeBytes(array);
-            for(int k=0;k<producers.length;k++){
-                producers[k].sendMessage(payload);
-            }
+    public void testPerformance() throws JMSException, InterruptedException{
+    	
+        for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
+            consumers[i].start();
+        }
+        for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
+            producers[i].start();
+        }
+        
+    	log.info("Sampling performance "+SAMPLE_COUNT+" times at a "+SAMPLE_INTERVAL+" ms interval.");
+        for(int i=0; i < SAMPLE_COUNT; i++){
+        	Thread.sleep(SAMPLE_INTERVAL);
+            dumpProducerRate();
+            dumpConsumerRate();
+        }
+        
+        for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
+            producers[i].stop();
+        }
+        for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
+            consumers[i].stop();
         }
     }
 
@@ -160,21 +167,21 @@ public class SimpleTopicTest extends TestCase{
         count=count/producers.length;
         log.info("Producer rate = "+count+" msg/sec total count = "+totalCount);
         for(int i=0;i<producers.length;i++){
-            producers[i].getRate().start();
+            producers[i].getRate().reset();
         }
     }
 
     protected void dumpConsumerRate(){
-        int count=0;
+        int rate=0;
         int totalCount=0;
         for(int i=0;i<consumers.length;i++){
-            count+=consumers[i].getRate().getRate();
+            rate+=consumers[i].getRate().getRate();
             totalCount+=consumers[i].getRate().getTotalCount();
         }
-        count=count/consumers.length;
-        log.info("Consumer rate = "+count+" msg/sec total count = "+totalCount);
+        rate=rate/consumers.length;
+        log.info("Consumer rate = "+rate+" msg/sec total count = "+totalCount);
         for(int i=0;i<consumers.length;i++){
-            consumers[i].getRate().start();
+            consumers[i].getRate().reset();
         }
     }
 }
