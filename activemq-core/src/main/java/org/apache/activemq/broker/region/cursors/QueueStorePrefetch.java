@@ -23,10 +23,12 @@ import java.util.LinkedList;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,17 +37,15 @@ import org.apache.commons.logging.LogFactory;
  * perist pending messages pending message (messages awaiting disptach to a
  * consumer) cursor
  * 
- * @version $Revision$
+ * @version $Revision: 474985 $
  */
-class TopicStorePrefetch extends AbstractPendingMessageCursor implements
+class QueueStorePrefetch extends AbstractPendingMessageCursor implements
         MessageRecoveryListener {
 
-    static private final Log log=LogFactory.getLog(TopicStorePrefetch.class);
+    static private final Log log=LogFactory.getLog(QueueStorePrefetch.class);
    
-    private TopicMessageStore store;
+    private MessageStore store;
     private final LinkedList batchList=new LinkedList();
-    private String clientId;
-    private String subscriberName;
     private Destination regionDestination;
 
     /**
@@ -54,18 +54,17 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
      * @param subscriberName
      * @throws IOException
      */
-    public TopicStorePrefetch(Topic topic,String clientId,String subscriberName){
-        this.regionDestination = topic;
-        this.store=(TopicMessageStore)topic.getMessageStore();
-        this.clientId=clientId;
-        this.subscriberName=subscriberName;
+    public QueueStorePrefetch(Queue queue){
+        this.regionDestination = queue;
+        this.store=(MessageStore)queue.getMessageStore();
+        
     }
 
     public void start() throws Exception{
     }
 
     public void stop() throws Exception{
-        store.resetBatching(clientId,subscriberName);
+        store.resetBatching();
     }
 
     /**
@@ -76,10 +75,10 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
     }
     
     public synchronized int size(){
-        try{
-            return store.getMessageCount(clientId,subscriberName);
-        }catch(IOException e){
-            log.error(this + " Failed to get the outstanding message count from the store",e);
+        try {
+        return store.getMessageCount();
+        }catch(IOException e) {
+            log.error("Failed to get message count",e);
             throw new RuntimeException(e);
         }
     }
@@ -129,17 +128,15 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
 
     // implementation
     protected void fillBatch() throws Exception{
-        store.recoverNextMessages(clientId,subscriberName,
-                maxBatchSize,this);
+        store.recoverNextMessages(maxBatchSize,this);
         // this will add more messages to the batch list
         if(!batchList.isEmpty()){
             Message message=(Message)batchList.getLast();
-          
         }
     }
     
     public String toString() {
-        return "TopicStorePrefetch" + System.identityHashCode(this) + "("+clientId+","+subscriberName+")";
+        return "QueueStorePrefetch" + System.identityHashCode(this) ;
     }
     
 }

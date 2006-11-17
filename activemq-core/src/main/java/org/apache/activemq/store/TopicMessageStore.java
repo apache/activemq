@@ -69,46 +69,21 @@ public interface TopicMessageStore extends MessageStore{
      * 
      * @param clientId
      * @param subscriptionName
-     * @param lastMessageId
      * @param maxReturned
      * @param listener
      * 
      * @throws Exception
      */
-    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,
+    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
                     MessageRecoveryListener listener) throws Exception;
 
     /**
      * A hint to the Store to reset any batching state for a durable subsriber
      * @param clientId 
      * @param subscriptionName 
-     * @param nextToDispatch 
      *
      */
-    public void resetBatching(String clientId,String subscriptionName,MessageId nextToDispatch);
-    
-    /**
-     * Get the next  messageId to deliver to a subscriber after the MessageId provided
-     * @param clientId
-     * @param subscriptionName
-     * @param id 
-     * @return the next messageId or null
-     * @throws IOException 
-     * @throws Exception 
-     */
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception;
-    
-    
-    /**
-     * Get the previous  messageId to deliver to a subscriber before the MessageId provided
-     * @param clientId
-     * @param subscriptionName
-     * @param id 
-     * @return the next messageId or null
-     * @throws IOException 
-     * @throws Exception 
-     */
-    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception;
+    public void resetBatching(String clientId,String subscriptionName);
     
     
     /**

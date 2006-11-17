@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.activeio.journal.RecordLocation;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -38,8 +40,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * A MessageStore that uses a Journal to store it's messages.
@@ -312,44 +313,6 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         subscriberAcks.put(key,container);
     }
 
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId messageId)
-            throws IOException{
-        MessageId result=null;
-        boolean getNext=false;
-        String key=getSubscriptionKey(clientId,subscriptionName);
-        ListContainer list=(ListContainer)subscriberAcks.get(key);
-        Iterator iter=list.iterator();
-        for(Iterator i=list.iterator();i.hasNext();){
-            String id=i.next().toString();
-            if(id.equals(messageId.toString())){
-                getNext=true;
-            }else if(getNext){
-                result=new MessageId(id);
-                break;
-            }
-        }
-        return result;
-    }
-
-    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId messageId)
-            throws IOException{
-        MessageId result=null;
-        String previousId=null;
-        String key=getSubscriptionKey(clientId,subscriptionName);
-        ListContainer list=(ListContainer)subscriberAcks.get(key);
-        Iterator iter=list.iterator();
-        for(Iterator i=list.iterator();i.hasNext();){
-            String id=i.next().toString();
-            if(id.equals(messageId.toString())){
-                if(previousId!=null){
-                    result=new MessageId(previousId);
-                }
-                break;
-            }
-            previousId=id;
-        }
-        return result;
-    }
 
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         String key=getSubscriptionKey(clientId,subscriberName);
@@ -358,5 +321,17 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
     }
 
     public void resetBatching(String clientId,String subscriptionName,MessageId nextId){
+    }
+
+    
+    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,MessageRecoveryListener listener) throws Exception{
+        
+        
+    }
+
+    
+    public void resetBatching(String clientId,String subscriptionName){
+      
+        
     }
 }

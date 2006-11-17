@@ -82,22 +82,15 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         delegate.recoverSubscription(clientId, subscriptionName, listener);
     }
     
-    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,MessageRecoveryListener listener) throws Exception{
-        delegate.recoverNextMessages(clientId, subscriptionName, lastMessageId,maxReturned,listener);
+    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,MessageRecoveryListener listener) throws Exception{
+        delegate.recoverNextMessages(clientId, subscriptionName, maxReturned,listener);
     }
     
-    public void resetBatching(String clientId,String subscriptionName,MessageId id) {
-        delegate.resetBatching(clientId,subscriptionName,id);
+    public void resetBatching(String clientId,String subscriptionName) {
+        delegate.resetBatching(clientId,subscriptionName);
     }
     
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
-        return delegate.getNextMessageIdToDeliver(clientId,subscriptionName,id);
-    }
-    
-    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
-        return delegate.getPreviousMessageIdToDeliver(clientId,subscriptionName,id);
-    }
-    
+       
     public ActiveMQDestination getDestination() {
         return delegate.getDestination();
     }
@@ -120,4 +113,19 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         return delegate.getMessageCount(clientId,subscriberName);
     }    
+    
+   
+    public int getMessageCount() throws IOException{
+        return delegate.getMessageCount();
+    }
+
+    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+       delegate.recoverNextMessages(maxReturned,listener);
+        
+    }
+
+    public void resetBatching(){
+        delegate.resetBatching();
+        
+    }
 }

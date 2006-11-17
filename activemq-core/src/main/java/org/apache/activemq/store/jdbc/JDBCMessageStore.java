@@ -19,7 +19,7 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
-
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -33,6 +33,7 @@ import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
+
 /**
  * @version $Revision: 1.10 $
  */
@@ -42,6 +43,7 @@ public class JDBCMessageStore implements MessageStore {
     protected final ActiveMQDestination destination;
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;
+    protected AtomicLong lastMessageId = new AtomicLong(-1);
 
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat,
             ActiveMQDestination destination) {
@@ -201,4 +203,67 @@ public class JDBCMessageStore implements MessageStore {
     public void setUsageManager(UsageManager usageManager) {
         // we can ignore since we don't buffer up messages.
     }
+
+  
+    public int getMessageCount() throws IOException{
+        int result = 0;
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+        try {
+            
+            result = adapter.doGetMessageCount(c, destination);
+               
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+            throw IOExceptionSupport.create("Failed to get Message Count: " + destination + ". Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+        return result;
+    }
+
+    /**
+     * @param maxReturned
+     * @param listener
+     * @throws Exception
+     * @see org.apache.activemq.store.MessageStore#recoverNextMessages(int, org.apache.activemq.store.MessageRecoveryListener)
+     */
+    public void recoverNextMessages(int maxReturned,final MessageRecoveryListener listener) throws Exception{
+        TransactionContext c=persistenceAdapter.getTransactionContext();
+        
+        try{
+            adapter.doRecoverNextMessages(c,destination,lastMessageId.get(),maxReturned,
+                    new JDBCMessageRecoveryListener(){
+
+                        public void recoverMessage(long sequenceId,byte[] data) throws Exception{
+                            Message msg=(Message)wireFormat.unmarshal(new ByteSequence(data));
+                            msg.getMessageId().setBrokerSequenceId(sequenceId);
+                            listener.recoverMessage(msg);
+                            lastMessageId.set(sequenceId);
+                        }
+
+                        public void recoverMessageReference(String reference) throws Exception{
+                            listener.recoverMessageReference(reference);
+                        }
+
+                        public void finished(){
+                            listener.finished();
+                        }
+                    });
+        }catch(SQLException e){
+            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+        }finally{
+            c.close();
+        }
+        
+    }
+
+    /**
+     * 
+     * @see org.apache.activemq.store.MessageStore#resetBatching()
+     */
+    public void resetBatching(){
+        lastMessageId.set(-1);
+        
+    }
+
 }

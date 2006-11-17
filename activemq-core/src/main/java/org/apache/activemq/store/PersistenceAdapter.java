@@ -104,6 +104,4 @@ public interface PersistenceAdapter extends Service {
      * @param usageManager The UsageManager that is controlling the broker's memory usage.
      */
     public void setUsageManager(UsageManager usageManager);
-
-   
 }

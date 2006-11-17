@@ -415,4 +415,23 @@ public class QuickJournalMessageStore implements MessageStore {
         throw new IOException("The journal does not support message references.");
     }
 
+   
+    public int getMessageCount() throws IOException{
+        peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getMessageCount();
+    }
+
+    
+    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+        peristenceAdapter.checkpoint(true, true);
+        longTermStore.recoverNextMessages(maxReturned,listener);
+        
+    }
+
+    
+    public void resetBatching(){
+       longTermStore.resetBatching();
+        
+    }
+
 }

@@ -66,6 +66,8 @@ public class Statements {
     private String durableSubscriberMessageCountStatement;
     private String nextDurableSubscriberMessageIdStatement;
     private String prevDurableSubscriberMessageIdStatement;
+    private String destinationMessageCountStatement;
+    private String findNextMessagesStatement;
     private boolean useLockCreateWhereClause;
 
     public String[] getCreateSchemaStatements() {
@@ -338,6 +340,29 @@ public class Statements {
         }
         return lockUpdateStatement;
     }
+    
+    /**
+     * @return the destinationMessageCountStatement
+     */
+    public String getDestinationMessageCountStatement(){
+        if (destinationMessageCountStatement==null) {
+            destinationMessageCountStatement= "SELECT COUNT(*) FROM " + getFullMessageTableName()
+            + " WHERE CONTAINER=?";
+        }
+        return destinationMessageCountStatement;
+    }
+
+    /**
+     * @return the findNextMessagesStatement
+     */
+    public String getFindNextMessagesStatement(){
+        if(findNextMessagesStatement == null) {            
+            findNextMessagesStatement="SELECT ID, MSG FROM " + getFullMessageTableName()
+            + " WHERE CONTAINER=? AND ID > ? ORDER BY ID";
+        }
+        return findNextMessagesStatement;
+    }
+
 
     public String getFullMessageTableName() {
         return getTablePrefix() + getMessageTableName();
@@ -627,4 +652,22 @@ public class Statements {
     public void setPrevDurableSubscriberMessageIdStatement(String prevDurableSubscriberMessageIdStatement){
         this.prevDurableSubscriberMessageIdStatement=prevDurableSubscriberMessageIdStatement;
     }
+    
+    /**
+     * @param findNextMessagesStatement the findNextMessagesStatement to set
+     */
+    public void setFindNextMessagesStatement(String findNextMessagesStatement){
+        this.findNextMessagesStatement=findNextMessagesStatement;
+    }
+
+    /**
+     * @param destinationMessageCountStatement the destinationMessageCountStatement to set
+     */
+    public void setDestinationMessageCountStatement(String destinationMessageCountStatement){
+        this.destinationMessageCountStatement=destinationMessageCountStatement;
+    }
+    
+    
+    
+   
 }

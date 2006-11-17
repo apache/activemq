@@ -287,4 +287,16 @@ public class RapidMessageStore implements MessageStore {
         }
     }
 
+
+   
+    public int getMessageCount(){
+        return 0;
+    }
+
+    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+    }
+
+    public void resetBatching(){
+    }
+
 }

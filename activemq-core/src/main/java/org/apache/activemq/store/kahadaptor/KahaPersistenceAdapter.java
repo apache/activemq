@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -37,7 +38,7 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * @org.apache.xbean.XBean
@@ -106,7 +107,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
             MapContainer subsContainer=getMapContainer(destination.toString()+"-Subscriptions","topic-subs");
             ListContainer ackContainer=store.getListContainer(destination.toString(),"topic-acks");
             ackContainer.setMarshaller(new TopicSubAckMarshaller());
-            rc=new KahaTopicMessageStore(store,messageContainer,ackContainer,subsContainer,destination);
+            rc=new KahaTopicMessageStore(store,messageContainer,ackContainer,subsContainer,destination,maximumDestinationCacheSize);
             messageStores.put(destination,rc);
             if(transactionStore!=null){
                 rc=transactionStore.proxy(rc);

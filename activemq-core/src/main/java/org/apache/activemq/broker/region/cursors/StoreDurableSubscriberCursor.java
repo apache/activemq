@@ -27,7 +27,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.Store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * perist pending messages pending message (messages awaiting disptach to a consumer) cursor
@@ -142,12 +141,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
                 TopicStorePrefetch tsp=(TopicStorePrefetch)topics.get(dest);
                 if(tsp!=null){
                     tsp.addMessageLast(node);
-                    if(started){
-                        // if the store has been empty - then this message is next to dispatch
-                        if((pendingCount-nonPersistent.size())<=0){
-                            tsp.nextToDispatch(node.getMessageId());
-                        }
-                    }
                 }
             }
         }
@@ -190,6 +183,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     }
 
     public synchronized void reset(){
+        nonPersistent.reset();
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
             AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
             tsp.reset();
@@ -199,21 +193,27 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     public int size(){
         return pendingCount;
     }
+    
+    public synchronized void setMaxBatchSize(int maxBatchSize){
+        for(Iterator i=storePrefetches.iterator();i.hasNext();){
+            AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
+            tsp.setMaxBatchSize(maxBatchSize);
+        }
+        super.setMaxBatchSize(maxBatchSize);
+    }
 
     protected synchronized PendingMessageCursor getNextCursor() throws Exception{
         if(currentCursor==null||currentCursor.isEmpty()){
             currentCursor=null;
             for(Iterator i=storePrefetches.iterator();i.hasNext();){
-                AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
-                tsp.setMaxBatchSize(getMaxBatchSize());
+                AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next(); 
                 if(tsp.hasNext()){
                     currentCursor=tsp;
                     break;
                 }
             }
             // round-robin
-            Object obj=storePrefetches.removeFirst();
-            storePrefetches.addLast(obj);
+            storePrefetches.addLast(storePrefetches.removeFirst());
         }
         return currentCursor;
     }
