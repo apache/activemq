@@ -66,7 +66,13 @@ public class KahaMessageStore implements MessageStore, UsageListener{
 
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
         StoreEntry item = messageContainer.placeLast(message);
+        // TODO: we should do the following but it is not need if the message is being added within a persistence transaction
+        // but since I can't tell if one is running right now.. I'll leave this out for now. 
+//        if( message.isResponseRequired() ) {
+//        	messageContainer.force();
+//        }
         cache.put(message.getMessageId(),item);
+        
     }
 
     public synchronized void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
