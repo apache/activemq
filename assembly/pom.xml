@@ -122,14 +122,6 @@
       <groupId>xmlpull</groupId>
       <artifactId>xmlpull</artifactId>
     </dependency>
-    <dependency>
-      <groupId>mx4j</groupId>
-      <artifactId>mx4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>mx4j</groupId>
-      <artifactId>mx4j-remote</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>log4j</groupId>
