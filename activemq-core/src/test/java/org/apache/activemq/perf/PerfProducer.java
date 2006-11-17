@@ -59,10 +59,10 @@ public class PerfProducer implements Runnable {
     	
 	synchronized public void start() throws JMSException{
 		if( !running ) {
+	        rate.reset();
 			running = true;
 	        connection.start();
 	        new Thread(this).start(); 
-	        rate.reset();
 		}
     }
     public void stop() throws JMSException, InterruptedException{
