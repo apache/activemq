@@ -26,8 +26,8 @@ import javax.jms.JMSException;
  */
 public class SimpleNonPersistentQueueTest extends SimpleQueueTest{
     
-    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        PerfProducer pp=new PerfProducer(fac,dest);
+    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number, byte[] payload) throws JMSException{
+        PerfProducer pp=new PerfProducer(fac,dest,payload);
         pp.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         return pp;
     }

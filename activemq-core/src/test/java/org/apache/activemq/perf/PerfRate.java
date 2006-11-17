@@ -30,26 +30,34 @@ public class PerfRate{
     public int getCount(){
         return totalCount;
     }
+
     public void increment(){
         totalCount++;
         count++;
     }
-    public void start(){
-        count=0;
-        startTime=System.currentTimeMillis();
-    }
+
     public int getRate(){
         long endTime=System.currentTimeMillis();
         long totalTime=endTime-startTime;
         int result=(int) ((count*1000)/totalTime);
         return result;
     }
+    
+    /**
+     * Resets the rate sampling.
+     */
+    public void reset() {
+        count=0;
+        startTime=System.currentTimeMillis();
+    }
+
     /**
      * @return Returns the totalCount.
      */
     public int getTotalCount(){
         return totalCount;
     }
+    
     /**
      * @param totalCount
      *            The totalCount to set.
