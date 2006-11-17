@@ -19,7 +19,9 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
-
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
@@ -30,13 +32,14 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import java.util.concurrent.atomic.AtomicBoolean;
+
 
 /**
  * @version $Revision: 1.6 $
  */
 public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMessageStore {
 
+    private Map subscriberLastMessageMap=new ConcurrentHashMap();
     public JDBCTopicMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat,
             ActiveMQTopic topic) {
         super(persistenceAdapter, adapter, wireFormat, topic);
@@ -90,35 +93,46 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
-    public void recoverNextMessages(final String clientId,final String subscriptionName, final MessageId lastMessageId,final int maxReturned,final MessageRecoveryListener listener) throws Exception{
-        TransactionContext c = persistenceAdapter.getTransactionContext();
-        try {
-            long lastSequence = lastMessageId != null ? lastMessageId.getBrokerSequenceId() : -1;
-            adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName,lastSequence,maxReturned,
-                    new JDBCMessageRecoveryListener() {
-                        public void recoverMessage(long sequenceId, byte[] data) throws Exception {
-                            Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
+    public synchronized void recoverNextMessages(final String clientId,final String subscriptionName,
+            final int maxReturned,final MessageRecoveryListener listener) throws Exception{
+        TransactionContext c=persistenceAdapter.getTransactionContext();
+        String subcriberId=getSubscriptionKey(clientId,subscriptionName);
+        AtomicLong last=(AtomicLong)subscriberLastMessageMap.get(subcriberId);
+        if(last==null){
+            last=new AtomicLong(-1);
+            subscriberLastMessageMap.put(subcriberId,last);
+        }
+        final AtomicLong finalLast=last;
+        try{
+            adapter.doRecoverNextMessages(c,destination,clientId,subscriptionName,last.get(),maxReturned,
+                    new JDBCMessageRecoveryListener(){
+
+                        public void recoverMessage(long sequenceId,byte[] data) throws Exception{
+                            Message msg=(Message)wireFormat.unmarshal(new ByteSequence(data));
                             msg.getMessageId().setBrokerSequenceId(sequenceId);
                             listener.recoverMessage(msg);
+                            finalLast.set(sequenceId);
                         }
-                        public void recoverMessageReference(String reference) throws Exception {
+
+                        public void recoverMessageReference(String reference) throws Exception{
                             listener.recoverMessageReference(reference);
                         }
-                        
+
                         public void finished(){
                             listener.finished();
                         }
                     });
-        } catch (SQLException e) {
+        }catch(SQLException e){
             JDBCPersistenceAdapter.log("JDBC Failure: ",e);
-
-        } finally {
+        }finally{
             c.close();
+            last.set(finalLast.get());
         }
-        
     }
     
-    public void resetBatching(String clientId,String subscriptionName,MessageId id) {
+    public void resetBatching(String clientId,String subscriptionName) {
+        String subcriberId=getSubscriptionKey(clientId,subscriptionName);
+        subscriberLastMessageMap.remove(subcriberId);
     }
     
     /**
@@ -165,6 +179,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             throw IOExceptionSupport.create("Failed to remove subscription for: " + clientId + ". Reason: " + e, e);
         } finally {
             c.close();
+            resetBatching(clientId,subscriptionName);
         }
     }
 
@@ -180,76 +195,9 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
-        
-        final MessageId result = new MessageId();
-        final AtomicBoolean initalized = new AtomicBoolean();
-        TransactionContext c = persistenceAdapter.getTransactionContext();
-        try {
-            long sequence = id != null ? id.getBrokerSequenceId() : -1;
-           adapter.doGetNextDurableSubscriberMessageIdStatement(c, destination, clientId, subscriptionName,sequence,new JDBCMessageRecoveryListener() {
-               public void recoverMessage(long sequenceId, byte[] data) throws Exception {
-                   Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
-                   msg.getMessageId().setBrokerSequenceId(sequenceId);
-                   result.setBrokerSequenceId(msg.getMessageId().getBrokerSequenceId());
-                   initalized.set(true);
-                   
-               }
-               public void recoverMessageReference(String reference) throws Exception {
-                   result.setValue(reference);
-                   initalized.set(true);
-                   
-               }
-               
-               public void finished(){          
-               }
-           });
-           
-               
-        } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
-            throw IOExceptionSupport.create("Failed to get next MessageId to deliver: " + clientId + ". Reason: " + e, e);
-        } finally {
-            c.close();
-        }
-        return initalized.get () ? result : null;
-    }
     
-    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
-        final MessageId result = new MessageId();
-        final AtomicBoolean initalized = new AtomicBoolean();
-        TransactionContext c = persistenceAdapter.getTransactionContext();
-        try {
-            long sequence = id != null ? id.getBrokerSequenceId() : -1;
-           adapter.doGetPrevDurableSubscriberMessageIdStatement(c, destination, clientId, subscriptionName,sequence,new JDBCMessageRecoveryListener() {
-               public void recoverMessage(long sequenceId, byte[] data) throws Exception {
-                   Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
-                   msg.getMessageId().setBrokerSequenceId(sequenceId);
-                   result.setProducerId(msg.getMessageId().getProducerId());
-                   result.setProducerSequenceId(msg.getMessageId().getProducerSequenceId());
-                   result.setBrokerSequenceId(msg.getMessageId().getBrokerSequenceId());
-                   initalized.set(true);
-                   
-               }
-               public void recoverMessageReference(String reference) throws Exception {
-                   result.setValue(reference);
-                   initalized.set(true);
-                   
-               }
-               
-               public void finished(){          
-               }
-           });
-           
-               
-        } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
-            throw IOExceptionSupport.create("Failed to get next MessageId to deliver: " + clientId + ". Reason: " + e, e);
-        } finally {
-            c.close();
-        }
-        return initalized.get () ? result : null;
-    }
+    
+    
 
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         int result = 0;
@@ -263,6 +211,12 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         } finally {
             c.close();
         }
+        return result;
+    }
+    
+    protected String getSubscriptionKey(String clientId,String subscriberName){
+        String result=clientId+":";
+        result+=subscriberName!=null?subscriberName:"NOT_SET";
         return result;
     }
 

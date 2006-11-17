@@ -677,6 +677,54 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             close(s);
         }
     }
+    
+   
+    public int doGetMessageCount(TransactionContext c,ActiveMQDestination destination) throws SQLException, IOException{
+        PreparedStatement s=null;
+        ResultSet rs=null;
+        int result=0;
+        try{
+            s=c.getConnection().prepareStatement(statements.getDestinationMessageCountStatement());
+            s.setString(1,destination.getQualifiedName());
+            rs=s.executeQuery();
+            if(rs.next()){
+                result=rs.getInt(1);
+            }
+        }finally{
+            close(rs);
+            close(s);
+        }
+        return result;
+    }
+
+    
+    public void doRecoverNextMessages(TransactionContext c,ActiveMQDestination destination,long nextSeq,int maxReturned,JDBCMessageRecoveryListener listener) throws Exception{
+        PreparedStatement s=null;
+        ResultSet rs=null;
+        try{
+            s=c.getConnection().prepareStatement(statements.getFindNextMessagesStatement());
+            s.setString(1,destination.getQualifiedName());
+            s.setLong(4,nextSeq);
+            rs=s.executeQuery();
+            int count=0;
+            if(statements.isUseExternalMessageReferences()){
+                while(rs.next()&&count<maxReturned){
+                    listener.recoverMessageReference(rs.getString(1));
+                    count++;
+                }
+            }else{
+                while(rs.next()&&count<maxReturned){
+                    listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2));
+                    count++;
+                }
+            }
+        }finally{
+            close(rs);
+            close(s);
+            listener.finished();
+        }
+        
+    }
     /*
      * Useful for debugging. public void dumpTables(Connection c, String destinationName, String clientId, String
      * subscriptionName) throws SQLException { printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); printQuery(c,
@@ -700,4 +748,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
      * out.print(set.getString(i)+"|"); } out.println(); } } finally { try { set.close(); } catch (Throwable ignore) {}
      * try { s.close(); } catch (Throwable ignore) {} } }
      */
+
+    
 }

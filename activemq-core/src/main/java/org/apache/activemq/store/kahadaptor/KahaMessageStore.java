@@ -26,6 +26,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.StoreEntry;
+import org.apache.activemq.memory.UsageListener;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
@@ -35,10 +36,12 @@ import org.apache.activemq.util.LRUCache;
  * 
  * @version $Revision: 1.7 $
  */
-public class KahaMessageStore implements MessageStore{
+public class KahaMessageStore implements MessageStore, UsageListener{
     protected final ActiveMQDestination destination;
     protected final ListContainer messageContainer;
+    protected StoreEntry batchEntry = null;
     protected final LRUCache cache;
+    protected UsageManager usageManager;
 
     public KahaMessageStore(ListContainer container,ActiveMQDestination destination, int maximumCacheSize) throws IOException{
         this.messageContainer=container;
@@ -73,18 +76,18 @@ public class KahaMessageStore implements MessageStore{
 
     public synchronized Message getMessage(MessageId identity) throws IOException{
         Message result=null;
-        StoreEntry entry=(StoreEntry)cache.remove(identity);
+        StoreEntry entry=(StoreEntry)cache.get(identity);
         if(entry!=null){
             result = (Message)messageContainer.get(entry);
-        }else{
-       
-        for(Iterator i=messageContainer.iterator();i.hasNext();){
-            Message msg=(Message)i.next();
-            if(msg.getMessageId().equals(identity)){
-                result=msg;
-                break;
+        }else{    
+            for (entry = messageContainer.getFirst();entry != null; entry = messageContainer.getNext(entry)) {
+                Message msg=(Message)messageContainer.get(entry);
+                if(msg.getMessageId().equals(identity)){
+                    result=msg;
+                    cache.put(identity,msg);
+                    break;
+                }
             }
-        }
         }
         return result;
     }
@@ -102,10 +105,10 @@ public class KahaMessageStore implements MessageStore{
         if(entry!=null){
             messageContainer.remove(entry);
         }else{
-            for(Iterator i=messageContainer.iterator();i.hasNext();){
-                Message msg=(Message)i.next();
+            for (entry = messageContainer.getFirst();entry != null; entry = messageContainer.getNext(entry)) {
+                Message msg=(Message)messageContainer.get(entry);
                 if(msg.getMessageId().equals(msgId)){
-                    i.remove();
+                    messageContainer.remove(entry);
                     break;
                 }
             }
@@ -119,9 +122,15 @@ public class KahaMessageStore implements MessageStore{
         listener.finished();
     }
 
-    public void start() {}
+    public void start() {
+        if( this.usageManager != null )
+            this.usageManager.addUsageListener(this);
+    }
 
-    public void stop() {}
+    public void stop() {
+        if( this.usageManager != null )
+            this.usageManager.removeUsageListener(this);
+    }
 
     public synchronized void removeAllMessages(ConnectionContext context) throws IOException{
         messageContainer.clear();
@@ -141,6 +150,91 @@ public class KahaMessageStore implements MessageStore{
      * @param usageManager The UsageManager that is controlling the destination's memory usage.
      */
     public void setUsageManager(UsageManager usageManager) {
+        this.usageManager = usageManager;
+    }
+
+    /**
+     * @return the number of messages held by this destination
+     * @see org.apache.activemq.store.MessageStore#getMessageCount()
+     */
+    public int getMessageCount(){
+       return messageContainer.size();
+    }
+
+    /**
+     * @param id
+     * @return null
+     * @throws Exception
+     * @see org.apache.activemq.store.MessageStore#getPreviousMessageIdToDeliver(org.apache.activemq.command.MessageId)
+     */
+    public MessageId getPreviousMessageIdToDeliver(MessageId id) throws Exception{
+        return null;
+    }
+
+    /**
+     * @param lastMessageId
+     * @param maxReturned
+     * @param listener
+     * @throws Exception
+     * @see org.apache.activemq.store.MessageStore#recoverNextMessages(org.apache.activemq.command.MessageId, int, org.apache.activemq.store.MessageRecoveryListener)
+     */
+    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+        StoreEntry entry = batchEntry;
+        if (entry == null) {
+            entry= messageContainer.getFirst();
+        }else {
+            entry=messageContainer.refresh(entry);
+            entry=messageContainer.getNext(entry);
+        }
+        if(entry!=null){
+            int count = 0;
+            do{
+                Object msg=messageContainer.get(entry);
+                if(msg!=null){
+                    if(msg.getClass()==String.class){
+                        String ref=msg.toString();
+                        listener.recoverMessageReference(ref);
+                    }else{
+                        Message message=(Message)msg;
+                        listener.recoverMessage(message);
+                    }
+                    count++;
+                }
+                batchEntry = entry;
+                entry=messageContainer.getNext(entry);
+            }while(entry!=null&&count<maxReturned);
+        }
+        listener.finished();
+        
+    }
+
+    /**
+     * @param nextToDispatch
+     * @see org.apache.activemq.store.MessageStore#resetBatching(org.apache.activemq.command.MessageId)
+     */
+    public void resetBatching(){
+        batchEntry = null;
+        
+    }
+    
+    /**
+     * @return true if the store supports cursors
+     */
+    public boolean isSupportForCursors() {
+        return true;
+    }
+
+    /**
+     * @param memoryManager
+     * @param oldPercentUsage
+     * @param newPercentUsage
+     * @see org.apache.activemq.memory.UsageListener#onMemoryUseChanged(org.apache.activemq.memory.UsageManager, int, int)
+     */
+    public synchronized void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
+        if (newPercentUsage == 100) {
+            cache.clear();
+        }
+        
     }
 
 }

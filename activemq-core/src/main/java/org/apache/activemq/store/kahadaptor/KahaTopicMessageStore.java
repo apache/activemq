@@ -17,6 +17,7 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -31,24 +32,20 @@ import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @version $Revision: 1.5 $
  */
-public class KahaTopicMessageStore implements TopicMessageStore{
+public class KahaTopicMessageStore extends KahaMessageStore implements TopicMessageStore{
 
-    private ActiveMQDestination destination;
     private ListContainer ackContainer;
-    private ListContainer messageContainer;
     private Map subscriberContainer;
     private Store store;
     private Map subscriberMessages=new ConcurrentHashMap();
 
     public KahaTopicMessageStore(Store store,ListContainer messageContainer,ListContainer ackContainer,
-            MapContainer subsContainer,ActiveMQDestination destination) throws IOException{
-        this.messageContainer=messageContainer;
-        this.destination=destination;
+            MapContainer subsContainer,ActiveMQDestination destination,int maximumCacheSize) throws IOException{
+        super(messageContainer,destination,maximumCacheSize);
         this.store=store;
         this.ackContainer=ackContainer;
         subscriberContainer=subsContainer;
@@ -159,7 +156,7 @@ public class KahaTopicMessageStore implements TopicMessageStore{
         }
     }
 
-    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,
+    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
             MessageRecoveryListener listener) throws Exception{
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
@@ -195,7 +192,7 @@ public class KahaTopicMessageStore implements TopicMessageStore{
     }
 
     public void delete(){
-        messageContainer.clear();
+        super.delete();
         ackContainer.clear();
         subscriberContainer.clear();
     }
@@ -322,82 +319,16 @@ public class KahaTopicMessageStore implements TopicMessageStore{
         }
     }
 
-    /**
-     * @param usageManager
-     * @see org.apache.activemq.store.MessageStore#setUsageManager(org.apache.activemq.memory.UsageManager)
-     */
-    public void setUsageManager(UsageManager usageManager){
-        // TODO Auto-generated method stub
-    }
-
-    /**
-     * @throws Exception
-     * @see org.apache.activemq.Service#start()
-     */
-    public void start() throws Exception{
-        // TODO Auto-generated method stub
-    }
-
-    /**
-     * @throws Exception
-     * @see org.apache.activemq.Service#stop()
-     */
-    public void stop() throws Exception{
-        // TODO Auto-generated method stub
-    }
-
-    /**
-     * @param clientId
-     * @param subscriptionName
-     * @see org.apache.activemq.store.TopicMessageStore#resetBatching(java.lang.String, java.lang.String)
-     */
-    public synchronized void resetBatching(String clientId,String subscriptionName,MessageId nextToDispatch){
+    public synchronized void resetBatching(String clientId,String subscriptionName){
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer topicSubContainer=(TopicSubContainer)subscriberMessages.get(key);
         if(topicSubContainer!=null){
             topicSubContainer.reset();
-            if(nextToDispatch!=null){
-                StoreEntry entry=topicSubContainer.getListContainer().getFirst();
-                do{
-                    ConsumerMessageRef consumerRef=(ConsumerMessageRef)topicSubContainer.getListContainer().get(entry);
-                    Object msg=messageContainer.get(consumerRef.getMessageEntry());
-                    if(msg!=null){
-                        if(msg.getClass()==String.class){
-                            String ref=msg.toString();
-                            if(msg.toString().equals(nextToDispatch.toString())){
-                                // need to set the entry to the previous one
-                                // to ensure we start in the right place
-                                topicSubContainer
-                                        .setBatchEntry(topicSubContainer.getListContainer().getPrevious(entry));
-                                break;
-                            }
-                        }else{
-                            Message message=(Message)msg;
-                            if(message!=null&&message.getMessageId().equals(nextToDispatch)){
-                                // need to set the entry to the previous one
-                                // to ensure we start in the right place
-                                topicSubContainer
-                                        .setBatchEntry(topicSubContainer.getListContainer().getPrevious(entry));
-                                break;
-                            }
-                        }
-                    }
-                    entry=topicSubContainer.getListContainer().getNext(entry);
-                }while(entry!=null);
-            }
         }
     }
 
-    /**
-     * @param clientId
-     * @param subscriptionName
-     * @param id
-     * @return next messageId
-     * @throws IOException
-     * @see org.apache.activemq.store.TopicMessageStore#getNextMessageIdToDeliver(java.lang.String, java.lang.String,
-     *      org.apache.activemq.command.MessageId)
-     */
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws IOException{
+   
+    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName) throws IOException{
         // TODO Auto-generated method stub
         return null;
     }

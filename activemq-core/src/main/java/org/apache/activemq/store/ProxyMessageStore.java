@@ -77,4 +77,20 @@ public class ProxyMessageStore implements MessageStore {
     public void setUsageManager(UsageManager usageManager) {
         delegate.setUsageManager(usageManager);
     }
+
+ 
+    public int getMessageCount() throws IOException{
+        return delegate.getMessageCount();
+    }
+
+
+    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+       delegate.recoverNextMessages(maxReturned,listener);
+        
+    }
+
+    public void resetBatching(){
+        delegate.resetBatching();
+        
+    }
 }

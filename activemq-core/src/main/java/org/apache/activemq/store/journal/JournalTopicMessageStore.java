@@ -58,9 +58,9 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         longTermStore.recoverSubscription(clientId, subscriptionName, listener);
     }
     
-    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,MessageRecoveryListener listener) throws Exception{
+    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,MessageRecoveryListener listener) throws Exception{
         this.peristenceAdapter.checkpoint(true, true);
-        longTermStore.recoverNextMessages(clientId, subscriptionName, lastMessageId,maxReturned,listener);
+        longTermStore.recoverNextMessages(clientId, subscriptionName, maxReturned,listener);
         
     }
 
@@ -190,23 +190,14 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         return longTermStore.getAllSubscriptions();
     }
 
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
-        this.peristenceAdapter.checkpoint(true, true);
-        return longTermStore.getNextMessageIdToDeliver(clientId,subscriptionName,id);
-    }
     
-    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws Exception{
-        this.peristenceAdapter.checkpoint(true, true);
-        return longTermStore.getPreviousMessageIdToDeliver(clientId,subscriptionName,id);
-    }
-
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         this.peristenceAdapter.checkpoint(true, true);
         return longTermStore.getMessageCount(clientId,subscriberName);
     }
     
-    public void resetBatching(String clientId,String subscriptionName,MessageId nextToDispatch) {
-        longTermStore.resetBatching(clientId,subscriptionName,nextToDispatch);
+    public void resetBatching(String clientId,String subscriptionName) {
+        longTermStore.resetBatching(clientId,subscriptionName);
     }
 
     
