@@ -164,7 +164,7 @@ public class SimpleTopicTest extends TestCase{
         int totalCount=0;
         for(int i=0;i<producers.length;i++){
             totalRate+=producers[i].getRate().getRate();
-            totalCount+=consumers[i].getRate().getTotalCount();
+            totalCount+=producers[i].getRate().getTotalCount();
         }
         int avgRate = totalRate/producers.length;
         log.info("Avg producer rate = "+avgRate+" msg/sec | Total rate = "+totalRate+", sent = "+totalCount);
