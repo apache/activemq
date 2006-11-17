@@ -32,6 +32,8 @@ import javax.jms.Topic;
 public class PerfConsumer implements MessageListener{
     protected Connection connection;
     protected MessageConsumer consumer;
+    protected long sleepDuration;
+    
     protected PerfRate rate=new PerfRate();
     public PerfConsumer(ConnectionFactory fac,Destination dest,String consumerName) throws JMSException{
         connection=fac.createConnection();
@@ -62,5 +64,18 @@ public class PerfConsumer implements MessageListener{
     }
     public void onMessage(Message msg){
         rate.increment();
+        try {
+        	if( sleepDuration!=0 ) {
+        		Thread.sleep(sleepDuration);
+        	}
+		} catch (InterruptedException e) {
+		}        
     }
+    
+	public synchronized long getSleepDuration() {
+		return sleepDuration;
+	}
+	public synchronized void setSleepDuration(long sleepDuration) {
+		this.sleepDuration = sleepDuration;
+	}
 }
