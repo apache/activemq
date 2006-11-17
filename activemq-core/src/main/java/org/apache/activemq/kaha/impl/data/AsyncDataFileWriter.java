@@ -27,8 +27,8 @@ import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 
-import edu.emory.mathcs.backport.java.util.LinkedList;
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
+import java.util.LinkedList;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Optimized Store writer that uses an async thread do batched writes to 

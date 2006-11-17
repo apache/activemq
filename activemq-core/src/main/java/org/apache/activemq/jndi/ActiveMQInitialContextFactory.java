@@ -38,7 +38,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A factory of the ActiveMQ InitialContext which contains {@link ConnectionFactory}

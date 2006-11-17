@@ -30,7 +30,7 @@ import org.apache.activemq.command.ConnectionInfo;
 
 import org.apache.activemq.jaas.JassCredentialCallbackHandler;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 /**

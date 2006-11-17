@@ -29,8 +29,8 @@ import javax.jms.Session;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author rnewson

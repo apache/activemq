@@ -19,7 +19,7 @@ package org.apache.activemq.tool.sampler;
 import org.apache.activemq.tool.reports.PerformanceReportWriter;
 import org.apache.activemq.tool.properties.AbstractObjectProperties;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractPerformanceSampler extends AbstractObjectProperties implements PerformanceSampler {
 	protected long rampUpTime   = 30 * 1000; // 30 secs

@@ -36,7 +36,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.util.ClassLoading;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * A Flow provides different dispatch policies within the NMR
  * 

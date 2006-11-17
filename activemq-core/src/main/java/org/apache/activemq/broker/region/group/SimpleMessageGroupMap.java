@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.broker.region.group;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.ConsumerId;
 

@@ -37,7 +37,7 @@ import org.apache.activemq.util.MapHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * A {@link DiscoveryAgent} using <a href="http://www.zeroconf.org/">Zeroconf</a>

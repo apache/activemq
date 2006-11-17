@@ -226,12 +226,6 @@
       <!-- Required dependencies -->
       <!-- =============================== -->
       <dependency>
-        <groupId>backport-util-concurrent</groupId>
-        <artifactId>backport-util-concurrent</artifactId>
-        <version>${backport-util-concurrent-version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
         <version>${commons-logging-version}</version>
@@ -843,8 +837,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.4</source>
-          <target>1.4</target>
+          <source>1.5</source>
+          <target>1.5</target>
         </configuration>
       </plugin>
       <plugin>
@@ -899,7 +893,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <links>
-            <link>http://java.sun.com/j2ee/1.4/docs/api</link>
+            <link>http://java.sun.com/j2ee/1.5/docs/api</link>
             <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
             <link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
             <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
@@ -925,7 +919,6 @@
     <aopalliance-version>1.0</aopalliance-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
-    <backport-util-concurrent-version>2.1</backport-util-concurrent-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
     <commons-collections-version>2.1</commons-collections-version>

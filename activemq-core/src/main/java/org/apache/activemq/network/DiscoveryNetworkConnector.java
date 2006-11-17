@@ -31,7 +31,7 @@ import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A network connector which uses a discovery agent to detect the remote brokers

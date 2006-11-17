@@ -31,8 +31,8 @@ import org.apache.activemq.transport.TransportServer;
 
 import javax.net.SocketFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class InactivityMonitorTest extends CombinationTestSupport implements TransportAcceptListener {

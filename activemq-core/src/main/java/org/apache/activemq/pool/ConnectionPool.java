@@ -29,7 +29,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.pool.ObjectPoolFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Holds a real JMS connection along with the session pools associated with it.

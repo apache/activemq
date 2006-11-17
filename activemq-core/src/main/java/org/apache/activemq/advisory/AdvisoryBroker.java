@@ -38,7 +38,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This broker filter handles tracking the state of the broker for purposes of publishing advisory messages

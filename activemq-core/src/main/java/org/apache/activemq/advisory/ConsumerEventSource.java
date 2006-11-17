@@ -17,8 +17,8 @@
  */
 package org.apache.activemq.advisory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQDestination;

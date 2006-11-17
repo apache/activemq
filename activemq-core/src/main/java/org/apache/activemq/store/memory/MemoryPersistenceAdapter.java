@@ -34,7 +34,7 @@ import org.apache.activemq.store.TransactionStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @org.apache.xbean.XBean

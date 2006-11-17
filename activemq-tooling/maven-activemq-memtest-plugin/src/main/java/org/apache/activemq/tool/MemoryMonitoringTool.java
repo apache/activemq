@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.tool;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 import java.io.DataOutputStream;

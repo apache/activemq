@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.benchmark;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.util.IdGenerator;

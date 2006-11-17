@@ -31,7 +31,7 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Topic;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class JmsConsumerClient extends AbstractJmsMeasurableClient {
     private static final Log log = LogFactory.getLog(JmsConsumerClient.class);

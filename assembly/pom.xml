@@ -132,10 +132,6 @@
     </dependency>
 
     <dependency>
-      <groupId>backport-util-concurrent</groupId>
-      <artifactId>backport-util-concurrent</artifactId>
-    </dependency>
-    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
@@ -277,7 +273,7 @@
               <goal>createbundle</goal>
             </goals>
             <configuration>
-              <includes>activemq-core,activemq-console,activeio-core,activemq-jaas,activemq-optional,backport-util-concurrent,commons-logging,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,derby</includes>
+              <includes>activemq-core,activemq-console,activeio-core,activemq-jaas,activemq-optional,commons-logging,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,derby</includes>
             </configuration>
           </execution>
         </executions>

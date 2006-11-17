@@ -17,12 +17,12 @@
  */
 package org.apache.activemq.thread;
 
-import edu.emory.mathcs.backport.java.util.concurrent.Executor;
-import edu.emory.mathcs.backport.java.util.concurrent.ExecutorService;
-import edu.emory.mathcs.backport.java.util.concurrent.SynchronousQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Manages the thread pool for long running tasks.
@@ -87,7 +87,7 @@ public class TaskRunnerFactory {
                 return thread;
             }
         });
-        rc.allowCoreThreadTimeOut(true);
+        //rc.allowCoreThreadTimeOut(true);
         return rc;
     }
 

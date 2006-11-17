@@ -21,7 +21,7 @@ import org.apache.activemq.tool.sampler.MeasurableClient;
 
 import javax.jms.ConnectionFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class AbstractJmsMeasurableClient extends AbstractJmsClient implements MeasurableClient {
     protected AtomicLong throughput = new AtomicLong(0);

@@ -17,8 +17,8 @@
  */
 package org.apache.activemq.transport;
 
-import edu.emory.mathcs.backport.java.util.Queue;
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.activemq.util.ServiceStopper;
 

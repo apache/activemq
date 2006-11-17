@@ -37,7 +37,7 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 abstract public class AbstractSubscription implements Subscription {
     

@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.broker.ConnectionContext;

@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.broker.ft;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;

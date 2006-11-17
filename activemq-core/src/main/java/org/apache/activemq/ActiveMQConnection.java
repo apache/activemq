@@ -85,14 +85,14 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
-import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class ActiveMQConnection implements Connection, TopicConnection, QueueConnection, StatsCapable, Closeable,  StreamConnection, TransportListener {
@@ -183,7 +183,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 thread.setDaemon(true);
                 return thread;
             }});
-        asyncConnectionThread.allowCoreThreadTimeOut(true);
+        //asyncConnectionThread.allowCoreThreadTimeOut(true);
         
         this.info = new ConnectionInfo(new ConnectionId(connectionIdGenerator.generateId()));
         this.info.setManageable(true);

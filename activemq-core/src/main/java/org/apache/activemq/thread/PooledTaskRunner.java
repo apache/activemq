@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.thread;
 
-import edu.emory.mathcs.backport.java.util.concurrent.Executor;
+import java.util.concurrent.Executor;
 
 /**
  *

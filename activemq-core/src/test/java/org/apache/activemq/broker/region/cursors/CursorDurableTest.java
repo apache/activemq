@@ -43,8 +43,8 @@ import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMes
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 /**
  * @version $Revision: 1.3 $
  */
