@@ -37,6 +37,7 @@ public class JournalKahaQueueTest extends SimpleQueueTest{
     	
         KahaPersistenceAdapter kahaAdaptor = new KahaPersistenceAdapter(new File(dataFileDir, "kaha"));
         JournalPersistenceAdapter journalAdaptor = new JournalPersistenceAdapter(journal, kahaAdaptor, answer.getTaskRunnerFactory());
+        journalAdaptor.setMaxCheckpointWorkers(1);
         
         answer.setPersistenceAdapter(journalAdaptor);
         answer.addConnector(bindAddress);
