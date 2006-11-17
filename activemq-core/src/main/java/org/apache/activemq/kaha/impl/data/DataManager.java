@@ -259,6 +259,7 @@ public final class DataManager{
 
     private void removeDataFile(DataFile dataFile) throws IOException{
         fileMap.remove(dataFile.getNumber());
+        writer.force(dataFile);
         boolean result=dataFile.delete();
         log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
     }
