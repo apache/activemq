@@ -93,13 +93,13 @@ public class RequesterTool {
 			// And the Destinations..
 			if (topic) {
 				destination = session.createTopic(subject);
-				if( replySubject==null )
+				if( replySubject==null || replySubject.equals("") )
 					replyDest = session.createTemporaryTopic();
 				else
 					replyDest = session.createTopic(replySubject);
 			} else {
 				destination = session.createQueue(subject);
-				if( replySubject==null )
+				if( replySubject==null || replySubject.equals("") )
 					replyDest = session.createTemporaryQueue();
 				else
 					replyDest = session.createQueue(replySubject);
