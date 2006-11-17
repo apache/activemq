@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.tool.sampler.plugins;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

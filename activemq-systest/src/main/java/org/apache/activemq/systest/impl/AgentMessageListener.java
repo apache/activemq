@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.systest.impl;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.Message;
 import javax.jms.MessageListener;

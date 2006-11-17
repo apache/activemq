@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import junit.framework.TestCase;
 import org.apache.activemq.kaha.impl.KahaStore;
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CountDownLatch;
 /**
  * Store test
  * 

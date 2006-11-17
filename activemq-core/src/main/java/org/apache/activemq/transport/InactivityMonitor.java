@@ -25,7 +25,7 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Used to make sure that commands are arriving periodically from the peer of the transport.  

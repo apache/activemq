@@ -19,7 +19,7 @@ package org.apache.activemq.memory;
 
 import java.util.Map;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Use any Map to implement the Cache.  No cache eviction going on here.  Just gives

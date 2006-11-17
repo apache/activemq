@@ -36,8 +36,8 @@ import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A servlet which handles server side HTTP transport, delegating to the

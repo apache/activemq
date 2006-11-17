@@ -52,7 +52,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit;
 
 public class BrokerTestSupport extends CombinationTestSupport {
     

@@ -30,8 +30,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 
-import edu.emory.mathcs.backport.java.util.concurrent.Semaphore;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * BrokerBenchmark is used to get an idea of the raw performance of a broker.  Since

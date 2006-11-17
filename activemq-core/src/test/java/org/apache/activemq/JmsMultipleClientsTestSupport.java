@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.net.URI;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.*;
 

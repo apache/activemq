@@ -25,7 +25,7 @@ import org.apache.activemq.transport.StubTransportListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.Queue;
+import java.util.Queue;
 
 /**
  * 

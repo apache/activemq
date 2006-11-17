@@ -19,10 +19,10 @@ package org.apache.activemq.thread;
 
 import java.util.HashMap;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ScheduledFuture;
-import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
-import edu.emory.mathcs.backport.java.util.concurrent.ThreadFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @version $Revision$
@@ -39,7 +39,6 @@ public class Scheduler {
         });
     static {
         clockDaemon.setKeepAliveTime(5, TimeUnit.SECONDS);
-        clockDaemon.allowCoreThreadTimeOut(false);
     }
     static HashMap clockTickets = new HashMap();
 

@@ -41,8 +41,8 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.IdGenerator;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @version $Revision: 1.1.1.1 $

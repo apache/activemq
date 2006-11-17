@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.memory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Simple CacheFilter that increases/decreases usage on a UsageManager as

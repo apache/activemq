@@ -28,9 +28,9 @@ import javax.jms.TextMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.springframework.jms.core.MessageCreator;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @version $Revision$

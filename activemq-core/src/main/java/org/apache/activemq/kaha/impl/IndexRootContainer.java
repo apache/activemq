@@ -34,7 +34,7 @@ import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
 * A container of roots for other Containers

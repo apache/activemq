@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.TransactionId;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TransactionState {        
     final TransactionId id;

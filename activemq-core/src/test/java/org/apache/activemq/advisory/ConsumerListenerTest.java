@@ -17,9 +17,9 @@
  */
 package org.apache.activemq.advisory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ArrayBlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.advisory.ConsumerEvent;

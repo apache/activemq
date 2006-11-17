@@ -27,7 +27,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.Store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * perist pending messages pending message (messages awaiting disptach to a consumer) cursor

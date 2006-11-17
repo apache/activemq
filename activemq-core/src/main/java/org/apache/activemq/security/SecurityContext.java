@@ -20,7 +20,7 @@ package org.apache.activemq.security;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Used to cache up authorizations so that subsequent requests are faster.

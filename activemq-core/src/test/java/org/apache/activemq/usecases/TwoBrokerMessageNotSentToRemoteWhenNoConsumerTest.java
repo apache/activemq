@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.net.URI;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @version $Revision: 1.1.1.1 $

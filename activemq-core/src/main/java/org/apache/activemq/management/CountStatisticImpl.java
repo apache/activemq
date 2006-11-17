@@ -19,7 +19,7 @@ package org.apache.activemq.management;
 
 import javax.management.j2ee.statistics.CountStatistic;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A count statistic implementation

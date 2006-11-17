@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.IndentPrinter;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Statistics for a number of JMS connections

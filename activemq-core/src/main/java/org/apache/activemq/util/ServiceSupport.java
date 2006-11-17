@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.util;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;

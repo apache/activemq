@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.ObjectName;
 

@@ -22,7 +22,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jmdns.JmDNS;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class JmDNSFactory {
     

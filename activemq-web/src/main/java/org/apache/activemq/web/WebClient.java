@@ -51,7 +51,7 @@ import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.emory.mathcs.backport.java.util.concurrent.Semaphore;
+import java.util.concurrent.Semaphore;
 
 /**
  * Represents a messaging client used from inside a web container typically
