@@ -21,9 +21,11 @@ package org.apache.activemq.perf;
  * @version $Revision: 1.3 $
  */
 public class PerfRate{
+	
     protected int totalCount;
     protected int count;
     protected long startTime=System.currentTimeMillis();
+    
     /**
      * @return Returns the count.
      */
@@ -31,7 +33,7 @@ public class PerfRate{
         return totalCount;
     }
 
-    public void increment(){
+    synchronized public void increment(){
         totalCount++;
         count++;
     }
@@ -41,6 +43,19 @@ public class PerfRate{
         long totalTime=endTime-startTime;
         int result=(int) ((count*1000)/totalTime);
         return result;
+    }
+    
+    /**
+     * Resets the rate sampling.
+     */
+    synchronized public PerfRate cloneAndReset() {
+    	PerfRate rc = new PerfRate();
+    	rc.totalCount = totalCount;
+    	rc.count=count;
+    	rc.startTime=startTime;    	
+        count=0;
+        startTime=System.currentTimeMillis();
+        return rc;
     }
     
     /**

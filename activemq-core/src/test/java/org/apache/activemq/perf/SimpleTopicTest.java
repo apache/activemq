@@ -43,10 +43,10 @@ public class SimpleTopicTest extends TestCase{
     //protected String bindAddress="vm://localhost";
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
-    protected String DESTINATION_NAME=getClass().toString();
+    protected String DESTINATION_NAME=getClass().getName();
     protected int SAMPLE_COUNT = 30;
     protected long SAMPLE_INTERVAL = 2000;
-    protected int NUMBER_OF_CONSUMERS=1;
+    protected int NUMBER_OF_CONSUMERS=10;
     protected int NUMBER_OF_PRODUCERS=1;
     protected int PAYLOAD_SIZE=1024;
     protected byte[] array=null;
@@ -163,27 +163,23 @@ public class SimpleTopicTest extends TestCase{
         int totalRate=0;
         int totalCount=0;
         for(int i=0;i<producers.length;i++){
-            totalRate+=producers[i].getRate().getRate();
-            totalCount+=producers[i].getRate().getTotalCount();
+        	PerfRate rate = producers[i].getRate().cloneAndReset();
+            totalRate+=rate.getRate();
+            totalCount+=rate.getTotalCount();
         }
         int avgRate = totalRate/producers.length;
         log.info("Avg producer rate = "+avgRate+" msg/sec | Total rate = "+totalRate+", sent = "+totalCount);
-        for(int i=0;i<producers.length;i++){
-            producers[i].getRate().reset();
-        }
     }
 
     protected void dumpConsumerRate(){
         int totalRate=0;
         int totalCount=0;
         for(int i=0;i<consumers.length;i++){
-            totalRate+=consumers[i].getRate().getRate();
-            totalCount+=consumers[i].getRate().getTotalCount();
+        	PerfRate rate = consumers[i].getRate().cloneAndReset();
+            totalRate+=rate.getRate();
+            totalCount+=rate.getTotalCount();
         }
         int avgRate = totalRate/consumers.length;
         log.info("Avg consumer rate = "+avgRate+" msg/sec | Total rate = "+totalRate+", received = "+totalCount);
-        for(int i=0;i<consumers.length;i++){
-            consumers[i].getRate().reset();
-        }
     }
 }

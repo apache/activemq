@@ -51,7 +51,7 @@ public class PerfConsumer implements MessageListener{
     }
     public void start() throws JMSException{
         connection.start();
-        rate.getRate();
+        rate.reset();
     }
     public void stop() throws JMSException{
         connection.stop();
