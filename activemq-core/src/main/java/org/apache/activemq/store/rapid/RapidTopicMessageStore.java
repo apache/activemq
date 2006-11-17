@@ -22,7 +22,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.activeio.journal.RecordLocation;
+
+import org.apache.activeio.journal.active.Location;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.JournalTopicAck;
@@ -170,7 +171,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         ack.setSubscritionName(subscriptionName);
         ack.setClientId(clientId);
         ack.setTransactionId(context.getTransaction()!=null?context.getTransaction().getTransactionId():null);
-        final RecordLocation location=peristenceAdapter.writeCommand(ack,false);
+        final Location location=peristenceAdapter.writeCommand(ack,false);
         final SubscriptionKey key=new SubscriptionKey(clientId,subscriptionName);
         if(!context.isInTransaction()){
             if(debug)
@@ -236,7 +237,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
      * @param location
      * @param key
      */
-    private void acknowledge(MessageId messageId,RecordLocation location,SubscriptionKey key){
+    private void acknowledge(MessageId messageId,Location location,SubscriptionKey key){
         synchronized(this){
             lastLocation=location;
             ackedLastAckLocations.put(key,messageId);
@@ -265,17 +266,17 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         return result;
     }
 
-    public RecordLocation checkpoint() throws IOException{
+    public Location checkpoint() throws IOException{
         ArrayList cpAckedLastAckLocations;
         // swap out the hash maps..
         synchronized(this){
             cpAckedLastAckLocations=new ArrayList(this.ackedLastAckLocations.values());
             this.ackedLastAckLocations=new HashMap();
         }
-        RecordLocation rc=super.checkpoint();
+        Location rc=super.checkpoint();
         if(!cpAckedLastAckLocations.isEmpty()){
             Collections.sort(cpAckedLastAckLocations);
-            RecordLocation t=(RecordLocation)cpAckedLastAckLocations.get(0);
+            Location t=(Location)cpAckedLastAckLocations.get(0);
             if(rc==null||t.compareTo(rc)<0){
                 rc=t;
             }

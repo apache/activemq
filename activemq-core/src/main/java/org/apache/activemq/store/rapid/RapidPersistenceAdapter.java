@@ -23,12 +23,22 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activeio.journal.InvalidRecordLocationException;
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.JournalEventListener;
 import org.apache.activeio.journal.RecordLocation;
 import org.apache.activeio.journal.active.JournalImpl;
+import org.apache.activeio.journal.active.Location;
 import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
 import org.apache.activemq.broker.ConnectionContext;
@@ -66,16 +76,6 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with a
@@ -471,14 +471,14 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
      */
     private void recover() throws IllegalStateException, InvalidRecordLocationException, IOException, IOException {
 
-        RecordLocation pos = null;
+        Location pos = null;
         int transactionCounter = 0;
 
         log.info("Journal Recovery Started.");
         ConnectionContext context = new ConnectionContext();
 
         // While we have records in the journal.
-        while ((pos = journal.getNextRecordLocation(pos)) != null) {
+        while ((pos = (Location) journal.getNextRecordLocation(pos)) != null) {
             Packet data = journal.read(pos);
             DataStructure c = (DataStructure) wireFormat.unmarshal(toByteSequence(data));
 
@@ -603,9 +603,9 @@ public class RapidPersistenceAdapter implements PersistenceAdapter, JournalEvent
      * @return
      * @throws IOException
      */
-    public RecordLocation writeCommand(DataStructure command, boolean sync) throws IOException {
+    public Location writeCommand(DataStructure command, boolean sync) throws IOException {
         if( started.get() )
-            return journal.write(toPacket(wireFormat.marshal(command)), sync);
+            return (Location) journal.write(toPacket(wireFormat.marshal(command)), sync);
         throw new IOException("closed");
     }
 
