@@ -33,7 +33,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class SimpleTopicTest extends TestCase{
-    private static final Log log=LogFactory.getLog(SimpleTopicTest.class);
+    private final Log log=LogFactory.getLog(getClass());
+    
     protected BrokerService broker;
     protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true";
     //protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=false";
@@ -42,7 +43,7 @@ public class SimpleTopicTest extends TestCase{
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String DESTINATION_NAME=getClass().toString();
-    protected int SAMPLE_COUNT = 10;
+    protected int SAMPLE_COUNT = 30;
     protected long SAMPLE_INTERVAL = 2000;
     protected int NUMBER_OF_CONSUMERS=1;
     protected int NUMBER_OF_PRODUCERS=1;
