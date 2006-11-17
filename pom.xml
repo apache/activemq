@@ -214,7 +214,7 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activeio-core</artifactId>
-        <version>3.x-incubator-SNAPSHOT</version>
+        <version>3.1-incubator-SNAPSHOT</version>
       </dependency>
 	  <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -289,34 +289,6 @@
             <artifactId>qdox</artifactId>
           </exclusion>
         </exclusions>
-        <!--
-          <exclusions>
-          <exclusion>
-          <groupId>backport-util-concurrent</groupId>
-          <artifactId>backport-util-concurrent</artifactId>
-          </exclusion>
-          <exclusion>
-          <groupId>ant</groupId>
-          <artifactId>ant</artifactId>
-          </exclusion>
-          <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-          <groupId>mx4j</groupId>
-          <artifactId>mx4j</artifactId>
-          </exclusion>
-          <exclusion>
-          <groupId>qdox</groupId>
-          <artifactId>qdox</artifactId>
-          </exclusion>
-          <exclusion>
-          <groupId>stax</groupId>
-          <artifactId>stax-api</artifactId>
-          </exclusion>
-          </exclusions>
-        -->
 
       </dependency>
 
@@ -524,31 +496,6 @@
         <groupId>activemq</groupId>
         <artifactId>jmdns</artifactId>
         <version>1.0-RC2</version>
-      </dependency>
-      <dependency>
-        <groupId>mx4j</groupId>
-        <artifactId>mx4j</artifactId>
-        <version>${mx4j-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>mx4j</groupId>
-        <artifactId>mx4j-jmx</artifactId>
-        <version>${mx4j-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>mx4j</groupId>
-        <artifactId>mx4j-remote</artifactId>
-        <version>${mx4j-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>mx4j</groupId>
-        <artifactId>mx4j-tools</artifactId>
-        <version>${mx4j-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>mx4j</groupId>
-        <artifactId>mx4j-impl</artifactId>
-        <version>${mx4j-version}</version>
       </dependency>
 
       <dependency>
@@ -940,7 +887,6 @@
     <junit-version>3.8.1</junit-version>
     <jxta-version>2.0</jxta-version>
     <log4j-version>1.2.12</log4j-version>
-    <mx4j-version>2.1.1</mx4j-version>
     <org-apache-derby-version>10.1.1.0</org-apache-derby-version>
     <org-apache-geronimo-specs-version>1.0</org-apache-geronimo-specs-version>
     <org-apache-maven-surefire-plugin-version>2.2</org-apache-maven-surefire-plugin-version>
