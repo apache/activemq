@@ -36,7 +36,8 @@ public class SimpleTopicTest extends TestCase{
     private final Log log=LogFactory.getLog(getClass());
     
     protected BrokerService broker;
-    protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true";
+//    protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false";
+    protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=true";
     //protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=false";
     //protected String bindAddress="vm://localhost?marshal=true";
     //protected String bindAddress="vm://localhost";
