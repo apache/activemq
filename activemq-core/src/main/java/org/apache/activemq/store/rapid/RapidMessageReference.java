@@ -18,30 +18,24 @@
 
 package org.apache.activemq.store.rapid;
 
-import org.apache.activeio.journal.RecordLocation;
+import org.apache.activeio.journal.active.Location;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 
 public class RapidMessageReference {
     public final MessageId messageId;
-    public final long expiration;
-    public final RecordLocation location;
+    public final Location location;
     
-    public RapidMessageReference(Message message, RecordLocation location) {
+    public RapidMessageReference(Message message, Location location) {
         this.messageId = message.getMessageId();
-        this.expiration = message.getExpiration();
         this.location=location;
-    }
-
-    public long getExpiration() {
-        return expiration;
     }
 
     public MessageId getMessageId() {
         return messageId;
     }
     
-    public RecordLocation getLocation() {
+    public Location getLocation() {
         return location;
     }
 }

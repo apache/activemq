@@ -20,10 +20,11 @@ package org.apache.activemq.store.rapid;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.transaction.xa.XAException;
 
-import org.apache.activeio.journal.RecordLocation;
+import org.apache.activeio.journal.active.Location;
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
@@ -32,8 +33,6 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  */
@@ -54,9 +53,9 @@ public class RapidTransactionStore implements TransactionStore {
         public byte operationType;
         public RapidMessageStore store;
         public Object data;
-        public RecordLocation location;
+        public Location location;
         
-        public TxOperation(byte operationType, RapidMessageStore store, Object data, RecordLocation location) {
+        public TxOperation(byte operationType, RapidMessageStore store, Object data, Location location) {
             this.operationType=operationType;
             this.store=store;
             this.data=data;
@@ -70,22 +69,22 @@ public class RapidTransactionStore implements TransactionStore {
      */
     public static class Tx {
 
-        private final RecordLocation location;
+        private final Location location;
         private ArrayList operations = new ArrayList();
 
-        public Tx(RecordLocation location) {
+        public Tx(Location location) {
             this.location=location;
         }
 
-        public void add(RapidMessageStore store, Message msg, RecordLocation loc) {
+        public void add(RapidMessageStore store, Message msg, Location loc) {
             operations.add(new TxOperation(TxOperation.ADD_OPERATION_TYPE, store, msg, loc));
         }
 
-        public void add(RapidMessageStore store, MessageAck ack, RecordLocation loc) {
+        public void add(RapidMessageStore store, MessageAck ack, Location loc) {
             operations.add(new TxOperation(TxOperation.REMOVE_OPERATION_TYPE, store, ack, loc));
         }
 
-        public void add(RapidTopicMessageStore store, JournalTopicAck ack, RecordLocation loc) {
+        public void add(RapidTopicMessageStore store, JournalTopicAck ack, Location loc) {
             operations.add(new TxOperation(TxOperation.ACK_OPERATION_TYPE, store, ack, loc));
         }
         
@@ -148,7 +147,7 @@ public class RapidTransactionStore implements TransactionStore {
         preparedTransactions.put(txid, tx);
     }
 
-    public Tx getTx(Object txid, RecordLocation location) {
+    public Tx getTx(Object txid, Location location) {
         Tx tx = (Tx) inflightTransactions.get(txid);
         if (tx == null) {
             tx = new Tx(location);
@@ -249,7 +248,7 @@ public class RapidTransactionStore implements TransactionStore {
      * @param message
      * @throws IOException
      */
-    void addMessage(RapidMessageStore store, Message message, RecordLocation location) throws IOException {
+    void addMessage(RapidMessageStore store, Message message, Location location) throws IOException {
         Tx tx = getTx(message.getTransactionId(), location);
         tx.add(store, message, location);
     }
@@ -258,19 +257,19 @@ public class RapidTransactionStore implements TransactionStore {
      * @param ack
      * @throws IOException
      */
-    public void removeMessage(RapidMessageStore store, MessageAck ack, RecordLocation location) throws IOException {
+    public void removeMessage(RapidMessageStore store, MessageAck ack, Location location) throws IOException {
         Tx tx = getTx(ack.getTransactionId(), location);
         tx.add(store, ack, location);
     }
     
     
-    public void acknowledge(RapidTopicMessageStore store, JournalTopicAck ack, RecordLocation location) {
+    public void acknowledge(RapidTopicMessageStore store, JournalTopicAck ack, Location location) {
         Tx tx = getTx(ack.getTransactionId(), location);
         tx.add(store, ack, location);
     }
 
 
-    public RecordLocation checkpoint() throws IOException {
+    public Location checkpoint() throws IOException {
         
         // Nothing really to checkpoint.. since, we don't
         // checkpoint tx operations in to long term store until they are committed.
@@ -278,17 +277,17 @@ public class RapidTransactionStore implements TransactionStore {
         // But we keep track of the first location of an operation
         // that was associated with an active tx. The journal can not
         // roll over active tx records.        
-        RecordLocation rc = null;
+        Location rc = null;
         for (Iterator iter = inflightTransactions.values().iterator(); iter.hasNext();) {
             Tx tx = (Tx) iter.next();
-            RecordLocation location = tx.location;
+            Location location = tx.location;
             if (rc == null || rc.compareTo(location) < 0) {
                 rc = location;
             }
         }
         for (Iterator iter = preparedTransactions.values().iterator(); iter.hasNext();) {
             Tx tx = (Tx) iter.next();
-            RecordLocation location = tx.location;
+            Location location = tx.location;
             if (rc == null || rc.compareTo(location) < 0) {
                 rc = location;
             }

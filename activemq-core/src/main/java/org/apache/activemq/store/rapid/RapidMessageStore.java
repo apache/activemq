@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.apache.activeio.journal.RecordLocation;
 import org.apache.activeio.journal.active.Location;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -61,7 +60,7 @@ public class RapidMessageStore implements MessageStore {
 //    /** A MessageStore that we can use to retrieve messages quickly. */
 //    private LinkedHashMap cpAddedMessageIds;
     
-    protected RecordLocation lastLocation;
+    protected Location lastLocation;
     protected HashSet inFlightTxLocations = new HashSet();
     
     public RapidMessageStore(RapidPersistenceAdapter adapter, ActiveMQDestination destination, MapContainer container) {
@@ -82,7 +81,7 @@ public class RapidMessageStore implements MessageStore {
         final MessageId id = message.getMessageId();
         
         final boolean debug = log.isDebugEnabled();        
-        final RecordLocation location = peristenceAdapter.writeCommand(message, message.isResponseRequired());
+        final Location location = peristenceAdapter.writeCommand(message, message.isResponseRequired());
         final RapidMessageReference md = new RapidMessageReference(message, location);
         
         if( !context.isInTransaction() ) {
@@ -127,19 +126,19 @@ public class RapidMessageStore implements MessageStore {
         }
     }
     
-    static protected String toString(RecordLocation location) {
+    static protected String toString(Location location) {
         Location l = (Location) location;
         return l.getLogFileId()+":"+l.getLogFileOffset();
     }
 
-    static protected RecordLocation toRecordLocation(String t) {
+    static protected Location toLocation(String t) {
         String[] strings = t.split(":");
         if( strings.length!=2 )
             throw new IllegalArgumentException("Invalid location: "+t);
         return new Location(Integer.parseInt(strings[0]),Integer.parseInt(strings[1]));
     }
 
-    public void replayAddMessage(ConnectionContext context, Message message, RecordLocation location) {
+    public void replayAddMessage(ConnectionContext context, Message message, Location location) {
         try {
             RapidMessageReference messageReference = new RapidMessageReference(message, location);
             messageContainer.put(message.getMessageId().toString(), messageReference);
@@ -157,7 +156,7 @@ public class RapidMessageStore implements MessageStore {
         remove.setDestination(destination);
         remove.setMessageAck(ack);
         
-        final RecordLocation location = peristenceAdapter.writeCommand(remove, ack.isResponseRequired());
+        final Location location = peristenceAdapter.writeCommand(remove, ack.isResponseRequired());
         if( !context.isInTransaction() ) {
             if( debug )
                 log.debug("Journalled message remove for: "+ack.getLastMessageId()+", at: "+location);
@@ -190,7 +189,7 @@ public class RapidMessageStore implements MessageStore {
         }
     }
     
-    private void removeMessage(final MessageAck ack, final RecordLocation location) {
+    private void removeMessage(final MessageAck ack, final Location location) {
         synchronized (this) {
             lastLocation = location;
             MessageId id = ack.getLastMessageId();
@@ -270,7 +269,7 @@ public class RapidMessageStore implements MessageStore {
      * @return
      * @throws IOException
      */
-    public RecordLocation checkpoint() throws IOException {
+    public Location checkpoint() throws IOException {
 
         ArrayList cpActiveJournalLocations;
 
@@ -281,7 +280,7 @@ public class RapidMessageStore implements MessageStore {
         
         if( cpActiveJournalLocations.size() > 0 ) {
             Collections.sort(cpActiveJournalLocations);
-            return (RecordLocation) cpActiveJournalLocations.get(0);
+            return (Location) cpActiveJournalLocations.get(0);
         } else {
             return lastLocation;
         }
