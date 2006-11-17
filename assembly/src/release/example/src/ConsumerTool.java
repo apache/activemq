@@ -90,7 +90,7 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
 			connection.setExceptionListener(this);
 			connection.start();
 
-			Session session = connection.createSession(transacted, ackMode);
+			session = connection.createSession(transacted, ackMode);
 			if (topic) {
 				destination = session.createTopic(subject);
 			} else {
