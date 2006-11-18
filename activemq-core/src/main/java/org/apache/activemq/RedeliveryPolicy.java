@@ -30,6 +30,8 @@ import java.util.Random;
  */
 public class RedeliveryPolicy implements Cloneable, Serializable {
 
+	public static final int NO_MAXIMUM_REDELIVERIES = -1;
+	
     // +/-15% for a 30% spread -cgs
     protected double collisionAvoidanceFactor = 0.15d;
     protected int maximumRedeliveries = 6;
