@@ -199,4 +199,109 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         session.commit();
         
     }
+    
+    /**
+     * @throws Exception
+     */
+    public void testInfiniteMaximumNumberOfRedeliveries() throws Exception {
+
+        // Receive a message with the JMS API
+        RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(100);
+        policy.setUseExponentialBackOff(false);
+       //  let's set the maximum redeliveries to no maximum (ie. infinite)
+        policy.setMaximumRedeliveries(-1);
+        
+        
+        connection.start();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+        
+        MessageConsumer consumer = session.createConsumer(destination);
+        
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+        producer.send(session.createTextMessage("2nd"));
+        session.commit();
+           
+        TextMessage m;
+ 
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());        
+        session.rollback();
+        
+        //we should be able to get the 1st message redelivered until a session.commit is called
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());        
+        session.rollback();           
+        
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());        
+        session.rollback();  
+        
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());        
+        session.rollback();  
+        
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());        
+        session.rollback();  
+        
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());        
+        session.commit();  
+        
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());        
+        session.commit();  
+       
+    }
+    
+    /**
+     * @throws Exception
+     */
+    public void testZeroMaximumNumberOfRedeliveries() throws Exception {
+
+        // Receive a message with the JMS API
+        RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(100);
+        policy.setUseExponentialBackOff(false);
+        //let's set the maximum redeliveries to 0
+        policy.setMaximumRedeliveries(0);
+      
+        connection.start();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+        
+        MessageConsumer consumer = session.createConsumer(destination);
+        
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+        producer.send(session.createTextMessage("2nd"));
+        session.commit();
+        
+        TextMessage m;
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());        
+        session.rollback();
+        
+        //the 1st  message should not be redelivered since maximumRedeliveries is set to 0
+        m = (TextMessage)consumer.receive(1000);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());        
+        session.commit();        
+     
+  
+       
+    }        
 }

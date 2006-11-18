@@ -712,7 +712,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                             
                             RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
                             int redeliveryCounter = md.getMessage().getRedeliveryCounter();
-                            if (redeliveryCounter > redeliveryPolicy.getMaximumRedeliveries()) {
+                            if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+                            		&& redeliveryCounter > redeliveryPolicy.getMaximumRedeliveries()) {
                                 
                                 // We need to NACK the messages so that they get sent to the
                                 // DLQ.
