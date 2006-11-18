@@ -782,7 +782,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             	redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
 
             rollbackCounter++;
-            if(rollbackCounter>redeliveryPolicy.getMaximumRedeliveries()){
+            if(redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+            		&& rollbackCounter>redeliveryPolicy.getMaximumRedeliveries()){
                 // We need to NACK the messages so that they get sent to the
                 // DLQ.
                 // Acknowledge the last message.
