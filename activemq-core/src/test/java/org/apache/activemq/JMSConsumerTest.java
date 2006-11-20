@@ -287,7 +287,8 @@ public class JMSConsumerTest extends JmsTestSupport {
     public void testMessageListenerUnackedWithPrefetch1StayInQueue() throws Exception {
 
         final AtomicInteger counter = new AtomicInteger(0);
-        final CountDownLatch done = new CountDownLatch(1);
+        final CountDownLatch sendDone = new CountDownLatch(1);
+        final CountDownLatch got2Done = new CountDownLatch(1);
 
         // Set prefetch to 1
         connection.getPrefetchPolicy().setAll(1);
@@ -309,8 +310,9 @@ public class JMSConsumerTest extends JmsTestSupport {
                     counter.incrementAndGet();
                     m.acknowledge();
                     if( counter.get()==2 ) {
-                            done.countDown();
-                            Thread.sleep(500);
+                    	sendDone.await();
+                        connection.close();
+                        got2Done.countDown();
                     }
                 } catch (Throwable e) {
                     e.printStackTrace();
@@ -320,10 +322,10 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         // Send the messages
         sendMessages(session, destination, 4);
+        sendDone.countDown();
         
         // Wait for first 2 messages to arrive.
-        assertTrue(done.await(100000, TimeUnit.MILLISECONDS));
-        connection.close();
+        assertTrue(got2Done.await(100000, TimeUnit.MILLISECONDS));
 
         // Re-start connection.
         connection = (ActiveMQConnection) factory.createConnection();

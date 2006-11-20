@@ -857,9 +857,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 	                }
 	            }
             }
-            // yeild here so that a thread trying to stop unconsumedMessages has 
-            // a chance of getting prioritized head of this thread that is in a dispatch loop.
-            Thread.yield(); 
         } catch (Exception e) {
         	session.connection.onAsyncException(e);
         }
