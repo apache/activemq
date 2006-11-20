@@ -139,4 +139,11 @@ public class MessageId implements DataStructure {
     public boolean isMarshallAware() {
         return false;
     }
+    
+    public MessageId copy(){
+        MessageId copy = new MessageId(producerId, producerSequenceId);
+        copy.key = key;
+        copy.brokerSequenceId = brokerSequenceId ;
+        return copy;
+    }    
 }
