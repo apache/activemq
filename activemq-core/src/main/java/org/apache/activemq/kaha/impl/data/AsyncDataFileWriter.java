@@ -135,7 +135,7 @@ final class AsyncDataFileWriter implements DataFileWriter {
      * @return
      * @throws IOException
      */
-    public DataItem storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
+    public synchronized DataItem storeItem(Marshaller marshaller, Object payload, byte type) throws IOException {
     	// We may need to slow down if we are pounding the async thread too 
     	// hard..
     	try {
@@ -177,37 +177,36 @@ final class AsyncDataFileWriter implements DataFileWriter {
     /**
      * 
      */
-    public void updateItem(final DataItem item, Marshaller marshaller, Object payload, byte type) throws IOException {
-    	// We may need to slow down if we are pounding the async thread too 
-    	// hard..
-    	try {
-			usage.waitForSpace();
-		} catch (InterruptedException e) {
-			throw new InterruptedIOException();
-		}
-
-		//Write the packet our internal buffer.
-    	final DataByteArrayOutputStream buffer = new DataByteArrayOutputStream();
-        buffer.position(DataManager.ITEM_HEAD_SIZE);
-        marshaller.writePayload(payload,buffer);
-        final int size=buffer.size();
-        int payloadSize=size-DataManager.ITEM_HEAD_SIZE;
-        buffer.reset();
-        buffer.writeByte(type);
-        buffer.writeInt(payloadSize);        
-        item.setSize(payloadSize);
-        final DataFile  dataFile = dataManager.getDataFile(item);                
-        
-        usage.increaseUsage(size);
-        
-    	WriteCommand write = new WriteCommand(item, dataFile.getRandomAccessFile(), buffer.getData(), latchAssignedToNewWrites);
-    	
-        // Equeue the write to an async thread.
-        synchronized(enqueueMutex) {
-        	dataFile.setWriterData(latchAssignedToNewWrites);
-        	enqueue(write);
+    public void updateItem(final DataItem item,Marshaller marshaller,Object payload,byte type) throws IOException{
+        // We may need to slow down if we are pounding the async thread too
+        // hard..
+        try{
+            usage.waitForSpace();
+        }catch(InterruptedException e){
+            throw new InterruptedIOException();
         }
-    	inflightWrites.put(new WriteKey(item), write);
+        synchronized(enqueueMutex){
+            // Write the packet our internal buffer.
+            final DataByteArrayOutputStream buffer=new DataByteArrayOutputStream();
+            buffer.position(DataManager.ITEM_HEAD_SIZE);
+            marshaller.writePayload(payload,buffer);
+            final int size=buffer.size();
+            int payloadSize=size-DataManager.ITEM_HEAD_SIZE;
+            buffer.reset();
+            buffer.writeByte(type);
+            buffer.writeInt(payloadSize);
+            item.setSize(payloadSize);
+            final DataFile dataFile=dataManager.getDataFile(item);
+            usage.increaseUsage(size);
+            WriteCommand write=new WriteCommand(item,dataFile.getRandomAccessFile(),buffer.getData(),
+                    latchAssignedToNewWrites);
+            // Equeue the write to an async thread.
+            synchronized(enqueueMutex){
+                dataFile.setWriterData(latchAssignedToNewWrites);
+                enqueue(write);
+            }
+            inflightWrites.put(new WriteKey(item),write);
+        }
     }
 
     private void enqueue(Object command) throws IOException {

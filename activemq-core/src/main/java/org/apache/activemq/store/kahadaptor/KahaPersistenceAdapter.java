@@ -74,7 +74,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         Set rc=new HashSet();
         try{
             Store store=getStore();
-            for(Iterator i=store.getMapContainerIds().iterator();i.hasNext();){
+            for(Iterator i=store.getListContainerIds().iterator();i.hasNext();){
                 Object obj=i.next();
                 if(obj instanceof ActiveMQDestination){
                     rc.add(obj);
@@ -161,7 +161,11 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
 
     public void deleteAllMessages() throws IOException{
         if(theStore!=null){
-            theStore.delete();
+            if(theStore.isInitialized()){
+                theStore.clear();
+            }else{
+                theStore.delete();
+            }
         }
     }
 

@@ -97,7 +97,7 @@ public final class DataManager{
         return name;
     }
 
-    DataFile findSpaceForData(DataItem item) throws IOException{
+    synchronized DataFile  findSpaceForData(DataItem item) throws IOException{
         if(currentWriteFile==null||((currentWriteFile.getLength()+item.getSize())>maxFileLength)){
             int nextNum=currentWriteFile!=null?currentWriteFile.getNumber().intValue()+1:1;
             if(currentWriteFile!=null&&currentWriteFile.isUnused()){
@@ -125,15 +125,15 @@ public final class DataManager{
         return getReader().readItem(marshaller,item);
     }
 
-    public StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException{
+    public synchronized StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException{
         return getWriter().storeItem(marshaller,payload, DATA_ITEM_TYPE);
     }
     
-    public StoreLocation storeRedoItem(Object payload) throws IOException{
+    public synchronized StoreLocation storeRedoItem(Object payload) throws IOException{
         return getWriter().storeItem(redoMarshaller, payload, REDO_ITEM_TYPE);
     }
     
-    public void updateItem(StoreLocation location,Marshaller marshaller, Object payload) throws IOException {
+    public synchronized void updateItem(StoreLocation location,Marshaller marshaller, Object payload) throws IOException {
         getWriter().updateItem((DataItem)location,marshaller,payload,DATA_ITEM_TYPE);
     }
 
@@ -296,7 +296,7 @@ public final class DataManager{
 		}
 		return reader;
 	}
-	protected DataFileReader createReader() {
+	protected synchronized DataFileReader createReader() {
 		if( useAsyncWriter ) {
 			return new AsyncDataFileReader(this, (AsyncDataFileWriter) getWriter());
 		} else {

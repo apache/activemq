@@ -54,7 +54,7 @@ final class AsyncDataFileReader implements DataFileReader {
     /* (non-Javadoc)
 	 * @see org.apache.activemq.kaha.impl.data.DataFileReader#readDataItemSize(org.apache.activemq.kaha.impl.data.DataItem)
 	 */
-    public byte readDataItemSize(DataItem item) throws IOException {
+    public synchronized byte readDataItemSize(DataItem item) throws IOException {
     	WriteCommand asyncWrite = (WriteCommand) inflightWrites.get(new WriteKey(item));
     	if( asyncWrite!= null ) {
     		item.setSize(asyncWrite.location.getSize());
@@ -73,7 +73,7 @@ final class AsyncDataFileReader implements DataFileReader {
     /* (non-Javadoc)
 	 * @see org.apache.activemq.kaha.impl.data.DataFileReader#readItem(org.apache.activemq.kaha.Marshaller, org.apache.activemq.kaha.StoreLocation)
 	 */
-    public Object readItem(Marshaller marshaller,StoreLocation item) throws IOException{
+    public synchronized Object readItem(Marshaller marshaller,StoreLocation item) throws IOException{
     	WriteCommand asyncWrite = (WriteCommand) inflightWrites.get(new WriteKey(item));
     	if( asyncWrite!= null ) {
             ByteArrayInputStream stream = new ByteArrayInputStream(asyncWrite.data, DataManager.ITEM_HEAD_SIZE, item.getSize());

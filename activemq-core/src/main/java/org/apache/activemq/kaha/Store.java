@@ -240,4 +240,9 @@ public interface Store{
      * @see org.apache.activemq.kaha.IndexTypes
      */
     public void setIndexType(String type);
+    
+    /**
+     * @return true if the store has been initialized
+     */
+    public boolean isInitialized();
 }

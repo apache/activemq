@@ -305,7 +305,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return result;
     }
 
-    protected void remove(IndexItem item){
+    protected synchronized void remove(IndexItem item){
         IndexItem prev=indexList.getPrevEntry(item);
         IndexItem next=indexList.getNextEntry(item);
         indexList.remove(item);
@@ -424,7 +424,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * 
      * @see java.util.List#set(int, E)
      */
-    public Object set(int index,Object element){
+    public synchronized Object set(int index,Object element){
         load();
         Object result=null;
         IndexItem replace=indexList.isEmpty()?null:(IndexItem)indexList.get(index);
@@ -438,7 +438,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return result;
     }
 
-    protected IndexItem internalSet(int index,Object element){
+    protected synchronized IndexItem internalSet(int index,Object element){
         IndexItem replace=indexList.isEmpty()?null:(IndexItem)indexList.get(index);
         IndexItem prev=(indexList.isEmpty()||(index-1)<0)?null:(IndexItem)indexList.get(index-1);
         IndexItem next=(indexList.isEmpty()||(index+1)>=size())?null:(IndexItem)indexList.get(index+1);
@@ -460,7 +460,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         itemAdded(item,index,element);
     }
 
-    protected StoreEntry internalAddLast(Object o){
+    protected synchronized StoreEntry internalAddLast(Object o){
         load();
         IndexItem item=writeLast(o);
         indexList.addLast(item);
@@ -468,7 +468,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return item;
     }
 
-    protected StoreEntry internalAddFirst(Object o){
+    protected synchronized StoreEntry internalAddFirst(Object o){
         load();
         IndexItem item=writeFirst(o);
         indexList.addFirst(item);
@@ -476,7 +476,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return item;
     }
 
-    protected IndexItem internalAdd(int index,Object element){
+    protected synchronized IndexItem internalAdd(int index,Object element){
         load();
         IndexItem item=insert(index,element);
         indexList.add(index,item);
@@ -484,7 +484,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return item;
     }
 
-    protected StoreEntry internalGet(int index){
+    protected synchronized StoreEntry internalGet(int index){
         load();
         if(index>=0&&index<indexList.size()){
             return indexList.get(index);
@@ -646,7 +646,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * @param object
      * @see org.apache.activemq.kaha.ListContainer#update(org.apache.activemq.kaha.StoreEntry, java.lang.Object)
      */
-    public void update(StoreEntry entry,Object object){
+    public synchronized void update(StoreEntry entry,Object object){
         try{
             dataManager.updateItem(entry.getValueDataItem(),marshaller,object);
         }catch(IOException e){
@@ -733,7 +733,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return indexList.getEntry(entry);
     }
 
-    protected IndexItem writeLast(Object value){
+    protected synchronized IndexItem writeLast(Object value){
         IndexItem index=null;
         try{
             if(value!=null){
@@ -760,7 +760,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return index;
     }
 
-    protected IndexItem writeFirst(Object value){
+    protected synchronized IndexItem writeFirst(Object value){
         IndexItem index=null;
         try{
             if(value!=null){
@@ -786,7 +786,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return index;
     }
 
-    protected IndexItem insert(int insertPos,Object value){
+    protected synchronized IndexItem insert(int insertPos,Object value){
         IndexItem index=null;
         try{
             if(value!=null){
@@ -823,7 +823,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return index;
     }
 
-    protected Object getValue(StoreEntry item){
+    protected synchronized Object getValue(StoreEntry item){
         Object result=null;
         if(item!=null){
             try{
@@ -858,7 +858,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         return result.toString();
     }
 
-    protected void itemAdded(IndexItem item,int pos,Object value){
+    protected synchronized void itemAdded(IndexItem item,int pos,Object value){
         if(cacheEnabled){
             int cachePosition=pos-offset;
             // if pos is before the cache offset
@@ -882,7 +882,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         }
     }
 
-    protected void itemRemoved(int pos){
+    protected synchronized void itemRemoved(int pos){
         if(cacheEnabled){
             int lastPosition=offset+cacheList.size()-1;
             int cachePosition=pos-offset;
@@ -900,7 +900,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         }
     }
 
-    protected Object getCachedItem(int pos){
+    protected synchronized Object getCachedItem(int pos){
         Object result=null;
         if(cacheEnabled) {
         int cachePosition=pos-offset;

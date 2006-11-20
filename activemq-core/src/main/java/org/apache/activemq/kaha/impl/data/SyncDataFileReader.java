@@ -45,7 +45,7 @@ final class SyncDataFileReader implements DataFileReader {
     /* (non-Javadoc)
 	 * @see org.apache.activemq.kaha.impl.data.DataFileReader#readDataItemSize(org.apache.activemq.kaha.impl.data.DataItem)
 	 */
-    public byte readDataItemSize(DataItem item) throws IOException {
+    public synchronized byte readDataItemSize(DataItem item) throws IOException {
         RandomAccessFile file = dataManager.getDataFile(item).getRandomAccessFile();
         file.seek(item.getOffset()); // jump to the size field
         byte rc = file.readByte();
@@ -56,7 +56,7 @@ final class SyncDataFileReader implements DataFileReader {
     /* (non-Javadoc)
 	 * @see org.apache.activemq.kaha.impl.data.DataFileReader#readItem(org.apache.activemq.kaha.Marshaller, org.apache.activemq.kaha.StoreLocation)
 	 */
-    public Object readItem(Marshaller marshaller,StoreLocation item) throws IOException{
+    public synchronized  Object readItem(Marshaller marshaller,StoreLocation item) throws IOException{
         RandomAccessFile file=dataManager.getDataFile(item).getRandomAccessFile();
         
         // TODO: we could reuse the buffer in dataIn if it's big enough to avoid

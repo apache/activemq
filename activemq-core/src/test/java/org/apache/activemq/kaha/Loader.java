@@ -91,6 +91,7 @@ class Loader extends Thread{
             startLoad=System.currentTimeMillis();
             value = getData(2048);
             for(int i=0;i<count;i++){
+                //System.out.println(this + " Container size = " + container.size());
                 String key="key:"+i;
                 container.put(key,value);
             }

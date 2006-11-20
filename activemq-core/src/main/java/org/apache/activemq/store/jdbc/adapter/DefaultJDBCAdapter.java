@@ -613,71 +613,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             close(rs);
             close(s);
         }
-    }
-
-    /**
-     * @param c
-     * @param destination
-     * @param clientId
-     * @param subscriberName
-     * @param id
-     * @return the previous Id
-     * @throws Exception 
-     * @see org.apache.activemq.store.jdbc.JDBCAdapter#doGetPrevDurableSubscriberMessageStatement(org.apache.activemq.store.jdbc.TransactionContext,
-     *      org.apache.activemq.command.ActiveMQDestination, java.lang.String, java.lang.String, java.lang.String)
-     */
-    public void doGetPrevDurableSubscriberMessageIdStatement(TransactionContext c,ActiveMQDestination destination,
-            String clientId,String subscriberName,long id,JDBCMessageRecoveryListener listener) throws Exception{
-        PreparedStatement s=null;
-        ResultSet rs=null;
-        try{
-            s=c.getConnection().prepareStatement(statements.getPrevDurableSubscriberMessageIdStatement());
-            s.setString(1,destination.getQualifiedName());
-            s.setLong(2,id);
-            rs=s.executeQuery();
-            if (rs.next()) {
-            listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2));
-            }
-            listener.finished();
-           
-        }finally{
-            close(rs);
-            close(s);
-        }
-    }
-
-    /**
-     * @param c
-     * @param destination
-     * @param clientId
-     * @param subscriberName
-     * @param id
-     * @return the next id
-     * @throws SQLException
-     * @throws IOException
-     * @see org.apache.activemq.store.jdbc.JDBCAdapter#doGetNextDurableSubscriberMessageIdStatement(org.apache.activemq.store.jdbc.TransactionContext,
-     *      org.apache.activemq.command.ActiveMQDestination, java.lang.String, java.lang.String, java.lang.String)
-     */
-    public void doGetNextDurableSubscriberMessageIdStatement(TransactionContext c,ActiveMQDestination destination,
-            String clientId,String subscriberName,long id,JDBCMessageRecoveryListener listener) throws Exception{
-        PreparedStatement s=null;
-        ResultSet rs=null;
-        try{
-            s=c.getConnection().prepareStatement(statements.getNextDurableSubscriberMessageIdStatement());
-            s.setString(1,destination.getQualifiedName());
-            s.setLong(2,id);
-            rs=s.executeQuery();
-            if (rs.next()) {
-            listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2));
-            }
-            listener.finished();
-           
-        }finally{
-            close(rs);
-            close(s);
-        }
-    }
-    
+    }    
    
     public int doGetMessageCount(TransactionContext c,ActiveMQDestination destination) throws SQLException, IOException{
         PreparedStatement s=null;
