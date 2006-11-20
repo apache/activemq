@@ -53,6 +53,7 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
         synchronized(consumers) {
             int count = 0;
             
+            Subscription firstMatchingConsumer = null;
             for (Iterator iter = consumers.iterator(); iter.hasNext();) {
                 Subscription sub = (Subscription) iter.next();
                 
@@ -60,17 +61,21 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
                 if (!sub.matches(node, msgContext)) 
                     continue;
                 
+                if (firstMatchingConsumer == null) {
+                    firstMatchingConsumer = sub;
+                }
+                
                 sub.add(node);
                 count++;
             }
             
+            if (firstMatchingConsumer != null) {
             // Rotate the consumer list.
             try {
-                if (consumers.size() > 1)
-                    consumers.add(consumers.remove(0));
-            } catch (Throwable bestEffort) {
-                log.error("Caught error rotating consumers",bestEffort);
-            }
+                 consumers.remove(firstMatchingConsumer);
+                 consumers.add(firstMatchingConsumer);
+                } catch (Throwable bestEffort) { }
+            	             }
             return count > 0;
         }        
     }

@@ -23,6 +23,11 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+
 public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
 
     protected BrokerService createBroker() throws Exception {
@@ -81,6 +86,23 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         super.testManyProducersManyConsumers();
         assertMessagesDividedAmongConsumers();
     }
+    
+    public void testOneProducerTwoMatchingConsumersOneNotMatchingConsumer() throws Exception {
+    // Create consumer that won't consume any message
+        createMessageConsumer(createConnectionFactory().createConnection(), createDestination(), "JMSPriority<1");
+        super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
+        assertMessagesDividedAmongConsumers();
+    }
+    	
+    protected MessageConsumer createMessageConsumer(Connection conn, Destination dest, String selector) throws Exception {
+        connections.add(conn);
+    
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    	final MessageConsumer consumer = sess.createConsumer(dest, selector);
+    	conn.start();
+    	
+    	return consumer;
+    }    
 
     public void assertMessagesDividedAmongConsumers() {
         assertEachConsumerReceivedAtLeastXMessages((messageCount * producerCount) / consumerCount);
