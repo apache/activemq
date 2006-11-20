@@ -314,6 +314,12 @@
         <version>${commons-collections-version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.apache.openjpa</groupId>
+        <artifactId>openjpa-persistence-jdbc</artifactId>
+        <version>${openjpa-version}</version>
+      </dependency>    
+
       <!-- Optional Spring Support -->
       <dependency>
         <groupId>org.springframework</groupId>
@@ -868,8 +874,9 @@
     <axis-version>1.2-RC1</axis-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
-    <commons-collections-version>2.1</commons-collections-version>
-    <commons-dbcp-version>1.2</commons-dbcp-version>
+    <commons-collections-version>3.1</commons-collections-version>
+    <openjpa-version>0.9.6-incubating</openjpa-version>
+    <commons-dbcp-version>1.2.1</commons-dbcp-version>
     <commons-httpclient-version>2.0.1</commons-httpclient-version>
     <commons-logging-version>1.1</commons-logging-version>
     <commons-pool-version>1.2</commons-pool-version>
@@ -887,7 +894,7 @@
     <junit-version>3.8.1</junit-version>
     <jxta-version>2.0</jxta-version>
     <log4j-version>1.2.12</log4j-version>
-    <org-apache-derby-version>10.1.1.0</org-apache-derby-version>
+    <org-apache-derby-version>10.1.3.1</org-apache-derby-version>
     <org-apache-geronimo-specs-version>1.0</org-apache-geronimo-specs-version>
     <org-apache-maven-surefire-plugin-version>2.2</org-apache-maven-surefire-plugin-version>
     <p2psockets-version>1.1.2</p2psockets-version>
