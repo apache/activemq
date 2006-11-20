@@ -69,6 +69,7 @@ public class SimpleTopicTest extends TestCase{
         
         destination=createDestination(session,DESTINATION_NAME);
         log.info("Testing against destination: "+destination);
+        log.info("Running "+NUMBER_OF_PRODUCERS+" producer(s) and "+NUMBER_OF_CONSUMERS+" consumer(s)");
         
         con.close();
         producers=new PerfProducer[NUMBER_OF_PRODUCERS];
