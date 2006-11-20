@@ -54,5 +54,14 @@ public class ByteSequence {
 	public void setOffset(int offset) {
 		this.offset = offset;
 	}
+	
+	public void compact() {
+		if( length != data.length ) {
+			byte t[] = new byte[length];
+			System.arraycopy(data, offset, t, 0, length);
+			data=t;
+			offset=0;
+		}
+	}
 
 }

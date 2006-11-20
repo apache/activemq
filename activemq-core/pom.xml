@@ -156,6 +156,10 @@
       <version>1.2.24</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.openjpa</groupId>
+      <artifactId>openjpa-persistence-jdbc</artifactId>
+    </dependency>    
   </dependencies>
 
   <build>
@@ -270,6 +274,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
+        <!-- 
         <configuration>
           <tasks>
             <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask"/>
@@ -283,33 +288,38 @@
             <version>${activemq-version}</version>
           </dependency>
         </dependencies>
+         -->
+        
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <configuration>
+              <tasks>
+                <path id="cp">
+                  <path refid="maven.test.classpath"/>
+                  <path refid="maven.compile.classpath"/>
+                  <path refid="maven.dependency.classpath"/>
+                </path>
+                <taskdef name="openjpac" classname="org.apache.openjpa.ant.PCEnhancerTask">
+                  <classpath refid="cp"/>
+                </taskdef>
+                <openjpac directory="${basedir}/target/jpa-classes">
+                  <classpath refid="cp"/>
+                  <fileset dir="${basedir}/target/classes">
+                    <include name="org/apache/activemq/store/jpa/model/*.class"/>
+                  </fileset>
+                </openjpac>
+                <copy todir="${basedir}/target/classes">
+                  <fileset dir="${basedir}/target/jpa-classes"/>
+                </copy>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
-
-      <!-- Use Gram to Gernerate the OpenWire Marshallers -->
-      <!--
-      <plugin>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>maven-gram-plugin</artifactId>
-        <version>4.1-incubator</version>
-        <configuration>
-          <scripts>
-            :GenerateJavaMarshalling.groovy: GenerateJavaTests.groovy: GenerateCSharpMarshalling.groovy:
-            GenerateCSharpClasses.groovy: GenerateCppMarshallingClasses.groovy: GenerateCppMarshallingHeaders.groovy:
-            GenerateCppHeaders.groovy: GenerateCppClasses.groovy: GenerateCMarshalling.groovy:
-          </scripts>
-          <groovyProperties>
-            <version>2</version>
-          </groovyProperties>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-openwire-generator</artifactId>
-            <version>${activemq-version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      -->
 
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
