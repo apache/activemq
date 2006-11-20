@@ -293,7 +293,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         return result;
     }
 
-    protected void remove(IndexItem item){
+    protected synchronized void remove(IndexItem item){
         Object key=getKey(item);
         if(key!=null){
             remove(key);
@@ -321,7 +321,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * @param value
      * @return the StoreEntry associated with the entry
      */
-    public StoreEntry place(Object key, Object value) {
+    public synchronized StoreEntry place(Object key, Object value) {
         load();
         if(indexMap.containsKey(key)){
             remove(key);
@@ -336,7 +336,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * Remove an Entry from ther Map
      * @param entry
      */
-    public void remove(StoreEntry entry) {
+    public synchronized void remove(StoreEntry entry) {
         load();
         IndexItem item=(IndexItem)entry;
         if(item!=null){
@@ -393,7 +393,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     }
     
 
-    protected Set getInternalKeySet(){
+    protected synchronized Set getInternalKeySet(){
         return new HashSet(indexMap.keySet());
     }
 
@@ -401,7 +401,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         return indexList;
     }
 
-    protected IndexItem write(Object key,Object value){
+    protected synchronized IndexItem write(Object key,Object value){
         IndexItem index=null;
         try{
             if(key!=null){

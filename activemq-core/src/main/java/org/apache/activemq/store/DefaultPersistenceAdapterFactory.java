@@ -30,6 +30,7 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.journal.QuickJournalPersistenceAdapter;
+import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -67,7 +68,9 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         if( useQuickJournal ) {
             return new QuickJournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
         }  else {
+            KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("amqstore")); 
             return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
+            //return new JournalPersistenceAdapter(getJournal(), adaptor, getTaskRunnerFactory());
         }
     }
 

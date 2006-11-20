@@ -65,7 +65,6 @@ public class Statements {
     private String nextDurableSubscriberMessageStatement;
     private String durableSubscriberMessageCountStatement;
     private String nextDurableSubscriberMessageIdStatement;
-    private String prevDurableSubscriberMessageIdStatement;
     private String destinationMessageCountStatement;
     private String findNextMessagesStatement;
     private boolean useLockCreateWhereClause;
@@ -253,46 +252,7 @@ public class Statements {
         return durableSubscriberMessageCountStatement;
     }
     
-    /**
-     * @return the nextDurableSubscriberMessageIdStatement
-     */
-    public String getNextDurableSubscriberMessageIdStatement(){
-        if (nextDurableSubscriberMessageIdStatement==null) {
-            nextDurableSubscriberMessageIdStatement =
-                "SELECT M.ID FROM " + getFullMessageTableName() + " M, "
-                 + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?" + " ORDER BY M.ID ";
-        }
-        return nextDurableSubscriberMessageIdStatement;
-    }
-    
-    /**
-     * @return the prevDurableSubscriberMessageIdStatement
-     */
-   /*
-    public String getPrevDurableSubscriberMessageIdStatement(){
-        if(prevDurableSubscriberMessageIdStatement==null) {
-            prevDurableSubscriberMessageIdStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
-            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-            + " AND M.CONTAINER=D.CONTAINER AND M.ID < ?" + " ORDER BY M.ID ";
-        }
-        return prevDurableSubscriberMessageIdStatement;
-    }
-    */
-   
-   
-    public String getPrevDurableSubscriberMessageIdStatement(){
-        if(prevDurableSubscriberMessageIdStatement==null) {
-            prevDurableSubscriberMessageIdStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M "
-            + " WHERE M.CONTAINER=? "
-            + "  AND M.ID <?" + "  ORDER BY M.ID DESC ";
-        }
-        return prevDurableSubscriberMessageIdStatement;
-    }
-    
-
-
-    public String getFindAllDestinationsStatement() {
+   public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
             findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullMessageTableName();
         }
@@ -643,15 +603,7 @@ public class Statements {
         this.nextDurableSubscriberMessageIdStatement=nextDurableSubscriberMessageIdStatement;
     }
 
-    
-   
-    
-    /**
-     * @param prevDurableSubscriberMessageIdStatement the prevDurableSubscriberMessageIdStatement to set
-     */
-    public void setPrevDurableSubscriberMessageIdStatement(String prevDurableSubscriberMessageIdStatement){
-        this.prevDurableSubscriberMessageIdStatement=prevDurableSubscriberMessageIdStatement;
-    }
+     
     
     /**
      * @param findNextMessagesStatement the findNextMessagesStatement to set

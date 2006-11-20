@@ -81,7 +81,11 @@ public final class IndexManager{
     }
     
     public synchronized void updateIndexes(IndexItem index) throws IOException{
+        try {
         writer.updateIndexes(index);
+        }catch(Throwable e) {
+            log.error(name + " GORT ERROR! ",e);
+        }
     }
 
     public synchronized void redo(final RedoStoreIndexItem redo) throws IOException{

@@ -29,7 +29,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class LoadTest extends TestCase{
     static final int COUNT=10000;
-    static final int NUM_LOADERS=2;
+    static final int NUM_LOADERS=5;
     protected String name="load.db";
     protected KahaStore store;
 

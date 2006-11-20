@@ -20,13 +20,13 @@ package org.apache.activemq.kaha.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
@@ -45,7 +45,6 @@ import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Store Implementation
@@ -74,7 +73,7 @@ public class KahaStore implements Store{
     private String mode;
     private boolean initialized;
     private boolean logIndexChanges=false;
-    private boolean useAsyncWriter=true;
+    private boolean useAsyncWriter=false;
     private long maxDataFileLength=DataManager.MAX_FILE_LENGTH;
     private FileLock lock;
     private String indexType=IndexTypes.DISK_INDEX;
@@ -154,17 +153,21 @@ public class KahaStore implements Store{
                     }
                 }
             }
-            log.info("Kaha Store deleted data directory "+directory);
+            String str=result?"successfully deleted":"failed to delete";
+            log.info("Kaha Store "+str+" data directory "+directory);
         }
-        initialized=false;
         return result;
+    }
+    
+    public synchronized boolean isInitialized(){
+        return initialized;
     }
 
     public boolean doesMapContainerExist(Object id) throws IOException{
         return doesMapContainerExist(id,DEFAULT_CONTAINER_NAME);
     }
 
-    public boolean doesMapContainerExist(Object id,String containerName) throws IOException{
+    public synchronized boolean doesMapContainerExist(Object id,String containerName) throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
@@ -204,7 +207,7 @@ public class KahaStore implements Store{
         deleteMapContainer(id,DEFAULT_CONTAINER_NAME);
     }
 
-    public void deleteMapContainer(Object id,String containerName) throws IOException{
+    public synchronized void deleteMapContainer(Object id,String containerName) throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
@@ -216,7 +219,7 @@ public class KahaStore implements Store{
         }
     }
 
-    public Set getMapContainerIds() throws IOException{
+    public synchronized Set getMapContainerIds() throws IOException{
         initialize();
         Set set = new HashSet();
         for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {
@@ -230,7 +233,7 @@ public class KahaStore implements Store{
         return doesListContainerExist(id,DEFAULT_CONTAINER_NAME);
     }
 
-    public boolean doesListContainerExist(Object id,String containerName) throws IOException{
+    public synchronized boolean doesListContainerExist(Object id,String containerName) throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
@@ -271,7 +274,7 @@ public class KahaStore implements Store{
         deleteListContainer(id,DEFAULT_CONTAINER_NAME);
     }
 
-    public void deleteListContainer(Object id,String containerName) throws IOException{
+    public synchronized void deleteListContainer(Object id,String containerName) throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
@@ -283,7 +286,7 @@ public class KahaStore implements Store{
         }
     }
 
-    public Set getListContainerIds() throws IOException{
+    public synchronized Set getListContainerIds() throws IOException{
         initialize();
         Set set = new HashSet();
         for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
@@ -310,7 +313,7 @@ public class KahaStore implements Store{
         return this.mapsContainer;
     }
 
-    public DataManager getDataManager(String name) throws IOException{
+    public synchronized DataManager getDataManager(String name) throws IOException{
         DataManager dm=(DataManager)dataManagers.get(name);
         if(dm==null){
             dm=new DataManager(directory,name);
@@ -322,7 +325,7 @@ public class KahaStore implements Store{
         return dm;
     }
 
-    public IndexManager getIndexManager(DataManager dm,String name) throws IOException{
+    public synchronized IndexManager getIndexManager(DataManager dm,String name) throws IOException{
         IndexManager im=(IndexManager)indexManagers.get(name);
         if(im==null){
             im=new IndexManager(directory,name,mode,logIndexChanges?dm:null);
@@ -343,18 +346,18 @@ public class KahaStore implements Store{
         });
     }
 
-    public boolean isLogIndexChanges(){
+    public synchronized boolean isLogIndexChanges(){
         return logIndexChanges;
     }
 
-    public void setLogIndexChanges(boolean logIndexChanges){
+    public synchronized void setLogIndexChanges(boolean logIndexChanges){
         this.logIndexChanges=logIndexChanges;
     }
 
     /**
      * @return the maxDataFileLength
      */
-    public long getMaxDataFileLength(){
+    public synchronized long getMaxDataFileLength(){
         return maxDataFileLength;
     }
 
@@ -362,7 +365,7 @@ public class KahaStore implements Store{
      * @param maxDataFileLength
      *            the maxDataFileLength to set
      */
-    public void setMaxDataFileLength(long maxDataFileLength){
+    public synchronized void setMaxDataFileLength(long maxDataFileLength){
         this.maxDataFileLength=maxDataFileLength;
     }
 
@@ -370,7 +373,7 @@ public class KahaStore implements Store{
      * @see org.apache.activemq.kaha.IndexTypes
      * @return the default index type
      */
-    public String getIndexType(){
+    public synchronized String getIndexType(){
         return indexType;
     }
 
@@ -380,7 +383,7 @@ public class KahaStore implements Store{
      * @param type
      * @see org.apache.activemq.kaha.IndexTypes
      */
-    public void setIndexType(String type){
+    public synchronized void setIndexType(String type){
         if(type==null||(!type.equals(IndexTypes.DISK_INDEX)&&!type.equals(IndexTypes.IN_MEMORY_INDEX))){
             throw new RuntimeException("Unknown IndexType: "+type);
         }
@@ -444,7 +447,7 @@ public class KahaStore implements Store{
         }
     }
 
-    private void unlock() throws IOException{
+    private synchronized void unlock() throws IOException{
         if(!disableLocking&&directory!=null){
             Set set=getVmLockSet();
             synchronized(set){
@@ -485,11 +488,11 @@ public class KahaStore implements Store{
      * scans the directory and builds up the IndexManager and DataManager
      * @throws IOException 
      */
-    private void generateInterestInListDataFiles() throws IOException {
-        for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
-            ContainerId id = (ContainerId)i.next();
-            DataManager dm = getDataManager(id.getDataContainerName());
-            IndexManager im = getIndexManager(dm,id.getDataContainerName());
+    private void generateInterestInListDataFiles() throws IOException{
+        for(Iterator i=listsContainer.getKeys().iterator();i.hasNext();){
+            ContainerId id=(ContainerId)i.next();
+            DataManager dm=getDataManager(id.getDataContainerName());
+            IndexManager im=getIndexManager(dm,id.getDataContainerName());
             IndexItem theRoot=listsContainer.getRoot(im,id);
             long nextItem=theRoot.getNextItem();
             while(nextItem!=Item.POSITION_NOT_SET){
@@ -499,13 +502,13 @@ public class KahaStore implements Store{
                 dm.addInterestInFile(item.getValueFile());
                 nextItem=item.getNextItem();
             }
-            
         }
     }
     
     /**
      * scans the directory and builds up the IndexManager and DataManager
-     * @throws IOException 
+     * 
+     * @throws IOException
      */
     private void generateInterestInMapDataFiles() throws IOException {
         for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {

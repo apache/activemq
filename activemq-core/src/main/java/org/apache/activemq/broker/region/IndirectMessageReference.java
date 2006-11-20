@@ -89,8 +89,8 @@ public class IndirectMessageReference implements QueueMessageReference {
     
     synchronized public int incrementReferenceCount() {
         int rc = ++referenceCount;
-        if( persistent && rc==1 ) {
-            assert message == null;            
+        if( persistent && rc==1 && message == null) {
+                 
             try {
                 message = destinationStore.getMessage(messageId);
                 if( message == null ) {

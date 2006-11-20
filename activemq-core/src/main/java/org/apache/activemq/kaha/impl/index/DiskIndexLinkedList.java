@@ -24,7 +24,7 @@ import org.apache.activemq.kaha.StoreEntry;
  * 
  * @version $Revision$
  */
-public class DiskIndexLinkedList implements IndexLinkedList{
+public  class DiskIndexLinkedList implements IndexLinkedList{
     protected IndexManager indexManager;
     protected transient IndexItem root;
     protected transient IndexItem last;
@@ -33,12 +33,12 @@ public class DiskIndexLinkedList implements IndexLinkedList{
     /**
      * Constructs an empty list.
      */
-    public DiskIndexLinkedList(IndexManager im,IndexItem header){
+    public  DiskIndexLinkedList(IndexManager im,IndexItem header){
         this.indexManager=im;
         this.root=header;
     }
 
-    public IndexItem getRoot(){
+    public synchronized IndexItem getRoot(){
         return root;
     }
 
@@ -51,7 +51,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @return the first element in this list.
      */
-    public IndexItem getFirst(){
+    public synchronized IndexItem getFirst(){
         if(size==0)
             return null;
         return getNextEntry(root);
@@ -62,7 +62,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @return the last element in this list.
      */
-    public IndexItem getLast(){
+    public synchronized IndexItem getLast(){
         if(size==0)
             return null;
         return last;
@@ -73,7 +73,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @return the first element from this list.
      */
-    public StoreEntry removeFirst(){
+    public synchronized StoreEntry removeFirst(){
         if(size==0){
             return null;
         }
@@ -87,7 +87,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @return the last element from this list.
      */
-    public Object removeLast(){
+    public synchronized Object removeLast(){
         if(size==0)
             return null;
         StoreEntry result=last;
@@ -100,7 +100,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @param o the element to be inserted at the beginning of this list.
      */
-    public void addFirst(IndexItem item){
+    public synchronized void addFirst(IndexItem item){
         if(size==0){
             last=item;
         }
@@ -113,7 +113,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @param o the element to be inserted at the end of this list.
      */
-    public void addLast(IndexItem item){
+    public synchronized void addLast(IndexItem item){
         size++;
         last=item;
     }
@@ -123,7 +123,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @return the number of elements in this list.
      */
-    public int size(){
+    public synchronized int size(){
         return size;
     }
 
@@ -132,7 +132,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @return true if there are no elements in the list
      */
-    public boolean isEmpty(){
+    public synchronized boolean isEmpty(){
         return size==0;
     }
 
@@ -142,7 +142,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * @param o element to be appended to this list.
      * @return <tt>true</tt> (as per the general contract of <tt>Collection.add</tt>).
      */
-    public boolean add(IndexItem item){
+    public synchronized boolean add(IndexItem item){
         addLast(item);
         return true;
     }
@@ -150,7 +150,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
     /**
      * Removes all of the elements from this list.
      */
-    public void clear(){
+    public synchronized void clear(){
         last=null;
         size=0;
     }
@@ -164,7 +164,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @throws IndexOutOfBoundsException if the specified index is is out of range (<tt>index &lt; 0 || index &gt;= size()</tt>).
      */
-    public IndexItem get(int index){
+    public synchronized IndexItem get(int index){
         return entry(index);
     }
 
@@ -177,7 +177,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @throws IndexOutOfBoundsException if the specified index is out of range (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
-    public void add(int index,IndexItem element){
+    public synchronized void add(int index,IndexItem element){
         if(index==size-1){
             last=element;
         }
@@ -193,7 +193,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * 
      * @throws IndexOutOfBoundsException if the specified index is out of range (<tt>index &lt; 0 || index &gt;= size()</tt>).
      */
-    public Object remove(int index){
+    public synchronized Object remove(int index){
         IndexItem e=entry(index);
         remove(e);
         return e;
@@ -225,7 +225,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * @return the index in this list of the first occurrence of the specified element, or -1 if the list does not
      *         contain this element.
      */
-    public int indexOf(StoreEntry o){
+    public synchronized int indexOf(StoreEntry o){
         int index=0;
         if(size>0){
             for(IndexItem e=getNextEntry(root);e!=null;e=getNextEntry(e)){
@@ -244,7 +244,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * @param entry
      * @return next entry
      */
-    public IndexItem getNextEntry(IndexItem current){
+    public synchronized IndexItem getNextEntry(IndexItem current){
         IndexItem result=null;
         if(current!=null&&current.getNextItem()>=0){
             try{
@@ -266,7 +266,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
      * @param entry
      * @return prev entry
      */
-    public IndexItem getPrevEntry(IndexItem current){
+    public synchronized IndexItem getPrevEntry(IndexItem current){
         IndexItem result=null;
         if(current!=null&&current.getPreviousItem()>=0){
             try{
@@ -282,7 +282,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
         return result;
     }
     
-   public  StoreEntry getEntry(StoreEntry current){
+   public synchronized  StoreEntry getEntry(StoreEntry current){
         StoreEntry result=null;
         if(current != null && current.getOffset() >= 0){
             try{
@@ -302,7 +302,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
     * Update the indexes of a StoreEntry
     * @param current
     */
-   public StoreEntry refreshEntry(StoreEntry current){
+   public synchronized StoreEntry refreshEntry(StoreEntry current){
        StoreEntry result=null;
        if(current != null && current.getOffset() >= 0){
            try{
@@ -318,7 +318,7 @@ public class DiskIndexLinkedList implements IndexLinkedList{
        return result;
    }
 
-    public void remove(IndexItem e){
+    public synchronized void remove(IndexItem e){
         if(e==root||e.equals(root))
             return;
         if(e==last||e.equals(last)){
