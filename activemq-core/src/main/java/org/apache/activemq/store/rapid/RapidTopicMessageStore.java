@@ -15,32 +15,27 @@
 package org.apache.activemq.store.rapid;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.activeio.journal.active.Location;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.JournalTopicAck;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.Store;
-import org.apache.activemq.kaha.StringMarshaller;
+import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.util.SubscriptionKey;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.activemq.store.kahadaptor.ConsumerMessageRef;
+import org.apache.activemq.store.kahadaptor.ConsumerMessageRefMarshaller;
+import org.apache.activemq.store.kahadaptor.TopicSubAck;
+import org.apache.activemq.store.kahadaptor.TopicSubContainer;
 
 
 /**
@@ -50,78 +45,61 @@ import org.apache.commons.logging.LogFactory;
  */
 public class RapidTopicMessageStore extends RapidMessageStore implements TopicMessageStore{
 
-    private static final Log log=LogFactory.getLog(RapidTopicMessageStore.class);
-    private HashMap ackedLastAckLocations=new HashMap();
-    private final MapContainer subscriberContainer;
-    private final MapContainer ackContainer;
-    private final Store store;
-    private Map subscriberAcks=new ConcurrentHashMap();
+    private ListContainer ackContainer;
+    private Map subscriberContainer;
+    private Store store;
+    private Map subscriberMessages=new ConcurrentHashMap();
 
-    public RapidTopicMessageStore(RapidPersistenceAdapter adapter,ActiveMQTopic destination,
-            MapContainer messageContainer,MapContainer subsContainer,MapContainer ackContainer) throws IOException{
-        super(adapter,destination,messageContainer);
-        this.subscriberContainer=subsContainer;
+    public RapidTopicMessageStore(RapidPersistenceAdapter adapter, Store store,ListContainer messageContainer,ListContainer ackContainer,
+            MapContainer subsContainer,ActiveMQDestination destination,int maximumCacheSize) throws IOException{
+        super(adapter,destination,messageContainer,maximumCacheSize);
+        this.store=store;
         this.ackContainer=ackContainer;
-        this.store=adapter.getStore();
+        subscriberContainer=subsContainer;
+        // load all the Ack containers
         for(Iterator i=subscriberContainer.keySet().iterator();i.hasNext();){
             Object key=i.next();
-            addSubscriberAckContainer(key);
+            addSubscriberMessageContainer(key);
         }
     }
 
-    public void recoverSubscription(String clientId,String subscriptionName,final MessageRecoveryListener listener)
-            throws Exception{
-        String key=getSubscriptionKey(clientId,subscriptionName);
-        ListContainer list=(ListContainer)subscriberAcks.get(key);
-        if(list!=null){
-            for(Iterator i=list.iterator();i.hasNext();){
-                Object msg=messageContainer.get(i.next());
-                if(msg!=null){
-                    if(msg.getClass()==String.class){
-                        listener.recoverMessageReference((String)msg);
-                    }else{
-                        listener.recoverMessage((Message)msg);
-                    }
-                }
-                listener.finished();
+    public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
+        int subscriberCount=subscriberMessages.size();
+        if(subscriberCount>0){
+            final Location location = peristenceAdapter.writeCommand(message, message.isResponseRequired());
+            final RapidMessageReference md = new RapidMessageReference(message, location);
+            StoreEntry messageEntry=messageContainer.placeLast(md);
+            TopicSubAck tsa=new TopicSubAck();
+            tsa.setCount(subscriberCount);
+            tsa.setMessageEntry(messageEntry);
+            StoreEntry ackEntry=ackContainer.placeLast(tsa);
+            for(Iterator i=subscriberMessages.values().iterator();i.hasNext();){
+                TopicSubContainer container=(TopicSubContainer)i.next();
+                ConsumerMessageRef ref=new ConsumerMessageRef();
+                ref.setAckEntry(ackEntry);
+                ref.setMessageEntry(messageEntry);
+                container.getListContainer().add(ref);
             }
-        }else{
-            listener.finished();
         }
     }
 
-    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,
-            MessageRecoveryListener listener) throws Exception{
-        String key=getSubscriptionKey(clientId,subscriptionName);
-        ListContainer list=(ListContainer)subscriberAcks.get(key);
-        if(list!=null){
-            boolean startFound=false;
-            int count=0;
-            for(Iterator i=list.iterator();i.hasNext()&&count<maxReturned;){
-                Object msg=messageContainer.get(i.next());
-                if(msg!=null){
-                    if(msg.getClass()==String.class){
-                        String ref=msg.toString();
-                        if(startFound||lastMessageId==null){
-                            listener.recoverMessageReference(ref);
-                            count++;
-                        }else if(!startFound||ref.equals(lastMessageId.toString())){
-                            startFound=true;
-                        }
+    public synchronized void acknowledge(ConnectionContext context,String clientId,String subscriptionName,
+            MessageId messageId) throws IOException{
+        String subcriberId=getSubscriptionKey(clientId,subscriptionName);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(subcriberId);
+        if(container!=null){
+            ConsumerMessageRef ref=(ConsumerMessageRef)container.getListContainer().removeFirst();
+            if(ref!=null){
+                TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
+                if(tsa!=null){
+                    if(tsa.decrementCount()<=0){
+                        ackContainer.remove(ref.getAckEntry());
+                        messageContainer.remove(tsa.getMessageEntry());
                     }else{
-                        Message message=(Message)msg;
-                        if(startFound||lastMessageId==null){
-                            listener.recoverMessage(message);
-                            count++;
-                        }else if(!startFound&&message.getMessageId().equals(lastMessageId)){
-                            startFound=true;
-                        }
+                        ackContainer.update(ref.getAckEntry(),tsa);
                     }
                 }
-                listener.finished();
             }
-        }else{
-            listener.finished();
         }
     }
 
@@ -129,7 +107,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         return (SubscriptionInfo)subscriberContainer.get(getSubscriptionKey(clientId,subscriptionName));
     }
 
-    public void addSubsciption(String clientId,String subscriptionName,String selector,boolean retroactive)
+    public synchronized void addSubsciption(String clientId,String subscriptionName,String selector,boolean retroactive)
             throws IOException{
         SubscriptionInfo info=new SubscriptionInfo();
         info.setDestination(destination);
@@ -142,122 +120,82 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         if(!subscriberContainer.containsKey(key)){
             subscriberContainer.put(key,info);
         }
-        addSubscriberAckContainer(key);
+        addSubscriberMessageContainer(key);
     }
 
-    public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
-        int subscriberCount=subscriberAcks.size();
-        if(subscriberCount>0){
-            String id=message.getMessageId().toString();
-            ackContainer.put(id,new AtomicInteger(subscriberCount));
-            for(Iterator i=subscriberAcks.keySet().iterator();i.hasNext();){
-                Object key=i.next();
-                ListContainer container=store.getListContainer(key,"durable-subs");
-                container.add(id);
-            }
-            super.addMessage(context,message);
-        }
-    }
-
-    /**
-     */
-    public void acknowledge(ConnectionContext context,String clientId,String subscriptionName,final MessageId messageId)
-            throws IOException{
-        final boolean debug=log.isDebugEnabled();
-        JournalTopicAck ack=new JournalTopicAck();
-        ack.setDestination(destination);
-        ack.setMessageId(messageId);
-        ack.setMessageSequenceId(messageId.getBrokerSequenceId());
-        ack.setSubscritionName(subscriptionName);
-        ack.setClientId(clientId);
-        ack.setTransactionId(context.getTransaction()!=null?context.getTransaction().getTransactionId():null);
-        final Location location=peristenceAdapter.writeCommand(ack,false);
-        final SubscriptionKey key=new SubscriptionKey(clientId,subscriptionName);
-        if(!context.isInTransaction()){
-            if(debug)
-                log.debug("Journalled acknowledge for: "+messageId+", at: "+location);
-            acknowledge(messageId,location,key);
-        }else{
-            if(debug)
-                log.debug("Journalled transacted acknowledge for: "+messageId+", at: "+location);
-            synchronized(this){
-                inFlightTxLocations.add(location);
-            }
-            transactionStore.acknowledge(this,ack,location);
-            context.getTransaction().addSynchronization(new Synchronization(){
-
-                public void afterCommit() throws Exception{
-                    if(debug)
-                        log.debug("Transacted acknowledge commit for: "+messageId+", at: "+location);
-                    synchronized(RapidTopicMessageStore.this){
-                        inFlightTxLocations.remove(location);
-                        acknowledge(messageId,location,key);
-                    }
-                }
-
-                public void afterRollback() throws Exception{
-                    if(debug)
-                        log.debug("Transacted acknowledge rollback for: "+messageId+", at: "+location);
-                    synchronized(RapidTopicMessageStore.this){
-                        inFlightTxLocations.remove(location);
-                    }
-                }
-            });
-        }
-    }
-
-    public void replayAcknowledge(ConnectionContext context,String clientId,String subscritionName,MessageId messageId){
-        try{
-            synchronized(this){
-                String subcriberId=getSubscriptionKey(clientId,subscritionName);
-                String id=messageId.toString();
-                ListContainer container=(ListContainer)subscriberAcks.get(subcriberId);
-                if(container!=null){
-                    // container.remove(id);
-                    container.removeFirst();
-                    AtomicInteger count=(AtomicInteger)ackContainer.remove(id);
-                    if(count!=null){
-                        if(count.decrementAndGet()>0){
-                            ackContainer.put(id,count);
-                        }else{
-                            // no more references to message messageContainer so remove it
-                            messageContainer.remove(messageId.toString());
-                        }
-                    }
-                }
-            }
-        }catch(Throwable e){
-            log.debug("Could not replay acknowledge for message '"+messageId
-                    +"'.  Message may have already been acknowledged. reason: "+e);
-        }
-    }
-
-    /**
-     * @param messageId
-     * @param location
-     * @param key
-     */
-    private void acknowledge(MessageId messageId,Location location,SubscriptionKey key){
-        synchronized(this){
-            lastLocation=location;
-            ackedLastAckLocations.put(key,messageId);
-            String subcriberId=getSubscriptionKey(key.getClientId(),key.getSubscriptionName());
-            String id=messageId.toString();
-            ListContainer container=(ListContainer)subscriberAcks.get(subcriberId);
-            if(container!=null){
-                // container.remove(id);
-                container.removeFirst();
-                AtomicInteger count=(AtomicInteger)ackContainer.remove(id);
-                if(count!=null){
-                    if(count.decrementAndGet()>0){
-                        ackContainer.put(id,count);
+    public synchronized void deleteSubscription(String clientId,String subscriptionName){
+        String key=getSubscriptionKey(clientId,subscriptionName);
+        subscriberContainer.remove(key);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
+        for(Iterator i=container.getListContainer().iterator();i.hasNext();){
+            ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
+            if(ref!=null){
+                TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
+                if(tsa!=null){
+                    if(tsa.decrementCount()<=0){
+                        ackContainer.remove(ref.getAckEntry());
+                        messageContainer.remove(tsa.getMessageEntry());
                     }else{
-                        // no more references to message messageContainer so remove it
-                        messageContainer.remove(messageId.toString());
+                        ackContainer.update(ref.getAckEntry(),tsa);
                     }
                 }
             }
         }
+    }
+
+    public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
+            throws Exception{
+        String key=getSubscriptionKey(clientId,subscriptionName);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
+        if(container!=null){
+            for(Iterator i=container.getListContainer().iterator();i.hasNext();){
+                ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
+                RapidMessageReference messageReference=(RapidMessageReference)messageContainer.get(ref
+                        .getMessageEntry());
+                if(messageReference!=null){
+                    Message m=(Message)peristenceAdapter.readCommand(messageReference.getLocation());
+                    listener.recoverMessage(m);
+                }
+            }
+        }
+        listener.finished();
+    }
+
+    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
+            MessageRecoveryListener listener) throws Exception{
+        String key=getSubscriptionKey(clientId,subscriptionName);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
+        if(container!=null){
+            int count=0;
+            StoreEntry entry=container.getBatchEntry();
+            if(entry==null){
+                entry=container.getListContainer().getFirst();
+            }else{
+                entry=container.getListContainer().refresh(entry);
+                entry=container.getListContainer().getNext(entry);
+            }
+            if(entry!=null){
+                do{
+                    ConsumerMessageRef consumerRef=(ConsumerMessageRef)container.getListContainer().get(entry);
+                    RapidMessageReference messageReference=(RapidMessageReference)messageContainer.get(consumerRef
+                            .getMessageEntry());
+                    if(messageReference!=null){
+                        Message m=(Message)peristenceAdapter.readCommand(messageReference.getLocation());
+                        listener.recoverMessage(m);
+                        count++;
+                    }
+                    container.setBatchEntry(entry);
+                    entry=container.getListContainer().getNext(entry);
+                }while(entry!=null&&count<maxReturned);
+            }
+        }
+        listener.finished();
+    }
+
+    
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException{
+        return (SubscriptionInfo[])subscriberContainer.values().toArray(
+                new SubscriptionInfo[subscriberContainer.size()]);
     }
 
     protected String getSubscriptionKey(String clientId,String subscriberName){
@@ -266,73 +204,102 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         return result;
     }
 
-    public Location checkpoint() throws IOException{
-        ArrayList cpAckedLastAckLocations;
-        // swap out the hash maps..
-        synchronized(this){
-            cpAckedLastAckLocations=new ArrayList(this.ackedLastAckLocations.values());
-            this.ackedLastAckLocations=new HashMap();
-        }
-        Location rc=super.checkpoint();
-        if(!cpAckedLastAckLocations.isEmpty()){
-            Collections.sort(cpAckedLastAckLocations);
-            Location t=(Location)cpAckedLastAckLocations.get(0);
-            if(rc==null||t.compareTo(rc)<0){
-                rc=t;
-            }
-        }
-        return rc;
+    protected void addSubscriberMessageContainer(Object key) throws IOException{
+        ListContainer container=store.getListContainer(key,"topic-subs");
+        Marshaller marshaller=new ConsumerMessageRefMarshaller();
+        container.setMarshaller(marshaller);
+        TopicSubContainer tsc=new TopicSubContainer(container);
+        subscriberMessages.put(key,tsc);
     }
 
-    public void deleteSubscription(String clientId,String subscriptionName) throws IOException{
+    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+        String key=getSubscriptionKey(clientId,subscriberName);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
+        return container.getListContainer().size();
+    }
+
+    /**
+     * @param context
+     * @param messageId
+     * @param expirationTime
+     * @param messageRef
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#addMessageReference(org.apache.activemq.broker.ConnectionContext,
+     *      org.apache.activemq.command.MessageId, long, java.lang.String)
+     */
+    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
+            throws IOException{
+       throw new IOException("Not supported");
+    }
+
+       
+
+    /**
+     * @param identity
+     * @return String
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#getMessageReference(org.apache.activemq.command.MessageId)
+     */
+    public String getMessageReference(MessageId identity) throws IOException{
+        return null;
+    }
+
+   
+
+    /**
+     * @param context
+     * @throws IOException
+     * @see org.apache.activemq.store.MessageStore#removeAllMessages(org.apache.activemq.broker.ConnectionContext)
+     */
+    public synchronized void removeAllMessages(ConnectionContext context) throws IOException{
+        messageContainer.clear();
+        ackContainer.clear();
+        for(Iterator i=subscriberMessages.values().iterator();i.hasNext();){
+            TopicSubContainer container=(TopicSubContainer)i.next();
+            container.getListContainer().clear();
+        }
+    }
+
+    
+    public synchronized void resetBatching(String clientId,String subscriptionName){
         String key=getSubscriptionKey(clientId,subscriptionName);
-        subscriberContainer.remove(key);
-        ListContainer list=(ListContainer)subscriberAcks.get(key);
-        for(Iterator i=list.iterator();i.hasNext();){
-            String id=i.next().toString();
-            AtomicInteger count=(AtomicInteger)ackContainer.remove(id);
-            if(count!=null){
-                if(count.decrementAndGet()>0){
-                    ackContainer.put(id,count);
-                }else{
-                    // no more references to message messageContainer so remove it
-                    messageContainer.remove(id);
+        TopicSubContainer topicSubContainer=(TopicSubContainer)subscriberMessages.get(key);
+        if(topicSubContainer!=null){
+            topicSubContainer.reset();
+        }
+    }
+
+   
+    public Location checkpoint() throws IOException{
+       return null;
+    }
+
+
+    public synchronized void replayAcknowledge(ConnectionContext context,String clientId,String subscriptionName,MessageId messageId){
+        String subcriberId=getSubscriptionKey(clientId,subscriptionName);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(subcriberId);
+        if(container!=null){
+            ConsumerMessageRef ref=(ConsumerMessageRef)container.getListContainer().removeFirst();
+            if(ref!=null){
+                TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
+                if(tsa!=null){
+                    if(tsa.decrementCount()<=0){
+                        ackContainer.remove(ref.getAckEntry());
+                        messageContainer.remove(tsa.getMessageEntry());
+                    }else{
+                        ackContainer.update(ref.getAckEntry(),tsa);
+                    }
                 }
             }
         }
     }
-
-    public SubscriptionInfo[] getAllSubscriptions() throws IOException{
-        return (SubscriptionInfo[])subscriberContainer.values().toArray(
-                new SubscriptionInfo[subscriberContainer.size()]);
-    }
-
-    protected void addSubscriberAckContainer(Object key) throws IOException{
-        ListContainer container=store.getListContainer(key,"durable-subs");
-        Marshaller marshaller=new StringMarshaller();
-        container.setMarshaller(marshaller);
-        subscriberAcks.put(key,container);
-    }
-
-
-    public int getMessageCount(String clientId,String subscriberName) throws IOException{
-        String key=getSubscriptionKey(clientId,subscriberName);
-        ListContainer list=(ListContainer)subscriberAcks.get(key);
-        return list.size();
-    }
-
-    public void resetBatching(String clientId,String subscriptionName,MessageId nextId){
-    }
-
-    
-    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,MessageRecoveryListener listener) throws Exception{
-        
-        
-    }
-
-    
-    public void resetBatching(String clientId,String subscriptionName){
-      
-        
-    }
 }
+
+
+
+
+
+
+
+
+

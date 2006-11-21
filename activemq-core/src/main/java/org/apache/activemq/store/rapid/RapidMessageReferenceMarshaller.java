@@ -18,28 +18,29 @@
 
 package org.apache.activemq.store.rapid;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import org.apache.activeio.journal.active.Location;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.kaha.Marshaller;
 
-public class RapidMessageReference {
-    public final MessageId messageId;
-    public final Location location;
+public class RapidMessageReferenceMarshaller  implements Marshaller{
     
-    public RapidMessageReference(MessageId messageId, Location location) {
-        this.messageId = messageId;
-        this.location=location;
-    }
-    public RapidMessageReference(Message message, Location location) {
-        this.messageId = message.getMessageId();
-        this.location=location;
+
+    
+    public Object readPayload(DataInput dataIn) throws IOException{
+        MessageId mid = new MessageId(dataIn.readUTF());
+        Location loc = new Location(dataIn.readInt(),dataIn.readInt());
+        RapidMessageReference rmr = new RapidMessageReference(mid,loc);
+        return rmr;
     }
 
-    public MessageId getMessageId() {
-        return messageId;
-    }
-    
-    public Location getLocation() {
-        return location;
+    public void writePayload(Object object,DataOutput dataOut) throws IOException{
+        RapidMessageReference rmr = (RapidMessageReference)object;
+        dataOut.writeUTF(rmr.getMessageId().toString());
+        dataOut.writeInt(rmr.getLocation().getLogFileId());
+        dataOut.writeInt(rmr.getLocation().getLogFileOffset());
+        
     }
 }

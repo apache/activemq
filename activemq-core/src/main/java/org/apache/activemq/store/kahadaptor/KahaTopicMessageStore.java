@@ -32,6 +32,7 @@ import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.rapid.RapidMessageReference;
 
 /**
  * @version $Revision: 1.5 $
@@ -149,11 +150,9 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                         listener.recoverMessage((Message)msg);
                     }
                 }
-                listener.finished();
             }
-        }else{
-            listener.finished();
         }
+        listener.finished();
     }
 
     public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
@@ -236,31 +235,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         messageContainer.add(messageRef);
     }
 
-    /**
-     * @return the destination
-     * @see org.apache.activemq.store.MessageStore#getDestination()
-     */
-    public ActiveMQDestination getDestination(){
-        return destination;
-    }
-
-    /**
-     * @param identity
-     * @return the Message
-     * @throws IOException
-     * @see org.apache.activemq.store.MessageStore#getMessage(org.apache.activemq.command.MessageId)
-     */
-    public Message getMessage(MessageId identity) throws IOException{
-        Message result=null;
-        for(Iterator i=messageContainer.iterator();i.hasNext();){
-            Message msg=(Message)i.next();
-            if(msg.getMessageId().equals(identity)){
-                result=msg;
-                break;
-            }
-        }
-        return result;
-    }
+   
 
     /**
      * @param identity
@@ -272,22 +247,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         return null;
     }
 
-    /**
-     * @throws Exception
-     * @see org.apache.activemq.store.MessageStore#recover(org.apache.activemq.store.MessageRecoveryListener)
-     */
-    public void recover(MessageRecoveryListener listener) throws Exception{
-        for(Iterator iter=messageContainer.iterator();iter.hasNext();){
-            Object msg=iter.next();
-            if(msg.getClass()==String.class){
-                listener.recoverMessageReference((String)msg);
-            }else{
-                listener.recoverMessage((Message)msg);
-            }
-        }
-        listener.finished();
-    }
-
+  
     /**
      * @param context
      * @throws IOException
@@ -302,49 +262,12 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         }
     }
 
-    /**
-     * @param context
-     * @param ack
-     * @throws IOException
-     * @see org.apache.activemq.store.MessageStore#removeMessage(org.apache.activemq.broker.ConnectionContext,
-     *      org.apache.activemq.command.MessageAck)
-     */
-    public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
-        for(Iterator i=messageContainer.iterator();i.hasNext();){
-            Message msg=(Message)i.next();
-            if(msg.getMessageId().equals(ack.getLastMessageId())){
-                i.remove();
-                break;
-            }
-        }
-    }
-
+   
     public synchronized void resetBatching(String clientId,String subscriptionName){
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer topicSubContainer=(TopicSubContainer)subscriberMessages.get(key);
         if(topicSubContainer!=null){
             topicSubContainer.reset();
         }
-    }
-
-   
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName) throws IOException{
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * @param clientId
-     * @param subscriptionName
-     * @param id
-     * @return previous messageId
-     * @throws IOException
-     * @see org.apache.activemq.store.TopicMessageStore#getPreviousMessageIdToDeliver(java.lang.String,
-     *      java.lang.String, org.apache.activemq.command.MessageId)
-     */
-    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id)
-            throws IOException{
-        // TODO Auto-generated method stub
-        return null;
     }
 }
