@@ -30,11 +30,15 @@ import org.apache.activemq.command.JournalQueueAck;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
+import org.apache.activemq.kaha.StoreEntry;
+import org.apache.activemq.memory.UsageListener;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.util.LRUCache;
 import org.apache.activemq.util.TransactionTemplate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,31 +48,42 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.14 $
  */
-public class RapidMessageStore implements MessageStore {
+public class RapidMessageStore implements MessageStore, UsageListener {
 
     private static final Log log = LogFactory.getLog(RapidMessageStore.class);
 
     protected final RapidPersistenceAdapter peristenceAdapter;
     protected final RapidTransactionStore transactionStore;
-    protected final MapContainer messageContainer;
+    protected final ListContainer messageContainer;
     protected final ActiveMQDestination destination;
     protected final TransactionTemplate transactionTemplate;
-
-//    private LinkedHashMap messages = new LinkedHashMap();
-//    private ArrayList messageAcks = new ArrayList();
-
-//    /** A MessageStore that we can use to retrieve messages quickly. */
-//    private LinkedHashMap cpAddedMessageIds;
+    protected final LRUCache cache;
+    protected UsageManager usageManager;
+    protected StoreEntry batchEntry = null;
+    
+    
     
     protected Location lastLocation;
     protected HashSet inFlightTxLocations = new HashSet();
     
-    public RapidMessageStore(RapidPersistenceAdapter adapter, ActiveMQDestination destination, MapContainer container) {
+    public RapidMessageStore(RapidPersistenceAdapter adapter, ActiveMQDestination destination, ListContainer container, int maximumCacheSize) {
         this.peristenceAdapter = adapter;
         this.transactionStore = adapter.getTransactionStore();
         this.messageContainer = container;
         this.destination = destination;
         this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext());
+        this.cache=new LRUCache(maximumCacheSize,maximumCacheSize,0.75f,false);
+//      populate the cache
+        StoreEntry entry=messageContainer.getFirst();
+        int count = 0;
+        if(entry!=null){
+            do{
+                RapidMessageReference msg = (RapidMessageReference)messageContainer.get(entry);
+                cache.put(msg.getMessageId(),entry);
+                entry = messageContainer.getNext(entry);
+                count++;
+            }while(entry!=null && count < maximumCacheSize);
+        }
     }
     
 
@@ -76,7 +91,7 @@ public class RapidMessageStore implements MessageStore {
      * Not synchronized since the Journal has better throughput if you increase
      * the number of concurrent writes that it is doing.
      */
-    public void addMessage(ConnectionContext context, final Message message) throws IOException {
+    public synchronized void addMessage(ConnectionContext context, final Message message) throws IOException {
         
         final MessageId id = message.getMessageId();
         
@@ -118,12 +133,9 @@ public class RapidMessageStore implements MessageStore {
         }
     }
 
-    private void addMessage(final RapidMessageReference messageReference) {
-        synchronized (this) {
-            lastLocation = messageReference.getLocation();
-            MessageId id = messageReference.getMessageId();
-            messageContainer.put(id.toString(), messageReference);
-        }
+    private synchronized void addMessage(final RapidMessageReference messageReference){
+        StoreEntry item=messageContainer.placeLast(messageReference);
+        cache.put(messageReference.getMessageId(),item);
     }
     
     static protected String toString(Location location) {
@@ -141,7 +153,7 @@ public class RapidMessageStore implements MessageStore {
     public void replayAddMessage(ConnectionContext context, Message message, Location location) {
         try {
             RapidMessageReference messageReference = new RapidMessageReference(message, location);
-            messageContainer.put(message.getMessageId().toString(), messageReference);
+            addMessage(messageReference);
         }
         catch (Throwable e) {
             log.warn("Could not replay add for message '" + message.getMessageId() + "'.  Message may have already been added. reason: " + e);
@@ -160,7 +172,7 @@ public class RapidMessageStore implements MessageStore {
         if( !context.isInTransaction() ) {
             if( debug )
                 log.debug("Journalled message remove for: "+ack.getLastMessageId()+", at: "+location);
-            removeMessage(ack, location);
+            removeMessage(ack.getLastMessageId());
         } else {
             if( debug )
                 log.debug("Journalled transacted message remove for: "+ack.getLastMessageId()+", at: "+location);
@@ -174,7 +186,7 @@ public class RapidMessageStore implements MessageStore {
                         log.debug("Transacted message remove commit for: "+ack.getLastMessageId()+", at: "+location);
                     synchronized( RapidMessageStore.this ) {
                         inFlightTxLocations.remove(location);
-                        removeMessage(ack, location);
+                        removeMessage(ack.getLastMessageId());
                     }
                 }
                 public void afterRollback() throws Exception {                    
@@ -189,32 +201,53 @@ public class RapidMessageStore implements MessageStore {
         }
     }
     
-    private void removeMessage(final MessageAck ack, final Location location) {
-        synchronized (this) {
-            lastLocation = location;
-            MessageId id = ack.getLastMessageId();
-            messageContainer.remove(id.toString());
+        
+    public synchronized void removeMessage(MessageId msgId) throws IOException{
+        StoreEntry entry=(StoreEntry)cache.remove(msgId);
+        if(entry!=null){
+            entry = messageContainer.refresh(entry);
+            messageContainer.remove(entry);
+        }else{
+            for (entry = messageContainer.getFirst();entry != null; entry = messageContainer.getNext(entry)) {
+                RapidMessageReference msg=(RapidMessageReference)messageContainer.get(entry);
+                if(msg.getMessageId().equals(msgId)){
+                    messageContainer.remove(entry);
+                    break;
+                }
+            }
         }
     }
     
     public void replayRemoveMessage(ConnectionContext context, MessageAck ack) {
         try {
             MessageId id = ack.getLastMessageId();
-            messageContainer.remove(id.toString());
+           removeMessage(id);
         }
         catch (Throwable e) {
             log.warn("Could not replay acknowledge for message '" + ack.getLastMessageId() + "'.  Message may have already been acknowledged. reason: " + e);
         }
     }
 
-    /**
-     * 
-     */
-    public Message getMessage(MessageId id) throws IOException {
-        RapidMessageReference messageReference = (RapidMessageReference) messageContainer.get(id.toString());
-        if (messageReference == null )
+   
+    public synchronized Message getMessage(MessageId identity) throws IOException{
+        RapidMessageReference result=null;
+        StoreEntry entry=(StoreEntry)cache.get(identity);
+        if(entry!=null){
+            entry = messageContainer.refresh(entry);
+            result = (RapidMessageReference)messageContainer.get(entry);
+        }else{    
+            for (entry = messageContainer.getFirst();entry != null; entry = messageContainer.getNext(entry)) {
+                RapidMessageReference msg=(RapidMessageReference)messageContainer.get(entry);
+                if(msg.getMessageId().equals(identity)){
+                    result=msg;
+                    cache.put(identity,entry);
+                    break;
+                }
+            }
+        }
+        if (result == null )
             return null;
-        return (Message) peristenceAdapter.readCommand(messageReference.getLocation());
+        return (Message) peristenceAdapter.readCommand(result.getLocation());
     }
 
     /**
@@ -225,28 +258,32 @@ public class RapidMessageStore implements MessageStore {
      * @param listener
      * @throws Exception 
      */
-    public void recover(final MessageRecoveryListener listener) throws Exception {
         
-        for(Iterator iter=messageContainer.values().iterator();iter.hasNext();){
+    public synchronized void recover(MessageRecoveryListener listener) throws Exception{
+        for(Iterator iter=messageContainer.iterator();iter.hasNext();){
             RapidMessageReference messageReference=(RapidMessageReference) iter.next();
             Message m = (Message) peristenceAdapter.readCommand(messageReference.getLocation());
             listener.recoverMessage(m);
         }
         listener.finished();
-        
     }
 
-    public void start() throws Exception {
+    public void start() {
+        if( this.usageManager != null )
+            this.usageManager.addUsageListener(this);
     }
 
-    public void stop() throws Exception {
+    public void stop() {
+        if( this.usageManager != null )
+            this.usageManager.removeUsageListener(this);
     }
 
     /**
      * @see org.apache.activemq.store.MessageStore#removeAllMessages(ConnectionContext)
      */
-    public void removeAllMessages(ConnectionContext context) throws IOException {
+    public synchronized void removeAllMessages(ConnectionContext context) throws IOException {
         messageContainer.clear();
+        cache.clear();
     }
     
     public ActiveMQDestination getDestination() {
@@ -254,15 +291,16 @@ public class RapidMessageStore implements MessageStore {
     }
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
-        throw new IOException("The journal does not support message references.");
+        throw new IOException("Does not support message references.");
     }
 
     public String getMessageReference(MessageId identity) throws IOException {
-        throw new IOException("The journal does not support message references.");
+        throw new IOException("Does not support message references.");
     }
 
 
     public void setUsageManager(UsageManager usageManager) {
+        this.usageManager = usageManager;
     }
 
     /**
@@ -289,13 +327,50 @@ public class RapidMessageStore implements MessageStore {
 
    
     public int getMessageCount(){
-        return 0;
+        return messageContainer.size();
     }
 
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+    public synchronized void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+        StoreEntry entry=batchEntry;
+        if(entry==null){
+            entry=messageContainer.getFirst();
+        }else{
+            entry=messageContainer.refresh(entry);
+            entry=messageContainer.getNext(entry);
+        }
+        if(entry!=null){
+            int count=0;
+            do{
+                RapidMessageReference messageReference=(RapidMessageReference)messageContainer.get(entry);
+                Message msg=(Message)peristenceAdapter.readCommand(messageReference.getLocation());
+                if(msg!=null){
+                    Message message=(Message)msg;
+                    listener.recoverMessage(message);
+                    count++;
+                }
+                batchEntry=entry;
+                entry=messageContainer.getNext(entry);
+            }while(entry!=null&&count<maxReturned);
+        }
+        listener.finished();
     }
 
     public void resetBatching(){
+        batchEntry = null;
+    }
+    
+    /**
+     * @return true if the store supports cursors
+     */
+    public boolean isSupportForCursors() {
+        return true;
+    }
+    
+    public synchronized void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
+        if (newPercentUsage == 100) {
+            cache.clear();
+        }
+        
     }
 
 }

@@ -91,7 +91,7 @@ public class KahaMessageStore implements MessageStore, UsageListener{
                 Message msg=(Message)messageContainer.get(entry);
                 if(msg.getMessageId().equals(identity)){
                     result=msg;
-                    cache.put(identity,msg);
+                    cache.put(identity,entry);
                     break;
                 }
             }
@@ -186,7 +186,7 @@ public class KahaMessageStore implements MessageStore, UsageListener{
      * @throws Exception
      * @see org.apache.activemq.store.MessageStore#recoverNextMessages(org.apache.activemq.command.MessageId, int, org.apache.activemq.store.MessageRecoveryListener)
      */
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+    public synchronized void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
         StoreEntry entry = batchEntry;
         if (entry == null) {
             entry= messageContainer.getFirst();
@@ -239,10 +239,9 @@ public class KahaMessageStore implements MessageStore, UsageListener{
      * @see org.apache.activemq.memory.UsageListener#onMemoryUseChanged(org.apache.activemq.memory.UsageManager, int, int)
      */
     public synchronized void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
-        if (newPercentUsage == 100) {
+        if(newPercentUsage==100){
             cache.clear();
         }
-        
     }
 
 }

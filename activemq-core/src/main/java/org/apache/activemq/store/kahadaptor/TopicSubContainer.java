@@ -22,43 +22,43 @@ import org.apache.activemq.kaha.StoreEntry;
  * 
  * @version $Revision: 1.10 $
  */
- class TopicSubContainer{
+ public class TopicSubContainer{
 
     private ListContainer listContainer;
     private StoreEntry batchEntry;
     
-    TopicSubContainer(ListContainer container){
+    public TopicSubContainer(ListContainer container){
         this.listContainer = container;
     }
     /**
      * @return the batchEntry
      */
-     StoreEntry getBatchEntry(){
+     public StoreEntry getBatchEntry(){
         return this.batchEntry;
     }
     
     /**
      * @param batchEntry the batchEntry to set
      */
-     void setBatchEntry(StoreEntry batchEntry){
+     public void setBatchEntry(StoreEntry batchEntry){
         this.batchEntry=batchEntry;
     }
     
     /**
      * @return the listContainer
      */
-     ListContainer getListContainer(){
+     public ListContainer getListContainer(){
         return this.listContainer;
     }
     
     /**
      * @param listContainer the listContainer to set
      */
-     void setListContainer(ListContainer container){
+     public void setListContainer(ListContainer container){
         this.listContainer=container;
     }
     
-     void reset() {
+     public void reset() {
         batchEntry = null;
     }
    
