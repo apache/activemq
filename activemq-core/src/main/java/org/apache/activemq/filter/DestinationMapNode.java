@@ -24,24 +24,33 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 
 /**
  * An implementation class used to implement {@link DestinationMap}
  * 
  * @version $Revision: 1.2 $
  */
-public class DestinationMapNode {
+public class DestinationMapNode implements DestinationNode {
+    protected static final String ANY_CHILD = DestinationMap.ANY_CHILD;
+    protected static final String ANY_DESCENDENT = DestinationMap.ANY_DESCENDENT;
+
     // we synchornize at the DestinationMap level
     private DestinationMapNode parent;
     private List values = new ArrayList();
     private Map childNodes = new HashMap();
-    private String path = "*";
-    private DestinationMapNode anyChild;
-    protected static final String ANY_CHILD = DestinationMap.ANY_CHILD;
-    protected static final String ANY_DESCENDENT = DestinationMap.ANY_DESCENDENT;
+    private String path = "Root";
+//    private DestinationMapNode anyChild;
+    private int pathLength;
 
     public DestinationMapNode(DestinationMapNode parent) {
         this.parent = parent;
+        if (parent == null) {
+            pathLength = 0;
+        }
+        else {
+            pathLength = parent.pathLength + 1;
+        }
     }
 
     /**
@@ -80,12 +89,12 @@ public class DestinationMapNode {
     /**
      * Returns the node which represents all children (i.e. the * node)
      */
-    public DestinationMapNode getAnyChildNode() {
-        if (anyChild == null) {
-            anyChild = createChildNode();
-        }
-        return anyChild;
-    }
+//    public DestinationMapNode getAnyChildNode() {
+//        if (anyChild == null) {
+//            anyChild = createChildNode();
+//        }
+//        return anyChild;
+//    }
 
     /**
      * Returns a mutable List of the values available at this node in the tree
@@ -99,7 +108,7 @@ public class DestinationMapNode {
      */
     public List removeValues() {
     	ArrayList v = new ArrayList(values);
-    	parent.getAnyChildNode().getValues().removeAll(v);
+//    	parent.getAnyChildNode().getValues().removeAll(v);
     	values.clear();
     	pruneIfEmpty();
         return v;
@@ -113,9 +122,9 @@ public class DestinationMapNode {
     }
     
     protected void removeDesendentValues(Set answer) {
-        if (anyChild != null) {
-            anyChild.removeDesendentValues(answer);
-        }
+//        if (anyChild != null) {
+//            anyChild.removeDesendentValues(answer);
+//        }
         answer.addAll(removeValues());
     }
 
@@ -133,12 +142,12 @@ public class DestinationMapNode {
             values.add(value);
         }
         else {
-            if (idx == paths.length - 1) {
-                getAnyChildNode().getValues().add(value);
-            }
-            else {
-                getAnyChildNode().add(paths, idx + 1, value);
-            }
+//            if (idx == paths.length - 1) {
+//                getAnyChildNode().getValues().add(value);
+//            }
+//            else {
+//                getAnyChildNode().add(paths, idx + 1, value);
+//            }
             getChildOrCreate(paths[idx]).add(paths, idx + 1, value);
         }
     }
@@ -149,33 +158,18 @@ public class DestinationMapNode {
             pruneIfEmpty();
         }
         else {
-            if (idx == paths.length - 1) {
-                getAnyChildNode().getValues().remove(value);
-            }
-            else {
-                getAnyChildNode().remove(paths, idx + 1, value);
-            }
+//            if (idx == paths.length - 1) {
+//                getAnyChildNode().getValues().remove(value);
+//            }
+//            else {
+//                getAnyChildNode().remove(paths, idx + 1, value);
+//            }
             getChildOrCreate(paths[idx]).remove(paths, ++idx, value);
         }
     }
 
     public void removeAll(Set answer, String[] paths, int startIndex) {
-//        if (idx >= paths.length) {
-//            values.clear();
-//            pruneIfEmpty();
-//        }
-//        else {
-//            if (idx == paths.length - 1) {
-//                getAnyChildNode().getValues().clear();
-//            }
-//            else {
-//                getAnyChildNode().removeAll(paths, idx + 1);
-//            }
-//            getChildOrCreate(paths[idx]).removeAll(paths, ++idx);
-//        }
-//        
-        
-        DestinationMapNode node = this;
+        DestinationNode node = this;
         for (int i = startIndex, size = paths.length; i < size && node != null; i++) {
 
         	String path = paths[i];
@@ -186,7 +180,8 @@ public class DestinationMapNode {
 
             node.appendMatchingWildcards(answer, paths, i);
             if (path.equals(ANY_CHILD)) {
-                node = node.getAnyChildNode();
+                //node = node.getAnyChildNode();
+                node = new AnyChildDestinationNode(node);
             }
             else {
                 node = node.getChild(path);
@@ -200,11 +195,20 @@ public class DestinationMapNode {
         
     }
 
-    protected void appendDescendantValues(Set answer) {
+    public void appendDescendantValues(Set answer) {
         answer.addAll(values);
-        if (anyChild != null) {
-            anyChild.appendDescendantValues(answer);
+
+        // lets add all the children too
+        Iterator iter = childNodes.values().iterator();
+        while (iter.hasNext()) {
+            DestinationNode child = (DestinationNode) iter.next();
+            child.appendDescendantValues(answer);
         }
+        
+        // TODO???
+//        if (anyChild != null) {
+//            anyChild.appendDescendantValues(answer);
+//        }
     }
 
     /**
@@ -214,10 +218,16 @@ public class DestinationMapNode {
         return new DestinationMapNode(this);
     }
 
+    /**
+     * Matches any entries in the map containing wildcards
+     */
     public void appendMatchingWildcards(Set answer, String[] paths, int idx) {
+        if (idx - 1 > pathLength) {
+            return;
+        }
         DestinationMapNode wildCardNode = getChild(ANY_CHILD);
         if (wildCardNode != null) {
-            wildCardNode.appendMatchingValues(answer, paths, idx + 1);
+            wildCardNode.appendMatchingValues(answer, paths, idx+1);
         }
         wildCardNode = getChild(ANY_DESCENDENT);
         if (wildCardNode != null) {
@@ -226,7 +236,7 @@ public class DestinationMapNode {
     }
 
     public void appendMatchingValues(Set answer, String[] paths, int startIndex) {
-        DestinationMapNode node = this;
+        DestinationNode node = this;
         boolean couldMatchAny = true;
         for (int i = startIndex, size = paths.length; i < size && node != null; i++) {
             String path = paths[i];
@@ -237,8 +247,10 @@ public class DestinationMapNode {
             }
 
             node.appendMatchingWildcards(answer, paths, i);
+
+
             if (path.equals(ANY_CHILD)) {
-                node = node.getAnyChildNode();
+                node = new AnyChildDestinationNode(node);
             }
             else {
                 node = node.getChild(path);
@@ -248,7 +260,7 @@ public class DestinationMapNode {
             answer.addAll(node.getValues());
             if (couldMatchAny) {
                 // lets allow FOO.BAR to match the FOO.BAR.> entry in the map
-                DestinationMapNode child = node.getChild(ANY_DESCENDENT);
+                DestinationNode child = node.getChild(ANY_DESCENDENT);
                 if (child != null) {
                     answer.addAll(child.getValues());
                 }
