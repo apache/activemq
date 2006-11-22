@@ -193,6 +193,19 @@ public class DestinationMapTest extends TestCase {
         assertMapValue("TEST.BAR.*", v2, v5, v6);
     }
 
+    public void testDoubleWildcardDoesNotMatchLongerPattern() throws Exception {
+        put("TEST.*", v1);
+        put("TEST.BAR.D3", v2);
+
+        assertMapValue("*.*.D3", v2);
+    }
+
+    public void testWildcardAtEndOfPathAndAtBeginningOfSearch() throws Exception {
+        put("TEST.*", v1);
+
+        assertMapValue("*.D1", v1);
+    }
+
     public void testAnyPathWildcardInMap() throws Exception {
         put("TEST.FOO.>", v1);
 
