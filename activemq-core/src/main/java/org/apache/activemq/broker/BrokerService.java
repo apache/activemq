@@ -1071,10 +1071,19 @@ public class BrokerService implements Service, Serializable {
      */
     protected void startAllConnectors() throws Exception{
         if (!isSlave()){
+             
+            ArrayList al = new ArrayList();	
+        	
             for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
                 TransportConnector connector = (TransportConnector) iter.next();
-                startTransportConnector(connector);
+                al.add(startTransportConnector(connector));
             }
+            
+            if (al.size()>0) {
+            	//let's clear the transportConnectors list and replace it with the started transportConnector instances 
+            	this.transportConnectors.clear();
+            	setTransportConnectors(al);
+            }            
 
             for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 NetworkConnector connector = (NetworkConnector) iter.next();
@@ -1095,7 +1104,7 @@ public class BrokerService implements Service, Serializable {
         }
     }
 
-    protected void startTransportConnector(TransportConnector connector) throws Exception {
+    protected TransportConnector startTransportConnector(TransportConnector connector) throws Exception {
         connector.setBroker(getBroker());
         connector.setBrokerName(getBrokerName());
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
@@ -1117,6 +1126,8 @@ public class BrokerService implements Service, Serializable {
             registerConnectorMBean(connector, objectName);
         }        
         connector.start();
+        
+        return connector;
     }
 
     public boolean isDeleteAllMessagesOnStartup() {
