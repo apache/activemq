@@ -118,14 +118,17 @@ public class KahaStore implements Store{
 
     public synchronized void clear() throws IOException{
         initialize();
-        for(Iterator i=maps.values().iterator();i.hasNext();){
-            BaseContainerImpl container=(BaseContainerImpl)i.next();
+        for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {
+            ContainerId id = (ContainerId)i.next();
+            MapContainer container = getMapContainer(id.getKey(),id.getDataContainerName());
             container.clear();
         }
-        for(Iterator i=lists.values().iterator();i.hasNext();){
-            BaseContainerImpl container=(BaseContainerImpl)i.next();
+        for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
+            ContainerId id = (ContainerId)i.next();
+            ListContainer container = getListContainer(id.getKey(),id.getDataContainerName());
             container.clear();
         }
+        
     }
 
     public synchronized boolean delete() throws IOException{
