@@ -37,7 +37,7 @@ public class DestinationMapMemoryTest extends TestCase {
             for (int j = 2; j <= i; j++) {
                 name += "." + j;
             }
-            System.out.println("Checking: " + name);
+            //System.out.println("Checking: " + name);
             try {
                 ActiveMQDestination d1 = createDestination(name);
                 DestinationMap map = new DestinationMap();
