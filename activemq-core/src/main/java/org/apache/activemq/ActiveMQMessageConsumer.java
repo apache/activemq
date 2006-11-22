@@ -106,6 +106,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private int rollbackCounter = 0;
     private long redeliveryDelay = 0;
     private int ackCounter = 0;
+    private int dispatchedCount = 0;
     private MessageListener messageListener;
     private JMSConsumerStatsImpl stats;
 
@@ -876,6 +877,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 	                    }
 	                }
 	            }
+            }
+            if (++dispatchedCount%1000==0) {
+                dispatchedCount=0;
+            Thread.yield();
             }
         } catch (Exception e) {
         	session.connection.onAsyncException(e);
