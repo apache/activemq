@@ -230,7 +230,6 @@
 
 
             <!-- m2 tests failing since move from assembly  -->
-            <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
             <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
             <exclude>**/TwoBrokerQueueClientsReconnectTest.*</exclude>
             <exclude>**/ThreeBrokerQueueNetworkUsingTcpTest.*</exclude>
