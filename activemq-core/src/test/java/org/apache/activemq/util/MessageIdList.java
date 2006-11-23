@@ -215,4 +215,20 @@ public class MessageIdList extends Assert implements MessageListener {
         this.parent = parent;
     }
 
+    
+    /**
+     * @return the maximumDuration
+     */
+    public long getMaximumDuration(){
+        return this.maximumDuration;
+    }
+
+    
+    /**
+     * @param maximumDuration the maximumDuration to set
+     */
+    public void setMaximumDuration(long maximumDuration){
+        this.maximumDuration=maximumDuration;
+    }
+
 }
