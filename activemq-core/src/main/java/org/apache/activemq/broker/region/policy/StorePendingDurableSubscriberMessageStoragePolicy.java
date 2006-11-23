@@ -20,7 +20,7 @@ import org.apache.activemq.kaha.Store;
 
 /**
  * Creates a PendingMessageCursor that access the persistent store to retrieve messages
- *  *
+ *  
  * @org.apache.xbean.XBean element="storeDurableSubscriberCursor" description="Pending messages for a durable subscriber
  *                         are referenced from the Store"
  * 

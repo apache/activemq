@@ -127,7 +127,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (broker.getDestinationPolicy() != null) {
             PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
-                entry.configure(queue);
+                entry.configure(queue,broker.getTempDataStore());
             }
         }
     }

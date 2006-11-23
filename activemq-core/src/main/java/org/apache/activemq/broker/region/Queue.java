@@ -366,6 +366,11 @@ public class Queue implements Destination, Task {
         if(!skipGc&&garbageSize>garbageSizeBeforeCollection){
             gc();
         }
+        try{
+            taskRunner.wakeup();
+        }catch(InterruptedException e){
+            log.warn("Task Runner failed to wakeup ",e);
+        }
     }
 
     public void gc() {
@@ -379,11 +384,6 @@ public class Queue implements Destination, Task {
                     continue;
                 }
             }
-        }
-        try{
-            taskRunner.wakeup();
-        }catch(InterruptedException e){
-            log.warn("Task Runner failed to wakeup ",e);
         }
     }
 
