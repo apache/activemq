@@ -132,15 +132,15 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void testSendReceiveUsingFailover() throws Exception {
-        sendUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
-        recvUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
+        sendUri = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
+        recvUri = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
         createMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingFailover() throws Exception {
-        sendUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
-        recvUri = "failover:tcp://localhost:61616,tcp://localhost:61617";
+        sendUri = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
+        recvUri = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
         createMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
@@ -160,21 +160,21 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void testSendReceiveUsingAutoAssignFailover() throws Exception {
-        sendUri = "failover:multicast://default";
-        recvUri = "failover:multicast://default";
+        sendUri = "failover:(discovery:multicast://default)";
+        recvUri = "failover:(discovery:multicast://default)";
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingAutoAssignFailover() throws Exception {
-        sendUri = "failover:multicast://default";
-        recvUri = "failover:multicast://default";
+        sendUri = "failover:(discovery:multicast://default)";
+        recvUri = "failover:(discovery:multicast://default)";
         createAutoAssignMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
     public void testSendReceiveUsingAutoAssignDiscovery() throws Exception {
-        sendUri = "discovery:multicast://default";
+		sendUri = "discovery:multicast://default";
         recvUri = "discovery:multicast://default";
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
