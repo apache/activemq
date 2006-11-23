@@ -129,10 +129,6 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
     // implementation
     protected void fillBatch() throws Exception{
         store.recoverNextMessages(maxBatchSize,this);
-        // this will add more messages to the batch list
-        if(!batchList.isEmpty()){
-            Message message=(Message)batchList.getLast();
-        }
     }
     
     public String toString() {

@@ -57,6 +57,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
             nonPersistent.setMaxBatchSize(getMaxBatchSize());
         }
         nonPersistent.start();
+        persistent.start();
         pendingCount=persistent.size();
     }
 
@@ -65,6 +66,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         if(nonPersistent!=null){
             nonPersistent.stop();
         }
+        persistent.stop();
         pendingCount=0;
     }
 

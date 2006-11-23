@@ -24,6 +24,7 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.kaha.Store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,7 +50,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private MessageGroupMapFactory messageGroupMapFactory;
     private PendingQueueMessageStoragePolicy pendingQueueMessageStoragePolicy;
     
-    public void configure(Queue queue) {
+    public void configure(Queue queue, Store tmpStore) {
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
         }
@@ -61,7 +62,7 @@ public class PolicyEntry extends DestinationMapEntry {
             queue.getUsageManager().setLimit(memoryLimit);
         }
         if (pendingQueueMessageStoragePolicy != null) {
-            PendingMessageCursor messages = pendingQueueMessageStoragePolicy.getQueuePendingMessageCursor();
+            PendingMessageCursor messages = pendingQueueMessageStoragePolicy.getQueuePendingMessageCursor(queue,tmpStore);
             queue.setMessages(messages);
         }
     }
