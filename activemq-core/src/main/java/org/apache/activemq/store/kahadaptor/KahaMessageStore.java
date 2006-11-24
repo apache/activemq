@@ -210,7 +210,7 @@ public class KahaMessageStore implements MessageStore, UsageListener{
                 }
                 batchEntry = entry;
                 entry=messageContainer.getNext(entry);
-            }while(entry!=null&&count<maxReturned);
+            }while(entry!=null&&count<maxReturned&&listener.hasSpace());
         }
         listener.finished();
         

@@ -219,6 +219,7 @@ public class TopicRegion extends AbstractRegion {
                 PendingMessageCursor cursor=broker.getPendingDurableSubscriberPolicy().getSubscriberPendingMessageCursor(
                         context.getClientId(),info.getSubscriptionName(),broker.getTempDataStore(),
                         info.getPrefetchSize());
+                cursor.setUsageManager(memoryManager);
                 sub=new DurableTopicSubscription(broker,context,info,keepDurableSubsActive,cursor);
                 durableSubscriptions.put(key,sub);
             }

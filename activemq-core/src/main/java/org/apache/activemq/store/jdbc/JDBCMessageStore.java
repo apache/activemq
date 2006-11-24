@@ -235,14 +235,18 @@ public class JDBCMessageStore implements MessageStore {
                     new JDBCMessageRecoveryListener(){
 
                         public void recoverMessage(long sequenceId,byte[] data) throws Exception{
-                            Message msg=(Message)wireFormat.unmarshal(new ByteSequence(data));
-                            msg.getMessageId().setBrokerSequenceId(sequenceId);
-                            listener.recoverMessage(msg);
-                            lastMessageId.set(sequenceId);
+                            if(listener.hasSpace()){
+                                Message msg=(Message)wireFormat.unmarshal(new ByteSequence(data));
+                                msg.getMessageId().setBrokerSequenceId(sequenceId);
+                                listener.recoverMessage(msg);
+                                lastMessageId.set(sequenceId);
+                            }
                         }
 
                         public void recoverMessageReference(String reference) throws Exception{
-                            listener.recoverMessageReference(reference);
+                            if(listener.hasSpace()) {
+                                listener.recoverMessageReference(reference);
+                            }
                         }
 
                         public void finished(){

@@ -203,6 +203,10 @@ public class Topic implements Destination {
                     }
 
                     public void finished(){}
+
+                    public boolean hasSpace(){
+                        return true;
+                    }
                 });
             }
             
@@ -334,6 +338,10 @@ public class Topic implements Destination {
                     public void recoverMessageReference(String messageReference) throws Exception{}
 
                     public void finished(){}
+
+                    public boolean hasSpace(){
+                       return true;
+                    }
                 });
                 Message[] msgs=subscriptionRecoveryPolicy.browse(getActiveMQDestination());
                 if(msgs!=null){

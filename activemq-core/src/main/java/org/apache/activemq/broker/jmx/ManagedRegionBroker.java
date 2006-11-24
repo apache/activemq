@@ -427,6 +427,10 @@ public class ManagedRegionBroker extends RegionBroker {
                 public void recoverMessageReference(String messageReference) throws Exception{}
 
                 public void finished(){}
+
+                public boolean hasSpace(){
+                    return true;
+                }
             });
         }catch(Throwable e){
             log.error("Failed to browse messages for Subscription "+view,e);

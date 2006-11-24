@@ -117,6 +117,7 @@ public class Queue implements Destination, Task {
     public void initialize() throws Exception{
         if(store!=null){
             // Restore the persistent messages.
+            messages.setUsageManager(getUsageManager());
             messages.start();
             if(messages.isRecoveryRequired()){
                 store.recover(new MessageRecoveryListener(){
@@ -144,6 +145,10 @@ public class Queue implements Destination, Task {
                     }
 
                     public void finished(){
+                    }
+
+                    public boolean hasSpace(){
+                        return true;
                     }
                 });
             }
@@ -242,6 +247,9 @@ public class Queue implements Destination, Task {
 
             synchronized (consumers) {
                 consumers.remove(sub);
+                if (consumers.isEmpty()) {
+                    messages.gc();
+                }
             }
             sub.remove(context, this);
 

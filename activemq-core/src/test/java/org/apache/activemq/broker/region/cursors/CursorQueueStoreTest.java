@@ -20,18 +20,20 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
-import javax.jms.Topic;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
+import org.apache.activemq.broker.region.policy.StorePendingQueueMessageStoragePolicy;
 
 /**
  * @version $Revision: 1.3 $
  */
-public class CursorDurableTest extends CursorSupport{
+public  class CursorQueueStoreTest extends CursorSupport{
 
     protected Destination getDestination(Session session) throws JMSException{
-        String topicName=getClass().getName();
-        return session.createTopic(topicName);
+        String queueName="QUEUE" + getClass().getName();
+        return session.createQueue(queueName);
     }
 
     protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException{
@@ -43,14 +45,19 @@ public class CursorDurableTest extends CursorSupport{
 
     protected MessageConsumer getConsumer(Connection connection) throws Exception{
         Session consumerSession=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        Topic topic=(Topic)getDestination(consumerSession);
-        MessageConsumer consumer=consumerSession.createDurableSubscriber(topic,"testConsumer");
+        Destination dest = getDestination(consumerSession);
+        MessageConsumer consumer=consumerSession.createConsumer(dest);
         return consumer;
     }
     
+    
     protected void configureBroker(BrokerService answer) throws Exception{
+        PolicyEntry policy = new PolicyEntry();
+        policy.setPendingQueueMessageStoragePolicy(new StorePendingQueueMessageStoragePolicy());
+        PolicyMap pMap = new PolicyMap();
+        pMap.setDefaultEntry(policy);
+        answer.setDestinationPolicy(pMap);
         answer.setDeleteAllMessagesOnStartup(true);
-        answer.setPendingDurableSubscriberPolicy(new StorePendingDurableSubscriberMessageStoragePolicy());
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
     }

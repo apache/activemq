@@ -68,6 +68,9 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
             public void finished(){
                 listener.finished();
             }
+            public boolean hasSpace(){
+                return true;
+            }
         });
 
     }
@@ -86,6 +89,9 @@ public class QuickJournalTopicMessageStore extends QuickJournalMessageStore impl
             
             public void finished(){
                 listener.finished();
+            }
+            public boolean hasSpace(){
+                return true;
             }
         });
         

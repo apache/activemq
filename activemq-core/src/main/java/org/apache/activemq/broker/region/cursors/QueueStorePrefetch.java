@@ -20,16 +20,12 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import javax.jms.JMSException;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.TopicMessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -65,6 +61,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
 
     public void stop() throws Exception{
         store.resetBatching();
+        gc();
     }
 
     /**
@@ -124,6 +121,10 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
             throws Exception{
         // shouldn't get called
         throw new RuntimeException("Not supported");
+    }
+    
+    public void gc() {
+        batchList.clear();
     }
 
     // implementation
