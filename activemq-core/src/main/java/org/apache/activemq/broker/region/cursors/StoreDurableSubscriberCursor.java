@@ -25,6 +25,7 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -86,6 +87,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     public synchronized void add(ConnectionContext context,Destination destination) throws Exception{
         TopicStorePrefetch tsp=new TopicStorePrefetch((Topic)destination,clientId,subscriberName);
         tsp.setMaxBatchSize(getMaxBatchSize());
+        tsp.setUsageManager(usageManager);
         topics.put(destination,tsp);
         storePrefetches.add(tsp);
         if(started){
@@ -200,6 +202,21 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
             tsp.setMaxBatchSize(maxBatchSize);
         }
         super.setMaxBatchSize(maxBatchSize);
+    }
+    
+    public synchronized void gc() {
+        for(Iterator i=storePrefetches.iterator();i.hasNext();){
+            PendingMessageCursor tsp=(PendingMessageCursor)i.next();
+            tsp.gc();
+        }
+    }
+    
+    public synchronized void setUsageManager(UsageManager usageManager){
+        super.setUsageManager(usageManager);
+        for(Iterator i=storePrefetches.iterator();i.hasNext();){
+            PendingMessageCursor tsp=(PendingMessageCursor)i.next();
+            tsp.setUsageManager(usageManager);
+        }
     }
 
     protected synchronized PendingMessageCursor getNextCursor() throws Exception{

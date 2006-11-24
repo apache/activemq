@@ -66,6 +66,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
 
     public void stop() throws Exception{
         store.resetBatching(clientId,subscriberName);
+        gc();
     }
 
     /**
@@ -136,6 +137,10 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
             Message message=(Message)batchList.getLast();
           
         }
+    }
+    
+    public void gc() {
+        batchList.clear();
     }
     
     public String toString() {

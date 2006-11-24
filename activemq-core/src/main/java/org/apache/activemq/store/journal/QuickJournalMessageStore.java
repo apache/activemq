@@ -373,6 +373,10 @@ public class QuickJournalMessageStore implements MessageStore {
             public void finished(){
                 listener.finished();
             }
+            public boolean hasSpace(){
+                // TODO Auto-generated method stub
+                return true;
+            }
         });
     }
 

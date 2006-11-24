@@ -26,4 +26,5 @@ public interface MessageRecoveryListener {
     void recoverMessage(Message message) throws Exception;
     void recoverMessageReference(String messageReference) throws Exception;
     void finished();
+    boolean hasSpace();
 }

@@ -370,6 +370,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
         ResultSet rs=null;
         try{
             s=c.getConnection().prepareStatement(statements.getFindDurableSubMessagesStatement());
+            s.setMaxRows(maxReturned);
             s.setString(1,destination.getQualifiedName());
             s.setString(2,clientId);
             s.setString(3,subscriptionName);
@@ -639,8 +640,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
         ResultSet rs=null;
         try{
             s=c.getConnection().prepareStatement(statements.getFindNextMessagesStatement());
+            s.setMaxRows(maxReturned);
             s.setString(1,destination.getQualifiedName());
-            s.setLong(4,nextSeq);
+            s.setLong(2,nextSeq);
             rs=s.executeQuery();
             int count=0;
             if(statements.isUseExternalMessageReferences()){
@@ -654,7 +656,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
                     count++;
                 }
             }
-        }finally{
+        }catch(Exception e) {
+            e.printStackTrace();
+        }finally {
             close(rs);
             close(s);
             listener.finished();

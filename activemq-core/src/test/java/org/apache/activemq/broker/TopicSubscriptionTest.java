@@ -28,7 +28,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
     public void testManyProducersManyConsumers() throws Exception {
         consumerCount = 20;
         producerCount = 20;
-        messageCount  = 500;
+        messageCount  = 50;
         messageSize   = 1; 
         prefetchCount = 10;
 

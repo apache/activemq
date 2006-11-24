@@ -19,6 +19,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.memory.UsageManager;
 
 /**
  * Interface to pending message (messages awaiting disptach to a consumer) cursor
@@ -125,4 +126,18 @@ public interface PendingMessageCursor extends Service{
      * @param node
      */
     public void remove(MessageReference node);
+    
+    
+    /**
+     * free up any internal buffers
+     *
+     */
+    public void gc();
+    
+    /**
+     * Set the UsageManager
+     * @param usageManager
+     * @see org.apache.activemq.memory.UsageManager
+     */
+    public void setUsageManager(UsageManager usageManager);
 }

@@ -186,7 +186,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
                     }
                     container.setBatchEntry(entry);
                     entry=container.getListContainer().getNext(entry);
-                }while(entry!=null&&count<maxReturned);
+                }while(entry!=null&&count<maxReturned && listener.hasSpace());
             }
         }
         listener.finished();

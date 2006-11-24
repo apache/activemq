@@ -14,10 +14,10 @@
 
 package org.apache.activemq.broker.region.cursors;
 
-import java.io.IOException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.memory.UsageManager;
 
 /**
  * Abstract method holder for pending message (messages awaiting disptach to a consumer) cursor
@@ -27,11 +27,13 @@ import org.apache.activemq.broker.region.MessageReference;
 public class AbstractPendingMessageCursor implements PendingMessageCursor{
 
     protected int maxBatchSize=100;
+    protected UsageManager usageManager;
 
     public void start() throws Exception{
     }
 
     public void stop() throws Exception{
+        gc();
     }
 
     public void add(ConnectionContext context,Destination destination) throws Exception{
@@ -86,17 +88,22 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     protected void fillBatch() throws Exception{
     }
 
-    /**
-     * Give the cursor a hint that we are about to remove messages from memory only
-     */
     public void resetForGC(){
         reset();
     }
 
-    /**
-     * @param node
-     * @see org.apache.activemq.broker.region.cursors.PendingMessageCursor#remove(org.apache.activemq.broker.region.MessageReference)
-     */
     public void remove(MessageReference node){
+    }
+    
+    public void gc(){
+    }
+
+   
+    public void setUsageManager(UsageManager usageManager){
+       this.usageManager = usageManager; 
+    }
+    
+    public boolean hasSpace() {
+        return usageManager != null ? !usageManager.isFull() : true;
     }
 }

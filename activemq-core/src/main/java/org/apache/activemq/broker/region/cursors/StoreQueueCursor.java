@@ -14,11 +14,11 @@
 
 package org.apache.activemq.broker.region.cursors;
 
-import java.util.Iterator;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -55,6 +55,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         if(nonPersistent==null){
             nonPersistent=new FilePendingMessageCursor(queue.getDestination(),tmpStore);
             nonPersistent.setMaxBatchSize(getMaxBatchSize());
+            nonPersistent.setUsageManager(usageManager);
         }
         nonPersistent.start();
         persistent.start();
@@ -65,8 +66,10 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         started=false;
         if(nonPersistent!=null){
             nonPersistent.stop();
+            nonPersistent.gc();
         }
         persistent.stop();
+        persistent.gc();
         pendingCount=0;
     }
 
@@ -162,10 +165,29 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         }
         super.setMaxBatchSize(maxBatchSize);
     }
+    
+    public void gc() {
+        if (persistent != null) {
+            persistent.gc();
+        }
+        if (nonPersistent != null) {
+            nonPersistent.gc();
+        }
+    }
+    
+    public void setUsageManager(UsageManager usageManager){
+        super.setUsageManager(usageManager);
+        if (persistent != null) {
+            persistent.setUsageManager(usageManager);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setUsageManager(usageManager);
+        }
+     }
 
     protected synchronized PendingMessageCursor getNextCursor() throws Exception{
         if(currentCursor==null||currentCursor.isEmpty()){
-            currentCursor = currentCursor == persistent ? nonPersistent : persistent;
+            currentCursor=currentCursor==persistent?nonPersistent:persistent;
         }
         return currentCursor;
     }
