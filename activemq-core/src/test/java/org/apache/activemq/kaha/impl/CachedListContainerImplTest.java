@@ -18,13 +18,13 @@ package org.apache.activemq.kaha.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.StoreFactory;
-import org.apache.activemq.kaha.impl.KahaStore;
 import org.apache.activemq.kaha.impl.container.ContainerId;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
-import org.apache.activemq.kaha.impl.data.DataManager;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 /**

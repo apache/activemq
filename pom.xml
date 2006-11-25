@@ -216,6 +216,12 @@
         <artifactId>activeio-core</artifactId>
         <version>3.1-incubator-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activeio-core</artifactId>
+        <version>3.1-incubator-SNAPSHOT</version>
+        <type>test-jar</type>
+      </dependency>
 	  <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-openwire-generator</artifactId>

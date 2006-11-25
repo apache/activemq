@@ -27,7 +27,6 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.container.ContainerId;
-import org.apache.activemq.kaha.impl.data.DataManager;
 import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;

@@ -33,11 +33,13 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreLocation;
+import org.apache.activemq.kaha.impl.async.AsyncDataManager;
+import org.apache.activemq.kaha.impl.async.DataManagerFacade;
 import org.apache.activemq.kaha.impl.container.BaseContainerImpl;
 import org.apache.activemq.kaha.impl.container.ContainerId;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
 import org.apache.activemq.kaha.impl.container.MapContainerImpl;
-import org.apache.activemq.kaha.impl.data.DataManager;
+import org.apache.activemq.kaha.impl.data.DataManagerImpl;
 import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.data.RedoListener;
 import org.apache.activemq.kaha.impl.index.IndexItem;
@@ -73,8 +75,8 @@ public class KahaStore implements Store{
     private String mode;
     private boolean initialized;
     private boolean logIndexChanges=false;
-    private boolean useAsyncWriter=false;
-    private long maxDataFileLength=DataManager.MAX_FILE_LENGTH;
+    private boolean useAsyncDataManager=false;
+    private long maxDataFileLength=1024*1024*32;
     private FileLock lock;
     private String indexType=IndexTypes.DISK_INDEX;
 
@@ -319,10 +321,21 @@ public class KahaStore implements Store{
     public synchronized DataManager getDataManager(String name) throws IOException{
         DataManager dm=(DataManager)dataManagers.get(name);
         if(dm==null){
-            dm=new DataManager(directory,name);
-            dm.setMaxFileLength(maxDataFileLength);
-            dm.setUseAsyncWriter(isUseAsyncWriter());
-            recover(dm);
+        	if( isUseAsyncDataManager() ) {
+	        	AsyncDataManager t=new AsyncDataManager();
+	        	t.setDirectory(directory);
+	        	t.setFilePrefix("data-"+name+"-");
+	        	t.setMaxFileLength((int) maxDataFileLength);
+	        	t.start();
+	            dm=new DataManagerFacade(t, name);
+        	} else {
+	        	DataManagerImpl t=new DataManagerImpl(directory,name);
+	            t.setMaxFileLength(maxDataFileLength);
+	            dm=t;
+        	}
+        	if( logIndexChanges ) {
+        		recover(dm);
+        	}
             dataManagers.put(name,dm);
         }
         return dm;
@@ -339,7 +352,6 @@ public class KahaStore implements Store{
 
     private void recover(final DataManager dm) throws IOException{
         dm.recoverRedoItems(new RedoListener(){
-
             public void onRedoItem(StoreLocation item,Object o) throws Exception{
                 RedoStoreIndexItem redo=(RedoStoreIndexItem)o;
                 // IndexManager im = getIndexManager(dm, redo.getIndexName());
@@ -531,12 +543,12 @@ public class KahaStore implements Store{
         }
     }
 
-	public synchronized boolean isUseAsyncWriter() {
-		return useAsyncWriter;
+	public synchronized boolean isUseAsyncDataManager() {
+		return useAsyncDataManager;
 	}
 
-	public synchronized void setUseAsyncWriter(boolean useAsyncWriter) {
-		this.useAsyncWriter = useAsyncWriter;
+	public synchronized void setUseAsyncDataManager(boolean useAsyncWriter) {
+		this.useAsyncDataManager = useAsyncWriter;
 	}
 
     

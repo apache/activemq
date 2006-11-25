@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.StoreEntry;
-import org.apache.activemq.kaha.impl.data.DataManager;
+import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.index.DiskIndexLinkedList;
 import org.apache.activemq.kaha.impl.index.IndexItem;

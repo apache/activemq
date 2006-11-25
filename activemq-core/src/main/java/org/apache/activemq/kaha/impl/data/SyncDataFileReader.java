@@ -27,9 +27,9 @@ import org.apache.activemq.util.DataByteArrayInputStream;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-final class SyncDataFileReader implements DataFileReader {
+public final class SyncDataFileReader {
     
-    private DataManager dataManager;
+    private DataManagerImpl dataManager;
     private DataByteArrayInputStream dataIn;
 
     /**
@@ -37,7 +37,7 @@ final class SyncDataFileReader implements DataFileReader {
      * 
      * @param file
      */
-    SyncDataFileReader(DataManager fileManager){
+    SyncDataFileReader(DataManagerImpl fileManager){
         this.dataManager=fileManager;
         this.dataIn=new DataByteArrayInputStream();
     }
@@ -62,7 +62,7 @@ final class SyncDataFileReader implements DataFileReader {
         // TODO: we could reuse the buffer in dataIn if it's big enough to avoid
         // allocating byte[] arrays on every readItem.
         byte[] data=new byte[item.getSize()];
-        file.seek(item.getOffset()+DataManager.ITEM_HEAD_SIZE);
+        file.seek(item.getOffset()+DataManagerImpl.ITEM_HEAD_SIZE);
         file.readFully(data);
         dataIn.restart(data);
         return marshaller.readPayload(dataIn);

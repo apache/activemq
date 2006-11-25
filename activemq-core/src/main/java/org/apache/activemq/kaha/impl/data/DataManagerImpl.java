@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreLocation;
+import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
@@ -37,21 +38,19 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public final class DataManager{
+public final class DataManagerImpl implements DataManager {
     
-    private static final Log log=LogFactory.getLog(DataManager.class);
+    private static final Log log=LogFactory.getLog(DataManagerImpl.class);
     public static long MAX_FILE_LENGTH=1024*1024*32;
     private static final String NAME_PREFIX="data-";
     private final File dir;
     private final String name;
-    private DataFileReader reader;
-    private DataFileWriter writer;
+    private SyncDataFileReader reader;
+    private SyncDataFileWriter writer;
     private DataFile currentWriteFile;
     private long maxFileLength = MAX_FILE_LENGTH;
     Map fileMap=new HashMap();
     
-    private boolean useAsyncWriter=false;
-
     public static final int ITEM_HEAD_SIZE=5; // type + length
     public static final byte DATA_ITEM_TYPE=1;
     public static final byte REDO_ITEM_TYPE=2;
@@ -59,7 +58,7 @@ public final class DataManager{
     Marshaller redoMarshaller = RedoStoreIndexItem.MARSHALLER;
     private String dataFilePrefix;
 
-    public DataManager(File dir, final String name){
+    public DataManagerImpl(File dir, final String name){
         this.dir=dir;
         this.name=name;
         
@@ -93,6 +92,9 @@ public final class DataManager{
         return result;
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#getName()
+	 */
     public String getName(){
         return name;
     }
@@ -121,22 +123,37 @@ public final class DataManager{
         return dataFile;
     }
     
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#readItem(org.apache.activemq.kaha.Marshaller, org.apache.activemq.kaha.StoreLocation)
+	 */
     public synchronized Object readItem(Marshaller marshaller, StoreLocation item) throws IOException{
         return getReader().readItem(marshaller,item);
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#storeDataItem(org.apache.activemq.kaha.Marshaller, java.lang.Object)
+	 */
     public synchronized StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException{
         return getWriter().storeItem(marshaller,payload, DATA_ITEM_TYPE);
     }
     
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#storeRedoItem(java.lang.Object)
+	 */
     public synchronized StoreLocation storeRedoItem(Object payload) throws IOException{
         return getWriter().storeItem(redoMarshaller, payload, REDO_ITEM_TYPE);
     }
     
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#updateItem(org.apache.activemq.kaha.StoreLocation, org.apache.activemq.kaha.Marshaller, java.lang.Object)
+	 */
     public synchronized void updateItem(StoreLocation location,Marshaller marshaller, Object payload) throws IOException {
         getWriter().updateItem((DataItem)location,marshaller,payload,DATA_ITEM_TYPE);
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#recoverRedoItems(org.apache.activemq.kaha.impl.data.RedoListener)
+	 */
     public synchronized void recoverRedoItems(RedoListener listener) throws IOException{
         
         // Nothing to recover if there is no current file.
@@ -179,6 +196,9 @@ public final class DataManager{
         }
     }
     
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#close()
+	 */
     public synchronized void close() throws IOException{
     	getWriter().close();
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
@@ -189,6 +209,9 @@ public final class DataManager{
         fileMap.clear();
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#force()
+	 */
     public synchronized void force() throws IOException{
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
             DataFile dataFile=(DataFile) i.next();
@@ -197,6 +220,9 @@ public final class DataManager{
     }
 
         
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#delete()
+	 */
     public synchronized boolean delete() throws IOException{
         boolean result=true;
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
@@ -208,6 +234,9 @@ public final class DataManager{
     }
     
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#addInterestInFile(int)
+	 */
     public synchronized void addInterestInFile(int file) throws IOException{
         if(file>=0){
             Integer key=new Integer(file);
@@ -225,6 +254,9 @@ public final class DataManager{
         }
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#removeInterestInFile(int)
+	 */
     public synchronized void removeInterestInFile(int file) throws IOException{
         if(file>=0){
             Integer key=new Integer(file);
@@ -243,6 +275,9 @@ public final class DataManager{
         }
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#consolidateDataFiles()
+	 */
     public synchronized void consolidateDataFiles() throws IOException{
         List purgeList=new ArrayList();
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
@@ -264,10 +299,16 @@ public final class DataManager{
         log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#getRedoMarshaller()
+	 */
     public Marshaller getRedoMarshaller() {
         return redoMarshaller;
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.activemq.kaha.impl.data.IDataManager#setRedoMarshaller(org.apache.activemq.kaha.Marshaller)
+	 */
     public void setRedoMarshaller(Marshaller redoMarshaller) {
         this.redoMarshaller = redoMarshaller;
     }
@@ -290,45 +331,30 @@ public final class DataManager{
         return "DataManager:("+NAME_PREFIX+name+")";
     }
 
-	public synchronized DataFileReader getReader() {
+	public synchronized SyncDataFileReader getReader() {
 		if( reader == null ) {
 			reader = createReader();
 		}
 		return reader;
 	}
-	protected synchronized DataFileReader createReader() {
-		if( useAsyncWriter ) {
-			return new AsyncDataFileReader(this, (AsyncDataFileWriter) getWriter());
-		} else {
-			return new SyncDataFileReader(this);
-		}
+	protected synchronized SyncDataFileReader createReader() {
+		return new SyncDataFileReader(this);
 	}
-	public synchronized void setReader(DataFileReader reader) {
+	public synchronized void setReader(SyncDataFileReader reader) {
 		this.reader = reader;
 	}
 
-	public synchronized DataFileWriter getWriter() {
+	public synchronized SyncDataFileWriter getWriter() {
 		if( writer==null ) {
 			writer = createWriter();
 		}
 		return writer;
 	}
-	private DataFileWriter createWriter() {
-		if( useAsyncWriter ) {
-			return new AsyncDataFileWriter(this);
-		} else {
-			return new SyncDataFileWriter(this);
-		}
+	private SyncDataFileWriter createWriter() {
+		return new SyncDataFileWriter(this);
 	}
-	public synchronized void setWriter(DataFileWriter writer) {
+	public synchronized void setWriter(SyncDataFileWriter writer) {
 		this.writer = writer;
 	}
 
-	public synchronized boolean isUseAsyncWriter() {
-		return useAsyncWriter;
-	}
-
-	public synchronized void setUseAsyncWriter(boolean useAsyncWriter) {
-		this.useAsyncWriter = useAsyncWriter;
-	}
 }

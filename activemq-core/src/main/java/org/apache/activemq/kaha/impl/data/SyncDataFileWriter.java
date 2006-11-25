@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import org.apache.activemq.kaha.Marshaller;
-import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 /**
  * Optimized Store writer.  Synchronously marshalls and writes to the data file. Simple but 
@@ -29,10 +28,10 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-final class SyncDataFileWriter implements DataFileWriter{
+final public class SyncDataFileWriter {
     
     private DataByteArrayOutputStream buffer;
-    private DataManager dataManager;
+    private DataManagerImpl dataManager;
 
 
     /**
@@ -40,7 +39,7 @@ final class SyncDataFileWriter implements DataFileWriter{
      * 
      * @param file
      */
-    SyncDataFileWriter(DataManager fileManager){
+    SyncDataFileWriter(DataManagerImpl fileManager){
         this.dataManager=fileManager;
         this.buffer=new DataByteArrayOutputStream();
     }
@@ -52,10 +51,10 @@ final class SyncDataFileWriter implements DataFileWriter{
         
         // Write the packet our internal buffer.
         buffer.reset();
-        buffer.position(DataManager.ITEM_HEAD_SIZE);
+        buffer.position(DataManagerImpl.ITEM_HEAD_SIZE);
         marshaller.writePayload(payload,buffer);
         int size=buffer.size();
-        int payloadSize=size-DataManager.ITEM_HEAD_SIZE;
+        int payloadSize=size-DataManagerImpl.ITEM_HEAD_SIZE;
         buffer.reset();
         buffer.writeByte(type);
         buffer.writeInt(payloadSize);
@@ -80,10 +79,10 @@ final class SyncDataFileWriter implements DataFileWriter{
     public synchronized void updateItem(DataItem item,Marshaller marshaller, Object payload, byte type) throws IOException {
         //Write the packet our internal buffer.
         buffer.reset();
-        buffer.position(DataManager.ITEM_HEAD_SIZE);
+        buffer.position(DataManagerImpl.ITEM_HEAD_SIZE);
         marshaller.writePayload(payload,buffer);
         int size=buffer.size();
-        int payloadSize=size-DataManager.ITEM_HEAD_SIZE;
+        int payloadSize=size-DataManagerImpl.ITEM_HEAD_SIZE;
         buffer.reset();
         buffer.writeByte(type);
         buffer.writeInt(payloadSize);

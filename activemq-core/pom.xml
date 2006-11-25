@@ -48,6 +48,12 @@
       <artifactId>activeio-core</artifactId>
       <optional>false</optional>
     </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
+      <optional>false</optional>
+      <type>test-jar</type>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
