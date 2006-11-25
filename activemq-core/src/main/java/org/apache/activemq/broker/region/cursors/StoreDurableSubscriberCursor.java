@@ -185,10 +185,16 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     }
 
     public synchronized void reset(){
-        nonPersistent.reset();
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
             AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
             tsp.reset();
+        }
+    }
+    
+    public synchronized void release(){
+        for(Iterator i=storePrefetches.iterator();i.hasNext();){
+            AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
+            tsp.release();
         }
     }
 

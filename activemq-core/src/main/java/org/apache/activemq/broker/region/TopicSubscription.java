@@ -135,33 +135,39 @@ public class TopicSubscription extends AbstractSubscription{
      * Discard any expired messages from the matched list. Called from a synchronized block.
      * @throws IOException 
      */
-    protected void removeExpiredMessages() throws IOException {
-        matched.reset();
-        while(matched.hasNext()) {
-            MessageReference node=matched.next();
-            if (node.isExpired()) {
-                matched.remove();
-                dispatched.incrementAndGet();
-                node.decrementReferenceCount();
-                break;
-            }
-        }
-        matched.release();
-    }
-
-    public void processMessageDispatchNotification(MessageDispatchNotification mdn){
-        synchronized(matchedListMutex){
+    protected void removeExpiredMessages() throws IOException{
+        try{
             matched.reset();
-            while(matched.hasNext()) {
+            while(matched.hasNext()){
                 MessageReference node=matched.next();
-                if(node.getMessageId().equals(mdn.getMessageId())){
+                if(node.isExpired()){
                     matched.remove();
                     dispatched.incrementAndGet();
                     node.decrementReferenceCount();
                     break;
                 }
             }
+        }finally{
             matched.release();
+        }
+    }
+
+    public void processMessageDispatchNotification(MessageDispatchNotification mdn){
+        synchronized(matchedListMutex){
+            try{
+                matched.reset();
+                while(matched.hasNext()){
+                    MessageReference node=matched.next();
+                    if(node.getMessageId().equals(mdn.getMessageId())){
+                        matched.remove();
+                        dispatched.incrementAndGet();
+                        node.decrementReferenceCount();
+                        break;
+                    }
+                }
+            }finally{
+                matched.release();
+            }
         }
     }
 
@@ -335,21 +341,22 @@ public class TopicSubscription extends AbstractSubscription{
 
     private void dispatchMatched() throws IOException{
         synchronized(matchedListMutex){
-            matched.reset();
-            while(matched.hasNext()) {
-                MessageReference message=(MessageReference) matched.next();
-                matched.remove();
-                
-                // Message may have been sitting in the matched list a while
-                // waiting for the consumer to ak the message.
-        		if( message.isExpired() ) {
-        			message.decrementReferenceCount();
-        			continue; // just drop it.
-        		}
-
-                dispatch(message);
+            try{
+                matched.reset();
+                while(matched.hasNext()){
+                    MessageReference message=(MessageReference)matched.next();
+                    matched.remove();
+                    // Message may have been sitting in the matched list a while
+                    // waiting for the consumer to ak the message.
+                    if(message.isExpired()){
+                        message.decrementReferenceCount();
+                        continue; // just drop it.
+                    }
+                    dispatch(message);
+                }
+            }finally{
+                matched.release();
             }
-            matched.release();
         }
     }
 

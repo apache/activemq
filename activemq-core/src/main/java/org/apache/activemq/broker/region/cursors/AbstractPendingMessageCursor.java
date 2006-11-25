@@ -110,4 +110,8 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     public boolean isFull() {
         return usageManager != null ? usageManager.isFull() : false;
     }
+
+    
+    public void release(){        
+    }
 }

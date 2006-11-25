@@ -123,6 +123,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
 	}
         
     public void add(MessageReference node) throws Exception{
+        try {
         boolean pendingEmpty = false;
         synchronized(pending){
             pendingEmpty=pending.isEmpty();
@@ -139,21 +140,30 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 pending.addMessageLast(node);
             }
         }
+        }catch(Throwable e) {
+            e.printStackTrace();
+            
+        }
     }
 
-    public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
+    public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception{
         synchronized(pending){
-            pending.reset();
-            while(pending.hasNext()){
-                MessageReference node=pending.next();
-                if(node.getMessageId().equals(mdn.getMessageId())){
-                    pending.remove();
-                    createMessageDispatch(node,node.getMessage());
-                    dispatched.addLast(node);
-                    return;
+            try{
+                pending.reset();
+                while(pending.hasNext()){
+                    MessageReference node=pending.next();
+                    if(node.getMessageId().equals(mdn.getMessageId())){
+                        pending.remove();
+                        createMessageDispatch(node,node.getMessage());
+                        dispatched.addLast(node);
+                        return;
+                    }
                 }
+            }finally{
+                pending.release();
             }
-            throw new JMSException("Slave broker out of sync with master: Dispatched message ("+mdn.getMessageId()+") was not in the pending list: "+pending);
+            throw new JMSException("Slave broker out of sync with master: Dispatched message ("+mdn.getMessageId()
+                    +") was not in the pending list: "+pending);
         }
     }
 
@@ -387,6 +397,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         dispatch(node);
                     }
                 }finally{
+                    pending.release();
                     dispatching=false;
                 }
             }
