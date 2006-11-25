@@ -118,15 +118,19 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             }
         }
         
-        if( !keepDurableSubsActive ) {
-        	synchronized(pending) {
-                pending.reset();
-	            while(pending.hasNext()) {
-	                MessageReference node = pending.next();
-	                node.decrementReferenceCount();
-	                pending.remove();
-	            }
-        	}
+        if(!keepDurableSubsActive){
+            synchronized(pending){
+                try{
+                    pending.reset();
+                    while(pending.hasNext()){
+                        MessageReference node=pending.next();
+                        node.decrementReferenceCount();
+                        pending.remove();
+                    }
+                }finally{
+                    pending.release();
+                }
+            }
         }
         prefetchExtension=0;
     }
@@ -195,22 +199,24 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     /**
      * Release any references that we are holding.
      */
-    public void destroy() {
-    	synchronized(pending) {
-            pending.reset();
-	        while(pending.hasNext()) {
-	            MessageReference node = pending.next();
-	            node.decrementReferenceCount();
-	        }
-	        pending.clear();
-    	}
-    	
-        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-            MessageReference node = (MessageReference) iter.next();
+    public void destroy(){
+        try{
+            synchronized(pending){
+                pending.reset();
+                while(pending.hasNext()){
+                    MessageReference node=pending.next();
+                    node.decrementReferenceCount();
+                }
+            }
+        }finally{
+            pending.release();
+            pending.clear();
+        }
+        for(Iterator iter=dispatched.iterator();iter.hasNext();){
+            MessageReference node=(MessageReference)iter.next();
             node.decrementReferenceCount();
         }
         dispatched.clear();
-        
     }
 
 }

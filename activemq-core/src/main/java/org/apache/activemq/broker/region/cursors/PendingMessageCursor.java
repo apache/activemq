@@ -54,6 +54,13 @@ public interface PendingMessageCursor extends Service{
      *
      */
     public void reset();
+    
+    /**
+     * hint to the cursor to release any locks it might have
+     * grabbed after a reset
+     *
+     */
+    public void release();
 
     /**
      * add message to await dispatch

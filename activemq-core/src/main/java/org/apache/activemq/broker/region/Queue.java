@@ -545,54 +545,58 @@ public class Queue implements Destination, Task {
                 }
             }
         }
-        synchronized (messages) {
-            messages.reset();
-            while(messages.hasNext()) {
-                try {
-                    MessageReference r = messages.next();
-                    r.incrementReferenceCount();
-                    try {
-                        Message m = r.getMessage();
-                        if (m != null) {
-                            l.add(m);
+        synchronized(messages){
+            try{
+                messages.reset();
+                while(messages.hasNext()){
+                    try{
+                        MessageReference r=messages.next();
+                        r.incrementReferenceCount();
+                        try{
+                            Message m=r.getMessage();
+                            if(m!=null){
+                                l.add(m);
+                            }
+                        }finally{
+                            r.decrementReferenceCount();
                         }
-                    }
-                    finally {
-                        r.decrementReferenceCount();
+                    }catch(IOException e){
+                        log.error("caught an exception brwsing "+this,e);
                     }
                 }
-                catch (IOException e) {
-                    log.error("caught an exception brwsing " + this,e);
-                }
+            }finally{
+                messages.release();
             }
         }
 
         return (Message[]) l.toArray(new Message[l.size()]);
     }
 
-    public Message getMessage(String messageId) {
-        synchronized (messages) {
-            messages.reset();
-            while(messages.hasNext()) {
-                try {
-                    MessageReference r = messages.next();
-                    if (messageId.equals(r.getMessageId().toString())) {
-                        r.incrementReferenceCount();
-                        try {
-                            Message m = r.getMessage();
-                            if (m != null) {
-                                return m;
+    public Message getMessage(String messageId){
+        synchronized(messages){
+            try{
+                messages.reset();
+                while(messages.hasNext()){
+                    try{
+                        MessageReference r=messages.next();
+                        if(messageId.equals(r.getMessageId().toString())){
+                            r.incrementReferenceCount();
+                            try{
+                                Message m=r.getMessage();
+                                if(m!=null){
+                                    return m;
+                                }
+                            }finally{
+                                r.decrementReferenceCount();
                             }
+                            break;
                         }
-                        finally {
-                            r.decrementReferenceCount();
-                        }
-                        break;
+                    }catch(IOException e){
+                        log.error("got an exception retrieving message "+messageId);
                     }
                 }
-                catch (IOException e) {
-                    log.error("got an exception retrieving message " + messageId);
-                }
+            }finally{
+                messages.release();
             }
         }
         return null;
@@ -868,13 +872,17 @@ public class Queue implements Destination, Task {
                 int count=0;
                 result=new ArrayList(toPageIn);
                 synchronized(messages){
-                    messages.reset();
-                    while(messages.hasNext()&&count<toPageIn){
-                        MessageReference node=messages.next();
-                        messages.remove();
-                        node=createMessageReference(node.getMessage());
-                        result.add(node);
-                        count++;
+                    try{
+                        messages.reset();
+                        while(messages.hasNext()&&count<toPageIn){
+                            MessageReference node=messages.next();
+                            messages.remove();
+                            node=createMessageReference(node.getMessage());
+                            result.add(node);
+                            count++;
+                        }
+                    }finally{
+                        messages.release();
                     }
                 }
                 synchronized(pagedInMessages){
