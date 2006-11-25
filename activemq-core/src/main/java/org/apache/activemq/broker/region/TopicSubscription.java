@@ -26,6 +26,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -50,7 +51,7 @@ public class TopicSubscription extends AbstractSubscription{
 	
     private static final Log log=LogFactory.getLog(TopicSubscription.class);
     
-    final protected LinkedList matched=new LinkedList();
+    final protected FilePendingMessageCursor matched;
     final protected ActiveMQDestination dlqDestination=new ActiveMQQueue("ActiveMQ.DLQ");
     final protected UsageManager usageManager;
     protected AtomicLong dispatched=new AtomicLong();
@@ -69,6 +70,7 @@ public class TopicSubscription extends AbstractSubscription{
                     throws InvalidSelectorException{
         super(broker,context,info);
         this.usageManager=usageManager;
+        this.matched = new FilePendingMessageCursor(info.getConsumerId().toString(), broker.getTempDataStore());
     }
 
     public void add(MessageReference node) throws InterruptedException,IOException{
@@ -84,7 +86,7 @@ public class TopicSubscription extends AbstractSubscription{
         }else{
             if(maximumPendingMessages!=0){
                 synchronized(matchedListMutex){
-                    matched.addLast(node);
+                    matched.addMessageLast(node);
                     // NOTE - be careful about the slaveBroker!
                     if (maximumPendingMessages > 0) {
                         
@@ -94,15 +96,22 @@ public class TopicSubscription extends AbstractSubscription{
                             max = maximumPendingMessages;
                         }
                         if (!matched.isEmpty() && matched.size() > max) {
-                            removeExpiredMessages(matched);
+                            removeExpiredMessages();
                         }
 
                         // lets discard old messages as we are a slow consumer
                         while (!matched.isEmpty() && matched.size() > maximumPendingMessages) {
-                            MessageReference[] oldMessages = messageEvictionStrategy.evictMessages(matched);
+                            int pageInSize = matched.size() - maximumPendingMessages;
+                            //only page in a 1000 at a time - else we could blow da memory
+                            pageInSize = Math.max(1000,pageInSize);
+                            LinkedList list = matched.pageInList(pageInSize);
+                            MessageReference[] oldMessages = messageEvictionStrategy.evictMessages(list);
                             int messagesToEvict = oldMessages.length;
                             for(int i = 0; i < messagesToEvict; i++) {
-                            	oldMessages[i].decrementReferenceCount();
+                                MessageReference oldMessage = oldMessages[i];
+                            	oldMessage.decrementReferenceCount();
+                                matched.remove(oldMessage);
+                                
                                 discarded++;
                                 if (log.isDebugEnabled()) {
                                     log.debug("Discarding message " + oldMessages[i]);
@@ -126,29 +135,33 @@ public class TopicSubscription extends AbstractSubscription{
      * Discard any expired messages from the matched list. Called from a synchronized block.
      * @throws IOException 
      */
-    protected void removeExpiredMessages(LinkedList messages) throws IOException {
-        for(Iterator i=matched.iterator();i.hasNext();){
-            MessageReference node=(MessageReference) i.next();
+    protected void removeExpiredMessages() throws IOException {
+        matched.reset();
+        while(matched.hasNext()) {
+            MessageReference node=matched.next();
             if (node.isExpired()) {
-                i.remove();
+                matched.remove();
                 dispatched.incrementAndGet();
                 node.decrementReferenceCount();
                 break;
             }
         }
+        matched.release();
     }
 
     public void processMessageDispatchNotification(MessageDispatchNotification mdn){
         synchronized(matchedListMutex){
-            for(Iterator i=matched.iterator();i.hasNext();){
-                MessageReference node=(MessageReference) i.next();
+            matched.reset();
+            while(matched.hasNext()) {
+                MessageReference node=matched.next();
                 if(node.getMessageId().equals(mdn.getMessageId())){
-                    i.remove();
+                    matched.remove();
                     dispatched.incrementAndGet();
                     node.decrementReferenceCount();
                     break;
                 }
             }
+            matched.release();
         }
     }
 
@@ -322,9 +335,10 @@ public class TopicSubscription extends AbstractSubscription{
 
     private void dispatchMatched() throws IOException{
         synchronized(matchedListMutex){
-            for(Iterator iter=matched.iterator();iter.hasNext()&&!isFull();){
-                MessageReference message=(MessageReference) iter.next();
-                iter.remove();
+            matched.reset();
+            while(matched.hasNext()) {
+                MessageReference message=(MessageReference) matched.next();
+                matched.remove();
                 
                 // Message may have been sitting in the matched list a while
                 // waiting for the consumer to ak the message.
@@ -335,6 +349,7 @@ public class TopicSubscription extends AbstractSubscription{
 
                 dispatch(message);
             }
+            matched.release();
         }
     }
 
@@ -380,11 +395,7 @@ public class TopicSubscription extends AbstractSubscription{
 
     public void destroy() {
         synchronized(matchedListMutex){
-            for (Iterator iter = matched.iterator(); iter.hasNext();) {
-                MessageReference node = (MessageReference) iter.next();
-                node.decrementReferenceCount();
-            }
-            matched.clear();
+            matched.destroy();
         }
     }
 

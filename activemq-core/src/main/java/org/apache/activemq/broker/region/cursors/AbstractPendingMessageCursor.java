@@ -106,4 +106,8 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     public boolean hasSpace() {
         return usageManager != null ? !usageManager.isFull() : true;
     }
+    
+    public boolean isFull() {
+        return usageManager != null ? usageManager.isFull() : false;
+    }
 }
