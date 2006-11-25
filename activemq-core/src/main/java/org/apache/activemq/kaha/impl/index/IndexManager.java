@@ -26,7 +26,7 @@ import java.util.LinkedList;
 
 
 import org.apache.activemq.kaha.StoreEntry;
-import org.apache.activemq.kaha.impl.data.DataManager;
+import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**

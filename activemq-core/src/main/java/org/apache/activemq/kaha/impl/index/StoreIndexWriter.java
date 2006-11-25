@@ -20,7 +20,7 @@ package org.apache.activemq.kaha.impl.index;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.apache.activemq.kaha.impl.data.DataManager;
+import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 /**
  * Optimized Store writer
