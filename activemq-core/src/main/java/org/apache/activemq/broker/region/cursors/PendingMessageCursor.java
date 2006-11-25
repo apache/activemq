@@ -140,4 +140,9 @@ public interface PendingMessageCursor extends Service{
      * @see org.apache.activemq.memory.UsageManager
      */
     public void setUsageManager(UsageManager usageManager);
+    
+    /**
+     * @return true if the cursor is full
+     */
+    public boolean isFull();
 }
