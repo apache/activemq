@@ -139,6 +139,7 @@
     <module>activemq-openwire-generator</module>
     <module>activemq-xmpp</module>
     <module>assembly</module>
+    <module>activemq-jpa-store</module>
   </modules>
 
   <scm>
