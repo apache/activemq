@@ -18,25 +18,31 @@ package org.apache.activemq.store.jpa.model;
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
+
+import org.apache.openjpa.persistence.jdbc.Index;
 
 /** 
  */
-@Entity
+@Entity()
 public class StoredMessage {
 	
     @Id
     private long id;
 	
-    @Basic
+    @Basic(optional=false)
+    @Index(enabled=true, unique=false)
     private String messageId;
 
-    @Basic
+    @Basic(optional=false)
+    @Index(enabled=true, unique=false)
     private String destination;
 
     @Basic
     private long exiration;
 
     @Basic
+    @Lob
     private byte[] data;
 
     public StoredMessage() {

@@ -21,6 +21,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import org.apache.openjpa.persistence.jdbc.Index;
+
 /** 
  */
 @Entity
@@ -91,10 +93,13 @@ public class StoredSubscription {
     private long id;
     
     @Basic
+    @Index(enabled=true, unique=false)
     private String destination;
     @Basic
+    @Index(enabled=true, unique=false)
     private String clientId;
     @Basic
+    @Index(enabled=true, unique=false)
     private String subscriptionName;
     
     @Basic
