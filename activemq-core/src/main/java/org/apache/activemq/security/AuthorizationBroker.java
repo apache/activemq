@@ -56,14 +56,19 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if( securityContext == null )
             throw new SecurityException("User is not authenticated.");
 
-        // You don't need to be an admin to create temp destinations.
-        if( !destination.isTemporary() 
-            || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
-            
-            Set allowedACLs = authorizationMap.getAdminACLs(destination);
-            if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
-                throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to create: "+destination);
+
+        //if(!((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
+        Set allowedACLs = null;
+        if(!destination.isTemporary()) {
+            allowedACLs = authorizationMap.getAdminACLs(destination);
+        } else {
+        	allowedACLs = authorizationMap.getTempDestinationAdminACLs();
         }
+     
+        if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
+            throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to create: "+destination);
+
+       // }
         
         return super.addDestination(context, destination);
     }
@@ -74,14 +79,15 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if( securityContext == null )
             throw new SecurityException("User is not authenticated.");
 
-        // You don't need to be an admin to remove temp destinations.
-        if( !destination.isTemporary() 
-            || !((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
-            
-            Set allowedACLs = authorizationMap.getAdminACLs(destination);
-            if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
-                throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to remove: "+destination);
+        Set allowedACLs = null;
+        if(!destination.isTemporary()) {
+            allowedACLs = authorizationMap.getAdminACLs(destination);
+        } else {
+        	allowedACLs = authorizationMap.getTempDestinationAdminACLs();
         }
+        
+    	if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
+            throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to remove: "+destination);
 
         super.removeDestination(context, destination, timeout);
     }
@@ -92,9 +98,16 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if( subject == null )
             throw new SecurityException("User is not authenticated.");
         
-        Set allowedACLs = authorizationMap.getReadACLs(info.getDestination());
+        Set allowedACLs = null;
+        if(!info.getDestination().isTemporary()) {
+            allowedACLs = authorizationMap.getReadACLs(info.getDestination());
+        }else {
+        	allowedACLs = authorizationMap.getTempDestinationWriteACLs();
+        }
+
         if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
             throw new SecurityException("User "+subject.getUserName()+" is not authorized to read from: "+info.getDestination());
+        
         subject.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());
         
         /* 
@@ -133,9 +146,17 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             throw new SecurityException("User is not authenticated.");
         
         if( info.getDestination()!=null ) {
-            Set allowedACLs = authorizationMap.getWriteACLs(info.getDestination());
-            if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
+        	
+        	Set allowedACLs = null;
+        	if(!info.getDestination().isTemporary()) {
+        		allowedACLs = authorizationMap.getWriteACLs(info.getDestination());          
+        	}else {
+        	   	allowedACLs = authorizationMap.getTempDestinationWriteACLs();
+        	}
+            if(allowedACLs!=null && !subject.isInOneOf(allowedACLs)) 
                 throw new SecurityException("User "+subject.getUserName()+" is not authorized to write to: "+info.getDestination());
+            
+            
             subject.getAuthorizedWriteDests().put(info.getDestination(), info.getDestination());
         }
         
@@ -146,11 +167,19 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         SecurityContext subject = (SecurityContext) context.getSecurityContext();
         if( subject == null )
             throw new SecurityException("User is not authenticated.");
-        
+
         if( !subject.getAuthorizedWriteDests().contains(messageSend.getDestination()) ) {
-            Set allowedACLs = authorizationMap.getWriteACLs(messageSend.getDestination());            
-            if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
+        	
+        	Set allowedACLs = null;
+        	if(!messageSend.getDestination().isTemporary()) {
+                allowedACLs = authorizationMap.getWriteACLs(messageSend.getDestination());            
+        	}else {
+        		allowedACLs = authorizationMap.getTempDestinationWriteACLs();
+        	}
+            
+        	if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
                 throw new SecurityException("User "+subject.getUserName()+" is not authorized to write to: "+messageSend.getDestination());
+        	
             subject.getAuthorizedWriteDests().put(messageSend.getDestination(), messageSend.getDestination());
         }
 

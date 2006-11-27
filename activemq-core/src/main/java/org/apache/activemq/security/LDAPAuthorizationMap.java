@@ -137,6 +137,22 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         queueSearchSubtreeBool = new Boolean(queueSearchSubtree).booleanValue();
     }
 
+    public Set getTempDestinationAdminACLs() {
+        //TODO insert implementation
+    	
+        return null;
+    }    
+    
+    public Set getTempDestinationReadACLs() {
+    	//    	TODO insert implementation
+        return null;
+    }
+    
+    public Set getTempDestinationWriteACLs() {
+    	//    	TODO insert implementation
+        return null;
+    }      
+    
     public Set getAdminACLs(ActiveMQDestination destination) {
         return getACLs(destination, adminBase, adminAttribute);
     }

@@ -28,6 +28,21 @@ import java.util.Set;
 public interface AuthorizationMap {
 
     /**
+     * Returns the set of all ACLs capable of administering temp destination
+     */
+    Set getTempDestinationAdminACLs();
+	
+    /**
+     * Returns the set of all ACLs capable of reading from temp destination
+     */
+    Set getTempDestinationReadACLs();
+    
+    /**
+     * Returns the set of all ACLs capable of writing to temp destination
+     */
+    Set getTempDestinationWriteACLs();    
+    
+    /**
      * Returns the set of all ACLs capable of administering the given destination
      */
     Set getAdminACLs(ActiveMQDestination destination);

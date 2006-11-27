@@ -42,6 +42,11 @@
               
               <authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
             </authorizationEntries>
+            
+            <!-- let's assign roles to temporary destinations. comment this entry if we don't want any roles assigned to temp destinations  -->
+            <tempDestinationAuthorizationEntry>  
+              <tempDestinationAuthorizationEntry read="tempDestinationAdmins" write="tempDestinationAdmins" admin="tempDestinationAdmins"/>
+           </tempDestinationAuthorizationEntry>               
           </authorizationMap>
         </map>
       </authorizationPlugin>
