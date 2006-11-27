@@ -51,6 +51,10 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
 
     public void addMessageLast(MessageReference node) throws Exception{
     }
+    
+    public void addRecoveredMessage(MessageReference node) throws Exception{
+        addMessageLast(node);
+    }
 
     public void clear(){
     }

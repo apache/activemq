@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -37,6 +38,7 @@ public class MemoryMessageStore implements MessageStore{
 
     protected final ActiveMQDestination destination;
     protected final Map messageTable;
+    protected MessageId lastBatchId;
 
     public MemoryMessageStore(ActiveMQDestination destination){
         this(destination,new LinkedHashMap());
@@ -115,12 +117,32 @@ public class MemoryMessageStore implements MessageStore{
         return messageTable.size();
     }
 
-    public void resetBatching(MessageId nextToDispatch){
-    }
-
+    
     public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+        synchronized(messageTable){
+            
+            boolean pastLackBatch=lastBatchId==null;
+            int count = 0;
+            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
+                Map.Entry entry=(Entry)iter.next();
+                if(pastLackBatch){
+                    count++;
+                    Object msg=entry.getValue();
+                    lastBatchId = (MessageId)entry.getKey();
+                    if(msg.getClass()==String.class){
+                        listener.recoverMessageReference((String)msg);
+                    }else{
+                        listener.recoverMessage((Message)msg);
+                    }
+                }else{
+                    pastLackBatch=entry.getKey().equals(lastBatchId);
+                }
+            }
+            listener.finished();
+        }
     }
 
     public void resetBatching(){
+        lastBatchId = null;
     }
 }

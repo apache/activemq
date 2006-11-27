@@ -15,46 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.region.policy;
+package org.apache.activemq.broker.region;
+
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.SubscriptionRecovery;
-import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.Message;
 
 /**
- * This SubscriptionRecoveryPolicy disable recovery of messages.
- * 
- * @org.apache.xbean.XBean
+ * An interface for recoverying transient messages held by the broker
+ * for retractive recovery for subscribers
  * 
  * @version $Revision$
  */
-public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
-
-
-    public SubscriptionRecoveryPolicy copy() {
-        // This object is immutable
-        return this;
-    }
-
-    public boolean add(ConnectionContext context, MessageReference node) throws Exception {
-        return true;
-    }
-
-    public void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception {
-    }
-
-    public void start() throws Exception {
-    }
-
-    public void stop() throws Exception {
-    }
-
-    public Message[] browse(ActiveMQDestination dest) throws Exception{
-        return new Message[0];
-    }
-
+public interface SubscriptionRecovery  {
+    
+    
+    /**
+     * Add a message to the SubscriptionRecovery
+     * @param context
+     * @param message
+     * @return true if the message is accepted
+     * @throws Exception
+     */
+    boolean addRecoveredMessage(ConnectionContext context, MessageReference message) throws Exception;
+    
+    
+    /**
+     * @return the Destination associated with this Subscription
+     */
+    ActiveMQDestination getActiveMQDestination();
+    
 }

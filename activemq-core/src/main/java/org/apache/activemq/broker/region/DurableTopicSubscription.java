@@ -152,6 +152,10 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         super.add(node);
     }
     
+    protected void doAddRecoveredMessage(MessageReference message) throws Exception {
+        pending.addRecoveredMessage(message);
+    }
+    
     public int getPendingQueueSize() {
         if( active || keepDurableSubsActive ) {
             return super.getPendingQueueSize();
@@ -218,5 +222,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         }
         dispatched.clear();
     }
+    
+    
 
 }

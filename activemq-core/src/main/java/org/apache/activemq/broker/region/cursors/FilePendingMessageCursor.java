@@ -17,8 +17,7 @@ package org.apache.activemq.broker.region.cursors;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
@@ -45,7 +44,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     private ListContainer diskList;
     private Iterator iter=null;
     private Destination regionDestination;
-    private ReentrantLock iterLock=new ReentrantLock();
+    private AtomicBoolean iterating=new AtomicBoolean();
+    private boolean flushRequired;
 
     /**
      * @param name
@@ -67,17 +67,19 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * reset the cursor
      * 
      */
-    public void reset(){
-        try{
-            iterLock.lockInterruptibly();
-            iter=isDiskListEmpty()?memoryList.iterator():getDiskList().listIterator();
-        }catch(InterruptedException e){
-            log.warn("Failed to get lock ",e);
+    public synchronized void reset(){
+        synchronized(iterating){
+            iterating.set(true);
         }
+        iter=isDiskListEmpty()?memoryList.iterator():getDiskList().listIterator();
     }
 
-    public void release(){
-        iterLock.unlock();
+    public synchronized void release(){
+        iterating.set(false);
+        if(flushRequired){
+            flushRequired=false;
+            flushToDisk();
+        }
     }
 
     public synchronized void destroy(){
@@ -219,13 +221,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     public void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
         if(newPercentUsage>=100){
-            try{
-                if(iterLock.tryLock(500,TimeUnit.MILLISECONDS)){
+            synchronized(iterating){
+                flushRequired=true;
+                if(!iterating.get()){
                     flushToDisk();
-                    iterLock.unlock();
+                    flushRequired=false;
                 }
-            }catch(InterruptedException e){
-                log.warn("caught an exception aquiring lock",e);
             }
         }
     }

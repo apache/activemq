@@ -22,10 +22,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -80,25 +79,15 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
         return true;
     }
 
-    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception {
-        
+    public void recover(ConnectionContext context,Topic topic,SubscriptionRecovery sub) throws Exception{
         // Re-dispatch the messages from the buffer.
-        ArrayList copy = new ArrayList(buffer);
-
-        if (!copy.isEmpty()) {
-            MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-            try {
-                for (Iterator iter = copy.iterator(); iter.hasNext();) {
-                    TimestampWrapper timestampWrapper = (TimestampWrapper) iter.next();
-                    MessageReference message = timestampWrapper.message;
-                    msgContext.setDestination(message.getRegionDestination().getActiveMQDestination());
-                    msgContext.setMessageReference(message);
-                    if (sub.matches(message, msgContext)) {
-                        sub.add(timestampWrapper.message);
-                    }
-                }
-            }finally {
-                msgContext.clear();
+        ArrayList copy=new ArrayList(buffer);
+        if(!copy.isEmpty()){
+            MessageEvaluationContext msgContext=context.getMessageEvaluationContext();
+            for(Iterator iter=copy.iterator();iter.hasNext();){
+                TimestampWrapper timestampWrapper=(TimestampWrapper)iter.next();
+                MessageReference message=timestampWrapper.message;
+                sub.addRecoveredMessage(context,message);
             }
         }
     }

@@ -17,22 +17,17 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import java.util.Iterator;
+import java.util.List;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy.TimestampWrapper;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.filter.DestinationFilter;
-import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.memory.list.DestinationBasedMessageList;
 import org.apache.activemq.memory.list.MessageList;
 import org.apache.activemq.memory.list.SimpleMessageList;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed
@@ -61,22 +56,13 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
         return true;
     }
 
-    public void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception {
+    public void recover(ConnectionContext context,Topic topic,SubscriptionRecovery sub) throws Exception{
         // Re-dispatch the messages from the buffer.
-        List copy = buffer.getMessages(sub);
-        if( !copy.isEmpty() ) {
-            MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-            try {
-                for (Iterator iter = copy.iterator(); iter.hasNext();) {
-                    MessageReference node = (MessageReference) iter.next();
-                    msgContext.setDestination(node.getRegionDestination().getActiveMQDestination());
-                    msgContext.setMessageReference(node);
-                    if (sub.matches(node, msgContext) ) {
-                        sub.add(node);
-                    }
-                }
-            } finally {
-                msgContext.clear();
+        List copy=buffer.getMessages(sub.getActiveMQDestination());
+        if(!copy.isEmpty()){
+            for(Iterator iter=copy.iterator();iter.hasNext();){
+                MessageReference node=(MessageReference)iter.next();
+                sub.addRecoveredMessage(context,node);
             }
         }
     }

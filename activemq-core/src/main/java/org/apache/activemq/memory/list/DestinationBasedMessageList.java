@@ -74,7 +74,7 @@ public class DestinationBasedMessageList implements MessageList {
         return getMessages(sub.getConsumerInfo().getDestination());
     }
     
-    protected  List getMessages(ActiveMQDestination destination) {
+    public  List getMessages(ActiveMQDestination destination) {
         Set set = null;
         synchronized (lock) {
             set = subscriptionIndex.get(destination);
