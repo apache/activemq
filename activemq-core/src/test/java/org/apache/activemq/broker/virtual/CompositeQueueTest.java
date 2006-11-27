@@ -30,6 +30,8 @@ import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.JMSException;
 
 import java.net.URI;
 
@@ -42,6 +44,9 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
     private static final Log log = LogFactory.getLog(CompositeQueueTest.class);
     
     private Connection connection;
+
+    protected int total = 10;
+
 
     public void testVirtualTopicCreation() throws Exception {
         if (connection == null) {
@@ -73,15 +78,27 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
         MessageProducer producer = session.createProducer(producerDestination);
         assertNotNull(producer);
 
-        int total = 10;
         for (int i = 0; i < total; i++) {
-            producer.send(session.createTextMessage("message: " + i));
+            producer.send(createMessage(session, i));
         }
 
+        assertMessagesArrived(messageList1, messageList2);
+    }
+
+    protected void assertMessagesArrived(ConsumerBean messageList1, ConsumerBean messageList2) {
         messageList1.assertMessagesArrived(total);
         messageList2.assertMessagesArrived(total);
     }
-    
+
+    protected TextMessage createMessage(Session session, int i) throws JMSException {
+        TextMessage textMessage = session.createTextMessage("message: " + i);
+        if (i % 2 == 1) {
+            textMessage.setStringProperty("odd", "yes");
+        }
+        textMessage.setIntProperty("i", i);
+        return textMessage;
+    }
+
     protected Destination getConsumer1Dsetination() {
         return new ActiveMQQueue("FOO");
     }

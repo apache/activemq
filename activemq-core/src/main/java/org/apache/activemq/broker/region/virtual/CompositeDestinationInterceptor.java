@@ -22,6 +22,7 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.MessageEvaluationContext;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ import java.util.Iterator;
 /**
  * Represents a composite {@link Destination} where send()s are replicated to
  * each Destination instance.
- * 
+ *
  * @version $Revision$
  */
 public class CompositeDestinationInterceptor extends DestinationFilter {
@@ -46,8 +47,29 @@ public class CompositeDestinationInterceptor extends DestinationFilter {
     }
 
     public void send(ConnectionContext context, Message message) throws Exception {
+        MessageEvaluationContext messageContext = null;
+
         for (Iterator iter = forwardDestinations.iterator(); iter.hasNext();) {
-            ActiveMQDestination destination = (ActiveMQDestination) iter.next();
+            ActiveMQDestination destination = null;
+            Object value = iter.next();
+
+            if (value instanceof FilteredDestination) {
+                FilteredDestination filteredDestination = (FilteredDestination) value;
+                if (messageContext == null) {
+                    messageContext = new MessageEvaluationContext();
+                    messageContext.setMessageReference(message);
+                }
+                messageContext.setDestination(filteredDestination.getDestination());
+                if (filteredDestination.matches(messageContext)) {
+                    destination = filteredDestination.getDestination();
+                }
+            }
+            else if (value instanceof ActiveMQDestination) {
+                destination = (ActiveMQDestination) value;
+            }
+            if (destination == null) {
+                continue;
+            }
 
             if (copyMessage) {
                 message = message.copy();
