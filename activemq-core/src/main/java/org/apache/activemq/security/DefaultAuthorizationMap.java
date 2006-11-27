@@ -37,14 +37,46 @@ import java.util.Set;
 public class DefaultAuthorizationMap extends DestinationMap implements AuthorizationMap {
 
     private AuthorizationEntry defaultEntry;
-
+    
+    private TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry;
+    
     public DefaultAuthorizationMap() {
     }
 
     public DefaultAuthorizationMap(List authorizationEntries) {
         setAuthorizationEntries(authorizationEntries);
+       
     }
 
+  
+    public void setTempDestinationAuthorizationEntry(TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry) {
+        this.tempDestinationAuthorizationEntry = tempDestinationAuthorizationEntry;
+    }    
+    
+    public TempDestinationAuthorizationEntry getTempDestinationAuthorizationEntry() {
+        return this.tempDestinationAuthorizationEntry;
+    }    
+    
+    public Set getTempDestinationAdminACLs() {
+        if(tempDestinationAuthorizationEntry != null)    
+        	return tempDestinationAuthorizationEntry.getAdminACLs();
+        else
+        	return null;
+    }
+    
+    public Set getTempDestinationReadACLs() {
+    	if(tempDestinationAuthorizationEntry != null)  
+           	return tempDestinationAuthorizationEntry.getReadACLs();
+    	else
+    		return null;
+    }
+    
+    public Set getTempDestinationWriteACLs() {
+    	if(tempDestinationAuthorizationEntry != null)
+           	return tempDestinationAuthorizationEntry.getWriteACLs();
+    	else
+    		return null;
+    }    
     
     public Set getAdminACLs(ActiveMQDestination destination) {
         Set entries = getAllEntries(destination);
