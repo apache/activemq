@@ -34,7 +34,7 @@ import javax.management.ObjectName;
 /**
  * @version $Revision: 1.5 $
  */
-public interface Subscription {
+public interface Subscription extends SubscriptionRecovery {
 
     /**
      * Used to add messages that match the subscription.

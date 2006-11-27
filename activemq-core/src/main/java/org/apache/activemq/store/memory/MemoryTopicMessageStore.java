@@ -37,10 +37,11 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
 
     private Map ackDatabase;
     private Map subscriberDatabase;
+    private Map batchDatabase;
     MessageId lastMessageId;
 
     public MemoryTopicMessageStore(ActiveMQDestination destination){
-        this(destination,new LinkedHashMap(),makeMap(),makeMap());
+        this(destination,new LinkedHashMap(),makeMap(),makeMap(),makeMap());
     }
 
     protected static Map makeMap(){
@@ -48,10 +49,11 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
 
     public MemoryTopicMessageStore(ActiveMQDestination destination,Map messageTable,Map subscriberDatabase,
-            Map ackDatabase){
+            Map ackDatabase, Map batchDatabase){
         super(destination,messageTable);
         this.subscriberDatabase=subscriberDatabase;
         this.ackDatabase=ackDatabase;
+        this.batchDatabase=batchDatabase;
     }
 
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
@@ -110,13 +112,10 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
             }
             listener.finished();
         }
+       
     }
 
-    public void recoverNextMessages(String clientId,String subscriptionName,MessageId lastMessageId,int maxReturned,
-            MessageRecoveryListener listener) throws Exception{
-        listener.finished();
-    }
-
+   
     public void delete(){
         super.delete();
         ackDatabase.clear();
@@ -128,14 +127,6 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         return (SubscriptionInfo[])subscriberDatabase.values().toArray(new SubscriptionInfo[subscriberDatabase.size()]);
     }
 
-    public MessageId getNextMessageIdToDeliver(String clientId,String subscriptionName,MessageId id) throws IOException{
-        return null;
-    }
-
-    public MessageId getPreviousMessageIdToDeliver(String clientId,String subscriptionName,MessageId id)
-            throws IOException{
-        return null;
-    }
 
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         int result=0;
@@ -143,24 +134,56 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         // the message table is a synchronizedMap - so just have to synchronize here
         synchronized(messageTable){
             result=messageTable.size();
-            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
-                Map.Entry entry=(Entry)iter.next();
-                if(entry.getKey().equals(lastAck)){
-                    break;
+            if(lastAck!=null){
+                for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
+                    Map.Entry entry=(Entry)iter.next();
+                    if(entry.getKey().equals(lastAck)){
+                        break;
+                    }
+                    result--;
                 }
-                result--;
             }
         }
         return result;
     }
 
-    public void resetBatching(String clientId,String subscriptionName,MessageId id){
-    }
-
+    
     public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
             MessageRecoveryListener listener) throws Exception{
+        SubscriptionKey key = new SubscriptionKey(clientId,subscriptionName);
+        MessageId lastBatch = (MessageId)batchDatabase.get(key);
+        if (lastBatch==null) {
+            //if last batch null - start from last ack
+            lastBatch = (MessageId)ackDatabase.get(key);
+        }
+        boolean pastLackBatch=lastBatch==null;
+        MessageId lastId = null;
+        // the message table is a synchronizedMap - so just have to synchronize here
+        int count = 0;
+        synchronized(messageTable){
+            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext() &&count < maxReturned ;){
+                Map.Entry entry=(Entry)iter.next();
+                if(pastLackBatch){
+                    count++;
+                    Object msg=entry.getValue();
+                    lastId = (MessageId)entry.getKey();
+                    if(msg.getClass()==String.class){
+                        listener.recoverMessageReference((String)msg);
+                    }else{
+                        listener.recoverMessage((Message)msg);
+                    }
+                }else{
+                    pastLackBatch=entry.getKey().equals(lastBatch);
+                }
+            }
+            if (lastId != null) {
+                batchDatabase.put(key,lastId);
+            }
+            listener.finished();
+        }
     }
 
     public void resetBatching(String clientId,String subscriptionName){
+        batchDatabase.remove(new SubscriptionKey(clientId,subscriptionName));
     }
 }

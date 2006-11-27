@@ -390,7 +390,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         
                         // Message may have been sitting in the pending list a while
                         // waiting for the consumer to ak the message.
-                		if( node.isExpired() ) {
+                		if( node != QueueMessageReference.NULL_MESSAGE && node.isExpired() ) {
                 			continue; // just drop it.
                 		}
 

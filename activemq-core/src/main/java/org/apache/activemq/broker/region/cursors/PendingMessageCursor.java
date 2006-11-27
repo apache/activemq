@@ -76,6 +76,13 @@ public interface PendingMessageCursor extends Service{
      * @throws Exception 
      */
     public void addMessageFirst(MessageReference node) throws Exception;
+    
+    /**
+     * Add a message recovered from a retroactive policy
+     * @param node
+     * @throws Exception
+     */
+    public void addRecoveredMessage(MessageReference node) throws Exception;
 
     /**
      * @return true if there pending messages to dispatch

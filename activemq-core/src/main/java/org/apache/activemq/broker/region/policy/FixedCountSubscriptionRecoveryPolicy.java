@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -53,7 +54,7 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
         return true;
     }
 
-    synchronized public void recover(ConnectionContext context,Topic topic,Subscription sub) throws Exception{
+    synchronized public void recover(ConnectionContext context,Topic topic,SubscriptionRecovery sub) throws Exception{
         // Re-dispatch the last message seen.
         int t=tail;
         // The buffer may not have rolled over yet..., start from the front
@@ -63,18 +64,9 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
         if(messages[t]==null)
             return;
         // Keep dispatching until t hit's tail again.
-        MessageEvaluationContext msgContext=context.getMessageEvaluationContext();
         do{
             MessageReference node=messages[t];
-            try{
-                msgContext.setDestination(node.getRegionDestination().getActiveMQDestination());
-                msgContext.setMessageReference(node);
-                if(sub.matches(node,msgContext)){
-                    sub.add(node);
-                }
-            }finally{
-                msgContext.clear();
-            }
+            sub.addRecoveredMessage(context,node);
             t++;
             if(t>=messages.length)
                 t=0;

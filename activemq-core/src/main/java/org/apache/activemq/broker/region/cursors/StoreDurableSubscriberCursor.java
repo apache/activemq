@@ -147,6 +147,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
             }
         }
     }
+    
+    public void addRecoveredMessage(MessageReference node) throws Exception{
+        nonPersistent.addMessageLast(node);
+    }
 
     public void clear(){
         pendingCount=0;

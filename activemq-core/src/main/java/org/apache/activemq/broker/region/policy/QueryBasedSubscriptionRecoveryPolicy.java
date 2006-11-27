@@ -24,6 +24,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -66,20 +67,16 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
         return query.validateUpdate(message.getMessage());
     }
 
-    public void recover(ConnectionContext context, final Topic topic, final Subscription sub) throws Exception {
-        if (query != null) {
-            final MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-            try {
-                ActiveMQDestination destination = sub.getConsumerInfo().getDestination();
-                query.execute(destination, new MessageListener() {
-                    public void onMessage(Message message) {
-                        dispatchInitialMessage(message, topic, msgContext, sub);
-                    }
-                });
-            }
-            finally {
-                msgContext.clear();
-            }
+    public void recover(final ConnectionContext context,final Topic topic,final SubscriptionRecovery sub)
+            throws Exception{
+        if(query!=null){
+            ActiveMQDestination destination=sub.getActiveMQDestination();
+            query.execute(destination,new MessageListener(){
+
+                public void onMessage(Message message){
+                    dispatchInitialMessage(message,topic,context,sub);
+                }
+            });
         }
     }
 
@@ -107,21 +104,17 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
         return new org.apache.activemq.command.Message[0];
     }
 
-    protected void dispatchInitialMessage(Message message,  Destination regionDestination, MessageEvaluationContext msgContext, Subscription sub) {
+    protected void dispatchInitialMessage(Message message,  Destination regionDestination, ConnectionContext context, SubscriptionRecovery sub) {
         try {
             ActiveMQMessage activeMessage = ActiveMQMessageTransformation.transformMessage(message, null);
             ActiveMQDestination destination = activeMessage.getDestination();
             if (destination == null) {
-                destination = sub.getConsumerInfo().getDestination();
+                destination = sub.getActiveMQDestination();
                 activeMessage.setDestination(destination);
             }
             activeMessage.setRegionDestination(regionDestination);
             configure(activeMessage);
-            msgContext.setDestination(destination);
-            msgContext.setMessageReference(activeMessage);
-            if (sub.matches(activeMessage, msgContext)) {
-                sub.add(activeMessage);
-            }
+            sub.addRecoveredMessage(context,activeMessage);
         }
         catch (Throwable e) {
             log.warn("Failed to dispatch initial message: " + message + " into subscription. Reason: " + e, e);

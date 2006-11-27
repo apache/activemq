@@ -159,4 +159,29 @@ abstract public class AbstractSubscription implements Subscription {
     public boolean isRecoveryRequired(){
         return true;
     }
+    
+    public boolean addRecoveredMessage(ConnectionContext context, MessageReference message) throws Exception{
+        boolean result = false;
+        MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
+        try {
+            msgContext.setDestination(message.getRegionDestination().getActiveMQDestination());
+            msgContext.setMessageReference(message);
+            result = matches(message,msgContext);
+            if (result) {
+                doAddRecoveredMessage(message);
+            }
+            
+        }finally {
+            msgContext.clear();
+        }
+        return result;
+    }
+    
+    public  ActiveMQDestination getActiveMQDestination() {
+        return info != null ? info.getDestination() : null;
+    }
+    
+    protected void doAddRecoveredMessage(MessageReference message) throws Exception {
+        add(message);
+    }
 }

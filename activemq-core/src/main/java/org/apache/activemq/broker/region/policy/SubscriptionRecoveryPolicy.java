@@ -22,6 +22,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -55,7 +56,7 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * @param node
      * @throws Exception
      */
-    void recover(ConnectionContext context, Topic topic, Subscription sub) throws Exception;
+    void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception;
     
     
     /**
@@ -67,6 +68,7 @@ public interface SubscriptionRecoveryPolicy extends Service {
 
     /**
      * Used to copy the policy object.
+     * @return the copy
      */
     SubscriptionRecoveryPolicy copy();
 }

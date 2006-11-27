@@ -17,20 +17,17 @@
  */
 package org.apache.activemq.memory.list;
 
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.filter.DestinationFilter;
-import org.apache.activemq.network.DemandForwardingBridge;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.DestinationFilter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A simple fixed size {@link MessageList} where there is a single, fixed size
@@ -66,7 +63,7 @@ public class SimpleMessageList implements MessageList {
         }
     }
 
-    public List getMessages(Subscription sub) {
+    public List getMessages(ActiveMQDestination destination) {
         return getList();
     }
     

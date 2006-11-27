@@ -112,7 +112,16 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         if(!subscriberContainer.containsKey(key)){
             subscriberContainer.put(key,info);
         }
-        addSubscriberMessageContainer(key);
+        ListContainer container=addSubscriberMessageContainer(key);
+        if(retroactive){
+            for(StoreEntry entry=ackContainer.getFirst();entry!=null;){
+                TopicSubAck tsa=(TopicSubAck)ackContainer.get(entry);
+                ConsumerMessageRef ref=new ConsumerMessageRef();
+                ref.setAckEntry(entry);
+                ref.setMessageEntry(tsa.getMessageEntry());
+                container.add(ref);
+            }
+        }
     }
 
     public synchronized void deleteSubscription(String clientId,String subscriptionName){
@@ -207,12 +216,13 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         return result;
     }
 
-    protected void addSubscriberMessageContainer(Object key) throws IOException{
+    protected ListContainer addSubscriberMessageContainer(Object key) throws IOException{
         ListContainer container=store.getListContainer(key,"topic-subs");
         Marshaller marshaller=new ConsumerMessageRefMarshaller();
         container.setMarshaller(marshaller);
         TopicSubContainer tsc=new TopicSubContainer(container);
         subscriberMessages.put(key,tsc);
+        return container;
     }
 
     public int getMessageCount(String clientId,String subscriberName) throws IOException{

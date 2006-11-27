@@ -17,12 +17,10 @@
  */
 package org.apache.activemq.memory.list;
 
+import java.util.List;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
-
-import java.util.List;
 
 /**
  * A container of messages which is used to store messages and then 
@@ -37,7 +35,7 @@ public interface MessageList {
     /**
      * Returns the current list of MessageReference objects for the given subscription
      */
-    List getMessages(Subscription sub);
+    List getMessages(ActiveMQDestination destination);
     
     /**
      * @param destination
