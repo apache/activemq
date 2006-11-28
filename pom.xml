@@ -126,17 +126,19 @@
   </distributionManagement>
 
   <modules>
-    <module>activemq-jaas</module>
     <module>activemq-core</module>
     <module>activemq-console</module>
+    <module>activemq-jaas</module>
+    <!-- <module>activemq-jpa-store</module> -->
+    <module>activemq-openwire-generator</module>
+    <module>activemq-optional</module>
     <module>activemq-ra</module>
     <module>activemq-rar</module>
+    <module>activemq-test-atomikos</module>
+    <module>activemq-tooling</module>
     <module>activemq-web</module>
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
-    <module>activemq-optional</module>
-    <module>activemq-tooling</module>
-    <module>activemq-openwire-generator</module>
     <module>activemq-xmpp</module>
     <module>assembly</module>
   </modules>
