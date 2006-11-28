@@ -35,6 +35,7 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -514,7 +515,16 @@ public class TransactionContext implements XAResource {
 			this.connection.ensureConnectionInfoSent();
 
 			DataArrayResponse receipt = (DataArrayResponse) this.connection.syncSendPacket(info);
-            return (XATransactionId[]) receipt.getData();
+            DataStructure[] data = receipt.getData();
+            XATransactionId[] answer = null;
+            if (data instanceof XATransactionId[]) {
+                answer = (XATransactionId[]) data;
+            }
+            else {
+                answer = new XATransactionId[data.length];
+                System.arraycopy(data, 0, answer, 0, data.length);
+            }
+            return answer;
         } catch (JMSException e) {
             throw toXAException(e);
         }
