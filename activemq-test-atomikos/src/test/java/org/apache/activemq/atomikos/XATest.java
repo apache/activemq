@@ -18,6 +18,7 @@
 package org.apache.activemq.atomikos;
 
 import com.atomikos.datasource.xa.DefaultXidFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 
@@ -36,8 +37,12 @@ import junit.framework.TestCase;
 public class XATest extends TestCase {
 
     public void testXA() throws Exception {
-        //String url = "tcp://localhost:61616";
-        String url = "vm://localhost";
+		BrokerService broker = new BrokerService();
+		broker.addConnector("tcp://localhost:61616");
+		broker.start();
+		
+	
+        String url = "tcp://localhost:61616";
         String qName = "MyQueue";
         int timeout = 5;
         DefaultXidFactory xidFactory = new DefaultXidFactory();
