@@ -25,9 +25,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.activemq</groupId>
+    <groupId>incubator-activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>4.2-incubator-SNAPSHOT</version>
+    <version>4.0.2-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>activemq-test-atomikos</artifactId>
@@ -69,6 +70,22 @@
       <artifactId>derby</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
+      <optional>true</optional>
+    </dependency>
+
 
     <dependency>
       <groupId>com.atomikos</groupId>
