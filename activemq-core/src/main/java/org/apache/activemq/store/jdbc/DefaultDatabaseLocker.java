@@ -52,14 +52,13 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         connection = dataSource.getConnection();
         connection.setAutoCommit(false);
         
-        PreparedStatement statement = connection.prepareStatement(statements.getLockCreateStatement());
+        log.info("Attempting to acquire the exclusive lock to become the Master broker");
+		String sql = statements.getLockCreateStatement();
+		PreparedStatement statement = connection.prepareStatement(sql);
         while (true) {
             try {
-                log.info("Attempting to acquire the exclusive lock to become the Master broker");
-                boolean answer = statement.execute();
-                if (answer) {
-                    break;
-                }
+                statement.execute();
+				break;
             }
             catch (Exception e) {
                 if (stopping) { 
