@@ -166,6 +166,8 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
             }else{
                 theStore.delete();
             }
+        }else {
+            StoreFactory.delete(getStoreName());
         }
     }
 
@@ -252,14 +254,20 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     public void setMaximumDestinationCacheSize(int maximumDestinationCacheSize){
         this.maximumDestinationCacheSize=maximumDestinationCacheSize;
     }
+    
 
     protected synchronized Store getStore() throws IOException{
         if(theStore==null){
             String name=dir.getAbsolutePath()+File.separator+"kaha.db";
-            theStore=StoreFactory.open(name,"rw");
+            theStore=StoreFactory.open(getStoreName(),"rw");
             theStore.setMaxDataFileLength(maxDataFileLength);
             theStore.setIndexType(indexType);
         }
         return theStore;
+    }
+    
+    private String getStoreName(){
+        String name=dir.getAbsolutePath()+File.separator+"kahadb";
+        return name;
     }
 }
