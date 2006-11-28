@@ -1,1 +1,1 @@
-class=org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter
+class=org.apache.activemq.store.jdbc.adapter.MySqlJDBCAdapter
