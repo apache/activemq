@@ -18,8 +18,9 @@
 package org.apache.activemq.security;
 
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.jaas.GroupPrincipal;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -39,6 +40,16 @@ public class AuthorizationEntry extends DestinationMapEntry {
     private Set readACLs = Collections.EMPTY_SET;
     private Set writeACLs = Collections.EMPTY_SET;
     private Set adminACLs = Collections.EMPTY_SET;
+    
+    private String groupClass = "org.apache.activemq.jaas.GroupPrincipal";
+        
+    public String getGroupClass() {
+    	return groupClass;
+    }
+     
+    public void setGroupClass(String groupClass) {
+        this.groupClass = groupClass;
+    }    
 
     public Set getAdminACLs() {
         return adminACLs;
@@ -66,24 +77,59 @@ public class AuthorizationEntry extends DestinationMapEntry {
 
     // helper methods for easier configuration in Spring
     // -------------------------------------------------------------------------
-    public void setAdmin(String roles) {
+    public void setAdmin(String roles) throws Exception {
         setAdminACLs(parseACLs(roles));
     }
 
-    public void setRead(String roles) {
+    public void setRead(String roles) throws Exception {
         setReadACLs(parseACLs(roles));
     }
 
-    public void setWrite(String roles) {
+    public void setWrite(String roles) throws Exception {
         setWriteACLs(parseACLs(roles));
     }
 
-    protected Set parseACLs(String roles) {
+    protected Set parseACLs(String roles) throws Exception {
         Set answer = new HashSet();
         StringTokenizer iter = new StringTokenizer(roles, ",");
         while (iter.hasMoreTokens()) {
             String name = iter.nextToken().trim();
-            answer.add(new GroupPrincipal(name));
+            Class[] paramClass = new Class[1];
+            paramClass[0] = String.class;
+            
+            Object[] param = new Object[1];
+            param[0] = new String(name);
+
+            try {
+            	Class cls = Class.forName(groupClass);
+            	
+            	Constructor[] constructors = cls.getConstructors();
+            	int i;
+            	for (i=0; i<constructors.length; i++) {
+            		Class[] paramTypes = constructors[i].getParameterTypes(); 
+            		if (paramTypes.length!=0 && paramTypes[0].equals(paramClass[0])) break;
+            	}
+            	if (i < constructors.length) {
+            		Object instance = constructors[i].newInstance(param);
+                	answer.add(instance);
+            	}
+            	else {
+            		Object instance = cls.newInstance();
+            		Method[] methods = cls.getMethods();
+            		i=0;
+            		for (i=0; i<methods.length; i++) {
+            			Class[] paramTypes = methods[i].getParameterTypes();
+            			if (paramTypes.length!=0 && methods[i].getName().equals("setName") && paramTypes[0].equals(paramClass[0])) break;
+            		}
+                		
+                	if (i < methods.length) {
+                		methods[i].invoke(instance, param);
+                    	answer.add(instance);
+                	}
+                	else throw new NoSuchMethodException();
+            	}
+            }
+            catch (Exception e) { throw e; }
         }
         return answer;
     }
