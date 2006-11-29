@@ -66,6 +66,10 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     public boolean isEmpty(){
         return false;
     }
+    
+    public boolean isEmpty(Destination destination) {
+        return isEmpty();
+    }
 
     public MessageReference next(){
         return null;

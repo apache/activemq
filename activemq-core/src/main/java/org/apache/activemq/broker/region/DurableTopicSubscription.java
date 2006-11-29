@@ -64,6 +64,9 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         if( active || keepDurableSubsActive ) {
             Topic topic = (Topic) destination;            
             topic.activate(context, this);
+            if (pending.isEmpty(topic)) {
+                topic.recoverRetroactiveMessages(context, this);
+            }
         }
         dispatchMatched();
     }
@@ -81,6 +84,13 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             }
             synchronized(pending) {
                 pending.start();
+            }
+            //If nothing was in the persistent store, then try to use the recovery policy.
+            if (pending.isEmpty()) {
+                for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                    Topic topic = (Topic) iter.next();
+                    topic.recoverRetroactiveMessages(context, this);
+                }
             }
             dispatchMatched();
         }

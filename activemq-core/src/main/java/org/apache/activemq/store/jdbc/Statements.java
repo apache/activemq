@@ -64,7 +64,7 @@ public class Statements {
     private String lockUpdateStatement;
     private String nextDurableSubscriberMessageStatement;
     private String durableSubscriberMessageCountStatement;
-    private String nextDurableSubscriberMessageIdStatement;
+    private String lastAckedDurableSubscriberMessageStatement;
     private String destinationMessageCountStatement;
     private String findNextMessagesStatement;
     private boolean useLockCreateWhereClause;
@@ -322,6 +322,18 @@ public class Statements {
         }
         return findNextMessagesStatement;
     }
+    
+    /**
+     * @return the lastAckedDurableSubscriberMessageStatement
+     */
+    public String getLastAckedDurableSubscriberMessageStatement(){
+        if(lastAckedDurableSubscriberMessageStatement==null) {
+            lastAckedDurableSubscriberMessageStatement = "SELECT MAX(LAST_ACKED_ID) FROM " + getFullAckTableName()
+            + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
+        }
+        return lastAckedDurableSubscriberMessageStatement;
+    }
+
 
 
     public String getFullMessageTableName() {
@@ -590,20 +602,7 @@ public class Statements {
      */
     public void setDurableSubscriberMessageCountStatement(String durableSubscriberMessageCountStatement){
         this.durableSubscriberMessageCountStatement=durableSubscriberMessageCountStatement;
-    }
-
-    
-    
-
-    
-    /**
-     * @param nextDurableSubscriberMessageIdStatement the nextDurableSubscriberMessageIdStatement to set
-     */
-    public void setNextDurableSubscriberMessageIdStatement(String nextDurableSubscriberMessageIdStatement){
-        this.nextDurableSubscriberMessageIdStatement=nextDurableSubscriberMessageIdStatement;
-    }
-
-     
+    }    
     
     /**
      * @param findNextMessagesStatement the findNextMessagesStatement to set
@@ -617,6 +616,16 @@ public class Statements {
      */
     public void setDestinationMessageCountStatement(String destinationMessageCountStatement){
         this.destinationMessageCountStatement=destinationMessageCountStatement;
+    }
+
+    
+    
+    
+    /**
+     * @param lastAckedDurableSubscriberMessageStatement the lastAckedDurableSubscriberMessageStatement to set
+     */
+    public void setLastAckedDurableSubscriberMessageStatement(String lastAckedDurableSubscriberMessageStatement){
+        this.lastAckedDurableSubscriberMessageStatement=lastAckedDurableSubscriberMessageStatement;
     }
     
     

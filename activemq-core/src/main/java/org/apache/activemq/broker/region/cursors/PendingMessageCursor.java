@@ -50,6 +50,13 @@ public interface PendingMessageCursor extends Service{
     public boolean isEmpty();
     
     /**
+     * check if a Destination is Empty for this cursor
+     * @param destination
+     * @return true id the Destination is empty
+     */
+    public boolean isEmpty(Destination destination);
+    
+    /**
      * reset the cursor
      *
      */

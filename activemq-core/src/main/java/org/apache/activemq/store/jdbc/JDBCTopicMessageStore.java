@@ -99,7 +99,8 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         String subcriberId=getSubscriptionKey(clientId,subscriptionName);
         AtomicLong last=(AtomicLong)subscriberLastMessageMap.get(subcriberId);
         if(last==null){
-            last=new AtomicLong(-1);
+            long lastAcked = adapter.doGetLastAckedDurableSubscriberMessageId(c,destination,clientId,subscriptionName);
+            last=new AtomicLong(lastAcked);
             subscriberLastMessageMap.put(subcriberId,last);
         }
         final AtomicLong finalLast=last;

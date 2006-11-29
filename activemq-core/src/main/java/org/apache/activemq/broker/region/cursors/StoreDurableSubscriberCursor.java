@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -85,14 +86,16 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
      * @throws Exception
      */
     public synchronized void add(ConnectionContext context,Destination destination) throws Exception{
-        TopicStorePrefetch tsp=new TopicStorePrefetch((Topic)destination,clientId,subscriberName);
-        tsp.setMaxBatchSize(getMaxBatchSize());
-        tsp.setUsageManager(usageManager);
-        topics.put(destination,tsp);
-        storePrefetches.add(tsp);
-        if(started){
-            tsp.start();
-            pendingCount+=tsp.size();
+        if(destination!=null&&!AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())){
+            TopicStorePrefetch tsp=new TopicStorePrefetch((Topic)destination,clientId,subscriberName);
+            tsp.setMaxBatchSize(getMaxBatchSize());
+            tsp.setUsageManager(usageManager);
+            topics.put(destination,tsp);
+            storePrefetches.add(tsp);
+            if(started){
+                tsp.start();
+                pendingCount+=tsp.size();
+            }
         }
     }
 
@@ -115,6 +118,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
      */
     public synchronized boolean isEmpty(){
         return pendingCount<=0;
+    }
+    
+    public boolean isEmpty(Destination destination) {
+        boolean result = true;
+        TopicStorePrefetch tsp=(TopicStorePrefetch)topics.get(destination);
+        if(tsp!=null){
+            result = tsp.size() <= 0;
+        }
+        return result;
     }
 
     /**
