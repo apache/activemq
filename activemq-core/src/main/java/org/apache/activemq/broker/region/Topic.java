@@ -146,7 +146,6 @@ public class Topic implements Destination {
     }
     
     public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Exception {
-        
         // synchronize with dispatch method so that no new messages are sent
         // while
         // we are recovering a subscription to avoid out of order messages.
@@ -210,15 +209,7 @@ public class Topic implements Destination {
                 });
             }
             
-            if( true && subscription.getConsumerInfo().isRetroactive() ) {
-                // If nothing was in the persistent store, then try to use the recovery policy.
-                if( subscription.getEnqueueCounter() == 0 ) {
-                    subscriptionRecoveryPolicy.recover(context, this, subscription);
-                } else {
-                    // TODO: implement something like
-                    // subscriptionRecoveryPolicy.recoverNonPersistent(context, this, sub);
-                }
-            }
+            
         
         }
         finally {
@@ -231,7 +222,15 @@ public class Topic implements Destination {
             consumers.remove(sub);
         }
         sub.remove(context, this);
-    }    
+    } 
+    
+    
+    protected void recoverRetroactiveMessages(ConnectionContext context,Subscription subscription) throws Exception{
+        if(subscription.getConsumerInfo().isRetroactive()){
+            subscriptionRecoveryPolicy.recover(context,this,subscription);
+        }
+    }
+    
 
 
     public void send(final ConnectionContext context, final Message message) throws Exception {

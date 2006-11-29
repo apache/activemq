@@ -544,6 +544,28 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             close(s);
         }
     }
+    
+    public long doGetLastAckedDurableSubscriberMessageId(TransactionContext c,ActiveMQDestination destination,String clientId, String subscriberName) throws SQLException,IOException{
+        PreparedStatement s=null;
+        ResultSet rs=null;
+        long result = -1;
+        try{
+            s=c.getConnection().prepareStatement(statements.getLastAckedDurableSubscriberMessageStatement());
+            s.setString(1,destination.getQualifiedName());
+            s.setString(2,clientId);
+            s.setString(3,subscriberName);
+            rs=s.executeQuery();
+            if(rs.next()){
+                result=rs.getLong(1);
+            }
+            rs.close();
+            s.close();
+        }finally{
+            close(rs);
+            close(s);
+        }
+        return result;
+    }
 
     static private void close(PreparedStatement s){
         try{

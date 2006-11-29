@@ -88,4 +88,6 @@ public interface JDBCAdapter{
     
     public void doRecoverNextMessages(TransactionContext c,ActiveMQDestination destination,long nextSeq,int maxReturned,
             JDBCMessageRecoveryListener listener) throws Exception;
+    
+    public long doGetLastAckedDurableSubscriberMessageId(TransactionContext c,ActiveMQDestination destination,String clientId, String subscriberName) throws SQLException,IOException;
 }

@@ -132,24 +132,9 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         }
     }
 
-    public synchronized void deleteSubscription(String clientId,String subscriptionName){
+    public synchronized void deleteSubscription(String clientId,String subscriptionName) throws IOException{
         String key=getSubscriptionKey(clientId,subscriptionName);
-        subscriberContainer.remove(key);
-        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
-        for(Iterator i=container.getListContainer().iterator();i.hasNext();){
-            ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
-            if(ref!=null){
-                TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
-                if(tsa!=null){
-                    if(tsa.decrementCount()<=0){
-                        ackContainer.remove(ref.getAckEntry());
-                        messageContainer.remove(tsa.getMessageEntry());
-                    }else{
-                        ackContainer.update(ref.getAckEntry(),tsa);
-                    }
-                }
-            }
-        }
+        removeSubscriberMessageContainer(key);
     }
 
     public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
@@ -220,6 +205,26 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         TopicSubContainer tsc=new TopicSubContainer(container);
         subscriberMessages.put(key,tsc);
         return container;
+    }
+    
+    protected void removeSubscriberMessageContainer(Object key) throws IOException {
+        subscriberContainer.remove(key);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.remove(key);
+        for(Iterator i=container.getListContainer().iterator();i.hasNext();){
+            ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
+            if(ref!=null){
+                TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
+                if(tsa!=null){
+                    if(tsa.decrementCount()<=0){
+                        ackContainer.remove(ref.getAckEntry());
+                        messageContainer.remove(tsa.getMessageEntry());
+                    }else{
+                        ackContainer.update(ref.getAckEntry(),tsa);
+                    }
+                }
+            }
+        }
+        store.deleteListContainer(key,"topic-subs");
     }
 
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
