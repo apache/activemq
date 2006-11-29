@@ -689,6 +689,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * @return the first StoreEntry or null if the list is empty
      */
     public synchronized StoreEntry getFirst(){
+        load();
         return indexList.getFirst();
     }
 
@@ -698,6 +699,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * @return the last StoreEntry or null if the list is empty
      */
     public synchronized StoreEntry getLast(){
+        load();
         return indexList.getLast();
     }
 
@@ -708,6 +710,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * @return the next StoreEntry or null
      */
     public synchronized StoreEntry getNext(StoreEntry entry){
+        load();
         IndexItem item=(IndexItem)entry;
         return indexList.getNextEntry(item);
     }
@@ -719,6 +722,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * @return the previous store entry or null
      */
     public synchronized StoreEntry getPrevious(StoreEntry entry){
+        load();
         IndexItem item=(IndexItem)entry;
         return indexList.getPrevEntry(item);
     }
@@ -730,6 +734,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * @return a refreshed StoreEntry
      */
     public synchronized StoreEntry refresh(StoreEntry entry) {
+        load();
         return indexList.getEntry(entry);
     }
 
