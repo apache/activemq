@@ -63,8 +63,11 @@ public class ActiveMQSessionExecutor implements Task {
 
     public void wakeup() {
         if( !dispatchedBySessionPool ) {
-            if( taskRunner!=null ) {
+            if( session.isSessionAsyncDispatch() ) {
                 try {
+                	if( taskRunner == null ) {
+                		taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this, "ActiveMQ Session: "+session.getSessionId());
+                	}
                     taskRunner.wakeup();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -101,10 +104,8 @@ public class ActiveMQSessionExecutor implements Task {
     synchronized void start() {
         if( !messageQueue.isRunning() ) {
             messageQueue.start();
-            if( session.isSessionAsyncDispatch() || dispatchedBySessionPool ) {
-                taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this, "ActiveMQ Session: "+session.getSessionId());
-            }
-            wakeup();
+            if( hasUncomsumedMessages() )
+            	wakeup();
         }
     }
 
