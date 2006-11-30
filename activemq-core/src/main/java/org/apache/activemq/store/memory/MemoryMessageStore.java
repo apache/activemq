@@ -50,12 +50,16 @@ public class MemoryMessageStore implements MessageStore{
     }
 
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
-        messageTable.put(message.getMessageId(),message);
+        synchronized(messageTable){
+            messageTable.put(message.getMessageId(),message);
+        }
     }
 
     public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
             throws IOException{
-        messageTable.put(messageId,messageRef);
+        synchronized(messageTable){
+            messageTable.put(messageId,messageRef);
+        }
     }
 
     public Message getMessage(MessageId identity) throws IOException{
@@ -67,11 +71,16 @@ public class MemoryMessageStore implements MessageStore{
     }
 
     public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
-        messageTable.remove(ack.getLastMessageId());
+        removeMessage(ack.getLastMessageId());
     }
 
     public void removeMessage(MessageId msgId) throws IOException{
-        messageTable.remove(msgId);
+        synchronized(messageTable){
+            messageTable.remove(msgId);
+            if(lastBatchId!=null&lastBatchId.equals(msgId)){
+                lastBatchId=null;
+            }
+        }
     }
 
     public void recover(MessageRecoveryListener listener) throws Exception{
@@ -96,7 +105,9 @@ public class MemoryMessageStore implements MessageStore{
     }
 
     public void removeAllMessages(ConnectionContext context) throws IOException{
-        messageTable.clear();
+        synchronized(messageTable){
+            messageTable.clear();
+        }
     }
 
     public ActiveMQDestination getDestination(){
@@ -104,7 +115,9 @@ public class MemoryMessageStore implements MessageStore{
     }
 
     public void delete(){
-        messageTable.clear();
+        synchronized(messageTable){
+            messageTable.clear();
+        }
     }
 
     /**
@@ -117,18 +130,16 @@ public class MemoryMessageStore implements MessageStore{
         return messageTable.size();
     }
 
-    
     public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
         synchronized(messageTable){
-            
             boolean pastLackBatch=lastBatchId==null;
-            int count = 0;
+            int count=0;
             for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
                 Map.Entry entry=(Entry)iter.next();
                 if(pastLackBatch){
                     count++;
                     Object msg=entry.getValue();
-                    lastBatchId = (MessageId)entry.getKey();
+                    lastBatchId=(MessageId)entry.getKey();
                     if(msg.getClass()==String.class){
                         listener.recoverMessageReference((String)msg);
                     }else{
@@ -143,6 +154,6 @@ public class MemoryMessageStore implements MessageStore{
     }
 
     public void resetBatching(){
-        lastBatchId = null;
+        lastBatchId=null;
     }
 }

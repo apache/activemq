@@ -88,5 +88,9 @@ public class DataSourceSupport {
         ds.setCreateDatabase("create");
         return ds;
     }
+    
+    public String toString(){
+        return ""+dataSource;
+    }
 
 }

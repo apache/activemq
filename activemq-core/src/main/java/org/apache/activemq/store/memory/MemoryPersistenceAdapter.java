@@ -154,4 +154,8 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
      */
     public void setUsageManager(UsageManager usageManager) {
     }
+    
+    public String toString(){
+        return "MemoryPersistenceAdapter";
+    }
 }

@@ -482,4 +482,8 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     protected DatabaseLocker createDatabaseLocker() throws IOException {
         return new DefaultDatabaseLocker(getDataSource(), getStatements());
     }
+    
+    public String toString(){
+        return "JDBCPersistenceAdaptor("+super.toString()+")";
+    }
 }

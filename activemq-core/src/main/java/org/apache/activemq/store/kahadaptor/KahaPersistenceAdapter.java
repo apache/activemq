@@ -270,4 +270,8 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         String name=dir.getAbsolutePath()+File.separator+"kahadb";
         return name;
     }
+    
+    public String toString(){
+        return "KahaPersistenceAdapter(" + getStoreName() +")";
+    }
 }
