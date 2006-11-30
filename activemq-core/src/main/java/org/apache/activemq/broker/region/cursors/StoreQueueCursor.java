@@ -59,7 +59,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         }
         nonPersistent.start();
         persistent.start();
-        pendingCount=persistent.size();
+        pendingCount=persistent.size() + nonPersistent.size();
     }
 
     public synchronized void stop() throws Exception{
@@ -87,12 +87,28 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
             }
         }
     }
+    
+    public void addMessageFirst(MessageReference node) throws Exception{
+        if(node!=null){
+            Message msg=node.getMessage();
+            if(started){
+                pendingCount++;
+                if(!msg.isPersistent()){
+                    nonPersistent.addMessageFirst(node);
+                }
+            }
+            if(msg.isPersistent()){
+                persistent.addMessageFirst(node);
+            }
+        }
+    }
 
     public void clear(){
         pendingCount=0;
     }
 
     public synchronized boolean hasNext(){
+        
         boolean result=pendingCount>0;
         if(result){
             try{
@@ -107,7 +123,8 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
     }
 
     public synchronized MessageReference next(){
-        return currentCursor!=null?currentCursor.next():null;
+        MessageReference result = currentCursor!=null?currentCursor.next():null;
+        return result;
     }
 
     public synchronized void remove(){
@@ -118,6 +135,11 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
     }
 
     public void remove(MessageReference node){
+        if (!node.isPersistent()) {
+            nonPersistent.remove(node);
+        }else {
+            persistent.remove(node);
+        }
         pendingCount--;
     }
 

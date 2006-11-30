@@ -385,7 +385,7 @@ public class BrokerService implements Service, Serializable {
             startDestinations();
             
             addShutdownHook();
-            log.info("Using Persistence Adaptor " + getPersistenceAdapter());
+            log.info("Using Persistence Adaptor: " + getPersistenceAdapter());
             if (deleteAllMessagesOnStartup) {
                 deleteAllMessages();
             }

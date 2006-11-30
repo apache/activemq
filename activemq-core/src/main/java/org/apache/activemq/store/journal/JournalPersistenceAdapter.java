@@ -669,5 +669,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     	org.apache.activeio.packet.ByteSequence sequence = packet.asByteSequence();
     	return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
+    
+    public String toString(){
+        return "JournalPersistenceAdapator(" + longTermPersistence + ")";
+    }
 
 }
