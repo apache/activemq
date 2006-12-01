@@ -70,7 +70,7 @@
         <configuration>
           <host>irc.codehaus.org</host>
           <port>6667</port>
-          <channel>#activemq</channel>
+          <channel>#activemq-ci</channel>
         </configuration>
       </notifier>
     </notifiers>
