@@ -24,6 +24,11 @@ import java.util.Map;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
+import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.transport.TransportListener;
@@ -38,17 +43,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ConnectionPool {
 	
+    private TransactionManager transactionManager;
     private ActiveMQConnection connection;
     private Map cache;
     private AtomicBoolean started = new AtomicBoolean(false);
     private int referenceCount;
     private ObjectPoolFactory poolFactory;
-	private long lastUsed;
+	private long lastUsed = System.currentTimeMillis();
 	private boolean hasFailed;
 	private int idleTimeout = 30*1000;
 
-    public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory) {
-        this(connection, new HashMap(), poolFactory);
+    public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager) {
+        this(connection, new HashMap(), poolFactory, transactionManager);
         // Add a transport Listener so that we can notice if this connection should be expired due to 
         // a connection failure.
         connection.addTransportListener(new TransportListener(){
@@ -66,10 +72,11 @@ public class ConnectionPool {
 		});
     }
 
-    public ConnectionPool(ActiveMQConnection connection, Map cache, ObjectPoolFactory poolFactory) {
+    public ConnectionPool(ActiveMQConnection connection, Map cache, ObjectPoolFactory poolFactory, TransactionManager transactionManager) {
         this.connection = connection;
         this.cache = cache;
         this.poolFactory = poolFactory;
+        this.transactionManager = transactionManager;
     }
 
     public void start() throws JMSException {
@@ -83,13 +90,35 @@ public class ConnectionPool {
     }
 
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
-        SessionKey key = new SessionKey(transacted, ackMode);
-        SessionPool pool = (SessionPool) cache.get(key);
-        if (pool == null) {
-            pool = new SessionPool(this, key, poolFactory.createPool());
-            cache.put(key, pool);
+        try {
+            boolean isXa = (transactionManager != null && transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION);
+            if (isXa) {
+                transacted = true;
+                ackMode = Session.SESSION_TRANSACTED;
+            }
+            SessionKey key = new SessionKey(transacted, ackMode);
+            SessionPool pool = (SessionPool) cache.get(key);
+            if (pool == null) {
+                pool = new SessionPool(this, key, poolFactory.createPool());
+                cache.put(key, pool);
+            }
+            PooledSession session = pool.borrowSession();
+            if (isXa) {
+                session.setIgnoreClose(true);
+                transactionManager.getTransaction().registerSynchronization(new Synchronization(session));
+                incrementReferenceCount();
+                transactionManager.getTransaction().enlistResource(createXaResource(session));
+            }
+            return session;
+        } catch (RollbackException e) {
+            final JMSException jmsException = new JMSException("Rollback Exception");
+            jmsException.initCause(e);
+            throw jmsException;
+        } catch (SystemException e) {
+            final JMSException jmsException = new JMSException("System Exception");
+            jmsException.initCause(e);
+            throw jmsException;
         }
-        return pool.borrowSession();
     }
 
     synchronized public void close() {
@@ -117,8 +146,8 @@ public class ConnectionPool {
 
 	synchronized public void decrementReferenceCount() {
 		referenceCount--;
+		lastUsed = System.currentTimeMillis();
 		if( referenceCount == 0 ) {
-			lastUsed = System.currentTimeMillis();
 			expiredCheck();
 		}
 	}
@@ -129,7 +158,8 @@ public class ConnectionPool {
 	synchronized public boolean expiredCheck() {
 		if( connection == null )
 			return true;
-		if( hasFailed || idleTimeout> 0 && System.currentTimeMillis() > lastUsed+idleTimeout ) {
+        long t = System.currentTimeMillis();
+		if( hasFailed || idleTimeout> 0 && t > lastUsed+idleTimeout ) {
 			if( referenceCount == 0 ) {
 				close();
 			}
@@ -145,5 +175,31 @@ public class ConnectionPool {
 	public void setIdleTimeout(int idleTimeout) {
 		this.idleTimeout = idleTimeout;
 	}
+    
+    protected XAResource createXaResource(PooledSession session) throws JMSException {
+        return session.getSession().getTransactionContext();
+    }
 
+    protected class Synchronization implements javax.transaction.Synchronization {
+        private final PooledSession session;
+
+        private Synchronization(PooledSession session) {
+            this.session = session;
+        }
+
+        public void beforeCompletion() {
+        }
+        
+        public void afterCompletion(int status) {
+            try {
+                // This will return session to the pool.
+                session.setIgnoreClose(false);
+                session.close();
+                decrementReferenceCount();
+            } catch (JMSException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    
 }
