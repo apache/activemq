@@ -65,9 +65,11 @@ public class PooledSession implements TopicSession, QueueSession {
     private ActiveMQQueueSender queueSender;
     private ActiveMQTopicPublisher topicPublisher;
     private boolean transactional = true;
+    private boolean ignoreClose = false;
     
     private final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
     private final CopyOnWriteArrayList browsers = new CopyOnWriteArrayList();
+
 
     public PooledSession(ActiveMQSession aSession, SessionPool sessionPool) {
         this.session = aSession;
@@ -75,47 +77,56 @@ public class PooledSession implements TopicSession, QueueSession {
         this.transactional = session.isTransacted();
     }
 
+    protected boolean isIgnoreClose() {
+        return ignoreClose;
+    }
+
+    protected void setIgnoreClose(boolean ignoreClose) {
+        this.ignoreClose = ignoreClose;
+    }
 
     public void close() throws JMSException {
-        // TODO a cleaner way to reset??
-
-        // lets reset the session
-        getSession().setMessageListener(null);
-        
-        // Close any consumers and browsers that may have been created.
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            MessageConsumer consumer = (MessageConsumer) iter.next();
-            consumer.close();
-        }
-        consumers.clear();
-        
-        for (Iterator iter = browsers.iterator(); iter.hasNext();) {
-            QueueBrowser browser = (QueueBrowser) iter.next();
-            browser.close();
-        }
-        browsers.clear();
-
-        // maybe do a rollback?
-        if (transactional) {
-            try {
-                getSession().rollback();
+        if (!ignoreClose) {
+            // TODO a cleaner way to reset??
+    
+            // lets reset the session
+            getSession().setMessageListener(null);
+            
+            // Close any consumers and browsers that may have been created.
+            for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+                MessageConsumer consumer = (MessageConsumer) iter.next();
+                consumer.close();
             }
-            catch (JMSException e) {
-                log.warn("Caught exception trying rollback() when putting session back into the pool: " + e, e);
-
-                // lets close the session and not put the session back into the pool
+            consumers.clear();
+            
+            for (Iterator iter = browsers.iterator(); iter.hasNext();) {
+                QueueBrowser browser = (QueueBrowser) iter.next();
+                browser.close();
+            }
+            browsers.clear();
+    
+            // maybe do a rollback?
+            if (transactional) {
                 try {
-                    session.close();
+                    getSession().rollback();
                 }
-                catch (JMSException e1) {
-                    log.trace("Ignoring exception as discarding session: " + e1, e1);
+                catch (JMSException e) {
+                    log.warn("Caught exception trying rollback() when putting session back into the pool: " + e, e);
+    
+                    // lets close the session and not put the session back into the pool
+                    try {
+                        session.close();
+                    }
+                    catch (JMSException e1) {
+                        log.trace("Ignoring exception as discarding session: " + e1, e1);
+                    }
+                    session = null;
+                    return;
                 }
-                session = null;
-                return;
             }
+    
+            sessionPool.returnSession(this);
         }
-
-        sessionPool.returnSession(this);
     }
 
     public void commit() throws JMSException {

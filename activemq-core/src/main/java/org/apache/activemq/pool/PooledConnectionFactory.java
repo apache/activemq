@@ -19,11 +19,13 @@ package org.apache.activemq.pool;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+import javax.transaction.TransactionManager;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -45,10 +47,12 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * @version $Revision: 1.1 $
  */
 public class PooledConnectionFactory implements ConnectionFactory, Service {
-    private ActiveMQConnectionFactory connectionFactory;
+    private ConnectionFactory connectionFactory;
     private Map cache = new HashMap();
     private ObjectPoolFactory poolFactory;
-    private int maximumActive = 5000;
+    private int maximumActive = 500;
+    private int maxConnections = 1;
+    private TransactionManager transactionManager;
 
     public PooledConnectionFactory() {
         this(new ActiveMQConnectionFactory());
@@ -62,12 +66,20 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         this.connectionFactory = connectionFactory;
     }
 
-    public ActiveMQConnectionFactory getConnectionFactory() {
+    public ConnectionFactory getConnectionFactory() {
         return connectionFactory;
     }
 
-    public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
+    public void setConnectionFactory(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
+    }
+
+    public TransactionManager getTransactionManager() {
+        return transactionManager;
+    }
+
+    public void setTransactionManager(TransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
     }
 
     public Connection createConnection() throws JMSException {
@@ -76,7 +88,17 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     public synchronized Connection createConnection(String userName, String password) throws JMSException {
         ConnectionKey key = new ConnectionKey(userName, password);
-        ConnectionPool connection = (ConnectionPool) cache.get(key);
+        LinkedList pools = (LinkedList) cache.get(key);
+        
+        if (pools ==  null) {
+            pools = new LinkedList();
+            cache.put(key, pools);
+        }
+
+        ConnectionPool connection = null;
+        if (pools.size() == maxConnections) {
+            connection = (ConnectionPool) pools.removeFirst();
+        }
         
         // Now.. we might get a connection, but it might be that we need to 
         // dump it..
@@ -86,10 +108,14 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         
         if (connection == null) {
             ActiveMQConnection delegate = createConnection(key);
-            connection = new ConnectionPool(delegate, getPoolFactory());
-            cache.put(key, connection);
+            connection = createConnectionPool(delegate);
         }
+        pools.add(connection);
         return new PooledConnection(connection);
+    }
+    
+    protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
+        return new ConnectionPool(connection, getPoolFactory(), transactionManager);
     }
 
     protected ActiveMQConnection createConnection(ConnectionKey key) throws JMSException {
@@ -144,6 +170,20 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
      */
     public void setMaximumActive(int maximumActive) {
         this.maximumActive = maximumActive;
+    }
+
+    /**
+     * @return the maxConnections
+     */
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    /**
+     * @param maxConnections the maxConnections to set
+     */
+    public void setMaxConnections(int maxConnections) {
+        this.maxConnections = maxConnections;
     }
 
     protected ObjectPoolFactory createPoolFactory() {
