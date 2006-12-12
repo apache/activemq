@@ -41,6 +41,10 @@ public class AuthorizationEntry extends DestinationMapEntry {
     private Set writeACLs = Collections.EMPTY_SET;
     private Set adminACLs = Collections.EMPTY_SET;
     
+    private String adminRoles = null;
+    private String readRoles = null;
+    private String writeRoles = null;
+    
     private String groupClass = "org.apache.activemq.jaas.GroupPrincipal";
         
     public String getGroupClass() {
@@ -76,17 +80,23 @@ public class AuthorizationEntry extends DestinationMapEntry {
     }
 
     // helper methods for easier configuration in Spring
+    // ACLs are already set in the afterPropertiesSet method to ensure that  groupClass is set first before
+    // calling parceACLs() on any of the roles. We still need to add  the call to parceACLs inside the helper
+    // methods for instances where we configure security programatically without using xbean
     // -------------------------------------------------------------------------
     public void setAdmin(String roles) throws Exception {
-        setAdminACLs(parseACLs(roles));
+    	adminRoles = roles;
+    	setAdminACLs(parseACLs(adminRoles));
     }
 
     public void setRead(String roles) throws Exception {
-        setReadACLs(parseACLs(roles));
+    	readRoles = roles;
+    	setReadACLs(parseACLs(readRoles));
     }
 
     public void setWrite(String roles) throws Exception {
-        setWriteACLs(parseACLs(roles));
+    	writeRoles = roles;
+    	setWriteACLs(parseACLs(writeRoles));
     }
 
     protected Set parseACLs(String roles) throws Exception {
@@ -133,4 +143,21 @@ public class AuthorizationEntry extends DestinationMapEntry {
         }
         return answer;
     }
+    
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+        
+        if(adminRoles!=null) {
+        	setAdminACLs(parseACLs(adminRoles));
+        }
+
+        if(writeRoles!=null) {
+        	setWriteACLs(parseACLs(writeRoles));
+        }
+        
+        if(readRoles!=null) {
+        	setReadACLs(parseACLs(readRoles));
+        }
+        
+    }    
 }
