@@ -74,8 +74,8 @@
 
         <exclude>**/target/**</exclude>
         <exclude>**/build/**</exclude>
-        <exclude>data/**</exclude>
-        <exclude>*/data/**</exclude>
+        <!-- exclude>data/**</exclude>
+        <exclude>*/data/**</exclude -->
         <exclude>activemq-data/**</exclude>
         <exclude>*/activemq-data/**</exclude>
         <exclude>**/eclipse-classes/**</exclude>
