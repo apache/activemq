@@ -162,7 +162,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.session = session;
-        this.selector = selector;
         this.redeliveryPolicy = session.connection.getRedeliveryPolicy();
         setTransformer(session.getTransformer());
 
@@ -174,6 +173,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info.setNoLocal(noLocal);
         this.info.setDispatchAsync(dispatchAsync);
         this.info.setRetroactive(this.session.connection.isUseRetroactiveConsumer());
+        this.info.setSelector(null);
 
         // Allows the options on the destination to configure the consumerInfo
         if (dest.getOptions() != null) {
@@ -184,11 +184,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info.setDestination(dest);
         this.info.setBrowser(browser);
         if (selector != null && selector.trim().length() != 0) {
-            // Validate that the selector
+            // Validate the selector
             new SelectorParser().parse(selector);
             this.info.setSelector(selector);
+            this.selector = selector;
+        } else if (info.getSelector() != null) {
+            // Validate the selector
+            new SelectorParser().parse(this.info.getSelector());
+            this.selector = this.info.getSelector();
         } else {
-            this.info.setSelector(null);
+            this.selector = null;
         }
 
         this.stats = new JMSConsumerStatsImpl(session.getSessionStats(), dest);
