@@ -193,7 +193,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
             closing.set(true);
             closeIdleSessions();
             while( activeSessions.size() > 0 ) {
-                System.out.println("ACtive Sessions = " + activeSessions.size());
+                //System.out.println("Active Sessions = " + activeSessions.size());
                 try {
                     closing.wait(1000);
                 } catch (InterruptedException e) {
