@@ -79,6 +79,11 @@ abstract public class AbstractRegion implements Region {
     }
     
     public void stop() throws Exception {
+        for (Iterator i = destinations.values().iterator();i.hasNext();) {
+            Destination dest = (Destination)i.next();
+            dest.stop();
+        }
+        destinations.clear();
     }
     
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
