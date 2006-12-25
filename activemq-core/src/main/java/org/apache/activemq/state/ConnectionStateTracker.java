@@ -177,174 +177,274 @@ public class ConnectionStateTracker implements CommandVisitor {
         }
     }
 
-    public Response processAddDestination(DestinationInfo info) throws Exception {
+    public Response processAddDestination(DestinationInfo info)  {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
-        if( info.getDestination().isTemporary() ) {
+        if( cs != null && info != null && info.getDestination().isTemporary() ) {
             cs.addTempDestination(info);
         }
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveDestination(DestinationInfo info) throws Exception {
+    public Response processRemoveDestination(DestinationInfo info)  {
         ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
-        if( info.getDestination().isTemporary() ) {
+        if( cs != null && info != null && info.getDestination().isTemporary() ) {
             cs.removeTempDestination(info.getDestination());
         }
         return TRACKED_RESPONSE_MARKER;
     }
 
 
-    public Response processAddProducer(ProducerInfo info) throws Exception {
-        SessionId sessionId = info.getProducerId().getParentId();
-        ConnectionId connectionId = sessionId.getParentId();
-        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-        SessionState ss = cs.getSessionState(sessionId);
-        ss.addProducer(info);
+    public Response processAddProducer(ProducerInfo info){
+        if(info!=null&&info.getProducerId()!=null){
+            SessionId sessionId=info.getProducerId().getParentId();
+            if(sessionId!=null){
+                ConnectionId connectionId=sessionId.getParentId();
+                if(connectionId!=null){
+                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                    if(cs!=null){
+                        SessionState ss=cs.getSessionState(sessionId);
+                        if(ss!=null){
+                            ss.addProducer(info);
+                        }
+                    }
+                }
+            }
+        }
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processRemoveProducer(ProducerId id) throws Exception {
-        SessionId sessionId = id.getParentId();
-        ConnectionId connectionId = sessionId.getParentId();        
-        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-        SessionState ss = cs.getSessionState(sessionId);
-        ss.removeProducer(id);        
+    public Response processRemoveProducer(ProducerId id){
+        if(id!=null){
+            SessionId sessionId=id.getParentId();
+            if(sessionId!=null){
+                ConnectionId connectionId=sessionId.getParentId();
+                if(connectionId!=null){
+                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                    if(cs!=null){
+                        SessionState ss=cs.getSessionState(sessionId);
+                        if(ss!=null){
+                            ss.removeProducer(id);
+                        }
+                    }
+                }
+            }
+        }
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processAddConsumer(ConsumerInfo info) throws Exception {
-        SessionId sessionId = info.getConsumerId().getParentId();
-        ConnectionId connectionId = sessionId.getParentId();
-        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-        SessionState ss = cs.getSessionState(sessionId);
-        ss.addConsumer(info);
+    public Response processAddConsumer(ConsumerInfo info){
+        if(info!=null){
+            SessionId sessionId=info.getConsumerId().getParentId();
+            if(sessionId!=null){
+                ConnectionId connectionId=sessionId.getParentId();
+                if(connectionId!=null){
+                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                    if(cs!=null){
+                        SessionState ss=cs.getSessionState(sessionId);
+                        if(ss!=null){
+                            ss.addConsumer(info);
+                        }
+                    }
+                }
+            }
+        }
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processRemoveConsumer(ConsumerId id) throws Exception {
-        SessionId sessionId = id.getParentId();
-        ConnectionId connectionId = sessionId.getParentId();
-        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-        SessionState ss = cs.getSessionState(sessionId);
-        ss.removeConsumer(id);
+    public Response processRemoveConsumer(ConsumerId id){
+        if(id!=null){
+            SessionId sessionId=id.getParentId();
+            if(sessionId!=null){
+                ConnectionId connectionId=sessionId.getParentId();
+                if(connectionId!=null){
+                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                    if(cs!=null){
+                        SessionState ss=cs.getSessionState(sessionId);
+                        if(ss!=null){
+                            ss.removeConsumer(id);
+                        }
+                    }
+                }
+            }
+        }
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processAddSession(SessionInfo info) throws Exception {
-        ConnectionId connectionId = info.getSessionId().getParentId();
-        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-        cs.addSession(info);
+    public Response processAddSession(SessionInfo info){
+        if(info!=null){
+            ConnectionId connectionId=info.getSessionId().getParentId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    cs.addSession(info);
+                }
+            }
+        }
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processRemoveSession(SessionId id) throws Exception {        
-        ConnectionId connectionId = id.getParentId();
-        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-        cs.removeSession(id);
+    public Response processRemoveSession(SessionId id){
+        if(id!=null){
+            ConnectionId connectionId=id.getParentId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    cs.removeSession(id);
+                }
+            }
+        }
         return TRACKED_RESPONSE_MARKER;
     }
     
-    public Response processAddConnection(ConnectionInfo info) throws Exception {
-        connectionStates.put(info.getConnectionId(), new ConnectionState(info));        
+    public Response processAddConnection(ConnectionInfo info){
+        if (info != null) {
+        connectionStates.put(info.getConnectionId(), new ConnectionState(info)); 
+        }
         return TRACKED_RESPONSE_MARKER;
     }
     
     public Response processRemoveConnection(ConnectionId id) throws Exception {
+        if (id != null) {
         connectionStates.remove(id);
+        }
         return TRACKED_RESPONSE_MARKER;
     }
 
     public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception {
         return null;
     }
-    public Response processMessage(Message send) throws Exception {
-    	if( trackTransactions && send.getTransactionId() != null ) {
-            ConnectionId connectionId = send.getProducerId().getParentId().getParentId();
-            ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-            TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
-            transactionState.addCommand(send);    		
+    
+    public Response processMessage(Message send) throws Exception{
+        if(trackTransactions&&send!=null&&send.getTransactionId()!=null){
+            ConnectionId connectionId=send.getProducerId().getParentId().getParentId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    TransactionState transactionState=cs.getTransactionState(send.getTransactionId());
+                    if(transactionState!=null){
+                        transactionState.addCommand(send);
+                    }
+                }
+            }
             return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
+        }
+        return null;
     }    
-    public Response processMessageAck(MessageAck ack) throws Exception {
-    	if( trackTransactions && ack.getTransactionId() != null ) {
-            ConnectionId connectionId = ack.getConsumerId().getParentId().getParentId();
-            ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-            TransactionState transactionState = cs.getTransactionState(ack.getTransactionId());
-            transactionState.addCommand(ack);    		
+    
+    public Response processMessageAck(MessageAck ack){
+        if(trackTransactions&&ack!=null&&ack.getTransactionId()!=null){
+            ConnectionId connectionId=ack.getConsumerId().getParentId().getParentId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    TransactionState transactionState=cs.getTransactionState(ack.getTransactionId());
+                    if(transactionState!=null){
+                        transactionState.addCommand(ack);
+                    }
+                }
+            }
             return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
+        }
+        return null;
     }
     
-    public Response processBeginTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        cs.addTransactionState(info.getTransactionId());
-	        return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
+    public Response processBeginTransaction(TransactionInfo info){
+        if(trackTransactions&&info!=null && info.getTransactionId() != null){
+            ConnectionId connectionId=info.getConnectionId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    cs.addTransactionState(info.getTransactionId());
+                }
+            }
+            return TRACKED_RESPONSE_MARKER;
+        }
+        return null;
     }    
-    public Response processPrepareTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        transactionState.addCommand(info);
-	        return TRACKED_RESPONSE_MARKER;
-    	} 
-    	return null;
+    
+    public Response processPrepareTransaction(TransactionInfo info) throws Exception{
+        if(trackTransactions&&info!=null){
+            ConnectionId connectionId=info.getConnectionId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
+                    if(transactionState!=null){
+                        transactionState.addCommand(info);
+                    }
+                }
+            }
+            return TRACKED_RESPONSE_MARKER;
+        }
+        return null;
     }
     
-    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        if( transactionState !=null ) {
-		        transactionState.addCommand(info);
-		        return new Tracked(new RemoveTransactionAction(info));
-	        }
-    	}
-    	return null;
+    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception{
+        if(trackTransactions&&info!=null){
+            ConnectionId connectionId=info.getConnectionId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
+                    if(transactionState!=null){
+                        transactionState.addCommand(info);
+                        return new Tracked(new RemoveTransactionAction(info));
+                    }
+                }
+            }
+        }
+        return null;
     }        
-    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        if( transactionState !=null ) {
-		        transactionState.addCommand(info);
-		        return new Tracked(new RemoveTransactionAction(info));
-	        }
-    	}
-    	return null;
+    
+    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception{
+        if(trackTransactions&&info!=null){
+            ConnectionId connectionId=info.getConnectionId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
+                    if(transactionState!=null){
+                        transactionState.addCommand(info);
+                        return new Tracked(new RemoveTransactionAction(info));
+                    }
+                }
+            }
+        }
+        return null;
     }
     
-    public Response processRollbackTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        if( transactionState !=null ) {
-		        transactionState.addCommand(info);
-		        return new Tracked(new RemoveTransactionAction(info));
-	        }
-    	}
-    	return null;
+    public Response processRollbackTransaction(TransactionInfo info) throws Exception{
+        if(trackTransactions&&info!=null){
+            ConnectionId connectionId=info.getConnectionId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
+                    if(transactionState!=null){
+                        transactionState.addCommand(info);
+                        return new Tracked(new RemoveTransactionAction(info));
+                    }
+                }
+            }
+        }
+        return null;
     }
     
-    public Response processEndTransaction(TransactionInfo info) throws Exception {
-    	if( trackTransactions ) {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
-	        transactionState.addCommand(info);
-	        return TRACKED_RESPONSE_MARKER;
-    	}
-    	return null;
+    public Response processEndTransaction(TransactionInfo info) throws Exception{
+        if(trackTransactions&&info!=null){
+            ConnectionId connectionId=info.getConnectionId();
+            if(connectionId!=null){
+                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
+                if(cs!=null){
+                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
+                    if(transactionState!=null){
+                        transactionState.addCommand(info);
+                    }
+                }
+            }
+            return TRACKED_RESPONSE_MARKER;
+        }
+        return null;
     }
     
     public Response processRecoverTransactions(TransactionInfo info) {
