@@ -349,9 +349,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
 
     protected void sendSyncToSlave(Command command){
         try{
-            System.err.println("SEMNDING SYNC "+command);
             Response response=(Response)slave.request(command);
-            System.out.println("GOT RESPONSE "+response);
             if(response.isException()){
                 ExceptionResponse er=(ExceptionResponse)response;
                 log.error("Slave Failed",er.getException());
