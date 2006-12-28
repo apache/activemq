@@ -22,7 +22,15 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -48,11 +56,9 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
-import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
-import org.apache.activemq.broker.util.CommandAgent;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.kaha.Store;
@@ -78,8 +84,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a number of transport
@@ -90,10 +94,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class BrokerService implements Service, Serializable {
 
-    public static final String DEFAULT_PORT = "61616";
+   
 
     private static final Log log = LogFactory.getLog(BrokerService.class);
     private static final long serialVersionUID = 7353129142305630237L;
+    public static final String DEFAULT_PORT = "61616";
+    public static final String DEFAULT_BROKER_NAME = "localhost";
+    public static final String LOCAL_HOST_NAME;
 
     private boolean useJmx = true;
     private boolean persistent = true;
@@ -101,7 +108,7 @@ public class BrokerService implements Service, Serializable {
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors = false;
     private boolean shutdownOnMasterFailure = false;
-    private String brokerName = "localhost";
+    private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectory;
     private File tmpDataDirectory;
     private Broker broker;
@@ -141,10 +148,12 @@ public class BrokerService implements Service, Serializable {
     private ActiveMQDestination[] destinations;
     private Store tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
+    private boolean useLocalHostBrokerName = false;
     //private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy = new VMPendingDurableSubscriberMessageStoragePolicy();
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy = new StorePendingDurableSubscriberMessageStoragePolicy();
-   
+    
 
+   
     /**
      * Adds a new transport connector for the given bind address
      *
@@ -397,7 +406,7 @@ public class BrokerService implements Service, Serializable {
             getBroker().start();
             /*
             if(isUseJmx()){
-                // yes - this is orer dependent!
+                // yes - this is order dependent!
                 // register all destination in persistence store including inactive destinations as mbeans
                 this.startDestinationsInPersistenceStore(broker);
             }
@@ -539,6 +548,10 @@ public class BrokerService implements Service, Serializable {
      * Sets the name of this broker; which must be unique in the network
      */
     public void setBrokerName(String brokerName) {
+        if (brokerName == null) {
+            throw new NullPointerException("The broker name cannot be null");
+        }
+        brokerName = brokerName.trim();
         this.brokerName = brokerName;
     }
 
@@ -906,9 +919,10 @@ public class BrokerService implements Service, Serializable {
     public URI getVmConnectorURI() {
         if (vmConnectorURI == null) {
             try {
-                vmConnectorURI = new URI("vm://" + getBrokerName());
+                vmConnectorURI = new URI("vm://" + getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
             }
             catch (URISyntaxException e) {
+                log.error("Badly formed URI from " + getBrokerName(),e);
             }
         }
         return vmConnectorURI;
@@ -1020,6 +1034,23 @@ public class BrokerService implements Service, Serializable {
         this.pendingDurableSubscriberPolicy=pendingDurableSubscriberPolicy;
         if (broker != null) {
             broker.setPendingDurableSubscriberPolicy(pendingDurableSubscriberPolicy);
+        }
+    }
+    
+    /**
+     * @return the useLocalHostBrokerName
+     */
+    public boolean isUseLocalHostBrokerName(){
+        return this.useLocalHostBrokerName;
+    }
+
+    /**
+     * @param useLocalHostBrokerName the useLocalHostBrokerName to set
+     */
+    public void setUseLocalHostBrokerName(boolean useLocalHostBrokerName){
+        this.useLocalHostBrokerName=useLocalHostBrokerName;
+        if(useLocalHostBrokerName&&!started.get()&&brokerName==null||brokerName==DEFAULT_BROKER_NAME){
+            brokerName=LOCAL_HOST_NAME;
         }
     }
 
@@ -1561,4 +1592,14 @@ public class BrokerService implements Service, Serializable {
             }
         }
     }    
+    
+    static{
+        String localHostName = "localhost";
+        try{
+            localHostName=java.net.InetAddress.getLocalHost().getHostName();
+        }catch(UnknownHostException e){
+            log.error("Failed to resolve localhost");
+        }
+        LOCAL_HOST_NAME = localHostName;
+    }
 }
