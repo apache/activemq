@@ -426,9 +426,32 @@ public class QuickJournalMessageStore implements MessageStore {
     }
 
     
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+    public void recoverNextMessages(int maxReturned,final MessageRecoveryListener listener) throws Exception{
         peristenceAdapter.checkpoint(true, true);
-        longTermStore.recoverNextMessages(maxReturned,listener);
+        longTermStore.recoverNextMessages(maxReturned,new MessageRecoveryListener() {
+
+            public void finished(){
+                listener.finished();
+                
+            }
+
+            public boolean hasSpace(){
+                return listener.hasSpace();
+            }
+
+            public void recoverMessage(Message message) throws Exception{
+               throw new IOException("Should not get called");
+                
+            }
+
+            public void recoverMessageReference(String messageReference) throws Exception{
+                RecordLocation loc = toRecordLocation(messageReference);
+                Message message = (Message) peristenceAdapter.readCommand(loc);
+                listener.recoverMessage(message);
+                
+            }
+            
+        });
         
     }
 
