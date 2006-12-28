@@ -352,7 +352,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    synchronized public Response processBeginTransaction(TransactionInfo info) throws Exception {
+    public Response processBeginTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -367,14 +367,14 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processEndTransaction(TransactionInfo info) throws Exception {
+    public Response processEndTransaction(TransactionInfo info) throws Exception {
         // No need to do anything.  This packet is just sent by the client
         // make sure he is synced with the server as commit command could
         // come from a different connection.
         return null;
     }
     
-    synchronized public Response processPrepareTransaction(TransactionInfo info) throws Exception {
+    public Response processPrepareTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -398,7 +398,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         }
     }
 
-    synchronized public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
+    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -412,7 +412,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         
     }
 
-    synchronized public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
+    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -424,7 +424,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    synchronized public Response processRollbackTransaction(TransactionInfo info) throws Exception {
+    public Response processRollbackTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -436,7 +436,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processForgetTransaction(TransactionInfo info) throws Exception {
+    public Response processForgetTransaction(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -446,7 +446,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processRecoverTransactions(TransactionInfo info) throws Exception {
+    public Response processRecoverTransactions(TransactionInfo info) throws Exception {
         ConnectionState cs = (ConnectionState) localConnectionStates.get(info.getConnectionId());
         ConnectionContext context=null;
         if( cs!=null ) {
@@ -501,7 +501,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    synchronized public Response processAddDestination(DestinationInfo info) throws Exception {
+    public Response processAddDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.addDestinationInfo(cs.getContext(), info);
         if( info.getDestination().isTemporary() ) {
@@ -510,7 +510,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    synchronized public Response processRemoveDestination(DestinationInfo info) throws Exception {
+    public Response processRemoveDestination(DestinationInfo info) throws Exception {
         ConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.removeDestinationInfo(cs.getContext(), info);
         if( info.getDestination().isTemporary() ) {
@@ -520,7 +520,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
 
 
-    synchronized public Response processAddProducer(ProducerInfo info) throws Exception {
+    public Response processAddProducer(ProducerInfo info) throws Exception {
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         
@@ -541,7 +541,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processRemoveProducer(ProducerId id) throws Exception {
+    public Response processRemoveProducer(ProducerId id) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         
@@ -557,7 +557,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    synchronized public Response processAddConsumer(ConsumerInfo info) throws Exception {
+    public Response processAddConsumer(ConsumerInfo info) throws Exception {
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         
@@ -579,7 +579,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processRemoveConsumer(ConsumerId id) throws Exception {
+    public Response processRemoveConsumer(ConsumerId id) throws Exception {
         
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
@@ -596,7 +596,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processAddSession(SessionInfo info) throws Exception {
+    public Response processAddSession(SessionInfo info) throws Exception {
         ConnectionId connectionId = info.getSessionId().getParentId();
         ConnectionState cs = lookupConnectionState(connectionId);
         
@@ -612,7 +612,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processRemoveSession(SessionId id) throws Exception {
+    public Response processRemoveSession(SessionId id) throws Exception {
         
         ConnectionId connectionId = id.getParentId();
         
@@ -649,7 +649,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processAddConnection(ConnectionInfo info) throws Exception {
+    public Response processAddConnection(ConnectionInfo info) throws Exception {
 
     	ConnectionState state = (ConnectionState) brokerConnectionStates.get(info.getConnectionId());
     	
@@ -698,7 +698,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
     
-    synchronized public Response processRemoveConnection(ConnectionId id)  {
+    public Response processRemoveConnection(ConnectionId id)  {
         
         ConnectionState cs = lookupConnectionState(id);
         
