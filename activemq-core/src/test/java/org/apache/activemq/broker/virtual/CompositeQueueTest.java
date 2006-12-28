@@ -121,10 +121,6 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
     protected BrokerService createBroker() throws Exception {
         XBeanBrokerFactory factory = new XBeanBrokerFactory();
         BrokerService answer = factory.createBroker(new URI(getBrokerConfigUri()));
-        
-        // lets disable persistence as we are a test
-        answer.setPersistent(false);
-        
         return answer;
     }
 
