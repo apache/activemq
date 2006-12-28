@@ -24,6 +24,7 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.commons.logging.Log;
@@ -43,6 +44,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
     private MessageStore store;
     private final LinkedList batchList=new LinkedList();
     private Destination regionDestination;
+    private int size = 0;
 
     /**
      * @param topic
@@ -68,26 +70,48 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
      * @return true if there are no pending messages
      */
     public boolean isEmpty(){
-        return batchList.isEmpty();
+        return size <= 0;
+    }
+    
+    public boolean hasMessagesBufferedToDeliver() {
+        return !batchList.isEmpty();
     }
     
     public synchronized int size(){
         try {
-        return store.getMessageCount();
+        size =  store.getMessageCount();
         }catch(IOException e) {
             log.error("Failed to get message count",e);
             throw new RuntimeException(e);
         }
+        return size;
     }
     
     public synchronized void addMessageLast(MessageReference node) throws Exception{
         if(node!=null){
             node.decrementReferenceCount();
         }
+        size++;
+    }
+    
+    public void addMessageFirst(MessageReference node) throws Exception{
+        if(node!=null){
+            node.decrementReferenceCount();
+        }
+        size++;
+    }
+    
+    public void remove(){
+        size--;
     }
 
+    public void remove(MessageReference node){
+        size--;
+    }
+
+
     public synchronized boolean hasNext(){
-        if(isEmpty()){
+        if(batchList.isEmpty()){
             try{
                 fillBatch();
             }catch(Exception e){
@@ -95,7 +119,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
                 throw new RuntimeException(e);
             }
         }
-        return !isEmpty();
+        return !batchList.isEmpty();
     }
 
     public synchronized MessageReference next(){
@@ -117,10 +141,15 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
         batchList.addLast(message);
     }
 
-    public void recoverMessageReference(String messageReference)
-            throws Exception{
-        // shouldn't get called
-        throw new RuntimeException("Not supported");
+    public void recoverMessageReference(String messageReference) throws Exception{
+        Message msg=store.getMessage(new MessageId(messageReference));
+        if(msg!=null){
+            recoverMessage(msg);
+        }else{
+            String err = "Failed to retrieve message for id: "+messageReference;
+            log.error(err);
+            throw new IOException(err);
+        }
     }
     
     public void gc() {

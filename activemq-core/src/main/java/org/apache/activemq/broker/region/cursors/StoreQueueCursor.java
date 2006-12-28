@@ -37,6 +37,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
     private QueueStorePrefetch persistent;
     private boolean started;
     private PendingMessageCursor currentCursor;
+    
    
     /**
      * Construct
@@ -48,6 +49,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         this.queue=queue;
         this.tmpStore=tmpStore;
         this.persistent=new QueueStorePrefetch(queue);
+        currentCursor = persistent;
     }
 
     public synchronized void start() throws Exception{
@@ -134,7 +136,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         pendingCount--;
     }
 
-    public void remove(MessageReference node){
+    public synchronized void remove(MessageReference node){
         if (!node.isPersistent()) {
             nonPersistent.remove(node);
         }else {
@@ -145,6 +147,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
 
     public synchronized void reset(){
         nonPersistent.reset();
+        persistent.reset();
     }
 
     public int size(){
@@ -208,8 +211,12 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
      }
 
     protected synchronized PendingMessageCursor getNextCursor() throws Exception{
-        if(currentCursor==null||currentCursor.isEmpty()){
+        if(currentCursor == null || !currentCursor.hasMessagesBufferedToDeliver()){
             currentCursor=currentCursor==persistent?nonPersistent:persistent;
+            //sanity check
+            if (currentCursor.isEmpty()) {
+                currentCursor=currentCursor==persistent?nonPersistent:persistent;
+            }
         }
         return currentCursor;
     }
