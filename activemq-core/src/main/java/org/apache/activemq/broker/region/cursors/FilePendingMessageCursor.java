@@ -213,6 +213,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         // we always have space - as we can persist to disk
         return false;
     }
+    
+    public boolean hasMessagesBufferedToDeliver() {
+        return !isEmpty();
+    }
 
     public void setUsageManager(UsageManager usageManager){
         super.setUsageManager(usageManager);

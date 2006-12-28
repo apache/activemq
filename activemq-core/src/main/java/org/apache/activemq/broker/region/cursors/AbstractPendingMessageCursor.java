@@ -122,4 +122,8 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     
     public void release(){        
     }
+    
+    public boolean hasMessagesBufferedToDeliver() {
+        return false;
+    }
 }

@@ -166,4 +166,9 @@ public interface PendingMessageCursor extends Service{
      * @return true if the cursor is full
      */
     public boolean isFull();
+    
+    /**
+     * @return true if the cursor has buffered messages ready to deliver
+     */
+    public boolean hasMessagesBufferedToDeliver();
 }
