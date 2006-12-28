@@ -28,6 +28,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.StoreQueueCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
@@ -44,6 +45,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.kaha.Store;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -74,7 +76,7 @@ public class Queue implements Destination, Task {
     private final Valve dispatchValve = new Valve(true);
     private final UsageManager usageManager;
     private final DestinationStatistics destinationStatistics = new DestinationStatistics();
-    private  PendingMessageCursor messages = new VMPendingMessageCursor();
+    private  PendingMessageCursor messages;
     private final LinkedList pagedInMessages = new LinkedList();
 
     private LockOwner exclusiveOwner;
@@ -92,13 +94,20 @@ public class Queue implements Destination, Task {
     private final Object exclusiveLockMutex = new Object();
     private final Object doDispatchMutex = new Object();
     private TaskRunner taskRunner;
+    private boolean started = false;
 
     public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
-            TaskRunnerFactory taskFactory) throws Exception {
+            TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
         this.destination = destination;
         this.usageManager = new UsageManager(memoryManager);
         this.usageManager.setLimit(Long.MAX_VALUE);
         this.store = store;
+        if(destination.isTemporary()){
+            this.messages=new VMPendingMessageCursor();
+        }else{
+            this.messages=new StoreQueueCursor(this,tmpStore);
+        }
+        
         this.taskRunner = taskFactory.createTaskRunner(this, "Queue  "+destination.getPhysicalName());
 
         // Let the store know what usage manager we are using so that he can
@@ -118,18 +127,16 @@ public class Queue implements Destination, Task {
         if(store!=null){
             // Restore the persistent messages.
             messages.setUsageManager(getUsageManager());
-            messages.start();
             if(messages.isRecoveryRequired()){
                 store.recover(new MessageRecoveryListener(){
 
                     public void recoverMessage(Message message){
-                    	// Message could have expired while it was being loaded..
-                    	if( message.isExpired() ) {
-                    		// TODO: remove message from store.
-                    		return;
-                    	}
-
-                    	message.setRegionDestination(Queue.this);
+                        // Message could have expired while it was being loaded..
+                        if(message.isExpired()){
+                            // TODO remove from store
+                            return;
+                        }
+                        message.setRegionDestination(Queue.this);
                         synchronized(messages){
                             try{
                                 messages.addMessageLast(message);
@@ -157,10 +164,12 @@ public class Queue implements Destination, Task {
 
     /**
      * Lock a node
+     * 
      * @param node
      * @param lockOwner
      * @return true if can be locked
-     * @see org.apache.activemq.broker.region.Destination#lock(org.apache.activemq.broker.region.MessageReference, org.apache.activemq.broker.region.LockOwner)
+     * @see org.apache.activemq.broker.region.Destination#lock(org.apache.activemq.broker.region.MessageReference,
+     *      org.apache.activemq.broker.region.LockOwner)
      */
     public boolean lock(MessageReference node,LockOwner lockOwner){
         synchronized(exclusiveLockMutex){
@@ -309,46 +318,60 @@ public class Queue implements Destination, Task {
     }
 
     public void send(final ConnectionContext context,final Message message) throws Exception{
-    	// There is delay between the client sending it and it arriving at the
-    	// destination.. it may have expired.
-    	if( message.isExpired() ) {
-    		return;
-    	}
-    		
+        // There is delay between the client sending it and it arriving at the
+        // destination.. it may have expired.
+        if(message.isExpired()){
+            if (log.isDebugEnabled()) {
+                log.debug("Expired message: " + message);
+            }
+            return;
+        }
         if(context.isProducerFlowControl()){
             if(usageManager.isSendFailIfNoSpace()&&usageManager.isFull()){
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             }else{
                 usageManager.waitForSpace();
-                
                 // The usage manager could have delayed us by the time
                 // we unblock the message could have expired..
-            	if( message.isExpired() ) {
-            		return;
-            	}
+                if(message.isExpired()){
+                    if (log.isDebugEnabled()) {
+                        log.debug("Expired message: " + message);
+                    }
+                    return;
+                }
             }
         }
         message.setRegionDestination(this);
-        if (store != null && message.isPersistent()) {
-            store.addMessage(context, message);
+        if(store!=null&&message.isPersistent()){
+            store.addMessage(context,message);
         }
         if(context.isInTransaction()){
             context.getTransaction().addSynchronization(new Synchronization(){
 
                 public void afterCommit() throws Exception{
-                	
-                	// It could take while before we receive the commit
-                	// operration.. by that time the message could have expired..
-                	if( message.isExpired() ) {
-                		// TODO: remove message from store.
-                		return;
-                	}
-
+                    //even though the message could be expired - it won't be from the store
+                    //and it's important to keep the store/cursor in step
+                    synchronized(messages){
+                        messages.addMessageLast(message);
+                    }
+                    // It could take while before we receive the commit
+                    // operration.. by that time the message could have expired..
+                    if(message.isExpired()){
+                        // TODO: remove message from store.
+                        if (log.isDebugEnabled()) {
+                            log.debug("Expired message: " + message);
+                        }
+                        return;
+                    }
                     sendMessage(context,message);
                 }
             });
         }else{
+            synchronized(messages){
+                messages.addMessageLast(message);
+            }
             sendMessage(context,message);
+            
         }
     }
        
@@ -432,11 +455,18 @@ public class Queue implements Destination, Task {
     }
 
     public void start() throws Exception {
+        started = true;
+        messages.start();
+        doPageIn(false);
     }
 
     public void stop() throws Exception {
+        started = false;
         if( taskRunner!=null ) {
             taskRunner.shutdown();
+        }
+        if(messages!=null){
+            messages.stop();
         }
     }
 
@@ -528,6 +558,11 @@ public class Queue implements Destination, Task {
 
     public Message[] browse() {
         ArrayList l = new ArrayList();
+        try{
+            doPageIn(true);
+        }catch(Exception e){
+            log.error("caught an exception browsing " + this,e);
+        }
         synchronized(pagedInMessages) {
             for (Iterator i = pagedInMessages.iterator();i.hasNext();) {
                 MessageReference r = (MessageReference)i.next();
@@ -538,7 +573,7 @@ public class Queue implements Destination, Task {
                         l.add(m);
                     }
                 }catch(IOException e){
-                    log.error("caught an exception brwsing " + this,e);
+                    log.error("caught an exception browsing " + this,e);
                 }
                 finally {
                     r.decrementReferenceCount();
@@ -850,11 +885,10 @@ public class Queue implements Destination, Task {
         return answer;
     }
     
+      
     private void sendMessage(final ConnectionContext context,Message msg) throws Exception{
         
-        synchronized(messages){
-            messages.addMessageLast(msg);
-        }
+        
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         pageInMessages(false);
@@ -863,10 +897,11 @@ public class Queue implements Destination, Task {
     private List doPageIn() throws Exception{
         return doPageIn(true);
     }
+    
     private List doPageIn(boolean force) throws Exception{
         final int toPageIn=maximumPagedInMessages-pagedInMessages.size();
         List result=null;
-        if((force || !consumers.isEmpty())&&toPageIn>0){
+        if((force||!consumers.isEmpty())&&toPageIn>0){
             try{
                 dispatchValve.increment();
                 int count=0;
@@ -877,9 +912,15 @@ public class Queue implements Destination, Task {
                         while(messages.hasNext()&&count<toPageIn){
                             MessageReference node=messages.next();
                             messages.remove();
-                            node=createMessageReference(node.getMessage());
-                            result.add(node);
-                            count++;
+                            if(!node.isExpired()){
+                                node=createMessageReference(node.getMessage());
+                                result.add(node);
+                                count++;
+                            }else{
+                                if (log.isDebugEnabled()) {
+                                    log.debug("Expired message: " + node);
+                                }
+                            }
                         }
                     }finally{
                         messages.release();

@@ -19,22 +19,21 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
-import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.SubscriptionKey;
-import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class DurableTopicSubscription extends PrefetchSubscription {
-    
+    static private final Log log=LogFactory.getLog(PrefetchSubscription.class);
     private final ConcurrentHashMap redeliveredMessages = new ConcurrentHashMap();
     private final ConcurrentHashMap destinations = new ConcurrentHashMap();
     private final SubscriptionKey subscriptionKey;
@@ -72,6 +71,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     }
    
     public void activate(ConnectionContext context, ConsumerInfo info) throws Exception {
+        log.debug("Deactivating " + this);
         if( !active ) {
             this.active = true;
             this.context = context;
@@ -96,7 +96,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         }
     }
 
-    synchronized public void deactivate(boolean keepDurableSubsActive) throws Exception {        
+    synchronized public void deactivate(boolean keepDurableSubsActive) throws Exception {   
+   
         active=false;
         synchronized(pending){
             pending.stop();
@@ -197,9 +198,12 @@ public class DurableTopicSubscription extends PrefetchSubscription {
             "DurableTopicSubscription:" +
             " consumer="+info.getConsumerId()+
             ", destinations="+destinations.size()+
-            ", dispatched="+dispatched.size()+
-            ", delivered="+this.prefetchExtension+
-            ", pending="+getPendingQueueSize();
+            ", total="+enqueueCounter+
+            ", pending="+getPendingQueueSize()+
+            ", dispatched="+dispatchCounter+
+            ", inflight="+dispatched.size()+
+            ", prefetchExtension="+this.prefetchExtension;
+            
     }
 
     public String getClientId() {

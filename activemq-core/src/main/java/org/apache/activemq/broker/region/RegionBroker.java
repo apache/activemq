@@ -78,7 +78,7 @@ public class RegionBroker implements Broker {
     private final Region tempQueueRegion;
     private final Region tempTopicRegion;
     private BrokerService brokerService;
-    private boolean stopped = false;
+    private boolean started = false;
     private boolean keepDurableSubsActive=false;
     
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
@@ -178,6 +178,7 @@ public class RegionBroker implements Broker {
     
     public void start() throws Exception {
         ((TopicRegion)topicRegion).setKeepDurableSubsActive(keepDurableSubsActive);
+        started = true;
         queueRegion.start();
         topicRegion.start();
         tempQueueRegion.start();
@@ -185,7 +186,7 @@ public class RegionBroker implements Broker {
     }
 
     public void stop() throws Exception {
-        stopped = true;
+        started = false;
         ServiceStopper ss = new ServiceStopper();
         doStop(ss);
         ss.throwFirstException();
@@ -245,7 +246,6 @@ public class RegionBroker implements Broker {
         if( destinations.contains(destination) ){
             throw new JMSException("Destination already exists: "+destination);
         }
-        
         Destination answer = null;
         switch(destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
@@ -366,7 +366,8 @@ public class RegionBroker implements Broker {
     }
 
     public void send(ConnectionContext context,  Message message) throws Exception {
-        message.getMessageId().setBrokerSequenceId(sequenceGenerator.getNextSequenceId());
+        long si = sequenceGenerator.getNextSequenceId();
+        message.getMessageId().setBrokerSequenceId(si);
         if (message.getTimestamp() > 0 && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) { 
             //timestamp not been disabled and has not passed through a network
             message.setTimestamp(System.currentTimeMillis());
@@ -541,7 +542,7 @@ public class RegionBroker implements Broker {
     }
     
     public boolean isStopped(){
-        return stopped;
+        return !started;
     }
     
     public Set getDurableDestinations(){

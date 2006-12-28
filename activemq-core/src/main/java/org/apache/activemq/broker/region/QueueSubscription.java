@@ -73,7 +73,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     
     protected boolean canDispatch(MessageReference n) throws IOException {
         QueueMessageReference node = (QueueMessageReference) n;
-        if( node.isAcked() )
+        if( node.isAcked())
             return false;
         // Keep message groups together.
         String groupId = node.getGroupID();
@@ -208,7 +208,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     
     /**
      */
-    synchronized public void destroy() {        
+    public void destroy() {        
     }
 
 }
