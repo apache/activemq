@@ -237,6 +237,7 @@
             <exclude>**/ThreeBrokerQueueNetworkTest.*</exclude>
             <exclude>**/ThreeBrokerTopicNetworkTest.*</exclude>
             <exclude>**/ThreeBrokerTopicNetworkUsingTcpTest.*</exclude>
+            <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
 
             <!-- TODO move to optional module...  -->
             <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
