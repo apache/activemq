@@ -127,12 +127,25 @@ public abstract class CursorSupport extends TestCase{
             producer.send(msg);
         }
         latch.await(300000,TimeUnit.MILLISECONDS);
+        producerConnection.close();
+        consumerConnection.close();
         assertEquals("Still dipatching - count down latch not sprung",latch.getCount(),0);
         assertEquals("cosumerList - expected: "+MESSAGE_COUNT+" but was: "+consumerList.size(),consumerList.size(),
                 senderList.size());
-        assertEquals(senderList,consumerList);
-        producerConnection.close();
-        consumerConnection.close();
+        for (int i =0; i < senderList.size(); i++) {
+            Message sent = (Message)senderList.get(i);
+            Message consumed = (Message)consumerList.get(i);
+            if (!sent.equals(consumed)) {
+               System.err.println("BAD MATCH AT POS " + i);
+               System.err.println(sent);
+               System.err.println(consumed);
+               System.err.println("\n\n\n\n\n");
+               for (int j = 0; j < consumerList.size(); j++) {
+                   System.err.println(consumerList.get(j));
+               }
+            }
+            assertEquals("This should be the same at pos " + i + " in the list",sent.getJMSMessageID(),consumed.getJMSMessageID());
+        }       
     }
 
     protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException{
