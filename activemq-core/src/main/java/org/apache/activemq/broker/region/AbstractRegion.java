@@ -38,6 +38,7 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import sun.security.x509.IssuerAlternativeNameExtension;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -60,6 +61,7 @@ abstract public class AbstractRegion implements Region {
     protected final TaskRunnerFactory taskRunnerFactory;
     protected final Object destinationsMutex = new Object();
     protected final Map consumerChangeMutexMap = new HashMap();
+    protected boolean started = false;
 
     public AbstractRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
         if (broker == null) {
@@ -76,9 +78,15 @@ abstract public class AbstractRegion implements Region {
     }
 
     public void start() throws Exception {
+        started = true;
+        for (Iterator i = destinations.values().iterator();i.hasNext();) {
+            Destination dest = (Destination)i.next();
+            dest.start();
+        }
     }
     
     public void stop() throws Exception {
+        started = false;
         for (Iterator i = destinations.values().iterator();i.hasNext();) {
             Destination dest = (Destination)i.next();
             dest.stop();
@@ -102,7 +110,7 @@ abstract public class AbstractRegion implements Region {
                 if (destinationInterceptor != null) {
                     dest = destinationInterceptor.intercept(dest);
                 }
-
+                
                 dest.start();
 
                 destinations.put(destination, dest);

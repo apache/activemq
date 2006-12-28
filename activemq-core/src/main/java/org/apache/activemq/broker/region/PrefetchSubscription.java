@@ -327,6 +327,10 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         return (dispatched.size()-prefetchExtension) >= (info.getPrefetchSize() *.9);
     }
     
+    public int countBeforeFull() {
+        return info.getPrefetchSize() + prefetchExtension - dispatched.size();
+    }
+    
     public int getPendingQueueSize(){
     	synchronized(pending) {
     		return pending.size();
@@ -396,28 +400,38 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 List toDispatch=null;
                 synchronized(pending){
                     try{
-                        pending.reset();
-                        while(pending.hasNext()&&!isFull()){
-                            MessageReference node=pending.next();
-                            pending.remove();
-                            // Message may have been sitting in the pending list a while
-                            // waiting for the consumer to ak the message.
-                            if(node!=QueueMessageReference.NULL_MESSAGE&&node.isExpired()){
-                                continue; // just drop it.
+                        int numberToDispatch=countBeforeFull();
+                        if(numberToDispatch>0){
+                            int count=0;
+                            pending.reset();
+                            while(pending.hasNext()&&!isFull()&&count<numberToDispatch){
+                                MessageReference node=pending.next();
+                               
+                                if(canDispatch(node)){
+                                    pending.remove();
+                                    // Message may have been sitting in the pending list a while
+                                    // waiting for the consumer to ak the message.
+                                    if(node!=QueueMessageReference.NULL_MESSAGE&&node.isExpired()){
+                                        continue; // just drop it.
+                                    }
+                                    if(toDispatch==null){
+                                        toDispatch=new ArrayList();
+                                    }
+                                    toDispatch.add(node);
+                                    count++;
+                                }
                             }
-                            if(toDispatch==null){
-                                toDispatch=new ArrayList();
-                            }
-                            toDispatch.add(node);
                         }
                     }finally{
                         pending.release();
                     }
                 }
                 if(toDispatch!=null){
-                    for(int i=0;i<toDispatch.size();i++){
-                        MessageReference node=(MessageReference)toDispatch.get(i);
-                        dispatch(node);
+                    synchronized(dispatched){
+                        for(int i=0;i<toDispatch.size();i++){
+                            MessageReference node=(MessageReference)toDispatch.get(i);
+                            dispatch(node);
+                        }
                     }
                 }
             }finally{
@@ -458,6 +472,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 }
                 return true;
             }else{
+                QueueMessageReference n = (QueueMessageReference) node;
                 return false;
             }
         }
