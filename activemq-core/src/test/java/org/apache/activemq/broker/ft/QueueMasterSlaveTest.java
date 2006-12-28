@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.broker.ft;
 
+import java.io.File;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.broker.BrokerService;
@@ -38,6 +39,10 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     protected String uriString="failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
 
     protected void setUp() throws Exception{
+        if(System.getProperty("basedir")==null){
+            File file=new File(".");
+            System.setProperty("basedir",file.getAbsolutePath());
+        }
         failureCount = super.messageCount/2;
         super.topic = isTopic();
         BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
