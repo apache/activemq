@@ -25,9 +25,7 @@
     
     
 
-    <persistenceAdapter>
-      <kahaPersistenceAdapter dir = "${basedir}/target/activemq-data/slave"/>
-    </persistenceAdapter>
+   
   </broker>
 
 </beans>
