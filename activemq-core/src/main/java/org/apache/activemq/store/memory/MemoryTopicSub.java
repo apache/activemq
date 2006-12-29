@@ -38,6 +38,9 @@ class MemoryTopicSub{
 
     void removeMessage(MessageId id){
         map.remove(id);
+        if (map.isEmpty()) {
+            lastBatch=null;
+        }
     }
 
     int size(){

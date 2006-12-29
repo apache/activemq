@@ -22,7 +22,6 @@ import org.apache.activeio.journal.active.Location;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.kaha.ListContainer;
@@ -78,7 +77,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
                 ConsumerMessageRef ref=new ConsumerMessageRef();
                 ref.setAckEntry(ackEntry);
                 ref.setMessageEntry(messageEntry);
-                container.getListContainer().add(ref);
+                container.add(ref);
             }
         }
     }
@@ -88,7 +87,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         String subcriberId=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(subcriberId);
         if(container!=null){
-            ConsumerMessageRef ref=(ConsumerMessageRef)container.getListContainer().removeFirst();
+            ConsumerMessageRef ref=(ConsumerMessageRef)container.remove();
             if(ref!=null){
                 TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
                 if(tsa!=null){
@@ -142,7 +141,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
         if(container!=null){
-            for(Iterator i=container.getListContainer().iterator();i.hasNext();){
+            for(Iterator i=container.iterator();i.hasNext();){
                 ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
                 RapidMessageReference messageReference=(RapidMessageReference)messageContainer.get(ref
                         .getMessageEntry());
@@ -163,14 +162,14 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
             int count=0;
             StoreEntry entry=container.getBatchEntry();
             if(entry==null){
-                entry=container.getListContainer().getFirst();
+                entry=container.getEntry();
             }else{
-                entry=container.getListContainer().refresh(entry);
-                entry=container.getListContainer().getNext(entry);
+                entry=container.refreshEntry(entry);
+                entry=container.getNextEntry(entry);
             }
             if(entry!=null){
                 do{
-                    ConsumerMessageRef consumerRef=(ConsumerMessageRef)container.getListContainer().get(entry);
+                    ConsumerMessageRef consumerRef=container.get(entry);
                     RapidMessageReference messageReference=(RapidMessageReference)messageContainer.get(consumerRef
                             .getMessageEntry());
                     if(messageReference!=null){
@@ -179,7 +178,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
                         count++;
                     }
                     container.setBatchEntry(entry);
-                    entry=container.getListContainer().getNext(entry);
+                    entry=container.getNextEntry(entry);
                 }while(entry!=null&&count<maxReturned && listener.hasSpace());
             }
         }
@@ -210,7 +209,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
     protected void removeSubscriberMessageContainer(Object key) throws IOException {
         subscriberContainer.remove(key);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.remove(key);
-        for(Iterator i=container.getListContainer().iterator();i.hasNext();){
+        for(Iterator i=container.iterator();i.hasNext();){
             ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
             if(ref!=null){
                 TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
@@ -230,7 +229,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         String key=getSubscriptionKey(clientId,subscriberName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
-        return container.getListContainer().size();
+        return container.size();
     }
 
     /**
@@ -271,7 +270,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         ackContainer.clear();
         for(Iterator i=subscriberMessages.values().iterator();i.hasNext();){
             TopicSubContainer container=(TopicSubContainer)i.next();
-            container.getListContainer().clear();
+            container.clear();
         }
     }
 
@@ -294,7 +293,7 @@ public class RapidTopicMessageStore extends RapidMessageStore implements TopicMe
         String subcriberId=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(subcriberId);
         if(container!=null){
-            ConsumerMessageRef ref=(ConsumerMessageRef)container.getListContainer().removeFirst();
+            ConsumerMessageRef ref=(ConsumerMessageRef)container.remove();
             if(ref!=null){
                 TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
                 if(tsa!=null){
