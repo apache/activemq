@@ -139,11 +139,15 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         }
     }
 
-    public void stop() throws Exception {
-        for (Iterator iter = cache.values().iterator(); iter.hasNext();) {
-            ConnectionPool connection = (ConnectionPool) iter.next();
-            connection.close();
+    public void stop() throws Exception{
+        for(Iterator iter=cache.values().iterator();iter.hasNext();){
+            LinkedList list=(LinkedList)iter.next();
+            for(Iterator i=list.iterator();i.hasNext();){
+                ConnectionPool connection=(ConnectionPool)i.next();
+                connection.close();
+            }
         }
+        cache.clear();
     }
 
     public ObjectPoolFactory getPoolFactory() {
