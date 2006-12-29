@@ -121,6 +121,9 @@ public class KahaMessageStore implements MessageStore, UsageListener{
                 }
             }
         }
+        if (messageContainer.isEmpty()) {
+            batchEntry = null;
+        }
     }
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception{
