@@ -22,8 +22,7 @@
     <transportConnectors>
       <transportConnector uri="tcp://localhost:62001"/>
     </transportConnectors>
-
-   
+       
   </broker>
 
 </beans>
