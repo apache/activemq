@@ -122,7 +122,7 @@ public class KahaMessageStore implements MessageStore, UsageListener{
             }
         }
         if (messageContainer.isEmpty()) {
-            batchEntry = null;
+            resetBatching();
         }
     }
 

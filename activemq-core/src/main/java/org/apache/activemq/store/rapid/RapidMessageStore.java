@@ -216,6 +216,9 @@ public class RapidMessageStore implements MessageStore, UsageListener {
                 }
             }
         }
+        if (messageContainer.isEmpty()) {
+            resetBatching();
+        }
     }
     
     public void replayRemoveMessage(ConnectionContext context, MessageAck ack) {
