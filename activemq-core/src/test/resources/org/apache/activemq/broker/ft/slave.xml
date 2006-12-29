@@ -18,12 +18,14 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="slave" persistent="false" useJmx="false" masterConnectorURI="tcp://localhost:62001" deleteAllMessagesOnStartup="true"  xmlns="http://activemq.org/config/1.0">
+  <broker brokerName="slave" useJmx="false" masterConnectorURI="tcp://localhost:62001" deleteAllMessagesOnStartup="true"  xmlns="http://activemq.org/config/1.0">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:62002"/>
     </transportConnectors>
     
-    
+    <persistenceAdapter>
+      <kahaPersistenceAdapter dir = "${basedir}/target/activemq-data/slave"/>
+    </persistenceAdapter>
 
    
   </broker>

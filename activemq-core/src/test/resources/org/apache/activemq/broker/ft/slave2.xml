@@ -19,7 +19,7 @@
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <!-- START SNIPPET: example -->
-  <broker brokerName="slave" persistent="false" useJmx="false"  deleteAllMessagesOnStartup="true"  xmlns="http://activemq.org/config/1.0">
+  <broker brokerName="slave" useJmx="false"  deleteAllMessagesOnStartup="true"  xmlns="http://activemq.org/config/1.0">
   
     <transportConnectors>
       <transportConnector uri="tcp://localhost:62002"/>
@@ -29,7 +29,9 @@
       <masterConnector remoteURI= "tcp://localhost:62001" userName="James" password="Cheese"/>
     </services>
 
-    
+    <persistenceAdapter>
+      <kahaPersistenceAdapter dir = "${basedir}/target/activemq-data/slave"/>
+    </persistenceAdapter>
   </broker>
   <!-- END SNIPPET: example -->
 
