@@ -14,6 +14,7 @@
 
 package org.apache.activemq.store.kahadaptor;
 
+import java.util.Iterator;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.StoreEntry;
 
@@ -44,22 +45,54 @@ import org.apache.activemq.kaha.StoreEntry;
         this.batchEntry=batchEntry;
     }
     
-    /**
-     * @return the listContainer
-     */
-     public ListContainer getListContainer(){
-        return this.listContainer;
-    }
-    
-    /**
-     * @param listContainer the listContainer to set
-     */
-     public void setListContainer(ListContainer container){
-        this.listContainer=container;
-    }
     
      public void reset() {
         batchEntry = null;
+    }
+     
+    public boolean isEmpty() {
+        return listContainer.isEmpty();
+    }
+    
+    public void add(ConsumerMessageRef ref) {
+        listContainer.add(ref);
+    }
+    
+    public ConsumerMessageRef remove() {
+        ConsumerMessageRef result =  (ConsumerMessageRef)listContainer.removeFirst();
+        if (listContainer.isEmpty()) {
+            reset();
+        }
+        return result;
+    }
+    
+    public ConsumerMessageRef get(StoreEntry entry) {
+        return (ConsumerMessageRef)listContainer.get(entry);
+    }
+    
+    public StoreEntry getEntry() {
+        return listContainer.getFirst();
+    }
+    
+    public StoreEntry refreshEntry(StoreEntry entry) {
+        return listContainer.refresh(entry);
+    }
+    
+    public StoreEntry getNextEntry(StoreEntry entry) {
+        return listContainer.getNext(entry);
+    }
+        
+    public Iterator iterator() {
+        return listContainer.iterator();
+    }
+    
+    public int size() {
+        return listContainer.size();
+    }
+    
+    public void clear() {
+        reset();
+        listContainer.clear();
     }
    
 }
