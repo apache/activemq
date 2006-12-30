@@ -20,7 +20,7 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import javax.jms.JMSException;
+
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Topic;
@@ -48,6 +48,10 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
     private String subscriberName;
     private Destination regionDestination;
 
+    boolean empty=true;
+	private MessageId firstMessageId;
+	private MessageId lastMessageId;
+
     /**
      * @param topic
      * @param clientId
@@ -73,7 +77,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
      * @return true if there are no pending messages
      */
     public boolean isEmpty(){
-        return batchList.isEmpty();
+        return empty;
     }
     
     public synchronized int size(){
@@ -86,27 +90,55 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
     }
     
     public synchronized void addMessageLast(MessageReference node) throws Exception{
-        if(node!=null){
+		if(node!=null){
+			if( empty ) {
+				firstMessageId = node.getMessageId();
+				empty=false;
+			}
+	        lastMessageId = node.getMessageId();
             node.decrementReferenceCount();
         }
     }
 
-    public synchronized boolean hasNext(){
-        if(isEmpty()){
-            try{
-                fillBatch();
-            }catch(Exception e){
-                log.error("Failed to fill batch",e);
-                throw new RuntimeException(e);
-            }
-        }
+    public synchronized boolean hasNext() {
         return !isEmpty();
     }
 
     public synchronized MessageReference next(){
-        Message result = (Message)batchList.removeFirst();
-        result.setRegionDestination(regionDestination);
-        return result;
+    	    	
+        if( empty ) {
+        	return null;
+        } else {
+
+        	// We may need to fill in the batch...
+            if(batchList.isEmpty()){
+                try{
+                    fillBatch();
+                }catch(Exception e){
+                    log.error("Failed to fill batch",e);
+                    throw new RuntimeException(e);
+                }
+                if( batchList.isEmpty()) {
+                	return null;
+                }
+            }
+
+            Message result = (Message)batchList.removeFirst();
+        	
+        	if( firstMessageId != null ) {
+            	// Skip messages until we get to the first message.
+        		if( !result.getMessageId().equals(firstMessageId) ) 
+        			return null;
+        		firstMessageId = null;
+        	}
+        	if( lastMessageId != null ) {
+        		if( result.getMessageId().equals(lastMessageId) ) {
+        			empty=true;
+        		}
+        	}        	
+            result.setRegionDestination(regionDestination);
+            return result;
+        }
     }
 
     public void reset(){
@@ -130,13 +162,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
 
     // implementation
     protected void fillBatch() throws Exception{
-        store.recoverNextMessages(clientId,subscriberName,
-                maxBatchSize,this);
-        // this will add more messages to the batch list
-        if(!batchList.isEmpty()){
-            Message message=(Message)batchList.getLast();
-          
-        }
+        store.recoverNextMessages(clientId,subscriberName,maxBatchSize,this);
     }
     
     public void gc() {
