@@ -406,7 +406,9 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                             pending.reset();
                             while(pending.hasNext()&&!isFull()&&count<numberToDispatch){
                                 MessageReference node=pending.next();
-                               
+                                if ( node == null )
+                                	break;
+                                
                                 if(canDispatch(node)){
                                     pending.remove();
                                     // Message may have been sitting in the pending list a while
