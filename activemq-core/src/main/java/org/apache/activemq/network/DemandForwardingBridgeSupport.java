@@ -176,8 +176,15 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 						}
                 	}
                     lastConnectSucceeded.set(false);
-
-                    log.debug("Outbound transport to " + remoteBrokerName + " resumed");                                        
+                    try {
+                        startLocalBridge();
+                        remoteBridgeStarted.set(true);
+                        startedLatch.countDown();
+                        log.debug("Outbound transport to " + remoteBrokerName + " resumed");   
+                    }catch(Exception e) {
+                        log.error("Caught exception  from local start ib resume transport",e );
+                    }
+                                                         
                 }
             }
         });
