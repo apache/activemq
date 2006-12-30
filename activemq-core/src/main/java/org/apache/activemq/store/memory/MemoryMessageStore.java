@@ -77,7 +77,7 @@ public class MemoryMessageStore implements MessageStore{
     public void removeMessage(MessageId msgId) throws IOException{
         synchronized(messageTable){
             messageTable.remove(msgId);
-            if(lastBatchId!=null && lastBatchId.equals(msgId)){
+            if((lastBatchId!=null && lastBatchId.equals(msgId)) || messageTable.isEmpty()){
                 lastBatchId=null;
             }
         }
