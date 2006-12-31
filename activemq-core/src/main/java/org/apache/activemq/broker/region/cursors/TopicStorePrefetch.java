@@ -48,7 +48,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
     private String subscriberName;
     private Destination regionDestination;
 
-    boolean empty=true;
+    boolean empty;
 	private MessageId firstMessageId;
 	private MessageId lastMessageId;
 
@@ -65,7 +65,16 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
         this.subscriberName=subscriberName;
     }
 
-    public void start() throws Exception{
+    public void start() throws Exception {
+        if(batchList.isEmpty()){
+            try{
+                fillBatch();
+            }catch(Exception e){
+                log.error("Failed to fill batch",e);
+                throw new RuntimeException(e);
+            }
+            empty = batchList.isEmpty();
+        }    	
     }
 
     public void stop() throws Exception{
