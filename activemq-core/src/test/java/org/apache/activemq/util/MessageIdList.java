@@ -19,6 +19,7 @@ package org.apache.activemq.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -50,6 +51,8 @@ public class MessageIdList extends Assert implements MessageListener {
     private boolean verbose;
     private MessageListener parent;
     private long maximumDuration = 15000L;
+
+	private CountDownLatch countDownLatch;
 
     public MessageIdList() {
         this(new Object());
@@ -99,6 +102,9 @@ public class MessageIdList extends Assert implements MessageListener {
     public void onMessage(Message message) {
         String id=null;
         try {
+        	if( countDownLatch != null )
+        		countDownLatch.countDown();
+        	
             id = message.getJMSMessageID();
             synchronized (semaphore) {
                 messageIds.add(id);
@@ -230,5 +236,9 @@ public class MessageIdList extends Assert implements MessageListener {
     public void setMaximumDuration(long maximumDuration){
         this.maximumDuration=maximumDuration;
     }
+
+	public void setCountDownLatch(CountDownLatch countDownLatch) {
+		this.countDownLatch = countDownLatch;
+	}
 
 }

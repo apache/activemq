@@ -43,6 +43,7 @@ import java.util.Iterator;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 import java.net.URI;
 
 /**
@@ -178,10 +179,14 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         return null;
     }
 
-    protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {
+    protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {    	
+    	return createConsumer(brokerName, dest, null);
+    }
+    
+    protected MessageConsumer createConsumer(String brokerName, Destination dest, CountDownLatch latch) throws Exception {
         BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
         if (brokerItem != null) {
-            return brokerItem.createConsumer(dest);
+            return brokerItem.createConsumer(dest, latch);
         }
         return null;
     }
@@ -321,19 +326,26 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         public MessageConsumer createConsumer(Destination dest) throws Exception {
+        	return createConsumer(dest, null);
+        }
+        
+        public MessageConsumer createConsumer(Destination dest, CountDownLatch latch) throws Exception {
             Connection c = createConnection();
             c.start();
             Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            return createConsumer(dest, s);
+            return createConsumerWithSession(dest, s, latch);
         }
 
-        public MessageConsumer createConsumer(Destination dest, Session sess) throws Exception {
+        public MessageConsumer createConsumerWithSession(Destination dest, Session sess) throws Exception {
+        	return createConsumerWithSession(dest, sess, null);
+        }
+        public MessageConsumer createConsumerWithSession(Destination dest, Session sess, CountDownLatch latch) throws Exception {
             MessageConsumer client = sess.createConsumer(dest);
             MessageIdList messageIdList = new MessageIdList();
+            messageIdList.setCountDownLatch(latch);
             messageIdList.setParent(allMessages);
             client.setMessageListener(messageIdList);
             consumers.put(client, messageIdList);
-
             return client;
         }
 

@@ -17,14 +17,17 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
-import java.util.Map;
-import java.util.HashMap;
-import java.net.URI;
+
+import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.util.MessageIdList;
 
 /**
  * @version $Revision: 1.1.1.1 $
@@ -45,14 +48,20 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         // Setup topic destination
         Destination dest = createDestination("TEST.FOO", true);
 
+        CountDownLatch latch = new CountDownLatch(
+        		BROKER_COUNT * PRODUCER_COUNT * 
+        		BROKER_COUNT * CONSUMER_COUNT *
+        		MESSAGE_COUNT);
+        
         // Setup consumers
         for (int i=1; i<=BROKER_COUNT; i++) {
             for (int j=0; j<CONSUMER_COUNT; j++) {
-                consumerMap.put("Consumer:" + i + ":" + j, createConsumer("Broker" + i, dest));
+                consumerMap.put("Consumer:" + i + ":" + j, createConsumer("Broker" + i, dest, latch));
             }
         }
+
         //wait for consumers to get propagated
-        Thread.sleep(2000);
+        Thread.sleep(5000);
 
         // Send messages
         for (int i=1; i<=BROKER_COUNT; i++) {
@@ -60,32 +69,37 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
                 sendMessages("Broker" + i, dest, MESSAGE_COUNT);
             }
         }
+        
+        assertTrue("Missing "+latch.getCount()+ " messages", latch.await(30, TimeUnit.SECONDS));
 
         // Get message count
         for (int i=1; i<=BROKER_COUNT; i++) {
             for (int j=0; j<CONSUMER_COUNT; j++) {
                 MessageIdList msgs = getConsumerMessages("Broker" + i, (MessageConsumer)consumerMap.get("Consumer:" + i + ":" + j));
-                msgs.waitForMessagesToArrive(BROKER_COUNT * PRODUCER_COUNT * MESSAGE_COUNT);
                 assertEquals(BROKER_COUNT * PRODUCER_COUNT * MESSAGE_COUNT, msgs.getMessageCount());
             }
         }
+        
     }
 
     public void testQueueAllConnected() throws Exception {
         bridgeAllBrokers();
-
         startAllBrokers();
 
         // Setup topic destination
         Destination dest = createDestination("TEST.FOO", false);
 
+        CountDownLatch latch = new CountDownLatch(BROKER_COUNT * PRODUCER_COUNT * MESSAGE_COUNT);
+        
         // Setup consumers
         for (int i=1; i<=BROKER_COUNT; i++) {
             for (int j=0; j<CONSUMER_COUNT; j++) {
-                consumerMap.put("Consumer:" + i + ":" + j, createConsumer("Broker" + i, dest));
+                consumerMap.put("Consumer:" + i + ":" + j, createConsumer("Broker" + i, dest, latch));
             }
         }
-        Thread.sleep(2000);
+        
+        //wait for consumers to get propagated
+        Thread.sleep(5000);
 
         // Send messages
         for (int i=1; i<=BROKER_COUNT; i++) {
@@ -95,8 +109,8 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         }
 
         // Wait for messages to be delivered
-        Thread.sleep(2000);
-
+        assertTrue("Missing "+latch.getCount()+ " messages", latch.await(30, TimeUnit.SECONDS));
+        
         // Get message count
         int totalMsg = 0;
         for (int i=1; i<=BROKER_COUNT; i++) {
@@ -105,7 +119,6 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
                 totalMsg += msgs.getMessageCount();
             }
         }
-
         assertEquals(BROKER_COUNT * PRODUCER_COUNT * MESSAGE_COUNT, totalMsg);
     }
 
