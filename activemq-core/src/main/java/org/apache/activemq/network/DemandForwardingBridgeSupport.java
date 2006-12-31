@@ -182,7 +182,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                         startedLatch.countDown();
                         log.debug("Outbound transport to " + remoteBrokerName + " resumed");   
                     }catch(Exception e) {
-                        log.error("Caught exception  from local start ib resume transport",e );
+                        log.error("Caught exception  from local start in resume transport",e );
                     }
                                                          
                 }
