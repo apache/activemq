@@ -395,6 +395,7 @@ public class BrokerService implements Service, Serializable {
             
             addShutdownHook();
             log.info("Using Persistence Adapter: " + getPersistenceAdapter());
+            
             if (deleteAllMessagesOnStartup) {
                 deleteAllMessages();
             }
@@ -448,8 +449,7 @@ public class BrokerService implements Service, Serializable {
         stopAllConnectors(stopper);
 
         
-        //remove any VMTransports connected
-        VMTransportFactory.stopped(getBrokerName());
+        
 
 
         stopper.stop(persistenceAdapter);
@@ -476,7 +476,10 @@ public class BrokerService implements Service, Serializable {
             }
             stopper.stop(getManagementContext());
         }
-
+        //remove any VMTransports connected
+        //this has to be done after services are stopped,
+        //to avoid timimg issue with discovery (spinning up a new instance)
+        VMTransportFactory.stopped(getBrokerName());
         log.info("ActiveMQ JMS Message Broker (" + getBrokerName()+", "+brokerId+") stopped");
 
         stopper.throwFirstException();
@@ -1513,6 +1516,7 @@ public class BrokerService implements Service, Serializable {
 
             for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 NetworkConnector connector = (NetworkConnector) iter.next();
+                connector.setLocalUri(getVmConnectorURI());
                 connector.setBrokerName(getBrokerName());
                 connector.setDurableDestinations(getBroker().getDurableDestinations());
                 connector.start();
