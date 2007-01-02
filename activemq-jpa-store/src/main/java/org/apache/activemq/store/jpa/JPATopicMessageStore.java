@@ -123,7 +123,7 @@ public class JPATopicMessageStore extends JPAMessageStore implements TopicMessag
 	}
 
 	public int getMessageCount(String clientId, String subscriptionName) throws IOException {
-		Integer rc;
+		Long rc;
 		EntityManager manager = adapter.beginEntityManager(null);
 		try {	
 			Query query = manager.createQuery(
@@ -131,17 +131,17 @@ public class JPATopicMessageStore extends JPAMessageStore implements TopicMessag
 					"where ss.clientId=?1 " +
 					"and   ss.subscriptionName=?2 " +
 					"and   ss.destination=?3 " +
-					"and   m.desination=ss.destination and m.id > ss.lastAckedId");
+					"and   m.destination=ss.destination and m.id > ss.lastAckedId");
 			query.setParameter(1, clientId);
 			query.setParameter(2, subscriptionName);
-			query.setParameter(2, destinationName);
-	        rc = (Integer) query.getSingleResult();	        
+			query.setParameter(3, destinationName);
+	        rc = (Long) query.getSingleResult();	        
 		} catch (Throwable e) {
 			adapter.rollbackEntityManager(null,manager);
 			throw IOExceptionSupport.create(e);
 		}
 		adapter.commitEntityManager(null,manager);
-		return rc;
+		return rc.intValue();
 	}
 
 	public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {

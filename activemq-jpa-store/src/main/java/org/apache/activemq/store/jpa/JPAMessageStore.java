@@ -92,17 +92,17 @@ public class JPAMessageStore implements MessageStore {
 	}
 
 	public int getMessageCount() throws IOException {
-		Integer rc;
+		Long rc;
 		EntityManager manager = adapter.beginEntityManager(null);
 		try {
 			Query query = manager.createQuery("select count(m) from StoredMessage m");
-			rc = (Integer) query.getSingleResult();
+			rc = (Long) query.getSingleResult();
 		} catch (Throwable e) {
 			adapter.rollbackEntityManager(null,manager);
 			throw IOExceptionSupport.create(e);
 		}
 		adapter.commitEntityManager(null,manager);
-		return rc;
+		return rc.intValue();
 	}
 
 	public String getMessageReference(MessageId identity) throws IOException {
