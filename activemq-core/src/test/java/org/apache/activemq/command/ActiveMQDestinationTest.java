@@ -44,6 +44,8 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
                 new ActiveMQTopic("TEST"),
                 new ActiveMQTempQueue("TEST:1"),
                 new ActiveMQTempTopic("TEST:1"),
+                new ActiveMQTempQueue("TEST"),
+                new ActiveMQTempTopic("TEST"),
                 new ActiveMQQueue("TEST?option=value"),
                 new ActiveMQTopic("TEST?option=value"),
                 new ActiveMQTempQueue("TEST:1?option=value"),
@@ -79,7 +81,8 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
         List actual = new ArrayList(set);
         assertEquals("Sorted order", expected, actual);
     }
-
+    
+   
     public static Test suite() {
         return suite(ActiveMQDestinationTest.class);
     }
