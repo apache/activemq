@@ -395,7 +395,6 @@ public class BrokerService implements Service, Serializable {
             
             addShutdownHook();
             log.info("Using Persistence Adapter: " + getPersistenceAdapter());
-            
             if (deleteAllMessagesOnStartup) {
                 deleteAllMessages();
             }
@@ -428,60 +427,47 @@ public class BrokerService implements Service, Serializable {
     }
 
     
-    public void stop() throws Exception {
-        if (! started.compareAndSet(true, false)) {
+    public void stop() throws Exception{
+        if(!started.compareAndSet(true,false)){
             return;
         }
-        log.info("ActiveMQ Message Broker (" + getBrokerName()+", "+brokerId+") is shutting down");
-        BrokerRegistry.getInstance().unbind(getBrokerName());
-        
+        log.info("ActiveMQ Message Broker ("+getBrokerName()+", "+brokerId+") is shutting down");
         removeShutdownHook();
-
-        ServiceStopper stopper = new ServiceStopper();
-        
-        if (services != null) {
-            for (int i = 0; i < services.length; i++) {
-                Service service = services[i];
+        ServiceStopper stopper=new ServiceStopper();
+        if(services!=null){
+            for(int i=0;i<services.length;i++){
+                Service service=services[i];
                 stopper.stop(service);
             }
         }
-        
         stopAllConnectors(stopper);
-
-        
-        
-
-
         stopper.stop(persistenceAdapter);
-
-        if (broker != null) {
+        if(broker!=null){
             stopper.stop(broker);
         }
         if(tempDataStore!=null){
             tempDataStore.close();
         }
-
-        if (isUseJmx()) {
-            MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            if (mbeanServer != null) {
-                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext();) {
-                    ObjectName name = (ObjectName) iter.next();
-                    try {
+        if(isUseJmx()){
+            MBeanServer mbeanServer=getManagementContext().getMBeanServer();
+            if(mbeanServer!=null){
+                for(Iterator iter=registeredMBeanNames.iterator();iter.hasNext();){
+                    ObjectName name=(ObjectName)iter.next();
+                    try{
                         mbeanServer.unregisterMBean(name);
-                    }
-                    catch (Exception e) {
-                        stopper.onException(mbeanServer, e);
+                    }catch(Exception e){
+                        stopper.onException(mbeanServer,e);
                     }
                 }
             }
             stopper.stop(getManagementContext());
         }
-        //remove any VMTransports connected
-        //this has to be done after services are stopped,
-        //to avoid timimg issue with discovery (spinning up a new instance)
+        // remove any VMTransports connected
+        // this has to be done after services are stopped,
+        // to avoid timimg issue with discovery (spinning up a new instance)
+        BrokerRegistry.getInstance().unbind(getBrokerName());
         VMTransportFactory.stopped(getBrokerName());
-        log.info("ActiveMQ JMS Message Broker (" + getBrokerName()+", "+brokerId+") stopped");
-
+        log.info("ActiveMQ JMS Message Broker ("+getBrokerName()+", "+brokerId+") stopped");
         stopper.throwFirstException();
     }
 
