@@ -20,37 +20,48 @@ package org.apache.activemq.broker.store;
 import junit.framework.Test;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.XARecoveryBrokerTest;
-import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
+import org.apache.activemq.broker.RecoveryBrokerTest;
+import org.apache.activemq.store.quick.QuickPersistenceAdapter;
 
 /**
  * Used to verify that recovery works correctly against 
  * 
  * @version $Revision$
  */
-public class QuickJournalXARecoveryBrokerTest extends XARecoveryBrokerTest {
+public class QuickStoreRecoveryBrokerTest extends RecoveryBrokerTest {
 
+    protected BrokerService createBroker() throws Exception {
+        BrokerService service = new BrokerService();
+        service.setDeleteAllMessagesOnStartup(true);
+        QuickPersistenceAdapter pa = new QuickPersistenceAdapter();
+        service.setPersistenceAdapter(pa);
+        return service;
+    }
+    
+    protected BrokerService createRestartedBroker() throws Exception {
+        BrokerService service = new BrokerService();
+        QuickPersistenceAdapter pa = new QuickPersistenceAdapter();
+        service.setPersistenceAdapter(pa);
+        return service;
+    }
+    
     public static Test suite() {
-        return suite(QuickJournalXARecoveryBrokerTest.class);
+        return suite(QuickStoreRecoveryBrokerTest.class);
     }
     
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 
-    protected BrokerService createBroker() throws Exception {
-        BrokerService service = new BrokerService();
-        service.setDeleteAllMessagesOnStartup(true);
-        DefaultPersistenceAdapterFactory factory = (DefaultPersistenceAdapterFactory) service.getPersistenceFactory();
-        factory.setUseQuickJournal(true);
-        return service;
-    }
     
-    protected BrokerService createRestartedBroker() throws Exception {
-        BrokerService service = new BrokerService();
-        DefaultPersistenceAdapterFactory factory = (DefaultPersistenceAdapterFactory) service.getPersistenceFactory();
-        factory.setUseQuickJournal(true);
-        return service;
-    }
+//    @Override
+//    public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Exception {
+//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
+//    }
+//    
+//    @Override
+//    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
+//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
+//    }
     
 }

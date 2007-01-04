@@ -21,9 +21,12 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 final class RecoveryListenerAdapter implements MessageRecoveryListener {
-
+	static final private Log log = LogFactory.getLog(RecoveryListenerAdapter.class);
+	
 	private final MessageStore store;
 	private final MessageRecoveryListener listener;
 
@@ -45,6 +48,12 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
 	}
 
 	public void recoverMessageReference(MessageId ref) throws Exception {
-		listener.recoverMessage( this.store.getMessage(ref) );
+		Message message = this.store.getMessage(ref);
+		if( message !=null ){
+			listener.recoverMessage( message );
+		} else {
+			log.error("Message id "+ref+" could not be recovered from the data store!");
+		}
+			
 	}
 }

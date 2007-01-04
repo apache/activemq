@@ -77,7 +77,7 @@ public class KahaReferenceStore extends KahaMessageStore implements ReferenceSto
         }else{    
             for (entry = messageContainer.getFirst();entry != null; entry = messageContainer.getNext(entry)) {
             	ReferenceRecord msg=(ReferenceRecord)messageContainer.get(entry);
-                if(msg.messageId.equals(identity)){
+                if(msg.messageId.equals(identity.toString())){
                     result=msg;
                     cache.put(identity,entry);
                     break;

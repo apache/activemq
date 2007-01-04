@@ -18,13 +18,13 @@
 package org.apache.activemq.store.quick;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.JournalTopicAck;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.kaha.impl.async.Location;
@@ -49,18 +49,18 @@ public class QuickTopicMessageStore extends QuickMessageStore implements TopicMe
     private TopicReferenceStore topicReferenceStore;
 	private HashMap<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
     
-    public QuickTopicMessageStore(QuickPersistenceAdapter adapter, TopicReferenceStore checkpointStore, ActiveMQTopic destinationName) {
-        super(adapter, checkpointStore, destinationName);
-        this.topicReferenceStore = checkpointStore;
+    public QuickTopicMessageStore(QuickPersistenceAdapter adapter, TopicReferenceStore topicReferenceStore, ActiveMQTopic destinationName) {
+        super(adapter, topicReferenceStore, destinationName);
+        this.topicReferenceStore = topicReferenceStore;
     }
     
     public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
-        this.peristenceAdapter.checkpoint(true);
+        flush();
         topicReferenceStore.recoverSubscription(clientId, subscriptionName, new RecoveryListenerAdapter(this, listener));
     }
     
     public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned, final MessageRecoveryListener listener) throws Exception{
-        this.peristenceAdapter.checkpoint(true);
+        flush();
         topicReferenceStore.recoverNextMessages(clientId, subscriptionName, maxReturned, new RecoveryListenerAdapter(this, listener));        
     }
 
@@ -69,14 +69,10 @@ public class QuickTopicMessageStore extends QuickMessageStore implements TopicMe
     }
 
     public void addSubsciption(String clientId, String subscriptionName, String selector, boolean retroactive) throws IOException {
-        this.peristenceAdapter.checkpoint(true);
+        flush();
         topicReferenceStore.addSubsciption(clientId, subscriptionName, selector, retroactive);
     }
 
-    public void addMessage(ConnectionContext context, Message message) throws IOException {
-        super.addMessage(context, message);
-    }
-    
     /**
      */
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, final MessageId messageId) throws IOException {
@@ -141,27 +137,35 @@ public class QuickTopicMessageStore extends QuickMessageStore implements TopicMe
      * @param messageId
      * @param location
      * @param key
+     * @throws InterruptedIOException 
      */
-    private void acknowledge(MessageId messageId, Location location, SubscriptionKey key) {
+    private void acknowledge(MessageId messageId, Location location, SubscriptionKey key) throws InterruptedIOException {
         synchronized(this) {
 		    lastLocation = location;
 		    ackedLastAckLocations.put(key, messageId);
 		}
+        try {
+			asyncWriteTask.wakeup();
+		} catch (InterruptedException e) {
+			throw new InterruptedIOException();
+		}
     }
     
-    public Location checkpoint() throws IOException {
-        
-		final HashMap<SubscriptionKey, MessageId> cpAckedLastAckLocations;
+    @Override
+    protected Location doAsyncWrite() throws IOException {
+
+    	final HashMap<SubscriptionKey, MessageId> cpAckedLastAckLocations;
 
         // swap out the hash maps..
         synchronized (this) {
             cpAckedLastAckLocations = this.ackedLastAckLocations;
             this.ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
         }
-
-        return super.checkpoint( new Callback() {
+        
+    	Location location = super.doAsyncWrite();
+    	    	
+        transactionTemplate.run(new Callback() {
             public void execute() throws Exception {
-
                 // Checkpoint the acknowledged messages.
                 Iterator<SubscriptionKey> iterator = cpAckedLastAckLocations.keySet().iterator();
                 while (iterator.hasNext()) {
@@ -169,12 +173,12 @@ public class QuickTopicMessageStore extends QuickMessageStore implements TopicMe
                     MessageId identity = cpAckedLastAckLocations.get(subscriptionKey);
                     topicReferenceStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId, subscriptionKey.subscriptionName, identity);
                 }
-
             }
-        });
-
+        } );
+        
+        return location;
     }
-
+   
     /**
 	 * @return Returns the longTermStore.
 	 */
@@ -192,7 +196,7 @@ public class QuickTopicMessageStore extends QuickMessageStore implements TopicMe
 
     
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
-        this.peristenceAdapter.checkpoint(true);
+        flush();
         return topicReferenceStore.getMessageCount(clientId,subscriberName);
     }
     

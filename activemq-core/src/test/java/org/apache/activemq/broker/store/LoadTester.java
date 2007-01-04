@@ -45,6 +45,9 @@ import org.apache.activemq.command.ActiveMQQueue;
  */
 public class LoadTester extends JmsTestSupport {
 
+	protected int MESSAGE_SIZE=1024*64;
+	protected int PRODUCE_COUNT=10000;
+
     protected BrokerService createBroker() throws Exception {
          return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/broker/store/loadtester.xml"));
     }
@@ -56,8 +59,6 @@ public class LoadTester extends JmsTestSupport {
     }
     
     public void testQueueSendThenAddConsumer() throws Exception {
-        int MESSAGE_SIZE=1024*64;
-        int PRODUCE_COUNT=10000;
         ProgressPrinter printer = new ProgressPrinter(PRODUCE_COUNT, 20);
    
         ActiveMQDestination destination = new ActiveMQQueue("TEST");

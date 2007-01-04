@@ -17,6 +17,7 @@
  */
 package org.apache.activemq;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -32,8 +33,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -105,6 +104,12 @@ public class JmsTestSupport extends CombinationTestSupport {
 
     protected void setUp() throws Exception {
         super.setUp();
+
+    	if(System.getProperty("basedir")==null){
+            File file=new File(".");
+            System.setProperty("basedir",file.getAbsolutePath());
+        }
+
         broker = createBroker();
         broker.start();
         factory = createConnectionFactory();

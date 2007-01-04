@@ -206,7 +206,7 @@ public final class AsyncDataManager {
     	}
 	}
     
-    private ByteSequence marshallState() throws IOException {
+    private synchronized ByteSequence marshallState() throws IOException {
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	DataOutputStream dos = new DataOutputStream(baos);
 
@@ -338,9 +338,7 @@ public final class AsyncDataManager {
     synchronized void removeInterestInFile(DataFile dataFile) throws IOException{
         if(dataFile!=null){
             if(dataFile.decrement()<=0){
-                if(dataFile!=currentWriteFile){
-                    removeDataFile(dataFile);
-                }
+                removeDataFile(dataFile);
             }
         }
     }
@@ -355,21 +353,18 @@ public final class AsyncDataManager {
         List<DataFile> purgeList=new ArrayList<DataFile>();
 		for (Integer key : unUsed) {
             DataFile dataFile=(DataFile) fileMap.get(key);
-            if( dataFile!=currentWriteFile ) {
-                purgeList.add(dataFile);
-            }
+            purgeList.add(dataFile);
 		}
 		
         for (DataFile dataFile : purgeList) {
-            removeDataFile(dataFile);
+			removeDataFile(dataFile);
 		}
-        
 	}
 
     public synchronized void consolidateDataFiles() throws IOException{
         List<DataFile> purgeList=new ArrayList<DataFile>();
         for (DataFile dataFile : fileMap.values()) {
-            if(dataFile.isUnused() && dataFile != currentWriteFile){
+            if( dataFile.isUnused() ){
                 purgeList.add(dataFile);
             }
         }
@@ -379,12 +374,21 @@ public final class AsyncDataManager {
     }
 
     private void removeDataFile(DataFile dataFile) throws IOException{
+
+    	// Make sure we don't delete too much data.
+        if( dataFile==currentWriteFile || mark==null || dataFile.getDataFileId() >= mark.getDataFileId() ) {
+        	return;
+        }
+
+        accessorPool.disposeDataFileAccessors(dataFile);
+        
         fileMap.remove(dataFile.getDataFileId());
         dataFile.unlink();
-        accessorPool.disposeDataFileAccessors(dataFile);        
         boolean result=dataFile.delete();
         log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
+        
     }
+        
 
     /**
      * @return the maxFileLength
@@ -479,8 +483,10 @@ public final class AsyncDataManager {
 		return rc;
 	}
 
-	public synchronized void setMark(Location location, boolean sync) throws IOException, IllegalStateException {
-		mark = location;
+	public void setMark(Location location, boolean sync) throws IOException, IllegalStateException {
+		synchronized(this) {
+			mark = location;
+		}
 		storeState(sync);
 	}
 
