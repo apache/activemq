@@ -54,6 +54,11 @@ public interface ReferenceStore extends MessageStore {
 		public void setOffset(int offset) {
 			this.offset = offset;
 		}
+		
+		@Override
+		public String toString() {
+			return "ReferenceData fileId="+fileId+", offset="+offset+", expiration="+expiration;
+		}
 	}
 	
     /**
