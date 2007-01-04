@@ -163,7 +163,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements
         batchList.addLast(message);
     }
 
-    public void recoverMessageReference(String messageReference)
+    public void recoverMessageReference(MessageId messageReference)
             throws Exception{
         // shouldn't get called
         throw new RuntimeException("Not supported");

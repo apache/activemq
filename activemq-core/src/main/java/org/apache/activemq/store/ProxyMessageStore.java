@@ -66,14 +66,6 @@ public class ProxyMessageStore implements MessageStore {
         return delegate.getDestination();
     }
 
-    public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
-        delegate.addMessageReference(context, messageId, expirationTime, messageRef);
-    }
-
-    public String getMessageReference(MessageId identity) throws IOException {
-        return delegate.getMessageReference(identity);
-    }
-
     public void setUsageManager(UsageManager usageManager) {
         delegate.setUsageManager(usageManager);
     }

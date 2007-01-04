@@ -160,7 +160,7 @@ public class JDBCMessageStore implements MessageStore {
                     listener.recoverMessage(msg);
                 }
                 public void recoverMessageReference(String reference) throws Exception {
-                    listener.recoverMessageReference(reference);
+                    listener.recoverMessageReference(new MessageId(reference));
                 }
                 public void finished(){
                     listener.finished();
@@ -245,7 +245,7 @@ public class JDBCMessageStore implements MessageStore {
 
                         public void recoverMessageReference(String reference) throws Exception{
                             if(listener.hasSpace()) {
-                                listener.recoverMessageReference(reference);
+                                listener.recoverMessageReference(new MessageId(reference));
                             }
                         }
 

@@ -18,13 +18,14 @@
 package org.apache.activemq.store;
 
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
 
 /**
  * @version $Revision: 1.4 $
  */
 public interface MessageRecoveryListener {
     void recoverMessage(Message message) throws Exception;
-    void recoverMessageReference(String messageReference) throws Exception;
+    void recoverMessageReference(MessageId ref) throws Exception;
     void finished();
     boolean hasSpace();
 }

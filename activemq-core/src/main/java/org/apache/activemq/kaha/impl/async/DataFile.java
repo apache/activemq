@@ -90,8 +90,8 @@ class DataFile extends LinkedNode implements Comparable {
 		// On close set the file size to the real size.
         if( length != file.length() ) {
 			file.setLength(getLength());
-			file.close();
         }
+		file.close();
 	}
     
 	public synchronized boolean delete() throws IOException{

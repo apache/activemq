@@ -147,7 +147,7 @@ public class Queue implements Destination, Task {
                         destinationStatistics.getMessages().increment();
                     }
 
-                    public void recoverMessageReference(String messageReference) throws Exception{
+                    public void recoverMessageReference(MessageId messageReference) throws Exception{
                         throw new RuntimeException("Should not be called.");
                     }
 

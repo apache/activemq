@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -55,20 +56,20 @@ public class MemoryMessageStore implements MessageStore{
         }
     }
 
-    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
-            throws IOException{
-        synchronized(messageTable){
-            messageTable.put(messageId,messageRef);
-        }
-    }
+//    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
+//            throws IOException{
+//        synchronized(messageTable){
+//            messageTable.put(messageId,messageRef);
+//        }
+//    }
 
     public Message getMessage(MessageId identity) throws IOException{
         return (Message)messageTable.get(identity);
     }
 
-    public String getMessageReference(MessageId identity) throws IOException{
-        return (String)messageTable.get(identity);
-    }
+//    public String getMessageReference(MessageId identity) throws IOException{
+//        return (String)messageTable.get(identity);
+//    }
 
     public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
         removeMessage(ack.getLastMessageId());
@@ -88,8 +89,8 @@ public class MemoryMessageStore implements MessageStore{
         synchronized(messageTable){
             for(Iterator iter=messageTable.values().iterator();iter.hasNext();){
                 Object msg=(Object)iter.next();
-                if(msg.getClass()==String.class){
-                    listener.recoverMessageReference((String)msg);
+                if(msg.getClass()==MessageId.class){
+                    listener.recoverMessageReference((MessageId)msg);
                 }else{
                     listener.recoverMessage((Message)msg);
                 }
@@ -140,8 +141,8 @@ public class MemoryMessageStore implements MessageStore{
                     count++;
                     Object msg=entry.getValue();
                     lastBatchId=(MessageId)entry.getKey();
-                    if(msg.getClass()==String.class){
-                        listener.recoverMessageReference((String)msg);
+                    if(msg.getClass()==MessageId.class){
+                        listener.recoverMessageReference((MessageId)msg);
                     }else{
                         listener.recoverMessage((Message)msg);
                     }

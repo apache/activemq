@@ -58,6 +58,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -424,7 +425,9 @@ public class ManagedRegionBroker extends RegionBroker {
                     result.add(message);
                 }
 
-                public void recoverMessageReference(String messageReference) throws Exception{}
+                public void recoverMessageReference(MessageId messageReference) throws Exception{
+                	throw new RuntimeException("Should not be called.");
+                }
 
                 public void finished(){}
 

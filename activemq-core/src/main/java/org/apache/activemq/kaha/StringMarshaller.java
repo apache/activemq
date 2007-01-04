@@ -25,7 +25,7 @@ import java.io.IOException;
  * 
  * @version $Revision: 1.2 $
  */
-public class StringMarshaller implements Marshaller{
+public class StringMarshaller implements Marshaller<String> {
     /**
      * Write the payload of this entry to the RawContainer
      * 
@@ -33,8 +33,8 @@ public class StringMarshaller implements Marshaller{
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-        dataOut.writeUTF(object.toString());
+    public void writePayload(String object,DataOutput dataOut) throws IOException{
+        dataOut.writeUTF(object);
     }
 
     /**
@@ -44,7 +44,7 @@ public class StringMarshaller implements Marshaller{
      * @return unmarshalled object
      * @throws IOException
      */
-    public Object readPayload(DataInput dataIn) throws IOException{
+    public String readPayload(DataInput dataIn) throws IOException{
         return dataIn.readUTF();
     }
 }

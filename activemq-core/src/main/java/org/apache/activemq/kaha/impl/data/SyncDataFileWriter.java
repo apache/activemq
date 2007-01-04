@@ -37,7 +37,7 @@ final public class SyncDataFileWriter {
     /**
      * Construct a Store writer
      * 
-     * @param file
+     * @param fileId
      */
     SyncDataFileWriter(DataManagerImpl fileManager){
         this.dataManager=fileManager;

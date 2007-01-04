@@ -27,7 +27,7 @@ import java.util.Set;
  * 
  * @version $Revision: 1.2 $
  */
-public interface MapContainer  extends   Map{
+public interface MapContainer<K, V> extends Map<K, V>{
     
     
     /**
@@ -54,7 +54,7 @@ public interface MapContainer  extends   Map{
      * The default uses Object serialization
      * @param keyMarshaller
      */
-    public void setKeyMarshaller(Marshaller keyMarshaller);
+    public void setKeyMarshaller(Marshaller<K> keyMarshaller);
     
     /**
      * For homogenous containers can set a custom marshaller for loading values
@@ -62,7 +62,7 @@ public interface MapContainer  extends   Map{
      * @param valueMarshaller 
    
      */
-    public void setValueMarshaller(Marshaller valueMarshaller);
+    public void setValueMarshaller(Marshaller<V> valueMarshaller);
     /**
      * @return the id the MapContainer was create with
      */
@@ -82,44 +82,44 @@ public interface MapContainer  extends   Map{
      * @param key 
      * @return true if the container contains the key
      */
-    public boolean containsKey(Object key);
+    public boolean containsKey(K key);
 
     /**
      * Get the value associated with the key
      * @param key 
      * @return the value associated with the key from the store
      */
-    public Object get(Object key);
+    public V get(K key);
 
     
     /**
      * @param o 
      * @return true if the MapContainer contains the value o
      */
-    public boolean containsValue(Object o);
+    public boolean containsValue(K o);
 
     /**
      * Add add entries in the supplied Map
      * @param map
      */
-    public void putAll(Map map);
+    public void putAll(Map<K,V> map);
 
     /**
      * @return a Set of all the keys
      */
-    public Set keySet();
+    public Set<K> keySet();
 
     /**
      * @return a collection of all the values - the values will be lazily pulled out of the
      * store if iterated etc.
      */
-    public Collection values();
+    public Collection<V> values();
 
     /**
      * @return a Set of all the Map.Entry instances - the values will be lazily pulled out of the
      * store if iterated etc.
      */
-    public Set entrySet();
+    public Set<Map.Entry<K,V>> entrySet();
 
    
     /**
@@ -128,7 +128,7 @@ public interface MapContainer  extends   Map{
      * @param value
      * @return the old value for the key
      */
-    public Object put(Object key,Object value);
+    public V put(K key,V value);
 
 
     /**
@@ -136,7 +136,7 @@ public interface MapContainer  extends   Map{
      * @param key 
      * @return the old value assocaited with the key or null
      */
-    public Object remove(Object key);
+    public V remove(K key);
 
     /**
      * empty the container
@@ -149,7 +149,7 @@ public interface MapContainer  extends   Map{
      * @param Value
      * @return the StoreEntry associated with the entry
      */
-    public StoreEntry place(Object key, Object Value);
+    public StoreEntry place(K key, V Value);
     
     /**
      * Remove an Entry from ther Map
@@ -162,14 +162,14 @@ public interface MapContainer  extends   Map{
      * @param keyLocation
      * @return the key for the entry
      */
-    public Object getKey(StoreEntry keyLocation);
+    public K getKey(StoreEntry keyLocation);
     
     /**
      * Get the value from it's location
      * @param Valuelocation
      * @return the Object
      */
-    public Object getValue(StoreEntry Valuelocation);
+    public V getValue(StoreEntry Valuelocation);
     
     /**
      * Set the internal index map

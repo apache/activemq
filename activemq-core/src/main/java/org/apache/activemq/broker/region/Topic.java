@@ -197,7 +197,7 @@ public class Topic implements Destination {
                         }
                     }
 
-                    public void recoverMessageReference(String messageReference) throws Exception{
+                    public void recoverMessageReference(MessageId messageReference) throws Exception{
                         throw new RuntimeException("Should not be called.");
                     }
 
@@ -334,7 +334,7 @@ public class Topic implements Destination {
                         result.add(message);
                     }
 
-                    public void recoverMessageReference(String messageReference) throws Exception{}
+                    public void recoverMessageReference(MessageId messageReference) throws Exception{}
 
                     public void finished(){}
 

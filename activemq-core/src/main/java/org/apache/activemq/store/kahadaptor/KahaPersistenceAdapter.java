@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -27,6 +28,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
+import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
 import org.apache.activemq.kaha.StringMarshaller;
@@ -50,13 +52,12 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     private static final Log log=LogFactory.getLog(KahaPersistenceAdapter.class);
     static final String PREPARED_TRANSACTIONS_NAME="PreparedTransactions";
     KahaTransactionStore transactionStore;
-    ConcurrentHashMap topics=new ConcurrentHashMap();
-    ConcurrentHashMap queues=new ConcurrentHashMap();
-    ConcurrentHashMap messageStores=new ConcurrentHashMap();
-    private boolean useExternalMessageReferences;
-    private OpenWireFormat wireFormat=new OpenWireFormat();
+    ConcurrentHashMap<ActiveMQTopic, TopicMessageStore> topics=new ConcurrentHashMap<ActiveMQTopic, TopicMessageStore>();
+    ConcurrentHashMap<ActiveMQQueue, MessageStore> queues=new ConcurrentHashMap<ActiveMQQueue, MessageStore>();
+    ConcurrentHashMap<ActiveMQDestination, MessageStore> messageStores=new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
+    protected OpenWireFormat wireFormat=new OpenWireFormat();
     private long maxDataFileLength=32*1024*1024;
-    private int maximumDestinationCacheSize=2000;
+    protected int maximumDestinationCacheSize=2000;
     private String indexType=IndexTypes.DISK_INDEX;
     private File dir;
     private Store theStore;
@@ -70,14 +71,14 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         wireFormat.setTightEncodingEnabled(true);
     }
 
-    public Set getDestinations(){
-        Set rc=new HashSet();
+    public Set<ActiveMQDestination> getDestinations(){
+        Set<ActiveMQDestination> rc=new HashSet<ActiveMQDestination>();
         try{
             Store store=getStore();
             for(Iterator i=store.getListContainerIds().iterator();i.hasNext();){
                 Object obj=i.next();
                 if(obj instanceof ActiveMQDestination){
-                    rc.add(obj);
+                    rc.add((ActiveMQDestination) obj);
                 }
             }
         }catch(IOException e){
@@ -87,7 +88,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException{
-        MessageStore rc=(MessageStore)queues.get(destination);
+        MessageStore rc=queues.get(destination);
         if(rc==null){
             rc=new KahaMessageStore(getListContainer(destination,"queue-data"),destination,maximumDestinationCacheSize);
             messageStores.put(destination,rc);
@@ -100,7 +101,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     public synchronized TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException{
-        TopicMessageStore rc=(TopicMessageStore)topics.get(destination);
+        TopicMessageStore rc=topics.get(destination);
         if(rc==null){
             Store store=getStore();
             ListContainer messageContainer=getListContainer(destination,"topic-data");
@@ -118,7 +119,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     protected MessageStore retrieveMessageStore(Object id){
-        MessageStore result=(MessageStore)messageStores.get(id);
+        MessageStore result=messageStores.get(id);
         return result;
     }
 
@@ -171,36 +172,24 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         }
     }
 
-    public boolean isUseExternalMessageReferences(){
-        return useExternalMessageReferences;
-    }
-
-    public void setUseExternalMessageReferences(boolean useExternalMessageReferences){
-        this.useExternalMessageReferences=useExternalMessageReferences;
-    }
-
-    protected MapContainer getMapContainer(Object id,String containerName) throws IOException{
+    protected MapContainer<String, Object> getMapContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
-        MapContainer container=store.getMapContainer(id,containerName);
+        MapContainer<String, Object> container=store.getMapContainer(id,containerName);
         container.setKeyMarshaller(new StringMarshaller());
-        if(useExternalMessageReferences){
-            container.setValueMarshaller(new StringMarshaller());
-        }else{
-            container.setValueMarshaller(new CommandMarshaller(wireFormat));
-        }
+        container.setValueMarshaller(createMessageMarshaller());        
         container.load();
         return container;
     }
 
-    protected ListContainer getListContainer(Object id,String containerName) throws IOException{
+    protected Marshaller<Object> createMessageMarshaller() {
+		return new CommandMarshaller(wireFormat);
+	}
+
+	protected ListContainer getListContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
         ListContainer container=store.getListContainer(id,containerName);
         container.setMaximumCacheSize(0);
-        if(useExternalMessageReferences){
-            container.setMarshaller(new StringMarshaller());
-        }else{
-            container.setMarshaller(new CommandMarshaller(wireFormat));
-        }
+        container.setMarshaller(createMessageMarshaller());        
         container.load();
         return container;
     }
@@ -258,7 +247,6 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
 
     protected synchronized Store getStore() throws IOException{
         if(theStore==null){
-            String name=dir.getAbsolutePath()+File.separator+"kaha.db";
             theStore=StoreFactory.open(getStoreName(),"rw");
             theStore.setMaxDataFileLength(maxDataFileLength);
             theStore.setIndexType(indexType);
@@ -267,7 +255,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
     
     private String getStoreName(){
-        String name=dir.getAbsolutePath()+File.separator+"kahadb";
+        String name=dir.getAbsolutePath()+File.separator+"kaha.db";
         return name;
     }
     

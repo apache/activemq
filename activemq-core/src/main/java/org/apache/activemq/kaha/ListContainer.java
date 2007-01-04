@@ -14,7 +14,6 @@
 
 package org.apache.activemq.kaha;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -24,7 +23,7 @@ import java.util.NoSuchElementException;
  * 
  * @version $Revision: 1.2 $
  */
-public interface ListContainer extends List{
+public interface ListContainer<V> extends List<V>{
 
     /**
      * The container is created or retrieved in an unloaded state. load populates the container will all the indexes
@@ -65,7 +64,7 @@ public interface ListContainer extends List{
      * 
      * @param o the element to be inserted at the beginning of this list.
      */
-    public void addFirst(Object o);
+    public void addFirst(V o);
 
     /**
      * Appends the given element to the end of this list. (Identical in function to the <tt>add</tt> method; included
@@ -73,7 +72,7 @@ public interface ListContainer extends List{
      * 
      * @param o the element to be inserted at the end of this list.
      */
-    public void addLast(Object o);
+    public void addLast(V o);
 
     /**
      * Removes and returns the first element from this list.
@@ -81,7 +80,7 @@ public interface ListContainer extends List{
      * @return the first element from this list.
      * @throws NoSuchElementException if this list is empty.
      */
-    public Object removeFirst();
+    public V removeFirst();
 
     /**
      * Removes and returns the last element from this list.
@@ -89,7 +88,7 @@ public interface ListContainer extends List{
      * @return the last element from this list.
      * @throws NoSuchElementException if this list is empty.
      */
-    public Object removeLast();
+    public V removeLast();
 
     /**
      * remove an objecr from the list without retrieving the old value from the store
@@ -120,7 +119,7 @@ public interface ListContainer extends List{
      * @param object
      * @return the entry in the Store
      */
-    public StoreEntry placeLast(Object object);
+    public StoreEntry placeLast(V object);
 
     /**
      * insert an Object in first position int the list but get a StoreEntry of its position
@@ -128,7 +127,7 @@ public interface ListContainer extends List{
      * @param object
      * @return the location in the Store
      */
-    public StoreEntry placeFirst(Object object);
+    public StoreEntry placeFirst(V object);
 
     /**
      * Advanced feature = must ensure the object written doesn't overwrite other objects in the container
@@ -136,7 +135,7 @@ public interface ListContainer extends List{
      * @param entry
      * @param object
      */
-    public void update(StoreEntry entry,Object object);
+    public void update(StoreEntry entry,V object);
 
     /**
      * Retrieve an Object from the Store by its location
@@ -144,7 +143,7 @@ public interface ListContainer extends List{
      * @param entry
      * @return the Object at that entry
      */
-    public Object get(StoreEntry entry);
+    public V get(StoreEntry entry);
 
     /**
      * Get the StoreEntry for the first item of the list

@@ -25,7 +25,7 @@ import java.util.Map;
  * @version $Revision$
  */
 
-public class LRUCache extends LinkedHashMap{
+public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     private static final long serialVersionUID=-342098639681884413L;
     protected int maxCacheSize=10000;
 

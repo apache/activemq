@@ -51,8 +51,8 @@ class MemoryTopicSub{
         for(Iterator iter=map.entrySet().iterator();iter.hasNext();){
             Map.Entry entry=(Entry)iter.next();
             Object msg=entry.getValue();
-            if(msg.getClass()==String.class){
-                listener.recoverMessageReference((String)msg);
+            if(msg.getClass()==MessageId.class){
+                listener.recoverMessageReference((MessageId)msg);
             }else{
                 listener.recoverMessage((Message)msg);
             }
@@ -71,8 +71,8 @@ class MemoryTopicSub{
                 count++;
                 Object msg=entry.getValue();
                 lastId=(MessageId)entry.getKey();
-                if(msg.getClass()==String.class){
-                    listener.recoverMessageReference((String)msg);
+                if(msg.getClass()==MessageId.class){
+                    listener.recoverMessageReference((MessageId)msg);
                 }else{
                     listener.recoverMessage((Message)msg);
                 }

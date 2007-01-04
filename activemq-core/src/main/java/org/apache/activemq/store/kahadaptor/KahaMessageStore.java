@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadaptor;
 
 import java.io.IOException;
 import java.util.Iterator;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -38,29 +39,33 @@ import org.apache.activemq.util.LRUCache;
  */
 public class KahaMessageStore implements MessageStore, UsageListener{
     protected final ActiveMQDestination destination;
-    protected final ListContainer messageContainer;
+    protected final ListContainer<Object> messageContainer;
     protected StoreEntry batchEntry = null;
-    protected final LRUCache cache;
+    protected final LRUCache<MessageId, StoreEntry> cache;
     protected UsageManager usageManager;
 
-    public KahaMessageStore(ListContainer container,ActiveMQDestination destination, int maximumCacheSize) throws IOException{
+    public KahaMessageStore(ListContainer<Object> container,ActiveMQDestination destination, int maximumCacheSize) throws IOException{
         this.messageContainer=container;
         this.destination=destination;
-        this.cache=new LRUCache(maximumCacheSize,maximumCacheSize,0.75f,false);
+        this.cache=new LRUCache<MessageId, StoreEntry>(maximumCacheSize,maximumCacheSize,0.75f,false);
         // populate the cache
         StoreEntry entry=messageContainer.getFirst();
         int count = 0;
         if(entry!=null){
             do{
-                Message msg = (Message)messageContainer.get(entry);
-                cache.put(msg.getMessageId(),entry);
+                MessageId id = getMessageId(messageContainer.get(entry));
+                cache.put(id,entry);
                 entry = messageContainer.getNext(entry);
                 count++;
             }while(entry!=null && count < maximumCacheSize);
         }
     }
     
-    public Object getId(){
+    protected MessageId getMessageId(Object object) {
+		return ((Message)object).getMessageId();
+	}
+
+	public Object getId(){
         return messageContainer.getId();
     }
 
@@ -75,14 +80,9 @@ public class KahaMessageStore implements MessageStore, UsageListener{
         cache.put(message.getMessageId(),item);
     }
 
-    public synchronized void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
-                    throws IOException{
-        throw new RuntimeException("Not supported");
-    }
-
     public synchronized Message getMessage(MessageId identity) throws IOException{
         Message result=null;
-        StoreEntry entry=(StoreEntry)cache.get(identity);
+        StoreEntry entry=cache.get(identity);
         if(entry!=null){
             entry = messageContainer.refresh(entry);
             result = (Message)messageContainer.get(entry);
@@ -99,16 +99,16 @@ public class KahaMessageStore implements MessageStore, UsageListener{
         return result;
     }
 
-    public String getMessageReference(MessageId identity) throws IOException{
-        return null;
-    }
+    protected void recover(MessageRecoveryListener listener, Object msg) throws Exception {
+        listener.recoverMessage((Message)msg);
+	}
 
     public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
         removeMessage(ack.getLastMessageId());
     }
 
     public synchronized void removeMessage(MessageId msgId) throws IOException{
-        StoreEntry entry=(StoreEntry)cache.remove(msgId);
+        StoreEntry entry=cache.remove(msgId);
         if(entry!=null){
             entry = messageContainer.refresh(entry);
             messageContainer.remove(entry);
@@ -128,7 +128,7 @@ public class KahaMessageStore implements MessageStore, UsageListener{
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception{
         for(Iterator iter=messageContainer.iterator();iter.hasNext();){
-            listener.recoverMessage((Message)iter.next());
+            recover(listener, iter.next());
         }
         listener.finished();
     }
@@ -202,13 +202,7 @@ public class KahaMessageStore implements MessageStore, UsageListener{
             do{
                 Object msg=messageContainer.get(entry);
                 if(msg!=null){
-                    if(msg.getClass()==String.class){
-                        String ref=msg.toString();
-                        listener.recoverMessageReference(ref);
-                    }else{
-                        Message message=(Message)msg;
-                        listener.recoverMessage(message);
-                    }
+                	recover(listener, msg);
                     count++;
                 }
                 batchEntry = entry;
