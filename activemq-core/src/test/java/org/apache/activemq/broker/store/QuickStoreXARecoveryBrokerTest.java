@@ -20,7 +20,7 @@ package org.apache.activemq.broker.store;
 import junit.framework.Test;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.RecoveryBrokerTest;
+import org.apache.activemq.broker.XARecoveryBrokerTest;
 import org.apache.activemq.store.quick.QuickPersistenceAdapter;
 
 /**
@@ -28,7 +28,15 @@ import org.apache.activemq.store.quick.QuickPersistenceAdapter;
  * 
  * @version $Revision$
  */
-public class QuickJournalRecoveryBrokerTest extends RecoveryBrokerTest {
+public class QuickStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
+
+    public static Test suite() {
+        return suite(QuickStoreXARecoveryBrokerTest.class);
+    }
+    
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
+    }
 
     protected BrokerService createBroker() throws Exception {
         BrokerService service = new BrokerService();
@@ -44,24 +52,5 @@ public class QuickJournalRecoveryBrokerTest extends RecoveryBrokerTest {
         service.setPersistenceAdapter(pa);
         return service;
     }
-    
-    public static Test suite() {
-        return suite(QuickJournalRecoveryBrokerTest.class);
-    }
-    
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
-    
-//    @Override
-//    public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Exception {
-//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
-//    }
-//    
-//    @Override
-//    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
-//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
-//    }
     
 }

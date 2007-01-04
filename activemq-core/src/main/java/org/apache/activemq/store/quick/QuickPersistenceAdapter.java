@@ -19,19 +19,12 @@ package org.apache.activemq.store.quick;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activeio.journal.Journal;
@@ -94,12 +87,14 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
     private WireFormat wireFormat = new OpenWireFormat();
 
     private UsageManager usageManager;
-    private long checkpointInterval = 1000 * 30;
+
+    private long cleanupInterval = 1000 * 10;
+    private long checkpointInterval = 1000 * 10;
+    
     private int maxCheckpointWorkers = 1;
     private int maxCheckpointMessageAddSize = 1024*4;
 
     private QuickTransactionStore transactionStore = new QuickTransactionStore(this);
-    private ThreadPoolExecutor checkpointExecutor;
     
     private TaskRunner checkpointTask;
     private CountDownLatch nextCheckpointCountDownLatch = new CountDownLatch(1);
@@ -110,6 +105,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
 	private Runnable periodicCleanupTask;
 	private boolean deleteAllMessages;
 	private File directory = new File("activemq-data/quick");
+
 
     
     public synchronized void start() throws Exception {
@@ -152,7 +148,13 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
     	
     	Set<Integer> files = referenceStoreAdapter.getReferenceFileIdsInUse();
     	for (Integer fileId : files) {
-			asyncDataManager.addInterestInFile(fileId);
+			try {
+				asyncDataManager.addInterestInFile(fileId);
+			} catch (IOException e) {
+				// We can expect these since referenceStoreAdapter is a litle behind in updates
+				// and it might think it has references to data files that have allready come and gone.. 
+				// This should get resolved once recovery kicks in.
+			}
 		}
         
         checkpointTask = taskRunnerFactory.createTaskRunner(new Task(){
@@ -161,15 +163,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
                 return false;
             }
         }, "ActiveMQ Journal Checkpoint Worker");
-        
-        checkpointExecutor = new ThreadPoolExecutor(maxCheckpointWorkers, maxCheckpointWorkers, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
-            public Thread newThread(Runnable runable) {
-                Thread t = new Thread(runable, "Journal checkpoint worker");
-                t.setPriority(7);
-                return t;
-            }            
-        });
-        
+                
         createTransactionStore();
         recover();
 
@@ -187,7 +181,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
 	        	cleanup();
 	        }
 	    };
-        Scheduler.executePeriodically(periodicCleanupTask, checkpointInterval);
+        Scheduler.executePeriodically(periodicCleanupTask, cleanupInterval);
 
     }
 
@@ -200,11 +194,22 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
         this.usageManager.removeUsageListener(this);        
         Scheduler.cancel(periodicCheckpointTask);
 
+        
+        Iterator<QuickMessageStore> iterator = queues.values().iterator();
+        while (iterator.hasNext()) {
+            QuickMessageStore ms = iterator.next();
+            ms.stop();
+        }
+
+        iterator = topics.values().iterator();
+        while (iterator.hasNext()) {
+            final QuickTopicMessageStore ms = (QuickTopicMessageStore) iterator.next();
+            ms.stop();
+        }
+        
         // Take one final checkpoint and stop checkpoint processing.
         checkpoint(true);
-        checkpointTask.shutdown();        
-        log.debug("Checkpoint task shutdown");
-        checkpointExecutor.shutdown();
+        checkpointTask.shutdown();   
         
         queues.clear();
         topics.clear();
@@ -268,54 +273,23 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
             log.debug("Checkpoint started.");
             Location newMark = null;
 
-            ArrayList<FutureTask> futureTasks = new ArrayList<FutureTask>(queues.size()+topics.size());
-            
-            //
             Iterator<QuickMessageStore> iterator = queues.values().iterator();
             while (iterator.hasNext()) {
-                try {
-                    final QuickMessageStore ms = iterator.next();
-                    FutureTask<Location> task = new FutureTask<Location>(new Callable<Location>() {
-                        public Location call() throws Exception {
-                            return ms.checkpoint();
-                        }});
-                    futureTasks.add(task);
-                    checkpointExecutor.execute(task);                        
-                }
-                catch (Exception e) {
-                    log.error("Failed to checkpoint a message store: " + e, e);
+                final QuickMessageStore ms = iterator.next();
+                Location mark = (Location) ms.getMark();
+                if (mark != null && (newMark == null || newMark.compareTo(mark) < 0)) {
+                    newMark = mark;
                 }
             }
 
             iterator = topics.values().iterator();
             while (iterator.hasNext()) {
-                try {
-                    final QuickTopicMessageStore ms = (QuickTopicMessageStore) iterator.next();
-                    FutureTask<Location> task = new FutureTask<Location>(new Callable<Location>() {
-                        public Location call() throws Exception {
-                            return ms.checkpoint();
-                        }});
-                    futureTasks.add(task);
-                    checkpointExecutor.execute(task);                        
-                }
-                catch (Exception e) {
-                    log.error("Failed to checkpoint a message store: " + e, e);
+                final QuickTopicMessageStore ms = (QuickTopicMessageStore) iterator.next();
+                Location mark = (Location) ms.getMark();
+                if (mark != null && (newMark == null || newMark.compareTo(mark) < 0)) {
+                    newMark = mark;
                 }
             }
-
-            try {
-                for (Iterator<FutureTask> iter = futureTasks.iterator(); iter.hasNext();) {
-                    FutureTask ft = iter.next();
-                    Location mark = (Location) ft.get();
-                    // We only set a newMark on full checkpoints.
-                    if (mark != null && (newMark == null || newMark.compareTo(mark) < 0)) {
-                        newMark = mark;
-                    }
-                }
-            } catch (Throwable e) {
-                log.error("Failed to checkpoint a message store: " + e, e);
-            }
-            
 
             try {
                 if (newMark != null) {
@@ -354,10 +328,8 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
     public void cleanup() {
     	
     	try {
-			
     		Set<Integer> inUse = referenceStoreAdapter.getReferenceFileIdsInUse();
 			asyncDataManager.consolidateDataFilesNotIn(inUse);
-			
 		} catch (IOException e) {
             log.error("Could not cleanup data files: "+e, e);
 		}
@@ -386,6 +358,11 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
         if (store == null) {
         	ReferenceStore checkpointStore = referenceStoreAdapter.createQueueReferenceStore(destination);
             store = new QuickMessageStore(this, checkpointStore, destination);
+            try {
+				store.start();
+			} catch (Exception e) {
+				throw IOExceptionSupport.create(e);
+			}
             queues.put(destination, store);
         }
         return store;
@@ -396,6 +373,11 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
         if (store == null) {
         	TopicReferenceStore checkpointStore = referenceStoreAdapter.createTopicReferenceStore(destinationName);
             store = new QuickTopicMessageStore(this, checkpointStore, destinationName);
+            try {
+				store.start();
+			} catch (Exception e) {
+				throw IOExceptionSupport.create(e);
+			}
             topics.put(destinationName, store);
         }
         return store;
@@ -445,7 +427,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
      * @throws InvalidLocationException
      * @throws IllegalStateException
      */
-    private void recover() throws IllegalStateException, IOException, IOException {
+    private void recover() throws IllegalStateException, IOException {
 
         Location pos = null;
         int transactionCounter = 0;
@@ -594,8 +576,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
         newPercentUsage = ((newPercentUsage)/10)*10;
         oldPercentUsage = ((oldPercentUsage)/10)*10;
         if (newPercentUsage >= 70 && oldPercentUsage < newPercentUsage) {
-            boolean sync = newPercentUsage >= 90;
-            checkpoint(sync);
+            checkpoint(false);
         }
     }
     

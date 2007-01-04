@@ -18,12 +18,15 @@
 package org.apache.activemq.store.quick;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -38,6 +41,8 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.ReferenceStore;
 import org.apache.activemq.store.ReferenceStore.ReferenceData;
+import org.apache.activemq.thread.Task;
+import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.TransactionTemplate;
@@ -66,7 +71,13 @@ public class QuickMessageStore implements MessageStore {
     private LinkedHashMap<MessageId, ReferenceData> cpAddedMessageIds;
     
     protected Location lastLocation;
+    protected Location lastWrittenLocation;
+    
     protected HashSet<Location> inFlightTxLocations = new HashSet<Location>();
+
+	protected final TaskRunner asyncWriteTask;
+	protected CountDownLatch flushLatch;
+	private final AtomicReference<Location> mark = new AtomicReference<Location>();
 
     public QuickMessageStore(QuickPersistenceAdapter adapter, ReferenceStore referenceStore, ActiveMQDestination destination) {
         this.peristenceAdapter = adapter;
@@ -74,6 +85,12 @@ public class QuickMessageStore implements MessageStore {
         this.referenceStore = referenceStore;
         this.destination = destination;
         this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext());
+        
+        asyncWriteTask = adapter.getTaskRunnerFactory().createTaskRunner(new Task(){
+			public boolean iterate() {
+				asyncWrite();
+				return false;
+			}}, "Checkpoint: "+destination);
     }
     
     public void setUsageManager(UsageManager usageManager) {
@@ -123,7 +140,7 @@ public class QuickMessageStore implements MessageStore {
         }
     }
 
-    private void addMessage(final Message message, final Location location) {
+    private void addMessage(final Message message, final Location location) throws InterruptedIOException {
         ReferenceData data = new ReferenceData();
     	data.setExpiration(message.getExpiration());
     	data.setFileId(location.getDataFileId());
@@ -132,6 +149,11 @@ public class QuickMessageStore implements MessageStore {
             lastLocation = location;
             messages.put(message.getMessageId(), data);
         }
+        try {
+			asyncWriteTask.wakeup();
+		} catch (InterruptedException e) {
+			throw new InterruptedIOException();
+		}
     }
     
     public void replayAddMessage(ConnectionContext context, Message message, Location location) {
@@ -193,14 +215,23 @@ public class QuickMessageStore implements MessageStore {
         }
     }
     
-    private void removeMessage(final MessageAck ack, final Location location) {
-        synchronized (this) {
+    private void removeMessage(final MessageAck ack, final Location location) throws InterruptedIOException {
+    	ReferenceData data;
+    	synchronized (this) {
             lastLocation = location;
             MessageId id = ack.getLastMessageId();
-            ReferenceData data = messages.remove(id);
+            data = messages.remove(id);
             if (data == null) {
                 messageAcks.add(ack);
             }
+        }
+    	
+        if (data == null) {
+            try {
+    			asyncWriteTask.wakeup();
+    		} catch (InterruptedException e) {
+    			throw new InterruptedIOException();
+    		}
         }
     }
     
@@ -216,34 +247,77 @@ public class QuickMessageStore implements MessageStore {
             log.warn("Could not replay acknowledge for message '" + messageAck.getLastMessageId() + "'.  Message may have already been acknowledged. reason: " + e);
         }
     }
+    
+    /**
+     * Waits till the lastest data has landed on the referenceStore
+     * @throws InterruptedIOException 
+     */
+    public void flush() throws InterruptedIOException {
+    	log.debug("flush");
+    	CountDownLatch countDown;
+    	synchronized(this) {
+    		if( lastWrittenLocation == lastLocation ) {
+    			return;
+    		}
+    		if( flushLatch== null ) {
+    			flushLatch = new CountDownLatch(1);
+    		}
+    		countDown = flushLatch;
+    	}
+    	try {
+        	asyncWriteTask.wakeup();
+	    	countDown.await();
+		} catch (InterruptedException e) {
+			throw new InterruptedIOException();
+		}
+	}
 
     /**
      * @return
      * @throws IOException
      */
-    public Location checkpoint() throws IOException {
-        return checkpoint(null);
+    private void asyncWrite() {
+        try {
+        	CountDownLatch countDown;
+        	synchronized(this) {
+        		countDown = flushLatch;
+        		flushLatch = null;
+        	}
+			
+        	mark.set(doAsyncWrite());
+			
+			if ( countDown != null ) {
+				countDown.countDown();
+			}
+		} catch (IOException e) {
+			log.error("Checkpoint failed: "+e, e);
+		}
     }
     
     /**
      * @return
      * @throws IOException
      */
-    public Location checkpoint(final Callback postCheckpointTest) throws IOException {
+    protected Location doAsyncWrite() throws IOException {
 
     	final ArrayList<MessageAck> cpRemovedMessageLocations;
         final ArrayList<Location> cpActiveJournalLocations;
         final int maxCheckpointMessageAddSize = peristenceAdapter.getMaxCheckpointMessageAddSize();
-
+        final Location lastLocation;
+        
         // swap out the message hash maps..
         synchronized (this) {
             cpAddedMessageIds = this.messages;
             cpRemovedMessageLocations = this.messageAcks;
             cpActiveJournalLocations=new ArrayList<Location>(inFlightTxLocations);            
             this.messages = new LinkedHashMap<MessageId, ReferenceData>();
-            this.messageAcks = new ArrayList<MessageAck>();            
+            this.messageAcks = new ArrayList<MessageAck>();      
+            lastLocation = this.lastLocation;
         }
 
+        if( log.isDebugEnabled() )
+        	log.debug("Doing batch update... adding: "+cpAddedMessageIds.size()+" removing: "+cpRemovedMessageLocations.size()+" ");
+        
         transactionTemplate.run(new Callback() {
             public void execute() throws Exception {
 
@@ -284,15 +358,15 @@ public class QuickMessageStore implements MessageStore {
                     }
                 }
                 
-                if( postCheckpointTest!= null ) {
-                    postCheckpointTest.execute();
-                }
             }
 
         });
+        
+        log.debug("Batch update done.");
 
         synchronized (this) {
             cpAddedMessageIds = null;
+            lastWrittenLocation = lastLocation;
         }
         
         if( cpActiveJournalLocations.size() > 0 ) {
@@ -338,7 +412,7 @@ public class QuickMessageStore implements MessageStore {
     }
 
     /**
-     * Replays the checkpointStore first as those messages are the oldest ones,
+     * Replays the referenceStore first as those messages are the oldest ones,
      * then messages are replayed from the transaction log and then the cache is
      * updated.
      * 
@@ -346,7 +420,7 @@ public class QuickMessageStore implements MessageStore {
      * @throws Exception 
      */
     public void recover(final MessageRecoveryListener listener) throws Exception {
-        peristenceAdapter.checkpoint(true);
+        flush();
         referenceStore.recover(new RecoveryListenerAdapter(this, listener));
     }
 
@@ -355,6 +429,7 @@ public class QuickMessageStore implements MessageStore {
     }
 
     public void stop() throws Exception {
+        asyncWriteTask.shutdown();
         referenceStore.stop();
     }
 
@@ -369,7 +444,7 @@ public class QuickMessageStore implements MessageStore {
      * @see org.apache.activemq.store.MessageStore#removeAllMessages(ConnectionContext)
      */
     public void removeAllMessages(ConnectionContext context) throws IOException {
-        peristenceAdapter.checkpoint(true);
+        flush();
         referenceStore.removeAllMessages(context);
     }
     
@@ -391,13 +466,12 @@ public class QuickMessageStore implements MessageStore {
      * @see org.apache.activemq.store.MessageStore#getMessageCount()
      */
     public int getMessageCount() throws IOException{
-        peristenceAdapter.checkpoint(true);
+        flush();
         return referenceStore.getMessageCount();
     }
 
-   
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
-        peristenceAdapter.checkpoint(true);
+	public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+        flush();
         referenceStore.recoverNextMessages(maxReturned,new RecoveryListenerAdapter(this, listener));
         
     }
@@ -407,5 +481,9 @@ public class QuickMessageStore implements MessageStore {
         referenceStore.resetBatching();
         
     }
+
+	public Location getMark() {
+		return mark.get();
+	}
 
 }

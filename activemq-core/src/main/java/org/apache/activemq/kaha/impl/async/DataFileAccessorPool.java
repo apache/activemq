@@ -36,9 +36,12 @@ public class DataFileAccessorPool {
 	int MAX_OPEN_READERS_PER_FILE=5;
 	
 	class Pool {
+		
 		private final DataFile file;
 		private final ArrayList<DataFileAccessor> pool = new ArrayList<DataFileAccessor>();
 		private boolean used; 
+		private int openCounter;
+		private boolean disposed;
 		
 		public Pool(DataFile file) {
 			this.file = file;
@@ -52,12 +55,14 @@ public class DataFileAccessorPool {
 				rc = (DataFileAccessor) pool.remove(pool.size()-1);
 			}
 			used=true;
+			openCounter++;
 			return rc;
 		}
 
 		public void closeDataFileReader(DataFileAccessor reader) {
+			openCounter--;
 			used=true;
-			if(pool.size() >= MAX_OPEN_READERS_PER_FILE ) {
+			if(pool.size() >= MAX_OPEN_READERS_PER_FILE || disposed) {
 				reader.dispose();
 			} else {
 				pool.add(reader);
@@ -77,6 +82,11 @@ public class DataFileAccessorPool {
 				reader.dispose();
 			}
 			pool.clear();
+			disposed=true;
+		}
+
+		public int getOpenCounter() {
+			return openCounter;
 		}
 		
 	}
@@ -102,17 +112,17 @@ public class DataFileAccessorPool {
 		}
 	}
 	
-	synchronized void disposeDataFileAccessors(DataFile dataFile) throws IOException {
+	synchronized void disposeDataFileAccessors(DataFile dataFile) {
 		if( closed ) {
-			throw new IOException("Closed.");
+			throw new IllegalStateException("Closed.");
 		}		
 		Pool pool = pools.get(dataFile.getDataFileId());
 		if( pool != null ) {
-			if( !pool.isUsed() ) {
+			if( pool.getOpenCounter()==0 ) {
 				pool.dispose();
 				pools.remove(dataFile.getDataFileId());
 			} else {
-				throw new IOException("The data file is still in use: "+dataFile);
+				throw new IllegalStateException("The data file is still in use: "+dataFile+", use count: "+pool.getOpenCounter());
 			}
 		}
 	}
