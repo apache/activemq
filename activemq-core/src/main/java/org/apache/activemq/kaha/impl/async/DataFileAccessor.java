@@ -40,7 +40,7 @@ final class DataFileAccessor {
     /**
      * Construct a Store reader
      * 
-     * @param file
+     * @param fileId
      * @throws IOException 
      */
     public DataFileAccessor(AsyncDataManager dataManager, DataFile dataFile) throws IOException{
@@ -66,19 +66,28 @@ final class DataFileAccessor {
     
     public ByteSequence readRecord(Location location) throws IOException {
     	
-    	if( !location.isValid() || location.getSize()==Location.NOT_SET )
+    	if( !location.isValid() )
     		throw new IOException("Invalid location: "+location);
-    	
+    	    	
     	WriteCommand asyncWrite = (WriteCommand) inflightWrites.get(new WriteKey(location));
     	if( asyncWrite!= null ) {
     		return asyncWrite.data;
     	}
 
 		try {
+
+			if( location.getSize()==Location.NOT_SET ) {
+		        file.seek(location.getOffset());
+		        location.setSize(file.readInt());
+				file.seek(location.getOffset()+AsyncDataManager.ITEM_HEAD_SPACE);
+	    	} else {
+				file.seek(location.getOffset()+AsyncDataManager.ITEM_HEAD_SPACE);
+	    	}
+			
 			byte[] data=new byte[location.getSize()-AsyncDataManager.ITEM_HEAD_FOOT_SPACE];
-			file.seek(location.getOffset()+AsyncDataManager.ITEM_HEAD_SPACE);
 			file.readFully(data);
 			return new ByteSequence(data, 0, data.length);
+
 		} catch (RuntimeException e) {
 			throw new IOException("Invalid location: "+location+", : "+e);
 		}

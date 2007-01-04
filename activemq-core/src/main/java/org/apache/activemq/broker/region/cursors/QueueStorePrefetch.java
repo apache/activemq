@@ -141,8 +141,8 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
         batchList.addLast(message);
     }
 
-    public void recoverMessageReference(String messageReference) throws Exception{
-        Message msg=store.getMessage(new MessageId(messageReference));
+    public void recoverMessageReference(MessageId messageReference) throws Exception {
+        Message msg=store.getMessage(messageReference);
         if(msg!=null){
             recoverMessage(msg);
         }else{

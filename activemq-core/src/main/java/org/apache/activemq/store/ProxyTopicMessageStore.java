@@ -95,13 +95,6 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         return delegate.getDestination();
     }
 
-    public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
-        delegate.addMessageReference(context, messageId, expirationTime, messageRef);
-    }
-    public String getMessageReference(MessageId identity) throws IOException {
-        return delegate.getMessageReference(identity);
-    }
-
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return delegate.getAllSubscriptions();
     }

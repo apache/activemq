@@ -78,7 +78,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                             listener.recoverMessage(msg);
                         }
                         public void recoverMessageReference(String reference) throws Exception {
-                            listener.recoverMessageReference(reference);
+                            listener.recoverMessageReference(new MessageId(reference));
                         }
                         
                         public void finished(){
@@ -118,7 +118,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                         }
 
                         public void recoverMessageReference(String reference) throws Exception{
-                            listener.recoverMessageReference(reference);
+                            listener.recoverMessageReference(new MessageId(reference));
                         }
 
                         public void finished(){

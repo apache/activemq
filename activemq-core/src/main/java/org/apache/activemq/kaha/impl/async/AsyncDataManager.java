@@ -27,9 +27,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -264,12 +266,28 @@ public final class AsyncDataManager {
     }
 
     public synchronized boolean delete() throws IOException{
-        boolean result=true;
+    	
+    	// Close all open file handles...
+    	appender.close();
+    	accessorPool.close();
+        
+    	boolean result=true;
         for(Iterator i=fileMap.values().iterator();i.hasNext();){
             DataFile dataFile=(DataFile) i.next();
             result&=dataFile.delete();
         }
         fileMap.clear();
+        lastAppendLocation.set(null);
+        mark=null;
+        currentWriteFile=null;
+        
+    	// reopen open file handles...
+    	accessorPool = new DataFileAccessorPool(this);
+    	if( useNio) {
+    		appender = new NIODataFileAppender(this);
+    	}	else {
+    		appender = new DataFileAppender(this);
+    	}
         return result;
     }
     
@@ -307,6 +325,27 @@ public final class AsyncDataManager {
             }
         }
     }
+    
+    
+    synchronized public void consolidateDataFilesNotIn(Set<Integer> inUse) throws IOException {
+		
+		// Substract and the difference is the set of files that are no longer needed :)
+		Set<Integer> unUsed = new HashSet<Integer>(fileMap.keySet());
+		unUsed.removeAll(inUse);
+		
+        List<DataFile> purgeList=new ArrayList<DataFile>();
+		for (Integer key : unUsed) {
+            DataFile dataFile=(DataFile) fileMap.get(key);
+            if( dataFile!=currentWriteFile ) {
+                purgeList.add(dataFile);
+            }
+		}
+		
+        for (DataFile dataFile : purgeList) {
+            removeDataFile(dataFile);
+		}
+        
+	}
 
     public synchronized void consolidateDataFiles() throws IOException{
         List<DataFile> purgeList=new ArrayList<DataFile>();
@@ -476,6 +515,5 @@ public final class AsyncDataManager {
 	public void setLastAppendLocation(Location lastSyncedLocation) {
 		this.lastAppendLocation.set(lastSyncedLocation);
 	}
-
 
 }

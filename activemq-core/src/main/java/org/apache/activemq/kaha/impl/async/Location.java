@@ -20,13 +20,14 @@ package org.apache.activemq.kaha.impl.async;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Used as a location in the data store.
  * 
  * @version $Revision: 1.2 $
  */
-public final class Location {
+public final class Location implements Comparable<Location> {
     
     public static final byte MARK_TYPE=-1;
     public static final byte USER_TYPE=1;    
@@ -37,6 +38,7 @@ public final class Location {
     private int offset=NOT_SET;
     private int size=NOT_SET;
     private byte type=NOT_SET_TYPE;
+    private CountDownLatch latch;
 
     public Location(){}
     
@@ -100,15 +102,6 @@ public final class Location {
         return result;
     }
 
-	public int compareTo(Object o) {
-		Location l = (Location)o;
-		if( dataFileId == l.dataFileId ) {
-			int rc = offset-l.offset;
-			return rc;
-		}
-		return dataFileId - l.dataFileId;
-	}
-
 	public void writeExternal(DataOutput dos) throws IOException {
 		dos.writeInt(dataFileId);
 		dos.writeInt(offset);
@@ -121,6 +114,22 @@ public final class Location {
 		offset = dis.readInt();
 		size = dis.readInt();
 		type = dis.readByte();
+	}
+
+	public CountDownLatch getLatch() {
+		return latch;
+	}
+	public void setLatch(CountDownLatch latch) {
+		this.latch = latch;
+	}
+
+	public int compareTo(Location o) {
+		Location l = (Location)o;
+		if( dataFileId == l.dataFileId ) {
+			int rc = offset-l.offset;
+			return rc;
+		}
+		return dataFileId - l.dataFileId;
 	}
 
 }

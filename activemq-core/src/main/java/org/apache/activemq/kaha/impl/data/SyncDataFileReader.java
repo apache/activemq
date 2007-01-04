@@ -35,7 +35,7 @@ public final class SyncDataFileReader {
     /**
      * Construct a Store reader
      * 
-     * @param file
+     * @param fileId
      */
     SyncDataFileReader(DataManagerImpl fileManager){
         this.dataManager=fileManager;

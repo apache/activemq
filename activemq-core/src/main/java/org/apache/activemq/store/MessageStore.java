@@ -41,18 +41,6 @@ public interface MessageStore extends Service{
     public void addMessage(ConnectionContext context,Message message) throws IOException;
 
     /**
-     * Adds a message reference to the message store
-     * 
-     * @param context 
-     * @param messageId 
-     * @param expirationTime 
-     * @param messageRef 
-     * @throws IOException 
-     */
-    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
-            throws IOException;
-
-    /**
      * Looks up a message using either the String messageID or the messageNumber. Implementations are encouraged to fill
      * in the missing key if its easy to do so.
      * 
@@ -61,16 +49,6 @@ public interface MessageStore extends Service{
      * @throws IOException 
      */
     public Message getMessage(MessageId identity) throws IOException;
-
-    /**
-     * Looks up a message using either the String messageID or the messageNumber. Implementations are encouraged to fill
-     * in the missing key if its easy to do so.
-     * 
-     * @param identity which contains either the messageID or the messageNumber
-     * @return the message or null if it does not exist
-     * @throws IOException 
-     */
-    public String getMessageReference(MessageId identity) throws IOException;
 
     /**
      * Removes a message from the message store.

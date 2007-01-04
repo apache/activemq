@@ -36,10 +36,10 @@ import org.apache.activemq.store.TopicMessageStore;
  */
 public class KahaTopicMessageStore extends KahaMessageStore implements TopicMessageStore{
 
-    private ListContainer ackContainer;
+    protected ListContainer ackContainer;
     private Map subscriberContainer;
     private Store store;
-    private Map subscriberMessages=new ConcurrentHashMap();
+    protected Map subscriberMessages=new ConcurrentHashMap();
 
     public KahaTopicMessageStore(Store store,ListContainer messageContainer,ListContainer ackContainer,
             MapContainer subsContainer,ActiveMQDestination destination,int maximumCacheSize) throws IOException{
@@ -139,18 +139,14 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                 ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
                 Object msg=messageContainer.get(ref.getMessageEntry());
                 if(msg!=null){
-                    if(msg.getClass()==String.class){
-                        listener.recoverMessageReference((String)msg);
-                    }else{
-                        listener.recoverMessage((Message)msg);
-                    }
+                	recover(listener, msg);
                 }
             }
         }
         listener.finished();
     }
 
-    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
+	public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
             MessageRecoveryListener listener) throws Exception{
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
@@ -170,13 +166,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                     ConsumerMessageRef consumerRef=container.get(entry);
                     Object msg=messageContainer.get(consumerRef.getMessageEntry());
                     if(msg!=null){
-                        if(msg.getClass()==String.class){
-                            String ref=msg.toString();
-                            listener.recoverMessageReference(ref);
-                        }else{
-                            Message message=(Message)msg;
-                            listener.recoverMessage(message);
-                        }
+                    	recover(listener, msg);
                         count++;
                     }
                     container.setBatchEntry(entry);
@@ -194,8 +184,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     }
 
     public SubscriptionInfo[] getAllSubscriptions() throws IOException{
-        return (SubscriptionInfo[])subscriberContainer.values().toArray(
-                new SubscriptionInfo[subscriberContainer.size()]);
+        return (SubscriptionInfo[])subscriberContainer.values().toArray(new SubscriptionInfo[subscriberContainer.size()]);
     }
 
     protected String getSubscriptionKey(String clientId,String subscriberName){
@@ -237,30 +226,6 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         String key=getSubscriptionKey(clientId,subscriberName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
         return container.size();
-    }
-
-    /**
-     * @param context
-     * @param messageId
-     * @param expirationTime
-     * @param messageRef
-     * @throws IOException
-     * @see org.apache.activemq.store.MessageStore#addMessageReference(org.apache.activemq.broker.ConnectionContext,
-     *      org.apache.activemq.command.MessageId, long, java.lang.String)
-     */
-    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
-            throws IOException{
-        messageContainer.add(messageRef);
-    }
-
-    /**
-     * @param identity
-     * @return String
-     * @throws IOException
-     * @see org.apache.activemq.store.MessageStore#getMessageReference(org.apache.activemq.command.MessageId)
-     */
-    public String getMessageReference(MessageId identity) throws IOException{
-        return null;
     }
 
     /**

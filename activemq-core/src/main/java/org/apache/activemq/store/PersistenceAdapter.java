@@ -19,6 +19,7 @@ package org.apache.activemq.store;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.memory.UsageManager;
@@ -39,7 +40,7 @@ public interface PersistenceAdapter extends Service {
      *
      * @return
      */
-    public Set getDestinations();
+    public Set<ActiveMQDestination> getDestinations();
 
     /**
      * Factory method to create a new queue message store with the given destination name
@@ -96,10 +97,7 @@ public interface PersistenceAdapter extends Service {
      * @throws IOException
      */
     public void deleteAllMessages() throws IOException;
-    
-    public boolean isUseExternalMessageReferences();
-    public void setUseExternalMessageReferences(boolean enable);
-    
+        
     /**
      * @param usageManager The UsageManager that is controlling the broker's memory usage.
      */

@@ -26,7 +26,7 @@ import java.io.IOException;
  * 
  * @version $Revision: 1.2 $
  */
-public interface Marshaller {
+public interface Marshaller<T> {
     
        
     /**
@@ -35,7 +35,7 @@ public interface Marshaller {
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(Object object, DataOutput dataOut) throws IOException;
+    public void writePayload(T object, DataOutput dataOut) throws IOException;
     
     
     /**
@@ -44,7 +44,7 @@ public interface Marshaller {
      * @return unmarshalled object
      * @throws IOException
      */
-    public Object readPayload(DataInput dataIn) throws IOException;
+    public T readPayload(DataInput dataIn) throws IOException;
 
    
 }

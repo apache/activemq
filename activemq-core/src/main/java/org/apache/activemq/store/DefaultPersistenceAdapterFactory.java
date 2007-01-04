@@ -20,7 +20,6 @@ package org.apache.activemq.store;
 import java.io.File;
 import java.io.IOException;
 
-
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.active.JournalImpl;
 import org.apache.activeio.journal.active.JournalLockedException;
@@ -29,7 +28,6 @@ import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
-import org.apache.activemq.store.journal.QuickJournalPersistenceAdapter;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
@@ -65,13 +63,13 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         }
         
         // Setup the Journal
-        if( useQuickJournal ) {
-            return new QuickJournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
-        }  else {
+//        if( useQuickJournal ) {
+//            return new QuickJournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
+//        }  else {
             KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("amqstore")); 
             return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
             //return new JournalPersistenceAdapter(getJournal(), adaptor, getTaskRunnerFactory());
-        }
+//        }
     }
 
     public int getJournalLogFiles() {

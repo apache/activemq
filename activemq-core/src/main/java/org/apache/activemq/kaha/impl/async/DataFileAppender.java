@@ -65,16 +65,13 @@ class DataFileAppender {
 		
 		public final DataFile dataFile;
 		public final WriteCommand first;
-		public CountDownLatch latch;
+		public final CountDownLatch latch = new CountDownLatch(1);
 		public int size;
 		
 		public WriteBatch(DataFile dataFile, WriteCommand write) throws IOException {
 			this.dataFile=dataFile;
 			this.first=write;
 			size+=write.location.getSize();
-			if( write.sync ) {
-				latch = new CountDownLatch(1);
-			}
 		}
 		
 		public boolean canAppend(DataFile dataFile, WriteCommand write) {
@@ -88,9 +85,6 @@ class DataFileAppender {
 		public void append(WriteCommand write) throws IOException {
 			this.first.getTailNode().linkAfter(write);
 			size+=write.location.getSize();
-			if( write.sync && latch==null ) {
-				latch = new CountDownLatch(1);
-			}
 		}
 	}
 	
@@ -122,7 +116,7 @@ class DataFileAppender {
     /**
      * Construct a Store writer
      * 
-     * @param file
+     * @param fileId
      */
     public DataFileAppender(AsyncDataManager dataManager){
         this.dataManager=dataManager;
@@ -161,7 +155,7 @@ class DataFileAppender {
 	        DataFile dataFile=dataManager.allocateLocation(location);
         	batch = enqueue(dataFile, write);
         }
-                
+        location.setLatch(batch.latch);
     	if( sync ) {
     		try {
     			batch.latch.await();
@@ -346,9 +340,7 @@ class DataFileAppender {
     			dataManager.setLastAppendLocation( lastWrite.location );
     			
     			// Signal any waiting threads that the write is on disk.
-    			if( wb.latch!=null ) {
-    				wb.latch.countDown();
-    			}
+				wb.latch.countDown();
     			
     			// Now that the data is on disk, remove the writes from the in flight
     			// cache.
