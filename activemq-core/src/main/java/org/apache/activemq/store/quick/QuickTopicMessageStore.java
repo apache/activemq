@@ -120,16 +120,18 @@ public class QuickTopicMessageStore extends QuickMessageStore implements TopicMe
         
     }
     
-    public void replayAcknowledge(ConnectionContext context, String clientId, String subscritionName, MessageId messageId) {
+    public boolean replayAcknowledge(ConnectionContext context, String clientId, String subscritionName, MessageId messageId) {
         try {
             SubscriptionInfo sub = topicReferenceStore.lookupSubscription(clientId, subscritionName);
             if( sub != null ) {
                 topicReferenceStore.acknowledge(context, clientId, subscritionName, messageId);
+                return true;
             }
         }
         catch (Throwable e) {
             log.debug("Could not replay acknowledge for message '" + messageId + "'.  Message may have already been acknowledged. reason: " + e);
         }
+        return false;
     }
         
 

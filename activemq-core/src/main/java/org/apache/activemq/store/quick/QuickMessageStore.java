@@ -157,7 +157,7 @@ public class QuickMessageStore implements MessageStore {
 		}
     }
     
-    public void replayAddMessage(ConnectionContext context, Message message, Location location) {
+    public boolean replayAddMessage(ConnectionContext context, Message message, Location location) {
     	MessageId id = message.getMessageId();
         try {
             // Only add the message if it has not already been added.
@@ -168,13 +168,13 @@ public class QuickMessageStore implements MessageStore {
             	data.setFileId(location.getDataFileId());
             	data.setOffset(location.getOffset());
                 referenceStore.addMessageReference(context, id, data);
-            	System.out.println("referenceStore.put "+id+"-->"+data);
-                
+                return true;
             }
         }
         catch (Throwable e) {
             log.warn("Could not replay add for message '" + id + "'.  Message may have already been added. reason: " + e,e);
         }
+        return false;
     }    
     
     /**
@@ -238,17 +238,19 @@ public class QuickMessageStore implements MessageStore {
         }
     }
     
-    public void replayRemoveMessage(ConnectionContext context, MessageAck messageAck) {
+    public boolean replayRemoveMessage(ConnectionContext context, MessageAck messageAck) {
         try {
             // Only remove the message if it has not already been removed.
             ReferenceData t = referenceStore.getMessageReference(messageAck.getLastMessageId());
             if( t!=null ) {
                 referenceStore.removeMessage(context, messageAck);
+                return true;
             }
         }
         catch (Throwable e) {
             log.warn("Could not replay acknowledge for message '" + messageAck.getLastMessageId() + "'.  Message may have already been acknowledged. reason: " + e);
         }
+        return false;
     }
     
     /**
@@ -335,7 +337,6 @@ public class QuickMessageStore implements MessageStore {
                 	Entry<MessageId, ReferenceData> entry = iterator.next();
                     try {
                     	referenceStore.addMessageReference(context, entry.getKey(), entry.getValue() );
-                    	System.out.println("referenceStore.put "+entry.getKey()+"-->"+entry.getValue());
                     } catch (Throwable e) {
                         log.warn("Message could not be added to long term store: " + e.getMessage(), e);
                     }
@@ -398,7 +399,6 @@ public class QuickMessageStore implements MessageStore {
         
         if( data==null ) {
         	data = referenceStore.getMessageReference(identity);
-        	System.out.println("referenceStore.get "+identity+"-->"+data);
             if( data==null ) {
             	return null;
             }
