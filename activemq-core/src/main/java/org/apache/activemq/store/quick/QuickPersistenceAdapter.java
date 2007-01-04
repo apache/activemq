@@ -422,9 +422,10 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
     private void recover() throws IllegalStateException, IOException {
 
         Location pos = null;
-        int transactionCounter = 0;
+        int redoCounter = 0;
 
         log.info("Journal Recovery Started from: " + asyncDataManager);
+        long start = System.currentTimeMillis();
         ConnectionContext context = new ConnectionContext();
 
         // While we have records in the journal.
@@ -439,8 +440,9 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
                     transactionStore.addMessage(store, message, pos);
                 }
                 else {
-                    store.replayAddMessage(context, message, pos);
-                    transactionCounter++;
+                    if( store.replayAddMessage(context, message, pos) ) {
+                    	redoCounter++;
+                    }
                 }
             } else {
                 switch (c.getDataStructureType()) {
@@ -452,8 +454,9 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
                         transactionStore.removeMessage(store, command.getMessageAck(), pos);
                     }
                     else {
-                        store.replayRemoveMessage(context, command.getMessageAck());
-                        transactionCounter++;
+                        if( store.replayRemoveMessage(context, command.getMessageAck()) ) {
+                        	redoCounter++;
+                        }
                     }
                 }
                 break;
@@ -465,8 +468,9 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
                         transactionStore.acknowledge(store, command, pos);
                     }
                     else {
-                        store.replayAcknowledge(context, command.getClientId(), command.getSubscritionName(), command.getMessageId());
-                        transactionCounter++;
+                        if( store.replayAcknowledge(context, command.getClientId(), command.getSubscritionName(), command.getMessageId()) ) {
+                        	redoCounter++;
+                        }
                     }
                 }
                 break;
@@ -491,18 +495,20 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
                             for (Iterator iter = tx.getOperations().iterator(); iter.hasNext();) {
                                 TxOperation op = (TxOperation) iter.next();
                                 if (op.operationType == TxOperation.ADD_OPERATION_TYPE) {
-                                    op.store.replayAddMessage(context, (Message)op.data, op.location);
+                                    if( op.store.replayAddMessage(context, (Message)op.data, op.location) )
+                                        redoCounter++;
                                 }
                                 if (op.operationType == TxOperation.REMOVE_OPERATION_TYPE) {
-                                    op.store.replayRemoveMessage(context, (MessageAck) op.data);
+                                    if( op.store.replayRemoveMessage(context, (MessageAck) op.data) )
+                                        redoCounter++;
                                 }
                                 if (op.operationType == TxOperation.ACK_OPERATION_TYPE) {
                                     JournalTopicAck ack = (JournalTopicAck) op.data;
-                                    ((QuickTopicMessageStore) op.store).replayAcknowledge(context, ack.getClientId(), ack.getSubscritionName(), ack
-                                            .getMessageId());
+                                    if( ((QuickTopicMessageStore) op.store).replayAcknowledge(context, ack.getClientId(), ack.getSubscritionName(), ack.getMessageId()) ) {
+                                        redoCounter++;
+                                    }
                                 }
                             }
-                            transactionCounter++;
                             break;
                         case JournalTransaction.LOCAL_ROLLBACK:
                         case JournalTransaction.XA_ROLLBACK:
@@ -524,11 +530,11 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
                 }
             }
         }
-
         Location location = writeTraceMessage("RECOVERED "+new Date(), true);
         asyncDataManager.setMark(location, true);
+        long end = System.currentTimeMillis();
 
-        log.info("Journal Recovered: " + transactionCounter + " message(s) in transactions recovered.");
+        log.info("Recovered " + redoCounter + " operations from redo log in "+((end-start)/1000.0f)+" seconds.");
     }
 
     private IOException createReadException(Location location, Exception e) {
