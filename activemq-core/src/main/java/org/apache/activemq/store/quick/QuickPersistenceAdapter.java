@@ -88,7 +88,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
 
     private UsageManager usageManager;
 
-    private long cleanupInterval = 1000 * 10;
+    private long cleanupInterval = 1000 * 1/10;
     private long checkpointInterval = 1000 * 10;
     
     private int maxCheckpointWorkers = 1;
@@ -147,15 +147,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
         referenceStoreAdapter.start();
     	
     	Set<Integer> files = referenceStoreAdapter.getReferenceFileIdsInUse();
-    	for (Integer fileId : files) {
-			try {
-				asyncDataManager.addInterestInFile(fileId);
-			} catch (IOException e) {
-				// We can expect these since referenceStoreAdapter is a litle behind in updates
-				// and it might think it has references to data files that have allready come and gone.. 
-				// This should get resolved once recovery kicks in.
-			}
-		}
+    	log.info("Active data files: "+files);
         
         checkpointTask = taskRunnerFactory.createTaskRunner(new Task(){
             public boolean iterate() {
@@ -172,8 +164,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
 	        public void run() {
                 checkpoint(false);
 	        }
-	    };
-	    
+	    };	    
         Scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval);
         
         periodicCleanupTask = new Runnable() {
@@ -193,6 +184,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
         
         this.usageManager.removeUsageListener(this);        
         Scheduler.cancel(periodicCheckpointTask);
+        Scheduler.cancel(periodicCleanupTask);
 
         
         Iterator<QuickMessageStore> iterator = queues.values().iterator();
@@ -499,7 +491,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
                             for (Iterator iter = tx.getOperations().iterator(); iter.hasNext();) {
                                 TxOperation op = (TxOperation) iter.next();
                                 if (op.operationType == TxOperation.ADD_OPERATION_TYPE) {
-                                    op.store.replayAddMessage(context, (Message)op.data, pos);
+                                    op.store.replayAddMessage(context, (Message)op.data, op.location);
                                 }
                                 if (op.operationType == TxOperation.REMOVE_OPERATION_TYPE) {
                                     op.store.replayRemoveMessage(context, (MessageAck) op.data);

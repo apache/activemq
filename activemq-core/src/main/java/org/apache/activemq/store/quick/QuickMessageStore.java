@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.JournalQueueAck;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -167,6 +168,8 @@ public class QuickMessageStore implements MessageStore {
             	data.setFileId(location.getDataFileId());
             	data.setOffset(location.getOffset());
                 referenceStore.addMessageReference(context, id, data);
+            	System.out.println("referenceStore.put "+id+"-->"+data);
+                
             }
         }
         catch (Throwable e) {
@@ -332,6 +335,7 @@ public class QuickMessageStore implements MessageStore {
                 	Entry<MessageId, ReferenceData> entry = iterator.next();
                     try {
                     	referenceStore.addMessageReference(context, entry.getKey(), entry.getValue() );
+                    	System.out.println("referenceStore.put "+entry.getKey()+"-->"+entry.getValue());
                     } catch (Throwable e) {
                         log.warn("Message could not be added to long term store: " + e.getMessage(), e);
                     }
@@ -394,21 +398,23 @@ public class QuickMessageStore implements MessageStore {
         
         if( data==null ) {
         	data = referenceStore.getMessageReference(identity);
+        	System.out.println("referenceStore.get "+identity+"-->"+data);
+            if( data==null ) {
+            	return null;
+            }
         }
-        
-        if( data==null ) {
-        	return null;
-        }
-        
-        Message answer = null;
-        if (answer != null ) {
-            return answer;
-        }
-        
+                
     	Location location = new Location();
     	location.setDataFileId(data.getFileId());
     	location.setOffset(data.getOffset());
-    	return (Message) peristenceAdapter.readCommand(location);
+    	
+    	DataStructure rc = peristenceAdapter.readCommand(location);
+    	
+    	try {
+			return (Message) rc;
+		} catch (ClassCastException e) {
+			throw new IOException("Could not read message "+identity+" at location "+location+", expected a message, but got: "+rc);
+		}
     }
 
     /**

@@ -56,11 +56,13 @@ public class QuickTransactionStore implements TransactionStore {
         public byte operationType;
         public QuickMessageStore store;
         public Object data;
+        public Location location;
         
-        public TxOperation(byte operationType, QuickMessageStore store, Object data) {
+        public TxOperation(byte operationType, QuickMessageStore store, Object data, Location location) {
             this.operationType=operationType;
             this.store=store;
             this.data=data;
+            this.location=location;
         }
         
     }
@@ -77,16 +79,16 @@ public class QuickTransactionStore implements TransactionStore {
             this.location=location;
         }
 
-        public void add(QuickMessageStore store, Message msg) {
-            operations.add(new TxOperation(TxOperation.ADD_OPERATION_TYPE, store, msg));
+        public void add(QuickMessageStore store, Message msg, Location location) {
+            operations.add(new TxOperation(TxOperation.ADD_OPERATION_TYPE, store, msg, location));
         }
 
         public void add(QuickMessageStore store, MessageAck ack) {
-            operations.add(new TxOperation(TxOperation.REMOVE_OPERATION_TYPE, store, ack));
+            operations.add(new TxOperation(TxOperation.REMOVE_OPERATION_TYPE, store, ack, null));
         }
 
         public void add(QuickTopicMessageStore store, JournalTopicAck ack) {
-            operations.add(new TxOperation(TxOperation.ACK_OPERATION_TYPE, store, ack));
+            operations.add(new TxOperation(TxOperation.ACK_OPERATION_TYPE, store, ack, null));
         }
         
         public Message[] getMessages() {
@@ -283,7 +285,7 @@ public class QuickTransactionStore implements TransactionStore {
      */
     void addMessage(QuickMessageStore store, Message message, Location location) throws IOException {
         Tx tx = getTx(message.getTransactionId(), location);
-        tx.add(store, message);
+        tx.add(store, message, location);
     }
 
     /**
