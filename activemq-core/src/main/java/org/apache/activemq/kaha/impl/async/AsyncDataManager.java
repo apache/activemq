@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -89,12 +90,14 @@ public final class AsyncDataManager {
 	
     protected final ConcurrentHashMap<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
 
+	private Runnable cleanupTask;
+
     @SuppressWarnings("unchecked")
 	public synchronized void start() throws IOException {
     	if( started ) {
     		return;
-    		
     	}
+
     	
     	started=true;
     	directory.mkdirs();
@@ -158,6 +161,12 @@ public final class AsyncDataManager {
         }
         
         storeState(false);
+        
+    	cleanupTask = new Runnable(){
+			public void run() {
+				cleanup();
+			}};
+    	Scheduler.executePeriodically(cleanupTask, 1000*30);
     }
     
     private Location recoveryCheck(DataFile dataFile, Location location) throws IOException {
@@ -257,14 +266,24 @@ public final class AsyncDataManager {
 	}
 
     public synchronized void close() throws IOException{
+    	if( !started ) {
+    		return;
+    	}
+    	Scheduler.cancel(cleanupTask);
     	accessorPool.close();
     	storeState(false);
     	appender.close();
         fileMap.clear();
     	controlFile.unlock();
     	controlFile.dispose();
+    	started=false;
     }
 
+	private synchronized void cleanup() {
+		if( accessorPool!=null ) {
+			accessorPool.disposeUnused();
+		}
+	}
     public synchronized boolean delete() throws IOException{
     	
     	// Close all open file handles...
@@ -362,6 +381,7 @@ public final class AsyncDataManager {
     private void removeDataFile(DataFile dataFile) throws IOException{
         fileMap.remove(dataFile.getDataFileId());
         dataFile.unlink();
+        accessorPool.disposeDataFileAccessors(dataFile);        
         boolean result=dataFile.delete();
         log.debug("discarding data file "+dataFile+(result?"successful ":"failed"));
     }

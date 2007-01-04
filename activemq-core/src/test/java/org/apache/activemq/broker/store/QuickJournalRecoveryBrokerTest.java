@@ -54,14 +54,14 @@ public class QuickJournalRecoveryBrokerTest extends RecoveryBrokerTest {
     }
 
     
-    @Override
-    public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Exception {
-    	// TODO: this test is currently failing in base class.. overriden to avoid failure
-    }
-    
-    @Override
-    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
-    	// TODO: this test is currently failing in base class.. overriden to avoid failure
-    }
+//    @Override
+//    public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Exception {
+//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
+//    }
+//    
+//    @Override
+//    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
+//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
+//    }
     
 }
