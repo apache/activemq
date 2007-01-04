@@ -114,8 +114,8 @@ public class KahaMessageStore implements MessageStore, UsageListener{
             messageContainer.remove(entry);
         }else{
             for (entry = messageContainer.getFirst();entry != null; entry = messageContainer.getNext(entry)) {
-                Message msg=(Message)messageContainer.get(entry);
-                if(msg.getMessageId().equals(msgId)){
+                MessageId id=getMessageId(messageContainer.get(entry));
+                if(id.equals(msgId)){
                     messageContainer.remove(entry);
                     break;
                 }

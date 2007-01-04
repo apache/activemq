@@ -30,6 +30,7 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.kahadaptor.KahaReferenceStoreAdapter.ReferenceRecord;
 
 /**
  * @version $Revision: 1.5 $
@@ -54,6 +55,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         }
     }
 
+    @Override
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
         int subscriberCount=subscriberMessages.size();
         if(subscriberCount>0){

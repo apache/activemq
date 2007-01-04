@@ -102,6 +102,21 @@ public class DataFileAccessorPool {
 		}
 	}
 	
+	synchronized void disposeDataFileAccessors(DataFile dataFile) throws IOException {
+		if( closed ) {
+			throw new IOException("Closed.");
+		}		
+		Pool pool = pools.get(dataFile.getDataFileId());
+		if( pool != null ) {
+			if( !pool.isUsed() ) {
+				pool.dispose();
+				pools.remove(dataFile.getDataFileId());
+			} else {
+				throw new IOException("The data file is still in use: "+dataFile);
+			}
+		}
+	}
+	
 	synchronized DataFileAccessor openDataFileAccessor(DataFile dataFile) throws IOException {
 		if( closed ) {
 			throw new IOException("Closed.");

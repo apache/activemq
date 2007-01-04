@@ -176,7 +176,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         Store store=getStore();
         MapContainer<String, Object> container=store.getMapContainer(id,containerName);
         container.setKeyMarshaller(new StringMarshaller());
-        container.setValueMarshaller(createMessageMarshaller());        
+        container.setValueMarshaller(new CommandMarshaller(wireFormat));        
         container.load();
         return container;
     }
