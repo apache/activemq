@@ -1,3 +1,20 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.store.jpa;
 
 import java.io.IOException;
@@ -59,12 +76,6 @@ public class JPAMessageStore implements MessageStore {
 		adapter.commitEntityManager(context,manager);		
 	}
 
-	public void addMessageReference(ConnectionContext context,
-			MessageId messageId, long expirationTime, String messageRef)
-			throws IOException {
-		throw new IOException("Not implemented.");
-	}
-
 	public ActiveMQDestination getDestination() {
 		return destination;
 	}
@@ -105,10 +116,7 @@ public class JPAMessageStore implements MessageStore {
 		return rc.intValue();
 	}
 
-	public String getMessageReference(MessageId identity) throws IOException {
-		throw new IOException("Not implemented.");
-	}
-
+	@SuppressWarnings("unchecked")
 	public void recover(MessageRecoveryListener container) throws Exception {
 		EntityManager manager = adapter.beginEntityManager(null);
 		try {
@@ -125,6 +133,7 @@ public class JPAMessageStore implements MessageStore {
 		adapter.commitEntityManager(null,manager);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
 		
 		EntityManager manager = adapter.beginEntityManager(null);

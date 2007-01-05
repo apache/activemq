@@ -29,21 +29,19 @@ import javax.persistence.Query;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
-import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.store.jpa.model.StoredMessage;
+import org.apache.activemq.store.TopicReferenceStore;
+import org.apache.activemq.store.jpa.model.StoredMessageReference;
 import org.apache.activemq.store.jpa.model.StoredSubscription;
 import org.apache.activemq.store.jpa.model.StoredSubscription.SubscriptionId;
-import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 
-public class JPATopicMessageStore extends JPAMessageStore implements TopicMessageStore {
+public class JPATopicReferenceStore extends JPAReferenceStore implements TopicReferenceStore {
     private Map<SubscriptionId,AtomicLong> subscriberLastMessageMap=new ConcurrentHashMap<SubscriptionId,AtomicLong>();
 
-	public JPATopicMessageStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
+	public JPATopicReferenceStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
 		super(adapter, destination);
 	}
 
@@ -70,7 +68,7 @@ public class JPATopicMessageStore extends JPAMessageStore implements TopicMessag
 			ss.setLastAckedId(-1);
 			
 			if( !retroactive ) {
-				Query query = manager.createQuery("select max(m.id) from StoredMessage m");
+				Query query = manager.createQuery("select max(m.id) from StoredMessageReference m");
 				Long rc = (Long) query.getSingleResult();
 				if( rc != null ) {
 					ss.setLastAckedId(rc);
@@ -144,7 +142,7 @@ public class JPATopicMessageStore extends JPAMessageStore implements TopicMessag
 		EntityManager manager = adapter.beginEntityManager(null);
 		try {	
 			Query query = manager.createQuery(
-					"select count(m) FROM StoredMessage m, StoredSubscription ss " +
+					"select count(m) FROM StoredMessageReference m, StoredSubscription ss " +
 					"where ss.clientId=?1 " +
 					"and   ss.subscriptionName=?2 " +
 					"and   ss.destination=?3 " +
@@ -197,14 +195,16 @@ public class JPATopicMessageStore extends JPAMessageStore implements TopicMessag
 	        }
 	        final AtomicLong lastMessageId=last;
 			
-			Query query = manager.createQuery("select m from StoredMessage m where m.destination=?1 and m.id>?2 order by m.id asc");
+			Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
 			query.setParameter(1, destinationName);
 			query.setParameter(2, lastMessageId.get());
 			query.setMaxResults(maxReturned);
 			int count = 0;
-			for (StoredMessage m : (List<StoredMessage>)query.getResultList()) {
-				Message message = (Message) wireFormat.unmarshal(new ByteSequence(m.getData()));
-				listener.recoverMessage(message);
+			for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
+				MessageId mid = new MessageId(m.getMessageId());
+				mid.setBrokerSequenceId(m.getId());
+				listener.recoverMessageReference(mid);
+
 				lastMessageId.set(m.getId());
 				count++;
 				if( count >= maxReturned ) { 
@@ -224,12 +224,13 @@ public class JPATopicMessageStore extends JPAMessageStore implements TopicMessag
 	
 			StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
 			
-			Query query = manager.createQuery("select m from StoredMessage m where m.destination=?1 and m.id>?2 order by m.id asc");
+			Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
 			query.setParameter(1, destinationName);
 			query.setParameter(2, ss.getLastAckedId());
-			for (StoredMessage m : (List<StoredMessage>)query.getResultList()) {
-				Message message = (Message) wireFormat.unmarshal(new ByteSequence(m.getData()));
-				listener.recoverMessage(message);
+			for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
+				MessageId mid = new MessageId(m.getMessageId());
+				mid.setBrokerSequenceId(m.getId());
+				listener.recoverMessageReference(mid);
 	        }
 		} catch (Throwable e) {
 			adapter.rollbackEntityManager(null,manager);
@@ -243,7 +244,6 @@ public class JPATopicMessageStore extends JPAMessageStore implements TopicMessag
 		id.setClientId(clientId);
 		id.setSubscriptionName(subscriptionName);
 		id.setDestination(destinationName);
-
         subscriberLastMessageMap.remove(id);
 	}
 

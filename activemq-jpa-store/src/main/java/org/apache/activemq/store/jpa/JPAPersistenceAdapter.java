@@ -48,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
  * An implementation of {@link PersistenceAdapter} that uses JPA to
  * store it's messages.
  * 
- * @org.apache.xbean.XBean
+ * @org.apache.xbean.XBean element="jpaPersistenceAdapter"
  * 
  * @version $Revision: 1.17 $
  */
@@ -149,7 +149,7 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
 		commitEntityManager(null,manager);		
 	}
 
-	public Set getDestinations() {
+	public Set<ActiveMQDestination> getDestinations() {
 		HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
 		
 		EntityManager manager = beginEntityManager(null);
@@ -188,12 +188,6 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
 	}
 
 	public void setUsageManager(UsageManager usageManager) {
-	}
-
-	public void setUseExternalMessageReferences(boolean enable) {
-		if( enable ) {
-			throw new IllegalArgumentException("This persistence adapter does not support externa message references");
-		}
 	}
 
 	public void start() throws Exception {
