@@ -28,16 +28,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Marshall an AtomicInteger
  * @version $Revision: 1.10 $
  */
-public class AtomicIntegerMarshaller implements Marshaller{
+public class AtomicIntegerMarshaller implements Marshaller<AtomicInteger>{
    
 
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-       AtomicInteger ai = (AtomicInteger) object;
+    public void writePayload(AtomicInteger ai,DataOutput dataOut) throws IOException{
        dataOut.writeInt(ai.get());
        
     }
 
-    public Object readPayload(DataInput dataIn) throws IOException{
+    public AtomicInteger readPayload(DataInput dataIn) throws IOException{
         int value = dataIn.readInt();
         return new AtomicInteger(value);
     }
