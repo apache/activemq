@@ -110,7 +110,7 @@ public class IndirectMessageReference implements QueueMessageReference {
         int rc = --referenceCount;
         if( persistent && rc == 0 && message!=null) {
             message.decrementReferenceCount();
-            message=null;
+            //message=null;
         }
         return rc;
     }
