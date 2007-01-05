@@ -88,7 +88,7 @@ public class QuickPersistenceAdapter implements PersistenceAdapter, UsageListene
 
     private UsageManager usageManager;
 
-    private long cleanupInterval = 1000 * 1/10;
+    private long cleanupInterval = 1000 * 60;
     private long checkpointInterval = 1000 * 10;
     
     private int maxCheckpointWorkers = 1;
