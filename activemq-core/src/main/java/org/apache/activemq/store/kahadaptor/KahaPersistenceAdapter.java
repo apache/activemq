@@ -57,7 +57,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     ConcurrentHashMap<ActiveMQDestination, MessageStore> messageStores=new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
     protected OpenWireFormat wireFormat=new OpenWireFormat();
     private long maxDataFileLength=32*1024*1024;
-    protected int maximumDestinationCacheSize=2000;
+    protected int maximumDestinationCacheSize=10000;
     private String indexType=IndexTypes.DISK_INDEX;
     private File dir;
     private Store theStore;
