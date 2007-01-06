@@ -18,6 +18,7 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
+import org.apache.activemq.command.ShutdownInfo;
 
 
 
@@ -38,9 +39,13 @@ public class MutexTransport extends TransportFilter {
         }
     }
 
-    public void oneway(Object command) throws IOException {
-        synchronized(writeMutex) {
+    public void oneway(Object command) throws IOException{
+        if(command instanceof ShutdownInfo){
             next.oneway(command);
+        }else{
+            synchronized(writeMutex){
+                next.oneway(command);
+            }
         }
     }
 
