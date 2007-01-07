@@ -59,6 +59,7 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.security.GeneralSecurityException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -139,7 +140,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 //clear any subscriptions - to try and prevent the bridge from stalling the broker
                 if( remoteInterupted.compareAndSet(false, true) ) {
                 	
-                    log.debug("Outbound transport to " + remoteBrokerName + " interrupted.");                                        
+                    log.info("Outbound transport to " + remoteBrokerName + " interrupted.");                                        
 
                 	if( localBridgeStarted.get() ) {
 	                    clearDownSubscriptions();
@@ -180,7 +181,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                         startLocalBridge();
                         remoteBridgeStarted.set(true);
                         startedLatch.countDown();
-                        log.debug("Outbound transport to " + remoteBrokerName + " resumed");   
+                        log.info("Outbound transport to " + remoteBrokerName + " resumed");   
                     }catch(Exception e) {
                         log.error("Caught exception  from local start in resume transport",e );
                     }
@@ -297,39 +298,48 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
         }
     }
 
-    public void stop() throws Exception {
-        log.debug(" stopping "+localBrokerName+ " bridge to " + remoteBrokerName + " is disposed already ? "+disposed);
-        if (!disposed) {
-			try {
-				disposed = true;
-
-				remoteBridgeStarted.set(false);
-				
-				localBroker.oneway(new ShutdownInfo());
-				remoteBroker.oneway(new ShutdownInfo());
-				
-			} catch (IOException e) {
-				log.debug("Caught exception stopping", e);
-			} finally {
-				ServiceStopper ss = new ServiceStopper();
-				ss.stop(localBroker);
-				ss.stop(remoteBroker);
-				ss.throwFirstException();
-			}
-		}
-        log.debug(localBrokerName+ " bridge to " + remoteBrokerName + " stopped");
+    public void stop() throws Exception{
+        log.debug(" stopping "+localBrokerName+" bridge to "+remoteBrokerName+" is disposed already ? "+disposed);
+        boolean wasDisposedAlready=disposed;
+        if(!disposed){
+            try{
+                disposed=true;
+                remoteBridgeStarted.set(false);
+                localBroker.oneway(new ShutdownInfo());
+                remoteBroker.oneway(new ShutdownInfo());
+            }catch(IOException e){
+                log.info("Caught exception stopping",e);
+            }finally{
+                ServiceStopper ss=new ServiceStopper();
+                ss.stop(localBroker);
+                ss.stop(remoteBroker);
+                ss.throwFirstException();
+            }
+        }
+        if(wasDisposedAlready){
+            log.debug(localBrokerName+" bridge to "+remoteBrokerName+" stopped");
+        }else{
+            log.info(localBrokerName+" bridge to "+remoteBrokerName+" stopped");
+        }
     }
     
-    protected void serviceRemoteException(Throwable error) {
-    	if( !disposed ) {
-	        log.info("Network connection between "+localBroker+" and "+remoteBroker+" shutdown due to a remote error: "+error);
-	        log.debug("The remote Exception was: "+error, error);
-	        new Thread() {
-	        	public void run() {
-	                ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
-	        	}
-	        }.start();
-    	}
+    protected void serviceRemoteException(Throwable error){
+        if(!disposed){
+            if(error instanceof SecurityException||error instanceof GeneralSecurityException){
+                log.error("Network connection between "+localBroker+" and "+remoteBroker
+                        +" shutdown due to a remote error: "+error);
+            }else{
+                log.warn("Network connection between "+localBroker+" and "+remoteBroker
+                        +" shutdown due to a remote error: "+error);
+            }
+            log.debug("The remote Exception was: "+error,error);
+            new Thread(){
+
+                public void run(){
+                    ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
+                }
+            }.start();
+        }
     }
 
     protected void serviceRemoteCommand(Command command) {
