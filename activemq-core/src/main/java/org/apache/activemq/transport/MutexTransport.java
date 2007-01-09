@@ -40,12 +40,8 @@ public class MutexTransport extends TransportFilter {
     }
 
     public void oneway(Object command) throws IOException{
-        if(command instanceof ShutdownInfo){
+        synchronized(writeMutex){
             next.oneway(command);
-        }else{
-            synchronized(writeMutex){
-                next.oneway(command);
-            }
         }
     }
 
