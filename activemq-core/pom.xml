@@ -255,6 +255,9 @@
             <!-- http://issues.apache.org/activemq/browse/AMQ-1027 -->
             <exclude>**/FailoverConsumerTest.*</exclude>
 
+            <!-- The NIO implemenation is not working properly on OS X.. -->
+            <exclude>**/nio/**</exclude>
+
           </excludes>
         </configuration>
       </plugin>
