@@ -120,6 +120,7 @@ fi
 if $cygwin; then
   ACTIVEMQ_HOME=`cygpath --windows "$ACTIVEMQ_HOME"`
   ACTIVEMQ_BASE=`cygpath --windows "$ACTIVEMQ_BASE"`
+  ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
   JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
   CYGHOME=`cygpath --windows "$HOME"`
@@ -139,17 +140,21 @@ if [ -z "$SSL_OPTS" ] ; then
 fi
 
 ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX $SSL_OPTS"
+
+# Set default classpath
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_HOME}/conf;"$ACTIVEMQ_CLASSPATH
+
 # Uncomment to enable YourKit profiling
 #ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
 
 # Uncomment to enable remote debugging
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
-#ACTIVEMQ_TASK="start"
+ACTIVEMQ_TASK="start"
 if [ -n "$CYGHOME" ]; then
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $ACTIVEMQ_TASK $@
+    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $ACTIVEMQ_TASK $@
 else
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -classpath "${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $ACTIVEMQ_TASK $@
+    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $ACTIVEMQ_TASK $@
 fi
 
 

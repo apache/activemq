@@ -92,7 +92,7 @@ public class ShellCommand extends AbstractCommand {
     }
 
     /**
-     * Parses for specific command task, default task is a start task.
+     * Parses for specific command task.
      * @param tokens - command arguments
      * @throws Exception
      */
@@ -109,6 +109,8 @@ public class ShellCommand extends AbstractCommand {
                 new ListCommand().execute(tokens);
             } else if (taskToken.equals("query")) {
                 new QueryCommand().execute(tokens);
+            } else if (taskToken.equals("bstat")) {
+                new BstatCommand().execute(tokens);
             } else if (taskToken.equals("browse")) {
                 new AmqBrowseCommand().execute(tokens);
             } else if (taskToken.equals("purge")) {
@@ -116,12 +118,10 @@ public class ShellCommand extends AbstractCommand {
             } else if (taskToken.equals("help")) {
                 printHelp();
             } else {
-                // If not valid task, push back to list
-                tokens.add(0, taskToken);
-                new StartCommand().execute(tokens);
+                printHelp();
             }
         } else {
-            new StartCommand().execute(tokens);
+            printHelp();
         }
         
     }

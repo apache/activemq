@@ -33,6 +33,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.StringTokenizer;
 
 /**
  * Main class that can bootstrap an ActiveMQ broker console. Handles command line
@@ -45,10 +48,10 @@ public class Main {
     public static final String TASK_DEFAULT_CLASS  = "org.apache.activemq.console.command.ShellCommand";
 
     private File          activeMQHome;
-	private File          activeMQBase;
+    private File          activeMQBase;
     private ClassLoader   classLoader;
-    private List          classpaths = new ArrayList(5);
-    private List          extensions = new ArrayList(5);
+    private Set           extensions = new HashSet(5);
+    private Set           activeMQClassPath = new HashSet(5);
 
 
     private static boolean useDefExt = true;
@@ -62,80 +65,81 @@ public class Main {
         app.parseExtensions(tokens);
 
         // Add the following to the classpath:
-        // 
+        //
         // ${activemq.base}/conf
         // ${activemq.base}/lib/* (only if activemq.base != activemq.home)
-        // ${activemq.home}/lib/* 
+        // ${activemq.home}/lib/*
         // ${activemq.base}/lib/optional/* (only if activemq.base != activemq.home)
-        // ${activemq.home}/lib/optional/* 
-        // 
+        // ${activemq.home}/lib/optional/*
+        //
         if(useDefExt && app.canUseExtdir()) {
 
-        	boolean baseIsHome = app.getActiveMQBase().equals(app.getActiveMQHome()); 
-        	
-            app.addClassPath(new File(app.getActiveMQBase(), "conf"));
-            
+            boolean baseIsHome = app.getActiveMQBase().equals(app.getActiveMQHome());
+
             if(!baseIsHome) {
                 app.addExtensionDirectory(new File(app.getActiveMQBase(), "lib"));
             }
             app.addExtensionDirectory(new File(app.getActiveMQHome(), "lib"));
-            
+
             if(!baseIsHome) {
                 app.addExtensionDirectory(new File(new File(app.getActiveMQBase(), "lib"), "optional"));
             }
             app.addExtensionDirectory(new File(new File(app.getActiveMQHome(), "lib"), "optional"));
-            
+
         }
+
+        // Add any custom classpath specified from the system property activemq.classpath
+        app.addClassPathList(System.getProperty("activemq.classpath"));
 
         try {
             app.runTaskClass(tokens);
         } catch (ClassNotFoundException e) {
             System.out.println("Could not load class: " + e.getMessage());
             try {
-				ClassLoader cl = app.getClassLoader();
-				if( cl!=null ) {
-		            System.out.println("Class loader setup: ");
-					printClassLoaderTree(cl);
-				}
-			} catch (MalformedURLException e1) {
-			}
+                ClassLoader cl = app.getClassLoader();
+                if( cl!=null ) {
+                    System.out.println("Class loader setup: ");
+                    printClassLoaderTree(cl);
+                }
+            } catch (MalformedURLException e1) {
+            }
         } catch (Throwable e) {
             System.out.println("Failed to execute main task. Reason: " + e);
         }
     }
 
     /**
-     * Print out what's in the classloader tree being used. 
-     * 
+     * Print out what's in the classloader tree being used.
+     *
      * @param cl
-     * @return
+     * @return depth
      */
-	private static int printClassLoaderTree(ClassLoader cl) {
-		int depth = 0;
-		if( cl.getParent()!=null ) {
-			depth = printClassLoaderTree(cl.getParent())+1;
-		}
-		
-		StringBuffer indent = new StringBuffer();
-		for (int i = 0; i < depth; i++) {
-			indent.append("  ");
-		}
-		
-		if( cl instanceof URLClassLoader ) {
-			URLClassLoader ucl = (URLClassLoader) cl;
-			System.out.println(indent+cl.getClass().getName()+" {");
-			URL[] urls = ucl.getURLs();
-			for (int i = 0; i < urls.length; i++) {
-				System.out.println(indent+"  "+urls[i]);
-			}
-			System.out.println(indent+"}");
-		} else {
-			System.out.println(indent+cl.getClass().getName());
-		}
-		return depth;
-	}
+    private static int printClassLoaderTree(ClassLoader cl) {
+        int depth = 0;
+        if( cl.getParent()!=null ) {
+            depth = printClassLoaderTree(cl.getParent())+1;
+        }
 
-	public void parseExtensions(List tokens) {
+        StringBuffer indent = new StringBuffer();
+        for (int i = 0; i < depth; i++) {
+            indent.append("  ");
+        }
+
+        if( cl instanceof URLClassLoader ) {
+            URLClassLoader ucl = (URLClassLoader) cl;
+            System.out.println(indent+cl.getClass().getName()+" {");
+            URL[] urls = ucl.getURLs();
+            for (int i = 0; i < urls.length; i++) {
+                System.out.println(indent+"  "+urls[i]);
+            }
+            System.out.println(indent+"}");
+        } else {
+            System.out.println(indent+cl.getClass().getName());
+        }
+        return depth;
+    }
+
+    public void parseExtensions(List tokens) {
         if (tokens.isEmpty()) {
             return;
         }
@@ -183,12 +187,12 @@ public class Main {
             } else {
                 i++;
             }
-		}
+        }
 
     }
 
     public void runTaskClass(List tokens) throws Throwable {
-    	
+
         System.out.println("ACTIVEMQ_HOME: "+ getActiveMQHome());
         System.out.println("ACTIVEMQ_BASE: "+ getActiveMQBase());
 
@@ -208,16 +212,25 @@ public class Main {
     public void addExtensionDirectory(File directory) {
         extensions.add(directory);
     }
-    
-    private void addClassPath(File file) {
-        classpaths.add(file);
-	}
+
+    public void addClassPathList(String fileList) {
+        if (fileList != null && fileList.length() > 0) {
+            StringTokenizer tokenizer = new StringTokenizer(fileList, ";");
+            while (tokenizer.hasMoreTokens()) {
+                addClassPath(new File(tokenizer.nextToken()));
+            }
+        }
+    }
+
+    public void addClassPath(File classpath) {
+        activeMQClassPath.add(classpath);
+    }
 
     /**
      * The extension directory feature will not work if the broker factory is already in the classpath
      * since we have to load him from a child ClassLoader we build for it to work correctly.
      *
-     * @return
+     * @return true, if extension dir can be used. false otherwise.
      */
     public boolean canUseExtdir() {
         try {
@@ -232,40 +245,40 @@ public class Main {
         if(classLoader==null) {
             // Setup the ClassLoader
             classLoader = Main.class.getClassLoader();
-            if (!extensions.isEmpty() || !classpaths.isEmpty()) {
+            if (!extensions.isEmpty() || !activeMQClassPath.isEmpty()) {
 
                 ArrayList urls = new ArrayList();
-                
-                for (Iterator iter = classpaths.iterator(); iter.hasNext();) {
+
+                for (Iterator iter = activeMQClassPath.iterator(); iter.hasNext();) {
                     File dir = (File) iter.next();
                     // try{ System.out.println("Adding to classpath: " + dir.getCanonicalPath()); }catch(Exception e){}
                     urls.add(dir.toURL());
                 }
-                
+
                 for (Iterator iter = extensions.iterator(); iter.hasNext();) {
                     File dir = (File) iter.next();
                     if( dir.isDirectory() ) {
-	                    File[] files = dir.listFiles();
-	                    if( files!=null ) {
-	                    	
-	                    	// Sort the jars so that classpath built is consistently
-	                    	// in the same order.  Also allows us to use jar names to control
-	                    	// classpath order.
-	                    	Arrays.sort(files, new Comparator(){
-								public int compare(Object o1, Object o2) {
-									File f1 = (File) o1;
-									File f2 = (File) o2;
-									return f1.getName().compareTo(f2.getName());
-								}
-							});
-	                    	
-	                        for (int j = 0; j < files.length; j++) {
-	                            if( files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar") ) {
-	                                // try{ System.out.println("Adding to classpath: " + files[j].getCanonicalPath()); }catch(Exception e){}
-	                                urls.add(files[j].toURL());
-	                            }
-	                        }
-	                    }
+                        File[] files = dir.listFiles();
+                        if( files!=null ) {
+
+                            // Sort the jars so that classpath built is consistently
+                            // in the same order.  Also allows us to use jar names to control
+                            // classpath order.
+                            Arrays.sort(files, new Comparator(){
+                                public int compare(Object o1, Object o2) {
+                                    File f1 = (File) o1;
+                                    File f2 = (File) o2;
+                                    return f1.getName().compareTo(f2.getName());
+                                }
+                            });
+
+                            for (int j = 0; j < files.length; j++) {
+                                if( files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar") ) {
+                                    // try{ System.out.println("Adding to classpath: " + files[j].getCanonicalPath()); }catch(Exception e){}
+                                    urls.add(files[j].toURL());
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -308,23 +321,22 @@ public class Main {
                 System.setProperty("activemq.home",activeMQHome.getAbsolutePath());
             }
         }
-        
+
         return activeMQHome;
     }
-    
+
     public File getActiveMQBase() {
         if(activeMQBase==null) {
             if(System.getProperty("activemq.base") != null) {
-            	activeMQBase = new File(System.getProperty("activemq.base"));
+                activeMQBase = new File(System.getProperty("activemq.base"));
             }
-            
+
             if(activeMQBase==null){
                 activeMQBase = getActiveMQHome();
                 System.setProperty("activemq.base",activeMQBase.getAbsolutePath());
             }
         }
-        
+
         return activeMQBase;
     }
-
 }
