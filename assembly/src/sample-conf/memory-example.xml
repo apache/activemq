@@ -15,9 +15,9 @@
     limitations under the License.
 -->
 <!-- START SNIPPET: xbean -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans>
   
-  <broker useJmx="false" brokerName="memoryBroker">
+  <broker useJmx="false" brokerName="memoryBroker" xmlns="http://activemq.org/config/1.0">
     <persistenceAdapter>
        <memoryPersistenceAdapter/>
     </persistenceAdapter>
