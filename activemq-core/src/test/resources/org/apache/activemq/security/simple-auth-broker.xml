@@ -27,10 +27,10 @@
 		<simpleAuthenticationPlugin>
 			<users>
 				<authenticationUser username="system" password="manager"
-					group="users,admins"/>
+					groups="users,admins"/>
 				<authenticationUser username="user" password="password"
-					group="users"/>
-				<authenticationUser username="guest" password="password" group="guests"/>
+					groups="users"/>
+				<authenticationUser username="guest" password="password" groups="guests"/>
 			</users>
 		</simpleAuthenticationPlugin>
 
