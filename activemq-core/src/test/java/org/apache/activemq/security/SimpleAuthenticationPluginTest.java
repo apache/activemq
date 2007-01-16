@@ -28,10 +28,10 @@ import org.apache.commons.logging.LogFactory;
 
 public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
-    private static final Log log = LogFactory.getLog(XBeanSecurityTest.class);
+    private static final Log log = LogFactory.getLog(SimpleAuthenticationPluginTest.class);
     
     public static Test suite() {
-        return suite(XBeanSecurityTest.class);
+        return suite(SimpleAuthenticationPluginTest.class);
     }
 
     public static void main(String[] args) {

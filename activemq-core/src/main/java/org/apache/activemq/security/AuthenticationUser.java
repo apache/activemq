@@ -29,22 +29,22 @@ public class AuthenticationUser {
 
 	String username;
 	String password;
-	String group;
+	String groups;
 	
 	
 	
-	public AuthenticationUser(String username, String password, String group) {
+	public AuthenticationUser(String username, String password, String groups) {
 		this.username = username;
 		this.password = password;
-		this.group = group;
+		this.groups = groups;
 	}
 	
 	
-	public String getGroup() {
-		return group;
+	public String getGroups() {
+		return groups;
 	}
-	public void setGroup(String group) {
-		this.group = group;
+	public void setGroups(String groups) {
+		this.groups = groups;
 	}
 	public String getPassword() {
 		return password;
