@@ -27,6 +27,7 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
 
     public void setStatements(Statements statements) {
         statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
+        statements.setBinaryDataType("LONGBLOB");
         super.setStatements(statements);
     }    
 }
