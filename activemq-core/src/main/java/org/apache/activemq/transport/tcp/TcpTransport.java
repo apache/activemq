@@ -356,6 +356,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
+        if (log.isDebugEnabled()) {
+            log.debug("Stopping transport " + this);
+        }
+
         // Closing the streams flush the sockets before closing.. if the socket
         // is hung.. then this hangs the close.
         // closeStreams();

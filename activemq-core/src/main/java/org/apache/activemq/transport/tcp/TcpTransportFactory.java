@@ -87,7 +87,9 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new TransportLogger(transport);
         }
 
-        transport = new InactivityMonitor(transport);
+        if (isUseInactivityMonitor(transport)) {
+            transport = new InactivityMonitor(transport);
+        }
 
         // Only need the WireFormatNegotiator if using openwire
         if( format instanceof OpenWireFormat ) {
@@ -95,6 +97,13 @@ public class TcpTransportFactory extends TransportFactory {
         }
         
         return transport;
+    }
+
+    /**
+     * Returns true if the inactivity monitor should be used on the transport
+     */
+    protected boolean isUseInactivityMonitor(Transport transport) {
+        return true;
     }
 
     protected Transport createTransport(URI location,WireFormat wf) throws UnknownHostException,IOException{

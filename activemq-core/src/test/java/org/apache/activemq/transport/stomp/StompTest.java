@@ -19,14 +19,13 @@ package org.apache.activemq.transport.stomp;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.*;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.transport.stomp.Stomp;
 
 import javax.jms.*;
-
+import javax.jms.Connection;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,8 +63,6 @@ public class StompTest extends CombinationTestSupport {
         session = connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
         queue = new ActiveMQQueue(getQueueName());
         connection.start();
-
-
     }
 
     protected Socket createSocket(URI connectUri) throws IOException {
@@ -78,7 +75,9 @@ public class StompTest extends CombinationTestSupport {
 
     protected void tearDown() throws Exception {
         connection.close();
-        stompSocket.close();
+        if (stompSocket != null) {
+            stompSocket.close();
+        }
         broker.stop();
     }
 
@@ -679,6 +678,37 @@ public class StompTest extends CombinationTestSupport {
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
         assertEquals("second message", message.getText().trim());
+    }
+
+    public void testDisconnectedClientsAreRemovedFromTheBroker() throws Exception {
+        assertClients(1);
+        String frame =
+            "CONNECT\n" +
+            "login: brianm\n" +
+            "passcode: wombats\n\n"+
+            Stomp.NULL;
+
+        sendFrame(frame);
+
+        // This test case is currently failing
+        waitForFrameToTakeEffect();
+
+        assertClients(2);
+
+        // now lets kill the socket
+        stompSocket.close();
+        stompSocket = null;
+
+        Thread.sleep(2000);
+
+        assertClients(1);
+    }
+
+    protected void assertClients(int expected) throws Exception {
+        org.apache.activemq.broker.Connection[] clients = broker.getBroker().getClients();
+        int actual = clients.length;
+
+        assertEquals("Number of clients", expected, actual);
     }
 
     protected void waitForFrameToTakeEffect() throws InterruptedException {

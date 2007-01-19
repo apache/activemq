@@ -20,6 +20,7 @@ package org.apache.activemq.broker;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.util.UDPTraceBrokerPlugin;
 import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
 import org.apache.activemq.broker.view.DestinationDotFilePlugin;
@@ -52,8 +53,15 @@ public class Main {
             // URI(brokerURI));
             BrokerService broker = new BrokerService();
             broker.setPersistent(false);
+
+            // for running on Java 5 without mx4j
+            ManagementContext managementContext = broker.getManagementContext();
+            managementContext.setFindTigerMbeanServer(true);
+            managementContext.setUseMBeanServer(true);
+            managementContext.setCreateConnector(false);
+
             broker.setUseJmx(true);
-            broker.setPlugins(new BrokerPlugin[] { new ConnectionDotFilePlugin(), new UDPTraceBrokerPlugin() });
+            //broker.setPlugins(new BrokerPlugin[] { new ConnectionDotFilePlugin(), new UDPTraceBrokerPlugin() });
             broker.addConnector("tcp://localhost:61616");
             broker.addConnector("stomp://localhost:61613");
             broker.start();
