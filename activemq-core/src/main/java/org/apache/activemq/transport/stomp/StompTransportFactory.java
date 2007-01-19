@@ -38,4 +38,9 @@ public class StompTransportFactory extends TcpTransportFactory {
     	transport = new StompTransportFilter(transport, new LegacyFrameTranslator());
     	return super.compositeConfigure(transport, format, options);
     }
+
+    protected boolean isUseInactivityMonitor(Transport transport) {
+        // lets disable the inactivity monitor as stomp does not use keep alive packets
+        return false;
+    }
 }
