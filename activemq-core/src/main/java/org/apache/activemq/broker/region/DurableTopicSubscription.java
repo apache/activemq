@@ -57,7 +57,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     synchronized public void gc() {
     }
 
-    public void add(ConnectionContext context, Destination destination) throws Exception {
+    public synchronized void add(ConnectionContext context, Destination destination) throws Exception {
         super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
         if( active || keepDurableSubsActive ) {
