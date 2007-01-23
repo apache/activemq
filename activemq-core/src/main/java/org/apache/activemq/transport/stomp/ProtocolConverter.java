@@ -377,7 +377,8 @@ public class ProtocolConverter {
 				(destination!=null && destination.equals(sub.getDestination()) )
 			) {
 		        sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
-				return;
+				iter.remove();
+                return;
 			}
 		}
 
