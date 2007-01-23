@@ -104,7 +104,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      * Occurs when a pull times out. If nothing has been dispatched since the timeout was setup, then send the NULL
      * message.
      */
-    private void pullTimeout(long dispatchCounterBeforePull){
+    private synchronized void pullTimeout(long dispatchCounterBeforePull){
         if(dispatchCounterBeforePull==dispatchCounter){
             try{
                 add(QueueMessageReference.NULL_MESSAGE);
@@ -368,7 +368,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         pending.remove(context,destination);
     }
 
-    protected void dispatchMatched() throws IOException{
+    protected synchronized void dispatchMatched() throws IOException{
         if(!broker.isSlaveBroker()&&dispatching.compareAndSet(false,true)){
             try{
                 try{
