@@ -102,11 +102,13 @@ public class NetworkTestSupport extends BrokerTestSupport {
     }
     
     protected BrokerService createBroker() throws Exception {
-        return BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false"));
+        BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false&"));
+        return broker;
     }
     
     protected BrokerService createRemoteBroker(PersistenceAdapter persistenceAdapter) throws Exception {
         BrokerService answer = new BrokerService();
+        broker.setBrokerName("remote");
         answer.setUseJmx(false);
         answer.setPersistenceAdapter(persistenceAdapter);
         return answer;
