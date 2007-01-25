@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.memory.UsageListener;
@@ -46,6 +47,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     private Destination regionDestination;
     private AtomicBoolean iterating=new AtomicBoolean();
     private boolean flushRequired;
+    private AtomicBoolean started=new AtomicBoolean();
 
     /**
      * @param name
@@ -54,6 +56,23 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public FilePendingMessageCursor(String name,Store store){
         this.name=name;
         this.store=store;
+    }
+
+    public void start(){
+        if(started.compareAndSet(false,true)){
+            if(usageManager!=null){
+                usageManager.addUsageListener(this);
+            }
+        }
+    }
+
+    public void stop(){
+        if(started.compareAndSet(true,false)){
+            gc();
+            if(usageManager!=null){
+                usageManager.removeUsageListener(this);
+            }
+        }
     }
 
     /**
@@ -83,6 +102,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     public synchronized void destroy(){
+        stop();
         for(Iterator i=memoryList.iterator();i.hasNext();){
             Message node=(Message)i.next();
             node.decrementReferenceCount();
@@ -213,8 +233,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         // we always have space - as we can persist to disk
         return false;
     }
-    
-    public boolean hasMessagesBufferedToDeliver() {
+
+    public boolean hasMessagesBufferedToDeliver(){
         return !isEmpty();
     }
 
@@ -224,7 +244,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     public void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
-        if(newPercentUsage>=100){
+        if(newPercentUsage>=getMemoryUsageHighWaterMark()){
             synchronized(iterating){
                 flushRequired=true;
                 if(!iterating.get()){
@@ -240,12 +260,14 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     protected synchronized void flushToDisk(){
-        for(Iterator i=memoryList.iterator();i.hasNext();){
-            MessageReference node=(MessageReference)i.next();
-            node.decrementReferenceCount();
-            getDiskList().addLast(node);
+        if(!memoryList.isEmpty()){
+            while(!memoryList.isEmpty()){
+                MessageReference node=(MessageReference)memoryList.removeFirst();
+                node.decrementReferenceCount();
+                getDiskList().addLast(node);
+            }
+            memoryList.clear();
         }
-        memoryList.clear();
     }
 
     protected boolean isDiskListEmpty(){
@@ -255,10 +277,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     protected ListContainer getDiskList(){
         if(diskList==null){
             try{
-                diskList=store.getListContainer(name);
+                diskList=store.getListContainer(name,"TopicSubscription",IndexTypes.DISK_INDEX);
                 diskList.setMarshaller(new CommandMarshaller(new OpenWireFormat()));
-                diskList.setMaximumCacheSize(0);
             }catch(IOException e){
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         }

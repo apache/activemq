@@ -25,14 +25,14 @@ import org.apache.activemq.memory.UsageManager;
  * @version $Revision$
  */
 public class AbstractPendingMessageCursor implements PendingMessageCursor{
-
+    protected int memoryUsageHighWaterMark = 90;
     protected int maxBatchSize=100;
     protected UsageManager usageManager;
 
-    public void start() throws Exception{
+    public void start() throws Exception {
     }
 
-    public void stop() throws Exception{
+    public void stop() throws Exception {
         gc();
     }
 
@@ -112,7 +112,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     }
     
     public boolean hasSpace() {
-        return usageManager != null ? !usageManager.isFull() : true;
+        return usageManager != null ? (usageManager.getPercentUsage() < memoryUsageHighWaterMark): true;
     }
     
     public boolean isFull() {
@@ -125,5 +125,29 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
     
     public boolean hasMessagesBufferedToDeliver() {
         return false;
+    }
+
+    
+    /**
+     * @return the memoryUsageHighWaterMark
+     */
+    public int getMemoryUsageHighWaterMark(){
+        return this.memoryUsageHighWaterMark;
+    }
+
+    
+    /**
+     * @param memoryUsageHighWaterMark the memoryUsageHighWaterMark to set
+     */
+    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark){
+        this.memoryUsageHighWaterMark=memoryUsageHighWaterMark;
+    }
+
+    
+    /**
+     * @return the usageManager
+     */
+    public UsageManager getUsageManager(){
+        return this.usageManager;
     }
 }

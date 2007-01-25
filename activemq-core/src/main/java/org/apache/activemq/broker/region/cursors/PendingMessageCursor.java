@@ -163,6 +163,23 @@ public interface PendingMessageCursor extends Service{
     public void setUsageManager(UsageManager usageManager);
     
     /**
+     * @return the usageManager
+     */
+    public UsageManager getUsageManager();
+    
+    /**
+     * @return the memoryUsageHighWaterMark
+     */
+    public int getMemoryUsageHighWaterMark();
+
+    
+    /**
+     * @param memoryUsageHighWaterMark the memoryUsageHighWaterMark to set
+     */
+    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark);
+
+    
+    /**
      * @return true if the cursor is full
      */
     public boolean isFull();
@@ -171,4 +188,6 @@ public interface PendingMessageCursor extends Service{
      * @return true if the cursor has buffered messages ready to deliver
      */
     public boolean hasMessagesBufferedToDeliver();
+    
+    
 }
