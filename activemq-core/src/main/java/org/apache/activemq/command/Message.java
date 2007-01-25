@@ -41,7 +41,7 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 abstract public class Message extends BaseCommand implements MarshallAware, MessageReference {
 
-    public static final int AVERAGE_MESSAGE_SIZE_OVERHEAD = 300;
+    public static final int AVERAGE_MESSAGE_SIZE_OVERHEAD = 500;
     
     protected MessageId messageId;
     protected ActiveMQDestination originalDestination;
@@ -604,7 +604,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public int getSize() {
-        if( size == 0 ) {
+        if( size <=AVERAGE_MESSAGE_SIZE_OVERHEAD ) {
             size = AVERAGE_MESSAGE_SIZE_OVERHEAD;
             if( marshalledProperties!=null )
                 size += marshalledProperties.getLength();
