@@ -179,7 +179,6 @@ public class RapidPersistenceAdapter implements PersistenceAdapter,JournalEventL
     protected ListContainer getListContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
         ListContainer container=store.getListContainer(id,containerName);
-        container.setMaximumCacheSize(0);
         container.setMarshaller(new RapidMessageReferenceMarshaller());
         container.load();
         return container;
