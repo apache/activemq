@@ -43,11 +43,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
 
     private static final Log log=LogFactory.getLog(ListContainerImpl.class);
     protected Marshaller marshaller=Store.ObjectMarshaller;
-    protected LinkedList cacheList=new LinkedList();
-    protected int offset=0;
-    protected int maximumCacheSize=100;
-    protected IndexItem lastCached;
-    protected boolean cacheEnabled = true;
+   
 
     public ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,
             String indexType) throws IOException{
@@ -91,7 +87,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         if(loaded){
             loaded=false;
             indexList.clear();
-            clearCache();
+            
         }
     }
 
@@ -406,7 +402,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         checkClosed();
         super.clear();
         doClear();
-        clearCache();
+        
     }
 
     /*
@@ -416,7 +412,12 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized Object get(int index){
         load();
-        return getCachedItem(index);
+        Object result = null;
+        IndexItem item=indexList.get(index);
+        if(item!=null){
+            result=getValue(item);
+        }
+        return result;
     }
 
     /*
@@ -589,7 +590,8 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized ListIterator listIterator(){
         load();
-        return new CachedContainerListIterator(this,0);
+        IndexItem start= indexList.getFirst();
+        return new ContainerListIterator(this,indexList,indexList.getRoot());
     }
 
     /*
@@ -599,7 +601,8 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized ListIterator listIterator(int index){
         load();
-        return new CachedContainerListIterator(this,index);
+        IndexItem start = (index-1) >0 ?indexList.get(index-1):indexList.getRoot();
+        return new ContainerListIterator(this,indexList,start);
     }
 
     /*
@@ -676,7 +679,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         load();
         boolean result=false;
         if(item!=null){
-            clearCache();
+           
             remove(item);
             result = true;
         }
@@ -864,156 +867,21 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     }
 
     protected synchronized void itemAdded(IndexItem item,int pos,Object value){
-        if(cacheEnabled){
-            int cachePosition=pos-offset;
-            // if pos is before the cache offset
-            // we need to clear the cache
-            if(pos<offset){
-                clearCache();
-            }
-            if(cacheList.isEmpty()){
-                offset=pos;
-                cacheList.add(value);
-                lastCached=item;
-            }else if(cachePosition==cacheList.size()&&cachePosition<maximumCacheSize){
-                cacheList.add(value);
-                lastCached=item;
-            }else if(cachePosition>=0&&cachePosition<=cacheList.size()){
-                cacheList.add(cachePosition,value);
-                if(cacheList.size()>maximumCacheSize){
-                    itemRemoved(cacheList.size()-1);
-                }
-            }
-        }
+        
     }
 
     protected synchronized void itemRemoved(int pos){
-        if(cacheEnabled){
-            int lastPosition=offset+cacheList.size()-1;
-            int cachePosition=pos-offset;
-            if(cachePosition>=0&&cachePosition<cacheList.size()){
-                if(cachePosition==lastPosition){
-                    if(lastCached!=null){
-                        lastCached=indexList.getPrevEntry(lastCached);
-                    }
-                }
-                cacheList.remove(pos);
-                if(cacheList.isEmpty()){
-                    clearCache();
-                }
-            }
-        }
+        
     }
 
     protected synchronized Object getCachedItem(int pos){
         Object result=null;
-        if(cacheEnabled) {
-        int cachePosition=pos-offset;
-        if(cachePosition>=0&&cachePosition<cacheList.size()){
-            result=cacheList.get(cachePosition);
-        }
-        if(result==null){
-            if(cachePosition==cacheList.size()&&lastCached!=null){
-                IndexItem item=indexList.getNextEntry(lastCached);
-                if(item!=null){
-                    result=getValue(item);
-                    cacheList.add(result);
-                    lastCached=item;
-                    if(cacheList.size()>maximumCacheSize){
-                        itemRemoved(0);
-                    }
-                }
-            }else{
-                IndexItem item=indexList.get(pos);
-                if(item!=null){
-                    result=getValue(item);
-                    if(result!=null){
-                        // outside the cache window - so clear
-                        if(!cacheList.isEmpty()){
-                            clearCache();
-                        }
-                        offset=pos;
-                        cacheList.add(result);
-                        lastCached=item;
-                    }
-                }
-            }
-        }
-        }else {
+        
             IndexItem item=indexList.get(pos);
             if(item!=null){
                 result=getValue(item);
             }
-        }
+       
         return result;
-    }
-
-    /**
-     * clear any cached values
-     */
-    public synchronized void clearCache(){
-        cacheList.clear();
-        offset=0;
-        lastCached=null;
-    }
-
-    /**
-     * @return the cacheList
-     */
-    public synchronized LinkedList getCacheList(){
-        return cacheList;
-    }
-
-    /**
-     * @param cacheList the cacheList to set
-     */
-    public synchronized void setCacheList(LinkedList cacheList){
-        this.cacheList=cacheList;
-    }
-
-    /**
-     * @return the lastCached
-     */
-    public synchronized StoreEntry getLastCached(){
-        return lastCached;
-    }
-
-    /**
-     * @param lastCached the lastCached to set
-     */
-    public synchronized void setLastCached(IndexItem lastCached){
-        this.lastCached=lastCached;
-    }
-
-    /**
-     * @return the maximumCacheSize
-     */
-    public synchronized int getMaximumCacheSize(){
-        return maximumCacheSize;
-    }
-
-    /**
-     * @param maximumCacheSize the maximumCacheSize to set
-     */
-    public synchronized void setMaximumCacheSize(int maximumCacheSize){
-        this.maximumCacheSize=maximumCacheSize;
-        cacheEnabled = maximumCacheSize >= 0;
-        if (!cacheEnabled) {
-            clearCache();
-        }
-    }
-
-    /**
-     * @return the offset
-     */
-    public synchronized int getOffset(){
-        return offset;
-    }
-
-    /**
-     * @param offset the offset to set
-     */
-    public synchronized void setOffset(int offset){
-        this.offset=offset;
-    }
+    }    
 }
