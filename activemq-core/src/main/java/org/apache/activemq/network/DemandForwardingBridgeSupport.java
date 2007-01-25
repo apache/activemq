@@ -308,7 +308,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 localBroker.oneway(new ShutdownInfo());
                 remoteBroker.oneway(new ShutdownInfo());
             }catch(IOException e){
-                log.info("Caught exception stopping",e);
+                log.debug("Caught exception stopping",e);
             }finally{
                 ServiceStopper ss=new ServiceStopper();
                 ss.stop(localBroker);
