@@ -43,10 +43,12 @@ public final class IndexManager{
     private RandomAccessFile indexFile;
     private StoreIndexReader reader;
     private StoreIndexWriter writer;
-    private LinkedList freeList=new LinkedList();
+ 
     private DataManager redoLog;
     private String mode;
     private long length=0;
+    private IndexItem firstFree;
+    private IndexItem lastFree;
 
     public IndexManager(File directory,String name,String mode,DataManager redoLog) throws IOException{
         this.directory = directory;
@@ -57,7 +59,7 @@ public final class IndexManager{
     }
 
     public synchronized boolean isEmpty(){
-        return freeList.isEmpty()&&length==0;
+        return lastFree == null &&length==0;
     }
 
     public synchronized IndexItem getIndex(long offset) throws IOException{
@@ -70,10 +72,16 @@ public final class IndexManager{
     }
 
     public synchronized void freeIndex(IndexItem item) throws IOException{
-        //item.reset();
+        item.reset();
         item.setActive(false);
+        if (lastFree == null) {
+            firstFree=lastFree=item;
+        }
+        else {
+            lastFree.setNextItem(item.getOffset());
+        }
         writer.updateIndexes(item);
-        freeList.add(item);
+        
     }
 
     public synchronized void storeIndex(IndexItem index) throws IOException{
@@ -84,7 +92,7 @@ public final class IndexManager{
         try {
         writer.updateIndexes(index);
         }catch(Throwable e) {
-            log.error(name + " GORT ERROR! ",e);
+            log.error(name + " error updating indexes ",e);
         }
     }
 
@@ -92,7 +100,7 @@ public final class IndexManager{
         writer.redoStoreItem(redo);
     }
 
-    public synchronized IndexItem createNewIndex(){
+    public synchronized IndexItem createNewIndex() throws IOException{
         IndexItem result=getNextFreeIndex();
         if(result==null){
             // allocate one
@@ -118,7 +126,7 @@ public final class IndexManager{
 
         
     public synchronized boolean delete() throws IOException{
-        freeList.clear();
+        firstFree = lastFree = null;
         if(indexFile!=null){
             indexFile.close();
             indexFile=null;
@@ -126,12 +134,23 @@ public final class IndexManager{
         return file.delete();
     }
 
-    private synchronized IndexItem getNextFreeIndex(){
+    private synchronized IndexItem getNextFreeIndex() throws IOException{
         IndexItem result=null;
-        if(!freeList.isEmpty()){
-            result=(IndexItem) freeList.removeLast();
+        if (firstFree != null) {
+            if (firstFree.equals(lastFree)) {
+                result = firstFree;
+                firstFree=lastFree=null;
+                
+            }else {
+                result = firstFree;
+                firstFree = getIndex(firstFree.getNextItem());
+                if (firstFree==null) {
+                    lastFree=null;
+                }
+            }
             result.reset();
         }
+       
         return result;
     }
 
@@ -158,11 +177,19 @@ public final class IndexManager{
         reader=new StoreIndexReader(indexFile);
         writer=new StoreIndexWriter(indexFile,name,redoLog);
         long offset=0;
+        
         while((offset+IndexItem.INDEX_SIZE)<=indexFile.length()){
             IndexItem index=reader.readItem(offset);
             if(!index.isActive()){
                 index.reset();
-                freeList.add(index);
+                if (lastFree != null) {
+                    lastFree.setNextItem(index.getOffset());
+                    updateIndexes(lastFree);
+                    lastFree=index;
+                }else {
+                    lastFree=firstFree=index;
+                }
+                
             }
             offset+=IndexItem.INDEX_SIZE;
         }
