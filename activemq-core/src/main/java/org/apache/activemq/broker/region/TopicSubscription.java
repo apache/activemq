@@ -22,6 +22,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.ConsumerControl;
@@ -41,7 +42,7 @@ public class TopicSubscription extends AbstractSubscription{
 
     private static final Log log=LogFactory.getLog(TopicSubscription.class);
     private static final AtomicLong cursorNameCounter=new AtomicLong(0);
-    final protected FilePendingMessageCursor matched;
+    protected PendingMessageCursor matched;
     final protected UsageManager usageManager;
     protected AtomicLong dispatched=new AtomicLong();
     protected AtomicLong delivered=new AtomicLong();
@@ -56,17 +57,21 @@ public class TopicSubscription extends AbstractSubscription{
     private int memoryUsageHighWaterMark=95;
 
     public TopicSubscription(Broker broker,ConnectionContext context,ConsumerInfo info,UsageManager usageManager)
-            throws InvalidSelectorException{
+            throws Exception{
         super(broker,context,info);
         this.usageManager=usageManager;
         String matchedName="TopicSubscription:"+cursorNameCounter.getAndIncrement()+"["+info.getConsumerId().toString()
                 +"]";
         this.matched=new FilePendingMessageCursor(matchedName,broker.getTempDataStore());
+       
+    }
+    
+    public void init() throws Exception {
         this.matched.setUsageManager(usageManager);
         this.matched.start();
     }
-
-    public void add(MessageReference node) throws InterruptedException,IOException{
+    
+    public void add(MessageReference node) throws Exception{
         enqueueCounter.incrementAndGet();
         node.incrementReferenceCount();
         if(!isFull()&&!isSlaveBroker()){
@@ -309,6 +314,20 @@ public class TopicSubscription extends AbstractSubscription{
     public UsageManager getUsageManager(){
         return this.usageManager;
     }
+    
+    /**
+     * @return the matched
+     */
+    public PendingMessageCursor getMatched(){
+        return this.matched;
+    }
+
+    /**
+     * @param matched the matched to set
+     */
+    public void setMatched(PendingMessageCursor matched){
+        this.matched=matched;
+    }
 
     /**
      * inform the MessageConsumer on the client to change it's prefetch
@@ -402,7 +421,14 @@ public class TopicSubscription extends AbstractSubscription{
 
     public void destroy(){
         synchronized(matchedListMutex){
-            matched.destroy();
+            try{
+                matched.destroy();
+            }catch(Exception e){
+               log.warn("Failed to destroy cursor",e);
+            }
         }
     }
+
+    
+    
 }

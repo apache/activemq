@@ -49,7 +49,7 @@ import org.apache.commons.logging.LogFactory;
 abstract public class PrefetchSubscription extends AbstractSubscription{
 
     static private final Log log=LogFactory.getLog(PrefetchSubscription.class);
-    final protected PendingMessageCursor pending;
+    protected PendingMessageCursor pending;
     final protected LinkedList dispatched=new LinkedList();
     protected int prefetchExtension=0;
     protected long enqueueCounter;
@@ -342,6 +342,17 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     public boolean isRecoveryRequired(){
         return pending.isRecoveryRequired();
     }
+    
+   
+    public PendingMessageCursor getPending(){
+        return this.pending;
+    }
+
+    public void setPending(PendingMessageCursor pending){
+        this.pending=pending;
+    }
+    
+   
 
     /**
      * optimize message consumer prefetch if the consumer supports it
@@ -506,4 +517,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     protected void acknowledge(ConnectionContext context,final MessageAck ack,final MessageReference node)
             throws IOException{
     }
+
+    
+    
 }

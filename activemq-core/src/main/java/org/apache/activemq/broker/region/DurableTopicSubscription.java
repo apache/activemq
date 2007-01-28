@@ -24,10 +24,12 @@ import javax.jms.InvalidSelectorException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,8 +42,8 @@ public class DurableTopicSubscription extends PrefetchSubscription {
     private final boolean keepDurableSubsActive;
     private boolean active=false;
     
-    public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive,PendingMessageCursor cursor) throws InvalidSelectorException {
-        super(broker,context,info,cursor);
+    public DurableTopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive) throws InvalidSelectorException {
+        super(broker,context,info,new StoreDurableSubscriberCursor(context.getClientId(),info.getSubscriptionName(),broker.getTempDataStore(),info.getPrefetchSize()));
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
@@ -70,7 +72,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
         dispatchMatched();
     }
    
-    public void activate(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public void activate(UsageManager memoryManager,ConnectionContext context, ConsumerInfo info) throws Exception {
         log.debug("Deactivating " + this);
         if( !active ) {
             this.active = true;
@@ -83,6 +85,7 @@ public class DurableTopicSubscription extends PrefetchSubscription {
                 }
             }
             synchronized(pending) {
+                pending.setUsageManager(memoryManager);
                 pending.start();
             }
             //If nothing was in the persistent store, then try to use the recovery policy.

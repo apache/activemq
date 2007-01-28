@@ -18,14 +18,14 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="slowConsumerBroker" persistent="true" useShutdownHook="false" xmlns="http://activemq.org/config/1.0">
+  <broker brokerName="slowConsumerBroker" useJmx="false" persistent="false" useShutdownHook="false" xmlns="http://activemq.org/config/1.0">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>
     </transportConnectors>
      <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry topic=">">            
+          <policyEntry topic="blob">            
             <!-- lets force old messages to be discarded for slow consumers -->
             <pendingMessageLimitStrategy>
               <constantPendingMessageLimitStrategy limit="10"/>

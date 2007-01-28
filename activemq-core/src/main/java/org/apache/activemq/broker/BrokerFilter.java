@@ -234,15 +234,6 @@ public class BrokerFilter implements Broker {
         next.setAdminConnectionContext(adminConnectionContext);
     }
     
-    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
-        return next.getPendingDurableSubscriberPolicy();
-    }
-  
-    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
-        next.setPendingDurableSubscriberPolicy(pendingDurableSubscriberPolicy);
-    }
-   
-
     public Store getTempDataStore() {
         return next.getTempDataStore();
     }

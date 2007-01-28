@@ -14,30 +14,25 @@
 
 package org.apache.activemq.broker.region.policy;
 
-import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.kaha.Store;
 
 
 /**
- * Creates a FilePendingMessageCursor
- *  *
- * @org.apache.xbean.XBean element="fileQueueCursor" description="Pending messages paged in from file"
- * 
- * @version $Revision$
- */
-public class FilePendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy{
-
-    /**
-     * @param queue
-     * @param tmpStore
-     * @return the cursor
-     * @see org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy#getQueuePendingMessageCursor(org.apache.openjpa.lib.util.concurrent.Queue, org.apache.activemq.kaha.Store)
-     */
-    public PendingMessageCursor getQueuePendingMessageCursor(Queue queue,Store tmpStore){
-         return new FilePendingMessageCursor("PendingCursor:" + queue.getName(),tmpStore);
-    }
-
+* Abstraction to allow different policies for holding messages awaiting dispatch to active clients
+* 
+* @version $Revision$
+*/
+public interface PendingSubscriberMessageStoragePolicy{
     
+    /**
+     * Retrieve the configured pending message storage cursor;
+     * 
+     * @param name
+     * @param tmpStorage
+     * @param maxBatchSize
+     * @return the Pending Message cursor
+     */
+    public PendingMessageCursor getSubscriberPendingMessageCursor(String name,Store tmpStorage,
+            int maxBatchSize);
 }

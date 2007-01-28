@@ -14,6 +14,7 @@
 
 package org.apache.activemq.broker.region.cursors;
 
+import java.util.LinkedList;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -149,5 +150,22 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
      */
     public UsageManager getUsageManager(){
         return this.usageManager;
+    }
+    
+    /**
+     * destroy the cursor
+     * @throws Exception 
+     */
+    public void destroy() throws Exception {
+        stop();
+    }
+    
+    /**
+     * Page in a restricted number of messages
+     * @param maxItems
+     * @return a list of paged in messages
+     */
+    public LinkedList pageInList(int maxItems) {
+        throw new RuntimeException("Not supported");
     }
 }
