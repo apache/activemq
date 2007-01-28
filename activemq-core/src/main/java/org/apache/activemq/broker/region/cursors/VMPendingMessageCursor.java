@@ -103,4 +103,13 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor{
             }
         }
     }
+    
+    /**
+     * Page in a restricted number of messages
+     * @param maxItems
+     * @return a list of paged in messages
+     */
+    public LinkedList pageInList(int maxItems) {
+        return list;
+    }
 }

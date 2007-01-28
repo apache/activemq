@@ -55,7 +55,6 @@ import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
@@ -149,8 +148,6 @@ public class BrokerService implements Service, Serializable {
     private Store tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName = false;
-    //private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy = new VMPendingDurableSubscriberMessageStoragePolicy();
-    private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy = new StorePendingDurableSubscriberMessageStoragePolicy();
     
 
    
@@ -1008,24 +1005,7 @@ public class BrokerService implements Service, Serializable {
     public void setPersistenceThreadPriority(int persistenceThreadPriority){
         this.persistenceThreadPriority=persistenceThreadPriority;
     }
-    
-    /**
-     * @return the pendingDurableSubscriberPolicy
-     */
-    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy(){
-        return this.pendingDurableSubscriberPolicy;
-    }
-  
-    /**
-     * @param pendingDurableSubscriberPolicy the pendingDurableSubscriberPolicy to set
-     */
-    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy){
-        this.pendingDurableSubscriberPolicy=pendingDurableSubscriberPolicy;
-        if (broker != null) {
-            broker.setPendingDurableSubscriberPolicy(pendingDurableSubscriberPolicy);
-        }
-    }
-    
+        
     /**
      * @return the useLocalHostBrokerName
      */
@@ -1296,7 +1276,6 @@ public class BrokerService implements Service, Serializable {
         
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
 		regionBroker.setBrokerName(getBrokerName());
-        regionBroker.setPendingDurableSubscriberPolicy(getPendingDurableSubscriberPolicy());
 		return regionBroker;
 	}
 

@@ -254,20 +254,6 @@ public interface Broker extends Region, Service {
      * @param adminConnectionContext 
      */
     public abstract void setAdminConnectionContext(ConnectionContext adminConnectionContext);
-    
-    /**
-     * @return the pendingDurableSubscriberPolicy
-     */
-    public abstract PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy();
-  
-    /**
-     * @param pendingDurableSubscriberPolicy the pendingDurableSubscriberPolicy to set
-     */
-    public abstract void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy);
-    /**
-     * @return the broker's temp data store
-     * @throws Exception
-     */
-    
+        
     public Store getTempDataStore();
 }

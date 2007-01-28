@@ -21,7 +21,7 @@ import org.apache.activemq.kaha.Store;
 /**
  * Creates a VMPendingMessageCursor
  *  *
- * @org.apache.xbean.XBean element="vmCursor" description="Pending messages held in the JVM"
+ * @org.apache.xbean.XBean element="vmDurableCursor" description="Pending messages held in the JVM"
  * 
  * @version $Revision$
  */

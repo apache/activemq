@@ -95,7 +95,7 @@ public class RegionBroker implements Broker {
     private ConnectionContext adminConnectionContext;
     protected DestinationFactory destinationFactory;
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
-    private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy = new VMPendingDurableSubscriberMessageStoragePolicy();
+    
         
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
         this.brokerService = brokerService;
@@ -587,16 +587,5 @@ public class RegionBroker implements Broker {
 
     public Store getTempDataStore() {
         return brokerService.getTempDataStore();
-    }
-    
-    /**
-     * @return the pendingDurableSubscriberPolicy
-     */
-    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy(){
-        return this.pendingDurableSubscriberPolicy;
-    }
-  
-    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy durableSubscriberCursor){
-        this.pendingDurableSubscriberPolicy=durableSubscriberCursor;
     }
 }

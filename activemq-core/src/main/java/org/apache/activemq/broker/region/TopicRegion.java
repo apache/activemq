@@ -104,7 +104,7 @@ public class TopicRegion extends AbstractRegion {
                             +" subscriberName: "+key.getSubscriptionName());
                 }
             }
-            sub.activate(context,info);
+            sub.activate(memoryManager,context,info);
             return sub;
         }else{
             return super.addConsumer(context,info);
@@ -208,38 +208,45 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
-    protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
-        if (info.isDurable()) {
-            if (AdvisorySupport.isAdvisoryTopic(info.getDestination())){
+    protected Subscription createSubscription(ConnectionContext context,ConsumerInfo info) throws JMSException{
+        if(info.isDurable()){
+            if(AdvisorySupport.isAdvisoryTopic(info.getDestination())){
                 throw new JMSException("Cannot create a durable subscription for an advisory Topic");
             }
-            SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
-            DurableTopicSubscription sub = (DurableTopicSubscription) durableSubscriptions.get(key);
+            SubscriptionKey key=new SubscriptionKey(context.getClientId(),info.getSubscriptionName());
+            DurableTopicSubscription sub=(DurableTopicSubscription)durableSubscriptions.get(key);
             if(sub==null){
-                PendingMessageCursor cursor=broker.getPendingDurableSubscriberPolicy().getSubscriberPendingMessageCursor(
-                        context.getClientId(),info.getSubscriptionName(),broker.getTempDataStore(),
-                        info.getPrefetchSize());
-                cursor.setUsageManager(memoryManager);
-                sub=new DurableTopicSubscription(broker,context,info,keepDurableSubsActive,cursor);
+                sub=new DurableTopicSubscription(broker,context,info,keepDurableSubsActive);
+                ActiveMQDestination destination=info.getDestination();
+                if(destination!=null&&broker.getDestinationPolicy()!=null){
+                    PolicyEntry entry=broker.getDestinationPolicy().getEntryFor(destination);
+                    if(entry!=null){
+                        entry.configure(broker,memoryManager,sub);
+                    }
+                }
                 durableSubscriptions.put(key,sub);
-            }
-            else {
+            }else{
                 throw new JMSException("That durable subscription is already active.");
             }
             return sub;
         }
-        else {
-            TopicSubscription answer = new TopicSubscription(broker,context, info, memoryManager);
-            
+        try{
+            TopicSubscription answer=new TopicSubscription(broker,context,info,memoryManager);
             // lets configure the subscription depending on the destination
-            ActiveMQDestination destination = info.getDestination();
-            if (destination != null && broker.getDestinationPolicy() != null) {
-                PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
-                if (entry != null) {
-                    entry.configure(answer);
+            ActiveMQDestination destination=info.getDestination();
+            if(destination!=null&&broker.getDestinationPolicy()!=null){
+                PolicyEntry entry=broker.getDestinationPolicy().getEntryFor(destination);
+                if(entry!=null){
+                    entry.configure(broker,memoryManager,answer);
                 }
             }
+            answer.init();
             return answer;
+        }catch(Exception e){
+            log.error("Failed to create TopicSubscription ",e);
+            JMSException jmsEx=new JMSException("Couldn't create TopicSubscription");
+            jmsEx.setLinkedException(e);
+            throw jmsEx;
         }
     }
 

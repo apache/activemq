@@ -246,14 +246,6 @@ public class MutableBrokerFilter implements Broker {
         return getNext().messagePull(context, pull);
     }
     
-    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
-        return getNext().getPendingDurableSubscriberPolicy();
-    }
-  
-    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
-        getNext().setPendingDurableSubscriberPolicy(pendingDurableSubscriberPolicy);
-    }
-    
     public Store getTempDataStore() {
         return getNext().getTempDataStore();
     }

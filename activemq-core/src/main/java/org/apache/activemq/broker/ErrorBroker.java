@@ -231,15 +231,7 @@ public class ErrorBroker implements Broker {
     public Response messagePull(ConnectionContext context, MessagePull pull) {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
-        throw new BrokerStoppedException(this.message);
-    }
-  
-    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
-        throw new BrokerStoppedException(this.message);
-    }
-    
+        
     public Store getTempDataStore() {
         throw new BrokerStoppedException(this.message);
     }

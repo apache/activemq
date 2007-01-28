@@ -232,12 +232,6 @@ public class EmptyBroker implements Broker {
         return null;
     }
     
-    public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
-        return null;
-    }
-  
-    public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
-    }
     
     public Store getTempDataStore() {
         return null;

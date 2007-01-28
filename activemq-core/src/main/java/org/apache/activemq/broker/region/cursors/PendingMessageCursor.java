@@ -14,6 +14,7 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
@@ -188,6 +189,19 @@ public interface PendingMessageCursor extends Service{
      * @return true if the cursor has buffered messages ready to deliver
      */
     public boolean hasMessagesBufferedToDeliver();
+    
+    /**
+     * destroy the cursor
+     * @throws Exception 
+     */
+    public void destroy() throws Exception;
+    
+    /**
+     * Page in a restricted number of messages
+     * @param maxItems
+     * @return a list of paged in messages
+     */
+    public LinkedList pageInList(int maxItems);
     
     
 }

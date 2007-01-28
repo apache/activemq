@@ -22,7 +22,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.Topic;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 
 /**
  * @version $Revision: 1.3 $
@@ -50,7 +49,6 @@ public class CursorDurableTest extends CursorSupport{
     
     protected void configureBroker(BrokerService answer) throws Exception{
         answer.setDeleteAllMessagesOnStartup(true);
-        answer.setPendingDurableSubscriberPolicy(new StorePendingDurableSubscriberMessageStoragePolicy());
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
     }

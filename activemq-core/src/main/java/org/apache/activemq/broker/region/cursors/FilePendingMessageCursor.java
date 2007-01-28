@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
@@ -39,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 public class FilePendingMessageCursor extends AbstractPendingMessageCursor implements UsageListener{
 
     static private final Log log=LogFactory.getLog(FilePendingMessageCursor.class);
+    static private final AtomicLong nameCount = new AtomicLong();
     private Store store;
     private String name;
     private LinkedList memoryList=new LinkedList();
@@ -54,7 +56,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @param store
      */
     public FilePendingMessageCursor(String name,Store store){
-        this.name=name;
+        this.name=nameCount.incrementAndGet() + "_"+name;
         this.store=store;
     }
 

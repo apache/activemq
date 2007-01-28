@@ -38,7 +38,7 @@ public class KahaQueueStoreTest extends CursorQueueStoreTest{
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("activemq-data/durableTest"));
         answer.setPersistenceAdapter(adaptor);
         PolicyEntry policy = new PolicyEntry();
-        policy.setPendingQueueMessageStoragePolicy(new StorePendingQueueMessageStoragePolicy());
+        policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         answer.setDestinationPolicy(pMap);

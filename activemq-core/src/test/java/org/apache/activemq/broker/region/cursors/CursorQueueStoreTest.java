@@ -53,7 +53,7 @@ public  class CursorQueueStoreTest extends CursorSupport{
     
     protected void configureBroker(BrokerService answer) throws Exception{
         PolicyEntry policy = new PolicyEntry();
-        policy.setPendingQueueMessageStoragePolicy(new StorePendingQueueMessageStoragePolicy());
+        policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         answer.setDestinationPolicy(pMap);
