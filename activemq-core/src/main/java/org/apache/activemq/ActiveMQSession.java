@@ -1535,7 +1535,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
         if ( connection.isCopyMessageOnSend() ){
             msg = (ActiveMQMessage) msg.copy();
-        }        
+        }
+        msg.setConnection(connection);
         msg.onSend();
         msg.setProducerId(msg.getMessageId().getProducerId());
 
