@@ -171,14 +171,5 @@ public interface MapContainer<K, V> extends Map<K, V>{
      */
     public V getValue(StoreEntry Valuelocation);
     
-    /**
-     * Set the internal index map
-     * @param map
-     */
-    public void setIndexMap(Map map);
-    
-    /**
-     * @return the index map
-     */
-    public Map getIndexMap();
+   
 }

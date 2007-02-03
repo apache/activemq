@@ -202,7 +202,7 @@ public class KahaStore implements Store{
             if(root==null){
                 root=mapsContainer.addRoot(im,containerId);
             }
-            result=new MapContainerImpl(containerId,root,im,dm,indexType);
+            result=new MapContainerImpl(directory,containerId,root,im,dm,indexType);
             maps.put(containerId,result);
         }
         return result;
