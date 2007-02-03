@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import org.apache.activemq.kaha.impl.index.IndexItem;
+import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
 /**
 * A Set of keys for the container
@@ -37,19 +39,29 @@ public class ContainerKeySet extends ContainerCollectionSupport implements Set{
     
     
     public boolean contains(Object o){
-        return container.getInternalKeySet().contains(o);
+        return container.containsKey(o);
     }
 
     public Iterator iterator(){
-        return new ContainerKeySetIterator(container,container.getInternalKeySet().iterator());
+        return new ContainerKeySetIterator(container);
     }
 
     public Object[] toArray(){
-        return container.getInternalKeySet().toArray();
+        List list = new ArrayList();
+        IndexItem item = container.getInternalList().getRoot();
+        while ((item = container.getInternalList().getNextEntry(item)) != null) {
+            list.add(container.getKey(item));
+        }
+        return list.toArray();
     }
 
     public Object[] toArray(Object[] a){
-        return container.getInternalKeySet().toArray(a);
+        List list = new ArrayList();
+        IndexItem item = container.getInternalList().getRoot();
+        while ((item = container.getInternalList().getNextEntry(item)) != null) {
+            list.add(container.getKey(item));
+        }
+        return list.toArray(a);
     }
 
     public boolean add(Object o){
@@ -61,7 +73,13 @@ public class ContainerKeySet extends ContainerCollectionSupport implements Set{
     }
 
     public boolean containsAll(Collection c){
-       return container.getInternalKeySet().containsAll(c);
+        boolean result = true;
+        for (Object key:c) {
+            if (!(result&=container.containsKey(key))) {
+                break;
+            }
+        }
+       return result;
     }
 
     public boolean addAll(Collection c){

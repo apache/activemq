@@ -18,6 +18,8 @@
 package org.apache.activemq.kaha.impl.container;
 
 import java.util.Iterator;
+import org.apache.activemq.kaha.impl.index.IndexItem;
+import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
 
 /**
@@ -27,25 +29,31 @@ import java.util.Iterator;
 */
 public class ContainerKeySetIterator implements Iterator{
     private MapContainerImpl container;
-    private Iterator  iter;
-    private Object currentKey;
-    ContainerKeySetIterator(MapContainerImpl container,Iterator iter){
+    private IndexLinkedList list;
+    protected IndexItem nextItem;
+    protected IndexItem currentItem;
+   
+    ContainerKeySetIterator(MapContainerImpl container){
         this.container = container;
-        this.iter = iter;
+        this.list=container.getInternalList();
+        this.currentItem=list.getRoot();
+        this.nextItem=list.getNextEntry(currentItem);
     }
     
     public boolean hasNext(){
-        return iter.hasNext();
+        return nextItem!=null;
     }
 
     public Object next(){
-        currentKey =  iter.next();
-        return currentKey;
+        currentItem=nextItem;
+        Object result=container.getKey(nextItem);
+        nextItem=list.getNextEntry(nextItem);
+        return result;
     }
 
     public void remove(){
-       if (currentKey != null){
-           container.remove(currentKey);
-       }
+        if(currentItem!=null){
+            container.remove(currentItem);
+        }
     }
 }
