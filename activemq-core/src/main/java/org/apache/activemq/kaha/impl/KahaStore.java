@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.RuntimeStoreException;
@@ -35,7 +34,6 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.DataManagerFacade;
-import org.apache.activemq.kaha.impl.container.BaseContainerImpl;
 import org.apache.activemq.kaha.impl.container.ContainerId;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
 import org.apache.activemq.kaha.impl.container.MapContainerImpl;
@@ -56,7 +54,7 @@ import org.apache.commons.logging.LogFactory;
 public class KahaStore implements Store{
 
     private static final String LOCK_FILE_NAME="store.lock";
-    private static final String DEFAULT_CONTAINER_NAME="kaha";
+    
     private final static String PROPERTY_PREFIX="org.apache.activemq.kaha.Store";
     private final static boolean brokenFileLock="true".equals(System.getProperty(PROPERTY_PREFIX+".broken","false"));
     private final static boolean disableLocking="true".equals(System.getProperty(PROPERTY_PREFIX+"DisableLocking",
@@ -78,7 +76,7 @@ public class KahaStore implements Store{
     private boolean useAsyncDataManager=false;
     private long maxDataFileLength=1024*1024*32;
     private FileLock lock;
-    private String indexType=IndexTypes.DISK_INDEX;
+    private IndexType indexType=IndexType.PERSISTENT;
 
     public KahaStore(String name,String mode) throws IOException{
         this.mode=mode;
@@ -188,7 +186,7 @@ public class KahaStore implements Store{
         return getMapContainer(id,containerName,indexType);
     }
 
-    public synchronized MapContainer getMapContainer(Object id,String containerName,String indexType)
+    public synchronized MapContainer getMapContainer(Object id,String containerName,IndexType indexType)
             throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
@@ -254,7 +252,7 @@ public class KahaStore implements Store{
         return getListContainer(id,containerName,indexType);
     }
 
-    public synchronized ListContainer getListContainer(Object id,String containerName,String indexType)
+    public synchronized ListContainer getListContainer(Object id,String containerName,IndexType indexType)
             throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
@@ -388,8 +386,8 @@ public class KahaStore implements Store{
      * @see org.apache.activemq.kaha.IndexTypes
      * @return the default index type
      */
-    public synchronized String getIndexType(){
-        return indexType;
+    public synchronized String getIndexTypeAsString(){
+        return indexType==IndexType.PERSISTENT ? "PERSISTENT":"VM";
     }
 
     /**
@@ -398,11 +396,12 @@ public class KahaStore implements Store{
      * @param type
      * @see org.apache.activemq.kaha.IndexTypes
      */
-    public synchronized void setIndexType(String type){
-        if(type==null||(!type.equals(IndexTypes.DISK_INDEX)&&!type.equals(IndexTypes.IN_MEMORY_INDEX))){
-            throw new RuntimeException("Unknown IndexType: "+type);
+    public synchronized void setIndexTypeAsString(String type){
+        if(type.equalsIgnoreCase("VM")){
+            indexType=IndexType.VM;
+        }else{
+            indexType=IndexType.PERSISTENT;
         }
-        this.indexType=type;
     }
     
     public synchronized void initialize() throws IOException{

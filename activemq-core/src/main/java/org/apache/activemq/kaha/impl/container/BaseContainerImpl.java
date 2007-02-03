@@ -21,8 +21,8 @@ package org.apache.activemq.kaha.impl.container;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.RuntimeStoreException;
+import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.kaha.impl.data.Item;
@@ -50,18 +50,15 @@ public abstract class BaseContainerImpl{
     protected boolean loaded=false;
     protected boolean closed=false;
     protected boolean initialized=false;
-    protected String indexType;
+    protected Store.IndexType indexType;
 
     protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,
-            DataManager dataManager,String indexType){
+            DataManager dataManager,Store.IndexType indexType){
         this.containerId=id;
         this.root=root;
         this.indexManager=indexManager;
         this.dataManager=dataManager;
         this.indexType = indexType;
-        if (indexType == null || (!indexType.equals(IndexTypes.DISK_INDEX) && !indexType.equals(IndexTypes.IN_MEMORY_INDEX))) {
-            throw new RuntimeException("Unknown IndexType: " + indexType);
-        }
     }
 
     public ContainerId getContainerId(){
@@ -73,7 +70,7 @@ public abstract class BaseContainerImpl{
             if(!initialized){
                 initialized=true;
                 if(this.indexList==null){
-                    if(indexType.equals(IndexTypes.DISK_INDEX)){
+                    if(indexType.equals(Store.IndexType.PERSISTENT)){
                         this.indexList=new DiskIndexLinkedList(indexManager,root);
                     }else{
                         this.indexList=new VMIndexLinkedList(root);

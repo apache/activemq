@@ -25,7 +25,25 @@ import java.util.Set;
  * @version $Revision: 1.2 $
  */
 public interface Store{
+    /**
+     * Defauly container name
+     */
+    public static final String DEFAULT_CONTAINER_NAME="kaha";
     
+    /**
+     * Index Types
+     *
+     */
+    public static enum IndexType{
+        /**
+         * Map Index held in memory
+         */
+        VM,
+        /**
+         * Map index persistent
+         */
+        PERSISTENT
+    }
     /**
      * Byte Marshaller
      */
@@ -116,7 +134,7 @@ public interface Store{
      * @return container for the associated id or null if it doesn't exist
      * @throws IOException
      */
-    public MapContainer getMapContainer(Object id,String containerName,String indexType) throws IOException;
+    public MapContainer getMapContainer(Object id,String containerName,Store.IndexType indexType) throws IOException;
 
     /**
      * delete a container from the default container
@@ -190,7 +208,7 @@ public interface Store{
      * @return container for the associated id or null if it doesn't exist
      * @throws IOException
      */
-    public ListContainer getListContainer(Object id,String containerName,String indexType) throws IOException;
+    public ListContainer getListContainer(Object id,String containerName,Store.IndexType indexType) throws IOException;
 
     /**
      * delete a ListContainer from the default container
@@ -232,14 +250,14 @@ public interface Store{
      * @see org.apache.activemq.kaha.IndexTypes
      * @return the default index type
      */
-    public String getIndexType();
+    public String getIndexTypeAsString();
     
     /**
      * Set the default index type
      * @param type
      * @see org.apache.activemq.kaha.IndexTypes
      */
-    public void setIndexType(String type);
+    public void setIndexTypeAsString(String type);
     
     /**
      * @return true if the store has been initialized

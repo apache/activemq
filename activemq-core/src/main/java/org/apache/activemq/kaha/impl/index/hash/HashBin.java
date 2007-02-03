@@ -174,7 +174,6 @@ class HashBin{
         int offset=index%maximumEntries;
         page.addHashEntry(offset,entry);
         doOverFlow(index);
-        page.save();
     }
 
     private HashEntry removeHashEntry(int index) throws IOException{
@@ -182,7 +181,6 @@ class HashBin{
         int offset=getRetrieveOffset(index);
         HashEntry result=page.removeHashEntry(offset);
         doUnderFlow(index);
-        page.save();
         return result;
     }
 
@@ -233,7 +231,7 @@ class HashBin{
         int count=0;
         for(HashPageInfo page:hashPages){
             if((index+1)<=(count+page.size())){
-                //count=count==0?count:count+1;
+                // count=count==0?count:count+1;
                 result=index-count;
                 break;
             }
@@ -278,7 +276,6 @@ class HashBin{
             HashEntry overflowed=info.removeHashEntry(info.size()-1);
             doOverFlow(pageNo+1,overflowed);
         }
-        info.save();
     }
 
     private void doUnderFlow(int index){
@@ -289,7 +286,7 @@ class HashBin{
         HashPageInfo info=hashPages.get(pageNo);
     }
 
-    private void end(){
+    private void end() throws IOException{
         for(HashPageInfo info:hashPages){
             info.end();
         }

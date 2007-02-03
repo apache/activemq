@@ -25,7 +25,6 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
@@ -58,7 +57,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     protected OpenWireFormat wireFormat=new OpenWireFormat();
     private long maxDataFileLength=32*1024*1024;
     protected int maximumDestinationCacheSize=10000;
-    private String indexType=IndexTypes.DISK_INDEX;
+   
     private File dir;
     private Store theStore;
 
@@ -215,20 +214,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         this.maxDataFileLength=maxDataFileLength;
     }
 
-    /**
-     * @return the indexType
-     */
-    public String getIndexType(){
-        return this.indexType;
-    }
-
-    /**
-     * @param indexType the indexTypes to set
-     */
-    public void setIndexType(String indexType){
-        this.indexType=indexType;
-    }
-
+  
     /**
      * @return the maximumDestinationCacheSize
      */
@@ -248,7 +234,6 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         if(theStore==null){
             theStore=StoreFactory.open(getStoreName(),"rw");
             theStore.setMaxDataFileLength(maxDataFileLength);
-            theStore.setIndexType(indexType);
         }
         return theStore;
     }

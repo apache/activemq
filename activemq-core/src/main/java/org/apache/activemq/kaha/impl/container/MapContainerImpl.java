@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.RuntimeStoreException;
@@ -52,7 +51,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     protected File directory;
 
     public MapContainerImpl(File directory,ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,
-            String indexType){
+            Store.IndexType indexType){
         super(id,root,indexManager,dataManager,indexType);
         this.directory = directory;
     }
@@ -60,7 +59,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     public synchronized void init() {
         super.init();
         if(index==null){
-            if(indexType.equals(IndexTypes.DISK_INDEX)){
+            if(indexType.equals(Store.IndexType.PERSISTENT)){
                 String name = containerId.getDataContainerName() + "_" + containerId.getKey();
                 try{
                     this.index=new HashIndex(directory, name , indexManager);

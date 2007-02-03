@@ -46,7 +46,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
    
 
     public ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,
-            String indexType) throws IOException{
+            Store.IndexType indexType) throws IOException{
         super(id,root,indexManager,dataManager,indexType);
     }
 

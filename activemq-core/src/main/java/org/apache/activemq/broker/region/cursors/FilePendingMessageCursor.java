@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.kaha.IndexTypes;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.memory.UsageListener;
@@ -279,7 +278,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     protected ListContainer getDiskList(){
         if(diskList==null){
             try{
-                diskList=store.getListContainer(name,"TopicSubscription",IndexTypes.DISK_INDEX);
+                diskList=store.getListContainer(name,"TopicSubscription",Store.IndexType.PERSISTENT);
                 diskList.setMarshaller(new CommandMarshaller(new OpenWireFormat()));
             }catch(IOException e){
                 e.printStackTrace();

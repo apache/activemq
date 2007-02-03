@@ -27,6 +27,7 @@ class HashPageInfo{
     private long id;
     private int size;
     private HashPage page;
+    private boolean dirty=false;
 
     HashPageInfo(HashIndex index){
         this.hashIndex=index;
@@ -63,6 +64,7 @@ class HashPageInfo{
     void addHashEntry(int index,HashEntry entry) throws IOException{
         page.addHashEntry(index,entry);
         size++;
+        dirty=true;
     }
 
     HashEntry getHashEntry(int index) throws IOException{
@@ -73,11 +75,12 @@ class HashPageInfo{
         HashEntry result=page.removeHashEntry(index);
         if(result!=null){
             size--;
+            dirty=true;
         }
         return result;
     }
-    
-    void dump() {
+
+    void dump(){
         page.dump();
     }
 
@@ -87,19 +90,21 @@ class HashPageInfo{
         }
     }
 
-    void end() {
+    void end() throws IOException{
+        if(page!=null){
+            if(dirty){
+                hashIndex.writeFullPage(page);
+            }
+        }
         page=null;
-    }
-    
-    HashPage getPage() {
-        return page;
-    }
-    
-    void setPage(HashPage page) {
-        this.page=page;
+        dirty=false;
     }
 
-    void save() throws IOException{
-        hashIndex.writeFullPage(page);
+    HashPage getPage(){
+        return page;
+    }
+
+    void setPage(HashPage page){
+        this.page=page;
     }
 }
