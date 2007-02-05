@@ -27,9 +27,12 @@ import java.util.Set;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.kaha.MessageMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ReferenceStore;
@@ -65,44 +68,12 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         fileReferences.load();        
     }
     
-    public static class ReferenceRecord {
-
-    	public String messageId;
-    	public ReferenceData data;
-
-		public ReferenceRecord() {			
-		}
-		public ReferenceRecord(String messageId, ReferenceData data) {
-			this.messageId = messageId;
-			this.data = data;
-		}
-	}
-
-    protected Marshaller<Object> createMessageMarshaller() {
-		return new Marshaller<Object>() {
-		    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-		    	ReferenceRecord rr = (ReferenceRecord) object;
-		        dataOut.writeUTF(rr.messageId);
-		        dataOut.writeInt(rr.data.getFileId());
-		        dataOut.writeInt(rr.data.getOffset());
-		        dataOut.writeLong(rr.data.getExpiration());		        
-		    }
-		    public Object readPayload(DataInput dataIn) throws IOException{
-		    	ReferenceRecord rr = new ReferenceRecord();
-		    	rr.messageId = dataIn.readUTF();
-		    	rr.data = new ReferenceData();
-		    	rr.data.setFileId(dataIn.readInt());
-		    	rr.data.setOffset(dataIn.readInt());
-		    	rr.data.setExpiration(dataIn.readLong());
-		    	return rr;
-		    }
-		};
-	}
+    
 
 	public ReferenceStore createQueueReferenceStore(ActiveMQQueue destination) throws IOException {
 		ReferenceStore rc=(ReferenceStore)queues.get(destination);
         if(rc==null){
-            rc=new KahaReferenceStore(getListContainer(destination,"queue-data"),destination,maximumDestinationCacheSize, fileReferences);
+            rc=new KahaReferenceStore(getMapReferenceContainer(destination,"queue-data"),destination);
             messageStores.put(destination,rc);
 //            if(transactionStore!=null){
 //                rc=transactionStore.proxy(rc);
@@ -116,11 +87,11 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 		TopicReferenceStore rc=(TopicReferenceStore)topics.get(destination);
         if(rc==null){
             Store store=getStore();
-            ListContainer messageContainer=getListContainer(destination,"topic-data");
-            MapContainer subsContainer=getMapContainer(destination.toString()+"-Subscriptions","topic-subs");
+            MapContainer messageContainer=getMapReferenceContainer(destination,"topic-data");
+            MapContainer subsContainer=getSubsMapContainer(destination.toString()+"-Subscriptions","topic-subs");
             ListContainer ackContainer=store.getListContainer(destination.toString(),"topic-acks");
             ackContainer.setMarshaller(new TopicSubAckMarshaller());
-            rc=new KahaTopicReferenceStore(store,messageContainer,ackContainer,subsContainer,destination,maximumDestinationCacheSize, fileReferences);
+            rc=new KahaTopicReferenceStore(store,messageContainer,ackContainer,subsContainer,destination);
             messageStores.put(destination,rc);
 //            if(transactionStore!=null){
 //                rc=transactionStore.proxy(rc);
@@ -148,6 +119,16 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 		return rc;
 		
 	}
-	
+    
+    protected MapContainer<MessageId,ReferenceRecord> getMapReferenceContainer(Object id,String containerName) throws IOException{
+        Store store=getStore();
+        MapContainer<MessageId, ReferenceRecord> container=store.getMapContainer(id,containerName);
+        container.setKeyMarshaller(new MessageIdMarshaller());
+        container.setValueMarshaller(new ReferenceRecordMarshaller());        
+        container.load();
+        return container;
+    }
+
+    
 	
 }

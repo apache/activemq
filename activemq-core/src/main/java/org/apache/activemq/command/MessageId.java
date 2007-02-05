@@ -22,7 +22,7 @@ package org.apache.activemq.command;
  * @openwire:marshaller code="110"
  * @version $Revision: 1.12 $
  */
-public class MessageId implements DataStructure {
+public class MessageId implements DataStructure, Comparable<MessageId> {
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.MESSAGE_ID;
     
@@ -145,5 +145,18 @@ public class MessageId implements DataStructure {
         copy.key = key;
         copy.brokerSequenceId = brokerSequenceId ;
         return copy;
+    }
+
+    /**
+     * @param o
+     * @return
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo(MessageId other){
+        int result = -1;
+        if (other != null) {
+            result = this.toString().compareTo(other.toString());
+        }
+        return result;
     }    
 }

@@ -46,8 +46,8 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
    
 
     public ListContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,
-            Store.IndexType indexType) throws IOException{
-        super(id,root,indexManager,dataManager,indexType);
+            boolean persistentIndex) throws IOException{
+        super(id,root,indexManager,dataManager,persistentIndex);
     }
 
     /*
@@ -697,7 +697,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     }
 
     /**
-     * Get yjr StoreEntry for the last item of the list
+     * Get the StoreEntry for the last item of the list
      * 
      * @return the last StoreEntry or null if the list is empty
      */

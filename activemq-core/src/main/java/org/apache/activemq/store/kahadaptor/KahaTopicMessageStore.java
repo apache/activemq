@@ -30,21 +30,20 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.store.kahadaptor.KahaReferenceStoreAdapter.ReferenceRecord;
 
 /**
  * @version $Revision: 1.5 $
  */
 public class KahaTopicMessageStore extends KahaMessageStore implements TopicMessageStore{
 
-    protected ListContainer ackContainer;
+    protected ListContainer<TopicSubAck> ackContainer;
     private Map subscriberContainer;
     private Store store;
     protected Map subscriberMessages=new ConcurrentHashMap();
 
-    public KahaTopicMessageStore(Store store,ListContainer messageContainer,ListContainer ackContainer,
-            MapContainer subsContainer,ActiveMQDestination destination,int maximumCacheSize) throws IOException{
-        super(messageContainer,destination,maximumCacheSize);
+    public KahaTopicMessageStore(Store store,MapContainer messageContainer,ListContainer<TopicSubAck> ackContainer,
+            MapContainer subsContainer,ActiveMQDestination destination) throws IOException{
+        super(messageContainer,destination);
         this.store=store;
         this.ackContainer=ackContainer;
         subscriberContainer=subsContainer;
@@ -59,7 +58,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
         int subscriberCount=subscriberMessages.size();
         if(subscriberCount>0){
-            StoreEntry messageEntry=messageContainer.placeLast(message);
+            StoreEntry messageEntry=messageContainer.place(message.getMessageId(),message);
             TopicSubAck tsa=new TopicSubAck();
             tsa.setCount(subscriberCount);
             tsa.setMessageEntry(messageEntry);
@@ -166,7 +165,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
             if(entry!=null){
                 do{
                     ConsumerMessageRef consumerRef=container.get(entry);
-                    Object msg=messageContainer.get(consumerRef.getMessageEntry());
+                    Object msg=messageContainer.getValue(consumerRef.getMessageEntry());
                     if(msg!=null){
                     	recover(listener, msg);
                         count++;
@@ -227,7 +226,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         String key=getSubscriptionKey(clientId,subscriberName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
-        return container.size();
+        return  container != null ? container.size() : 0;
     }
 
     /**

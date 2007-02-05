@@ -50,15 +50,15 @@ public abstract class BaseContainerImpl{
     protected boolean loaded=false;
     protected boolean closed=false;
     protected boolean initialized=false;
-    protected Store.IndexType indexType;
+    protected boolean persistentIndex;
 
     protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,
-            DataManager dataManager,Store.IndexType indexType){
+            DataManager dataManager,boolean persistentIndex){
         this.containerId=id;
         this.root=root;
         this.indexManager=indexManager;
         this.dataManager=dataManager;
-        this.indexType = indexType;
+        this.persistentIndex = persistentIndex;
     }
 
     public ContainerId getContainerId(){
@@ -70,7 +70,7 @@ public abstract class BaseContainerImpl{
             if(!initialized){
                 initialized=true;
                 if(this.indexList==null){
-                    if(indexType.equals(Store.IndexType.PERSISTENT)){
+                    if(persistentIndex){
                         this.indexList=new DiskIndexLinkedList(indexManager,root);
                     }else{
                         this.indexList=new VMIndexLinkedList(root);

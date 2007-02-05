@@ -278,7 +278,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     protected ListContainer getDiskList(){
         if(diskList==null){
             try{
-                diskList=store.getListContainer(name,"TopicSubscription",Store.IndexType.PERSISTENT);
+                diskList=store.getListContainer(name,"TopicSubscription",true);
                 diskList.setMarshaller(new CommandMarshaller(new OpenWireFormat()));
             }catch(IOException e){
                 e.printStackTrace();

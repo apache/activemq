@@ -29,21 +29,7 @@ public interface Store{
      * Defauly container name
      */
     public static final String DEFAULT_CONTAINER_NAME="kaha";
-    
-    /**
-     * Index Types
-     *
-     */
-    public static enum IndexType{
-        /**
-         * Map Index held in memory
-         */
-        VM,
-        /**
-         * Map index persistent
-         */
-        PERSISTENT
-    }
+
     /**
      * Byte Marshaller
      */
@@ -130,11 +116,11 @@ public interface Store{
      * 
      * @param id
      * @param containerName
-     * @param indexType 
+     * @param persistentIndex 
      * @return container for the associated id or null if it doesn't exist
      * @throws IOException
      */
-    public MapContainer getMapContainer(Object id,String containerName,Store.IndexType indexType) throws IOException;
+    public MapContainer getMapContainer(Object id,String containerName,boolean persistentIndex) throws IOException;
 
     /**
      * delete a container from the default container
@@ -204,11 +190,11 @@ public interface Store{
      * 
      * @param id
      * @param containerName
-     * @param indexType 
+     * @param persistentIndex 
      * @return container for the associated id or null if it doesn't exist
      * @throws IOException
      */
-    public ListContainer getListContainer(Object id,String containerName,Store.IndexType indexType) throws IOException;
+    public ListContainer getListContainer(Object id,String containerName,boolean persistentIndex) throws IOException;
 
     /**
      * delete a ListContainer from the default container

@@ -24,6 +24,7 @@ import org.apache.activemq.kaha.impl.index.Index;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.LRUCache;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class HashIndex implements Index{
 
-    private static final String NAME_PREFIX="tree-index-";
+    private static final String NAME_PREFIX="hash-index-";
     private static final int DEFAULT_PAGE_SIZE;
     private static final int DEFAULT_KEY_SIZE;
     private static final Log log=LogFactory.getLog(HashIndex.class);
@@ -55,6 +56,9 @@ public class HashIndex implements Index{
     private HashPage firstFree;
     private HashPage lastFree;
     private AtomicBoolean loaded=new AtomicBoolean();
+    private LRUCache<Long,HashPage> pageCache;
+    private boolean enablePageCaching=false;
+    private int pageCacheSize=10;
 
     /**
      * Constructor
@@ -86,6 +90,7 @@ public class HashIndex implements Index{
             capacity<<=1;
         this.bins=new HashBin[capacity];
         openIndexFile();
+        pageCache=new LRUCache<Long,HashPage>(pageCacheSize,pageCacheSize,0.75f,true);
     }
 
     /**
@@ -130,6 +135,37 @@ public class HashIndex implements Index{
         }
         this.pageSize=pageSize;
     }
+    
+
+    /**
+     * @return the enablePageCaching
+     */
+    public boolean isEnablePageCaching(){
+        return this.enablePageCaching;
+    }
+
+    /**
+     * @param enablePageCaching the enablePageCaching to set
+     */
+    public void setEnablePageCaching(boolean enablePageCaching){
+        this.enablePageCaching=enablePageCaching;
+    }
+
+    /**
+     * @return the pageCacheSize
+     */
+    public int getPageCacheSize(){
+        return this.pageCacheSize;
+    }
+
+    /**
+     * @param pageCacheSize the pageCacheSize to set
+     */
+    public void setPageCacheSize(int pageCacheSize){
+        this.pageCacheSize=pageCacheSize;
+        pageCache.setMaxCacheSize(pageCacheSize);
+    }
+
 
     public boolean isTransient(){
         return false;
@@ -187,6 +223,7 @@ public class HashIndex implements Index{
     }
 
     public void store(Object key,StoreEntry value) throws IOException{
+        load();
         HashEntry entry=new HashEntry();
         entry.setKey((Comparable)key);
         entry.setIndexOffset(value.getOffset());
@@ -194,16 +231,19 @@ public class HashIndex implements Index{
     }
 
     public StoreEntry get(Object key) throws IOException{
+        load();
         HashEntry entry=new HashEntry();
         entry.setKey((Comparable)key);
         HashEntry result=getBin(key).find(entry);
         return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
     }
 
-    public void remove(Object key) throws IOException{
+    public StoreEntry remove(Object key) throws IOException{
+        load();
         HashEntry entry=new HashEntry();
         entry.setKey((Comparable)key);
-        getBin(key).remove(entry);
+        HashEntry result = getBin(key).remove(entry);
+        return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
     }
 
     public boolean containsKey(Object key) throws IOException{
@@ -228,11 +268,15 @@ public class HashIndex implements Index{
     HashPage lookupPage(long pageId) throws IOException{
         HashPage result=null;
         if(pageId>=0){
-            result=getFullPage(pageId);
-            if(result!=null){
-                if(result.isActive()){
-                }else{
-                    throw new IllegalStateException("Trying to access an inactive page: "+pageId);
+            result=getFromCache(pageId);
+            if(result==null){
+                result=getFullPage(pageId);
+                if(result!=null){
+                    if(result.isActive()){
+                        addToCache(result);
+                    }else{
+                        throw new IllegalStateException("Trying to access an inactive page: "+pageId);
+                    }
                 }
             }
         }
@@ -251,10 +295,12 @@ public class HashIndex implements Index{
             indexFile.seek(length);
             indexFile.write(HashEntry.NOT_SET);
         }
+        addToCache(result);
         return result;
     }
 
     void releasePage(HashPage page) throws IOException{
+        removeFromCache(page);
         page.reset();
         page.setActive(false);
         if(lastFree==null){
@@ -348,6 +394,26 @@ public class HashIndex implements Index{
         int hash=hash(key);
         int i=indexFor(hash,bins.length);
         return getBin(i);
+    }
+    
+    private HashPage getFromCache(long pageId){
+        HashPage result=null;
+        if(enablePageCaching){
+            result=pageCache.get(pageId);
+        }
+        return result;
+    }
+    
+    private void addToCache(HashPage page){
+        if(enablePageCaching){
+            pageCache.put(page.getId(),page);
+        }
+    }
+
+    private void removeFromCache(HashPage page){
+        if(enablePageCaching){
+            pageCache.remove(page.getId());
+        }
     }
 
     static int hash(Object x){

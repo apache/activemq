@@ -15,38 +15,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadaptor;
+package org.apache.activemq.kaha;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
-
 /**
- * Marshall a Message or a MessageReference
- * @version $Revision: 1.10 $
+ * Implementation of a Marshaller for MessageIds
+ * 
+ * @version $Revision: 1.2 $
  */
-public class CommandMarshaller implements Marshaller<Object> {
+public class MessageMarshaller implements Marshaller<Message> {
     
     private WireFormat wireFormat;
-    public CommandMarshaller(WireFormat wireFormat){
-        this.wireFormat = wireFormat;
-      
+    /**
+     * Constructor
+     * @param wireFormat
+     */
+    public MessageMarshaller(WireFormat wireFormat) {
+        this.wireFormat=wireFormat;
     }
-    
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-        ByteSequence packet = wireFormat.marshal(object);
+    /**
+     * Write the payload of this entry to the RawContainer
+     * 
+     * @param message
+     * @param dataOut
+     * @throws IOException
+     */
+    public void writePayload(Message message,DataOutput dataOut) throws IOException{
+        ByteSequence packet = wireFormat.marshal(message);
         dataOut.writeInt(packet.length);
         dataOut.write(packet.data, packet.offset, packet.length);
     }
 
-   
-    public Object readPayload(DataInput dataIn) throws IOException{
+    /**
+     * Read the entry from the RawContainer
+     * 
+     * @param dataIn
+     * @return unmarshalled object
+     * @throws IOException
+     */
+    public Message readPayload(DataInput dataIn) throws IOException{
         int size=dataIn.readInt();
         byte[] data=new byte[size];
         dataIn.readFully(data);
-        return wireFormat.unmarshal(new ByteSequence(data));
+        return (Message)wireFormat.unmarshal(new ByteSequence(data));
     }
 }

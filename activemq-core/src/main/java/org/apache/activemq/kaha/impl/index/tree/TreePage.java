@@ -268,14 +268,16 @@ class TreePage{
         return result;
     }
 
-    void remove(TreeEntry entry) throws IOException{
+    TreeEntry remove(TreeEntry entry) throws IOException{
+        TreeEntry result = null;
         if(isRoot()){
             if(!isEmpty()){
-                doRemove(entry);
+                result = doRemove(entry);
             }
         }else{
             throw new IllegalStateException("remove() should not be called on non root page");
         }
+        return result;
     }
 
     private TreeEntry doInsert(Flavour flavour,TreeEntry newEntry) throws IOException{
@@ -369,7 +371,8 @@ class TreePage{
         return result;
     }
 
-    private void doRemove(TreeEntry entry) throws IOException{
+    private TreeEntry doRemove(TreeEntry entry) throws IOException{
+        TreeEntry result = null;
         TreePageEntry closest=findClosestEntry(entry);
         if(closest!=null){
             TreeEntry closestEntry=closest.getTreeEntry();
@@ -377,7 +380,7 @@ class TreePage{
                 TreePage closestPage=closest.getTreePage();
                 int cmp=closestEntry.compareTo(entry);
                 if(cmp==0){
-                    TreeEntry result=closest.getTreeEntry();
+                    result=closest.getTreeEntry();
                     int index=closest.getIndex();
                     removeTreeEntry(index);
                     save();
@@ -388,6 +391,7 @@ class TreePage{
                 }
             }
         }
+        return result;
     }
 
     /**
