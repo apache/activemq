@@ -138,7 +138,7 @@ public interface ListContainer<V> extends List<V>{
     public StoreEntry getFirst();
 
     /**
-     * Get yjr StoreEntry for the last item of the list
+     * Get the StoreEntry for the last item of the list
      * 
      * @return the last StoreEntry or null if the list is empty
      */

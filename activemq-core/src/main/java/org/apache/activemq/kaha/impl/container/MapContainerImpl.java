@@ -50,19 +50,20 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     protected Marshaller valueMarshaller=Store.ObjectMarshaller;
     protected File directory;
 
-    public MapContainerImpl(File directory,ContainerId id,IndexItem root,IndexManager indexManager,DataManager dataManager,
-            Store.IndexType indexType){
-        super(id,root,indexManager,dataManager,indexType);
-        this.directory = directory;
+    public MapContainerImpl(File directory,ContainerId id,IndexItem root,IndexManager indexManager,
+            DataManager dataManager,boolean persistentIndex){
+        super(id,root,indexManager,dataManager,persistentIndex);
+        this.directory=directory;
     }
 
-    public synchronized void init() {
+    public synchronized void init(){
         super.init();
         if(index==null){
-            if(indexType.equals(Store.IndexType.PERSISTENT)){
-                String name = containerId.getDataContainerName() + "_" + containerId.getKey();
+            if(persistentIndex){
+                String name=containerId.getDataContainerName()+"_"+containerId.getKey();
+                name=name.replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
                 try{
-                    this.index=new HashIndex(directory, name , indexManager);
+                    this.index=new HashIndex(directory,name,indexManager);
                 }catch(IOException e){
                     log.error("Failed to create HashIndex",e);
                     throw new RuntimeException(e);
@@ -182,7 +183,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         Object result=null;
         StoreEntry item=null;
         try{
-            item=(StoreEntry)index.get(key);
+            item=index.get(key);
         }catch(IOException e){
             log.error("Failed trying to get key: "+key,e);
             throw new RuntimeException(e);
@@ -288,11 +289,10 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         load();
         try{
             Object result=null;
-            IndexItem item=(IndexItem)index.get(key);
+            IndexItem item=(IndexItem)index.remove(key);
             if(item!=null){
                 // refresh the index
                 item=(IndexItem)indexList.refreshEntry(item);
-                index.remove(key);
                 result=getValue(item);
                 IndexItem prev=indexList.getPrevEntry(item);
                 IndexItem next=indexList.getNextEntry(item);
@@ -365,15 +365,13 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     public synchronized StoreEntry place(Object key,Object value){
         load();
         try{
-            if(index.containsKey(key)){
-                remove(key);
-            }
+            remove(key);
             IndexItem item=write(key,value);
             index.store(key,item);
             indexList.add(item);
             return item;
         }catch(IOException e){
-            log.error("Failed trying to palce key: "+key,e);
+            log.error("Failed trying to place key: "+key,e);
             throw new RuntimeException(e);
         }
     }
@@ -400,6 +398,33 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             indexList.remove(item);
             delete(item,prev,next);
         }
+    }
+
+    public synchronized StoreEntry getFirst(){
+        load();
+        return indexList.getFirst();
+    }
+
+    public synchronized StoreEntry getLast(){
+        load();
+        return indexList.getLast();
+    }
+
+    public synchronized StoreEntry getNext(StoreEntry entry){
+        load();
+        IndexItem item=(IndexItem)entry;
+        return indexList.getNextEntry(item);
+    }
+
+    public synchronized StoreEntry getPrevious(StoreEntry entry){
+        load();
+        IndexItem item=(IndexItem)entry;
+        return indexList.getPrevEntry(item);
+    }
+
+    public synchronized StoreEntry refresh(StoreEntry entry){
+        load();
+        return indexList.getEntry(entry);
     }
 
     /**

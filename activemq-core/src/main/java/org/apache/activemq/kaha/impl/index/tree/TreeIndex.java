@@ -225,10 +225,11 @@ public class TreeIndex implements Index{
         return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
     }
 
-    public void remove(Object key) throws IOException{
+    public StoreEntry remove(Object key) throws IOException{
         TreeEntry entry=new TreeEntry();
         entry.setKey((Comparable)key);
-        root.remove(entry);
+        TreeEntry result = root.remove(entry);
+        return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
     }
 
     public boolean containsKey(Object key) throws IOException{

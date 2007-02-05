@@ -171,5 +171,41 @@ public interface MapContainer<K, V> extends Map<K, V>{
      */
     public V getValue(StoreEntry Valuelocation);
     
+    /** Get the StoreEntry for the first value in the Map
+    * 
+    * @return the first StoreEntry or null if the map is empty
+    */
+   public StoreEntry getFirst();
+
+   /**
+    * Get the StoreEntry for the last value item of the Map
+    * 
+    * @return the last StoreEntry or null if the list is empty
+    */
+   public StoreEntry getLast();
+
+   /**
+    * Get the next StoreEntry value from the map
+    * 
+    * @param entry
+    * @return the next StoreEntry or null
+    */
+   public StoreEntry getNext(StoreEntry entry);
+
+   /**
+    * Get the previous StoreEntry from the map
+    * 
+    * @param entry
+    * @return the previous store entry or null
+    */
+   public StoreEntry getPrevious(StoreEntry entry);
+
    
+   /**
+    * It's possible that a StoreEntry could be come stale
+    * this will return an upto date entry for the StoreEntry position
+    * @param entry old entry
+    * @return a refreshed StoreEntry
+    */
+   public StoreEntry refresh(StoreEntry entry);
 }

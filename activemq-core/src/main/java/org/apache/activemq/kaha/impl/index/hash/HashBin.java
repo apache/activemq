@@ -146,7 +146,8 @@ class HashBin{
         }
     }
 
-    void remove(HashEntry entry) throws IOException{
+    HashEntry remove(HashEntry entry) throws IOException{
+        HashEntry result = null;
         try{
             int low=0;
             int high=size()-1;
@@ -155,6 +156,7 @@ class HashBin{
                 HashEntry te=getHashEntry(mid);
                 int cmp=te.compareTo(entry);
                 if(cmp==0){
+                    result =te;
                     removeHashEntry(mid);
                     size--;
                     break;
@@ -167,6 +169,7 @@ class HashBin{
         }finally{
             end();
         }
+        return result;
     }
 
     private void addHashEntry(int index,HashEntry entry) throws IOException{

@@ -23,7 +23,7 @@ package org.apache.activemq.command;
  * @openwire:marshaller code="120"
  * @version $Revision$
  */
-public class ConnectionId implements DataStructure {
+public class ConnectionId implements DataStructure, Comparable<ConnectionId> {
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.CONNECTION_ID;
     
@@ -85,5 +85,11 @@ public class ConnectionId implements DataStructure {
     
     public boolean isMarshallAware() {
         return false;
+    }
+
+    
+   
+    public int compareTo(ConnectionId o){
+        return value.compareTo(o.value);
     }
 }

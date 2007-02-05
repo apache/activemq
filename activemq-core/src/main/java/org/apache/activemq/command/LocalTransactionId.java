@@ -21,7 +21,7 @@ package org.apache.activemq.command;
  * @openwire:marshaller code="111"
  * @version $Revision: 1.11 $
  */
-public class LocalTransactionId extends TransactionId {
+public class LocalTransactionId extends TransactionId implements Comparable<LocalTransactionId>{
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_LOCAL_TRANSACTION_ID;
 
@@ -79,6 +79,19 @@ public class LocalTransactionId extends TransactionId {
                 && connectionId.equals(tx.connectionId);
     }
     
+    
+    /**
+     * @param o
+     * @return
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo(LocalTransactionId o){
+        int result = connectionId.compareTo(o.connectionId);
+        if (result==0) {
+            result = (int) (value - o.value);
+        }
+        return result;
+    }
     /**
      * @openwire:property version=1
      */
@@ -98,6 +111,8 @@ public class LocalTransactionId extends TransactionId {
     public void setConnectionId(ConnectionId connectionId) {
         this.connectionId = connectionId;
     }
+
+    
 
 
 }

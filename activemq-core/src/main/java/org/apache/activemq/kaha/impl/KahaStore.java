@@ -76,7 +76,7 @@ public class KahaStore implements Store{
     private boolean useAsyncDataManager=false;
     private long maxDataFileLength=1024*1024*32;
     private FileLock lock;
-    private IndexType indexType=IndexType.PERSISTENT;
+    private boolean persistentIndex=true;
 
     public KahaStore(String name,String mode) throws IOException{
         this.mode=mode;
@@ -183,10 +183,10 @@ public class KahaStore implements Store{
     }
 
     public MapContainer getMapContainer(Object id,String containerName) throws IOException{
-        return getMapContainer(id,containerName,indexType);
+        return getMapContainer(id,containerName,persistentIndex);
     }
 
-    public synchronized MapContainer getMapContainer(Object id,String containerName,IndexType indexType)
+    public synchronized MapContainer getMapContainer(Object id,String containerName,boolean persistentIndex)
             throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
@@ -200,7 +200,7 @@ public class KahaStore implements Store{
             if(root==null){
                 root=mapsContainer.addRoot(im,containerId);
             }
-            result=new MapContainerImpl(directory,containerId,root,im,dm,indexType);
+            result=new MapContainerImpl(directory,containerId,root,im,dm,persistentIndex);
             maps.put(containerId,result);
         }
         return result;
@@ -249,10 +249,10 @@ public class KahaStore implements Store{
     }
 
     public ListContainer getListContainer(Object id,String containerName) throws IOException{
-        return getListContainer(id,containerName,indexType);
+        return getListContainer(id,containerName,persistentIndex);
     }
 
-    public synchronized ListContainer getListContainer(Object id,String containerName,IndexType indexType)
+    public synchronized ListContainer getListContainer(Object id,String containerName,boolean persistentIndex)
             throws IOException{
         initialize();
         ContainerId containerId=new ContainerId();
@@ -267,7 +267,7 @@ public class KahaStore implements Store{
             if(root==null){
                 root=listsContainer.addRoot(im,containerId);
             }
-            result=new ListContainerImpl(containerId,root,im,dm,indexType);
+            result=new ListContainerImpl(containerId,root,im,dm,persistentIndex);
             lists.put(containerId,result);
         }
         return result;
@@ -387,7 +387,7 @@ public class KahaStore implements Store{
      * @return the default index type
      */
     public synchronized String getIndexTypeAsString(){
-        return indexType==IndexType.PERSISTENT ? "PERSISTENT":"VM";
+        return persistentIndex ? "PERSISTENT":"VM";
     }
 
     /**
@@ -398,9 +398,9 @@ public class KahaStore implements Store{
      */
     public synchronized void setIndexTypeAsString(String type){
         if(type.equalsIgnoreCase("VM")){
-            indexType=IndexType.VM;
+            persistentIndex=false;
         }else{
-            indexType=IndexType.PERSISTENT;
+            persistentIndex=true;
         }
     }
     
