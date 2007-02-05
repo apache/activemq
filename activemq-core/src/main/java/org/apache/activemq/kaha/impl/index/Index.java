@@ -43,9 +43,10 @@ public interface Index{
      * remove the index key
      * 
      * @param key
+     * @return StoreEntry removed
      * @throws IOException 
      */
-    public void remove(Object key) throws IOException;
+    public StoreEntry remove(Object key) throws IOException;
 
     /**
      * store the key, item
