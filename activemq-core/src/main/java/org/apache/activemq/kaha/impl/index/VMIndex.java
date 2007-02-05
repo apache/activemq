@@ -49,8 +49,8 @@ public class VMIndex implements Index{
      * @param key
      * @see org.apache.activemq.kaha.impl.index.Index#removeKey(java.lang.Object)
      */
-    public void remove(Object key){
-        map.remove(key);
+    public StoreEntry remove(Object key){
+       return  map.remove(key);
     }
 
     /**
