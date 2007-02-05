@@ -177,6 +177,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-xmpp</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-web-demo</artifactId>
         <version>${activemq-version}</version>
         <type>war</type>
@@ -185,7 +190,7 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-gbean-management</artifactId>
         <version>${activemq-version}</version>
-	  </dependency>
+  	  </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-console</artifactId>

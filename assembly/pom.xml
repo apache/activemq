@@ -75,6 +75,10 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-xmpp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-web-demo</artifactId>
       <type>war</type>
     </dependency>
