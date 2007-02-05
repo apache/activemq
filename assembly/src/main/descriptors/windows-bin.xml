@@ -46,6 +46,33 @@
       <lineEnding>dos</lineEnding>
     </fileSet>
 
+    <!-- Copy over the files that should not get the line endings converted but need to be chmod to 755 -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>bin/linux/wrapper</include>
+        <include>bin/linux/libwrapper.so</include>
+        <include>bin/macosx/wrapper</include>
+        <include>bin/macosx/libwrapper.jnilib</include>
+      </includes>
+      <fileMode>0755</fileMode>
+    </fileSet>
+
+    <!-- Copy over the files that need unix line endings and also chmod to 755 -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>bin/activemq</include>
+        <include>bin/activemq-admin</include>
+        <include>bin/macosx/activemq</include>
+        <include>bin/linux/activemq</include>
+      </includes>
+      <fileMode>0755</fileMode>
+      <lineEnding>unix</lineEnding>
+    </fileSet>
+
     <!-- Copy over files that should not get the line endings converted -->
     <fileSet>
       <directory>src/release</directory>
@@ -102,6 +129,7 @@
       <includes>
          <include>${pom.groupId}:activemq-rar</include>
          <include>${pom.groupId}:activemq-optional</include>
+         <include>${pom.groupId}:activemq-xmpp</include>
          <include>${pom.groupId}:activecluster</include>
          <include>commons-beanutils:commons-beanutils</include>
          <include>commons-collections:commons-collections</include>
