@@ -268,7 +268,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      */
     public synchronized Object put(Object key,Object value){
         load();
-        Object result=remove(key);;
+        Object result=remove(key);
         IndexItem item=write(key,value);
         try{
             index.store(key,item);
@@ -343,6 +343,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     public synchronized void clear(){
         checkClosed();
         loaded=true;
+        init();
         if(index!=null){
             try{
                 index.clear();
