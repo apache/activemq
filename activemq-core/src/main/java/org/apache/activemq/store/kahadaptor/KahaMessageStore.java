@@ -36,9 +36,9 @@ public class KahaMessageStore implements MessageStore{
     protected final ActiveMQDestination destination;
     protected final MapContainer<MessageId,Message> messageContainer;
     protected StoreEntry batchEntry=null;
-    
 
-    public KahaMessageStore(MapContainer<MessageId,Message> container,ActiveMQDestination destination) throws IOException{
+    public KahaMessageStore(MapContainer<MessageId,Message> container,ActiveMQDestination destination)
+            throws IOException{
         this.messageContainer=container;
         this.destination=destination;
     }
@@ -110,7 +110,7 @@ public class KahaMessageStore implements MessageStore{
     /**
      * @param usageManager The UsageManager that is controlling the destination's memory usage.
      */
-    public void setUsageManager(UsageManager usageManager) {
+    public void setUsageManager(UsageManager usageManager){
     }
 
     /**
@@ -146,6 +146,9 @@ public class KahaMessageStore implements MessageStore{
         }else{
             entry=messageContainer.refresh(entry);
             entry=messageContainer.getNext(entry);
+            if(entry==null){
+                batchEntry=null;
+            }
         }
         if(entry!=null){
             int count=0;
@@ -176,6 +179,4 @@ public class KahaMessageStore implements MessageStore{
     public boolean isSupportForCursors(){
         return true;
     }
-
-    
 }
