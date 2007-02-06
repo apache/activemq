@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.web.controller;
 
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DurableSubscriberFacade;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
@@ -32,8 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 public class CreateSubscriber extends DurableSubscriberFacade implements Controller {
     private String selector;
 
-    public CreateSubscriber(BrokerService brokerService) {
-        super(brokerService);
+    public CreateSubscriber(BrokerFacade brokerFacade) {
+        super(brokerFacade);
     }
 
     public String getSelector() {

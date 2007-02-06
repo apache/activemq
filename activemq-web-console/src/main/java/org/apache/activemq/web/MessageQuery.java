@@ -17,18 +17,14 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.BrokerService;
-
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
-
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Allow the user to browse a message on a queue by its ID
@@ -40,8 +36,8 @@ public class MessageQuery extends QueueBrowseQuery {
     private String id;
     private Message message;
 
-    public MessageQuery(BrokerService brokerService, SessionPool sessionPool) throws JMSException {
-        super(brokerService, sessionPool);
+    public MessageQuery(BrokerFacade brokerFacade, SessionPool sessionPool) throws JMSException {
+        super(brokerFacade, sessionPool);
     }
 
     public String getId() {

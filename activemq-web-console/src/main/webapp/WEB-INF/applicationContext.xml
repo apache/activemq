@@ -27,7 +27,7 @@
 
   <bean id="sessionPool" class="org.apache.activemq.web.SessionPool"/>
   
-  <bean id="brokerQuery" class="org.apache.activemq.web.BrokerFacade" autowire='constructor' singleton="false"/>
+  <bean id="brokerQuery" class="org.apache.activemq.web.LocalBrokerFacade" autowire='constructor' singleton="false"/>
   <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire='constructor' singleton="false"/>
   <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire='constructor' singleton="false"/>
 

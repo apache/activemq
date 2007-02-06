@@ -17,8 +17,8 @@
  */
 package org.apache.activemq.web.controller;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.apache.activemq.web.WebClient;
 import org.springframework.web.servlet.ModelAndView;
@@ -28,7 +28,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.Iterator;
 import java.util.Map;
 
@@ -50,8 +49,8 @@ public class SendMessage extends DestinationFacade implements Controller {
     private String JMSMessageCountHeader = "JMSXMessageNumber";
     private boolean redirectToBrowse;
 
-    public SendMessage(BrokerService brokerService) {
-        super(brokerService);
+    public SendMessage(BrokerFacade brokerFacade) {
+        super(brokerFacade);
     }
 
     public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {

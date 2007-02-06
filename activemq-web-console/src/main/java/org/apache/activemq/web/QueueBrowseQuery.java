@@ -17,7 +17,6 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.BrokerService;
 import org.springframework.beans.factory.DisposableBean;
 
 import javax.jms.JMSException;
@@ -36,8 +35,8 @@ public class QueueBrowseQuery extends DestinationFacade implements DisposableBea
     private Queue queue;
     private QueueBrowser browser;
 
-    public QueueBrowseQuery(BrokerService brokerService, SessionPool sessionPool) throws JMSException {
-        super(brokerService);
+    public QueueBrowseQuery(BrokerFacade brokerFacade, SessionPool sessionPool) throws JMSException {
+        super(brokerFacade);
         this.sessionPool = sessionPool;
         this.session = sessionPool.borrowSession();
         setJMSDestinationType("query");
