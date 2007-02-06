@@ -1089,7 +1089,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         // Allows the options on the destination to configure the consumerInfo
         if( info.getDestination().getOptions()!=null ) {
             HashMap options = new HashMap(info.getDestination().getOptions());
-            IntrospectionSupport.setProperties(this.info, options, "consumer.");
+            IntrospectionSupport.setProperties(info, options, "consumer.");
         }
         
         return new ActiveMQConnectionConsumer(this, sessionPool, info);
