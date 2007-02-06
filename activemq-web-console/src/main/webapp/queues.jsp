@@ -54,10 +54,10 @@
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
 <tr>
 <td><a href="browse.jsp?JMSDestination=${row.name}">${row.name}</a></td>
-<td>${row.destinationStatistics.messages.count}</td>
-<td>${row.destinationStatistics.consumers.count}</td>
-<td>${row.destinationStatistics.enqueues.count}</td>
-<td>${row.destinationStatistics.dequeues.count}</td>
+<td>${row.queueSize}</td>
+<td>${row.consumerCount}</td>
+<td>${row.enqueueCount}</td>
+<td>${row.dequeueCount}</td>
 <td>
     <a href="browse.jsp?JMSDestination=${row.name}">Browse</a>
 <%--    

@@ -45,9 +45,7 @@ import java.util.Set;
  *
  * @version $Revision$
  */
-public class LocalBrokerFacade implements BrokerFacade {
-    private static final Log log = LogFactory.getLog(LocalBrokerFacade.class);
-
+public class LocalBrokerFacade extends BrokerFacadeSupport {
     private BrokerService brokerService;
 
     public LocalBrokerFacade(BrokerService brokerService) {
@@ -78,69 +76,6 @@ public class LocalBrokerFacade implements BrokerFacade {
         }
         return adminView.getBroker();
     }
-
-    // TODO - we should not have to use JMX to implement the following methods...
-    
-    /*
-    public Collection getQueues() throws Exception {
-        BrokerView broker = brokerService.getAdminView();
-        if (broker == null) {
-            return Collections.EMPTY_LIST;
-        }
-        ObjectName[] queues = broker.getQueues();
-        return getManagedObjects(queues, QueueViewMBean.class);
-    }
-    */
-    public Collection getQueues() throws Exception {
-        ManagedRegionBroker broker = getManagedBroker();
-        if (broker == null) {
-            return new ArrayList();
-        }
-        return broker.getQueueRegion().getDestinationMap().values();
-    }
-
-    
-    public Collection getTopics() throws Exception {
-        BrokerView broker = brokerService.getAdminView();
-        if (broker == null) {
-            return Collections.EMPTY_LIST;
-        }
-        ObjectName[] queues = broker.getTopics();
-        return getManagedObjects(queues, TopicViewMBean.class);
-    }
-    
-    public Collection getDurableTopicSubscribers() throws Exception {
-        BrokerView broker = brokerService.getAdminView();
-        if (broker == null) {
-            return Collections.EMPTY_LIST;
-        }
-        ObjectName[] queues = broker.getDurableTopicSubscribers();
-        return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
-    }
-
-    protected Collection getManagedObjects(ObjectName[] names, Class type) {
-        List answer = new ArrayList();
-        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-        if (mbeanServer != null) {
-            for (int i = 0; i < names.length; i++) {
-                ObjectName name = names[i];
-                Object value = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, type, true);
-                if (value != null) {
-                    answer.add(value);
-                }
-            }
-        }
-        return answer;
-    }
-
-    /**
-     *
-     *
-     * public Collection getTopics() throws Exception { ManagedRegionBroker
-     * broker = getManagedBroker(); if (broker == null) { return new
-     * ArrayList(); } return
-     * broker.getTopicRegion().getDestinationMap().values(); }
-     */
 
     public void purgeQueue(ActiveMQDestination destination) throws Exception {
         Set destinations = getManagedBroker().getQueueRegion().getDestinations(destination);
