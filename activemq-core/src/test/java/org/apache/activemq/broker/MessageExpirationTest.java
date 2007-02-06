@@ -29,6 +29,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
+import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 
 public class MessageExpirationTest extends BrokerTestSupport {
     
@@ -57,6 +61,22 @@ public class MessageExpirationTest extends BrokerTestSupport {
                 new Byte(ActiveMQDestination.QUEUE_TYPE), 
                 new Byte(ActiveMQDestination.TOPIC_TYPE), 
                 } );
+    }
+
+    @Override
+    protected BrokerService createBroker() throws Exception {
+        BrokerService broker = new BrokerService();
+        broker.setPersistent(false);
+
+        // lets disable spooling
+        PolicyEntry policy = new PolicyEntry();
+        policy.setPendingSubscriberPolicy(new VMPendingSubscriberMessageStoragePolicy());
+
+        PolicyMap map = new PolicyMap();
+        map.setDefaultEntry(policy);
+        broker.setDestinationPolicy(map);
+        
+        return broker;
     }
 
     public void testMessagesWaitingForUssageDecreaseExpire() throws Exception {
