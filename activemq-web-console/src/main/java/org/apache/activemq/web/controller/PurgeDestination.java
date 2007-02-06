@@ -17,16 +17,13 @@
  */
 package org.apache.activemq.web.controller;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Set;
-import java.util.Iterator;
 
 /**
  *
@@ -34,8 +31,8 @@ import java.util.Iterator;
  */
 public class PurgeDestination extends DestinationFacade implements Controller {
 
-    public PurgeDestination(BrokerService brokerService) {
-        super(brokerService);
+    public PurgeDestination(BrokerFacade brokerFacade) {
+        super(brokerFacade);
     }
 
     public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -45,11 +42,7 @@ public class PurgeDestination extends DestinationFacade implements Controller {
 
     public void purgeDestination() throws Exception {
         if (isQueue()) {
-            Set destinations = getManagedBroker().getQueueRegion().getDestinations(createDestination());
-            for (Iterator i=destinations.iterator(); i.hasNext();) {
-                Queue regionQueue = (Queue)i.next();
-                regionQueue.purge();
-            }
+            getBrokerFacade().purgeQueue(createDestination());
         }
         else {
             throw new UnsupportedOperationException("Purge supported for queues only. Receieved JMSDestinationType=" + getJMSDestinationType());

@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -29,16 +29,16 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @version $Revision$
  */
-public class DestinationFacade extends BrokerFacade {
+public class DestinationFacade  {
 
     private String JMSDestination;
     private String JMSDestinationType;
+    private BrokerFacade brokerFacade;
 
-    public DestinationFacade(BrokerService brokerService) {
-        super(brokerService);
+    public DestinationFacade(BrokerFacade brokerFacade) {
+        this.brokerFacade = brokerFacade;
     }
 
-    
     public String toString() {
         return super.toString() + "[destination:" + JMSDestination + "; type=" + JMSDestinationType + "]";
     }
@@ -67,6 +67,14 @@ public class DestinationFacade extends BrokerFacade {
     
     // Properties
     // -------------------------------------------------------------------------
+    public BrokerViewMBean getBrokerAdmin() throws Exception {
+        return brokerFacade.getBrokerAdmin();
+    }
+
+    public BrokerFacade getBrokerFacade() {
+        return brokerFacade;
+    }
+
     public boolean isQueue() {
         if (JMSDestinationType != null && JMSDestinationType.equalsIgnoreCase("topic")) {
             return false;
@@ -109,7 +117,7 @@ public class DestinationFacade extends BrokerFacade {
 
     protected ModelAndView redirectToRequest(HttpServletRequest request) {
         String view = "redirect:" + request.getRequestURI();
-        System.out.println("Redirecting to: " + view);
+//        System.out.println("Redirecting to: " + view);
         return new ModelAndView(view);
     }
 

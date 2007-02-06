@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.web.controller;
 
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DurableSubscriberFacade;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
@@ -31,8 +31,8 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class DeleteSubscriber extends DurableSubscriberFacade implements Controller {
 
-    public DeleteSubscriber(BrokerService brokerService) {
-        super(brokerService);
+    public DeleteSubscriber(BrokerFacade brokerFacade) {
+        super(brokerFacade);
     }
 
     public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {

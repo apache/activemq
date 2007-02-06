@@ -17,8 +17,6 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.BrokerService;
-
 /**
  * 
  * @version $Revision$
@@ -28,8 +26,8 @@ public class DurableSubscriberFacade extends DestinationFacade {
     private String clientId;
     private String subscriberName;
 
-    public DurableSubscriberFacade(BrokerService brokerService) {
-        super(brokerService);
+    public DurableSubscriberFacade(BrokerFacade brokerFacade) {
+        super(brokerFacade);
     }
 
     public String getClientId() {
