@@ -21,7 +21,10 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.command.ActiveMQDestination;
 
-import java.util.Collection;
+import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 /**
  * A {@link BrokerFacade} which uses JMX to communicate with a remote broker
@@ -30,9 +33,11 @@ import java.util.Collection;
  */
 public class JMXBrokerFacade extends BrokerFacadeSupport {
     private ManagementContext managementContext;
+    private ObjectName brokerName;
 
     public BrokerViewMBean getBrokerAdmin() throws Exception {
-        return null;  /** TODO */
+        MBeanServerConnection mbeanServer = getManagementContext().getMBeanServer();
+        return (BrokerViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, getBrokerName(), BrokerViewMBean.class, true);
     }
 
     public void purgeQueue(ActiveMQDestination destination) throws Exception {
@@ -42,11 +47,27 @@ public class JMXBrokerFacade extends BrokerFacadeSupport {
     public ManagementContext getManagementContext() {
         if (managementContext == null) {
             managementContext = new ManagementContext();
+            managementContext.setCreateConnector(true);
         }
         return managementContext;
     }
 
     public void setManagementContext(ManagementContext managementContext) {
         this.managementContext = managementContext;
+    }
+
+    public ObjectName getBrokerName() throws MalformedObjectNameException {
+        if (brokerName == null) {
+            brokerName = createBrokerName();
+        }
+        return brokerName;
+    }
+
+    public void setBrokerName(ObjectName brokerName) {
+        this.brokerName = brokerName;
+    }
+
+    protected ObjectName createBrokerName() throws MalformedObjectNameException {
+        return new ObjectName(getManagementContext().getJmxDomainName() + ":Type=Broker");
     }
 }

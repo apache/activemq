@@ -42,7 +42,7 @@ function drawGraph() {
     var layout = new PlotKit.Layout("bar", options);
     
     layout.addDataset("sqrt",  [<c:forEach items="${requestContext.brokerQuery.queues}" var="row" varStatus="status"><c:if 
-         test="${status.count > 1}">, </c:if> [${status.count},  ${row.destinationStatistics.messages.count}] </c:forEach> ]);
+         test="${status.count > 1}">, </c:if> [${status.count},  ${row.queueSize}] </c:forEach> ]);
     layout.evaluate();
     
     var canvas = MochiKit.DOM.getElement("graph");
