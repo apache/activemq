@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadaptor;
+package org.apache.activemq.kaha;
 
 import java.io.DataInput;
 import java.io.DataOutput;

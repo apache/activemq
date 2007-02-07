@@ -20,21 +20,20 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.kaha.MessageIdMarshaller;
 import org.apache.activemq.kaha.MessageMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
-import org.apache.activemq.kaha.StringMarshaller;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
@@ -78,7 +77,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         Set<ActiveMQDestination> rc=new HashSet<ActiveMQDestination>();
         try{
             Store store=getStore();
-            for(Iterator i=store.getListContainerIds().iterator();i.hasNext();){
+            for(Iterator i=store.getMapContainerIds().iterator();i.hasNext();){
                 Object obj=i.next();
                 if(obj instanceof ActiveMQDestination){
                     rc.add((ActiveMQDestination) obj);

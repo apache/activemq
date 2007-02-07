@@ -110,7 +110,7 @@ public class KahaReferenceStore implements ReferenceStore{
 
     public void addReferenceFileIdsInUse(Set<Integer> rc){
         for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
-            ReferenceRecord msg=(ReferenceRecord)messageContainer.get(entry);
+            ReferenceRecord msg=(ReferenceRecord)messageContainer.getValue(entry);
             rc.add(msg.data.getFileId());
         }
     }

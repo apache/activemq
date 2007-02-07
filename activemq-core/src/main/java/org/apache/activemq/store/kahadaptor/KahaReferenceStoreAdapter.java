@@ -32,6 +32,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.kaha.MessageIdMarshaller;
 import org.apache.activemq.kaha.MessageMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.store.MessageStore;

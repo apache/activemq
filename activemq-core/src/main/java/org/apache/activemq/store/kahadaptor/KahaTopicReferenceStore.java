@@ -100,7 +100,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         for(StoreEntry entry=ackContainer.getFirst();entry!=null;entry=ackContainer.getNext(entry)){
             TopicSubAck subAck=(TopicSubAck)ackContainer.get(entry);
             if(subAck.getCount()>0){
-                ReferenceRecord rr=(ReferenceRecord)messageContainer.get(subAck.getMessageEntry());
+                ReferenceRecord rr=(ReferenceRecord)messageContainer.getValue(subAck.getMessageEntry());
                 rc.add(rr.data.getFileId());
             }
         }
