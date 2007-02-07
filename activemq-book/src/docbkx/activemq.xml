@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -16,69 +15,81 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-        "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <book>
   <bookinfo>
     <title>Apache ActiveMQ - User Guide</title>
-    <releaseinfo>4.2</releaseinfo>
+    <releaseinfo>&version;</releaseinfo>
+
     <authorgroup>
       <author>
         <firstname>James</firstname>
         <surname>Strachan</surname>
       </author>
+
       <author>
         <firstname>Brian</firstname>
         <surname>McCallister</surname>
       </author>
     </authorgroup>
+
     <legalnotice>
-      <para>
-        Licensed to the Apache Software Foundation (ASF) under one or more
-        contributor license agreements. See the NOTICE file distributed with
-        this work for additional information regarding copyright ownership.
-        The ASF licenses this file to You under the Apache License, Version 2.0
-        (the "License"); you may not use this file except in compliance with
-        the License. You may obtain a copy of the License at
-      </para>
+      <para>Licensed to the Apache Software Foundation (ASF) under one or more
+      contributor license agreements. See the NOTICE file distributed with
+      this work for additional information regarding copyright ownership. The
+      ASF licenses this file to You under the Apache License, Version 2.0 (the
+      "License"); you may not use this file except in compliance with the
+      License. You may obtain a copy of the License at</para>
 
-      <para>
-        http://www.apache.org/licenses/LICENSE-2.0
-      </para>
+      <para>http://www.apache.org/licenses/LICENSE-2.0</para>
 
-      <para>
-        Unless required by applicable law or agreed to in writing, software
-        distributed under the License is distributed on an "AS IS" BASIS,
-        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        See the License for the specific language governing permissions and
-        limitations under the License.
-      </para>
+      <para>Unless required by applicable law or agreed to in writing,
+      software distributed under the License is distributed on an "AS IS"
+      BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied. See the License for the specific language governing permissions
+      and limitations under the License.</para>
     </legalnotice>
   </bookinfo>
-  <toc/>
 
+  <toc></toc>
 
   <chapter id="introduction">
     <title>Introduction</title>
+
     <para></para>
 
-    <para>Apache ActiveMQ is the most popular and powerful open source Message
-      Broker available today. Its hosted at Apache and is distributed under the
-      Apache Software License (2.0).
-    </para>
+    <para><ulink url="http://activemq.apache.org/">Apache ActiveMQ</ulink> is
+    the most popular and powerful open source Message Broker available today.
+    Its hosted at Apache and is distributed under the Apache Software License
+    (2.0).</para>
 
-    <section id="introduction-overview">
-      <title>Overview</title>
-      <para></para>
+    <para>ActiveMQ supports different <ulink
+    url="http://activemq.apache.org/cross-language-clients.html">cross
+    language clients</ulink> from many different languages such as Java, C# /
+    .Net, C, C++, Ruby, Python, Perl, PHP together with different protocols
+    like OpenWire, Stomp, REST, Ajax/Cometd, XMPP. ActiveMQ also provides a
+    whole raft of powerful <ulink
+    url="http://activemq.apache.org/features.html">features</ulink> like
+    Message Groups, Exclusive Queues, Master/Slave, Networks of Brokers and so
+    forth.</para>
+
+    <section>
+      <title>Architecture</title>
+
+      <para>Like most Message Orientated Middleware (<acronym>MOM</acronym>)
+      providers ActiveMQ is based on the idea of one or more <emphasis>Message
+      Brokers</emphasis> running on the network which act as a message router
+      and optional persistence store, then <emphasis>Clients</emphasis>
+      connect to one or more Message Broker.</para>
     </section>
   </chapter>
 
   <chapter id="installation">
     <title>Installing Apache ActiveMQ</title>
 
-    <para>The first thing you need to do is install Apache ActiveMQ from a binary distribution.
-    </para>
+    <para>The first thing you need to do is install Apache ActiveMQ from a
+    binary distribution.</para>
 
     <para></para>
   </chapter>
@@ -86,11 +97,12 @@
   <chapter id="running-broker">
     <title>Running a Broker</title>
 
-
-    <para>The most typical deployment of Apache ActiveMQ, particularly if persistent messaging is to be used is for
-      brokers to be run on the network somewhere. This chapter takes you through running a broker as a stand alone
-      process.
-    </para>
+    <para>The most typical deployment of Apache ActiveMQ is for brokers to be
+    run on the network as a stand alone processes then messaging clients
+    connect to one or more brokers. So we will describe how to go about
+    running brokers, then in the <link linkend="java-client">next
+    chapter</link> we will describe how to connect to a broker from a
+    client.</para>
 
     <para></para>
   </chapter>
@@ -98,9 +110,9 @@
   <chapter id="java-client">
     <title>Using the Java Client</title>
 
-    <para>Apache ActiveMQ fully supports the JMS 1.1 and J2EE 1.4 specifications so feel free to follow any
-      documentation you have on JMS or J2EE for more background.
-    </para>
+    <para>Apache ActiveMQ fully supports the JMS 1.1 and J2EE 1.4
+    specifications so feel free to follow any documentation you have on JMS or
+    J2EE for more background.</para>
 
     <para></para>
   </chapter>
