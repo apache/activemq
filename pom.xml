@@ -172,6 +172,7 @@
   </distributionManagement>
 
   <modules>
+    <module>activemq-book</module>
     <module>activemq-core</module>
     <module>activemq-console</module>
     <module>activemq-jaas</module>
