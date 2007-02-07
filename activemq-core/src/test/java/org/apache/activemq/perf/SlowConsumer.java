@@ -25,7 +25,7 @@ import javax.jms.Message;
  * @version $Revision: 1.3 $
  */
 public class SlowConsumer extends PerfConsumer{
-    public SlowConsumer(ConnectionFactory fac,Destination dest,String consumerName,boolean slowConsumer)
+    public SlowConsumer(ConnectionFactory fac,Destination dest,String consumerName)
                     throws JMSException{
         super(fac,dest,consumerName);
     }
@@ -36,6 +36,7 @@ public class SlowConsumer extends PerfConsumer{
 
     public void onMessage(Message msg){
         super.onMessage(msg);
+        System.err.println("GOT A MSG " + msg);
         try{
             Thread.sleep(10000);
         }catch(InterruptedException e){

@@ -22,12 +22,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.memory.UsageListener;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.store.kahadaptor.CommandMarshaller;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
