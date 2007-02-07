@@ -58,18 +58,20 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
 
 
         //if(!((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue()) ) {
-        Set allowedACLs = null;
-        if(!destination.isTemporary()) {
-            allowedACLs = authorizationMap.getAdminACLs(destination);
-        } else {
-        	allowedACLs = authorizationMap.getTempDestinationAdminACLs();
-        }
-     
-        if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
-            throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to create: "+destination);
+        if (!securityContext.isBrokerContext()) {
+            Set allowedACLs = null;
+            if(!destination.isTemporary()) {
+                allowedACLs = authorizationMap.getAdminACLs(destination);
+            } else {
+                allowedACLs = authorizationMap.getTempDestinationAdminACLs();
+            }
+         
+            if(allowedACLs!=null && !securityContext.isInOneOf(allowedACLs))
+                throw new SecurityException("User "+securityContext.getUserName()+" is not authorized to create: "+destination);
 
-       // }
-        
+        }
+        // }
+
         return super.addDestination(context, destination);
     }
     
