@@ -1,27 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
-<book>
-  <title>The Apache ActiveMQ Book</title>
 
-  <chapter id="chapter1">
-    <title>What is Apache ActiveMQ?</title>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+        "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<book>
+  <bookinfo>
+    <title>Apache ActiveMQ - User Guide</title>
+    <releaseinfo>4.2</releaseinfo>
+    <authorgroup>
+      <author>
+        <firstname>James</firstname>
+        <surname>Strachan</surname>
+      </author>
+      <author>
+        <firstname>Brian</firstname>
+        <surname>McCallister</surname>
+      </author>
+    </authorgroup>
+    <legalnotice>
+      <para>
+        Licensed to the Apache Software Foundation (ASF) under one or more
+        contributor license agreements. See the NOTICE file distributed with
+        this work for additional information regarding copyright ownership.
+        The ASF licenses this file to You under the Apache License, Version 2.0
+        (the "License"); you may not use this file except in compliance with
+        the License. You may obtain a copy of the License at
+      </para>
+
+      <para>
+        http://www.apache.org/licenses/LICENSE-2.0
+      </para>
+
+      <para>
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+      </para>
+    </legalnotice>
+  </bookinfo>
+  <toc/>
+
+
+  <chapter id="introduction">
+    <title>Introduction</title>
+    <para></para>
 
     <para>Apache ActiveMQ is the most popular and powerful open source Message
-    Broker available today. Its hosted at Apache and is distributed under the
-    Apache Software License (2.0).</para>
+      Broker available today. Its hosted at Apache and is distributed under the
+      Apache Software License (2.0).
+    </para>
 
-    <para>Apache ActiveMQ supports</para>
+    <section id="introduction-overview">
+      <title>Overview</title>
+      <para></para>
+    </section>
+  </chapter>
+
+  <chapter id="installation">
+    <title>Installing Apache ActiveMQ</title>
+
+    <para>The first thing you need to do is install Apache ActiveMQ from a binary distribution.
+    </para>
 
     <para></para>
   </chapter>
 
-  <chapter id="chapter2">
-    <title>Getting Started</title>
+  <chapter id="running-broker">
+    <title>Running a Broker</title>
 
-    <para>First you will need to download Apache ActiveMQ from the site.</para>
 
-    <para>Apache ActiveMQ supports</para>
+    <para>The most typical deployment of Apache ActiveMQ, particularly if persistent messaging is to be used is for
+      brokers to be run on the network somewhere. This chapter takes you through running a broker as a stand alone
+      process.
+    </para>
+
+    <para></para>
+  </chapter>
+
+  <chapter id="java-client">
+    <title>Using the Java Client</title>
+
+    <para>Apache ActiveMQ fully supports the JMS 1.1 and J2EE 1.4 specifications so feel free to follow any
+      documentation you have on JMS or J2EE for more background.
+    </para>
 
     <para></para>
   </chapter>
