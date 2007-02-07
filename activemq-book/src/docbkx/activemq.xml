@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<book>
+  <title>The Apache ActiveMQ Book</title>
+
+  <chapter id="chapter1">
+    <title>What is Apache ActiveMQ?</title>
+
+    <para>Apache ActiveMQ is the most popular and powerful open source Message
+    Broker available today. Its hosted at Apache and is distributed under the
+    Apache Software License (2.0).</para>
+
+    <para>Apache ActiveMQ supports</para>
+
+    <para></para>
+  </chapter>
+
+  <chapter id="chapter2">
+    <title>Getting Started</title>
+
+    <para>First you will need to download Apache ActiveMQ from the site.</para>
+
+    <para>Apache ActiveMQ supports</para>
+
+    <para></para>
+  </chapter>
+</book>
