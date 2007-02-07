@@ -69,6 +69,7 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
@@ -1454,6 +1455,7 @@ public class BrokerService implements Service, Serializable {
     protected ConnectionContext createAdminConnectionContext() throws Exception {
         ConnectionContext context = new ConnectionContext();
         context.setBroker(getBroker());
+        context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
         return context;
     }
 

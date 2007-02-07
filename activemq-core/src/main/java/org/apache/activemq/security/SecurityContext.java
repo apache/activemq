@@ -19,7 +19,7 @@ package org.apache.activemq.security;
 
 import java.util.HashSet;
 import java.util.Set;
-
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,6 +28,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version $Revision$
  */
 abstract public class SecurityContext {
+
+    public static final SecurityContext BROKER_SECURITY_CONTEXT = new SecurityContext("ActiveMQBroker") {
+        @Override
+        public boolean isBrokerContext() {
+            return true;
+        }
+
+        public Set getPrincipals() {
+            return Collections.EMPTY_SET;
+        }
+    };
 
     final String userName;
     
@@ -53,8 +64,12 @@ abstract public class SecurityContext {
     public ConcurrentHashMap getAuthorizedReadDests() {
         return authorizedReadDests;
     }
+
     public ConcurrentHashMap getAuthorizedWriteDests() {
         return authorizedWriteDests;
     }
-    
+
+    public boolean isBrokerContext() {
+        return false;
+    }
 }
