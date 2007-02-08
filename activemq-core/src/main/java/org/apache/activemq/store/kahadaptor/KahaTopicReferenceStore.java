@@ -75,6 +75,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         int subscriberCount=subscriberMessages.size();
         if(subscriberCount>0){
             StoreEntry messageEntry=messageContainer.place(messageId,record);
+            addInterest(record);
             TopicSubAck tsa=new TopicSubAck();
             tsa.setCount(subscriberCount);
             tsa.setMessageEntry(messageEntry);
@@ -129,7 +130,11 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 if(tsa!=null){
                     if(tsa.decrementCount()<=0){
                         ackContainer.remove(ref.getAckEntry());
+                        ReferenceRecord rr = messageContainer.get(messageId);
+                        if (rr != null) {
                         messageContainer.remove(tsa.getMessageEntry());
+                        removeInterest(rr);
+                        }
                     }else{
                         ackContainer.update(ref.getAckEntry(),tsa);
                     }

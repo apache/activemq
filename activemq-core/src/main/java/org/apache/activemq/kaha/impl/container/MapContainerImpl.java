@@ -193,6 +193,23 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         }
         return result;
     }
+    
+    /**
+     * Get the StoreEntry associated with the key
+     * @param key
+     * @return the StoreEntry
+     */
+    public synchronized StoreEntry getEntry(Object key) {
+        load();
+        StoreEntry item=null;
+        try{
+            item=index.get(key);
+        }catch(IOException e){
+            log.error("Failed trying to get key: "+key,e);
+            throw new RuntimeException(e);
+        }
+        return item;
+    }
 
     /*
      * (non-Javadoc)

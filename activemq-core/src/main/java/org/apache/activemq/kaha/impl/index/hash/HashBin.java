@@ -138,6 +138,9 @@ class HashBin{
                 }
             }
             if(!replace){
+                if (low > size()) {
+                   System.out.println("SIZE() " + size() + " low = " + low); 
+                }
                 addHashEntry(low,newEntry);
                 size++;
             }

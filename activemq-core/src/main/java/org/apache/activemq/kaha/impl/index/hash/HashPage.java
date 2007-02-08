@@ -192,6 +192,8 @@ class HashPage{
         
 
     void addHashEntry(int index,HashEntry entry) throws IOException{
+        //index = index >= 0 ? index : 0;
+        //index = (index == 0 || index< size()) ? index : size()-1;
         hashIndexEntries.add(index,entry);
     }
     
