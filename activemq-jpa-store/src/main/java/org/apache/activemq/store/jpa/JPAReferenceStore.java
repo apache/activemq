@@ -207,4 +207,11 @@ public class JPAReferenceStore implements ReferenceStore {
 
 	public void stop() throws Exception {
 	}
+
+    public void setBatch(MessageId startAfter){        
+    }
+
+    public boolean supportsExternalBatchControl(){
+        return false;
+    }
 }
