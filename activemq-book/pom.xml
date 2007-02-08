@@ -74,7 +74,7 @@
         </dependencies>
 
         <configuration>
-          <foCustomization>src/styles/docbook-fo.xsl</foCustomization>
+          <foCustomization>${basedir}/src/styles/docbook-fo.xsl</foCustomization>
 
           <!-- lets use separate pages per chapter for HTML -->
           <chunkedOutput>true</chunkedOutput>
