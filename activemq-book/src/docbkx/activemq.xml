@@ -19,7 +19,8 @@
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <book>
   <bookinfo>
-    <title>Apache ActiveMQ - User Guide</title>
+    <title>Apache ActiveMQ</title>
+    <subtitle>User Guide</subtitle>
     <releaseinfo>&version;</releaseinfo>
 
     <authorgroup>

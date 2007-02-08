@@ -53,11 +53,12 @@
       <plugin>
         <groupId>com.agilejava.docbkx</groupId>
         <artifactId>docbkx-maven-plugin</artifactId>
+        <version>2.0.3-SNAPSHOT</version>
         <executions>
           <execution>
             <goals>
-              <goal>generate-html</goal>
               <goal>generate-pdf</goal>
+              <goal>generate-html</goal>
               <goal>generate-manpages</goal>
             </goals>
             <phase>generate-sources</phase>
@@ -73,6 +74,11 @@
         </dependencies>
 
         <configuration>
+          <foCustomization>src/styles/docbook-fo.xsl</foCustomization>
+
+          <!-- lets use separate pages per chapter for HTML -->
+          <chunkedOutput>true</chunkedOutput>
+
           <entities>
             <entity>
               <name>version</name>
@@ -80,11 +86,8 @@
             </entity>
           </entities>
 
-          <!-- lets use separate pages per chapter for HTML -->
-          <chunkedOutput>true</chunkedOutput>
-
           <!--<xincludeSupport>true</xincludeSupport>-->
-          
+
           <!--
           <sourceDirectory>target/docbkx</sourceDirectory>
           <preProcess>
