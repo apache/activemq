@@ -208,4 +208,11 @@ public interface MapContainer<K, V> extends Map<K, V>{
     * @return a refreshed StoreEntry
     */
    public StoreEntry refresh(StoreEntry entry);
+   
+   /**
+    * Get the StoreEntry associated with the key
+    * @param key
+    * @return the StoreEntry
+    */
+   public StoreEntry getEntry(K key);
 }

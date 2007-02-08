@@ -99,6 +99,7 @@ public class KahaReferenceStore implements ReferenceStore{
             throws IOException{
         ReferenceRecord record=new ReferenceRecord(messageId.toString(),data);
         messageContainer.put(messageId,record);
+        addInterest(record);
     }
 
     public ReferenceData getMessageReference(MessageId identity) throws IOException{
@@ -120,7 +121,8 @@ public class KahaReferenceStore implements ReferenceStore{
     }
 
     public synchronized void removeMessage(MessageId msgId) throws IOException{
-        messageContainer.remove(msgId);
+        ReferenceRecord rr = messageContainer.remove(msgId);
+        removeInterest(rr);
         if(messageContainer.isEmpty()){
             resetBatching();
         }
@@ -151,5 +153,29 @@ public class KahaReferenceStore implements ReferenceStore{
 
     public boolean isSupportForCursors(){
         return true;
+    }
+
+    /**
+     * @param startAfter
+     * @see org.apache.activemq.store.ReferenceStore#setBatch(org.apache.activemq.command.MessageId)
+     */
+    public void setBatch(MessageId startAfter){
+        resetBatching();
+        if (startAfter != null) {
+            batchEntry = messageContainer.getEntry(startAfter);
+        }
+        
+    }
+
+    public boolean supportsExternalBatchControl(){
+        return true;
+    }
+    
+    void removeInterest(ReferenceRecord rr) {
+        
+    }
+    
+    void addInterest(ReferenceRecord rr) {
+        
     }
 }

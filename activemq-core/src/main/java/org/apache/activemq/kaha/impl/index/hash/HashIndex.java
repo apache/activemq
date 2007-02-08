@@ -98,21 +98,21 @@ public class HashIndex implements Index{
      * 
      * @param marshaller
      */
-    public void setKeyMarshaller(Marshaller marshaller){
+    public synchronized void setKeyMarshaller(Marshaller marshaller){
         this.keyMarshaller=marshaller;
     }
 
     /**
      * @return the keySize
      */
-    public int getKeySize(){
+    public  synchronized int getKeySize(){
         return this.keySize;
     }
 
     /**
      * @param keySize the keySize to set
      */
-    public void setKeySize(int keySize){
+    public synchronized void setKeySize(int keySize){
         this.keySize=keySize;
         if(loaded.get()){
             throw new RuntimeException("Pages already loaded - can't reset key size");
@@ -122,14 +122,14 @@ public class HashIndex implements Index{
     /**
      * @return the pageSize
      */
-    public int getPageSize(){
+    public synchronized int getPageSize(){
         return this.pageSize;
     }
 
     /**
      * @param pageSize the pageSize to set
      */
-    public void setPageSize(int pageSize){
+    public synchronized void setPageSize(int pageSize){
         if(loaded.get()&&pageSize!=this.pageSize){
             throw new RuntimeException("Pages already loaded - can't reset page size");
         }
@@ -140,38 +140,38 @@ public class HashIndex implements Index{
     /**
      * @return the enablePageCaching
      */
-    public boolean isEnablePageCaching(){
+    public synchronized boolean isEnablePageCaching(){
         return this.enablePageCaching;
     }
 
     /**
      * @param enablePageCaching the enablePageCaching to set
      */
-    public void setEnablePageCaching(boolean enablePageCaching){
+    public synchronized void setEnablePageCaching(boolean enablePageCaching){
         this.enablePageCaching=enablePageCaching;
     }
 
     /**
      * @return the pageCacheSize
      */
-    public int getPageCacheSize(){
+    public synchronized int getPageCacheSize(){
         return this.pageCacheSize;
     }
 
     /**
      * @param pageCacheSize the pageCacheSize to set
      */
-    public void setPageCacheSize(int pageCacheSize){
+    public synchronized void setPageCacheSize(int pageCacheSize){
         this.pageCacheSize=pageCacheSize;
         pageCache.setMaxCacheSize(pageCacheSize);
     }
 
 
-    public boolean isTransient(){
+    public synchronized  boolean isTransient(){
         return false;
     }
 
-    public void load(){
+    public synchronized void load(){
         if(loaded.compareAndSet(false,true)){
             keysPerPage=pageSize/keySize;
             dataIn=new DataByteArrayInputStream();
@@ -211,7 +211,7 @@ public class HashIndex implements Index{
         }
     }
 
-    public void unload() throws IOException{
+    public synchronized void unload() throws IOException{
         if(loaded.compareAndSet(true,false)){
             if(indexFile!=null){
                 indexFile.close();
@@ -222,7 +222,7 @@ public class HashIndex implements Index{
         }
     }
 
-    public void store(Object key,StoreEntry value) throws IOException{
+    public synchronized void store(Object key,StoreEntry value) throws IOException{
         load();
         HashEntry entry=new HashEntry();
         entry.setKey((Comparable)key);
@@ -230,7 +230,7 @@ public class HashIndex implements Index{
         getBin(key).put(entry);
     }
 
-    public StoreEntry get(Object key) throws IOException{
+    public synchronized StoreEntry get(Object key) throws IOException{
         load();
         HashEntry entry=new HashEntry();
         entry.setKey((Comparable)key);
@@ -238,7 +238,7 @@ public class HashIndex implements Index{
         return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
     }
 
-    public StoreEntry remove(Object key) throws IOException{
+    public synchronized StoreEntry remove(Object key) throws IOException{
         load();
         HashEntry entry=new HashEntry();
         entry.setKey((Comparable)key);
@@ -246,18 +246,18 @@ public class HashIndex implements Index{
         return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
     }
 
-    public boolean containsKey(Object key) throws IOException{
+    public synchronized boolean containsKey(Object key) throws IOException{
         return get(key)!=null;
     }
 
-    public void clear() throws IOException{
+    public synchronized  void clear() throws IOException{
         unload();
         delete();
         openIndexFile();
         load();
     }
 
-    public void delete() throws IOException{
+    public synchronized void delete() throws IOException{
         unload();
         if(file.exists()){
             boolean result=file.delete();

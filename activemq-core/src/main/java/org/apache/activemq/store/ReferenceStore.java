@@ -72,4 +72,11 @@ public interface ReferenceStore extends MessageStore {
      */
     public ReferenceData getMessageReference(MessageId identity) throws IOException;
     
+    /**
+     * @return true if it supports external batch control
+     */
+    public boolean supportsExternalBatchControl();
+    
+    public void setBatch(MessageId startAfter);
+    
 }
