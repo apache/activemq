@@ -385,6 +385,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 try{
                     int numberToDispatch=countBeforeFull();
                     if(numberToDispatch>0){
+                        pending.setMaxBatchSize(numberToDispatch);
                         int count=0;
                         pending.reset();
                         while(pending.hasNext()&&!isFull()&&count<numberToDispatch){

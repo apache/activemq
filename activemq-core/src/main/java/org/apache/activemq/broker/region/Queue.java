@@ -899,6 +899,7 @@ public class Queue implements Destination, Task {
         final int toPageIn=maximumPagedInMessages-pagedInMessages.size();
         List result=null;
         if((force||!consumers.isEmpty())&&toPageIn>0){
+            messages.setMaxBatchSize(toPageIn);
             try{
                 dispatchValve.increment();
                 int count=0;
