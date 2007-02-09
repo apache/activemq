@@ -72,13 +72,14 @@
     <xbean-version>2.8</xbean-version>
     <dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m2-incubating-repository</dist-repo-url>
     <m1-dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m1-snapshot-repository</m1-dist-repo-url>
-    <site-repo-url>scpexe://people.apache.org/www/incubator.apache.org/activemq/maven/</site-repo-url>
+    <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
   </properties>
   <prerequisites>
     <maven>2.0.4</maven>
   </prerequisites>
 
-  <url>http://incubator.apache.org/activemq/</url>
+  <url>http://activemq.apache.org</url>
+
   <organization>
     <name>Apache Software Foundation</name>
     <url>http://www.apache.org/</url>
@@ -191,9 +192,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
-    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</developerConnection>
+    <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
   </scm>
 
   <dependencyManagement>
@@ -378,7 +379,7 @@
         <groupId>org.apache.openjpa</groupId>
         <artifactId>openjpa-persistence-jdbc</artifactId>
         <version>${openjpa-version}</version>
-      </dependency>    
+      </dependency>
 
       <!-- Optional Spring Support -->
       <dependency>
