@@ -1,0 +1,9 @@
+<chapter id="java-client">
+  <title>Using the Java Client</title>
+
+  <para>Apache ActiveMQ fully supports the JMS 1.1 and J2EE 1.4
+  specifications so feel free to follow any documentation you have on JMS or
+  J2EE for more background.</para>
+
+  <para></para>
+</chapter>

@@ -15,8 +15,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" 
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" 
+[
+  <!ENTITY introduction SYSTEM "introduction.xml">
+  <!ENTITY installation SYSTEM "installation.xml">
+  <!ENTITY java-client SYSTEM "java-client.xml">
+  <!ENTITY running-broker SYSTEM "running-broker.xml">
+]>
 <book>
   <bookinfo>
     <title>Apache ActiveMQ</title>
@@ -55,66 +61,80 @@
 
   <toc></toc>
 
-  <chapter id="introduction">
-    <title>Introduction</title>
+  &introduction;
+  
+  &installation;
+  
+  &running-broker;
+  
+  &java-client;
 
-    <para></para>
-
-    <para><ulink url="http://activemq.apache.org/">Apache ActiveMQ</ulink> is
-    the most popular and powerful open source Message Broker available today.
-    Its hosted at Apache and is distributed under the Apache Software License
-    (2.0).</para>
-
-    <para>ActiveMQ supports different <ulink
-    url="http://activemq.apache.org/cross-language-clients.html">cross
-    language clients</ulink> from many different languages such as Java, C# /
-    .Net, C, C++, Ruby, Python, Perl, PHP together with different protocols
-    like OpenWire, Stomp, REST, Ajax/Cometd, XMPP. ActiveMQ also provides a
-    whole raft of powerful <ulink
-    url="http://activemq.apache.org/features.html">features</ulink> like
-    Message Groups, Exclusive Queues, Master/Slave, Networks of Brokers and so
-    forth.</para>
-
-    <section>
-      <title>Architecture</title>
-
-      <para>Like most Message Orientated Middleware (<acronym>MOM</acronym>)
-      providers ActiveMQ is based on the idea of one or more <emphasis>Message
-      Brokers</emphasis> running on the network which act as a message router
-      and optional persistence store, then <emphasis>Clients</emphasis>
-      connect to one or more Message Broker.</para>
-    </section>
+  <chapter id="destination-concepts">
+    <title>Destinations in ActiveMQ</title>
+    <para>Discuss the types of destinations and their behavior</para>
   </chapter>
 
-  <chapter id="installation">
-    <title>Installing Apache ActiveMQ</title>
-
-    <para>The first thing you need to do is install Apache ActiveMQ from a
-    binary distribution.</para>
-
-    <para></para>
+  <chapter id="basic-configuration">
+    <title>Basic Configuration</title>
+    <para>In which we discuss the basic layout and concepts of the xbean XML</para>
+  </chapter>
+  
+  <chapter id="destination-policies">
+    <title>Destination Policy Configuration</title>
+    <para>In which we discuss destination policies.</para>
   </chapter>
 
-  <chapter id="running-broker">
-    <title>Running a Broker</title>
-
-    <para>The most typical deployment of Apache ActiveMQ is for brokers to be
-    run on the network as a stand alone processes then messaging clients
-    connect to one or more brokers. So we will describe how to go about
-    running brokers, then in the <link linkend="java-client">next
-    chapter</link> we will describe how to connect to a broker from a
-    client.</para>
-
-    <para></para>
+  <chapter id="persistence">
+    <title>Persistence</title>
+    <para>
+      In which we discuss persistence in the general sense, probably use sections for the 
+      different options.
+    </para>
+  </chapter>
+  
+  <chapter id="transports">
+    <title>Transports</title>
+    <para>In which we discuss transports.</para>
   </chapter>
 
-  <chapter id="java-client">
-    <title>Using the Java Client</title>
-
-    <para>Apache ActiveMQ fully supports the JMS 1.1 and J2EE 1.4
-    specifications so feel free to follow any documentation you have on JMS or
-    J2EE for more background.</para>
-
-    <para></para>
+  <chapter id="networks-of-brokers">
+    <title>Networks of Brokers</title>
+    <para>In which we discuss networks of brokers.</para>
   </chapter>
+  
+  <chapter id="using-jmx">
+    <title>Using JMX</title>
+    <para>What is doable, and how, via JMX</para>
+  </chapter>
+  
+  <chapter id="web-console">
+    <title>Web Console</title>
+    <para>Setting up and using the web console.</para>
+  </chapter>
+  
+  <chapter id="jms-bridge">
+    <title>The JMS to JMS Bridge</title>
+    <para>Using the JMS to JMS Bridge</para>
+  </chapter>
+  
+  <chapter id="authentication">
+    <title>Authentication</title>
+    <para>Yea!</para>
+  </chapter>
+  
+  <chapter id="deployment-example-small">
+    <title>A Small Deployment</title>
+    <para>...</para>
+  </chapter>
+  
+  <chapter id="deployment-example-multisite">
+    <title>A Multi-Site Deployment Example</title>
+    <para>...</para>
+  </chapter>
+  
+  <chapter id="message-converters">
+    <title>Using Message Converters</title>
+    <para>...</para>
+  </chapter>
+  
 </book>
