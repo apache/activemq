@@ -54,40 +54,50 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
     }
 
     public void setCount(long count) {
-        counter.set(count);
+    	if(isEnabled()) {
+            counter.set(count);
+    	}
     }
 
     public void add(long amount) {
-        counter.addAndGet(amount);
-        updateSampleTime();
-        if (parent != null) {
-            parent.add(amount);
-        }
+    	if (isEnabled()) {
+			counter.addAndGet(amount);
+			updateSampleTime();
+			if (parent != null) {
+				parent.add(amount);
+			}
+		}
     }
 
     public void increment() {
-        counter.incrementAndGet();
-        updateSampleTime();
-        if (parent != null) {
-            parent.increment();
-        }
-    }
+		if (isEnabled()) {
+			counter.incrementAndGet();
+			updateSampleTime();
+			if (parent != null) {
+				parent.increment();
+			}
+		}
+	}
 
-    public void subtract(long amount) {
-        counter.addAndGet(-amount);
-        updateSampleTime();
-        if (parent != null) {
-            parent.subtract(amount);
-        }
-    }
-    
-    public void decrement() {
-        counter.decrementAndGet();
-        updateSampleTime();
-        if (parent != null) {
-            parent.decrement();
-        }
-    }
+	public void subtract(long amount) {
+		if (isEnabled()) {
+			counter.addAndGet(-amount);
+			updateSampleTime();
+			if (parent != null) {
+				parent.subtract(amount);
+			}
+		}
+	}
+
+	public void decrement() {
+		if (isEnabled()) {
+			counter.decrementAndGet();
+			updateSampleTime();
+			if (parent != null) {
+				parent.decrement();
+			}
+		}
+	}
 
     public CountStatisticImpl getParent() {
         return parent;

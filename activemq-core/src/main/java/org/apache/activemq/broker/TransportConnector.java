@@ -256,6 +256,8 @@ public class TransportConnector implements Connector {
     // -------------------------------------------------------------------------
     protected Connection createConnection(Transport transport) throws IOException {
         TransportConnection answer = new TransportConnection(this, transport, broker, disableAsyncDispatch ? null : taskRunnerFactory);
+        boolean statEnabled = this.getStatistics().isEnabled();
+        answer.getStatistics().setEnabled(statEnabled);
         answer.setMessageAuthorizationPolicy(messageAuthorizationPolicy);
         return answer;
     }

@@ -54,6 +54,30 @@ public class ConnectorView implements ConnectorViewMBean {
     public void resetStatistics() {
         connector.getStatistics().reset();
     }
+    
+    
+    /**
+     * enable statistics gathering
+     */     
+    public void enableStatistics() {
+    	connector.getStatistics().setEnabled(true);
+    }      
+    
+    /**
+     * disable statistics gathering
+     */     
+    public void disableStatistics() {
+    	connector.getStatistics().setEnabled(false);
+    }      
+    
+    /**
+     * Returns true if statistics is enabled
+     * 
+     * @return true if statistics is enabled
+     */    
+    public boolean isStatisticsEnabled() {
+    	return connector.getStatistics().isEnabled();
+    }         
 
     /**
      * Returns the number of messages enqueued on this connector

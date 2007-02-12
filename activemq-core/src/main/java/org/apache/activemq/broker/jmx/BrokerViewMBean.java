@@ -39,6 +39,10 @@ public interface BrokerViewMBean extends Service {
     
     public void resetStatistics();
     
+    public void enableStatistics();
+    public void disableStatistics();
+    public boolean isStatisticsEnabled();
+    
     public long getTotalEnqueueCount();
     public long getTotalDequeueCount();
     public long getTotalConsumerCount();
