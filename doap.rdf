@@ -34,15 +34,23 @@
     <created>2006-03-27</created>
     <license rdf:resource="http://usefulinc.com/doap/licenses/asl20" />
     <name>Apache ActiveMQ</name>
-    <homepage rdf:resource="http://incubator.apache.org/activemq" />
-    <asfext:pmc rdf:resource="http://incubator.apache.org" />
-    <shortdesc>ActiveMQ is a fast open source JMS 1.1 provider and Message Fabric.</shortdesc>
-    <description>ActiveMQ is a fast open source JMS 1.1 provider and Message Fabric supporting clustering, peer networks, discovery, TCP, SSL, multicast, persistence, XA and integrates seamlessly into J2EE 1.4 containers, light weight containers and any Java application.</description>
+    <homepage rdf:resource="http://activemq.apache.org/" />
+    <asfext:pmc rdf:resource="http://activemq.apache.org/" />
+    <shortdesc>ActiveMQ is the most popular and powerful open source Message Broker.</shortdesc>
+    <description>ActiveMQ is a fast and powerful Message Broker which supports many Cross Language Clients and Protocols and many advanced features while fully supporting JMS 1.1 and J2EE 1.4.</description>
     <bug-database rdf:resource="http://jira.activemq.org/jira/browse/AMQ" />
-    <mailing-list rdf:resource="http://incubator.apache.org/activemq/Mailing+Lists" />
-    <download-page rdf:resource="http://incubator.apache.org/activemq/Download" />
+    <mailing-list rdf:resource="http://activemq.apache.org/mailing-lists.html" />
+    <download-page rdf:resource="http://activemq.apache.org/download.html" />
+
     <programming-language>Java</programming-language>
     <programming-language>C</programming-language>
+    <programming-language>C++</programming-language>
+    <programming-language>Ruby</programming-language>
+    <programming-language>Perl</programming-language>
+    <programming-language>Python</programming-language>
+    <programming-language>PHP</programming-language>
+    <programming-language>C#</programming-language>
+
     <category rdf:resource="http://projects.apache.org/category/network-server" />
     <category rdf:resource="http://projects.apache.org/category/network-client" />
     <maintainer>
