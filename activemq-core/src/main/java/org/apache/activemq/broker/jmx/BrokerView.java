@@ -91,6 +91,19 @@ public class BrokerView implements BrokerViewMBean {
     public void resetStatistics() {
         broker.getDestinationStatistics().reset();
     }
+    
+    public void enableStatistics() {
+        broker.getDestinationStatistics().setEnabled(true);
+    }    
+    
+    public void disableStatistics() {
+        broker.getDestinationStatistics().setEnabled(false);
+    }   
+    
+    public boolean isStatisticsEnabled() {
+    	return broker.getDestinationStatistics().isEnabled();
+    }
+    
 
     public void terminateJVM(int exitCode) {
         System.exit(exitCode);

@@ -71,6 +71,15 @@ public class ConnectorStatistics extends StatsImpl {
         dequeues.reset();
     }
     
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        enqueues.setEnabled(enabled);
+        dequeues.setEnabled(enabled);
+        consumers.setEnabled(enabled);
+        messages.setEnabled(enabled);
+        messagesCached.setEnabled(enabled);
+    }
+    
     public void setParent(ConnectorStatistics parent) {
         if( parent!=null ) {
             enqueues.setParent(parent.enqueues);

@@ -103,6 +103,7 @@ public class BrokerService implements Service, Serializable {
     public static final String LOCAL_HOST_NAME;
 
     private boolean useJmx = true;
+    private boolean enableStatistics = true;
     private boolean persistent = true;
     private boolean populateJMSXUserID = false;
     private boolean useShutdownHook = true;
@@ -402,6 +403,7 @@ public class BrokerService implements Service, Serializable {
             }
 
             getBroker().start();
+
             /*
             if(isUseJmx()){
                 // yes - this is order dependent!
@@ -671,7 +673,19 @@ public class BrokerService implements Service, Serializable {
     public boolean isUseJmx() {
         return useJmx;
     }
+    
+    public boolean isEnableStatistics() {
+        return enableStatistics;
+    }    
 
+    /**
+     * Sets whether or not the Broker's services enable statistics or
+     * not.
+     */
+    public void setEnableStatistics(boolean enableStatistics) {
+        this.enableStatistics = enableStatistics;
+    }    
+    
     /**
      * Sets whether or not the Broker's services should be exposed into JMX or
      * not.
@@ -1224,6 +1238,11 @@ public class BrokerService implements Service, Serializable {
                 });
             }
         };
+        
+        RegionBroker rBroker = (RegionBroker) regionBroker;
+        rBroker.getDestinationStatistics().setEnabled(enableStatistics);
+        
+        
 
         if (isUseJmx()) {
             ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
@@ -1521,6 +1540,9 @@ public class BrokerService implements Service, Serializable {
         if (isUseJmx()) {
             connector = registerConnectorMBean(connector);
         }        
+        
+       	connector.getStatistics().setEnabled(enableStatistics);
+        
         connector.start();
         
         return connector;

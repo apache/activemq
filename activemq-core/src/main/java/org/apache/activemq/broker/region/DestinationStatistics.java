@@ -79,7 +79,18 @@ public class DestinationStatistics extends StatsImpl {
         enqueues.reset();
         dequeues.reset();
         dispatched.reset();
-    }
+    }     
+    
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        enqueues.setEnabled(enabled);
+        dispatched.setEnabled(enabled);
+        dequeues.setEnabled(enabled);
+        consumers.setEnabled(enabled);
+        messages.setEnabled(enabled);
+        messagesCached.setEnabled(enabled);
+
+    }    
 
     public void setParent(DestinationStatistics parent) {
         if (parent != null) {

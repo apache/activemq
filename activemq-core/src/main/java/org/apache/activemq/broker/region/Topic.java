@@ -82,7 +82,9 @@ public class Topic implements Destination {
         if( store!=null ) {
             store.setUsageManager(usageManager);
         }
-
+        
+        //let's copy the enabled property from the parent DestinationStatistics
+        this.destinationStatistics.setEnabled(parentStats.isEnabled());
         this.destinationStatistics.setParent(parentStats);
     }
 

@@ -114,6 +114,8 @@ public class Queue implements Destination, Task {
             store.setUsageManager(usageManager);
         }
 
+        //let's copy the enabled property from the parent DestinationStatistics
+        this.destinationStatistics.setEnabled(parentStats.isEnabled());
         destinationStatistics.setParent(parentStats);
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
 

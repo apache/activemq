@@ -25,6 +25,23 @@ public interface ConnectorViewMBean extends Service {
      * Resets the statistics
      */
     public void resetStatistics();
+    
+    /**
+     * enable statistics gathering
+     */   
+    public void enableStatistics();
+
+    /**
+     * disable statistics gathering
+     */  
+    public void disableStatistics();
+    
+    /**
+     * Returns true if statistics is enabled
+     * 
+     * @return true if statistics is enabled
+     */  
+    public boolean isStatisticsEnabled();
 
     /**
      * Returns the number of messages enqueued on this connector
