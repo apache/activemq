@@ -59,15 +59,15 @@ public class KahaStore implements Store{
     private final static boolean brokenFileLock="true".equals(System.getProperty(PROPERTY_PREFIX+".broken","false"));
     private final static boolean disableLocking="true".equals(System.getProperty(PROPERTY_PREFIX+"DisableLocking",
             "false"));
-    private static Set lockSet;
+    private static Set<String> lockSet;
     private static final Log log=LogFactory.getLog(KahaStore.class);
     private File directory;
     private IndexRootContainer mapsContainer;
     private IndexRootContainer listsContainer;
-    private Map lists=new ConcurrentHashMap();
-    private Map maps=new ConcurrentHashMap();
-    private Map dataManagers=new ConcurrentHashMap();
-    private Map indexManagers=new ConcurrentHashMap();
+    private Map<ContainerId, ListContainerImpl> lists=new ConcurrentHashMap<ContainerId, ListContainerImpl>();
+    private Map<ContainerId, MapContainerImpl> maps=new ConcurrentHashMap<ContainerId, MapContainerImpl>();
+    private Map<String, DataManager> dataManagers=new ConcurrentHashMap<String, DataManager>();
+    private Map<String, IndexManager> indexManagers=new ConcurrentHashMap<String, IndexManager>();
     private IndexManager rootIndexManager; // contains all the root indexes
     private boolean closed=false;
     private String mode;
@@ -89,13 +89,22 @@ public class KahaStore implements Store{
             closed=true;
             if(initialized){
                 unlock();
-                for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
-                    IndexManager im=(IndexManager)iter.next();
+                
+                for (ListContainerImpl container : lists.values()) {
+					container.close();
+				}
+                lists.clear();
+                for (MapContainerImpl container : maps.values()) {
+					container.close();
+				}
+                maps.clear();
+                for(Iterator<IndexManager> iter=indexManagers.values().iterator();iter.hasNext();){
+                    IndexManager im=iter.next();
                     im.close();
                     iter.remove();
                 }
-                for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
-                    DataManager dm=(DataManager)iter.next();
+                for(Iterator<DataManager> iter=dataManagers.values().iterator();iter.hasNext();){
+                    DataManager dm=iter.next();
                     dm.close();
                     iter.remove();
                 }
@@ -105,12 +114,12 @@ public class KahaStore implements Store{
 
     public synchronized void force() throws IOException{
         if(initialized){
-            for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
-                IndexManager im=(IndexManager)iter.next();
+            for(Iterator<IndexManager> iter=indexManagers.values().iterator();iter.hasNext();){
+                IndexManager im=iter.next();
                 im.force();
             }
-            for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
-                DataManager dm=(DataManager)iter.next();
+            for(Iterator<DataManager> iter=dataManagers.values().iterator();iter.hasNext();){
+                DataManager dm=iter.next();
                 dm.force();
             }
         }
@@ -135,13 +144,13 @@ public class KahaStore implements Store{
         boolean result=true;
         if(initialized){
             clear();
-            for(Iterator iter=indexManagers.values().iterator();iter.hasNext();){
-                IndexManager im=(IndexManager)iter.next();
+            for(Iterator<IndexManager> iter=indexManagers.values().iterator();iter.hasNext();){
+                IndexManager im=iter.next();
                 result&=im.delete();
                 iter.remove();
             }
-            for(Iterator iter=dataManagers.values().iterator();iter.hasNext();){
-                DataManager dm=(DataManager)iter.next();
+            for(Iterator<DataManager> iter=dataManagers.values().iterator();iter.hasNext();){
+                DataManager dm=iter.next();
                 result&=dm.delete();
                 iter.remove();
             }
@@ -192,7 +201,7 @@ public class KahaStore implements Store{
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
         containerId.setDataContainerName(containerName);
-        MapContainerImpl result=(MapContainerImpl)maps.get(containerId);
+        MapContainerImpl result=maps.get(containerId);
         if(result==null){
             DataManager dm=getDataManager(containerName);
             IndexManager im=getIndexManager(dm,containerName);
@@ -215,16 +224,16 @@ public class KahaStore implements Store{
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
         containerId.setDataContainerName(containerName);
-        MapContainerImpl container=(MapContainerImpl)maps.remove(containerId);
+        MapContainerImpl container=maps.remove(containerId);
         if(container!=null){
             container.clear();
             mapsContainer.removeRoot(container.getIndexManager(),containerId);
         }
     }
 
-    public synchronized Set getMapContainerIds() throws IOException{
+    public synchronized Set<Object> getMapContainerIds() throws IOException{
         initialize();
-        Set set = new HashSet();
+        Set<Object> set = new HashSet<Object>();
         for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {
             ContainerId id = (ContainerId)i.next();
             set.add(id.getKey());
@@ -258,7 +267,7 @@ public class KahaStore implements Store{
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
         containerId.setDataContainerName(containerName);
-        ListContainerImpl result=(ListContainerImpl)lists.get(containerId);
+        ListContainerImpl result=lists.get(containerId);
         if(result==null){
             DataManager dm=getDataManager(containerName);
             IndexManager im=getIndexManager(dm,containerName);
@@ -282,16 +291,16 @@ public class KahaStore implements Store{
         ContainerId containerId=new ContainerId();
         containerId.setKey(id);
         containerId.setDataContainerName(containerName);
-        ListContainerImpl container=(ListContainerImpl)lists.remove(containerId);
+        ListContainerImpl container=lists.remove(containerId);
         if(container!=null){
             listsContainer.removeRoot(container.getIndexManager(),containerId);
             container.clear();
         }
     }
 
-    public synchronized Set getListContainerIds() throws IOException{
+    public synchronized Set<Object> getListContainerIds() throws IOException{
         initialize();
-        Set set = new HashSet();
+        Set<Object> set = new HashSet<Object>();
         for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
             ContainerId id = (ContainerId)i.next();
             set.add(id.getKey());
@@ -317,7 +326,7 @@ public class KahaStore implements Store{
     }
 
     public synchronized DataManager getDataManager(String name) throws IOException{
-        DataManager dm=(DataManager)dataManagers.get(name);
+        DataManager dm=dataManagers.get(name);
         if(dm==null){
         	if( isUseAsyncDataManager() ) {
 	        	AsyncDataManager t=new AsyncDataManager();
@@ -340,7 +349,7 @@ public class KahaStore implements Store{
     }
 
     public synchronized IndexManager getIndexManager(DataManager dm,String name) throws IOException{
-        IndexManager im=(IndexManager)indexManagers.get(name);
+        IndexManager im=indexManagers.get(name);
         if(im==null){
             im=new IndexManager(directory,name,mode,logIndexChanges?dm:null);
             indexManagers.put(name,im);
@@ -432,8 +441,8 @@ public class KahaStore implements Store{
              */
             generateInterestInMapDataFiles();
             generateInterestInListDataFiles();
-            for(Iterator i=dataManagers.values().iterator();i.hasNext();){
-                DataManager dm=(DataManager)i.next();
+            for(Iterator<DataManager> i=dataManagers.values().iterator();i.hasNext();){
+                DataManager dm=i.next();
                 dm.consolidateDataFiles();
             }
         }
@@ -441,7 +450,7 @@ public class KahaStore implements Store{
 
     private synchronized void lock() throws IOException{
         if(!disableLocking&&directory!=null&&lock==null){
-            Set set=getVmLockSet();
+            Set<String> set=getVmLockSet();
             synchronized(set){
                 if(lock==null){
                     if(!set.add(directory.getCanonicalPath())){
@@ -463,7 +472,7 @@ public class KahaStore implements Store{
 
     private synchronized void unlock() throws IOException{
         if(!disableLocking&&directory!=null){
-            Set set=getVmLockSet();
+            Set<String> set=getVmLockSet();
             synchronized(set){
                 if(lock!=null){
                     set.remove(directory.getCanonicalPath());
@@ -484,13 +493,13 @@ public class KahaStore implements Store{
 
     
 
-    static private Set getVmLockSet(){
+    static private Set<String> getVmLockSet(){
         if(lockSet==null){
             Properties properties=System.getProperties();
             synchronized(properties){
-                lockSet=(Set)properties.get("org.apache.activemq.kaha.impl.KahaStore");
+                lockSet=(Set<String>) properties.get("org.apache.activemq.kaha.impl.KahaStore");
                 if(lockSet==null){
-                    lockSet=new HashSet();
+                    lockSet=new HashSet<String>();
                 }
                 properties.put(PROPERTY_PREFIX,lockSet);
             }
