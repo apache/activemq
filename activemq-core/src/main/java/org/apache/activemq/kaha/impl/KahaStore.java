@@ -228,6 +228,7 @@ public class KahaStore implements Store{
         if(container!=null){
             container.clear();
             mapsContainer.removeRoot(container.getIndexManager(),containerId);
+            container.close();
         }
     }
 
@@ -295,6 +296,7 @@ public class KahaStore implements Store{
         if(container!=null){
             listsContainer.removeRoot(container.getIndexManager(),containerId);
             container.clear();
+            container.close();
         }
     }
 
