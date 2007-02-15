@@ -104,7 +104,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if(!info.getDestination().isTemporary()) {
             allowedACLs = authorizationMap.getReadACLs(info.getDestination());
         }else {
-        	allowedACLs = authorizationMap.getTempDestinationWriteACLs();
+        	allowedACLs = authorizationMap.getTempDestinationReadACLs();
         }
 
         if(allowedACLs!=null && !subject.isInOneOf(allowedACLs))
