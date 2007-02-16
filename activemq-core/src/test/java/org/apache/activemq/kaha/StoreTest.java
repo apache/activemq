@@ -151,13 +151,14 @@ public class StoreTest extends TestCase{
     
     public void testBasicAllocations() throws Exception{
         Map testMap = new HashMap();
-        for (int i =0; i<10; i++){
+        int count = 1000;
+        for (int i =0; i<count; i++){
             String key = "key:"+i;
             String value = "value:"+i;
             testMap.put(key, value);
         }
         List testList = new ArrayList();
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < count; i++){
             testList.add("value:"+i);
         }
         String listId = "testList";
