@@ -428,8 +428,14 @@ public class ProtocolConverter {
 
 	                    responseHeaders.put(Stomp.Headers.Connected.SESSION, connectionInfo.getClientId());
 	                    String requestId = (String) headers.get(Stomp.Headers.Connect.REQUEST_ID);
+                        if (requestId == null) {
+                            // TODO legacy
+                            requestId = (String) headers.get(Stomp.Headers.RECEIPT_REQUESTED);
+                        }
 	                    if( requestId !=null ){
+                            // TODO legacy
 		                    responseHeaders.put(Stomp.Headers.Connected.RESPONSE_ID, requestId);
+                            responseHeaders.put(Stomp.Headers.Response.RECEIPT_ID, requestId);
 	            		}
 
 	                    StompFrame sc = new StompFrame();
@@ -441,7 +447,6 @@ public class ProtocolConverter {
 
 			}
 		});
-
 	}
 
 	protected void onStompDisconnect(StompFrame command) throws ProtocolException {
@@ -483,9 +488,7 @@ public class ProtocolConverter {
 	}
 
     public  ActiveMQMessage convertMessage(StompFrame command) throws IOException, JMSException {
-
         ActiveMQMessage msg = frameTranslator.convertFrame(command);
-
         return msg;
     }
 
