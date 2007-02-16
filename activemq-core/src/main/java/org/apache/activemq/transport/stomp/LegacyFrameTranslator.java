@@ -73,10 +73,20 @@ public class LegacyFrameTranslator implements FrameTranslator
 
         StringBuffer buffer = new StringBuffer();
         if (amq_d.isQueue()) {
-            buffer.append("/queue/");
+            if (amq_d.isTemporary()) {
+                buffer.append("/temp-queue/");
+            }
+            else {
+                buffer.append("/queue/");
+            }
         }
-        if (amq_d.isTopic()) {
-            buffer.append("/topic/");
+        else {
+            if (amq_d.isTemporary()) {
+                buffer.append("/temp-topic/");
+            }
+            else {
+                buffer.append("/topic/");
+            }
         }
         buffer.append(p_name);
         return buffer.toString();
@@ -94,9 +104,17 @@ public class LegacyFrameTranslator implements FrameTranslator
             String t_name = name.substring("/topic/".length(), name.length());
             return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TOPIC_TYPE);
         }
+        else if (name.startsWith("/temp-queue/")) {
+            String t_name = name.substring("/temp-queue/".length(), name.length());
+            return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TEMP_QUEUE_TYPE);
+        }
+        else if (name.startsWith("/temp-topic/")) {
+            String t_name = name.substring("/temp-topic/".length(), name.length());
+            return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TEMP_TOPIC_TYPE);
+        }
         else {
             throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations " +
-                                        "must begine with /queue/ or /topic/");
+                                        "must begine with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
         }
     }
 }
