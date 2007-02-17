@@ -663,9 +663,10 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * @param entry
      * @return the Object at that entry
      */
-    public synchronized Object get(StoreEntry entry){
+    public synchronized Object get(final StoreEntry entry){
         load();
-        return getValue(entry);
+        StoreEntry entryToUse = refresh(entry);
+        return getValue(entryToUse);
     }
 
     /**
@@ -835,9 +836,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         Object result=null;
         if(item!=null){
             try{
-                // ensure it's up to date
-                StoreEntry itemToUse=indexList.getEntry(item);
-                StoreLocation data=itemToUse.getValueDataItem();
+                StoreLocation data=item.getValueDataItem();
                 result=dataManager.readItem(marshaller,data);
             }catch(IOException e){
                 log.error("Failed to get value for "+item,e);
@@ -873,15 +872,4 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     protected synchronized void itemRemoved(int pos){
         
     }
-
-    protected synchronized Object getCachedItem(int pos){
-        Object result=null;
-        
-            IndexItem item=indexList.get(pos);
-            if(item!=null){
-                result=getValue(item);
-            }
-       
-        return result;
-    }    
 }
