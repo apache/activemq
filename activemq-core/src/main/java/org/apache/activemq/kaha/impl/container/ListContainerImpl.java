@@ -836,8 +836,8 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         if(item!=null){
             try{
                 // ensure it's up to date
-                // item=indexList.getEntry(item);
-                StoreLocation data=item.getValueDataItem();
+                StoreEntry itemToUse=indexList.getEntry(item);
+                StoreLocation data=itemToUse.getValueDataItem();
                 result=dataManager.readItem(marshaller,data);
             }catch(IOException e){
                 log.error("Failed to get value for "+item,e);
