@@ -92,7 +92,10 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         copy.producerId = producerId;
         copy.transactionId = transactionId;
         copy.destination = destination;
-        copy.messageId = messageId.copy();
+        if( messageId!=null ) 
+        	copy.messageId = messageId.copy();
+        else
+        	copy.messageId = messageId;        
         copy.originalDestination = originalDestination;
         copy.originalTransactionId = originalTransactionId;
         copy.expiration = expiration;
