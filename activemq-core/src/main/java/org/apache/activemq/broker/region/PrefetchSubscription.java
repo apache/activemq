@@ -445,7 +445,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             //System.err.println(broker.getBrokerName() + " " + this + " (" + enqueueCounter + ", " + dispatchCounter +") " + node);
             return true;
         }else{
-            QueueMessageReference n=(QueueMessageReference)node;
             return false;
         }
     }
