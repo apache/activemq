@@ -39,11 +39,11 @@ public class PooledTopicPublisher extends PooledProducer implements TopicPublish
     }
 
     public void publish(Message message) throws JMSException {
-        getTopicPublisher().publish(message);
+        getTopicPublisher().publish((Topic) getDestination(), message);
     }
 
     public void publish(Message message, int i, int i1, long l) throws JMSException {
-        getTopicPublisher().publish(message, i, i1, l);
+        getTopicPublisher().publish((Topic) getDestination(), message, i, i1, l);
     }
 
     public void publish(Topic topic, Message message) throws JMSException {
