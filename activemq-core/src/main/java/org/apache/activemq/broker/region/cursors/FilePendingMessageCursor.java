@@ -46,7 +46,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     private ListContainer diskList;
     private Iterator iter=null;
     private Destination regionDestination;
-    private AtomicBoolean iterating=new AtomicBoolean();
+    private boolean iterating;
     private boolean flushRequired;
     private AtomicBoolean started=new AtomicBoolean();
 
@@ -88,14 +88,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * 
      */
     public synchronized void reset(){
-        synchronized(iterating){
-            iterating.set(true);
-        }
+        iterating=true;
         iter=isDiskListEmpty()?memoryList.iterator():getDiskList().listIterator();
     }
 
     public synchronized void release(){
-        iterating.set(false);
+        iterating=false;
         if(flushRequired){
             flushRequired=false;
             flushToDisk();
@@ -246,9 +244,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     public void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
         if(newPercentUsage>=getMemoryUsageHighWaterMark()){
-            synchronized(iterating){
+            synchronized(this){
                 flushRequired=true;
-                if(!iterating.get()){
+                if(!iterating){
                     flushToDisk();
                     flushRequired=false;
                 }
