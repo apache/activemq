@@ -31,6 +31,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
@@ -244,7 +245,7 @@ public class RegionBroker implements Broker {
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         if( destinations.contains(destination) ){
-            throw new JMSException("Destination already exists: "+destination);
+            throw new DestinationAlreadyExistsException(destination);
         }
         Destination answer = null;
         switch(destination.getDestinationType()) {

@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -326,9 +327,15 @@ abstract public class AbstractRegion implements Region {
                 if(autoCreateDestinations){
                     // Try to auto create the destination... re-invoke broker from the
                     // top so that the proper security checks are performed.
-                    context.getBroker().addDestination(context,destination);
+                    try {
+                        dest = addDestination(context, destination);
+                        //context.getBroker().addDestination(context,destination);
+                    }
+                    catch (DestinationAlreadyExistsException e) {
+                        // if the destination already exists then lets ignore this error
+                    }
                     // We should now have the dest created.
-                    dest=(Destination) destinations.get(destination);
+                    //dest=(Destination) destinations.get(destination);
                 }
                 if(dest==null){
                     throw new JMSException("The destination "+destination+" does not exist.");
