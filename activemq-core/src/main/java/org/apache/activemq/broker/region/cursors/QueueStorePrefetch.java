@@ -42,7 +42,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
     static private final Log log=LogFactory.getLog(QueueStorePrefetch.class);
    
     private MessageStore store;
-    private final LinkedList batchList=new LinkedList();
+    private final LinkedList <Message>batchList=new LinkedList<Message>();
     private Destination regionDestination;
     private int size = 0;
 
@@ -123,7 +123,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
     }
 
     public synchronized MessageReference next(){
-        Message result = (Message)batchList.removeFirst();
+        Message result = batchList.removeFirst();
         result.setRegionDestination(regionDestination);
         return result;
     }
@@ -137,7 +137,10 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
 
     public void recoverMessage(Message message) throws Exception{
         message.setRegionDestination(regionDestination);
-        message.incrementReferenceCount();
+        // only increment if count is zero (could have been cached)
+        if(message.getReferenceCount()==0){
+            message.incrementReferenceCount();
+        }
         batchList.addLast(message);
     }
 
@@ -153,6 +156,9 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
     }
     
     public void gc() {
+        for (Message msg:batchList) {
+            msg.decrementReferenceCount();
+        }
         batchList.clear();
     }
 

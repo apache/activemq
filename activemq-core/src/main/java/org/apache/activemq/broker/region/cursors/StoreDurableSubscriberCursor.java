@@ -42,7 +42,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     private String clientId;
     private String subscriberName;
     private Map topics=new HashMap();
-    private LinkedList storePrefetches=new LinkedList();
+    private LinkedList <PendingMessageCursor>storePrefetches=new LinkedList<PendingMessageCursor>();
     private boolean started;
     private PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
@@ -61,21 +61,24 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     }
 
     public synchronized void start() throws Exception{
-        started=true;
-        for(Iterator i=storePrefetches.iterator();i.hasNext();){
-            PendingMessageCursor tsp=(PendingMessageCursor)i.next();
-            tsp.start();
-            pendingCount+=tsp.size();
+        if(!started){
+            started=true;
+            for(PendingMessageCursor tsp: storePrefetches){
+                tsp.start();
+                pendingCount+=tsp.size();
+            }
         }
     }
 
     public synchronized void stop() throws Exception{
-        started=false;
-        for(Iterator i=storePrefetches.iterator();i.hasNext();){
-            PendingMessageCursor tsp=(PendingMessageCursor)i.next();
-            tsp.stop();
+        if(started){
+            started=false;
+            for(PendingMessageCursor tsp: storePrefetches){
+                tsp.stop();
+            }
+           
+            pendingCount=0;
         }
-        pendingCount=0;
     }
 
     /**
@@ -119,12 +122,12 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     public synchronized boolean isEmpty(){
         return pendingCount<=0;
     }
-    
-    public boolean isEmpty(Destination destination) {
-        boolean result = true;
+
+    public boolean isEmpty(Destination destination){
+        boolean result=true;
         TopicStorePrefetch tsp=(TopicStorePrefetch)topics.get(destination);
         if(tsp!=null){
-            result = tsp.size() <= 0;
+            result=tsp.size()<=0;
         }
         return result;
     }
@@ -140,7 +143,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         return false;
     }
 
-    
     public synchronized void addMessageLast(MessageReference node) throws Exception{
         if(node!=null){
             Message msg=node.getMessage();
@@ -159,7 +161,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
             }
         }
     }
-    
+
     public void addRecoveredMessage(MessageReference node) throws Exception{
         nonPersistent.addMessageLast(node);
     }
@@ -178,12 +180,13 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
                 throw new RuntimeException(e);
             }
             result=currentCursor!=null?currentCursor.hasNext():false;
-        }
+        }     
         return result;
     }
 
     public synchronized MessageReference next(){
-        return currentCursor!=null?currentCursor.next():null;
+        MessageReference result =  currentCursor!=null?currentCursor.next():null;
+        return result;
     }
 
     public synchronized void remove(){
@@ -192,7 +195,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         }
         pendingCount--;
     }
-    
+
     public void remove(MessageReference node){
         if(currentCursor!=null){
             currentCursor.remove(node);
@@ -206,7 +209,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
             tsp.reset();
         }
     }
-    
+
     public synchronized void release(){
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
             AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
@@ -217,7 +220,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
     public int size(){
         return pendingCount;
     }
-    
+
     public synchronized void setMaxBatchSize(int maxBatchSize){
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
             AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
@@ -225,14 +228,14 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         }
         super.setMaxBatchSize(maxBatchSize);
     }
-    
-    public synchronized void gc() {
+
+    public synchronized void gc(){
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
             PendingMessageCursor tsp=(PendingMessageCursor)i.next();
             tsp.gc();
         }
     }
-    
+
     public synchronized void setUsageManager(UsageManager usageManager){
         super.setUsageManager(usageManager);
         for(Iterator i=storePrefetches.iterator();i.hasNext();){
@@ -245,7 +248,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         if(currentCursor==null||currentCursor.isEmpty()){
             currentCursor=null;
             for(Iterator i=storePrefetches.iterator();i.hasNext();){
-                AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next(); 
+                AbstractPendingMessageCursor tsp=(AbstractPendingMessageCursor)i.next();
                 if(tsp.hasNext()){
                     currentCursor=tsp;
                     break;
@@ -255,5 +258,9 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
             storePrefetches.addLast(storePrefetches.removeFirst());
         }
         return currentCursor;
+    }
+
+    public String toString(){
+        return "StoreDurableSubscriber("+clientId+":"+subscriberName+")";
     }
 }
