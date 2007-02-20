@@ -43,7 +43,7 @@ public class ResponseCorrelator extends TransportFilter {
     
     private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
     private IntSequenceGenerator sequenceGenerator;
-    
+    private final boolean debug = log.isDebugEnabled();
     public ResponseCorrelator(Transport next) {
         this(next, new IntSequenceGenerator());
     }
@@ -82,7 +82,7 @@ public class ResponseCorrelator extends TransportFilter {
     
     public void onCommand(Object o) {
     	Command command = (Command) o;
-        boolean debug = log.isDebugEnabled();
+        
         if( command.isResponse() ) {
             Response response = (Response) command;
             FutureResponse future = (FutureResponse) requestMap.remove(new Integer(response.getCorrelationId()));
