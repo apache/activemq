@@ -90,6 +90,9 @@ public class UsageManager {
             for( int i=0; percentUsage >= 100 ; i++) {
                 usageMutex.wait();
             }
+            for( int i=0; percentUsage > 90 ; i++) {
+                usageMutex.wait(100);
+            }
         }
     }
     
@@ -246,15 +249,16 @@ public class UsageManager {
         // Switching from being full to not being full..
         if( oldPercentUsage >= 100 && newPercentUsage < 100 ) {
             synchronized (usageMutex) {
+                System.err.println("Memory usage change.  from: "+oldPercentUsage+", to: "+newPercentUsage);
                 usageMutex.notifyAll();
             }            
         }
-        
-        // Let the listeners know
+//      Let the listeners know
         for (Iterator iter = listeners.iterator(); iter.hasNext();) {
             UsageListener l = (UsageListener) iter.next();
             l.onMemoryUseChanged(this, oldPercentUsage, newPercentUsage);
         }
+       
     }
 
     public String toString() {
