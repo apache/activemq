@@ -216,7 +216,7 @@ public class TopicRegion extends AbstractRegion {
             SubscriptionKey key=new SubscriptionKey(context.getClientId(),info.getSubscriptionName());
             DurableTopicSubscription sub=(DurableTopicSubscription)durableSubscriptions.get(key);
             if(sub==null){
-                sub=new DurableTopicSubscription(broker,context,info,keepDurableSubsActive);
+                sub=new DurableTopicSubscription(broker,memoryManager,context,info,keepDurableSubsActive);
                 ActiveMQDestination destination=info.getDestination();
                 if(destination!=null&&broker.getDestinationPolicy()!=null){
                     PolicyEntry entry=broker.getDestinationPolicy().getEntryFor(destination);
