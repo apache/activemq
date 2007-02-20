@@ -199,6 +199,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected boolean closed;
     protected boolean asyncDispatch;
     protected boolean sessionAsyncDispatch;
+    protected final boolean debug;
     protected Object sendMutex = new Object();
 
     /**
@@ -216,7 +217,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch,boolean sessionAsyncDispatch)
             throws JMSException {
-
+        this.debug = log.isDebugEnabled();
         this.connection = connection;
         this.acknowledgementMode = acknowledgeMode;
         this.asyncDispatch=asyncDispatch;
@@ -1539,7 +1540,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 			msg.setConnection(connection);
 			msg.onSend();
 			msg.setProducerId(msg.getMessageId().getProducerId());
-			if(log.isDebugEnabled()){
+			if(this.debug){
 				log.debug("Sending message: "+msg);
 			}
 			if(!msg.isPersistent()||connection.isUseAsyncSend()||txid!=null){
