@@ -29,7 +29,7 @@ public class StatisticImpl implements Statistic, Resettable {
     private String description;
     private long startTime;
     private long lastSampleTime;
-    protected boolean enabled= true;
+    protected boolean enabled= false;
 
     public StatisticImpl(String name, String unit, String description) {
         this.name = name;
