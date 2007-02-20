@@ -103,7 +103,7 @@ public class BrokerService implements Service, Serializable {
     public static final String LOCAL_HOST_NAME;
 
     private boolean useJmx = true;
-    private boolean enableStatistics = true;
+    private boolean enableStatistics = false;
     private boolean persistent = true;
     private boolean populateJMSXUserID = false;
     private boolean useShutdownHook = true;
