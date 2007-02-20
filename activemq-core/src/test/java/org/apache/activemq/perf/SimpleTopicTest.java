@@ -34,17 +34,17 @@ public class SimpleTopicTest extends TestCase{
     protected BrokerService broker;
     // protected String
     // bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false";
-    protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=true";
+    //protected String bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=true";
     // protected String
     // bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=false";
     // protected String bindAddress="vm://localhost?marshal=true";
-    // protected String bindAddress="vm://localhost";
+    protected String bindAddress="vm://localhost";
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String DESTINATION_NAME=getClass().getName();
-    protected int SAMPLE_COUNT=30;
-    protected long SAMPLE_INTERVAL=2000;
-    protected int NUMBER_OF_CONSUMERS=1;
+    protected int SAMPLE_COUNT=20;
+    protected long SAMPLE_INTERVAL=1000;
+    protected int NUMBER_OF_CONSUMERS=0;
     protected int NUMBER_OF_PRODUCERS=1;
     protected int PAYLOAD_SIZE=1024;
     protected byte[] array=null;
