@@ -34,6 +34,7 @@ import org.apache.activemq.kaha.MessageIdMarshaller;
 import org.apache.activemq.kaha.MessageMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
+import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
@@ -50,7 +51,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public class KahaPersistenceAdapter implements PersistenceAdapter{
-
+    private static final int STORE_LOCKED_WAIT_DELAY = 10*1000;
     private static final Log log=LogFactory.getLog(KahaPersistenceAdapter.class);
     static final String PREPARED_TRANSACTIONS_NAME="PreparedTransactions";
     KahaTransactionStore transactionStore;
@@ -126,13 +127,25 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     public TransactionStore createTransactionStore() throws IOException{
+       
         if(transactionStore==null){
+            while (true) {
+                try {
             Store store=getStore();
             MapContainer container=store.getMapContainer(PREPARED_TRANSACTIONS_NAME,"transactions");
             container.setKeyMarshaller(new CommandMarshaller(wireFormat));
             container.setValueMarshaller(new TransactionMarshaller(wireFormat));
             container.load();
             transactionStore=new KahaTransactionStore(this,container);
+            break;
+                }catch(StoreLockedExcpetion e) {
+                    log.info("Store is locked... waiting "+(STORE_LOCKED_WAIT_DELAY/1000)+" seconds for the Store to be unlocked.");
+                    try{
+                        Thread.sleep(STORE_LOCKED_WAIT_DELAY);
+                    }catch(InterruptedException e1){
+                    }
+                }
+        }
         }
         return transactionStore;
     }
