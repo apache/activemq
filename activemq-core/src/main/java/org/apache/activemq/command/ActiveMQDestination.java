@@ -298,7 +298,9 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
         return hashValue;
     }
     public String toString() {
-        return getQualifiedName();
+        // TODO we should use the physical name by default for easier operation
+        // with other software like StompConnect
+        return physicalName;
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {
