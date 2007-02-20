@@ -419,7 +419,7 @@ public class KahaStore implements Store{
         if(closed)
             throw new IOException("Store has been closed.");
         if(!initialized){
-            initialized=true;
+           
             log.info("Kaha Store using data directory "+directory);
             DataManager defaultDM=getDataManager(DEFAULT_CONTAINER_NAME);
             rootIndexManager=getIndexManager(defaultDM,DEFAULT_CONTAINER_NAME);
@@ -436,6 +436,7 @@ public class KahaStore implements Store{
                 listRoot=rootIndexManager.getIndex(IndexItem.INDEX_SIZE);
             }
             lock();
+            initialized=true;
             mapsContainer=new IndexRootContainer(mapRoot,rootIndexManager,defaultDM);
             listsContainer=new IndexRootContainer(listRoot,rootIndexManager,defaultDM);
             /**
