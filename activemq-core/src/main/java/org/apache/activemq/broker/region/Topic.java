@@ -19,11 +19,14 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
-import org.apache.activemq.broker.region.policy.FixedCountSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
@@ -44,9 +47,6 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The Topic is a destination that sends a copy of a message to every active
@@ -64,7 +64,7 @@ public class Topic implements Destination {
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
-    private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new FixedCountSubscriptionRecoveryPolicy();
+    private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new NoSubscriptionRecoveryPolicy();
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private final ConcurrentHashMap durableSubcribers = new ConcurrentHashMap();
