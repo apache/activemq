@@ -18,9 +18,10 @@
 package org.apache.activemq.util;
 
 import java.io.IOException;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A helper class for running code with a PersistenceAdapter
@@ -29,6 +30,7 @@ import org.apache.activemq.store.PersistenceAdapter;
  * @version $Revision: 1.2 $
  */
 public class TransactionTemplate {
+    static private final Log log=LogFactory.getLog(TransactionTemplate.class);
     private PersistenceAdapter persistenceAdapter;
     private ConnectionContext context;
 
@@ -59,6 +61,7 @@ public class TransactionTemplate {
                 persistenceAdapter.commitTransaction(context);
             }
             else {
+                log.error("Having to Rollback - caught an exception: " + throwable);
                 persistenceAdapter.rollbackTransaction(context);
             }            
         }
