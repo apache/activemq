@@ -56,7 +56,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
         this.subscriberName=subscriberName;
     }
 
-    public void start() throws Exception{
+    public synchronized void start() throws Exception{
         if(batchList.isEmpty()){
             try{
                 fillBatch();
@@ -68,7 +68,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
         }
     }
 
-    public void stop() throws Exception{
+    public synchronized void stop() throws Exception{
         store.resetBatching(clientId,subscriberName);
         gc();
     }
@@ -145,7 +145,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
     public void finished(){
     }
 
-    public void recoverMessage(Message message) throws Exception{
+    public synchronized void recoverMessage(Message message) throws Exception{
         message.setRegionDestination(regionDestination);
         // only increment if count is zero (could have been cached)
         if(message.getReferenceCount()==0){
@@ -160,11 +160,11 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
     }
 
     // implementation
-    protected void fillBatch() throws Exception{
+    protected synchronized void fillBatch() throws Exception{
         store.recoverNextMessages(clientId,subscriberName,maxBatchSize,this);
     }
 
-    public void gc(){
+    public synchronized void gc(){
         for(Message msg:batchList){
             msg.decrementReferenceCount();
         }

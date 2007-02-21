@@ -196,7 +196,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         pendingCount--;
     }
 
-    public void remove(MessageReference node){
+    public synchronized void remove(MessageReference node){
         if(currentCursor!=null){
             currentCursor.remove(node);
         }
