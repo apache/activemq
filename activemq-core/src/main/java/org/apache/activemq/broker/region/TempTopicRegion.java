@@ -20,6 +20,7 @@ package org.apache.activemq.broker.region;
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -32,7 +33,8 @@ public class TempTopicRegion extends AbstractRegion {
 
     public TempTopicRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
         super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
-        setAutoCreateDestinations(false);
+        // We should allow the following to be configurable via a Destination Policy 
+        // setAutoCreateDestinations(false);
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
@@ -47,5 +49,15 @@ public class TempTopicRegion extends AbstractRegion {
         return "TempTopicRegion: destinations="+destinations.size()+", subscriptions="+subscriptions.size()+", memory="+memoryManager.getPercentUsage()+"%";
     }
 
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+    	
+    	// Force a timeout value so that we don't get an error that 
+    	// there is still an active sub.  Temp destination may be removed   
+    	// while a network sub is still active which is valid.
+    	if( timeout == 0 ) 
+    		timeout = 1;
+    	
+    	super.removeDestination(context, destination, timeout);
+    }
 
 }

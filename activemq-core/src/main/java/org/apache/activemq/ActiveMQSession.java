@@ -57,6 +57,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQStreamMessage;
+import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Command;
@@ -1755,6 +1756,16 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
         }
     }
+
+	public boolean isInUse(ActiveMQTempDestination destination) {
+        for(Iterator iter=consumers.iterator();iter.hasNext();){
+            ActiveMQMessageConsumer c=(ActiveMQMessageConsumer) iter.next();
+            if( c.isInUse(destination) ) {
+            	return true;
+            }
+        }
+        return false;
+	}
 
     
 

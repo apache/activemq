@@ -535,81 +535,94 @@ public class BrokerTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection1);
     }
 
-    public void initCombosForTestTempDestinationsRemovedOnConnectionClose() {    
-        addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
-        addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
-    }
     
-    public void testTempDestinationsRemovedOnConnectionClose() throws Exception {
-        
-        // Setup a first connection
-        StubConnection connection1 = createConnection();
-        ConnectionInfo connectionInfo1 = createConnectionInfo();
-        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
-        ProducerInfo producerInfo1 = createProducerInfo(sessionInfo1);
-        connection1.send(connectionInfo1);
-        connection1.send(sessionInfo1);
-        connection1.send(producerInfo1);
+//
+//  TODO: need to reimplement this since we don't fail when we send to a non-existant
+//  destination.  But if we can access the Region directly then we should be able to
+//  check that if the destination was removed.
+// 
+//    public void initCombosForTestTempDestinationsRemovedOnConnectionClose() {    
+//        addCombinationValues( "deliveryMode", new Object[]{ 
+//                new Integer(DeliveryMode.NON_PERSISTENT), 
+//                new Integer(DeliveryMode.PERSISTENT)} );
+//        addCombinationValues( "destinationType", new Object[]{ 
+//                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+//                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+//    }
+//    
+//    public void testTempDestinationsRemovedOnConnectionClose() throws Exception {
+//        
+//        // Setup a first connection
+//        StubConnection connection1 = createConnection();
+//        ConnectionInfo connectionInfo1 = createConnectionInfo();
+//        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
+//        ProducerInfo producerInfo1 = createProducerInfo(sessionInfo1);
+//        connection1.send(connectionInfo1);
+//        connection1.send(sessionInfo1);
+//        connection1.send(producerInfo1);
+//
+//        destination = createDestinationInfo(connection1, connectionInfo1, destinationType);
+//        
+//        StubConnection connection2 = createConnection();
+//        ConnectionInfo connectionInfo2 = createConnectionInfo();
+//        SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
+//        ProducerInfo producerInfo2 = createProducerInfo(sessionInfo2);
+//        connection2.send(connectionInfo2);
+//        connection2.send(sessionInfo2);
+//        connection2.send(producerInfo2);
+//
+//        // Send from connection2 to connection1's temp destination.  Should succeed.
+//        connection2.send(createMessage(producerInfo2, destination, deliveryMode));
+//        
+//        // Close connection 1
+//        connection1.request(closeConnectionInfo(connectionInfo1));
+//        
+//        try {
+//            // Send from connection2 to connection1's temp destination.  Should not succeed.
+//            connection2.request(createMessage(producerInfo2, destination, deliveryMode));
+//            fail("Expected JMSException.");
+//        } catch ( JMSException success ) {
+//        }
+//        
+//    }
 
-        destination = createDestinationInfo(connection1, connectionInfo1, destinationType);
-        
-        StubConnection connection2 = createConnection();
-        ConnectionInfo connectionInfo2 = createConnectionInfo();
-        SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
-        ProducerInfo producerInfo2 = createProducerInfo(sessionInfo2);
-        connection2.send(connectionInfo2);
-        connection2.send(sessionInfo2);
-        connection2.send(producerInfo2);
-
-        // Send from connection2 to connection1's temp destination.  Should succeed.
-        connection2.send(createMessage(producerInfo2, destination, deliveryMode));
-        
-        // Close connection 1
-        connection1.request(closeConnectionInfo(connectionInfo1));
-        
-        try {
-            // Send from connection2 to connection1's temp destination.  Should not succeed.
-            connection2.request(createMessage(producerInfo2, destination, deliveryMode));
-            fail("Expected JMSException.");
-        } catch ( JMSException success ) {
-        }
-        
-    }
-
-    public void initCombosForTestTempDestinationsAreNotAutoCreated() {    
-        addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
-        addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
-    }
     
-    public void testTempDestinationsAreNotAutoCreated() throws Exception {
-        
-        // Setup a first connection
-        StubConnection connection1 = createConnection();
-        ConnectionInfo connectionInfo1 = createConnectionInfo();
-        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
-        ProducerInfo producerInfo1 = createProducerInfo(sessionInfo1);
-        connection1.send(connectionInfo1);
-        connection1.send(sessionInfo1);
-        connection1.send(producerInfo1);
-
-        destination = ActiveMQDestination.createDestination(connectionInfo1.getConnectionId()+":1", destinationType); 
-            
-        // Should not be able to send to a non-existant temp destination.
-        try {
-            connection1.request(createMessage(producerInfo1, destination, deliveryMode));
-            fail("Expected JMSException.");
-        } catch ( JMSException success ) {
-        }
-        
-    }
+//    public void initCombosForTestTempDestinationsAreNotAutoCreated() {    
+//        addCombinationValues( "deliveryMode", new Object[]{ 
+//                new Integer(DeliveryMode.NON_PERSISTENT), 
+//                new Integer(DeliveryMode.PERSISTENT)} );
+//        addCombinationValues( "destinationType", new Object[]{ 
+//                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+//                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+//    }
+//    
+//   
+    
+    
+//  We create temp destination on demand now so this test case is no longer 
+//  valid.
+//    
+//    public void testTempDestinationsAreNotAutoCreated() throws Exception {
+//        
+//        // Setup a first connection
+//        StubConnection connection1 = createConnection();
+//        ConnectionInfo connectionInfo1 = createConnectionInfo();
+//        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
+//        ProducerInfo producerInfo1 = createProducerInfo(sessionInfo1);
+//        connection1.send(connectionInfo1);
+//        connection1.send(sessionInfo1);
+//        connection1.send(producerInfo1);
+//
+//        destination = ActiveMQDestination.createDestination(connectionInfo1.getConnectionId()+":1", destinationType); 
+//            
+//        // Should not be able to send to a non-existant temp destination.
+//        try {
+//            connection1.request(createMessage(producerInfo1, destination, deliveryMode));
+//            fail("Expected JMSException.");
+//        } catch ( JMSException success ) {
+//        }
+//        
+//    }
     
     public void initCombosForTestTempDestinationsOnlyAllowsLocalConsumers() {    
         addCombinationValues( "deliveryMode", new Object[]{ 

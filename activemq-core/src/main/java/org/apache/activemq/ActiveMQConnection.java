@@ -129,6 +129,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean nestedMapAndListEnabled = true;
     private boolean useRetroactiveConsumer;
     private boolean useSyncSend=false;
+    private boolean watchTopicAdvisories=true;
     private int closeTimeout = 15000;
     
     private final Transport transport;
@@ -1267,7 +1268,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         // broker without having to do an RPC to the broker.
         
         ConsumerId consumerId = new ConsumerId(new SessionId(info.getConnectionId(), -1),consumerIdGenerator.getNextSequenceId());
-        advisoryConsumer = new AdvisoryConsumer(this, consumerId);        
+        if( watchTopicAdvisories ) {
+        	advisoryConsumer = new AdvisoryConsumer(this, consumerId);
+        }
     }
 
 
@@ -1602,7 +1605,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void deleteTempDestination(ActiveMQTempDestination destination) throws JMSException {
         
-        checkClosedOrFailed();        
+        checkClosedOrFailed();    
+
+        for(Iterator i=this.sessions.iterator();i.hasNext();){
+            ActiveMQSession s=(ActiveMQSession) i.next();
+            if( s.isInUse(destination) ) {
+            	throw new JMSException("A consumer is consuming from the temporary destination");
+            }
+        }
+
+        
         activeTempDestinations.remove(destination);
 
         DestinationInfo info = new DestinationInfo();
@@ -1616,6 +1628,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
 
     public boolean isDeleted(ActiveMQDestination dest) {
+    	
+    	// If we are not watching the advisories.. then 
+    	// we will assume that the temp destination does exist.
+    	if( advisoryConsumer==null )
+    		return false;
+    	
         return !activeTempDestinations.contains(dest);
     }
 
@@ -1911,6 +1929,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	}
 	public void setUseSyncSend(boolean forceSyncSend) {
 		this.useSyncSend = forceSyncSend;
+	}
+
+
+	public synchronized boolean isWatchTopicAdvisories() {
+		return watchTopicAdvisories;
+	}
+
+
+	public synchronized void setWatchTopicAdvisories(boolean watchTopicAdvisories) {
+		this.watchTopicAdvisories = watchTopicAdvisories;
 	}
     
 }

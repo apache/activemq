@@ -30,6 +30,7 @@ import javax.jms.MessageListener;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
@@ -907,5 +908,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 		}
     	return false;
 	}
+
+	public boolean isInUse(ActiveMQTempDestination destination) {
+		return info.getDestination().equals(destination);
+	}    
 
 }
