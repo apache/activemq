@@ -124,6 +124,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     protected final AtomicBoolean disposed=new AtomicBoolean(false);
     private CountDownLatch stopLatch = new CountDownLatch(1);
     protected final AtomicBoolean asyncException = new AtomicBoolean(false);
+    private ConnectionContext context;
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
         private final ConnectionContext context;
@@ -299,6 +300,18 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                 response = new Response();                
             }
             response.setCorrelationId(commandId);
+            if( context!=null && context.isDontSendReponse() ) {
+                // No need to send back a response at this time.
+            } else {
+                if( response == null ) {
+                    response = new Response();
+                }
+                response.setCorrelationId(commandId);
+            }
+            if( context!=null ) {
+                context.setDontSendReponse(false);
+                context=null;
+            }
         }
         return response;
         
@@ -461,7 +474,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         
         ProducerId producerId = messageSend.getProducerId();
         ConnectionState state = lookupConnectionState(producerId);
-        ConnectionContext context = state.getContext();
+        context = state.getContext();
         
         // If the message originates from this client connection, 
         // then, finde the associated producer state so we can do some dup detection.
@@ -671,7 +684,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     	
         // Setup the context.
         String clientId = info.getClientId();
-        ConnectionContext context = new ConnectionContext();
+        context = new ConnectionContext();
         context.setConnection(this);
         context.setBroker(broker);
         context.setConnector(connector);

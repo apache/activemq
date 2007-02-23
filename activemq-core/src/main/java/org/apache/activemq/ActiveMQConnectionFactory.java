@@ -85,6 +85,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
     private boolean nestedMapAndListEnabled = true;
+    private boolean useSyncSend=false;
+
     JMSStatsImpl factoryStats = new JMSStatsImpl();
 
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
@@ -256,6 +258,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
+            connection.setUseSyncSend(isUseSyncSend());
 
             transport.start();
 
@@ -507,10 +510,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             props.setProperty("password", getPassword());
         }
 
+                
+        props.setProperty("useSyncSend", Boolean.toString(isUseSyncSend()));
         props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
-
+        
+        
         if (getUserName() != null) {
             props.setProperty("userName", getUserName());
         }
@@ -678,4 +684,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setStatsEnabled(boolean statsEnabled){
         this.factoryStats.setEnabled(statsEnabled);
     }
+
+	public boolean isUseSyncSend() {
+		return useSyncSend;
+	}
+
+	public void setUseSyncSend(boolean forceSyncSend) {
+		this.useSyncSend = forceSyncSend;
+	}
 }

@@ -18,6 +18,7 @@
 package org.apache.activemq.memory;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +50,7 @@ public class UsageManager {
     private final Object usageMutex = new Object();
     
     private final CopyOnWriteArrayList listeners = new CopyOnWriteArrayList();
+    private final LinkedList callbacks = new LinkedList();
     
     private boolean sendFailIfNoSpace;
 
@@ -89,6 +91,38 @@ public class UsageManager {
         synchronized (usageMutex) {
             for( int i=0; percentUsage >= 100 ; i++) {
                 usageMutex.wait();
+            }
+        }
+    }
+
+    /**
+     * @param callback
+     * @return true if the UsageManager was full.  The callback will only be called if this method returns true.
+     */
+    public boolean notifyCallbackWhenNotFull( final Runnable callback ) {
+        
+    	if(parent!=null) {
+    		Runnable r = new Runnable(){
+				public void run() {
+			        synchronized (usageMutex) {
+			            if( percentUsage >= 100 ) {
+			            	callbacks.add(callback);
+			            } else {
+			            	callback.run();
+			            }
+			        }
+				}
+            };
+    		if( parent.notifyCallbackWhenNotFull(r) ) {
+    			return true;
+    		}
+    	}
+        synchronized (usageMutex) {
+            if( percentUsage >= 100 ) {
+            	callbacks.add(callback);
+            	return true;
+            } else {
+            	return false;
             }
         }
     }
@@ -247,6 +281,11 @@ public class UsageManager {
         if( oldPercentUsage >= 100 && newPercentUsage < 100 ) {
             synchronized (usageMutex) {
                 usageMutex.notifyAll();
+                for (Iterator iter = callbacks.iterator(); iter.hasNext();) {
+					Runnable callback = (Runnable) iter.next();
+					callback.run();
+				}
+                callbacks.clear();
             }            
         }
         
