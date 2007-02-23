@@ -765,11 +765,13 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
 
     public void dispatchSync(Command message) {
+        getStatistics().getEnqueues().increment();
         processDispatch(message);
     }
     
     
     public void dispatchAsync(Command message) {
+        getStatistics().getEnqueues().increment();
         if( taskRunner==null ) {
             dispatchSync( message );
         } else {
@@ -783,22 +785,26 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
     
     protected void processDispatch(Command command){
-        if(command.isMessageDispatch()){
-            MessageDispatch md=(MessageDispatch) command;
-            Runnable sub=(Runnable) md.getConsumer();
-            broker.processDispatch(md);
-            try{
-                dispatch(command);
-            }finally{
-                if(sub!=null){
-                    sub.run();
+        try {
+            if(command.isMessageDispatch()){
+                MessageDispatch md=(MessageDispatch) command;
+                Runnable sub=(Runnable) md.getConsumer();
+                broker.processDispatch(md);
+                try{
+                    dispatch(command);
+                }finally{
+                    if(sub!=null){
+                        sub.run();
+                    }
                 }
+            } else if( command.isShutdownInfo() ) {
+                dispatch(command);
+                dispatchStopped.countDown();
+            } else {
+                dispatch(command);
             }
-        } else if( command.isShutdownInfo() ) {
-            dispatch(command);
-            dispatchStopped.countDown();
-        } else {
-            dispatch(command);
+        } finally {
+            getStatistics().getDequeues().increment();
         }
     }       
     
@@ -1077,12 +1083,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         try {
             setMarkedCandidate(true);
             transport.oneway(command);
-            getStatistics().onCommand(command);
-        }
-        catch (IOException e) {
+        } catch(IOException e){
             serviceExceptionAsync(e);
-        }
-        finally {
+        } finally{
             setMarkedCandidate(false);
         }
     }
@@ -1090,4 +1093,16 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     public String getRemoteAddress() {
         return transport.getRemoteAddress();
     }
+
+    public String getConnectionId() {
+        Iterator iterator = localConnectionStates.values().iterator();
+        ConnectionState object = (ConnectionState) iterator.next();
+        if( object == null ) {
+            return null;
+        }
+        if( object.getInfo().getClientId() !=null )
+            return object.getInfo().getClientId();
+        return object.getInfo().getConnectionId().toString();
+    }
+
 }

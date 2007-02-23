@@ -106,4 +106,6 @@ public interface Connection extends Service {
 
 	public void serviceExceptionAsync(IOException e);
 
+	public String getConnectionId();
+
 }
