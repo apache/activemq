@@ -121,7 +121,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     private boolean pendingStop;
     private long timeStamp = 0;
     
-    private AtomicBoolean stopped = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(false);
+	private final AtomicBoolean transportDisposed = new AtomicBoolean();
     protected final AtomicBoolean disposed=new AtomicBoolean(false);
     private CountDownLatch stopLatch = new CountDownLatch(1);
     protected final AtomicBoolean asyncException = new AtomicBoolean(false);
@@ -936,8 +937,12 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 
 		        if( taskRunner!=null ) {
                     taskRunner.wakeup();
-                    dispatchStoppedLatch.await();
+                    // Give it a change to stop gracefully.
+                    dispatchStoppedLatch.await(5, TimeUnit.SECONDS);
+                    disposeTransport();
 		            taskRunner.shutdown();
+                } else {
+                    disposeTransport();
                 }
 		        
                 // Run the MessageDispatch callbacks so that message references get cleaned up.
@@ -973,11 +978,6 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 		        }
 				stopLatch.countDown();
 	        }
-	        
-	        transport.stop();
-	        active = false;
-	        
-    		log.debug("Stopped connection: "+transport.getRemoteAddress());
     	}
     }
 
@@ -1158,4 +1158,16 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return object.getInfo().getConnectionId().toString();
     }
 
+
+	protected void disposeTransport() {
+    	if( transportDisposed.compareAndSet(false, true) ) {
+        try {
+			transport.stop();
+			active = false;
+			log.debug("Stopped connection: "+transport.getRemoteAddress());
+		} catch (Exception e) {
+			log.debug("Could not stop transport: "+e,e);
+		}
+    	}
+	}
 }
