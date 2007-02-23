@@ -301,10 +301,6 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             }
         }        
         if( responseRequired ) {
-            if( response == null ) {
-                response = new Response();                
-            }
-            response.setCorrelationId(commandId);
             if( context!=null && context.isDontSendReponse() ) {
                 // No need to send back a response at this time.
             } else {
