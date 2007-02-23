@@ -33,10 +33,12 @@ import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.BooleanExpression;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.selector.SelectorParser;
@@ -51,6 +53,12 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
+import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
+import edu.emory.mathcs.backport.java.util.concurrent.ThreadPoolExecutor;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -267,19 +275,56 @@ public class Queue implements Destination {
         }
 
     }
+    
+    static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(1, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue()); 
 
     public void send(final ConnectionContext context, final Message message) throws Exception {
 
         if (context.isProducerFlowControl()) {
-            if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
-                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-            }
-            else {
-                usageManager.waitForSpace();
-            }
+            if( message.isResponseRequired() ) {
+            	if( usageManager.isFull() ) {
+//            		System.out.println("Registering callback...");
+	            	Runnable callback = new Runnable() {
+	            		public void run() {
+//                    		System.out.println("Callback triggering async thread..");
+                    		threadPool.execute(new Runnable() {
+	            				public void run() {
+	    	            	        try {							
+//	    	                    		System.out.println("Async thread start..");
+	    	            	        	sendMessage(context, message);
+	    				                Response response = new Response();
+	    				                response.setCorrelationId(message.getCommandId());
+	    								context.getConnection().dispatchAsync(response);							
+	    							} catch (Exception e) {
+	    				                ExceptionResponse response = new ExceptionResponse(e);
+	    				                response.setCorrelationId(message.getCommandId());
+	    								context.getConnection().dispatchAsync(response);
+	    							} finally {
+//	    	                    		System.out.println("Async thread end..");
+	    							}
+	            				}
+	            			});
+	            		}
+	            	};
+	            	if( usageManager.notifyCallbackWhenNotFull(callback) ) {
+	            		context.setDontSendReponse(true);
+	            		return;
+	            	}
+            	}
+            } else {
+                if (usageManager.isSendFailIfNoSpace() ) {
+                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
+                } else {
+                    usageManager.waitForSpace();
+                }
+            }        	
         }
 
-        message.setRegionDestination(this);
+        sendMessage(context, message);
+    }
+
+	private void sendMessage(final ConnectionContext context, final Message message) throws IOException, Exception {
+		message.setRegionDestination(this);
 
         if (store != null && message.isPersistent())
             store.addMessage(context, message);
@@ -301,7 +346,7 @@ public class Queue implements Destination {
         finally {
             node.decrementReferenceCount();
         }
-    }
+	}
 
     public void dispose(ConnectionContext context) throws IOException {
         if (store != null) {

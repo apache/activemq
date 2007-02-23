@@ -128,6 +128,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean optimizeAcknowledge = false;
     private boolean nestedMapAndListEnabled = true;
     private boolean useRetroactiveConsumer;
+    private boolean useSyncSend=false;
     private int closeTimeout = 15000;
     
     private final Transport transport;
@@ -1903,5 +1904,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
 
+	public boolean isUseSyncSend() {
+		return useSyncSend;
+	}
+	public void setUseSyncSend(boolean forceSyncSend) {
+		this.useSyncSend = forceSyncSend;
+	}
     
 }

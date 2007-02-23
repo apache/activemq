@@ -54,6 +54,7 @@ public class ConnectionContext {
     private boolean producerFlowControl=true;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private AtomicInteger referenceCounter = new AtomicInteger();
+    private boolean dontSendReponse;
     
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     
@@ -244,6 +245,14 @@ public class ConnectionContext {
 	
 	public int decrementReference() {
 		return referenceCounter.decrementAndGet();
+	}
+
+	public boolean isDontSendReponse() {
+		return dontSendReponse;
+	}
+
+	public void setDontSendReponse(boolean dontSendReponse) {
+		this.dontSendReponse = dontSendReponse;
 	}
 
 }
