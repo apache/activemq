@@ -30,6 +30,10 @@ import javax.jms.MessageNotWriteableException;
 
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.policy.FixedCountSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
@@ -79,11 +83,23 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected void setUp() throws Exception {
         super.setUp();
         broker = createBroker();
+        setDefaultPolicy(broker);
         broker.start();
+    }
+    
+    protected void setDefaultPolicy(BrokerService brokerService) {
+    	PolicyEntry policy = new PolicyEntry();
+        policy.setDispatchPolicy(new RoundRobinDispatchPolicy());
+        policy.setSubscriptionRecoveryPolicy(new FixedCountSubscriptionRecoveryPolicy());
+        PolicyMap pMap = new PolicyMap();
+        pMap.setDefaultEntry(policy);
+
+        broker.setDestinationPolicy(pMap);
     }
 
     protected BrokerService createBroker() throws Exception {
-        return BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false"));
+        BrokerService broker =  BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false"));
+        return  broker;
     }
     
     protected void tearDown() throws Exception {
