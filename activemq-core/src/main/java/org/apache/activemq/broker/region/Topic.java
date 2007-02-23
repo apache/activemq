@@ -232,7 +232,7 @@ public class Topic implements Destination {
 
     public void send(final ConnectionContext context, final Message message) throws Exception {
 
-        if (context.isProducerFlowControl()  && !context.isNetworkConnection() ) {
+        if (context.isProducerFlowControl() ) {
             if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             } else {

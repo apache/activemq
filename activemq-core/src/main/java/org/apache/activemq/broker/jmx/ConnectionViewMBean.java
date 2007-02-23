@@ -71,4 +71,11 @@ public interface ConnectionViewMBean extends Service {
      */
     public String getRemoteAddress();
 
+    /**
+     * Returns the JMS connection id for this connection
+     * 
+     * @return the JMS connection id for this connection
+     */
+    public String getConnectionId();
+
 }

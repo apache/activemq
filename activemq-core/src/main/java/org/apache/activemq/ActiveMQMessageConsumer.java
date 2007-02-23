@@ -582,6 +582,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public void dispose() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
+        	
+        	//log.warn("Consumer is being disposed.", new Exception("trace exception."));
+        	
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now. (session may still
             // commit/rollback the acks).
@@ -833,31 +836,36 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void dispatch(MessageDispatch md) {
         MessageListener listener = this.messageListener;
         try {
+        	
             synchronized(unconsumedMessages.getMutex()){
-	            if (!unconsumedMessages.isClosed()) {
-	                if (listener != null && unconsumedMessages.isRunning() ) {
-	                    ActiveMQMessage message = createActiveMQMessage(md);
-	                    beforeMessageIsConsumed(md);
-	                    try {
-	                        listener.onMessage(message);
-	                        afterMessageIsConsumed(md, false);
-	                    } catch (RuntimeException e) {
-	                        if ( session.isDupsOkAcknowledge() || session.isAutoAcknowledge() ) {
-	                            // Redeliver the message
-	                        } else {
-	                            // Transacted or Client ack: Deliver the next message.
-	                            afterMessageIsConsumed(md, false);
-	                        }
-	                        log.warn("Exception while processing message: " + e, e);
-	                    }
-	                } else {
-	                    unconsumedMessages.enqueue(md);
-	                    if (availableListener != null) {
-	                        availableListener.onMessageAvailable(this);
-	                    }
-	                }
+	            if (unconsumedMessages.isClosed()) {
+	            	return;
+            	}
+                if (listener == null || !unconsumedMessages.isRunning() ) {
+                    unconsumedMessages.enqueue(md);
+                    if (availableListener != null) {
+                        availableListener.onMessageAvailable(this);
+                    }
+                    return;
+                }                	
+        	}
+        	
+	        ActiveMQMessage message = createActiveMQMessage(md);
+	        beforeMessageIsConsumed(md);
+	        try {
+	            listener.onMessage(message);
+	            afterMessageIsConsumed(md, false);
+	        } catch (RuntimeException e) {
+	            if ( session.isDupsOkAcknowledge() || session.isAutoAcknowledge() ) {
+	                // Redeliver the message
+	            } else {
+	                // Transacted or Client ack: Deliver the next message.
+	                afterMessageIsConsumed(md, false);
 	            }
-            }
+	            log.warn("Exception while processing message: " + e, e);
+	        }
+        	
+            
         } catch (Exception e) {
         	session.connection.onAsyncException(e);
         }
