@@ -573,10 +573,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
 
                     if (isConnectionInfoSentToBroker) {
+                    	// If we announced ourselfs to the broker.. Try to let the broker
+                    	// know that the connection is being shutdown.
                         syncSendPacket(info.createRemoveCommand(), closeTimeout);
+                        asyncSendPacket(new ShutdownInfo());
                     }
 
-                    asyncSendPacket(new ShutdownInfo());
                     ServiceSupport.dispose(this.transport);
 
                     started.set(false);
