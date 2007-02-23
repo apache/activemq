@@ -17,14 +17,13 @@
  */
 package org.apache.activemq.transport;
 
-import java.io.IOException;
-
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -147,8 +146,8 @@ public class InactivityMonitor extends TransportFilter {
     public void onException(IOException error) {
     	if( monitorStarted.get() ) {
 	        stopMonitorThreads();
-	        getTransportListener().onException(error);
     	}
+        getTransportListener().onException(error);
     }
     
     
