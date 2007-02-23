@@ -54,6 +54,7 @@ public class UsageManager {
 
     /** True if someone called setSendFailIfNoSpace() on this particular usage manager */
     private boolean sendFailIfNoSpaceExplicitySet;
+    private final boolean debug = log.isDebugEnabled();
 
     public UsageManager() {
         this(null);
@@ -242,22 +243,21 @@ public class UsageManager {
         return (int)((((usage*100)/limit)/percentUsageMinDelta)*percentUsageMinDelta);
     }
     
-    private void fireEvent(int oldPercentUsage, int newPercentUsage) {
-        
-        log.debug("Memory usage change.  from: "+oldPercentUsage+", to: "+newPercentUsage);
-        
+    private void fireEvent(int oldPercentUsage,int newPercentUsage){
+        if (debug) {
+            log.debug("Memory usage change.  from: "+oldPercentUsage+", to: "+newPercentUsage);
+        }
         // Switching from being full to not being full..
-        if( oldPercentUsage >= 100 && newPercentUsage < 100 ) {
-            synchronized (usageMutex) {
+        if(oldPercentUsage>=100&&newPercentUsage<100){
+            synchronized(usageMutex){
                 usageMutex.notifyAll();
-            }            
+            }
         }
-//      Let the listeners know
-        for (Iterator iter = listeners.iterator(); iter.hasNext();) {
-            UsageListener l = (UsageListener) iter.next();
-            l.onMemoryUseChanged(this, oldPercentUsage, newPercentUsage);
+        // Let the listeners know
+        for(Iterator iter=listeners.iterator();iter.hasNext();){
+            UsageListener l=(UsageListener)iter.next();
+            l.onMemoryUseChanged(this,oldPercentUsage,newPercentUsage);
         }
-       
     }
 
     public String toString() {
