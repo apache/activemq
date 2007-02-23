@@ -135,7 +135,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
-        service.setUseJmx(false);
+        service.setUseJmx(true);
         
         // Setup a destination policy where it takes only 1 message at a time.
         PolicyMap policyMap = new PolicyMap();        

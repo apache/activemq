@@ -790,13 +790,10 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                 MessageDispatch md=(MessageDispatch) command;
                 Runnable sub=(Runnable) md.getConsumer();
                 broker.processDispatch(md);
-                try{
-                    dispatch(command);
-                }finally{
-                    if(sub!=null){
-                        sub.run();
-                    }
+                if(sub!=null){
+                    sub.run();
                 }
+                dispatch(command);
             } else if( command.isShutdownInfo() ) {
                 dispatch(command);
                 dispatchStopped.countDown();

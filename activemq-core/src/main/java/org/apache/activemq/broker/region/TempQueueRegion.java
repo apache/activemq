@@ -38,7 +38,6 @@ public class TempQueueRegion extends AbstractRegion {
         super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         // We should allow the following to be configurable via a Destination Policy 
         // setAutoCreateDestinations(false);
-        System.out.println("test");
     }
 
     protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {

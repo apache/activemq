@@ -50,8 +50,6 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     // These are the messages waiting to be delivered to the client
     private final MessageDispatchChannel unconsumedMessages = new MessageDispatchChannel();
 
-    private int deliveredCounter = 0;
-    private MessageDispatch lastDelivered;
     private boolean eosReached;
     private byte buffer[];
     private int pos;
@@ -117,10 +115,6 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     public void close() throws IOException {
         if (!unconsumedMessages.isClosed()) {
             try {
-                if (lastDelivered != null) {
-                    MessageAck ack = new MessageAck(lastDelivered, MessageAck.STANDARD_ACK_TYPE, deliveredCounter);
-                    connection.asyncSendPacket(ack);
-                }
                 dispose();
                 this.connection.syncSendPacket(info.createRemoveCommand());
             } catch (JMSException e) {
@@ -150,16 +144,8 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         if (md == null || unconsumedMessages.isClosed() || md.getMessage().isExpired())
             return null;
 
-        deliveredCounter++;
-        if ((0.75 * info.getPrefetchSize()) <= deliveredCounter) {
-            MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, deliveredCounter);
-            connection.asyncSendPacket(ack);
-            deliveredCounter = 0;
-            lastDelivered = null;
-        } else {
-            lastDelivered = md;
-        }
-
+        MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
+        connection.asyncSendPacket(ack);
         return (ActiveMQMessage) md.getMessage();
     }
 

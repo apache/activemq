@@ -490,8 +490,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                             log.trace("bridging "+localBrokerName+" -> "+remoteBrokerName+": "+message);
                         
                         
-                        
-                        if( !message.isResponseRequired() ) {
+                        if( !( message.isResponseRequired() || message.getDestination().isQueue() ) ) {
                             
                             // If the message was originally sent using async send, we will preserve that QOS
                             // by bridging it using an async send (small chance of message loss).

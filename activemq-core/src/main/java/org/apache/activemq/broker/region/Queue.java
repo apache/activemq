@@ -280,8 +280,8 @@ public class Queue implements Destination {
 
     public void send(final ConnectionContext context, final Message message) throws Exception {
 
-        if (context.isProducerFlowControl() && !context.isNetworkConnection()) {
-            if( message.isResponseRequired() ) {
+        if (context.isProducerFlowControl() ) {
+            if( message.isResponseRequired() || context.isNetworkConnection() ) {
             	if( usageManager.isFull() ) {
 //            		System.out.println("Registering callback...");
 	            	Runnable callback = new Runnable() {
