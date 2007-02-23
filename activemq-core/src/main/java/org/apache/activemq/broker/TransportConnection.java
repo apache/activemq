@@ -920,6 +920,16 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 	
 	        if(disposed.compareAndSet(false, true)) {
 		        
+
+               // Let all the connection contexts know we are shutting down
+               // so that in progress operations can notice and unblock.
+                ArrayList l=new ArrayList(localConnectionStates.values());
+                for(Iterator iter=l.iterator();iter.hasNext();){
+                    ConnectionState cs=(ConnectionState) iter.next();
+                    cs.getContext().getStopping().set(true);
+                }
+
+
                 taskRunner.wakeup();
                 dispatchStoppedLatch.await();
 
@@ -943,7 +953,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 		        // Remove all logical connection associated with this connection
 		        // from the broker.
 		        if(!broker.isStopped()){
-		            ArrayList l=new ArrayList(localConnectionStates.keySet());
+		            l=new ArrayList(localConnectionStates.keySet());
 		            for(Iterator iter=l.iterator();iter.hasNext();){
 		                ConnectionId connectionId=(ConnectionId) iter.next();
 		                try{

@@ -95,6 +95,19 @@ public class UsageManager {
         }
     }
 
+    public boolean waitForSpace(long timeout) throws InterruptedException {
+        if(parent!=null) {
+            if( !parent.waitForSpace(timeout) )
+            	return false;
+        }
+        synchronized (usageMutex) {
+            if( percentUsage >= 100 ) {
+                usageMutex.wait(timeout);
+            }
+            return percentUsage < 100;
+        }
+    }
+
     /**
      * @param callback
      * @return true if the UsageManager was full.  The callback will only be called if this method returns true.
