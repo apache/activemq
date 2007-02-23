@@ -55,6 +55,7 @@ public class ConnectionContext {
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private AtomicInteger referenceCounter = new AtomicInteger();
     private boolean dontSendReponse;
+    private boolean networkConnection;
     
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     
@@ -253,6 +254,14 @@ public class ConnectionContext {
 
 	public void setDontSendReponse(boolean dontSendReponse) {
 		this.dontSendReponse = dontSendReponse;
+	}
+
+	public synchronized boolean isNetworkConnection() {
+		return networkConnection;
+	}
+
+	public synchronized void setNetworkConnection(boolean networkConnection) {
+		this.networkConnection = networkConnection;
 	}
 
 }
