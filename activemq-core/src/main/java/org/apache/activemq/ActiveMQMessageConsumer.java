@@ -583,8 +583,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void dispose() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
         	
-        	//log.warn("Consumer is being disposed.", new Exception("trace exception."));
-        	
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now. (session may still
             // commit/rollback the acks).

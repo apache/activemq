@@ -826,7 +826,10 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
            if( disposed.get() ) {
                 if( dispatchStopped.compareAndSet(false, true)) {                                                             
                     if( transportException.get()==null ) {
-                        dispatch(new ShutdownInfo());
+                        try {
+                            dispatch(new ShutdownInfo());
+                        } catch (Throwable ignore) {
+                        }
                     }
                     dispatchStoppedLatch.countDown();
                 }
@@ -930,11 +933,12 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                 }
 
 
-                taskRunner.wakeup();
-                dispatchStoppedLatch.await();
 
-		        if( taskRunner!=null )
+		        if( taskRunner!=null ) {
+                    taskRunner.wakeup();
+                    dispatchStoppedLatch.await();
 		            taskRunner.shutdown();
+                }
 		        
                 // Run the MessageDispatch callbacks so that message references get cleaned up.
                 for (Iterator iter = dispatchQueue.iterator(); iter.hasNext();) {
