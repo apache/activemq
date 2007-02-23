@@ -17,7 +17,6 @@
  */
 package org.apache.activemq.management;
 
-import org.apache.activemq.management.CountStatisticImpl;
 
 public class CountStatisticTest extends StatisticTestSupport {
     
@@ -30,6 +29,7 @@ public class CountStatisticTest extends StatisticTestSupport {
      */
     public void testStatistic() throws Exception {
         CountStatisticImpl stat = new CountStatisticImpl("myCounter", "seconds", "myDescription");
+        stat.setEnabled(true);
         assertStatistic(stat, "myCounter", "seconds", "myDescription");
 
         assertEquals(0, stat.getCount());
