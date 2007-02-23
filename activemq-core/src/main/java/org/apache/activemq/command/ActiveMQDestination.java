@@ -17,6 +17,16 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.jndi.JNDIBaseStorable;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Queue;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
+import javax.jms.Topic;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -25,19 +35,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.Properties;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.Topic;
-
-import org.apache.activemq.util.URISupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.jndi.JNDIBaseStorable;
+import java.util.StringTokenizer;
 
 /**
  * @openwire:marshaller
@@ -297,10 +296,9 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
         }
         return hashValue;
     }
+    
     public String toString() {
-        // TODO we should use the physical name by default for easier operation
-        // with other software like StompConnect
-        return physicalName;
+        return getQualifiedName();
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {
