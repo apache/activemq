@@ -882,14 +882,15 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 		        
                // Clear out what's on the queue so that we can send the Shutdown command quicker.
                dispatchQueue.clear();
-               dispatchAsync(new ShutdownInfo());
-
-                // Wait up to 10 seconds for the shutdown command to be sent to 
-                // the client.
-                dispatchStopped.await(10, TimeUnit.SECONDS);
+               if( transportException==null ) {
+                    // Wait up to 10 seconds for the shutdown command to be sent to 
+                    // the client.
+                    dispatchAsync(new ShutdownInfo());
+                    dispatchStopped.await(10, TimeUnit.SECONDS);
+               }
 
 		        if( taskRunner!=null )
-		            taskRunner.shutdown();
+		            taskRunner.shutdownNoWait();
 		        
 		        // Clear out the dispatch queue to release any memory that
 		        // is being held on to.

@@ -25,4 +25,5 @@ package org.apache.activemq.thread;
 public interface TaskRunner {
     public abstract void wakeup() throws InterruptedException;
     public abstract void shutdown() throws InterruptedException;
+    public abstract void shutdownNoWait() throws InterruptedException;
 }

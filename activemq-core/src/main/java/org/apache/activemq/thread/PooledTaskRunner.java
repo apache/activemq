@@ -90,6 +90,12 @@ class PooledTaskRunner implements TaskRunner {
                 }
             }
         }
+    }
+    
+    public void shutdownNoWait() throws InterruptedException{
+        synchronized(runable){
+            shutdown=true;
+        }
     }        
     
     private void runTask() {
