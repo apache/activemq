@@ -291,7 +291,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent,Runnable{
     private void doTimeKeepingServices(){
         if(started.get()){
             long currentTime=System.currentTimeMillis();
-            if((currentTime-keepAliveInterval)>lastAdvertizeTime){
+            if (currentTime < lastAdvertizeTime || ((currentTime-keepAliveInterval)>lastAdvertizeTime)) {
                 doAdvertizeSelf();
                 lastAdvertizeTime = currentTime;
             }
