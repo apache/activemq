@@ -315,7 +315,10 @@ public class Queue implements Destination {
                 if (usageManager.isSendFailIfNoSpace() ) {
                     throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
                 } else {
-                    usageManager.waitForSpace();
+                    while( !usageManager.waitForSpace(1000) ) {
+                        if( context.getStopping().get() )
+                            throw new IOException("Connection closed, send aborted.");
+                    }
                 }
             }        	
         }

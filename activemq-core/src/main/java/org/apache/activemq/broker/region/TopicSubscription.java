@@ -162,7 +162,7 @@ public class TopicSubscription extends AbstractSubscription{
                 context.getTransaction().addSynchronization(new Synchronization(){
                     public void afterCommit() throws Exception{
                     	synchronized( TopicSubscription.this ) {
-	                    	if( singleDestination ) {
+	                    	if( singleDestination && destination!=null) {
 	                    		destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
 	                    	}
                     	}                    
@@ -172,7 +172,7 @@ public class TopicSubscription extends AbstractSubscription{
                 });
             }else{
             	
-            	if( singleDestination ) {
+            	if( singleDestination && destination!=null ) {
             		destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
             	}
             	            

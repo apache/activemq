@@ -18,6 +18,7 @@
 package org.apache.activemq.broker;
 
 import edu.emory.mathcs.backport.java.util.concurrent.ConcurrentHashMap;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.broker.region.MessageReference;
@@ -56,6 +57,7 @@ public class ConnectionContext {
     private AtomicInteger referenceCounter = new AtomicInteger();
     private boolean dontSendReponse;
     private boolean networkConnection;
+    private final AtomicBoolean stopping = new AtomicBoolean();
     
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     
@@ -262,6 +264,10 @@ public class ConnectionContext {
 
 	public synchronized void setNetworkConnection(boolean networkConnection) {
 		this.networkConnection = networkConnection;
+	}
+
+	public AtomicBoolean getStopping() {
+		return stopping;
 	}
 
 }
