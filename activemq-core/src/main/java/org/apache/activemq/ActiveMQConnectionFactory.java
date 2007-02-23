@@ -86,7 +86,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean useRetroactiveConsumer;
     private boolean nestedMapAndListEnabled = true;
     private boolean useSyncSend=false;
-
+    private boolean watchTopicAdvisories=true;
+    
     JMSStatsImpl factoryStats = new JMSStatsImpl();
 
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
@@ -259,7 +260,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
             connection.setUseSyncSend(isUseSyncSend());
-
+            connection.setWatchTopicAdvisories(watchTopicAdvisories);
+            
             transport.start();
 
             if( clientID !=null )
@@ -519,7 +521,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
-        
+        props.setProperty("watchTopicAdvisories", Boolean.toString(isWatchTopicAdvisories()));
         
         if (getUserName() != null) {
             props.setProperty("userName", getUserName());
@@ -695,5 +697,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
 	public void setUseSyncSend(boolean forceSyncSend) {
 		this.useSyncSend = forceSyncSend;
+	}
+
+	public synchronized boolean isWatchTopicAdvisories() {
+		return watchTopicAdvisories;
+	}
+
+	public synchronized void setWatchTopicAdvisories(boolean watchTopicAdvisories) {
+		this.watchTopicAdvisories = watchTopicAdvisories;
 	}
 }
