@@ -249,7 +249,6 @@ public class UsageManager {
         // Switching from being full to not being full..
         if( oldPercentUsage >= 100 && newPercentUsage < 100 ) {
             synchronized (usageMutex) {
-                System.err.println("Memory usage change.  from: "+oldPercentUsage+", to: "+newPercentUsage);
                 usageMutex.notifyAll();
             }            
         }
