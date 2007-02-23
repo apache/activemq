@@ -56,9 +56,13 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     }
 
 
-    public boolean matches(MessageEvaluationContext message) throws JMSException{
+    public boolean matches(MessageEvaluationContext mec) throws JMSException{
         try{
-            return matchesForwardingFilter(message.getMessage());
+            //for Queues - the message can be acknowledged and dropped whilst still
+            //in the dispatch loop
+            //so need to get the reference to it
+            Message message = mec.getMessage();
+            return message != null &&  matchesForwardingFilter(message);
         }catch(IOException e){
             throw JMSExceptionSupport.create(e);
         }

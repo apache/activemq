@@ -125,6 +125,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     private CountDownLatch stopLatch = new CountDownLatch(1);
     protected final AtomicBoolean asyncException = new AtomicBoolean(false);
     private ConnectionContext context;
+    private boolean networkConnection;
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
         private final ConnectionContext context;
@@ -693,6 +694,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         context.setUserName(info.getUserName());
         context.setConnectionId(info.getConnectionId());
         context.setWireFormatInfo(wireFormatInfo);
+        context.setNetworkConnection(networkConnection);
         context.incrementReference();
         this.manageable = info.isManageable();
         
@@ -1058,6 +1060,12 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         
         this.brokerInfo = info;
         broker.addBroker(this, info);
+        networkConnection = true;
+        for (Iterator iter = localConnectionStates.values().iterator(); iter.hasNext();) {
+            ConnectionState cs = (ConnectionState) iter.next();
+            cs.getContext().setNetworkConnection(true);
+        }       
+
         return null;
     }
 
