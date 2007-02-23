@@ -73,6 +73,19 @@ class DedicatedTaskRunner implements TaskRunner {
         }
     }        
     
+
+    /**
+     * shut down the task
+     * @throws InterruptedException 
+     */
+    public void shutdownNoWait() throws InterruptedException{
+        synchronized(mutex){
+            shutdown=true;
+            pending=true;
+            mutex.notifyAll();
+        }
+    }        
+    
     private void runTask() {
         
         try {
