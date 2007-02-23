@@ -126,6 +126,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     protected final AtomicBoolean asyncException = new AtomicBoolean(false);
     private ConnectionContext context;
     private boolean networkConnection;
+    private CountDownLatch dispatchStopped = new CountDownLatch(1);
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState {
         private final ConnectionContext context;
@@ -793,7 +794,10 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                     sub.run();
                 }
             }
-        }else{
+        } else if( command.isShutdownInfo() ) {
+            dispatch(command);
+            dispatchStopped.countDown();
+        } else {
             dispatch(command);
         }
     }       
@@ -868,21 +872,19 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 	            if (masterBroker != null){
 	                masterBroker.stop();
 	            }
-	            
-	            // If the transport has not failed yet,
-	            // notify the peer that we are doing a normal shutdown.
-	            if( transportException == null ) {
-	            	transport.oneway(new ShutdownInfo());
-	            }
 	        } catch (Exception ignore) {
-	            //ignore.printStackTrace();
 	        }
 	
-	        transport.stop();
-	        active = false;
-	       
 	        if(disposed.compareAndSet(false, true)) {
 		        
+               // Clear out what's on the queue so that we can send the Shutdown command quicker.
+               dispatchQueue.clear();
+               dispatchAsync(new ShutdownInfo());
+
+                // Wait up to 10 seconds for the shutdown command to be sent to 
+                // the client.
+                dispatchStopped.await(10, TimeUnit.SECONDS);
+
 		        if( taskRunner!=null )
 		            taskRunner.shutdown();
 		        
@@ -911,6 +913,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 				stopLatch.countDown();
 	        }
 	        
+	        transport.stop();
+	        active = false;
 	        
     		log.debug("Stopped connection: "+transport.getRemoteAddress());
     	}
