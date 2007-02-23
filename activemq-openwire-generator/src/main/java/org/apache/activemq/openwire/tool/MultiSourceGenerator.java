@@ -17,6 +17,12 @@
  */
 package org.apache.activemq.openwire.tool;
 
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.FixCRLF;
+import org.codehaus.jam.JClass;
+import org.codehaus.jam.JProperty;
+import org.codehaus.jam.JamClassIterator;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -24,12 +30,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.FixCRLF;
-import org.codehaus.jam.JClass;
-import org.codehaus.jam.JProperty;
-import org.codehaus.jam.JamClassIterator;
 
 /**
  * 
@@ -159,8 +159,9 @@ public abstract class MultiSourceGenerator extends OpenWireGenerator {
 
     protected void initialiseManuallyMaintainedClasses() {
         String[] names = { "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic",
-                "BaseCommand", "ActiveMQMessage", "ActiveMQTextMessage", "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage",
-                "ActiveMQStreamMessage", "DataStructureSupport", "WireFormatInfo", "ActiveMQObjectMessage" };
+                "BaseCommand",
+                "ActiveMQMessage", "ActiveMQTextMessage", "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage",
+                "ActiveMQBlobMessage", "DataStructureSupport", "WireFormatInfo", "ActiveMQObjectMessage" };
 
         for (int i = 0; i < names.length; i++) {
             manuallyMaintainedClasses.add(names[i]);

@@ -17,28 +17,21 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.SessionId;
-import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.command.*;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This implementation of {@link SubscriptionRecoveryPolicy} will perform a user
@@ -121,7 +114,7 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
         }
     }
 
-    protected void configure(ActiveMQMessage msg) {
+    protected void configure(ActiveMQMessage msg) throws JMSException {
         long sequenceNumber = messageSequence.incrementAndGet();
         msg.setMessageId(new MessageId(producerId, sequenceNumber));
         msg.onSend();

@@ -67,6 +67,7 @@ public interface CommandTypes {
     byte  ACTIVEMQ_OBJECT_MESSAGE           = 26;
     byte  ACTIVEMQ_STREAM_MESSAGE           = 27;
     byte  ACTIVEMQ_TEXT_MESSAGE             = 28;
+    byte  ACTIVEMQ_BLOB_MESSAGE             = 29;
 
     ///////////////////////////////////////////////////
     //

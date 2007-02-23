@@ -30,7 +30,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
 	// The default values here are what the wire format changes to after a default negotiation.
 	//
 	
-    private int version=2;
+    private int version=OpenWireFormat.DEFAULT_VERSION;
     private boolean stackTraceEnabled=true;
     private boolean tcpNoDelayEnabled=true;
     private boolean cacheEnabled=true;

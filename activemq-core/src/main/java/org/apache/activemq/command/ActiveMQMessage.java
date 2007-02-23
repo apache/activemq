@@ -594,7 +594,7 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
     /**
      * Send operation event listener.  Used to get the message ready to be sent. 
      */
-    public void onSend() {
+    public void onSend() throws JMSException {
         setReadOnlyBody(true);
         setReadOnlyProperties(true);
     }
