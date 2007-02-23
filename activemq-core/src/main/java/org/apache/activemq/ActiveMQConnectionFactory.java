@@ -239,10 +239,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         if (brokerURL == null) {
             throw new ConfigurationException("brokerURL not set.");
         }
-        Transport transport;
+        ActiveMQConnection connection=null;
         try {
-            transport = createTransport();
-            ActiveMQConnection connection = createActiveMQConnection(transport, factoryStats);
+            Transport transport = createTransport();
+            connection = createActiveMQConnection(transport, factoryStats);
 
             connection.setUserName(userName);
             connection.setPassword(password);
@@ -268,9 +268,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             return connection;
         }
         catch (JMSException e) {
+        	// Clean up!
+    		try { connection.close(); } catch ( Throwable ignore ) {}
             throw e;
         }
         catch (Exception e) {
+        	// Clean up!
+    		try { connection.close(); } catch ( Throwable ignore ) {}
             throw JMSExceptionSupport.create("Could not connect to broker URL: " + brokerURL + ". Reason: " + e, e);
         }
     }
