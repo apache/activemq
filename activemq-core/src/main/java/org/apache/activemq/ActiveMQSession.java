@@ -17,58 +17,7 @@
  */
 package org.apache.activemq;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.jms.BytesMessage;
-import javax.jms.Destination;
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
-import javax.jms.Session;
-import javax.jms.StreamMessage;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
-import javax.jms.TransactionRolledBackException;
-
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMapMessage;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQObjectMessage;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQStreamMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionId;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.*;
 import org.apache.activemq.management.JMSSessionStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -76,9 +25,21 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.blob.BlobUploader;
+import org.apache.activemq.blob.BlobUploadStrategy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.jms.*;
+import javax.jms.IllegalStateException;
+import javax.jms.Message;
+import java.io.Serializable;
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -169,6 +130,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @see javax.jms.XASession
  */
 public class ActiveMQSession implements Session, QueueSession, TopicSession, StatsCapable, ActiveMQDispatcher {
+    private BlobUploadStrategy blobUploadStrategy;
 
     public static interface DeliveryListener {
         public void beforeDelivery(ActiveMQSession session, Message msg);
@@ -286,9 +248,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public BytesMessage createBytesMessage() throws JMSException {
-        checkClosed();
         ActiveMQBytesMessage message = new ActiveMQBytesMessage();
-        message.setConnection(connection);
+        configureMessage(message);
         return message;
     }
 
@@ -304,9 +265,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public MapMessage createMapMessage() throws JMSException {
-        checkClosed();
         ActiveMQMapMessage message = new ActiveMQMapMessage();
-        message.setConnection(connection);
+        configureMessage(message);
         return message;
     }
 
@@ -322,9 +282,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public Message createMessage() throws JMSException {
-        checkClosed();
         ActiveMQMessage message = new ActiveMQMessage();
-        message.setConnection(connection);
+        configureMessage(message);
         return message;
     }
 
@@ -339,9 +298,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public ObjectMessage createObjectMessage() throws JMSException {
-        checkClosed();
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
-        message.setConnection(connection);
+        configureMessage(message);
         return message;
     }
 
@@ -358,9 +316,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
-        checkClosed();
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
-        message.setConnection(connection);
+        configureMessage(message);
         message.setObject(object);
         return message;
     }
@@ -376,9 +333,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public StreamMessage createStreamMessage() throws JMSException {
-        checkClosed();
         ActiveMQStreamMessage message = new ActiveMQStreamMessage();
-        message.setConnection(connection);
+        configureMessage(message);
         return message;
     }
 
@@ -393,9 +349,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public TextMessage createTextMessage() throws JMSException {
-        checkClosed();
         ActiveMQTextMessage message = new ActiveMQTextMessage();
-        message.setConnection(connection);
+        configureMessage(message);
         return message;
     }
 
@@ -411,12 +366,76 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public TextMessage createTextMessage(String text) throws JMSException {
-        checkClosed();
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setText(text);
-        message.setConnection(connection);
+        configureMessage(message);
         return message;
     }
+
+    /**
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
+     * object is used to send a message containing a <CODE>URL</CODE> which points to some
+     * network addressible BLOB.
+     *
+     * @param url
+     *            the network addressable URL used to pass directly to the consumer
+     * @return a BlobMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public BlobMessage createBlobMessage(URL url) throws JMSException {
+        ActiveMQBlobMessage message = new ActiveMQBlobMessage();
+        configureMessage(message);
+        message.setURL(url);
+        return message;
+    }
+
+    /**
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
+     * object is used to send a message containing the <CODE>File</CODE> content. Before the
+     * message is sent the file conent will be uploaded to the broker or some other remote repository
+     * depending on the {@link #getBlobUploadStrategy()}.
+     *
+     * @param file
+     *            the file to be uploaded to some remote repo (or the broker) depending on the
+     *
+     * @return a BlobMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public BlobMessage createBlobMessage(File file) throws JMSException {
+        ActiveMQBlobMessage message = new ActiveMQBlobMessage();
+        configureMessage(message);
+        message.setBlobUploader(new BlobUploader(blobUploadStrategy, file));
+        message.setDeletedByBroker(true);
+        return message;
+    }
+
+
+    /**
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
+     * object is used to send a message containing the <CODE>File</CODE> content. Before the
+     * message is sent the file conent will be uploaded to the broker or some other remote repository
+     * depending on the {@link #getBlobUploadStrategy()}.
+     *
+     * @param file
+     *            the file to be uploaded to some remote repo (or the broker) depending on the
+     *
+     * @return a BlobMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public BlobMessage createBlobMessage(InputStream in) throws JMSException {
+        ActiveMQBlobMessage message = new ActiveMQBlobMessage();
+        configureMessage(message);
+        message.setBlobUploader(new BlobUploader(blobUploadStrategy, in));
+        message.setDeletedByBroker(true);
+        return message;
+    }
+
 
     /**
      * Indicates whether the session is in transacted mode.
@@ -571,6 +590,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
         }
     }
+
+    /**
+     * Checks that the session is not closed then configures the message
+     */
+    protected void configureMessage(ActiveMQMessage message) throws IllegalStateException {
+        checkClosed();
+        message.setConnection(connection);
+    }
+
 
     /**
      * Check if the session is closed. It is used for ensuring that the session
@@ -1718,7 +1746,20 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public List getUnconsumedMessages() {
 		return executor.getUnconsumedMessages();
 	}
-    
+
+
+    public BlobUploadStrategy getBlobUploadStrategy() {
+        return blobUploadStrategy;
+    }
+
+    /**
+     * Sets the upload strategy for BLOBs which are sent out-of-band by uploading them
+     * to some remote repository or the broker
+     */
+    public void setBlobUploadStrategy(BlobUploadStrategy blobUploadStrategy) {
+        this.blobUploadStrategy = blobUploadStrategy;
+    }
+
     public String toString() {
         return "ActiveMQSession {id="+info.getSessionId()+",started="+started.get()+"}";
     }

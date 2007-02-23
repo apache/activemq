@@ -129,7 +129,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
         copy.dataIn = null;
     }
 
-    public void onSend() {
+    public void onSend() throws JMSException {
         super.onSend();
         storeContent();
     }

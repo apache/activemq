@@ -17,36 +17,33 @@
  */
 package org.apache.activemq.openwire;
 
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.MarshallAware;
+import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.util.*;
+import org.apache.activemq.wireformat.WireFormat;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.command.MarshallAware;
-import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.ByteSequenceData;
-import org.apache.activemq.util.ClassLoading;
-import org.apache.activemq.util.DataByteArrayInputStream;
-import org.apache.activemq.util.DataByteArrayOutputStream;
-import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.wireformat.WireFormat;
-
 /**
  * 
  * @version $Revision$
  */
 final public class OpenWireFormat implements WireFormat {
-    
+
+    public static final int DEFAULT_VERSION = 3;
+
     static final byte NULL_TYPE = CommandTypes.NULL;
     private static final int MARSHAL_CACHE_SIZE = Short.MAX_VALUE/2;
     private static final int MARSHAL_CACHE_FREE_SPACE = 100;
     
     private DataStreamMarshaller dataMarshallers[];
-    private int version = 2;
+    private int version;
     private boolean stackTraceEnabled=false;
     private boolean tcpNoDelayEnabled=false;
     private boolean cacheEnabled=false;
@@ -64,7 +61,7 @@ final public class OpenWireFormat implements WireFormat {
 	private WireFormatInfo preferedWireFormatInfo;
             
 	public OpenWireFormat() {
-		this(2);
+		this(DEFAULT_VERSION);
 	}
 	
     public OpenWireFormat(int i) {
