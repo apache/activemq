@@ -20,8 +20,8 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 
 import javax.jms.JMSException;
 import java.io.File;
-import java.io.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 /**
@@ -31,27 +31,36 @@ import java.net.URL;
  */
 public class BlobUploader {
 
-    private BlobUploadStrategy strategy;
+    private BlobTransferPolicy blobTransferPolicy;
     private File file;
     private InputStream in;
 
 
-    public BlobUploader(BlobUploadStrategy strategy, File file) {
-        this.strategy = strategy;
-        this.file = file;
+    public BlobUploader(BlobTransferPolicy blobTransferPolicy, InputStream in) {
+        this.blobTransferPolicy = blobTransferPolicy;
+        this.in = in;
     }
 
-    public BlobUploader(BlobUploadStrategy strategy, InputStream in) {
-        this.strategy = strategy;
-        this.in = in;
+    public BlobUploader(BlobTransferPolicy blobTransferPolicy, File file) {
+        this.blobTransferPolicy = blobTransferPolicy;
+        this.file = file;
     }
 
     public URL upload(ActiveMQBlobMessage message) throws JMSException, IOException {
         if (file != null) {
-            return strategy.uploadFile(message, file);
+            return getStrategy().uploadFile(message, file);
         }
         else {
-            return strategy.uploadStream(message, in);
+            return getStrategy().uploadStream(message, in);
         }
+    }
+
+
+    public BlobTransferPolicy getBlobTransferPolicy() {
+        return blobTransferPolicy;
+    }
+
+    public BlobUploadStrategy getStrategy() {
+        return getBlobTransferPolicy().getUploadStrategy();
     }
 }

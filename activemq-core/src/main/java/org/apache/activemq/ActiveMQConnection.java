@@ -82,6 +82,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -116,6 +117,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     
     // Configuration options variables
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+    private BlobTransferPolicy blobTransferPolicy;
     private RedeliveryPolicy redeliveryPolicy;
     private MessageTransformer transformer;
 
@@ -1405,7 +1407,19 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
         this.redeliveryPolicy = redeliveryPolicy;
     }
-    
+
+    public BlobTransferPolicy getBlobTransferPolicy() {
+        return blobTransferPolicy;
+    }
+
+    /**
+     * Sets the policy used to describe how out-of-band BLOBs (Binary Large OBjects)
+     * are transferred from producers to brokers to consumers
+     */
+    public void setBlobTransferPolicy(BlobTransferPolicy blobTransferPolicy) {
+        this.blobTransferPolicy = blobTransferPolicy;
+    }
+
     /**
      * @return Returns the alwaysSessionAsync.
      */
@@ -1490,6 +1504,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 this.brokerInfo = (BrokerInfo)command;
                 brokerInfoReceived.countDown();
                 this.optimizeAcknowledge &= !this.brokerInfo.isFaultTolerantConfiguration();
+                getBlobTransferPolicy().setBrokerUploadUrl(brokerInfo.getBrokerUploadUrl());
             }
             else if (command instanceof ControlCommand) {
                 onControlCommand((ControlCommand) command);

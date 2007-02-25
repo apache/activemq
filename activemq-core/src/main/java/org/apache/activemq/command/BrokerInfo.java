@@ -38,6 +38,8 @@ public class BrokerInfo extends BaseCommand{
     BrokerInfo peerBrokerInfos[];
     String brokerName;
     long connectionId;
+    String brokerUploadUrl;
+
 
     public boolean isBrokerInfo(){
         return true;
@@ -184,5 +186,17 @@ public class BrokerInfo extends BaseCommand{
 		this.connectionId = connectionId;
 	}
 
-  
+
+    /**
+     * The URL to use when uploading BLOBs to the broker or some other external file/http server
+     *
+     * @openwire:property version=3
+     */
+    public String getBrokerUploadUrl() {
+        return brokerUploadUrl;
+    }
+
+    public void setBrokerUploadUrl(String brokerUploadUrl) {
+        this.brokerUploadUrl = brokerUploadUrl;
+    }
 }

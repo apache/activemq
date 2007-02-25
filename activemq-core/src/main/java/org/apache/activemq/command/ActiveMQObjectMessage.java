@@ -21,6 +21,15 @@ package org.apache.activemq.command;
 
 
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
+import org.apache.activemq.util.JMSExceptionSupport;
+
+import javax.jms.JMSException;
+import javax.jms.ObjectMessage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,16 +39,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
-
-import javax.jms.JMSException;
-import javax.jms.ObjectMessage;
-
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.util.ByteArrayInputStream;
-import org.apache.activemq.util.ByteArrayOutputStream;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
-import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * An <CODE>ObjectMessage</CODE> object is used to send a message that contains a serializable object in the Java
@@ -107,6 +106,11 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
+
+    public String getJMSXMimeType() {
+        return "jms/object-message";
+    }
+
 
     /**
      * Clears out the message body. Clearing a message's body does not clear its header values or property entries.

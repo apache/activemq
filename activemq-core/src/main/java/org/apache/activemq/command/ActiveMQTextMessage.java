@@ -17,18 +17,6 @@
  */
 package org.apache.activemq.command;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
-
-import javax.jms.JMSException;
-import javax.jms.MessageNotWriteableException;
-import javax.jms.TextMessage;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -36,6 +24,17 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.wireformat.WireFormat;
+
+import javax.jms.JMSException;
+import javax.jms.MessageNotWriteableException;
+import javax.jms.TextMessage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 /**
  * 
@@ -61,6 +60,10 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
+    }
+    
+    public String getJMSXMimeType() {
+        return "jms/text-message";
     }
 
     public void setText(String text) throws MessageNotWriteableException {

@@ -44,7 +44,7 @@ import org.apache.activemq.util.TypeConversionSupport;
  * 
  * @version $Revision:$
  */
-public class ActiveMQMessage extends Message implements javax.jms.Message {
+public class ActiveMQMessage extends Message implements org.apache.activemq.Message {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MESSAGE;
 
@@ -180,7 +180,11 @@ public class ActiveMQMessage extends Message implements javax.jms.Message {
     public void setJMSCorrelationIDAsBytes(byte[] correlationId) throws JMSException {
         this.setCorrelationId(decodeString(correlationId));
     }
-    
+
+    public String getJMSXMimeType() {
+        return "jms/message";
+    }
+
     static protected String decodeString(byte[] data) throws JMSException {
         try {
             if (data == null) {
