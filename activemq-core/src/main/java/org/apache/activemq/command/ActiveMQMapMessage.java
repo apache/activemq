@@ -147,6 +147,11 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
+    
+    public String getJMSXMimeType() {
+        return "jms/map-message";
+    }
+
 
     /**
      * Clears out the message body. Clearing a message's body does not clear its header values or property entries. <P>

@@ -17,20 +17,6 @@
  */
 package org.apache.activemq;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
-import javax.naming.Context;
-
 import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
@@ -42,7 +28,20 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
+import org.apache.activemq.blob.BlobTransferPolicy;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.naming.Context;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -69,9 +68,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected String password;
     protected String clientID;
 
-    // optimization flags
+    // client policies
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
     private RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+    private BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
     private MessageTransformer transformer;
 
     private boolean disableTimeStampsByDefault = false;
@@ -258,6 +258,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
             connection.setTransformer(getTransformer());
+            connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
 
             transport.start();
 
@@ -400,6 +401,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     public boolean isUseAsyncSend() {
         return useAsyncSend;
+    }
+
+    public BlobTransferPolicy getBlobTransferPolicy() {
+        return blobTransferPolicy;
+    }
+
+    /**
+     * Sets the policy used to describe how out-of-band BLOBs (Binary Large OBjects)
+     * are transferred from producers to brokers to consumers
+     */
+    public void setBlobTransferPolicy(BlobTransferPolicy blobTransferPolicy) {
+        this.blobTransferPolicy = blobTransferPolicy;
     }
 
     /**

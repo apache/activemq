@@ -107,6 +107,11 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
+    
+    public String getJMSXMimeType() {
+        return "jms/bytes-message";
+    }
+
 
     /**
      * Clears out the message body. Clearing a message's body does not clear its header values or property entries. <P>

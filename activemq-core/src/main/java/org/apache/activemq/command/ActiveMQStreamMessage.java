@@ -151,6 +151,11 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
         return DATA_STRUCTURE_TYPE;
     }
 
+    public String getJMSXMimeType() {
+        return "jms/stream-message";
+    }
+
+
     /**
      * Clears out the message body. Clearing a message's body does not clear its
      * header values or property entries. <p/>

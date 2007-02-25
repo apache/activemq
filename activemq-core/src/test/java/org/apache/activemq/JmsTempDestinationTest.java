@@ -17,12 +17,21 @@
  */
 package org.apache.activemq;
 
-import java.util.ArrayList;
-import javax.jms.*;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-
 import junit.framework.TestCase;
+
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.InvalidDestinationException;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+import javax.jms.TemporaryQueue;
+import javax.jms.TextMessage;
+import java.util.ArrayList;
 
 /**
  * @version

@@ -39,6 +39,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
 
     private String remoteBlobUrl;
     private String mimeType;
+    private String name;
     private boolean deletedByBroker;
 
     private transient BlobUploader blobUploader;
@@ -90,6 +91,19 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
         this.mimeType = mimeType;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * The name of the attachment which can be useful information if transmitting files over ActiveMQ
+     *
+     * @openwire:property version=3 cache=false
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
     /**
      * @openwire:property version=3 cache=false
      */
@@ -99,6 +113,10 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
 
     public void setDeletedByBroker(boolean deletedByBroker) {
         this.deletedByBroker = deletedByBroker;
+    }
+
+    public String getJMSXMimeType() {
+        return getMimeType();
     }
 
     public InputStream getInputStream() throws IOException, JMSException {

@@ -26,7 +26,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.blob.BlobUploader;
-import org.apache.activemq.blob.BlobUploadStrategy;
+import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -130,7 +130,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @see javax.jms.XASession
  */
 public class ActiveMQSession implements Session, QueueSession, TopicSession, StatsCapable, ActiveMQDispatcher {
-    private BlobUploadStrategy blobUploadStrategy;
 
     public static interface DeliveryListener {
         public void beforeDelivery(ActiveMQSession session, Message msg);
@@ -146,6 +145,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private TransactionContext transactionContext;
     private DeliveryListener deliveryListener;
     private MessageTransformer transformer;
+    private BlobTransferPolicy blobTransferPolicy;
 
     protected final ActiveMQConnection connection;
     protected final SessionInfo info;
@@ -190,6 +190,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         stats = new JMSSessionStatsImpl(producers, consumers);
         this.connection.asyncSendPacket(info);
         setTransformer(connection.getTransformer());
+        setBlobTransferPolicy(connection.getBlobTransferPolicy());
         
         if( connection.isStarted() )
             start();
@@ -408,8 +409,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public BlobMessage createBlobMessage(File file) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         configureMessage(message);
-        message.setBlobUploader(new BlobUploader(blobUploadStrategy, file));
+        message.setBlobUploader(new BlobUploader(getBlobTransferPolicy(), file));
         message.setDeletedByBroker(true);
+        message.setName(file.getName());
         return message;
     }
 
@@ -431,7 +433,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public BlobMessage createBlobMessage(InputStream in) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         configureMessage(message);
-        message.setBlobUploader(new BlobUploader(blobUploadStrategy, in));
+        message.setBlobUploader(new BlobUploader(getBlobTransferPolicy(), in));
         message.setDeletedByBroker(true);
         return message;
     }
@@ -1743,22 +1745,22 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.transformer = transformer;
     }
 
+    public BlobTransferPolicy getBlobTransferPolicy() {
+        return blobTransferPolicy;
+    }
+
+    /**
+     * Sets the policy used to describe how out-of-band BLOBs (Binary Large OBjects)
+     * are transferred from producers to brokers to consumers
+     */
+    public void setBlobTransferPolicy(BlobTransferPolicy blobTransferPolicy) {
+        this.blobTransferPolicy = blobTransferPolicy;
+    }
+
     public List getUnconsumedMessages() {
 		return executor.getUnconsumedMessages();
 	}
 
-
-    public BlobUploadStrategy getBlobUploadStrategy() {
-        return blobUploadStrategy;
-    }
-
-    /**
-     * Sets the upload strategy for BLOBs which are sent out-of-band by uploading them
-     * to some remote repository or the broker
-     */
-    public void setBlobUploadStrategy(BlobUploadStrategy blobUploadStrategy) {
-        this.blobUploadStrategy = blobUploadStrategy;
-    }
 
     public String toString() {
         return "ActiveMQSession {id="+info.getSessionId()+",started="+started.get()+"}";

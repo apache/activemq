@@ -16,7 +16,6 @@
  */
 package org.apache.activemq;
 
-import javax.jms.Message;
 import javax.jms.JMSException;
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -54,4 +53,11 @@ public interface BlobMessage extends Message {
      */
     void setMimeType(String mimeType);
 
+
+    String getName();
+
+    /**
+     * The name of the attachment which can be useful information if transmitting files over ActiveMQ
+     */
+    void setName(String name);
 }
