@@ -376,10 +376,6 @@ public class RegionBroker implements Broker {
 
     public void send(ConnectionContext context,  Message message) throws Exception {
         message.getMessageId().setBrokerSequenceId(sequenceGenerator.getNextSequenceId());
-        if (message.getTimestamp() > 0 && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) { 
-            //timestamp not been disabled and has not passed through a network
-            message.setTimestamp(System.currentTimeMillis());
-        }
         ActiveMQDestination destination = message.getDestination();
         switch(destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
