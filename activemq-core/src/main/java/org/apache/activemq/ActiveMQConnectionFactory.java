@@ -530,7 +530,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
         IntrospectionSupport.getProperties(getPrefetchPolicy(), props, "prefetchPolicy.");
         IntrospectionSupport.getProperties(getRedeliveryPolicy(), props, "redeliveryPolicy.");
-        
+        IntrospectionSupport.getProperties(getBlobTransferPolicy(), props, "blobTransferPolicy.");
+
         props.setProperty("copyMessageOnSend", Boolean.toString(isCopyMessageOnSend()));
         props.setProperty("disableTimeStampsByDefault", Boolean.toString(isDisableTimeStampsByDefault()));
         props.setProperty("objectMessageSerializationDefered", Boolean.toString(isObjectMessageSerializationDefered()));
