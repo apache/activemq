@@ -43,7 +43,8 @@ begin
         $stdout.flush
         @conn.ack @msg.headers["message-id"]
     end
-
+    @conn.disconnect
+  
 rescue 
 end
 
