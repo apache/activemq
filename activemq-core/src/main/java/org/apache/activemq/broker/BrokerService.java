@@ -505,7 +505,7 @@ public class BrokerService implements Service, Serializable {
         if (broker == null) {
             log.info("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION + " JMS Message Broker ("
                     + getBrokerName() + ") is starting");
-            log.info("For help or more information please see: http://incubator.apache.org/activemq/");
+            log.info("For help or more information please see: http://activemq.apache.org/");
             broker = createBroker();
         }
         return broker;
@@ -961,7 +961,7 @@ public class BrokerService implements Service, Serializable {
 
     /**
      * Sets whether or not
-     * <a href="http://incubator.apache.org/activemq/virtual-destinations.html">Virtual Topics</a>
+     * <a href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>
      * should be supported by default if they have not been explicitly configured.
      */
     public void setUseVirtualTopics(boolean useVirtualTopics) {

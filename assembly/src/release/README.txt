@@ -8,20 +8,20 @@ Getting Started
 To help you get started, try the following links:-
 
 Getting Started
-http://incubator.apache.org/activemq/getting-started.html
+http://activemq.apache.org/getting-started.html
 
 Building
-http://incubator.apache.org/activemq/getting-started.html#GettingStarted-WindowsSourceInstallation
-http://incubator.apache.org/activemq/getting-started.html#GettingStarted-UnixSourceInstallation
+http://activemq.apache.org/getting-started.html#GettingStarted-WindowsSourceInstallation
+http://activemq.apache.org/getting-started.html#GettingStarted-UnixSourceInstallation
 
 Examples
-http://incubator.apache.org/activemq/examples.html
+http://activemq.apache.org/examples.html
 
 We welcome contributions of all kinds, for details of how you can help
-http://incubator.apache.org/activemq/contributing.html
+http://activemq.apache.org/contributing.html
 
 Please refer to the website for details of finding the issue tracker, email lists, wiki or IRC channel
-http://incubator.apache.org/activemq/
+http://activemq.apache.org/
 
 Please help us make Apache ActiveMQ better - we appreciate any feedback you may have.
 Enjoy!

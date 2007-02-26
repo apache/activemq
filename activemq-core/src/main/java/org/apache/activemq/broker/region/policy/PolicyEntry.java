@@ -210,7 +210,7 @@ public class PolicyEntry extends DestinationMapEntry{
 
     /**
      * Sets the factory used to create new instances of {MessageGroupMap} used to implement the <a
-     * href="http://incubator.apache.org/activemq/message-groups.html">Message Groups</a> functionality.
+     * href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.
      */
     public void setMessageGroupMapFactory(MessageGroupMapFactory messageGroupMapFactory){
         this.messageGroupMapFactory=messageGroupMapFactory;
