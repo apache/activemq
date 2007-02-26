@@ -124,7 +124,9 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
                             message.setJMSType("test");
                             producer2.send(consumerDestination2,message);
                             Thread.sleep(50);
-                            System.err.println("Sent("+loop+"): "+i);
+                            if (verbose) {
+                                System.err.println("Sent("+loop+"): "+i);
+                            }
                         }
                         producer2.close();
                         connection2.stop();
@@ -154,7 +156,9 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
                 msg=consumer3.receive(10000);
                 if(msg==null)
                     break;
-                System.err.println("Received("+loop+"): "+i);
+                if (verbose) {
+                    System.err.println("Received("+loop+"): "+i);
+                }
                 Thread.sleep(500);
                 msg.acknowledge();
             }
