@@ -80,7 +80,7 @@ public class VMTransportFactory extends TransportFactory{
                     Map brokerOptions=IntrospectionSupport.extractProperties(options,"broker.");
                     brokerURI=new URI("broker://()/"+host+"?"+URISupport.createQueryString(brokerOptions));
                 }
-                if( "false".equals(options.get("create")) ) {
+                if( "false".equals(options.remove("create")) ) {
                 	create=false;
                 }
             }catch(URISyntaxException e1){
