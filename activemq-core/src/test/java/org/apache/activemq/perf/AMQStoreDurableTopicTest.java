@@ -26,7 +26,7 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest{
 
    
     protected void configureBroker(BrokerService answer) throws Exception{
-        File dataFileDir=new File("activemq-data/perfTest/amqdb");
+        File dataFileDir=new File("target/test-amq-data/perfTest/amqdb");
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         adaptor.setDirectory(dataFileDir);
         answer.setPersistenceAdapter(adaptor);

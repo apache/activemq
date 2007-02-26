@@ -15,26 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.region.cursors;
+package org.apache.activemq.util;
 
-import java.io.File;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 /**
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
-public class KahaCursorDurableTest extends CursorDurableTest{
-    
-    protected static final Log log = LogFactory.getLog(KahaCursorDurableTest.class);
+public class IOHelper {
 
-    
+    public static String getDefaultDataDirectory() {
+        return getDefaultDirectoryPrefix() + "activemq-data";
+    }
 
-    protected void configureBroker(BrokerService answer) throws Exception{
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("target/test-amq-data/durableTest"));
-        answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(bindAddress);
-        answer.setDeleteAllMessagesOnStartup(true);
+    public static String getDefaultStoreDirectory() {
+        return getDefaultDirectoryPrefix() + "amqstore";
+    }
+
+    /**
+     * Allows a system property to be used to overload the default data directory
+     * which can be useful for forcing the test cases to use a target/ prefix
+     */
+    public static String getDefaultDirectoryPrefix() {
+        try {
+            return System.getProperty("org.apache.activemq.default.directory.prefix", "");
+        }
+        catch (Exception e) {
+            return "";
+        }
     }
 }

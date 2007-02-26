@@ -19,6 +19,7 @@ package org.apache.activemq.usecases;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +46,7 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
     private List messages = createConcurrentList();
     private final Object lock = new Object();
     private String[] data;
-    private String DATAFILE_ROOT =  "activemq-data";
+    private String DATAFILE_ROOT = IOHelper.getDefaultDataDirectory();
     private int messageCount = 3;
     private String url = "vm://localhost";
 

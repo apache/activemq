@@ -35,7 +35,7 @@ public class KahaQueueStoreTest extends CursorQueueStoreTest{
     
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("activemq-data/durableTest"));
+        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("target/test-amq-data/durableTest"));
         answer.setPersistenceAdapter(adaptor);
         PolicyEntry policy = new PolicyEntry();
         policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());

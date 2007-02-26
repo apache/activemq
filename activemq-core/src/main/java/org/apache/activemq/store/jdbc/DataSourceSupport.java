@@ -18,6 +18,7 @@
 package org.apache.activemq.store.jdbc;
 
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.apache.activemq.util.IOHelper;
 
 import javax.sql.DataSource;
 
@@ -32,7 +33,7 @@ import java.io.IOException;
  */
 public class DataSourceSupport {
 
-    private String dataDirectory = "activemq-data";
+    private String dataDirectory = IOHelper.getDefaultDataDirectory();
     private File dataDirectoryFile;
     private DataSource dataSource;
 
