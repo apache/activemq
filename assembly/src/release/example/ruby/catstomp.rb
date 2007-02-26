@@ -42,6 +42,7 @@ begin
     STDIN.each_line { |line| 
         @conn.send @destination, line, @headers
     }
+    @conn.disconnect
 
 rescue 
 end

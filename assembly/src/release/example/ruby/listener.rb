@@ -48,3 +48,4 @@ while true
  		$stdout.print "#{@msg.command}: #{@msg.body}\n"
 	end
 end
+@conn.disconnect

@@ -63,3 +63,5 @@ for i in 1..(@batches)
 end
 
 @conn.send '/topic/event', "SHUTDOWN", {'persistent'=>'false'}
+
+@conn.disconnect
