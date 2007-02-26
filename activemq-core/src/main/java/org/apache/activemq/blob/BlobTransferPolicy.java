@@ -26,6 +26,7 @@ public class BlobTransferPolicy {
     private String defaultUploadUrl = "http://localhost:8080";
     private String brokerUploadUrl;
     private String uploadUrl;
+    private int bufferSize = 128 * 1024;
     private BlobUploadStrategy uploadStrategy;
 
     /**
@@ -94,6 +95,17 @@ public class BlobTransferPolicy {
      */
     public void setUploadStrategy(BlobUploadStrategy uploadStrategy) {
         this.uploadStrategy = uploadStrategy;
+    }
+
+    public int getBufferSize() {
+        return bufferSize;
+    }
+
+    /**
+     * Sets the default buffer size used when uploading or downloading files
+     */
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
     }
 
     protected BlobUploadStrategy createUploadStrategy() {

@@ -20,10 +20,13 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 
 import javax.jms.JMSException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * A default implementation of {@link BlobUploadStrategy} which uses the URL class to upload
@@ -37,17 +40,36 @@ public class DefaultBlobUploadStrategy implements BlobUploadStrategy {
     }
 
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
-        URL url = createUploadURL(message);
-        // TODO upload to URL
-        // return url;
-        throw new JMSException("Not implemented yet!");
+        return uploadStream(message, new FileInputStream(file));
     }
 
-    public URL uploadStream(ActiveMQBlobMessage message, InputStream in) throws JMSException, IOException {
+    public URL uploadStream(ActiveMQBlobMessage message, InputStream fis) throws JMSException, IOException {
         URL url = createUploadURL(message);
-        // TODO upload to URL
-        // return url;
-        throw new JMSException("Not implemented yet!");
+
+        URLConnection connection = url.openConnection();
+        connection.setDoOutput(true);
+        OutputStream os = connection.getOutputStream();
+
+        byte[] buf = new byte[transferPolicy.getBufferSize()];
+        for (int c = fis.read(buf); c != -1; c = fis.read(buf)) {
+            os.write(buf, 0, c);
+        }
+        os.close();
+        fis.close();
+
+        /*
+        // Read the response.
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+            System.out.println(inputLine);
+        }
+        in.close();
+        */
+
+        // TODO we now need to ensure that the return code is OK?
+
+        return url;
     }
 
     protected URL createUploadURL(ActiveMQBlobMessage message) throws JMSException, MalformedURLException {
