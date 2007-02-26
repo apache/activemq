@@ -30,6 +30,8 @@ import java.net.URI;
 public abstract class HttpTransportSupport extends TransportThreadSupport {
     private TextWireFormat textWireFormat;
     private URI remoteUrl;
+    private String proxyHost;
+    private int proxyPort = 8080;
 
     public HttpTransportSupport(TextWireFormat textWireFormat, URI remoteUrl) {
         this.textWireFormat = textWireFormat;
@@ -56,5 +58,21 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
 
     public void setTextWireFormat(TextWireFormat textWireFormat) {
         this.textWireFormat = textWireFormat;
+    }
+
+    public String getProxyHost() {
+        return proxyHost;
+    }
+
+    public void setProxyHost(String proxyHost) {
+        this.proxyHost = proxyHost;
+    }
+
+    public int getProxyPort() {
+        return proxyPort;
+    }
+
+    public void setProxyPort(int proxyPort) {
+        this.proxyPort = proxyPort;
     }
 }

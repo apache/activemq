@@ -194,7 +194,11 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected HttpClient createHttpClient() {
-        return new HttpClient();
+        HttpClient client = new HttpClient();
+        if (getProxyHost() != null) {
+            client.getHostConfiguration().setProxy(getProxyHost(), getProxyPort());
+        }
+        return client;
     }
 
     protected void configureMethod(HttpMethod method) {
