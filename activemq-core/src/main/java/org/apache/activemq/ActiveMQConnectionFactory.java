@@ -504,9 +504,15 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             setRedeliveryPolicy(rp);
             rc = true;
         }
-        
+
+        BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
+        if ( IntrospectionSupport.setProperties(blobTransferPolicy, properties, "blobTransferPolicy.") ) {
+            setBlobTransferPolicy(blobTransferPolicy);
+            rc = true;
+        }
+
         rc |= IntrospectionSupport.setProperties(this, properties);
-        
+
         return rc;
     }
 
