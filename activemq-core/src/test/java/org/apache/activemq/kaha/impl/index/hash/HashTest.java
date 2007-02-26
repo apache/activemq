@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
+import org.apache.activemq.util.IOHelper;
 
 /**
  * Test a HashIndex
@@ -39,7 +40,7 @@ public class HashTest extends TestCase{
      */
     protected void setUp() throws Exception{
         super.setUp();
-        directory=new File("activemq-data");
+        directory=new File(IOHelper.getDefaultDataDirectory());
         directory.mkdirs();
         indexManager=new IndexManager(directory,"im-hash-test","rw",null);
         this.hashIndex=new HashIndex(directory,"testHash",indexManager);

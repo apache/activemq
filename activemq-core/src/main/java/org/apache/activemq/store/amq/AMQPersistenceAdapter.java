@@ -62,6 +62,7 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -105,7 +106,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 
 	private Runnable periodicCleanupTask;
 	private boolean deleteAllMessages;
-	private File directory = new File("activemq-data/quick");
+	private File directory = new File(IOHelper.getDefaultDataDirectory() + "/quick");
 
 
     

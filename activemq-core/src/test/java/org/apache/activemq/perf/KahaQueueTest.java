@@ -30,7 +30,7 @@ public class KahaQueueTest extends SimpleQueueTest{
     
         
     protected void configureBroker(BrokerService answer) throws Exception{
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("activemq-data/perfTest"));
+        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("target/test-amq-data/perfTest"));
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);

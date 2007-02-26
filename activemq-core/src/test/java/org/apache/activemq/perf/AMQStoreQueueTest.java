@@ -29,7 +29,7 @@ public class AMQStoreQueueTest extends SimpleQueueTest{
         
     protected void configureBroker(BrokerService answer) throws Exception{
         
-    	File dataFileDir = new File("activemq-data/perfTest/amq");
+    	File dataFileDir = new File("target/test-amq-data/perfTest/amq");
     	
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         adaptor.setDirectory(dataFileDir);

@@ -73,6 +73,7 @@ import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
+import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
@@ -82,6 +83,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -553,7 +555,7 @@ public class BrokerService implements Service, Serializable {
 
     public File getDataDirectory() {
         if (dataDirectory == null) {
-            dataDirectory = new File(new File("activemq-data"), getBrokerName()
+            dataDirectory = new File(new File(IOHelper.getDefaultDataDirectory()), getBrokerName()
                     .replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
         }
         return dataDirectory;

@@ -29,7 +29,7 @@ public class RapidStoreQueueTest extends SimpleQueueTest{
         
     protected void configureBroker(BrokerService answer) throws Exception{
         
-    	File dataFileDir = new File("activemq-data/perfTest");
+    	File dataFileDir = new File("target/test-amq-data/perfTest");
         File journalDir = new File(dataFileDir, "journal").getCanonicalFile();
         JournalImpl journal = new JournalImpl(journalDir, 3, 1024*1024*20);
     	

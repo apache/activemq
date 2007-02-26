@@ -84,7 +84,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
     }
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        //KahaPersistenceAdapter adapter=new KahaPersistenceAdapter(new File("activemq-data/durableTest"));
+        //KahaPersistenceAdapter adapter=new KahaPersistenceAdapter(new File("target/test-amq-data/durableTest"));
         //JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
        // answer.setPersistenceAdapter(adapter);
         answer.setDeleteAllMessagesOnStartup(true);
