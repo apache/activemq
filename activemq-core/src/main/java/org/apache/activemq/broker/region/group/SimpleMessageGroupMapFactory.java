@@ -18,7 +18,7 @@ package org.apache.activemq.broker.region.group;
 
 /**
  * A factory to create instances of {@link SimpleMessageGroupMap} when implementing the 
- * <a href="http://incubator.apache.org/activemq/message-groups.html">Message Groups</a> functionality.
+ * <a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.
  * 
  * @org.apache.xbean.XBean
  * 

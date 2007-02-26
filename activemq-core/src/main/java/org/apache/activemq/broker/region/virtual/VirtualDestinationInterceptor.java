@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  * Implements <a
- * href="http://incubator.apache.org/activemq/virtual-destinations.html">Virtual
+ * href="http://activemq.apache.org/virtual-destinations.html">Virtual
  * Topics</a>.
  * 
  * @org.apache.xbean.XBean

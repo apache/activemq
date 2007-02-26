@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Connects a Slave Broker to a Master when using <a
- * href="http://incubator.apache.org/activemq/masterslave.html">Master Slave</a>
+ * href="http://activemq.apache.org/masterslave.html">Master Slave</a>
  * for High Availability of messages.
  * 
  * @org.apache.xbean.XBean

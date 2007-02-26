@@ -27,7 +27,7 @@ Welcome to the ActiveMQ Console
 </p>
 
 <p>
-You can find more information about ActiveMQ on the <a href="http://incubator.apache.org/activemq/">Apache ActiveMQ Site</a>
+You can find more information about ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
 </p>
 </body>
 </html>
