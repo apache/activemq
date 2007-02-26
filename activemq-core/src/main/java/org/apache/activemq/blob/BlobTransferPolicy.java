@@ -23,7 +23,7 @@ package org.apache.activemq.blob;
  * @version $Revision: $
  */
 public class BlobTransferPolicy {
-    private String defaultUploadUrl = "http://localhost:8080";
+    private String defaultUploadUrl = "http://localhost:8080/uploads/";
     private String brokerUploadUrl;
     private String uploadUrl;
     private int bufferSize = 128 * 1024;
