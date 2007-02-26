@@ -386,9 +386,30 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             internal error.
      */
     public BlobMessage createBlobMessage(URL url) throws JMSException {
+        return createBlobMessage(url, false);
+    }
+
+
+    /**
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
+     * object is used to send a message containing a <CODE>URL</CODE> which points to some
+     * network addressible BLOB.
+     *
+     * @param url
+     *            the network addressable URL used to pass directly to the consumer
+     * @param deletedByBroker
+     *          indicates whether or not the resource is deleted by the broker when the message
+     * is acknowledged
+     * @return a BlobMessage
+     * @throws JMSException
+     *             if the JMS provider fails to create this message due to some
+     *             internal error.
+     */
+    public BlobMessage createBlobMessage(URL url, boolean deletedByBroker) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         configureMessage(message);
         message.setURL(url);
+        message.setDeletedByBroker(deletedByBroker);
         return message;
     }
 
@@ -396,10 +417,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
      * object is used to send a message containing the <CODE>File</CODE> content. Before the
      * message is sent the file conent will be uploaded to the broker or some other remote repository
-     * depending on the {@link #getBlobUploadStrategy()}.
+     * depending on the {@link #getBlobTransferPolicy()}.
      *
      * @param file
-     *            the file to be uploaded to some remote repo (or the broker) depending on the
+     *            the file to be uploaded to some remote repo (or the broker) depending on the strategy
      *
      * @return a BlobMessage
      * @throws JMSException
@@ -420,10 +441,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
      * object is used to send a message containing the <CODE>File</CODE> content. Before the
      * message is sent the file conent will be uploaded to the broker or some other remote repository
-     * depending on the {@link #getBlobUploadStrategy()}.
+     * depending on the {@link #getBlobTransferPolicy()}.
      *
-     * @param file
-     *            the file to be uploaded to some remote repo (or the broker) depending on the
+     * @param in
+     *            the stream to be uploaded to some remote repo (or the broker) depending on the strategy
      *
      * @return a BlobMessage
      * @throws JMSException
