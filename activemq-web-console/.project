@@ -1,7 +1,12 @@
 <projectDescription>
   <name>activemq-web-console</name>
   <comment>Web Console for ActiveMQ</comment>
-  <projects/>
+  <projects>
+    <project>activemq-jaas</project>
+    <project>activeio-core</project>
+    <project>activemq-web</project>
+    <project>activemq-core</project>
+  </projects>
   <buildSpec>
     <buildCommand>
       <name>org.eclipse.jdt.core.javabuilder</name>
