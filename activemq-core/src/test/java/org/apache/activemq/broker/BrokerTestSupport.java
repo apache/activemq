@@ -83,20 +83,20 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected void setUp() throws Exception {
         super.setUp();
         broker = createBroker();
-        setDefaultPolicy(broker);
+        PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(getDefaultPolicy());
+        broker.setDestinationPolicy(policyMap);
         broker.start();
     }
     
-    protected void setDefaultPolicy(BrokerService brokerService) {
-    	PolicyEntry policy = new PolicyEntry();
+    protected PolicyEntry getDefaultPolicy() {
+        PolicyEntry policy = new PolicyEntry();
         policy.setDispatchPolicy(new RoundRobinDispatchPolicy());
         policy.setSubscriptionRecoveryPolicy(new FixedCountSubscriptionRecoveryPolicy());
-        PolicyMap pMap = new PolicyMap();
-        pMap.setDefaultEntry(policy);
-
-        broker.setDestinationPolicy(pMap);
+        return policy;
     }
-
+    
+  
     protected BrokerService createBroker() throws Exception {
         BrokerService broker =  BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false"));
         return  broker;
