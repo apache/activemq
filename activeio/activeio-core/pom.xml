@@ -31,6 +31,19 @@
   <build>
     <plugins>
 
+      <!-- Configure which tests are included/excuded -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*Test.*</include>
+          </includes>
+          <excludes>
+            <exclude>**/MulticastSyncChannelTest.*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
       <!-- generate the attached tests jar -->
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
