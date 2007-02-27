@@ -496,7 +496,7 @@ public class KahaStore implements Store{
 
     
 
-    static private Set<String> getVmLockSet(){
+    static synchronized private Set<String> getVmLockSet(){
         if(lockSet==null){
             Properties properties=System.getProperties();
             synchronized(properties){
