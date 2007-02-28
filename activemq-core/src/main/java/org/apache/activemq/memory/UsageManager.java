@@ -18,7 +18,9 @@
 package org.apache.activemq.memory;
 
 import java.util.Iterator;
+import java.util.List;
 
+import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,7 +37,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 
  * @version $Revision: 1.3 $
  */
-public class UsageManager {
+public class UsageManager  implements Service{
 
     private static final Log log = LogFactory.getLog(UsageManager.class);
     
@@ -55,9 +57,12 @@ public class UsageManager {
     /** True if someone called setSendFailIfNoSpace() on this particular usage manager */
     private boolean sendFailIfNoSpaceExplicitySet;
     private final boolean debug = log.isDebugEnabled();
+    private String name = "";
+    private float usagePortion = 1.0f;
+    private List<UsageManager> children = new CopyOnWriteArrayList<UsageManager>();
 
     public UsageManager() {
-        this(null);
+        this(null,"default");
     }
     
     /**
@@ -68,7 +73,25 @@ public class UsageManager {
      * @param parent
      */
     public UsageManager(UsageManager parent) {
+        this(parent,"default");
+    }
+    
+    public UsageManager(String name) {
+        this(null,name);
+    }
+    
+    public UsageManager(UsageManager parent,String name) {
+        this(parent,name,1.0f);
+    }
+    
+    public UsageManager(UsageManager parent, String name, float portion) {
         this.parent = parent;
+        this.usagePortion=portion;
+        if (parent != null) {
+            this.limit=(long)(parent.limit * portion);
+            this.name= parent.name + ":";
+        }
+        this.name += name;
     }
     
     /**
@@ -90,9 +113,6 @@ public class UsageManager {
         synchronized (usageMutex) {
             for( int i=0; percentUsage >= 100 ; i++) {
                 usageMutex.wait();
-            }
-            for( int i=0; percentUsage > 90 ; i++) {
-                usageMutex.wait(100);
             }
         }
     }
@@ -166,11 +186,14 @@ public class UsageManager {
             throw new IllegalArgumentException("percentUsageMinDelta must be greater or equal to 0");
         }
         int percentUsage;
-        synchronized (usageMutex) {
-            this.limit = limit;
-            percentUsage = caclPercentUsage();
+        synchronized(usageMutex){
+            this.limit=parent!=null?(long)(parent.limit*usagePortion):limit;
+            percentUsage=caclPercentUsage();
         }
         setPercentUsage(percentUsage);
+        for (UsageManager child:children) {
+            child.setLimit(limit);
+        }
     }
     
     /*
@@ -259,8 +282,35 @@ public class UsageManager {
             l.onMemoryUseChanged(this,oldPercentUsage,newPercentUsage);
         }
     }
+    
+    public String getName() {
+        return name;
+    }
 
-    public String toString() {
-        return "UsageManager: percentUsage="+percentUsage+"%, usage="+usage+" limit="+limit+" percentUsageMinDelta="+percentUsageMinDelta+"%";
+    public String toString(){
+       
+        
+        return "UsageManager("+ getName() +") percentUsage="+percentUsage+"%, usage="+usage+" limit="+limit+" percentUsageMinDelta="
+                +percentUsageMinDelta+"%";
+    }
+
+    public void start(){
+        if(parent!=null){
+            parent.addChild(this);
+        }
+    }
+
+    public void stop(){
+        if(parent!=null){
+            parent.removeChild(this);
+        }
+    }
+
+    private void addChild(UsageManager child){
+        children.add(child);
+    }
+
+    private void removeChild(UsageManager child){
+        children.remove(child);
     }
 }
