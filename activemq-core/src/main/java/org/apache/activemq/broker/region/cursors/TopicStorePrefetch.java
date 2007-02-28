@@ -191,7 +191,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
                         batchList.removeFirst();
                     }
                     if(batchList.isEmpty()){
-                        log.warn("Refilling batch - haven't got past first message = " + firstMessageId);
+                        log.debug("Refilling batch - haven't got past first message = " + firstMessageId);
                         fillBatch();
                     }
                 }
