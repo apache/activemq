@@ -120,7 +120,9 @@ public class BrokerService implements Service, Serializable {
     private ObjectName brokerObjectName;
     private TaskRunnerFactory taskRunnerFactory;
     private TaskRunnerFactory persistenceTaskRunnerFactory;
-    private UsageManager memoryManager;
+    private UsageManager usageManager;
+    private UsageManager producerUsageManager;
+    private UsageManager consumerUsageManager;
     private PersistenceAdapter persistenceAdapter;
     private PersistenceAdapterFactory persistenceFactory;
     private DestinationFactory destinationFactory;
@@ -621,18 +623,56 @@ public class BrokerService implements Service, Serializable {
     }
 
     public UsageManager getMemoryManager() {
-        if (memoryManager == null) {
-            memoryManager = new UsageManager();
-            memoryManager.setLimit(1024 * 1024 * 20); // Default to 20 Meg
+        if (usageManager == null) {
+            usageManager = new UsageManager("Main");
+            usageManager.setLimit(1024 * 1024 * 20); // Default to 20 Meg
             // limit
         }
-        return memoryManager;
+        return usageManager;
     }
+       
 
     public void setMemoryManager(UsageManager memoryManager) {
-        this.memoryManager = memoryManager;
+        this.usageManager = memoryManager;
+    }
+    
+    /**
+     * @return the consumerUsageManager
+     */
+    public UsageManager getConsumerUsageManager(){
+        if (consumerUsageManager==null) {
+            consumerUsageManager = new UsageManager(getMemoryManager(),"Consumer",0.5f);
+        }
+        return consumerUsageManager;
     }
 
+    
+    /**
+     * @param consumerUsageManager the consumerUsageManager to set
+     */
+    public void setConsumerUsageManager(UsageManager consumerUsageManager){
+        this.consumerUsageManager=consumerUsageManager;
+    }
+
+    
+    /**
+     * @return the producerUsageManager
+     */
+    public UsageManager getProducerUsageManager(){
+        if (producerUsageManager==null) {
+            producerUsageManager = new UsageManager(getMemoryManager(),"Producer",0.45f);
+        }
+        return producerUsageManager;
+    }
+    
+    /**
+     * @param producerUsageManager the producerUsageManager to set
+     */
+    public void setProducerUsageManager(UsageManager producerUsageManager){
+        this.producerUsageManager=producerUsageManager;
+    }    
+
+   
     public PersistenceAdapter getPersistenceAdapter() throws IOException {
         if (persistenceAdapter == null) {
             persistenceAdapter = createPersistenceAdapter();
@@ -1272,7 +1312,7 @@ public class BrokerService implements Service, Serializable {
     protected Broker createRegionBroker() throws Exception {
         // we must start the persistence adaptor before we can create the region
         // broker
-        getPersistenceAdapter().setUsageManager(getMemoryManager());
+        getPersistenceAdapter().setUsageManager(getProducerUsageManager());
         getPersistenceAdapter().start();
         
         DestinationInterceptor destinationInterceptor = null;
@@ -1284,15 +1324,15 @@ public class BrokerService implements Service, Serializable {
         }
 	RegionBroker regionBroker = null;
 	if (destinationFactory == null) {
-            destinationFactory = new DestinationFactoryImpl(getMemoryManager(), getTaskRunnerFactory(), getPersistenceAdapter());
+            destinationFactory = new DestinationFactoryImpl(getProducerUsageManager(), getTaskRunnerFactory(), getPersistenceAdapter());
         }
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getMemoryManager(),
+            regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getConsumerUsageManager(),
                     destinationFactory, destinationInterceptor);
         }
         else {
-            regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getMemoryManager(), destinationFactory, destinationInterceptor);
+            regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getConsumerUsageManager(), destinationFactory, destinationInterceptor);
         }
         destinationFactory.setRegionBroker(regionBroker);
         
@@ -1597,4 +1637,7 @@ public class BrokerService implements Service, Serializable {
         }
         LOCAL_HOST_NAME = localHostName;
     }
+
+    
+   
 }

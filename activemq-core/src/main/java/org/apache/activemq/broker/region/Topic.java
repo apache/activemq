@@ -74,7 +74,7 @@ public class Topic implements Destination {
 
         this.destination = destination;
         this.store = store; //this could be NULL! (If an advsiory)
-        this.usageManager = new UsageManager(memoryManager);
+        this.usageManager = new UsageManager(memoryManager,destination.toString());
         this.usageManager.setLimit(Long.MAX_VALUE);
         
         // Let the store know what usage manager we are using so that he can flush messages to disk
@@ -321,10 +321,17 @@ public class Topic implements Destination {
 
     public void start() throws Exception {
         this.subscriptionRecoveryPolicy.start();
+        if (usageManager != null) {
+            usageManager.start();
+        }
+        
     }
 
     public void stop() throws Exception {
         this.subscriptionRecoveryPolicy.stop();
+        if (usageManager != null) {
+            usageManager.stop();
+        }
     }
     
     public Message[] browse(){
