@@ -256,6 +256,8 @@
 
 
             <!-- Exclude tests with timing issues in them; they will be fixed in trunk -->
+            <exclude>**/CursorDurableTest.*</exclude>
+            <exclude>**/NetworkReconnectTest.*</exclude>
             <exclude>**/TopicClusterTest.*</exclude>
             <exclude>**/MultiBrokersMultiClientsTest.*</exclude>
             <exclude>**/TwoMulticastDiscoveryBrokerTopicSendReceiveTest.*</exclude>
