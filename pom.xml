@@ -24,7 +24,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>4.1-incubator-SNAPSHOT</version>
+  <version>4.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 
@@ -32,7 +32,7 @@
     <maven>2.0.4</maven>
   </prerequisites>
 
-  <url>http://incubator.apache.org/activemq/</url>
+  <url>http://activemq.apache.org/</url>
   <organization>
     <name>Apache Software Foundation</name>
     <url>http://www.apache.org/</url>
@@ -110,8 +110,8 @@
 
   <distributionManagement>
     <repository>
-      <id>apache.incubating.releases</id>
-      <name>Apache Incubating Release Distribution Repository</name>
+      <id>apache.releases</id>
+      <name>Apache Release Distribution Repository</name>
       <url>${dist-repo-url}</url>
     </repository>
     <snapshotRepository>
@@ -921,7 +921,7 @@
   </reporting>
 
   <properties>
-    <activemq-version>4.1-incubator-SNAPSHOT</activemq-version>
+    <activemq-version>4.1-SNAPSHOT</activemq-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.6.2</ant-version>
@@ -963,8 +963,8 @@
     <xmlpull-version>1.1.3.4d_b4_min</xmlpull-version>
     <xstream-version>1.1.2</xstream-version>
     <xbean-version>2.8</xbean-version>
-    <dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m2-incubating-repository</dist-repo-url>
+    <dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m2-ibiblio-rsync-repository</dist-repo-url>
     <m1-dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m1-snapshot-repository</m1-dist-repo-url>
-    <site-repo-url>scpexe://people.apache.org/www/incubator.apache.org/activemq/maven/</site-repo-url>
+    <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
   </properties>
 </project>
