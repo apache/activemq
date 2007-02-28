@@ -168,6 +168,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
 
     public void clear(){
         pendingCount=0;
+        nonPersistent.clear();
+        for(PendingMessageCursor tsp: storePrefetches){
+            tsp.clear();
+        }
     }
 
     public synchronized boolean hasNext(){
