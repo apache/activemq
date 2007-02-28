@@ -27,7 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * perist pending messages pending message (messages awaiting disptach to a consumer) cursor
+ * perist pendingCount messages pendingCount message (messages awaiting disptach to a consumer) cursor
  * 
  * @version $Revision$
  */
@@ -39,15 +39,15 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
     private String clientId;
     private String subscriberName;
     private Destination regionDestination;
-    boolean empty;
     private MessageId firstMessageId;
     private MessageId lastMessageId;
+    private int pendingCount;
+    private boolean started;
 
     /**
      * @param topic
      * @param clientId
      * @param subscriberName
-     * @throws IOException
      */
     public TopicStorePrefetch(Topic topic,String clientId,String subscriberName){
         this.regionDestination=topic;
@@ -56,48 +56,69 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
         this.subscriberName=subscriberName;
     }
 
-    public synchronized void start() throws Exception{
-        if(batchList.isEmpty()){
+    public synchronized void start(){
+        if(!started){
+            started=true;
+            pendingCount=getStoreSize();
             try{
                 fillBatch();
             }catch(Exception e){
                 log.error("Failed to fill batch",e);
                 throw new RuntimeException(e);
             }
-            empty=batchList.isEmpty();
         }
     }
 
-    public synchronized void stop() throws Exception{
-        store.resetBatching(clientId,subscriberName);
-        gc();
+    public synchronized void stop(){
+        if(started){
+            started=false;
+            store.resetBatching(clientId,subscriberName);
+            gc();
+        }
     }
 
     /**
-     * @return true if there are no pending messages
+     * @return true if there are no pendingCount messages
      */
     public boolean isEmpty(){
-        return empty;
+        return pendingCount <= 0;
     }
 
     public synchronized int size(){
-        try{
-            return store.getMessageCount(clientId,subscriberName);
-        }catch(IOException e){
-            log.error(this+" Failed to get the outstanding message count from the store",e);
-            throw new RuntimeException(e);
-        }
+        return getPendingCount();
     }
 
     public synchronized void addMessageLast(MessageReference node) throws Exception{
         if(node!=null){
-            if(empty){
+            if(isEmpty() && started){
                 firstMessageId=node.getMessageId();
-                empty=false;
             }
             lastMessageId=node.getMessageId();
             node.decrementReferenceCount();
+            pendingCount++;
         }
+    }
+    
+    public void addMessageFirst(MessageReference node) throws Exception{
+        if(node!=null){
+            if(started){
+                firstMessageId=node.getMessageId();
+            }
+            node.decrementReferenceCount();
+            pendingCount++;
+        }
+    }
+    
+    public synchronized void remove(){
+        pendingCount--;
+    }
+    
+    public synchronized void remove(MessageReference node){
+        pendingCount--;
+    }
+    
+    public synchronized void clear(){
+        pendingCount=0;
     }
 
     public synchronized boolean hasNext(){
@@ -106,7 +127,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     public synchronized MessageReference next(){
         Message result=null;
-        if(!empty){
+        if(!isEmpty()){
             if(batchList.isEmpty()){
                 try{
                     fillBatch();
@@ -120,19 +141,12 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
             }
             if(!batchList.isEmpty()){
                 result=batchList.removeFirst();
-                if(firstMessageId!=null){
-                    // Skip messages until we get to the first message.
-                    if(!result.getMessageId().equals(firstMessageId))
-                        result=null;
-                    firstMessageId=null;
-                }else{
-                    if(lastMessageId!=null){
-                        if(result.getMessageId().equals(lastMessageId)){
-                            empty=true;
-                        }
+                if(lastMessageId!=null){
+                    if(result.getMessageId().equals(lastMessageId)){
+                        //pendingCount=0;
                     }
-                    result.setRegionDestination(regionDestination);
                 }
+                result.setRegionDestination(regionDestination);
             }
         }
         return result;
@@ -161,8 +175,47 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     // implementation
     protected synchronized void fillBatch() throws Exception{
-        store.recoverNextMessages(clientId,subscriberName,maxBatchSize,this);
+        if(!isEmpty()){
+            store.recoverNextMessages(clientId,subscriberName,maxBatchSize,this);
+            if(firstMessageId!=null){
+                int pos=0;
+                for(Message msg:batchList){
+                    if(msg.getMessageId().equals(firstMessageId)){
+                        firstMessageId=null;
+                        break;
+                    }
+                    pos++;
+                }
+                if(pos>0){
+                    for(int i=0;i<pos&&!batchList.isEmpty();i++){
+                        batchList.removeFirst();
+                    }
+                    if(batchList.isEmpty()){
+                        log.warn("Refilling batch - haven't got past first message = " + firstMessageId);
+                        fillBatch();
+                    }
+                }
+            }
+        }
     }
+    
+    protected synchronized int getPendingCount(){
+        if(pendingCount <= 0){
+            pendingCount = getStoreSize();
+        }
+        return pendingCount;
+    }
+    
+    protected synchronized int getStoreSize(){
+        try{
+            return store.getMessageCount(clientId,subscriberName);
+        }catch(IOException e){
+            log.error(this+" Failed to get the outstanding message count from the store",e);
+            throw new RuntimeException(e);
+        }
+    }
+    
+    
 
     public synchronized void gc(){
         for(Message msg:batchList){
