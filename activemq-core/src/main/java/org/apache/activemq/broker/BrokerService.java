@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -145,6 +146,7 @@ public class BrokerService implements Service, Serializable {
     private URI vmConnectorURI;
     private PolicyMap destinationPolicy;
     private AtomicBoolean started = new AtomicBoolean(false);
+    private AtomicBoolean stopped = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
     private boolean keepDurableSubsActive=true;
     private boolean useVirtualTopics=true;
@@ -154,9 +156,8 @@ public class BrokerService implements Service, Serializable {
     private Store tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName = false;
-    
+    private CountDownLatch stoppedLatch = new CountDownLatch(1);
 
-   
     /**
      * Adds a new transport connector for the given bind address
      *
@@ -471,33 +472,27 @@ public class BrokerService implements Service, Serializable {
         // to avoid timimg issue with discovery (spinning up a new instance)
         BrokerRegistry.getInstance().unbind(getBrokerName());
         VMTransportFactory.stopped(getBrokerName());
+        stopped.set(true);
+        stoppedLatch.countDown();
+
         log.info("ActiveMQ JMS Message Broker ("+getBrokerName()+", "+brokerId+") stopped");
         stopper.throwFirstException();
     }
 
-	protected void stopAllConnectors(ServiceStopper stopper) {
-		
-		for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = (NetworkConnector) iter.next();
-            unregisterNetworkConnectorMBean(connector);
-            stopper.stop(connector);
+    /**
+     * A helper method to block the caller thread until the broker has been stopped
+     */
+    public void waitUntilStopped() {
+        while (!stopped.get()) {
+            try {
+                stoppedLatch.await();
+            }
+            catch (InterruptedException e) {
+                // ignore
+            }
         }
+    }
 
-        for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = (ProxyConnector) iter.next();
-            stopper.stop(connector);
-        }
-        
-        for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = (JmsConnector) iter.next();
-            stopper.stop(connector);
-        }
-        
-        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = (TransportConnector) iter.next();
-            stopper.stop(connector);
-        }
-	}
 
     // Properties
     // -------------------------------------------------------------------------
@@ -1122,6 +1117,30 @@ public class BrokerService implements Service, Serializable {
             }
         }
     }
+
+    protected void stopAllConnectors(ServiceStopper stopper) {
+
+		for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+            NetworkConnector connector = (NetworkConnector) iter.next();
+            unregisterNetworkConnectorMBean(connector);
+            stopper.stop(connector);
+        }
+
+        for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
+            ProxyConnector connector = (ProxyConnector) iter.next();
+            stopper.stop(connector);
+        }
+
+        for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
+            JmsConnector connector = (JmsConnector) iter.next();
+            stopper.stop(connector);
+        }
+
+        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
+            TransportConnector connector = (TransportConnector) iter.next();
+            stopper.stop(connector);
+        }
+	}
 
     protected TransportConnector registerConnectorMBean(TransportConnector connector) throws IOException  {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
