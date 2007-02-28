@@ -50,6 +50,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
     private Connection connection3;
     private Session consumeSession3;
     private TopicSubscriber consumer3;
+    private final String countProperyName = "count";
 
     /**
      * Set up a durable suscriber test.
@@ -84,9 +85,9 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
     }
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        //KahaPersistenceAdapter adapter=new KahaPersistenceAdapter(new File("target/test-amq-data/durableTest"));
-        //JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
-       // answer.setPersistenceAdapter(adapter);
+        // KahaPersistenceAdapter adapter=new KahaPersistenceAdapter(new File("activemq-data/durableTest"));
+        // JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
+        // answer.setPersistenceAdapter(adapter);
         answer.setDeleteAllMessagesOnStartup(true);
     }
 
@@ -110,6 +111,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
 
             public void run(){
                 try{
+                    int count = 0;
                     for(int loop=0;loop<4;loop++){
                         connection2=createConnection();
                         connection2.start();
@@ -121,12 +123,14 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
                             BytesMessage message=session2.createBytesMessage();
                             message.writeBytes(new byte[MSIZE]);
                             message.setStringProperty("test","test");
+                            message.setIntProperty(countProperyName,count);
                             message.setJMSType("test");
                             producer2.send(consumerDestination2,message);
                             Thread.sleep(50);
-                            if (verbose) {
-                                System.err.println("Sent("+loop+"): "+i);
+                            if(verbose){
+                                System.out.println("Sent("+loop+"): "+i);
                             }
+                            count++;
                         }
                         producer2.close();
                         connection2.stop();
@@ -143,6 +147,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
         consumeSession3=connection3.createSession(false,Session.CLIENT_ACKNOWLEDGE);
         consumer3=consumeSession3.createDurableSubscriber((Topic)consumerDestination2,getName());
         connection3.close();
+        int count =0;
         for(int loop=0;loop<4;++loop){
             connection3=createConnection();
             connection3.setClientID("test");
@@ -152,23 +157,22 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
             Message msg=null;
             int i;
             for(i=0;i<NMSG/4;i++){
-                // System.err.println("Receive...");
                 msg=consumer3.receive(10000);
                 if(msg==null)
                     break;
-                if (verbose) {
-                    System.err.println("Received("+loop+"): "+i);
+                if(verbose) {
+                    System.out.println("Received("+loop+"): "+i + " count = " + msg.getIntProperty(countProperyName));
                 }
+                assertNotNull(msg);
+                assertEquals(msg.getJMSType(),"test");
+                assertEquals(msg.getStringProperty("test"),"test");
+                assertEquals("Messages received out of order",count,msg.getIntProperty(countProperyName));
                 Thread.sleep(500);
                 msg.acknowledge();
+                count++;
             }
             consumer3.close();
             assertEquals("Receiver "+loop,NMSG/4,i);
-            assertNotNull(msg);
-            // assertEquals(((BytesMessage) msg).getText(), "test");
-            assertEquals(msg.getJMSType(),"test");
-            assertEquals(msg.getStringProperty("test"),"test");
-            // connection3.stop();
             connection3.close();
         }
     }
