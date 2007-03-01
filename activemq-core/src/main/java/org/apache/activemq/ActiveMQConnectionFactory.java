@@ -87,6 +87,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean useRetroactiveConsumer;
     private boolean nestedMapAndListEnabled = true;
     JMSStatsImpl factoryStats = new JMSStatsImpl();
+    private boolean alwaysSyncSend;
 
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
             public Thread newThread(Runnable run) {
@@ -425,6 +426,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setUseAsyncSend(boolean useAsyncSend) {
         this.useAsyncSend = useAsyncSend;
     }
+    
+    /**
+     * @return true if always sync send messages
+     */
+    public boolean isAlwaysSyncSend(){
+        return this.alwaysSyncSend;
+    }
+
+    /**
+     * Set true if always require messages to be sync sent
+     * @param alwaysSyncSend
+     */
+    public void setAlwaysSyncSend(boolean alwaysSyncSend){
+        this.alwaysSyncSend=alwaysSyncSend;
+    }
 
     public String getUserName() {
         return userName;
@@ -553,6 +569,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("alwaysSessionAsync", Boolean.toString(isAlwaysSessionAsync()));
         props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
         props.setProperty("statsEnabled",Boolean.toString(isStatsEnabled()));
+        props.setProperty("alwaysSyncSend",Boolean.toString(isAlwaysSyncSend()));
 
     }
 

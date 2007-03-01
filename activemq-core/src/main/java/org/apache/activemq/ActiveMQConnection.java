@@ -132,6 +132,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean optimizeAcknowledge = false;
     private boolean nestedMapAndListEnabled = true;
     private boolean useRetroactiveConsumer;
+    private boolean alwaysSyncSend;
     private int closeTimeout = 15000;
     
     private final Transport transport;
@@ -1301,6 +1302,22 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setUseAsyncSend(boolean useAsyncSend) {
         this.useAsyncSend = useAsyncSend;
     }
+    
+    /**
+     * @return true if always sync send messages
+     */
+    public boolean isAlwaysSyncSend(){
+        return this.alwaysSyncSend;
+    }
+
+    /**
+     * Set true if always require messages to be sync sent
+     * @param alwaysSyncSend
+     */
+    public void setAlwaysSyncSend(boolean alwaysSyncSend){
+        this.alwaysSyncSend=alwaysSyncSend;
+    }
+
 
     /**
      * Cleans up this connection so that it's state is as if the connection was
@@ -1929,8 +1946,5 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     
     public String toString() {
         return "ActiveMQConnection {id="+info.getConnectionId()+",clientId="+info.getClientId()+",started="+started.get()+"}";
-    }
-
-
-    
+    }    
 }
