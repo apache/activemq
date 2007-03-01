@@ -106,6 +106,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 
 	private Runnable periodicCleanupTask;
 	private boolean deleteAllMessages;
+    private boolean syncOnWrite;
 	private File directory = new File(IOHelper.getDefaultDataDirectory() + "/amq");
 
 
@@ -560,12 +561,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
     /**
      * 
      * @param command
-     * @param sync
+     * @param syncHint
      * @return
      * @throws IOException
      */
-    public Location writeCommand(DataStructure command, boolean sync) throws IOException {
-        return asyncDataManager.write(wireFormat.marshal(command), sync);
+    public Location writeCommand(DataStructure command, boolean syncHint) throws IOException {
+        return asyncDataManager.write(wireFormat.marshal(command), (syncHint && syncOnWrite));
     }
 
     private Location writeTraceMessage(String message, boolean sync) throws IOException {
@@ -676,5 +677,15 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 	public void setDirectory(File directory) {
 		this.directory = directory;
 	}
+
+    public boolean isSyncOnWrite(){
+        return this.syncOnWrite;
+    }
+
+    public void setSyncOnWrite(boolean syncOnWrite){
+        this.syncOnWrite=syncOnWrite;
+    }
+    
+
 
 }
