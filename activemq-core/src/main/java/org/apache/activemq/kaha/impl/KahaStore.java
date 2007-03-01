@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.RuntimeStoreException;
@@ -34,7 +35,6 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.DataManagerFacade;
-import org.apache.activemq.kaha.impl.container.ContainerId;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
 import org.apache.activemq.kaha.impl.container.MapContainerImpl;
 import org.apache.activemq.kaha.impl.data.DataManagerImpl;
@@ -218,12 +218,14 @@ public class KahaStore implements Store{
     public void deleteMapContainer(Object id) throws IOException{
         deleteMapContainer(id,DEFAULT_CONTAINER_NAME);
     }
+    
+    public void deleteMapContainer(Object id,String containerName) throws IOException{
+        ContainerId containerId = new ContainerId(id,containerName);
+        deleteMapContainer(containerId);
+    }
 
-    public synchronized void deleteMapContainer(Object id,String containerName) throws IOException{
+    public synchronized void deleteMapContainer(ContainerId containerId) throws IOException{
         initialize();
-        ContainerId containerId=new ContainerId();
-        containerId.setKey(id);
-        containerId.setDataContainerName(containerName);
         MapContainerImpl container=maps.remove(containerId);
         if(container!=null){
             container.clear();
@@ -232,12 +234,12 @@ public class KahaStore implements Store{
         }
     }
 
-    public synchronized Set<Object> getMapContainerIds() throws IOException{
+    public synchronized Set<ContainerId> getMapContainerIds() throws IOException{
         initialize();
-        Set<Object> set = new HashSet<Object>();
+        Set<ContainerId> set = new HashSet<ContainerId>();
         for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {
             ContainerId id = (ContainerId)i.next();
-            set.add(id.getKey());
+            set.add(id);
         }
         return set;
     }
@@ -286,12 +288,14 @@ public class KahaStore implements Store{
     public void deleteListContainer(Object id) throws IOException{
         deleteListContainer(id,DEFAULT_CONTAINER_NAME);
     }
-
+    
     public synchronized void deleteListContainer(Object id,String containerName) throws IOException{
+        ContainerId containerId=new ContainerId(id,containerName);
+        deleteListContainer(containerId);
+    }
+
+    public synchronized void deleteListContainer(ContainerId containerId) throws IOException{
         initialize();
-        ContainerId containerId=new ContainerId();
-        containerId.setKey(id);
-        containerId.setDataContainerName(containerName);
         ListContainerImpl container=lists.remove(containerId);
         if(container!=null){
             listsContainer.removeRoot(container.getIndexManager(),containerId);
@@ -300,12 +304,12 @@ public class KahaStore implements Store{
         }
     }
 
-    public synchronized Set<Object> getListContainerIds() throws IOException{
+    public synchronized Set<ContainerId> getListContainerIds() throws IOException{
         initialize();
-        Set<Object> set = new HashSet<Object>();
+        Set<ContainerId> set = new HashSet<ContainerId>();
         for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
             ContainerId id = (ContainerId)i.next();
-            set.add(id.getKey());
+            set.add(id);
         }
         return set;
     }
@@ -333,7 +337,7 @@ public class KahaStore implements Store{
         	if( isUseAsyncDataManager() ) {
 	        	AsyncDataManager t=new AsyncDataManager();
 	        	t.setDirectory(directory);
-	        	t.setFilePrefix("data-"+name+"-");
+	        	t.setFilePrefix("async-data-"+name+"-");
 	        	t.setMaxFileLength((int) maxDataFileLength);
 	        	t.start();
 	            dm=new DataManagerFacade(t, name);

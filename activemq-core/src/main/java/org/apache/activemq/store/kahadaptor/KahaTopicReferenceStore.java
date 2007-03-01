@@ -39,9 +39,9 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     private Store store;
     protected Map subscriberMessages=new ConcurrentHashMap();
 
-    public KahaTopicReferenceStore(Store store,MapContainer messageContainer,ListContainer ackContainer,
+    public KahaTopicReferenceStore(Store store,KahaReferenceStoreAdapter adapter,MapContainer messageContainer,ListContainer ackContainer,
             MapContainer subsContainer,ActiveMQDestination destination) throws IOException{
-        super(messageContainer,destination);
+        super(adapter,messageContainer,destination);
         this.store=store;
         this.ackContainer=ackContainer;
         subscriberContainer=subsContainer;
@@ -97,18 +97,18 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         return result.data;
     }
 
-    public void addReferenceFileIdsInUse(Set<Integer> rc){
+    public void addReferenceFileIdsInUse(){
         for(StoreEntry entry=ackContainer.getFirst();entry!=null;entry=ackContainer.getNext(entry)){
             TopicSubAck subAck=(TopicSubAck)ackContainer.get(entry);
             if(subAck.getCount()>0){
                 ReferenceRecord rr=(ReferenceRecord)messageContainer.getValue(subAck.getMessageEntry());
-                rc.add(rr.data.getFileId());
+                addInterest(rr);
             }
         }
     }
 
     protected ListContainer addSubscriberMessageContainer(Object key) throws IOException{
-        ListContainer container=store.getListContainer(key,"topic-subs");
+        ListContainer container=store.getListContainer(key,"topic-subs-references");
         Marshaller marshaller=new ConsumerMessageRefMarshaller();
         container.setMarshaller(marshaller);
         TopicSubContainer tsc=new TopicSubContainer(container);
@@ -129,11 +129,15 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
                 if(tsa!=null){
                     if(tsa.decrementCount()<=0){
-                        ackContainer.remove(ref.getAckEntry());
-                        ReferenceRecord rr = messageContainer.get(messageId);
-                        if (rr != null) {
-                        messageContainer.remove(tsa.getMessageEntry());
-                        removeInterest(rr);
+                        StoreEntry entry=ref.getAckEntry();
+                        entry=ackContainer.refresh(entry);
+                        ackContainer.remove(entry);
+                        ReferenceRecord rr=messageContainer.get(messageId);
+                        if(rr!=null){
+                            entry=tsa.getMessageEntry();
+                            entry=messageContainer.refresh(entry);
+                            messageContainer.remove(entry);
+                            removeInterest(rr);
                         }
                     }else{
                         ackContainer.update(ref.getAckEntry(),tsa);
@@ -261,7 +265,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 }
             }
         }
-        store.deleteListContainer(key,"topic-subs");
+        store.deleteListContainer(key,"topic-subs-references");
     }
 
     protected String getSubscriptionKey(String clientId,String subscriberName){

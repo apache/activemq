@@ -45,6 +45,7 @@ public final class IndexManager{
     private long length=0;
     private IndexItem firstFree;
     private IndexItem lastFree;
+    private boolean dirty;
 
     public IndexManager(File directory,String name,String mode,DataManager redoLog) throws IOException{
         this.directory=directory;
@@ -76,10 +77,12 @@ public final class IndexManager{
             lastFree.setNextItem(item.getOffset());
         }
         writer.updateIndexes(item);
+        dirty=true;
     }
 
     public synchronized void storeIndex(IndexItem index) throws IOException{
         writer.storeItem(index);
+        dirty=true;
     }
 
     public synchronized void updateIndexes(IndexItem index) throws IOException{
@@ -88,10 +91,12 @@ public final class IndexManager{
         }catch(Throwable e){
             log.error(name+" error updating indexes ",e);
         }
+        dirty=true;
     }
 
     public synchronized void redo(final RedoStoreIndexItem redo) throws IOException{
         writer.redoStoreItem(redo);
+        dirty=true;
     }
 
     public synchronized IndexItem createNewIndex() throws IOException{
@@ -113,8 +118,9 @@ public final class IndexManager{
     }
 
     public synchronized void force() throws IOException{
-        if(indexFile!=null){
+        if(indexFile!=null && dirty){
             indexFile.getFD().sync();
+            dirty=false;
         }
     }
 

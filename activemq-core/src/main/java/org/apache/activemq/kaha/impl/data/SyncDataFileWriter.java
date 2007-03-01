@@ -96,9 +96,10 @@ final public class SyncDataFileWriter {
 
 	public synchronized void force(DataFile dataFile) throws IOException {
 		// If our dirty marker was set.. then we need to sync
-		if( dataFile.getWriterData()!=null ) {
+		if( dataFile.getWriterData()!=null && dataFile.isDirty()) {
 			dataFile.getRandomAccessFile().getFD().sync();
 	        dataFile.setWriterData(null);
+            dataFile.setDirty(false);
 		}
 	}
 

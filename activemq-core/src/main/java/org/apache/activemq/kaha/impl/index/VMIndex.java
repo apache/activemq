@@ -14,10 +14,14 @@
 
 package org.apache.activemq.kaha.impl.index;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreEntry;
+import org.apache.activemq.kaha.impl.container.MapContainerImpl;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Index implementation using a HashMap
@@ -25,9 +29,13 @@ import org.apache.activemq.kaha.StoreEntry;
  * @version $Revision: 1.2 $
  */
 public class VMIndex implements Index{
-
+    private static final Log log=LogFactory.getLog(VMIndex.class);
+    private IndexManager indexManager;
     private Map<Object,StoreEntry> map=new HashMap<Object,StoreEntry>();
 
+    public VMIndex(IndexManager manager) {
+        this.indexManager= manager;
+    }
     /**
      * 
      * @see org.apache.activemq.kaha.impl.index.Index#clear()
@@ -47,10 +55,20 @@ public class VMIndex implements Index{
 
     /**
      * @param key
+     * @return store entry
      * @see org.apache.activemq.kaha.impl.index.Index#removeKey(java.lang.Object)
      */
     public StoreEntry remove(Object key){
-       return  map.remove(key);
+        StoreEntry result =   map.remove(key);
+        if (result != null) {
+            try{
+                result=indexManager.refreshIndex((IndexItem)result);
+            }catch(IOException e){
+                log.error("Failed to refresh entry",e);
+               throw new RuntimeException("Failed to refresh entry");
+            }
+        }
+        return result;
     }
 
     /**
@@ -68,7 +86,16 @@ public class VMIndex implements Index{
      * @return the entry
      */
     public StoreEntry get(Object key){
-        return map.get(key);
+        StoreEntry result =  map.get(key);
+        if (result != null) {
+            try{
+                result=indexManager.refreshIndex((IndexItem)result);
+            }catch(IOException e){
+                log.error("Failed to refresh entry",e);
+               throw new RuntimeException("Failed to refresh entry");
+            }
+        }
+        return result;
     }
 
     /**

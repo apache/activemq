@@ -31,9 +31,11 @@ public class KahaReferenceStore implements ReferenceStore{
 
     protected final ActiveMQDestination destination;
     protected final MapContainer<MessageId,ReferenceRecord> messageContainer;
+    protected KahaReferenceStoreAdapter adapter;
     protected StoreEntry batchEntry=null;
 
-    public KahaReferenceStore(MapContainer container,ActiveMQDestination destination) throws IOException{
+    public KahaReferenceStore(KahaReferenceStoreAdapter adapter,MapContainer container,ActiveMQDestination destination) throws IOException{
+        this.adapter = adapter;
         this.messageContainer=container;
         this.destination=destination;
     }
@@ -109,10 +111,10 @@ public class KahaReferenceStore implements ReferenceStore{
         return result.data;
     }
 
-    public void addReferenceFileIdsInUse(Set<Integer> rc){
+    public void addReferenceFileIdsInUse(){
         for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
             ReferenceRecord msg=(ReferenceRecord)messageContainer.getValue(entry);
-            rc.add(msg.data.getFileId());
+            addInterest(msg);
         }
     }
 
@@ -172,10 +174,10 @@ public class KahaReferenceStore implements ReferenceStore{
     }
     
     void removeInterest(ReferenceRecord rr) {
-        
+        adapter.removeInterestInRecordFile(rr.data.getFileId());
     }
     
     void addInterest(ReferenceRecord rr) {
-        
+        adapter.addInterestInRecordFile(rr.data.getFileId());
     }
 }

@@ -86,8 +86,12 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                 TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
                 if(tsa!=null){
                     if(tsa.decrementCount()<=0){
-                        ackContainer.remove(ref.getAckEntry());
-                        messageContainer.remove(tsa.getMessageEntry());
+                        StoreEntry entry = ref.getAckEntry();
+                        entry = ackContainer.refresh(entry);
+                        ackContainer.remove(entry);
+                        entry = tsa.getMessageEntry();
+                        entry =messageContainer.refresh(entry);
+                        messageContainer.remove(entry);
                     }else{
                         ackContainer.update(ref.getAckEntry(),tsa);
                     }

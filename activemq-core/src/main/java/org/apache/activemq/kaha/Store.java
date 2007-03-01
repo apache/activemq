@@ -138,6 +138,13 @@ public interface Store{
      * @throws IOException
      */
     public void deleteMapContainer(Object id,String containerName) throws IOException;
+    
+    /**
+     * Delete Map container
+     * @param id
+     * @throws IOException
+     */
+    public void deleteMapContainer(ContainerId id) throws IOException;
 
     /**
      * Get a Set of call MapContainer Ids
@@ -145,7 +152,7 @@ public interface Store{
      * @return the set of ids
      * @throws IOException
      */
-    public Set getMapContainerIds() throws IOException;
+    public Set<ContainerId> getMapContainerIds() throws IOException;
 
     /**
      * Checks if a ListContainer exists in the default container
@@ -213,6 +220,12 @@ public interface Store{
      */
     public void deleteListContainer(Object id,String containerName) throws IOException;
 
+    /**
+     * delete a list container
+     * @param id
+     * @throws IOException
+     */
+    public void deleteListContainer(ContainerId id) throws IOException;
 
     /**
      * Get a Set of call ListContainer Ids
@@ -220,7 +233,7 @@ public interface Store{
      * @return the set of ids
      * @throws IOException
      */
-    public Set getListContainerIds() throws IOException;
+    public Set<ContainerId> getListContainerIds() throws IOException;
     
     /**
      * @return the maxDataFileLength

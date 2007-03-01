@@ -65,6 +65,10 @@ public  class DiskIndexLinkedList implements IndexLinkedList{
     public synchronized IndexItem getLast(){
         if(size==0)
             return null;
+        if(last!=null){
+            last.next=null;
+            last.setNextItem(IndexItem.POSITION_NOT_SET);
+        }
         return last;
     }
 
@@ -323,6 +327,7 @@ public  class DiskIndexLinkedList implements IndexLinkedList{
             return;
         if(e==last||e.equals(last)){
             if(size>1){
+                last = (IndexItem)refreshEntry(last);
                 last=getPrevEntry(last);
             }else{
                 last=null;
