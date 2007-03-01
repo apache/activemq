@@ -1594,11 +1594,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 			if(this.debug){
 				log.debug("Sending message: "+msg);
 			}
-			if(!msg.isPersistent()||connection.isUseAsyncSend()||txid!=null){
-				this.connection.asyncSendPacket(msg);
-			}else{
-				this.connection.syncSendPacket(msg);
-			}
+			if(!connection.isAlwaysSyncSend()&&(!msg.isPersistent()||connection.isUseAsyncSend()||txid!=null)){
+                this.connection.asyncSendPacket(msg);
+            }else{
+                this.connection.syncSendPacket(msg);
+            }
 		}
 	}
 
