@@ -1332,6 +1332,9 @@ public class BrokerService implements Service, Serializable {
         // we must start the persistence adaptor before we can create the region
         // broker
         getPersistenceAdapter().setUsageManager(getProducerUsageManager());
+        if(this.deleteAllMessagesOnStartup){
+            getPersistenceAdapter().deleteAllMessages();
+        }
         getPersistenceAdapter().start();
         
         DestinationInterceptor destinationInterceptor = null;
