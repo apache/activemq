@@ -922,6 +922,9 @@
             <link>http://jakarta.apache.org/regexp/apidocs/</link>
             <link>http://jakarta.apache.org/velocity/api/</link>
           </links>
+          <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
+          <linksource>true</linksource>
+          <maxmemory>900m</maxmemory>
         </configuration>
       </plugin>
     </plugins>
