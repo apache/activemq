@@ -57,7 +57,7 @@ public final class DataManagerImpl implements DataManager {
     
     Marshaller redoMarshaller = RedoStoreIndexItem.MARSHALLER;
     private String dataFilePrefix;
-
+   
     public DataManagerImpl(File dir, final String name){
         this.dir=dir;
         this.name=name;

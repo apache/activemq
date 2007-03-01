@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.RuntimeStoreException;
@@ -69,7 +70,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                     throw new RuntimeException(e);
                 }
             }else{
-                this.index=new VMIndex();
+                this.index=new VMIndex(indexManager);
             }
         }
         index.setKeyMarshaller(keyMarshaller);
@@ -505,7 +506,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                 StoreLocation data=dataManager.storeDataItem(valueMarshaller,value);
                 index.setValueData(data);
             }
-            IndexItem prev=indexList.getLast();
+            IndexItem prev=indexList.getLast();           
             prev=prev!=null?prev:indexList.getRoot();
             IndexItem next=indexList.getNextEntry(prev);
             prev.setNextItem(index.getOffset());

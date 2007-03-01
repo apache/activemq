@@ -100,16 +100,7 @@ public class StoreTest extends TestCase{
         assertFalse(store.doesMapContainerExist(containerId));
     }
 
-    /*
-     * Test method for 'org.apache.activemq.kaha.Store.getMapContainerIds()'
-     */
-    public void testGetMapContainerIds()throws Exception {
-        String containerId = "test";
-        MapContainer container = store.getMapContainer(containerId);
-        Set set = store.getMapContainerIds();
-        assertTrue(set.contains(containerId));
-    }
-
+    
     
 
     /*
@@ -139,16 +130,7 @@ public class StoreTest extends TestCase{
         assertFalse(store.doesListContainerExist(containerId));
     }
 
-    /*
-     * Test method for 'org.apache.activemq.kaha.Store.getListContainerIds()'
-     */
-    public void testGetListContainerIds()throws Exception {
-        String containerId = "test";
-        ListContainer container = store.getListContainer(containerId);
-        Set set = store.getListContainerIds();
-        assertTrue(set.contains(containerId));
-    }
-    
+        
     public void testBasicAllocations() throws Exception{
         Map testMap = new HashMap();
         int count = 1000;

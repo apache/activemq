@@ -34,6 +34,7 @@ class DataFile{
     private RandomAccessFile randomAcessFile;
     private Object writerData;
     long length=0;
+    private boolean dirty;
 
     DataFile(File file,int number){
         this.file=file;
@@ -107,6 +108,15 @@ class DataFile{
 	 */
 	public synchronized void setWriterData(Object writerData) {
 		this.writerData = writerData;
+        dirty=true;
 	}
+    
+    public synchronized boolean isDirty() {
+        return dirty;
+    }
+    
+    public synchronized void setDirty(boolean value) {
+        this.dirty = value;
+    }
 
 }

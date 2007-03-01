@@ -37,10 +37,23 @@ public class MapContainerTest extends TestCase{
     protected MapContainer container;
     protected Map testMap;
     protected static final int COUNT = 10;
+    
+    public void testBasicAllocations() throws Exception{
+        String key = "key";
+        Object value = testMap;
+        MapContainer test = store.getMapContainer("test","test");
+        test.put(key,value);
+        store.close();
+        store = getStore();
+        assertTrue(store.getMapContainerIds().isEmpty()==false);
+        test = store.getMapContainer("test","test");
+        assertEquals(value,test.get(key));
+        
+    }
     /*
      * Test method for 'org.apache.activemq.kaha.MapContainer.size()'
      */
-    public void XtestSize() throws Exception {
+    public void testSize() throws Exception {
         container.putAll(testMap);
         assertTrue(container.size()==testMap.size());
     }
@@ -48,14 +61,14 @@ public class MapContainerTest extends TestCase{
     /*
      * Test method for 'org.apache.activemq.kaha.MapContainer.isEmpty()'
      */
-    public void XtestIsEmpty() throws Exception {
+    public void testIsEmpty() throws Exception {
        assertTrue(container.isEmpty());
     }
 
     /*
      * Test method for 'org.apache.activemq.kaha.MapContainer.clear()'
      */
-    public void XtestClear() throws Exception {
+    public void testClear() throws Exception {
         container.putAll(testMap);
         assertTrue(container.size()==testMap.size());
         container.clear();

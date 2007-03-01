@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.kaha.impl.container;
+package org.apache.activemq.kaha;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -31,6 +31,15 @@ public class ContainerId implements Externalizable{
     private Object key;
     private String dataContainerName;
 
+    public ContainerId() {
+    }
+    
+    public ContainerId(Object key,String dataContainerName) {
+        this.key=key;
+        this.dataContainerName=dataContainerName;
+    }
+    
+    
     /**
      * @return Returns the dataContainerPrefix.
      */
@@ -39,10 +48,10 @@ public class ContainerId implements Externalizable{
     }
 
     /**
-     * @param dataContainerPrefix The dataContainerPrefix to set.
+     * @param dataContainerName The dataContainerPrefix to set.
      */
-    public void setDataContainerName(String dataContainerPrefix){
-        this.dataContainerName=dataContainerPrefix;
+    public void setDataContainerName(String dataContainerName){
+        this.dataContainerName=dataContainerName;
     }
 
     /**

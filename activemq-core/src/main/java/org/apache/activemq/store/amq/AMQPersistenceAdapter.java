@@ -84,7 +84,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
     private final ConcurrentHashMap<ActiveMQTopic, AMQMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, AMQMessageStore>();
     
     private AsyncDataManager asyncDataManager;
-    private ReferenceStoreAdapter referenceStoreAdapter;
+    private KahaReferenceStoreAdapter referenceStoreAdapter;
 	private TaskRunnerFactory taskRunnerFactory; 
     private WireFormat wireFormat = new OpenWireFormat();
 
@@ -106,7 +106,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 
 	private Runnable periodicCleanupTask;
 	private boolean deleteAllMessages;
-	private File directory = new File(IOHelper.getDefaultDataDirectory() + "/quick");
+	private File directory = new File(IOHelper.getDefaultDataDirectory() + "/amq");
 
 
     
@@ -242,7 +242,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
             checkpointTask.wakeup();
             
             if (sync) {
-                log.debug("Waitng for checkpoint to complete.");
+                if(log.isDebugEnabled()){
+                    log.debug("Waitng for checkpoint to complete.");
+                }
                 latch.await();
             }
         }
@@ -264,7 +266,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
         }        
         try {
 
-            log.debug("Checkpoint started.");
+            if(log.isDebugEnabled()){
+                log.debug("Checkpoint started.");
+            }
+            referenceStoreAdapter.sync();
             Location newMark = null;
 
             Iterator<AMQMessageStore> iterator = queues.values().iterator();
@@ -287,7 +292,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 
             try {
                 if (newMark != null) {
-                    log.debug("Marking journal at: " + newMark);
+                    if(log.isDebugEnabled()){
+                        log.debug("Marking journal at: " + newMark);
+                    }
                     asyncDataManager.setMark(newMark, false);
                     writeTraceMessage("CHECKPOINT "+new Date(), true);
                 }
@@ -296,17 +303,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
                 log.error("Failed to mark the Journal: " + e, e);
             }
     
-//                if (referenceStoreAdapter instanceof JDBCReferenceStoreAdapter) {
-//                    // We may be check pointing more often than the checkpointInterval if under high use
-//                    // But we don't want to clean up the db that often.
-//                    long now = System.currentTimeMillis();
-//                    if( now > lastCleanup+checkpointInterval ) {
-//                        lastCleanup = now;
-//                        ((JDBCReferenceStoreAdapter) referenceStoreAdapter).cleanup();
-//                    }
-//                }
-
-            log.debug("Checkpoint done.");
+            if(log.isDebugEnabled()){
+                log.debug("Checkpoint done.");
+            }
+        }
+        catch(IOException e) {
+            log.error("Failed to sync reference store",e);
         }
         finally {
             latch.countDown();
@@ -603,7 +605,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 		return manager;
 	}
     
-    protected ReferenceStoreAdapter createReferenceStoreAdapter() throws IOException {
+    protected KahaReferenceStoreAdapter createReferenceStoreAdapter() throws IOException {
     	KahaReferenceStoreAdapter adaptor = new KahaReferenceStoreAdapter(directory); 
 		return adaptor;
 	}
@@ -627,9 +629,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 	public ReferenceStoreAdapter getReferenceStoreAdapter() {
 		return referenceStoreAdapter;
 	}
-	public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter) {
-		this.referenceStoreAdapter = referenceStoreAdapter;
-	}
+	
 
 	public TaskRunnerFactory getTaskRunnerFactory() {
 		return taskRunnerFactory;
