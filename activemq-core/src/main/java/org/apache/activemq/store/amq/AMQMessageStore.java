@@ -68,8 +68,9 @@ public class AMQMessageStore implements MessageStore{
     protected HashSet<Location> inFlightTxLocations=new HashSet<Location>();
     protected final TaskRunner asyncWriteTask;
     protected CountDownLatch flushLatch;
+    private final boolean debug=log.isDebugEnabled();
     private final AtomicReference<Location> mark=new AtomicReference<Location>();
-
+    
     public AMQMessageStore(AMQPersistenceAdapter adapter,ReferenceStore referenceStore,ActiveMQDestination destination){
         this.peristenceAdapter=adapter;
         this.transactionStore=adapter.getTransactionStore();
@@ -95,7 +96,7 @@ public class AMQMessageStore implements MessageStore{
      */
     public void addMessage(ConnectionContext context,final Message message) throws IOException{
         final MessageId id=message.getMessageId();
-        final boolean debug=log.isDebugEnabled();
+        
         final Location location=peristenceAdapter.writeCommand(message,message.isResponseRequired());
         if(!context.isInTransaction()){
             if(debug)
@@ -168,7 +169,6 @@ public class AMQMessageStore implements MessageStore{
     /**
      */
     public void removeMessage(ConnectionContext context,final MessageAck ack) throws IOException{
-        final boolean debug=log.isDebugEnabled();
         JournalQueueAck remove=new JournalQueueAck();
         remove.setDestination(destination);
         remove.setMessageAck(ack);
@@ -450,6 +450,7 @@ public class AMQMessageStore implements MessageStore{
     }
 
     public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+        /*
         RecoveryListenerAdapter recoveryListener=new RecoveryListenerAdapter(this,listener);
         if(referenceStore.supportsExternalBatchControl()){
             synchronized(this){
@@ -469,6 +470,13 @@ public class AMQMessageStore implements MessageStore{
                 }
             }
         }else{
+            flush();
+            referenceStore.recoverNextMessages(maxReturned,recoveryListener);
+        }
+        */
+        RecoveryListenerAdapter recoveryListener=new RecoveryListenerAdapter(this,listener);
+        referenceStore.recoverNextMessages(maxReturned,recoveryListener);
+        if(recoveryListener.size()==0&&recoveryListener.hasSpace()){
             flush();
             referenceStore.recoverNextMessages(maxReturned,recoveryListener);
         }

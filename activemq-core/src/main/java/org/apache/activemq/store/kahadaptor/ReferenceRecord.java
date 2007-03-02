@@ -18,8 +18,8 @@ import org.apache.activemq.store.ReferenceStore.ReferenceData;
 
 public class ReferenceRecord{
 
-    public String messageId;
-    public ReferenceData data;
+    private String messageId;
+    private ReferenceData data;
 
     public ReferenceRecord(){
     }
@@ -27,5 +27,37 @@ public class ReferenceRecord{
     public ReferenceRecord(String messageId,ReferenceData data){
         this.messageId=messageId;
         this.data=data;
+    }
+
+    
+    /**
+     * @return the data
+     */
+    public ReferenceData getData(){
+        return this.data;
+    }
+
+    
+    /**
+     * @param data the data to set
+     */
+    public void setData(ReferenceData data){
+        this.data=data;
+    }
+
+    
+    /**
+     * @return the messageId
+     */
+    public String getMessageId(){
+        return this.messageId;
+    }
+
+    
+    /**
+     * @param messageId the messageId to set
+     */
+    public void setMessageId(String messageId){
+        this.messageId=messageId;
     }
 }
