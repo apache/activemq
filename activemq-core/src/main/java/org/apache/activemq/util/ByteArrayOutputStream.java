@@ -31,7 +31,7 @@ public class ByteArrayOutputStream extends OutputStream {
     int size;
 
     public ByteArrayOutputStream() {
-        this(512);
+        this(1028);
     }
     public ByteArrayOutputStream(int capacity) {
         buffer = new byte[capacity];
