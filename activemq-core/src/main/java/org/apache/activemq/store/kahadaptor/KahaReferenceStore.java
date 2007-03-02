@@ -32,7 +32,7 @@ public class KahaReferenceStore implements ReferenceStore{
     protected final ActiveMQDestination destination;
     protected final MapContainer<MessageId,ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
-    protected StoreEntry batchEntry=null;
+    private StoreEntry batchEntry=null;
 
     public KahaReferenceStore(KahaReferenceStoreAdapter adapter,MapContainer container,ActiveMQDestination destination) throws IOException{
         this.adapter = adapter;
@@ -47,7 +47,7 @@ public class KahaReferenceStore implements ReferenceStore{
     }
 
     protected MessageId getMessageId(Object object){
-        return new MessageId(((ReferenceRecord)object).messageId);
+        return new MessageId(((ReferenceRecord)object).getMessageId());
     }
 
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
@@ -60,13 +60,13 @@ public class KahaReferenceStore implements ReferenceStore{
 
     protected void recover(MessageRecoveryListener listener,Object msg) throws Exception{
         ReferenceRecord record=(ReferenceRecord)msg;
-        listener.recoverMessageReference(new MessageId(record.messageId));
+        listener.recoverMessageReference(new MessageId(record.getMessageId()));
     }
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception{
         for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
             ReferenceRecord record=messageContainer.getValue(entry);
-            recover(listener,new MessageId(record.messageId));
+            recover(listener,new MessageId(record.getMessageId()));
         }
         listener.finished();
     }
@@ -78,9 +78,6 @@ public class KahaReferenceStore implements ReferenceStore{
         }else{
             entry=messageContainer.refresh(entry);
             entry=messageContainer.getNext(entry);
-            if (entry==null) {
-                batchEntry=null;
-            }
         }
         if(entry!=null){
             int count=0;
@@ -108,7 +105,7 @@ public class KahaReferenceStore implements ReferenceStore{
         ReferenceRecord result=messageContainer.get(identity);
         if(result==null)
             return null;
-        return result.data;
+        return result.getData();
     }
 
     public void addReferenceFileIdsInUse(){
@@ -123,10 +120,12 @@ public class KahaReferenceStore implements ReferenceStore{
     }
 
     public synchronized void removeMessage(MessageId msgId) throws IOException{
-        ReferenceRecord rr = messageContainer.remove(msgId);
-        removeInterest(rr);
-        if(messageContainer.isEmpty()){
-            resetBatching();
+        ReferenceRecord rr=messageContainer.remove(msgId);
+        if(rr!=null){
+            removeInterest(rr);
+            if(messageContainer.isEmpty()){
+                resetBatching();
+            }
         }
     }
 
@@ -157,27 +156,23 @@ public class KahaReferenceStore implements ReferenceStore{
         return true;
     }
 
-    /**
-     * @param startAfter
-     * @see org.apache.activemq.store.ReferenceStore#setBatch(org.apache.activemq.command.MessageId)
-     */
-    public void setBatch(MessageId startAfter){
-        resetBatching();
-        if (startAfter != null) {
-            batchEntry = messageContainer.getEntry(startAfter);
-        }
-        
-    }
-
+    
     public boolean supportsExternalBatchControl(){
         return true;
     }
     
     void removeInterest(ReferenceRecord rr) {
-        adapter.removeInterestInRecordFile(rr.data.getFileId());
+        adapter.removeInterestInRecordFile(rr.getData().getFileId());
     }
     
     void addInterest(ReferenceRecord rr) {
-        adapter.addInterestInRecordFile(rr.data.getFileId());
+        adapter.addInterestInRecordFile(rr.getData().getFileId());
+    }
+
+    /**
+     * @param startAfter
+     * @see org.apache.activemq.store.ReferenceStore#setBatch(org.apache.activemq.command.MessageId)
+     */
+    public void setBatch(MessageId startAfter){        
     }
 }

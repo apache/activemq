@@ -51,9 +51,7 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener{
     public void recoverMessageReference(MessageId ref) throws Exception{
         Message message=this.store.getMessage(ref);
         if(message!=null){
-            listener.recoverMessage(message);
-            count++;
-            lastRecovered=ref;
+            recoverMessage(message);
         }else{
             log.error("Message id "+ref+" could not be recovered from the data store!");
         }

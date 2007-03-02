@@ -53,7 +53,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     }
 
     protected MessageId getMessageId(Object object){
-        return new MessageId(((ReferenceRecord)object).messageId);
+        return new MessageId(((ReferenceRecord)object).getMessageId());
     }
 
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
@@ -66,7 +66,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
 
     protected void recover(MessageRecoveryListener listener,Object msg) throws Exception{
         ReferenceRecord record=(ReferenceRecord)msg;
-        listener.recoverMessageReference(new MessageId(record.messageId));
+        listener.recoverMessageReference(new MessageId(record.getMessageId()));
     }
 
     public void addMessageReference(ConnectionContext context,MessageId messageId,ReferenceData data)
@@ -94,7 +94,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         ReferenceRecord result=messageContainer.get(identity);
         if(result==null)
             return null;
-        return result.data;
+        return result.getData();
     }
 
     public void addReferenceFileIdsInUse(){

@@ -24,11 +24,12 @@ public class ReferenceRecordMarshaller implements Marshaller<ReferenceRecord>{
 
     public ReferenceRecord readPayload(DataInput dataIn) throws IOException{
         ReferenceRecord rr=new ReferenceRecord();
-        rr.messageId=dataIn.readUTF();
-        rr.data=new ReferenceData();
-        rr.data.setFileId(dataIn.readInt());
-        rr.data.setOffset(dataIn.readInt());
-        rr.data.setExpiration(dataIn.readLong());
+        rr.setMessageId(dataIn.readUTF());
+        ReferenceData referenceData = new ReferenceData();
+        referenceData.setFileId(dataIn.readInt());
+        referenceData.setOffset(dataIn.readInt());
+        referenceData.setExpiration(dataIn.readLong());
+        rr.setData(referenceData);
         return rr;
     }
 
@@ -39,9 +40,9 @@ public class ReferenceRecordMarshaller implements Marshaller<ReferenceRecord>{
      * @see org.apache.activemq.kaha.Marshaller#writePayload(java.lang.Object, java.io.DataOutput)
      */
     public void writePayload(ReferenceRecord rr,DataOutput dataOut) throws IOException{
-        dataOut.writeUTF(rr.messageId);
-        dataOut.writeInt(rr.data.getFileId());
-        dataOut.writeInt(rr.data.getOffset());
-        dataOut.writeLong(rr.data.getExpiration());
+        dataOut.writeUTF(rr.getMessageId());
+        dataOut.writeInt(rr.getData().getFileId());
+        dataOut.writeInt(rr.getData().getOffset());
+        dataOut.writeLong(rr.getData().getExpiration());
     }
 }
