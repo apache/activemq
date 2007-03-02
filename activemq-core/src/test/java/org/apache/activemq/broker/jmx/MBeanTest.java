@@ -297,6 +297,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setUseJmx(true);
+        answer.setEnableStatistics(true);
         answer.setPersistent(false);
         answer.addConnector(bindAddress);
         return answer;
