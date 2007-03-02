@@ -594,7 +594,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 
 
     public String toString(){
-        return "JournalPersistenceAdapator(" + referenceStoreAdapter + ")";
+        return "AMQPersistenceAdapter(" + directory + ")";
     }
 
     ///////////////////////////////////////////////////////////////////
