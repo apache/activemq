@@ -256,6 +256,7 @@
 
 
             <!-- Exclude tests with timing issues in them; they will be fixed in trunk -->
+            <exclude>**/ReliableReconnectTest.*</exclude>
             <exclude>**/JMSConsumerTest.*</exclude>
             <exclude>**/CursorDurableTest.*</exclude>
             <exclude>**/NetworkReconnectTest.*</exclude>
