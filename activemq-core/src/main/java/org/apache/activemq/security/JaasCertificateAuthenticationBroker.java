@@ -100,7 +100,10 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter {
                         dnName, subject, (X509Certificate[])info.getTransportContext());
                     context.setSecurityContext(s);
                 } catch (Exception e) {
-                    throw new SecurityException("User name or password is invalid: " + e.getMessage(), e);
+                    // Java 5 only: throw new SecurityException("User name or password is invalid: " + e.getMessage(), e);
+                    SecurityException s = new SecurityException("User name or password is invalid: " + e.getMessage());
+					s.initCause(e);
+					throw s;
                 }
             } finally {
                 Thread.currentThread().setContextClassLoader(original);
