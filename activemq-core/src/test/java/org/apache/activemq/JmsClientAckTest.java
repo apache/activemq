@@ -56,7 +56,7 @@ public class JmsClientAckTest extends TestSupport {
     public void testAckedMessageAreConsumed() throws JMSException {
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("test");
+        Queue queue = session.createQueue(getQueueName());
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Hello"));
 
@@ -86,7 +86,7 @@ public class JmsClientAckTest extends TestSupport {
     public void testLastMessageAcked() throws JMSException {
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("test");
+        Queue queue = session.createQueue(getQueueName());
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Hello"));
         producer.send(session.createTextMessage("Hello2"));
@@ -122,7 +122,7 @@ public class JmsClientAckTest extends TestSupport {
     public void testUnAckedMessageAreNotConsumedOnSessionClose() throws JMSException {
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("test");
+        Queue queue = session.createQueue(getQueueName());
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Hello"));
 
@@ -144,4 +144,9 @@ public class JmsClientAckTest extends TestSupport {
         
         session.close();
     }
+
+    protected String getQueueName() {
+        return getClass().getName() + "." + getName();
+    }
+
 }
