@@ -17,32 +17,33 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import java.io.File;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StorePendingQueueMessageStoragePolicy;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.3 $
  */
-public class KahaQueueStoreTest extends CursorQueueStoreTest{
+public class AMQStoreQueueStoreTest extends CursorQueueStoreTest{
     
-    protected static final Log log = LogFactory.getLog(KahaQueueStoreTest.class);
+    protected static final Log log = LogFactory.getLog(AMQStoreQueueStoreTest.class);
 
     
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("target/test-amq-data/durableTest"));
+        PersistenceAdapter adaptor = new AMQPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
         PolicyEntry policy = new PolicyEntry();
         policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         answer.setDestinationPolicy(pMap);
-        answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.addConnector(bindAddress);
+       
     }
 }

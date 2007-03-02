@@ -139,10 +139,12 @@ public abstract class CursorSupport extends TestCase{
                System.err.println("BAD MATCH AT POS " + i);
                System.err.println(sent);
                System.err.println(consumed);
+               /*
                System.err.println("\n\n\n\n\n");
                for (int j = 0; j < consumerList.size(); j++) {
                    System.err.println(consumerList.get(j));
                }
+               */
             }
             assertEquals("This should be the same at pos " + i + " in the list",sent.getJMSMessageID(),consumed.getJMSMessageID());
         }       

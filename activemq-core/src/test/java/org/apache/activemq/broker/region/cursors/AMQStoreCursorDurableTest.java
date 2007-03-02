@@ -17,24 +17,24 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import java.io.File;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.3 $
  */
-public class KahaCursorDurableTest extends CursorDurableTest{
+public class AMQStoreCursorDurableTest extends CursorDurableTest{
     
-    protected static final Log log = LogFactory.getLog(KahaCursorDurableTest.class);
+    protected static final Log log = LogFactory.getLog(AMQStoreCursorDurableTest.class);
 
     
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("target/test-amq-data/durableTest"));
+        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.addConnector(bindAddress);
+       
     }
 }
