@@ -19,6 +19,7 @@ package org.apache.activemq.broker.policy;
 
 import org.apache.activemq.broker.QueueSubscriptionTest;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.FixedCountSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
@@ -34,7 +35,7 @@ public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
 
         PolicyEntry policy = new PolicyEntry();
         policy.setDispatchPolicy(new SimpleDispatchPolicy());
-
+        policy.setSubscriptionRecoveryPolicy(new FixedCountSubscriptionRecoveryPolicy());
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
 
