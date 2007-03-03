@@ -155,11 +155,11 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void send(ConnectionContext context, Message message) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         throw new BrokerStoppedException(this.message);
     }
 

@@ -31,7 +31,9 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
@@ -366,46 +368,56 @@ public class RegionBroker implements Broker {
         topicRegion.removeSubscription(context, info);
     }
 
-    public void send(ConnectionContext context,  Message message) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange,  Message message) throws Exception {
         long si = sequenceGenerator.getNextSequenceId();
         message.getMessageId().setBrokerSequenceId(si);
-        ActiveMQDestination destination = message.getDestination();
-        switch(destination.getDestinationType()) {
-        case ActiveMQDestination.QUEUE_TYPE:
-            queueRegion.send(context, message);
-            break;
-        case ActiveMQDestination.TOPIC_TYPE:
-            topicRegion.send(context, message);
-            break;
-        case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            tempQueueRegion.send(context, message);
-            break;
-        case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            tempTopicRegion.send(context, message);
-            break;
-        default:
-            throw createUnknownDestinationTypeException(destination);
+        if (producerExchange.isMutable() || producerExchange.getRegion()==null) {
+            ActiveMQDestination destination = message.getDestination();
+            Region region = null;
+            switch(destination.getDestinationType()) {
+            case ActiveMQDestination.QUEUE_TYPE:
+                region = queueRegion;
+                break;
+            case ActiveMQDestination.TOPIC_TYPE:
+                region = topicRegion;
+                break;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                region = tempQueueRegion;
+                break;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                region = tempTopicRegion;
+                break;
+            default:
+                throw createUnknownDestinationTypeException(destination);
+            }
+            producerExchange.setRegion(region);
         }
+        producerExchange.getRegion().send(producerExchange,message);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
-        ActiveMQDestination destination = ack.getDestination();
-        switch(destination.getDestinationType()) {
-        case ActiveMQDestination.QUEUE_TYPE:
-            queueRegion.acknowledge(context, ack);
-            break;
-        case ActiveMQDestination.TOPIC_TYPE:
-            topicRegion.acknowledge(context, ack);
-            break;
-        case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            tempQueueRegion.acknowledge(context, ack);
-            break;
-        case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            tempTopicRegion.acknowledge(context, ack);
-            break;
-        default:
-            throw createUnknownDestinationTypeException(destination);
+    public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
+        if(consumerExchange.getRegion()==null){
+            ActiveMQDestination destination=ack.getDestination();
+            Region region=null;
+            switch(destination.getDestinationType()){
+            case ActiveMQDestination.QUEUE_TYPE:
+                region=queueRegion;
+                break;
+            case ActiveMQDestination.TOPIC_TYPE:
+                region=topicRegion;
+                break;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                region=tempQueueRegion;
+                break;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                region=tempTopicRegion;
+                break;
+            default:
+                throw createUnknownDestinationTypeException(destination);
+            }
+            consumerExchange.setRegion(region);
         }
+        consumerExchange.getRegion().acknowledge(consumerExchange,ack);
     }
 
     

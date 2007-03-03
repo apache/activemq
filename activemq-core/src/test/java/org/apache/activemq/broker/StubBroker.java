@@ -173,7 +173,7 @@ public class StubBroker implements Broker {
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
@@ -212,7 +212,7 @@ public class StubBroker implements Broker {
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
     }
 
-    public void send(ConnectionContext context, Message message) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
     }
 
     public void start() throws Exception {

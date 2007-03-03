@@ -22,6 +22,7 @@ import java.util.Iterator;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -265,11 +266,13 @@ public class AdvisoryBroker extends BrokerFilter {
         advisoryMessage.setDestination(topic);
         advisoryMessage.setResponseRequired(false);
         advisoryMessage.setProducerId(advisoryProducerId);
-        
         boolean originalFlowControl = context.isProducerFlowControl();
+        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+        producerExchange.setConnectionContext(context);
+        producerExchange.setMutable(true);
         try {
             context.setProducerFlowControl(false);
-            next.send(context, advisoryMessage);
+            next.send(producerExchange, advisoryMessage);
         } finally {
             context.setProducerFlowControl(originalFlowControl);
         }

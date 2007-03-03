@@ -31,6 +31,7 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
@@ -106,8 +107,8 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
-        super.send(context, messageSend);
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        super.send(producerExchange, messageSend);
         ProducerId producerId = messageSend.getProducerId();
         ActiveMQDestination destination = messageSend.getDestination();
         synchronized (lock) {

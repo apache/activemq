@@ -19,6 +19,8 @@ package org.apache.activemq.broker.region;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -98,17 +100,18 @@ public interface Region extends Service {
      * Send a message to the broker to using the specified destination.  The destination specified
      * in the message does not need to match the destination the message is sent to.  This is 
      * handy in case the message is being sent to a dead letter destination.
-     * @param context the environment the operation is being executed under.
+     * @param producerExchange the environment the operation is being executed under.
+     * @param message 
      * @throws Exception TODO
      */
-    public void send(ConnectionContext context, Message message) throws Exception;
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception;
     
     /**
      * Used to acknowledge the receipt of a message by a client.
-     * @param context the environment the operation is being executed under.
+     * @param consumerExchange the environment the operation is being executed under.
      * @throws Exception TODO
      */
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception;
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception;
     
     /**
      * Allows a consumer to pull a message from a queue

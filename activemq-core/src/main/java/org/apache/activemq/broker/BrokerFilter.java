@@ -70,8 +70,8 @@ public class BrokerFilter implements Broker {
         return next.getDestinations(destination);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
-        next.acknowledge(context, ack);
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
+        next.acknowledge(consumerExchange, ack);
     }
 
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
@@ -122,8 +122,8 @@ public class BrokerFilter implements Broker {
         next.rollbackTransaction(context, xid);
     }
 
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
-        next.send(context, messageSend);
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        next.send(producerExchange, messageSend);
     }
 
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {

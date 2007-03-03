@@ -33,9 +33,10 @@ public class UserIDBroker extends BrokerFilter {
         super(next);
     }
 
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        final ConnectionContext context = producerExchange.getConnectionContext();
         String userID = context.getUserName();
         messageSend.setUserID(userID);
-        super.send(context, messageSend);
+        super.send(producerExchange, messageSend);
     }
 }

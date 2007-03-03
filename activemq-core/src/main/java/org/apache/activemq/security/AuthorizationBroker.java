@@ -20,6 +20,7 @@ package org.apache.activemq.security;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -165,8 +166,8 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super.addProducer(context, info);
     }
         
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
-        SecurityContext subject = (SecurityContext) context.getSecurityContext();
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        SecurityContext subject = (SecurityContext) producerExchange.getConnectionContext().getSecurityContext();
         if( subject == null )
             throw new SecurityException("User is not authenticated.");
 
@@ -185,7 +186,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             subject.getAuthorizedWriteDests().put(messageSend.getDestination(), messageSend.getDestination());
         }
 
-        super.send(context, messageSend);
+        super.send(producerExchange, messageSend);
     }
     
     // SecurityAdminMBean interface

@@ -25,7 +25,9 @@ import java.util.Set;
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -300,17 +302,28 @@ abstract public class AbstractRegion implements Region {
         throw new JMSException("Invalid operation.");
     }
 
-    public void send(ConnectionContext context, Message messageSend)
+    public void send(final ProducerBrokerExchange producerExchange, Message messageSend)
             throws Exception {
-        Destination dest = lookup(context, messageSend.getDestination());
-        dest.send(context, messageSend);
+        final ConnectionContext context = producerExchange.getConnectionContext();
+               
+        if (producerExchange.isMutable() || producerExchange.getRegionDestination()==null) {
+            final Destination regionDestination = lookup(context,messageSend.getDestination());
+            producerExchange.setRegionDestination(regionDestination);
+        }
+        
+        producerExchange.getRegionDestination().send(context, messageSend);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
-        Subscription sub = (Subscription) subscriptions.get(ack.getConsumerId());
-        if( sub==null )
-            throw new IllegalArgumentException("The subscription does not exist: "+ack.getConsumerId());
-        sub.acknowledge(context, ack);
+    public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
+        Subscription sub=consumerExchange.getSubscription();
+        if(sub==null){
+            sub=(Subscription)subscriptions.get(ack.getConsumerId());
+            if(sub==null){
+                throw new IllegalArgumentException("The subscription does not exist: "+ack.getConsumerId());
+            }
+            consumerExchange.setSubscription(sub);
+        }
+        sub.acknowledge(consumerExchange.getConnectionContext(),ack);
     }
 
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {

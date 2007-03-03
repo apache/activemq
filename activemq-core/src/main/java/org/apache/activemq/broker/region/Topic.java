@@ -24,6 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.FixedSizedSubscriptionRecoveryPolicy;
@@ -242,7 +243,6 @@ public class Topic implements Destination {
     	if( message.isExpired() ) {
     		return;
     	}
-
         if (context.isProducerFlowControl()) {
             if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
@@ -426,7 +426,7 @@ public class Topic implements Destination {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void dispatch(ConnectionContext context, Message message) throws Exception {
+    protected void dispatch(final ConnectionContext context, Message message) throws Exception {
         destinationStatistics.getEnqueues().increment();
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
@@ -481,7 +481,10 @@ public class Topic implements Destination {
                     boolean originalFlowControl = context.isProducerFlowControl();
                     try {
                         context.setProducerFlowControl(false);
-                        context.getBroker().send(context, message);
+                        ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+                        producerExchange.setMutable(false);
+                        producerExchange.setConnectionContext(context);
+                        context.getBroker().send(producerExchange, message);
                     } finally {
                         context.setProducerFlowControl(originalFlowControl);
                     }

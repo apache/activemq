@@ -84,8 +84,8 @@ public class MutableBrokerFilter implements Broker {
         return getNext().getDestinations(destination);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
-        getNext().acknowledge(context, ack);
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
+        getNext().acknowledge(consumerExchange, ack);
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
@@ -132,8 +132,8 @@ public class MutableBrokerFilter implements Broker {
         getNext().rollbackTransaction(context, xid);
     }
 
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
-        getNext().send(context, messageSend);
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        getNext().send(producerExchange, messageSend);
     }
 
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {

@@ -153,11 +153,11 @@ public class EmptyBroker implements Broker {
 
     }
 
-    public void send(ConnectionContext context, Message message) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
 
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
 
     }
 

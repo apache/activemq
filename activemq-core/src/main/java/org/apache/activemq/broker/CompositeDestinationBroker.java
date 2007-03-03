@@ -81,7 +81,7 @@ public class CompositeDestinationBroker extends BrokerFilter {
     /**
      * 
      */
-    public void send(ConnectionContext context, Message message) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         ActiveMQDestination destination = message.getDestination();
         if( destination.isComposite() ) {
             ActiveMQDestination[] destinations = destination.getCompositeDestinations();
@@ -92,10 +92,10 @@ public class CompositeDestinationBroker extends BrokerFilter {
                 message.setOriginalDestination(destination);
                 message.setDestination(destinations[i]);
                 message.evictMarshlledForm();
-                next.send(context, message);
+                next.send(producerExchange, message);
             }
         } else {
-            next.send(context, message);
+            next.send(producerExchange, message);
         }
     }
     

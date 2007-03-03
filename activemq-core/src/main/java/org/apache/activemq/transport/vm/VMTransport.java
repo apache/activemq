@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -74,9 +73,6 @@ public class VMTransport implements Transport,Task{
     }
 
     public void oneway(Object command) throws IOException{
-        if (command instanceof Message) {
-            command = ((Message)command).copy();
-        }
         if(disposed){
             throw new TransportDisposedIOException("Transport disposed.");
         }
@@ -94,9 +90,6 @@ public class VMTransport implements Transport,Task{
     }
 
     protected void syncOneWay(Object command){
-        if (command instanceof Message) {
-            command = ((Message)command).copy();
-        }
         final TransportListener tl=peer.transportListener;
         prePeerSetQueue=peer.prePeerSetQueue;
         if(tl==null){

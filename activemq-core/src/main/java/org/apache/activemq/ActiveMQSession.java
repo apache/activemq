@@ -1585,6 +1585,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 				message.setJMSMessageID(msg.getMessageId().toString());
 			}
 			msg.setTransactionId(txid);
+            if(connection.isCopyMessageOnSend()){
+                msg=(ActiveMQMessage)msg.copy();
+            }
 			msg.setConnection(connection);
 			msg.onSend();
 			msg.setProducerId(msg.getMessageId().getProducerId());
